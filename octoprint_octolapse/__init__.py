@@ -13,10 +13,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 	
 	##~~ After Startup
 	def on_after_startup(self):
-        	self._logger.info("Octolapse has been loaded and is active.")
+		self._logger.info("Octolapse has been loaded and is active.")
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
+		self._logger.info("Octolapse is creating default settings.")
 		return dict(
 			enabled = True,
 			selected_profile_index = 1,
@@ -101,17 +102,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 					)
 				)
 			]
-		);
-				
+		)
+
+
 	def get_template_configs(self):
-		return [
-			dict(type="navbar", custom_bindings=False),
-			dict(type="settings", custom_bindings=False)
-		]	
+		self._logger.info("Octolapse is loading template configurations.")
+		return [dict(type="settings", custom_bindings=False)]
 
 	##~~ AssetPlugin mixin
 
 	def get_assets(self):
+		self._logger.info("Octolapse is loading assets.")
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(js = ["js/octolapse.js"],
@@ -125,6 +126,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 		# Plugin here.  See
 		# https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
 		# for details.
+		self._logger.info("Octolapse is geting update information.")
 		return dict(octolapse = dict(displayName="Octolapse Plugin",
 				displayVersion=self._plugin_version,
 
