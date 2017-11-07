@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\octoprint_octolapse"
+    "\\octoprint_octolapse",
+    "\\octoprint_octolapse\\css",
+    "\\octoprint_octolapse\\js",
+    "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\octoprint_octolapse\\__init__.py",
   "PreviewInSolutionExplorer": false
 }

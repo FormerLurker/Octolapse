@@ -12,18 +12,47 @@
         </label>
       </div>
     </div>
+    <h3>Printer Settings</h3>
+    <div class="control-group">
+      <label class="control-label">Retraction Length</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.retract_length"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Retraction Speed</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.retract_speed"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Movement Speed</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.movement_speed"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Snapshot Command</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.snapshot_command"/>
+      </div>
+    </div>
+    <!--<div class="control-group">
+      <label class="control-label">Snapshot Gcode</label>
+      <div class="controls" data-bind="foreach: settings.plugins.octolapse.printer.snapshot_gcode">
+        <input type="text" class="input-block-level" data-bind="value: $data"/>
+      </div>
+    </div>-->
+    <h3>Select a profile to edit</h3>
     <div class="control-group">
       <label class="control-label">Profiles</label>
       <div class="controls">
-        <ul data-bind="foreach: settings.plugins.octolapse.profiles">
-          <li>
-            <span data-bind="text: name"></span>
-          </li>
-        </ul>
+        <select data-bind="foreach: settings.plugins.octolapse.profiles, value: settings.plugins.octolapse.current_profile_name">
+          <option data-bind="text : name, value : name"></option>
+        </select>
       </div>
     </div>
     <div data-bind="foreach: settings.plugins.octolapse.profiles">
-
       <div class="control-group">
         <label class="control-label">Name</label>
         <div class="controls">
@@ -42,33 +71,52 @@
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: stabilization.x_movement_speed"/>
         </div>
-
         <div class="control-group">
           <label class="control-label">Stabilization Type</label>
           <div class="controls">
             <select data-bind="value: stabilization.x_type">
               <option value="disabled">Disabled</option>
-              <option value="fixed">Fixed (Millimeters)</option>
+              <option value="fixed_coordinate">Fixed (Millimeters)</option>
               <option value="fixed_path">CSV Separated List of X Coordinates (Millimeters)</option>
               <option value="relative">Relative to Bed(percent)</option>
               <option value="relative_print">Relative to Print CSV(percent, per layer)</option>
               <option value="relative_path">Relative CSV (percent).</option>
             </select>
           </div>
-          <div class="control-group">
-            <label class="control-label">Fixed - X Coordinate</label>
-            <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_coordinate"/>
-            </div>
-          </div>
-
         </div>
+        <div class="control-group">
+          <label class="control-label">Fixed Coordinate</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_coordinate"/>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Fixed Path</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_path"/>
+            <input type="checkbox" data-bind="checked: stabilization.x_fixed_path_loop" />Loop
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Relative Coordinate</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative"/>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Relative Path</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative_path"/>
+            <input type="checkbox" data-bind="checked: stabilization.x_relative_path_loop" />Loop
+          </div>
+        </div>
+        
       </div>
       <h3>Y-Stabilization Options</h3>
       <div class="control-group">
         <label class="control-label" for="stabilization.y_stabilization_value">Movement Speed</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: stabilization.y_movement_speed"/>
+          <input type="text" class="input-block-level" data-bind="value: stabilization.y_movement_speed_mms"/>
         </div>
       </div>
       <div class="control-group">
@@ -76,7 +124,7 @@
         <div class="controls">
           <select data-bind="value: stabilization.y_type">
             <option value="disabled">Disabled</option>
-            <option value="fixed">Fixed (Millimeters)</option>
+            <option value="fixed_coordinate">Fixed (Millimeters)</option>
             <option value="fixed_path">CSV Separated List of Y Coordinates (Millimeters)</option>
             <option value="relative">Relative to Bed(percent)</option>
             <option value="relative_print">Relative to Print CSV(percent, per layer)</option>
@@ -84,12 +132,31 @@
           </select>
         </div>
         <div class="control-group">
-          <label class="control-label">Fixed - Y Coordinate</label>
+          <label class="control-label">Fixed Coordinate</label>
           <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_coordinate"/>
           </div>
         </div>
-
+        <div class="control-group">
+          <label class="control-label">Fixed Path</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_path"/>
+            <input type="checkbox" data-bind="checked: stabilization.t_fixed_path_loop" />Loop
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Relative Coordinate</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative"/>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Relative Path</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative_path"/>
+            <input type="checkbox" data-bind="checked: stabilization.t_relative_path_loop" />Loop
+          </div>
+        </div>
       </div>
       <h3>Snapshot Triggers</h3>
       <div class="control-group">
@@ -99,18 +166,19 @@
             <option value="layer_change">Layer Change</option>
             <option value="z_height_intervals">Z Height Intervals</option>
             <option value="inserval_seconds">Second Intervals</option>
+            <option value="gcode">Custom Gcode</option>
           </select>
           <span class="help-inline">
             <span class="label label-important">Attention</span> Could be in MM or % depending on the trigger type.  Ignored for layer change types.
           </span>
         </div>
-
         <div class="control-group">
           <label class="control-label">Delay (Milliseconds) before taking a snapshot</label>
           <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: snapshot.delay"/>
           </div>
         </div>
+
       </div>
       <h3>Rendering Options</h3>
       <div class="control-group">
@@ -118,10 +186,12 @@
         <div class="controls">
           <select data-bind="value: rendering.fps_calculation_type">
             <option value="static">Static FPS (higher FPS = shorter videos)</option>
-            <option value="seconds">Fixed Run Length (FPS = Total Frames/Run Length Seconds)</option>
+            <option value="duration">Fixed Run Length (FPS = Total Frames/Run Length Seconds)</option>
           </select>
         </div>
       </div>
+
+
       <div class="control-group">
         <label class="control-label" >Static FPS</label>
         <div class="controls">
@@ -215,9 +285,11 @@
       </div>
       <div class="control-group">
         <label class="control-label">Auto White Balance</label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: camera.white_balance_auto" title="Enable or disable auto white balance."/>Enabled
-        </label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: camera.white_balance_auto" title="Enable or disable auto white balance."/>Enabled
+          </label>
+        </div>
       </div>
       <div class="control-group">
         <label class="control-label">Gain</label>
@@ -301,9 +373,11 @@
       </div>
       <div class="control-group">
         <label class="control-label">Autofocus Enabled</label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: camera.autofocus_enabled" title="Enable or disable autofocus."/>Enabled
-        </label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: camera.autofocus_enabled" title="Enable or disable autofocus."/>Enabled
+          </label>
+        </div>
       </div>
       <div class="control-group">
         <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
@@ -340,7 +414,10 @@
           <input type="text" class="input-block-level" data-bind="value: camera.jpeg_quality"/>
         </div>
       </div>
-    </div>
 
+    </div>
+    <!--End profile for loop-->
   </div>
 </form>
+
+

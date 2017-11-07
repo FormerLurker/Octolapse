@@ -1,113 +1,45 @@
 # coding=utf-8
 from __future__ import absolute_import
-
 import octoprint.plugin
 import time
 import os
 import sys
+from .settings import OctolapseSettings
+from .gcode import GCode
 
 class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin,
                       octoprint.plugin.TemplatePlugin,
 			octoprint.plugin.StartupPlugin):
+
 	
+	def __init__(self):
+		self.OctolapseGcode = GCode()
 	##~~ After Startup
 	def on_after_startup(self):
 		self._logger.info("Octolapse has been loaded and is active.")
 	##~~ SettingsPlugin mixin
-
 	def get_settings_defaults(self):
-		self._logger.info("Octolapse is creating default settings.")
-		return dict(
-			enabled = True,
-			selected_profile_index = 1,
-			profiles=
-			[
-				dict(
-					name= "default",
-					description= "Fixed XY at back left - relative stabilization (0,100)",
-					printer = dict(
-						bed_x_max= -1, 
-						bed_y_max= -1, 
-						bed_z_max= -1
-					),
-					stabilization = dict(
-						x_movement_speed= 0,
-						x_type = 'fixed',
-						x_fixed_coordinate = 0,
-						x_fixed_path= [],
-						x_fixed_path_loop= True,
-						x_relative= 100,
-						x_relative_print= 100,
-						x_relative_path= [],
-						x_relative_path_loop= True,
-						y_movement_speed_mms= 0, 
-						y_type = 'fixed',
-						y_fixed_coordinate = 0,
-						y_fixed_path= [],
-						y_fixed_path_loop= True,
-						y_relative= 100,
-						y_relative_print= 100,
-						y_relative_path= [],
-						y_relative_path_loop= True,
-						z_movement_speed_mms= 0
-					),
-					snapshot =dict(
-						trigger_type = 'layer_change',
-						length = 0.2,
-						seconds = 30,
-						archive = True,
-						delay = 1000,
-						retract_before_move= False
-					),
-					rendering = dict(
-						enabled = True,
-						fps_calculation_type = 'duration',
-						run_length_seconds = 10,
-						fps = 30,
-						max_fps = 120.0,
-						min_fps = 1.0,
-						output_format = 'mp4'
-					),
-					file_options = dict(
-						output_filename="{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}",
-						sync_with_timelapse = True,
-						cleanup_before_print=True,
-						cleanup_after_print=False,
-						cleanup_after_cancel=True,
-						cleanup_before_close=True,
-						cleanup_after_render=False
-					),
-					camera = dict(
-						brightness=128,
-						contrast=128,
-						saturation=128,
-						white_balance_auto= True,
-						gain= 0,
-						powerline_frequency=60,
-						white_balance_temperature= 4000,
-						sharpness= 128,
-						backlight_compensation_enabled= False,
-						exposure_type= True,
-						exposure= 250,
-						exposure_auto_priority_enabled = True,
-						pan=0,
-						tilt=0,
-						autofocus_enabled= True,
-						focus=35,
-						zoom=100,
-						led1_mode= 'auto',
-						led1_frequency= 0,
-						jpeg_quality= 80
-					)
-				)
-			]
-		)
-
+		defaultSettings = settings.GetOctoprintDefaultSettings()
+		self._logger.info("Octolapse is creating default settings:")
+		return defaultSettings
 
 	def get_template_configs(self):
 		self._logger.info("Octolapse is loading template configurations.")
 		return [dict(type="settings", custom_bindings=False)]
+
+	def CurrentPrinterProfile(self):
+		return self._printer_profile_manager.get_current()
+
+	def Settings(self):
+		if(hasattr(self, '_settings') and self._settings is not None):
+			return OctolapseSettings(self._settings)
+		return OctolapseSettings(None)
+
+	def CurrentProfile(self):
+		if(hasattr(self, '_settings') and self._settings is not None):
+			return OctolapseSettings(self._settings).CurrentProfile()
+		return OctolapseSettings(None).CurrentProfile()
 
 	##~~ AssetPlugin mixin
 
@@ -129,15 +61,62 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 		self._logger.info("Octolapse is geting update information.")
 		return dict(octolapse = dict(displayName="Octolapse Plugin",
 				displayVersion=self._plugin_version,
-
 				# version check: github repository
 				type="github_release",
 				user="FormerLurker",
 				repo="Octolapse",
 				current=self._plugin_version,
-
 				# update method: pip
 				pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip"))
+
+	
+	
+
+	printer_is_absolute = False
+	printer_max_z = 0
+	printer_current_layer = 0
+	sending_snapshot = False
+	
+	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+		snapshotEndCode = "M292; Octolapse - EndSnapshot"
+		snapshotCommands = []
+		if(self._printer is not None and self._printer.is_printing()):
+			snapshotTriggerType = self.CurrentProfile().snapshot.trigger_type
+			if snapshotTriggerType == settings.PROFILE_SNAPSHOT_GCODE_TYPE:
+				snapshotCommand = self.Settings().printer.snapshot_command
+				if(cmd == snapshotCommand):
+					commands = 	self.OctolapseGcode.GetSnapshotGcodeArray(self.Settings().printer, self.CurrentProfile(),self.CurrentPrinterProfile())
+					self._logger.info("Octolapse has detected a snapshot gcode.  Adding following gcode:")
+					command_line = 1
+					for command in commands:
+						## log and build in a snapshot command type
+						self._logger.info('Line {0:d}: {1:s}'.format(command_line,command))
+						command_line += 1
+						snapshotCommands.append((command,))
+
+					self._logger.info('Line {0:d}: {1:s}'.format(command_line,snapshotEndCode))
+					snapshotCommands.append((snapshotEndCode,"EndSnapshot"))
+					comm_instance._log("Octolapse: snapshot gcode queuing")
+					cmd = snapshotCommands
+		return cmd
+	
+	printer_extruder_position = 0;
+
+	WaitingForSnapshotResponse = False;
+	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+		if(cmd_type == "EndSnapshot"):
+			comm_instance._log("Octolapse: snapshot gcode sent")
+			self._logger.info("Octolapse - All timelapse gcode sent to the printer.  Waiting for a response.")
+			self.WaitingForSnapshotResponse = True;
+
+	def GcodeReceived(self, comm_instance, line, *args, **kwargs):
+		if(self.WaitingForSnapshotResponse==True):
+			comm_instance._log("Octolapse: Taking Snapshot")
+			time.sleep(5)
+			comm_instance._log("Octolapse: Snapshot Finished")
+			self._logger.info("Octolapse - Received line from printer: {0:s}.".format(line))
+			self.WaitingForSnapshotResponse = False
+		return line
 
 
 # If you want your plugin to be registered within OctoPrint under a different
@@ -154,6 +133,9 @@ def __plugin_load__():
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
+		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent,
+		"octoprint.comm.protocol.gcode.received": __plugin_implementation__.GcodeReceived
 	}
 
