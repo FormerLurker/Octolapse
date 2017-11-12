@@ -1,5 +1,5 @@
 <form class="form-horizontal">
-  <div>
+  <div data-bind="with: settings.plugins.octolapse">
     <h3>Plugin Settings</h3>
     <span class="help-inline">
       <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
@@ -8,51 +8,20 @@
       <label class="control-label">Enable Octolapse</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: settings.plugins.octolapse.enabled" title="Enable or disable the plugin"/>Enabled
+          <input type="checkbox" data-bind="checked: is_octolapse_enabled" title="Enable or disable the plugin"/>Enabled
         </label>
       </div>
     </div>
-    <h3>Printer Settings</h3>
-    <div class="control-group">
-      <label class="control-label">Retraction Length</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.retract_length"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Retraction Speed</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.retract_speed"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Movement Speed</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.movement_speed"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Snapshot Command</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: settings.plugins.octolapse.printer.snapshot_command"/>
-      </div>
-    </div>
-    <!--<div class="control-group">
-      <label class="control-label">Snapshot Gcode</label>
-      <div class="controls" data-bind="foreach: settings.plugins.octolapse.printer.snapshot_gcode">
-        <input type="text" class="input-block-level" data-bind="value: $data"/>
-      </div>
-    </div>-->
     <h3>Select a profile to edit</h3>
     <div class="control-group">
       <label class="control-label">Profiles</label>
       <div class="controls">
-        <select data-bind="foreach: settings.plugins.octolapse.profiles, value: settings.plugins.octolapse.current_profile_name">
+        <select data-bind="foreach: profiles, value: current_profile_name">
           <option data-bind="text : name, value : name"></option>
         </select>
       </div>
     </div>
-    <div data-bind="foreach: settings.plugins.octolapse.profiles">
+    <div data-bind="foreach: profiles">
       <div class="control-group">
         <label class="control-label">Name</label>
         <div class="controls">
@@ -110,7 +79,7 @@
             <input type="checkbox" data-bind="checked: stabilization.x_relative_path_loop" />Loop
           </div>
         </div>
-        
+
       </div>
       <h3>Y-Stabilization Options</h3>
       <div class="control-group">
@@ -158,7 +127,7 @@
           </div>
         </div>
       </div>
-      <h3>Snapshot Triggers</h3>
+      <h3>Snapshots</h3>
       <div class="control-group">
         <label class="control-label">Trigger a snapshot at:</label>
         <div class="controls">
@@ -176,6 +145,73 @@
           <label class="control-label">Delay (Milliseconds) before taking a snapshot</label>
           <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: snapshot.delay"/>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Use a custom script to take a snapshot</label>
+          <div class="controls">
+            <input type="checkbox" data-bind="checked: camera.custom_script_enabled" />Custom Script Enabled
+            <span class="help-inline">
+              <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
+            </span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Script to run when taking a snapshot (full path)</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: snapshot.script_path"/>
+          </div>
+        </div>
+
+
+        <div class="control-group">
+          <label class="control-label" >Output File Format</label>
+          <div class="controls">
+            <select data-bind="value: snapshot.output_format">
+              <option value="jpg">jpg</option>
+              <option value="gif">gif</option>
+              <option value="bmp">bmp</option>
+            </select>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Output File Name</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: snapshot.output_filename"/>
+          </div>
+          <span class="help-inline">
+            <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+          </span>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Output File Directory</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: snapshot.output_directory"/>
+          </div>
+          <span class="help-inline">
+            <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+          </span>
+        </div>
+
+        
+        <div class="control-group">
+          <label class="control-label">Delete Snapshots Files:</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: snapshot.cleanup_before_print" title="Before Print Starts"/>Before Print Starts
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_print" title="After Print Completes"/>After Print Completes
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: snapshot.cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
+            </label>
           </div>
         </div>
 
@@ -217,7 +253,7 @@
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label" >Output File Forma</label>
+        <label class="control-label" >Output File Format</label>
         <div class="controls">
           <select data-bind="value: rendering.output_format">
             <option value="mp4">MP4</option>
@@ -226,45 +262,63 @@
           </select>
         </div>
       </div>
-      <h4>File Options</h4>
       <div class="control-group">
         <label class="control-label">Output File Name</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: file_options.output_filename"/>
+          <input type="text" class="input-block-level" data-bind="value: rendering.output_filename"/>
         </div>
         <span class="help-inline">
           <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
         </span>
       </div>
       <div class="control-group">
-        <label class="control-label">Sync Output with Timelapse Control</label>
+        <label class="control-label">Output File Directory</label>
         <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
-          </label>
+          <input type="text" class="input-block-level" data-bind="value: rendering.output_directory"/>
+        </div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+        </span>
+      </div>
+      <div class="control-group">
+          <label class="control-label">Sync Output with Timelapse Control</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: rendering.sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
+            </label>
+          </div>
+        </div>
+
+      <h4>Camera Settings</h4>
+      <div class="control-group">
+        <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: camera.address"/>
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label" for="settings-octolapse-timelapse-files">Delete Snapshots Files:</label>
+        <label class="control-label">Ignore any SSL errors at the camera address.</label>
         <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.cleanup_before_print" title="Before Print Starts"/>Before Print Starts
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.cleanup_after_print" title="After Print Completes"/>After Print Completes
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: file_options.cleanup_after_render" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
-          </label>
+          <input type="checkbox" data-bind="checked: camera.ignore_ssl_error" />Ignore SSL
+          <span class="help-inline">
+            <span class="label label-important">Attention</span>Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
+          </span>
         </div>
       </div>
-      <h4>Camera Settings</h4>
+      <div class="control-group">
+        <label class="control-label">If required, enter a username to be sent with the camera snapshot request</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: camera.username"/>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">If required, enter a password to be sent with the camera snapshot request</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: camera.password"/>
+        </div>
+      </div>
+
       <div class="control-group">
         <label class="control-label">Brightness (0-255)</label>
         <div class="controls">
@@ -417,6 +471,31 @@
 
     </div>
     <!--End profile for loop-->
+    <h3>Printer Settings</h3>
+    <div class="control-group">
+      <label class="control-label">Retraction Length</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: printer.retract_length"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Retraction Speed</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: printer.retract_speed"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Movement Speed</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: printer.movement_speed"/>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Snapshot Command</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: printer.snapshot_command"/>
+      </div>
+    </div>
   </div>
 </form>
 

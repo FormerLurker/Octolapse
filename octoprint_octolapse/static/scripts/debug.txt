@@ -1,0 +1,2390 @@
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USERNAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USERNAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USERNAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USERNAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USERNAME=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USERNAME = Brad 
+USERNAME = Brad
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {EC71A94B-6B31-49DA-B812-385246B65F97}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts># set credentials 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC Brad  ) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USERNAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USERNAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USERNAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USERNAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USERNAME=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USERNAME = Brad 
+USERNAME = Brad
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {7D2FC4B0-E5E5-4948-AB5D-C4DE88AF76FC}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts># set credentials 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC Brad  ) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USERNAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USERNAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USERNAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USERNAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USERNAME=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USERNAME = Brad 
+USERNAME = Brad
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {216770B3-0A73-4443-A7E6-C64B523FD26B}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC Brad  ) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USERNAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USERNAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USERNAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USERNAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USERNAME=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USERNAME = Brad 
+USERNAME = Brad
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {7A8C04A3-9458-4A20-B43A-B335035A6481}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC Brad  ) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse =  
+USER_NAME_octolapse = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {B356B77B-52FC-4CF8-9570-AADC0145D2EA}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC   ) 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Invalid number of arguments.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse =  
+USER_NAME_octolapse = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {4CCE6886-5E36-44DE-9A8C-6851DA2FE251}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC   ) 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Invalid number of arguments.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse =  
+USER_NAME_octolapse = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {ECAB3DB5-187B-45BD-A656-A968CB3EBF61}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "" == "" (bitsadmin /SetCredentials "snapshot" Server BASIC   ) 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Invalid number of arguments.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Job completed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.mp4  
+ echo output directory singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.mp4  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="http://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="http://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.mp4
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse =  
+USER_NAME_octolapse = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD =  
+PASSWORD = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "http://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "" == "" (
+bitsadmin /create "snapshot"  
+ bitsadmin /SetCredentials "snapshot" Server BASIC    
+ bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+) 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {06FADC15-E6CF-4BFF-8E72-D17D7708503D}.
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Invalid number of arguments.
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>ELSE( 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {E6AE2BAC-BE0F-4D76-B4F2-ED51EA8AA761}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "http://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    http://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.mp4
+ERROR CODE:    0x80190190 - HTTP status 400: The server cannot process the request because the syntax is not valid.
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 2 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.jpg  
+ echo output directory singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="https://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--user_name" == "" (
+IF "--user_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=Brad@ninjamojo.com  
+ echo output directory Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--output_file_name" (
+SET OUTPUTFILENAME=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--user_name" (
+SET USER_NAME_octolapse=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--password" (
+SET PASSWORD=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Brad@ninjamojo.com  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--password" == "" (
+IF "--password" == "--output_directory" (
+SET OUTPUTDIRECTORY=Iaw7sukHUWytXGxovK27  
+ echo output directory Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--output_file_name" (
+SET OUTPUTFILENAME=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--user_name" (
+SET USER_NAME_octolapse=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--password" (
+SET PASSWORD=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse = Brad@ninjamojo.com 
+USER_NAME_octolapse = Brad@ninjamojo.com
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD = Iaw7sukHUWytXGxovK27 
+PASSWORD = Iaw7sukHUWytXGxovK27
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad@ninjamojo.com" == "" (
+bitsadmin /create "snapshot"  
+ bitsadmin /SetSecurityFlags myJob 0x0001  
+ bitsadmin /SetCredentials "snapshot" Server BASIC Brad@ninjamojo.com Iaw7sukHUWytXGxovK27  
+ bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg"  
+ bitsadmin /complete "snapshot" 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>ELSE( 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {CA9B7634-E298-4E1A-89A3-115295D515A4}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /SetSecurityFlags myJob 0x0001 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to find job named "myJob".
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    https://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg
+ERROR CODE:    0x80072f0d - The certificate authority is invalid or incorrect
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 8 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 8 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.jpg  
+ echo output directory singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="https://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--user_name" == "" (
+IF "--user_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=Brad@ninjamojo.com  
+ echo output directory Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--output_file_name" (
+SET OUTPUTFILENAME=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--user_name" (
+SET USER_NAME_octolapse=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--password" (
+SET PASSWORD=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Brad@ninjamojo.com  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--password" == "" (
+IF "--password" == "--output_directory" (
+SET OUTPUTDIRECTORY=Iaw7sukHUWytXGxovK27  
+ echo output directory Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--output_file_name" (
+SET OUTPUTFILENAME=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--user_name" (
+SET USER_NAME_octolapse=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--password" (
+SET PASSWORD=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse = Brad@ninjamojo.com 
+USER_NAME_octolapse = Brad@ninjamojo.com
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD = Iaw7sukHUWytXGxovK27 
+PASSWORD = Iaw7sukHUWytXGxovK27
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad@ninjamojo.com" == "" (
+bitsadmin /create "snapshot"  
+ bitsadmin /SetSecurityFlags "snapshot" 0x0001  
+ bitsadmin /SetCredentials "snapshot" Server BASIC Brad@ninjamojo.com Iaw7sukHUWytXGxovK27  
+ bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg"  
+ bitsadmin /complete "snapshot" 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>ELSE( 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {B256E04A-CAD5-4A46-96C7-EA087DE536FA}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /SetSecurityFlags "snapshot" 0x0001 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 9 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    https://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg
+ERROR CODE:    0x80072f0d - The certificate authority is invalid or incorrect
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 9 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 9 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat" == "" (
+IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_directory" (
+SET OUTPUTDIRECTORY=--output_directory  
+ echo output directory --output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--output_file_name" (
+SET OUTPUTFILENAME=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--user_name" (
+SET USER_NAME_octolapse=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--password" (
+SET PASSWORD=--output_directory  
+ SHIFT
+)  
+ IF ""C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts\snapshot.bat"" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=--output_directory  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_directory" == "" (
+IF "--output_directory" == "--output_directory" (
+SET OUTPUTDIRECTORY=c:\temp\snapshots\singleSnap.gcode\  
+ echo output directory c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--output_file_name" (
+SET OUTPUTFILENAME=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--user_name" (
+SET USER_NAME_octolapse=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--password" (
+SET PASSWORD=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ IF "--output_directory" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=c:\temp\snapshots\singleSnap.gcode\  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+output directory c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--output_file_name" == "" (
+IF "--output_file_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=singleSnap.gcode_1510097927.93.jpg  
+ echo output directory singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--output_file_name" (
+SET OUTPUTFILENAME=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--user_name" (
+SET USER_NAME_octolapse=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--password" (
+SET PASSWORD=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ IF "--output_file_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=singleSnap.gcode_1510097927.93.jpg  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--snapshot_address" == "" (
+IF "--snapshot_address" == "--output_directory" (
+SET OUTPUTDIRECTORY="https://tako2.prefecture/webcam/?action=snapshot"  
+ echo output directory "https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--output_file_name" (
+SET OUTPUTFILENAME="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--user_name" (
+SET USER_NAME_octolapse="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--password" (
+SET PASSWORD="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ IF "--snapshot_address" == "--snapshot_address" (
+SET SNAPSHOTADDRESS="https://tako2.prefecture/webcam/?action=snapshot"  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--user_name" == "" (
+IF "--user_name" == "--output_directory" (
+SET OUTPUTDIRECTORY=Brad@ninjamojo.com  
+ echo output directory Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--output_file_name" (
+SET OUTPUTFILENAME=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--user_name" (
+SET USER_NAME_octolapse=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--password" (
+SET PASSWORD=Brad@ninjamojo.com  
+ SHIFT
+)  
+ IF "--user_name" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Brad@ninjamojo.com  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "--password" == "" (
+IF "--password" == "--output_directory" (
+SET OUTPUTDIRECTORY=Iaw7sukHUWytXGxovK27  
+ echo output directory Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--output_file_name" (
+SET OUTPUTFILENAME=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--user_name" (
+SET USER_NAME_octolapse=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--password" (
+SET PASSWORD=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ IF "--password" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=Iaw7sukHUWytXGxovK27  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF NOT "" == "" (
+IF "" == "--output_directory" (
+SET OUTPUTDIRECTORY=  
+ echo output directory   
+ SHIFT
+)  
+ IF "" == "--output_file_name" (
+SET OUTPUTFILENAME=  
+ SHIFT
+)  
+ IF "" == "--user_name" (
+SET USER_NAME_octolapse=  
+ SHIFT
+)  
+ IF "" == "--password" (
+SET PASSWORD=  
+ SHIFT
+)  
+ IF "" == "--snapshot_address" (
+SET SNAPSHOTADDRESS=  
+ SHIFT
+)  
+ SHIFT 
+ GOTO :loop 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\ 
+OUTPUT FILE DIRECTORY = c:\temp\snapshots\singleSnap.gcode\
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg 
+OUTPUT FILE NAME = singleSnap.gcode_1510097927.93.jpg
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo USER_NAME_octolapse = Brad@ninjamojo.com 
+USER_NAME_octolapse = Brad@ninjamojo.com
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo PASSWORD = Iaw7sukHUWytXGxovK27 
+PASSWORD = Iaw7sukHUWytXGxovK27
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot" 
+SNAPSHOTADDRESS = "https://tako2.prefecture/webcam/?action=snapshot"
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>echo DEFAULT =  
+DEFAULT = 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>mkdir c:\temp\snapshots\singleSnap.gcode\ 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>IF "Brad@ninjamojo.com" == "" (
+bitsadmin /create "snapshot"  
+ bitsadmin /SetSecurityFlags "snapshot" 0x0001  
+ bitsadmin /SetCredentials "snapshot" Server BASIC Brad@ninjamojo.com Iaw7sukHUWytXGxovK27  
+ bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg"  
+ bitsadmin /complete "snapshot"  
+ goto exit 
+) 
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /create "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Created job {205D0C90-A14F-4EAC-92D9-17368AA4B9CE}.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /SetSecurityFlags "snapshot" 0x0001 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 10 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /transfer "snapshot" "https://tako2.prefecture/webcam/?action=snapshot" "c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Unable to complete transfer.
+ERROR FILE:    https://tako2.prefecture/webcam/?action=snapshot -> c:\temp\snapshots\singleSnap.gcode\singleSnap.gcode_1510097927.93.jpg
+ERROR CODE:    0x80072f0d - The certificate authority is invalid or incorrect
+ERROR CONTEXT: 0x00000005 - The error occurred while the remote file was being processed.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>bitsadmin /complete "snapshot" 
+
+BITSADMIN version 3.0
+BITS administration utility.
+(C) Copyright 2000-2006 Microsoft Corp.
+
+BITSAdmin is deprecated and is not guaranteed to be available in future versions of Windows.
+Administrative tools for the BITS service are now provided by BITS PowerShell cmdlets.
+
+Found 10 jobs named "snapshot".
+Use the job identifier instead of the job name.
+
+C:\Users\Brad\Source\Repos\Octolapse\octoprint_octolapse\static\scripts>exit:
