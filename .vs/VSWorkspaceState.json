@@ -2,8 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\octoprint_octolapse",
+    "\\octoprint_octolapse\\static",
+    "\\octoprint_octolapse\\static\\js",
     "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\__init__.py",
+  "SelectedNode": "\\octoprint_octolapse\\gcode.py",
   "PreviewInSolutionExplorer": false
 }

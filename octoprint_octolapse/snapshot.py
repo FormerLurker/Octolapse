@@ -8,11 +8,12 @@ from io import open as iopen
 from urlparse import urlsplit
 
 
-class Snapshot(object):
+class CaptureSnapshot(object):
 
-	def __init__(self,profile,logger):
+	def __init__(self, profile,printer,octoprintLogger):
 		self.Profile = profile
-		self.Logger = logger
+		self.Printer = printer
+		self.Logger = octoprintLogger
 		self.PrintStartTime = time.time()
 		self.PrintEndTime = time.time()
 
@@ -30,20 +31,7 @@ class Snapshot(object):
 		# set the file name
 		info.FileName = self.GetSnapshotFileName(printerFileName)
 		info.DirectoryName = self.GetSnapshotDirectoryName(printerFileName)
-		# call the snapshot command
-			
-		#
-		#if(len(self.Profile.snapshot.snapshot_camera_username) > 0):
-		#	cmd = "{0:s} --output_directory {1:s} --output_file_name {2:s} --user_name {3:s} --password {4:s} --snapshot_address {5:s}"
-		#	cmd = cmd.format(self.Profile.snapshot.script_path, info.DirectoryName, info.FileName, self.Profile.snapshot.snapshot_camera_username, self.Profile.snapshot.snapshot_camera_password, self.Profile.snapshot.snapshot_camera_address)
-		#else:
-		#	cmd = "{0:s} --output_directory {1:s} --output_file_name {2:s} --snapshot_address {5:s} "
-		#	cmd = cmd.format(self.Profile.snapshot.script_path, info.DirectoryName, info.FileName, self.Profile.snapshot.snapshot_camera_username, self.Profile.snapshot.snapshot_camera_password, self.Profile.snapshot.snapshot_camera_address)
-
-		#self.Logger.info("Octolapse - Executing snap script at: {0:s}".format(cmd))
-
 		try:
-			#r = os.system(cmd)
 			dir = "{0:s}{1:s}".format(info.DirectoryName, info.FileName)
 			r=None
 			if(len(self.Profile.camera.username)>0):
@@ -54,14 +42,17 @@ class Snapshot(object):
 				r=requests.get(self.Profile.camera.address,verify = not self.Profile.camera.ignore_ssl_error)
 
 			if r.status_code == requests.codes.ok:
-				os.makedirs(os.path.dirname(dir))
+				try:
+					os.makedirs(os.path.dirname(dir))
+				except:
+					self.Logger.debug("The directory {0:s} already exists".format(dir))
 				with iopen(dir, 'wb') as file:
 					file.write(r.content)
 			else:
 				return False
 
 		except Exception as e:
-			print(e)
+			
 			self.Logger.info("Octolapse - Error downloading snapshot:{0:s}".format(e))
 			return None
 		return info
@@ -72,10 +63,10 @@ class Snapshot(object):
 		if(not filename):
 			filename = "snapshot_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
 		filename = filename.replace("{FILENAME}",utility.getstring(printerFileName,""))
-		filename = filename.replace("{DATETIMESTAMP}",str(int(time.time())))
+		filename = filename.replace("{DATETIMESTAMP}","{0:.1f}".format(time.time()))
 		filename = filename.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
-		filename = filename.replace("{PRINTSTARTTIME}","{0:.0f}".format(self.PrintStartTime))
-		filename = filename.replace("{PRINTENDTIME}","{0:0.0f}".format(self.PrintEndTime))
+		filename = filename.replace("{PRINTSTARTTIME}","{0:.1f}".format(self.PrintStartTime))
+		filename = filename.replace("{PRINTENDTIME}","{0:0.1f}".format(self.PrintEndTime))
 		return filename
 
 
@@ -85,7 +76,7 @@ class Snapshot(object):
 			directoryName = "./snapshots/{FILENAME}/{PRINTSTARTTIME}"
 
 		directoryName = directoryName.replace("{FILENAME}",utility.getstring(printerFileName,""))
-		directoryName = directoryName.replace("{DATETIMESTAMP}",str(int(time.time())))
+		directoryName = directoryName.replace("{DATETIMESTAMP}","{0:0.0f}".format(time.time()))
 		directoryName = directoryName.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
 		directoryName = directoryName.replace("{PRINTSTARTTIME}","{0:0.0f}".format(self.PrintStartTime))
 		directoryName = directoryName.replace("{PRINTENDTIME}","{0:0.0f}".format(self.PrintEndTime))
@@ -108,9 +99,15 @@ class SnapshotInfo(object):
 		self.FileName = ""
 		self.DirectoryName = ""
 
+		# call the snapshot command
+			
+		#
+		#if(len(self.Profile.snapshot.snapshot_camera_username) > 0):
+		#	cmd = "{0:s} --output_directory {1:s} --output_file_name {2:s} --user_name {3:s} --password {4:s} --snapshot_address {5:s}"
+		#	cmd = cmd.format(self.Profile.snapshot.script_path, info.DirectoryName, info.FileName, self.Profile.snapshot.snapshot_camera_username, self.Profile.snapshot.snapshot_camera_password, self.Profile.snapshot.snapshot_camera_address)
+		#else:
+		#	cmd = "{0:s} --output_directory {1:s} --output_file_name {2:s} --snapshot_address {5:s} "
+		#	cmd = cmd.format(self.Profile.snapshot.script_path, info.DirectoryName, info.FileName, self.Profile.snapshot.snapshot_camera_username, self.Profile.snapshot.snapshot_camera_password, self.Profile.snapshot.snapshot_camera_address)
 
-
-
-
-
-
+		#self.Logger.info("Octolapse - Executing snap script at: {0:s}".format(cmd))
+		#r = os.system(cmd)

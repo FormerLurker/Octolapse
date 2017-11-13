@@ -12,6 +12,35 @@ def GetOctoprintSettings(settings):
 		print (settings)
 		octoprintSettings = { "is_octolapse_enabled" : utility.getbool(settings.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			'current_profile_name' : utility.getstring(settings.current_profile_name,defaults.current_profile_name),
+			'stabilization_options' : [
+				dict(
+					value='disabled'
+					,name='Disabled'
+				),dict(
+					value='fixed_coordinate'
+					,name='Fixed (Millimeters)'
+				),dict(
+					value='fixed_path'
+					,name='CSV Separated List of Y Coordinates (Millimeters)'
+				)
+				,dict(
+					value='relative'
+					,name='Relative to Bed(percent)'
+				)
+				,dict(
+					value='relative_path'
+					,name='Relative CSV (percent).'
+				)
+			],
+			'fps_calculation_options' : [
+				dict(
+					value='static'
+					,name='Static FPS (higher FPS = better quality/shorter videos)'
+				),dict(
+					value='duration'
+					,name='Fixed Run Length (FPS = Total Frames/Run Length Seconds)'
+				)
+			],
 			'printer' : {
 				'retract_length' :  utility.getint(settings.printer.retract_length,defaults.printer.retract_length),
 				'retract_speed' : utility.getint(settings.printer.retract_speed,defaults.printer.retract_speed),
@@ -48,9 +77,30 @@ def GetOctoprintSettings(settings):
 					'z_movement_speed_mms' : utility.getint(profile.stabilization.z_movement_speed_mms,defaultProfile.stabilization.z_movement_speed_mms)
 				},
 				'snapshot' : {
-					'trigger_type' : utility.getstring(profile.snapshot.trigger_type,defaultProfile.snapshot.trigger_type),
-					'length' : utility.getfloat(profile.snapshot.length,defaultProfile.snapshot.length ),
-					'seconds' : utility.getfloat(profile.snapshot.seconds,defaultProfile.snapshot.seconds ),
+					'gcode_trigger_enabled'				: utility.getbool(profile.snapshot.gcode_trigger_enabled,defaultProfile.snapshot.gcode_trigger_enabled),
+					'gcode_trigger_on_extruding'		: utility.getbool(profile.snapshot.gcode_trigger_on_extruding,defaultProfile.snapshot.gcode_trigger_on_extruding),
+					'gcode_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.gcode_trigger_on_extruding_start,defaultProfile.snapshot.gcode_trigger_on_extruding_start),
+					'gcode_trigger_on_primed'			: utility.getbool(profile.snapshot.gcode_trigger_on_primed,defaultProfile.snapshot.gcode_trigger_on_primed),
+					'gcode_trigger_on_retracting'		: utility.getbool(profile.snapshot.gcode_trigger_on_retracting,defaultProfile.snapshot.gcode_trigger_on_retracting),
+					'gcode_trigger_on_retracted'		: utility.getbool(profile.snapshot.gcode_trigger_on_retracted,defaultProfile.snapshot.gcode_trigger_on_retracted),
+					'gcode_trigger_on_detracting'		: utility.getbool(profile.snapshot.gcode_trigger_on_detracting,defaultProfile.snapshot.gcode_trigger_on_detracting),
+					'timer_trigger_enabled'				: utility.getbool(profile.snapshot.timer_trigger_enabled,defaultProfile.snapshot.timer_trigger_enabled),
+					'timer_trigger_seconds'				: utility.getint (profile.snapshot.timer_trigger_seconds,defaultProfile.snapshot.timer_trigger_seconds),
+					'timer_trigger_on_extruding'		: utility.getbool(profile.snapshot.timer_trigger_on_extruding,defaultProfile.snapshot.timer_trigger_on_extruding),
+					'timer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.timer_trigger_on_extruding_start,defaultProfile.snapshot.timer_trigger_on_extruding_start),
+					'timer_trigger_on_primed'			: utility.getbool(profile.snapshot.timer_trigger_on_primed,defaultProfile.snapshot.timer_trigger_on_primed),
+					'timer_trigger_on_retracting'		: utility.getbool(profile.snapshot.timer_trigger_on_retracting,defaultProfile.snapshot.timer_trigger_on_retracting),
+					'timer_trigger_on_retracted'		: utility.getbool(profile.snapshot.timer_trigger_on_retracted,defaultProfile.snapshot.timer_trigger_on_retracted),
+					'timer_trigger_on_detracting'		: utility.getbool(profile.snapshot.timer_trigger_on_detracting,defaultProfile.snapshot.timer_trigger_on_detracting),
+					'layer_trigger_enabled'				: utility.getbool(profile.snapshot.layer_trigger_enabled,defaultProfile.snapshot.layer_trigger_enabled),
+					'layer_trigger_height'				: utility.getint (profile.snapshot.layer_trigger_height,defaultProfile.snapshot.layer_trigger_height),
+					'layer_trigger_zmin'				: utility.getint (profile.snapshot.layer_trigger_zmin,defaultProfile.snapshot.layer_trigger_zmin),
+					'layer_trigger_on_extruding'		: utility.getbool(profile.snapshot.layer_trigger_on_extruding,defaultProfile.snapshot.layer_trigger_on_extruding),
+					'layer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.layer_trigger_on_extruding_start,defaultProfile.snapshot.layer_trigger_on_extruding_start),
+					'layer_trigger_on_primed'			: utility.getbool(profile.snapshot.layer_trigger_on_primed,defaultProfile.snapshot.layer_trigger_on_primed),
+					'layer_trigger_on_retracting'		: utility.getbool(profile.snapshot.layer_trigger_on_retracting,defaultProfile.snapshot.layer_trigger_on_retracting),
+					'layer_trigger_on_retracted'		: utility.getbool(profile.snapshot.layer_trigger_on_retracted,defaultProfile.snapshot.layer_trigger_on_retracted),
+					'layer_trigger_on_detracting'		: utility.getbool(profile.snapshot.layer_trigger_on_detracting,defaultProfile.snapshot.layer_trigger_on_detracting),
 					'archive' : utility.getbool(profile.snapshot.archive,defaultProfile.snapshot.archive ),
 					'delay' : utility.getint(profile.snapshot.delay,defaultProfile.snapshot.delay ),
 					'output_format' : utility.getstring(profile.snapshot.output_format,defaultProfile.snapshot.output_format ),
@@ -182,15 +232,42 @@ class Stabilization(object):
 class Snapshot(object):
 
 	def __init__(self,snapshot):
-		self.trigger_type = 'gcode'
-		self.length = 0.2
-		self.seconds = 30
+
+		#Initialize defaults
+		#Gcode Trigger
+		self.gcode_trigger_enabled		= True
+		self.gcode_trigger_on_extruding = True
+		self.gcode_trigger_on_extruding_start = True
+		self.gcode_trigger_on_primed = True
+		self.gcode_trigger_on_retracting = True
+		self.gcode_trigger_on_retracted = True
+		self.gcode_trigger_on_detracting = True
+		#Timer Trigger
+		self.timer_trigger_enabled = False
+		self.timer_trigger_seconds = 60
+		self.timer_trigger_on_extruding = True
+		self.timer_trigger_on_extruding_start = True
+		self.timer_trigger_on_primed = True
+		self.timer_trigger_on_retracting = False
+		self.timer_trigger_on_retracted = True
+		self.timer_trigger_on_detracting = True
+		#Layer Trigger
+		self.layer_trigger_enabled = True
+		self.layer_trigger_height = 0
+		self.layer_trigger_zmin = 0.5
+		self.layer_trigger_on_extruding = True
+		self.layer_trigger_on_extruding_start = True
+		self.layer_trigger_on_primed = False
+		self.layer_trigger_on_retracting = False
+		self.layer_trigger_on_retracted = False
+		self.layer_trigger_on_detracting = False
+		# other settings
 		self.archive = True
 		self.delay = 1000
 		self.retract_before_move = False
 		self.output_format = "jpg";
 		self.output_filename = "{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "./snapshots/{FILENAME}_{PRINTENDTIME}/"
+		self.output_directory = "./snapshots/{FILENAME}_{PRINTSTARTTIME}/"
 		self.cleanup_before_print = True
 		self.cleanup_after_print = False
 		self.cleanup_after_cancel = True
@@ -200,27 +277,49 @@ class Snapshot(object):
 		self.script_path = ""
 		
 		if(snapshot is not None):
-			self.trigger_type = utility.getstring(snapshot["trigger_type"],self.trigger_type)
-			self.length = utility.getfloat(snapshot["length"],self.length)
-			self.seconds = utility.getint(snapshot["seconds"],self.seconds)
-			self.archive = utility.getbool(snapshot["archive"],self.archive)
-			self.delay = utility.getint(snapshot["delay"],self.delay)
-			self.retract_before_move = utility.getbool(snapshot["retract_before_move"],self.retract_before_move)
-			self.output_format = utility.getstring(snapshot["output_format"],self.output_format )
-			self.output_filename = utility.getstring(snapshot["output_filename"],self.output_filename )
-			self.output_directory = utility.getstring(snapshot["output_directory"],self.output_directory )
-			self.cleanup_before_print = utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print )
-			self.cleanup_after_print = utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print )
-			self.cleanup_after_cancel = utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel )
-			self.cleanup_before_close = utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close )
-			self.cleanup_after_render	 = utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render )
-			self.cleanup_before_print = utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print)
-			self.cleanup_after_print = utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print)
-			self.cleanup_after_cancel = utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel)
-			self.cleanup_before_close = utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close)
-			self.cleanup_after_render = utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render)
-			self.custom_script_enabled = utility.getbool(snapshot["custom_script_enabled"],self.custom_script_enabled)
-			self.script_path = utility.getstring(snapshot["script_path"],self.script_path)
+			#Initialize all values according to the provided snapshot, use defaults if the values are null or incorrectly formatted
+			self.gcode_trigger_enabled				= utility.getbool(snapshot["gcode_trigger_enabled"],self.gcode_trigger_enabled)
+			self.gcode_trigger_on_extruding			= utility.getbool(snapshot["gcode_trigger_on_extruding"],self.gcode_trigger_on_extruding)
+			self.gcode_trigger_on_extruding_start	= utility.getbool(snapshot["gcode_trigger_on_extruding_start"],self.gcode_trigger_on_extruding_start)
+			self.gcode_trigger_on_primed			= utility.getbool(snapshot["gcode_trigger_on_primed"],self.gcode_trigger_on_primed)
+			self.gcode_trigger_on_retracting		= utility.getbool(snapshot["gcode_trigger_on_retracting"],self.gcode_trigger_on_retracting)
+			self.gcode_trigger_on_retracted			= utility.getbool(snapshot["gcode_trigger_on_retracted"],self.gcode_trigger_on_retracted)
+			self.gcode_trigger_on_detracting		= utility.getbool(snapshot["gcode_trigger_on_detracting"],self.gcode_trigger_on_detracting)
+			self.timer_trigger_enabled				= utility.getbool(snapshot["timer_trigger_enabled"],self.timer_trigger_enabled)
+			self.timer_trigger_seconds				= utility.getint(snapshot["timer_trigger_seconds"],self.timer_trigger_seconds)
+			self.timer_trigger_on_extruding			= utility.getbool(snapshot["timer_trigger_on_extruding"],self.timer_trigger_on_extruding)
+			self.timer_trigger_on_extruding_start	= utility.getbool(snapshot["timer_trigger_on_extruding_start"],self.timer_trigger_on_extruding_start)
+			self.timer_trigger_on_primed			= utility.getbool(snapshot["timer_trigger_on_primed"],self.timer_trigger_on_primed)
+			self.timer_trigger_on_retracting		= utility.getbool(snapshot["timer_trigger_on_retracting"],self.timer_trigger_on_retracting)
+			self.timer_trigger_on_retracted			= utility.getbool(snapshot["timer_trigger_on_retracted"],self.timer_trigger_on_retracted)
+			self.timer_trigger_on_detracting		= utility.getbool(snapshot["timer_trigger_on_detracting"],self.timer_trigger_on_detracting)
+			self.layer_trigger_enabled				= utility.getbool(snapshot["layer_trigger_enabled"],self.layer_trigger_enabled)
+			self.layer_trigger_height				= utility.getint(snapshot["layer_trigger_height"],self.layer_trigger_height)
+			self.layer_trigger_zmin					= utility.getint(snapshot["layer_trigger_zmin"],self.layer_trigger_zmin)
+			self.layer_trigger_on_extruding			= utility.getbool(snapshot["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
+			self.layer_trigger_on_extruding_start	= utility.getbool(snapshot["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)
+			self.layer_trigger_on_primed			= utility.getbool(snapshot["layer_trigger_on_primed"],self.layer_trigger_on_primed)
+			self.layer_trigger_on_retracting		= utility.getbool(snapshot["layer_trigger_on_retracting"],self.layer_trigger_on_retracting)
+			self.layer_trigger_on_retracted			= utility.getbool(snapshot["layer_trigger_on_retracted"],self.layer_trigger_on_retracted)
+			self.layer_trigger_on_detracting		= utility.getbool(snapshot["layer_trigger_on_detracting"],self.layer_trigger_on_detracting)
+			self.archive							= utility.getbool(snapshot["archive"],self.archive)
+			self.delay								= utility.getint(snapshot["delay"],self.delay)
+			self.retract_before_move				= utility.getbool(snapshot["retract_before_move"],self.retract_before_move)
+			self.output_format						= utility.getstring(snapshot["output_format"],self.output_format )
+			self.output_filename					= utility.getstring(snapshot["output_filename"],self.output_filename )
+			self.output_directory					= utility.getstring(snapshot["output_directory"],self.output_directory )
+			self.cleanup_before_print				= utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print )
+			self.cleanup_after_print				= utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print )
+			self.cleanup_after_cancel				= utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel )
+			self.cleanup_before_close				= utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close )
+			self.cleanup_after_render				= utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render )
+			self.cleanup_before_print				= utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print)
+			self.cleanup_after_print				= utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print)
+			self.cleanup_after_cancel				= utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel)
+			self.cleanup_before_close				= utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close)
+			self.cleanup_after_render				= utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render)
+			self.custom_script_enabled				= utility.getbool(snapshot["custom_script_enabled"],self.custom_script_enabled)
+			self.script_path						= utility.getstring(snapshot["script_path"],self.script_path)
 class Rendering(object):
 	def __init__(self,rendering):
 		self.enabled = True
@@ -302,7 +401,7 @@ class Camera(object):
 
 class Profile(object):
 	
-
+	
 	def __init__(self,profile):
 		self.name = "Default"
 		self.description = "Fixed XY at back left - relative stabilization (0,100)"
@@ -310,7 +409,7 @@ class Profile(object):
 		self.snapshot = Snapshot(None)
 		self.rendering = Rendering(None)
 		self.camera = Camera(None)
-		if(profile is not None):
+		if(profile is not None ):
 			self.name = utility.getstring(profile["name"],self.name)
 			self.description = utility.getstring(profile["description"],self.description)
 			self.stabilization = Stabilization(profile["stabilization"])

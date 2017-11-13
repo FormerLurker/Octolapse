@@ -1,502 +1,657 @@
-<form class="form-horizontal">
-  <div data-bind="with: settings.plugins.octolapse">
-    <h3>Plugin Settings</h3>
-    <span class="help-inline">
-      <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
-    </span>
-    <div class="control-group">
-      <label class="control-label">Enable Octolapse</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: is_octolapse_enabled" title="Enable or disable the plugin"/>Enabled
-        </label>
-      </div>
-    </div>
-    <h3>Select a profile to edit</h3>
-    <div class="control-group">
-      <label class="control-label">Profiles</label>
-      <div class="controls">
-        <select data-bind="foreach: profiles, value: current_profile_name">
-          <option data-bind="text : name, value : name"></option>
-        </select>
-      </div>
-    </div>
-    <div data-bind="foreach: profiles">
+<form class="form-horizontal" >
+  <div id="octoprint_settings">
+    <div data-bind="with: global_settings.settings.plugins.octolapse">
+      <h3>Plugin Settings</h3>
+      <span class="help-inline">
+        <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
+      </span>
       <div class="control-group">
-        <label class="control-label">Name</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: name"/>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: is_octolapse_enabled" title="Enable or disable the plugin"/>Enable Octolapse
+          </label>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label">Description</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: description"/>
-        </div>
-      </div>
-      <h3>X-Stabilization Options</h3>
-      <div class="control-group">
-        <label class="control-label" >Movement Speed</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: stabilization.x_movement_speed"/>
-        </div>
+      <div data-bind="visible: is_octolapse_enabled">
+        <h3>Select a profile to edit</h3>
         <div class="control-group">
-          <label class="control-label">Stabilization Type</label>
+          <label class="control-label">Profiles</label>
           <div class="controls">
-            <select data-bind="value: stabilization.x_type">
-              <option value="disabled">Disabled</option>
-              <option value="fixed_coordinate">Fixed (Millimeters)</option>
-              <option value="fixed_path">CSV Separated List of X Coordinates (Millimeters)</option>
-              <option value="relative">Relative to Bed(percent)</option>
-              <option value="relative_print">Relative to Print CSV(percent, per layer)</option>
-              <option value="relative_path">Relative CSV (percent).</option>
+            <select data-bind="foreach: profiles, value: current_profile_name">
+              <option data-bind="text : name, value : name"></option>
             </select>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label">Fixed Coordinate</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_coordinate"/>
+        <div data-bind="foreach: profiles">
+          <div class="control-group">
+            <label class="control-label">Name</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: name"/>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Fixed Path</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_path"/>
-            <input type="checkbox" data-bind="checked: stabilization.x_fixed_path_loop" />Loop
+          <div class="control-group">
+            <label class="control-label">Description</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: description"/>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Relative Coordinate</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative"/>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Relative Path</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative_path"/>
-            <input type="checkbox" data-bind="checked: stabilization.x_relative_path_loop" />Loop
-          </div>
-        </div>
+          <div id="octolapse_stabilization_x">
+            <h3>X-Stabilization Options</h3>
+            <div>
+              <div class="control-group">
+                <label class="control-label">Stabilization Type</label>
+                <div class="controls">
+                  <select data-bind="options: $parent.stabilization_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+                               optionsCaption: 'Select One...',
+                               value: stabilization.x_type"></select>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: stabilization.x_type() === 'fixed_coordinate'">
+                <label class="control-label">Fixed Coordinate</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_coordinate"/>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: stabilization.x_type() === 'fixed_path'">
+                <label class="control-label">Fixed Path</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: stabilization.x_fixed_path"/>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: stabilization.x_fixed_path_loop" />Loop
+                  </label>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: stabilization.x_type() === 'relative'">
+                <label class="control-label">Relative Coordinate</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative"/>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: stabilization.x_type() === 'relative_path'">
+                <label class="control-label">Relative Path</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: stabilization.x_relative_path"/>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: stabilization.x_relative_path_loop" />Loop
+                  </label>
+                </div>
+              </div>
 
-      </div>
-      <h3>Y-Stabilization Options</h3>
-      <div class="control-group">
-        <label class="control-label" for="stabilization.y_stabilization_value">Movement Speed</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: stabilization.y_movement_speed_mms"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Stabilization Type</label>
-        <div class="controls">
-          <select data-bind="value: stabilization.y_type">
-            <option value="disabled">Disabled</option>
-            <option value="fixed_coordinate">Fixed (Millimeters)</option>
-            <option value="fixed_path">CSV Separated List of Y Coordinates (Millimeters)</option>
-            <option value="relative">Relative to Bed(percent)</option>
-            <option value="relative_print">Relative to Print CSV(percent, per layer)</option>
-            <option value="relative_path">Relative CSV (percent).</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Fixed Coordinate</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_coordinate"/>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Fixed Path</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_path"/>
-            <input type="checkbox" data-bind="checked: stabilization.t_fixed_path_loop" />Loop
+          <div id="octolapse_stabilization_y">
+            <h3>Y-Stabilization Options</h3>
+            <div class="control-group">
+              <label class="control-label">Stabilization Type</label>
+              <div class="controls">
+                <select data-bind="options: $parent.stabilization_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+                               optionsCaption: 'Select One...',
+                               value: stabilization.y_type"></select>
+              </div>
+            </div>
+            <div class="control-group" data-bind="visible: stabilization.y_type() === 'fixed_coordinate'">
+              <label class="control-label">Fixed Coordinate</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_coordinate"/>
+              </div>
+            </div>
+            <div class="control-group" data-bind="visible: stabilization.y_type() === 'fixed_path'">
+              <label class="control-label">Fixed Path</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: stabilization.y_fixed_path"/>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: stabilization.t_fixed_path_loop" />Loop
+                </label>
+              </div>
+            </div>
+            <div class="control-group" data-bind="visible: stabilization.y_type() === 'relative'">
+              <label class="control-label">Relative Coordinate</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative"/>
+              </div>
+            </div>
+            <div class="control-group" data-bind="visible: stabilization.y_type() === 'relative_path'">
+              <label class="control-label">Relative Path</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative_path"/>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: stabilization.t_relative_path_loop" />Loop
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Relative Coordinate</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative"/>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Relative Path</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: stabilization.y_relative_path"/>
-            <input type="checkbox" data-bind="checked: stabilization.t_relative_path_loop" />Loop
-          </div>
-        </div>
-      </div>
-      <h3>Snapshots</h3>
-      <div class="control-group">
-        <label class="control-label">Trigger a snapshot at:</label>
-        <div class="controls">
-          <select data-bind="value: snapshot.trigger_type">
-            <option value="layer_change">Layer Change</option>
-            <option value="z_height_intervals">Z Height Intervals</option>
-            <option value="inserval_seconds">Second Intervals</option>
-            <option value="gcode">Custom Gcode</option>
-          </select>
-          <span class="help-inline">
-            <span class="label label-important">Attention</span> Could be in MM or % depending on the trigger type.  Ignored for layer change types.
-          </span>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Delay (Milliseconds) before taking a snapshot</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: snapshot.delay"/>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Use a custom script to take a snapshot</label>
-          <div class="controls">
-            <input type="checkbox" data-bind="checked: camera.custom_script_enabled" />Custom Script Enabled
-            <span class="help-inline">
-              <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
-            </span>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Script to run when taking a snapshot (full path)</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: snapshot.script_path"/>
-          </div>
-        </div>
+          <div id="octolapse_snapshot_triggers">
+            <h3>Snapshot Triggers</h3>
+            <div>
+              <label class="control-label">Snapshot On Gcode</label>
+              <div class="control-group">
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_enabled" />Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: snapshot.gcode_trigger_enabled">
+                <div class="controls">
+                  <small>
+                    <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
+                      <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
+                    </a>
+                  </small>
+                </div>
+                <div id="trigger_gcode_advanced" class="control-group hide">
+                  <div class="controls">
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_extruding" />Trigger On Extruding
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_extruding_start" />Trigger On Extruding Start
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_primed"/>Trigger On Extruder Primed
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_retracting" />Trigger On Filament Retract
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_retracted" />Trigger On Filament Retracted
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_on_detracting" />Trigger On Filament Detracting
+                    </label>
+                  </div>
+                </div>
+              </div>
 
+            </div>
+            <div>
+              <label class="control-label">Timer Trigger:</label>
+              <div class="control-group">
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.timer_trigger_enabled" />Enabled
+                  </label>
+                </div>
+                <div class="control-group" data-bind="visible: snapshot.timer_trigger_enabled">
+                  <label class="control-label">Seconds to Trigger</label>
+                  <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: snapshot.timer_trigger_seconds"/>
+                    <small>
+                      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
+                        <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
+                      </a>
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div id="trigger_timer_advanced" class="hide">
+                <div class="control-group">
+                  <div class="controls">
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_extruding" />Trigger On Extruding
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_extruding_start" />Trigger On Extruding Start
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_primed"/>Trigger On Extruder Primed
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_retracting" />Trigger On Filament Retract
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_retracted" />Trigger On Filament Retracted
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_on_detracting" />Trigger On Filament Detracting
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="control-label">Layer/Height Trigger:</label>
+              <div class="control-group">
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_enabled" />Enabled
+                  </label>
+                </div>
+                <div class="control-group" data-bind="visible: snapshot.layer_trigger_enabled">
+                  <div class="control-group">
+                    <label class="control-label">Trigger Height (0 for trigger at layer change)</label>
+                    <div class="controls">
+                      <input type="text" class="input-block-level" data-bind="value: snapshot.layer_trigger_height"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label">Minimum Z-Height Before Triggering</label>
+                    <div class="controls">
+                      <input type="text" class="input-block-level" data-bind="value: snapshot.layer_trigger_zmin"/>
+                    </div>
+                  </div>
+                  <div class="controls">
+                    <small>
+                      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_height_advanced.hide' }">
+                        <i class="fa fa-caret-right"></i> {{ _('Advanced Layer/Height Trigger Options') }}
+                      </a>
+                    </small>
+                  </div>
 
-        <div class="control-group">
-          <label class="control-label" >Output File Format</label>
-          <div class="controls">
-            <select data-bind="value: snapshot.output_format">
-              <option value="jpg">jpg</option>
-              <option value="gif">gif</option>
-              <option value="bmp">bmp</option>
-            </select>
+                </div>
+
+              </div>
+            </div>
+
+            <div id="trigger_height_advanced" class="hide">
+              <div class="control-group">
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_extruding" />Trigger On Extruding
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_extruding_start" />Trigger On Extruding Start
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_primed"/>Trigger On Extruder Primed
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_retracting" />Trigger On Filament Retract
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_retracted" />Trigger On Filament Retracted
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.layer_trigger_on_detracting" />Trigger On Filament Detracting
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Delay (Milliseconds) before taking a snapshot</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: snapshot.delay"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <small>
+              <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
+                <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
+              </a>
+            </small>
+          </div>
+          <div id="snapshot_trigger_advanced" class="control-group hide">
+            <div class="control-group">
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: camera.custom_script_enabled" />Custom Script Enabled
+                  <span class="help-inline">
+                    <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">A custom script that will capture a snapshot (full path)</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: snapshot.script_path"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" >Output File Format</label>
+              <div class="controls">
+                <select data-bind="value: snapshot.output_format">
+                  <option value="jpg">jpg</option>
+                  <option value="gif">gif</option>
+                  <option value="bmp">bmp</option>
+                </select>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Output File Name</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: snapshot.output_filename"/>
+                <span class="help-inline">
+                  <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+                </span>
+              </div>
+
+            </div>
+            <div class="control-group">
+              <label class="control-label">Output File Directory</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: snapshot.output_directory"/>
+                <span class="help-inline">
+                  <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+                </span>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Delete Snapshots Files:</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_before_print" title="Before Print Starts"/>Before Print Starts
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_print" title="After Print Completes"/>After Print Completes
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
+                </label>
+              </div>
+            </div>
+          </div>
+          <div id="octolapse_rendering">
+            <h3>Rendering Options</h3>
+            <div class="control-group">
+              <label class="control-label" >Frames per Second (FPS)</label>
+              <div class="controls">
+                <select data-bind="options: $parent.fps_calculation_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+                               optionsCaption: 'Select One...',
+                               value: rendering.fps_calculation_type"></select>
+              </div>
+            </div>
+            <div class="control-group"  data-bind="visible: rendering.fps_calculation_type() === 'static'">
+              <label class="control-label" >Static FPS</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: rendering.fps"/>
+              </div>
+            </div>
+            <div class="control-group"  data-bind="visible: rendering.fps_calculation_type() === 'duration'">
+              <label class="control-label" >Fixed Run Length in Seconds</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: rendering.run_length_seconds"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Sync Output with Timelapse Control</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: rendering.sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
+                </label>
+              </div>
+            </div>
+            <div class="control-group">
+
+              <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
+                <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
+              </a>
+
+            </div>
+            <div class="control-group hide" id="rendering-advanced">
+              <div class="control-group">
+                <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: rendering.max_fps"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" >Minimum FPS - calculated FPS can be no less than this value.</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: rendering.max_fps"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" >Output File Format</label>
+                <div class="controls">
+                  <select data-bind="value: rendering.output_format">
+                    <option value="mp4">MP4</option>
+                    <option value="mpeg">MPEG</option>
+                    <option value="gif">GIF</option>
+                  </select>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Output File Name</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: rendering.output_filename"/>
+                </div>
+                <span class="help-inline">
+                  <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+                </span>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Output File Directory</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: rendering.output_directory"/>
+                </div>
+                <span class="help-inline">
+                  <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+                </span>
+              </div>
+            </div>
+          </div>
+          <div id="octolapse_camera_settings">
+            <h4>Camera Settings</h4>
+            <div class="control-group">
+              <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: camera.address"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
+                <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
+              </a>
+            </div>
+            <div id="camera-advanced" class="control-group hide">
+              <div class="control-group">
+                <label class="control-label">Ignore any SSL errors at the camera address.</label>
+                <div class="controls">
+                  <input type="checkbox" data-bind="checked: camera.ignore_ssl_error" />Ignore SSL
+                  <span class="help-inline">
+                    <span class="label label-important">Attention</span>Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
+                  </span>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">If required, enter a username to be sent with the camera snapshot request</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.username"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">If required, enter a password to be sent with the camera snapshot request</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.password"/>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Brightness (0-255)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.brightness"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Contrast (0-255)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.contrast"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Saturation (0-255)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.saturation"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Auto White Balance</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: camera.white_balance_auto" title="Enable or disable auto white balance."/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Gain</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.gain"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Powerline Frequency</label>
+                <div class="controls">
+                  <select data-bind="value: camera.powerline_frequency">
+                    <option value="50">50</option>
+                    <option value="60">60</option>
+                  </select>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">White Balance Temeprature (in Kelvin)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.white_balance_temperature"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Sharpness (0-255)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.sharpness"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Backlight Compensation</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: camera.backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Powerline Frequency</label>
+                <div class="controls">
+                  <select data-bind="value: camera.powerline_frequency">
+                    <option value="50">50</option>
+                    <option value="60">60</option>
+                  </select>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Exposure Type</label>
+                <div class="controls">
+                  <select data-bind="value: camera.exposure_type">
+                    <option value="auto">Auto</option>
+                    <option value="manual">Manual</option>
+                    <option value="aperture_priority">Aperture Priority Mode</option>
+                  </select>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Exposure</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.exposure"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Exposure Auto Priority</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: camera.exposure_auto_priority_enabled" />Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Pan</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.pan"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Tilt</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.tilt"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Autofocus Enabled</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: camera.autofocus_enabled" title="Enable or disable autofocus."/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.focus"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Zoom</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.zoom"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Led 1 Mode</label>
+                <div class="controls">
+                  <select data-bind="value: camera.led1_mode">
+                    <option value="off">Off</option>
+                    <option value="on">On</option>
+                    <option value="blink">Blink</option>
+                    <option value="auto">Auto</option>
+                  </select>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Led 1 Frequency</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.led1_frequency"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Jpeg Quality</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.jpeg_quality"/>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label">Output File Name</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: snapshot.output_filename"/>
+        <div id="octolapse_printer">
+          <h3>Printer Settings</h3>
+          <div class="control-group">
+            <label class="control-label">Retraction Length</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.retract_length"/>
+            </div>
           </div>
-          <span class="help-inline">
-            <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-          </span>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Output File Directory</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: snapshot.output_directory"/>
+          <div class="control-group">
+            <label class="control-label">Retraction Speed</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.retract_speed"/>
+            </div>
           </div>
-          <span class="help-inline">
-            <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-          </span>
-        </div>
-
-        
-        <div class="control-group">
-          <label class="control-label">Delete Snapshots Files:</label>
-          <div class="controls">
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: snapshot.cleanup_before_print" title="Before Print Starts"/>Before Print Starts
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_print" title="After Print Completes"/>After Print Completes
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: snapshot.cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
-            </label>
+          <div class="control-group">
+            <label class="control-label">Movement Speed</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.movement_speed"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Snapshot Command</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.snapshot_command"/>
+            </div>
           </div>
         </div>
-
-      </div>
-      <h3>Rendering Options</h3>
-      <div class="control-group">
-        <label class="control-label" >Frames per Second (FPS)</label>
-        <div class="controls">
-          <select data-bind="value: rendering.fps_calculation_type">
-            <option value="static">Static FPS (higher FPS = shorter videos)</option>
-            <option value="duration">Fixed Run Length (FPS = Total Frames/Run Length Seconds)</option>
-          </select>
-        </div>
-      </div>
-
-
-      <div class="control-group">
-        <label class="control-label" >Static FPS</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.fps"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Fixed Run Length in Seconds</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.run_length_seconds"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.max_fps"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Minimum FPS - calculated FPS can be no less than this value.</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.max_fps"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Output File Format</label>
-        <div class="controls">
-          <select data-bind="value: rendering.output_format">
-            <option value="mp4">MP4</option>
-            <option value="mpeg">MPEG</option>
-            <option value="gif">GIF</option>
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Output File Name</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.output_filename"/>
-        </div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Output File Directory</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: rendering.output_directory"/>
-        </div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
-      </div>
-      <div class="control-group">
-          <label class="control-label">Sync Output with Timelapse Control</label>
-          <div class="controls">
-            <label class="checkbox">
-              <input type="checkbox" data-bind="checked: rendering.sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
-            </label>
-          </div>
-        </div>
-
-      <h4>Camera Settings</h4>
-      <div class="control-group">
-        <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.address"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Ignore any SSL errors at the camera address.</label>
-        <div class="controls">
-          <input type="checkbox" data-bind="checked: camera.ignore_ssl_error" />Ignore SSL
-          <span class="help-inline">
-            <span class="label label-important">Attention</span>Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
-          </span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">If required, enter a username to be sent with the camera snapshot request</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.username"/>
-        </div>
-      </div>
-
-      <div class="control-group">
-        <label class="control-label">If required, enter a password to be sent with the camera snapshot request</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.password"/>
-        </div>
-      </div>
-
-      <div class="control-group">
-        <label class="control-label">Brightness (0-255)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.brightness"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Contrast (0-255)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.contrast"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Saturation (0-255)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.saturation"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Auto White Balance</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: camera.white_balance_auto" title="Enable or disable auto white balance."/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Gain</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.gain"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Powerline Frequency</label>
-        <div class="controls">
-          <select data-bind="value: camera.powerline_frequency">
-            <option value="50">50</option>
-            <option value="60">60</option>
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">White Balance Temeprature (in Kelvin)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.white_balance_temperature"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Sharpness (0-255)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.sharpness"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Backlight Compensation</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: camera.backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Powerline Frequency</label>
-        <div class="controls">
-          <select data-bind="value: camera.powerline_frequency">
-            <option value="50">50</option>
-            <option value="60">60</option>
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Exposure Type</label>
-        <div class="controls">
-          <select data-bind="value: camera.exposure_type">
-            <option value="auto">Auto</option>
-            <option value="manual">Manual</option>
-            <option value="aperture_priority">Aperture Priority Mode</option>
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Exposure</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.exposure"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Exposure Auto Priority</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: camera.exposure_auto_priority_enabled" />Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Pan</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.pan"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Tilt</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.tilt"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Autofocus Enabled</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: camera.autofocus_enabled" title="Enable or disable autofocus."/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.focus"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Zoom</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.zoom"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Led 1 Mode</label>
-        <div class="controls">
-          <select data-bind="value: camera.led1_mode">
-            <option value="off">Off</option>
-            <option value="on">On</option>
-            <option value="blink">Blink</option>
-            <option value="auto">Auto</option>
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Led 1 Frequency</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.led1_frequency"/>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Jpeg Quality</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: camera.jpeg_quality"/>
-        </div>
-      </div>
-
-    </div>
-    <!--End profile for loop-->
-    <h3>Printer Settings</h3>
-    <div class="control-group">
-      <label class="control-label">Retraction Length</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: printer.retract_length"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Retraction Speed</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: printer.retract_speed"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Movement Speed</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: printer.movement_speed"/>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Snapshot Command</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: printer.snapshot_command"/>
       </div>
     </div>
   </div>
 </form>
-
-

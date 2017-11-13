@@ -6,10 +6,10 @@ import operator
 class SnapshotGcode(object):
 	def __init__(self):
 		self.Commands = []
-		self.X = 0
-		self.Y = 0
-		self.Z = 0
-		self.Layer = 0
+		self.X = None
+		self.Y = None
+
+		
 
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
@@ -31,7 +31,9 @@ class CommandParameters(collections.MutableMapping):
 
 
     def __getitem__(self,key):
-        return self.store[self.__keytransform__(key)]
+		if(self.__keytransform__(key) in self.store.keys()):
+			return self.store[self.__keytransform__(key)]
+		return None
 
     def __setitem__(self,key,value):
 
@@ -157,52 +159,52 @@ class Command(object):
             return False  
 
 class Commands(object):
-    G0 = Command(
-    name="Rapid Linear Move"
-    ,command="G0"
-    ,regex="(?i)^[gG0]{1,3}(?:\s+x-?(?P<x>[0-9.]{1,15})|\s+y-?(?P<y>[0-9.]{1,15})|\s+z-?(?P<z>[0-9.]{1,15})|\s+e-?(?P<e>[0-9.]{1,15})|\s+f-?(?P<f>[0-9.]{1,15}))*$"
-    ,displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentTemplate}"
-    ,commentTemplate="{Comment}"
-    ,commentSeperator=";"
-    ,parameters = [ CommandParameter(name="X",group=1),
-                    CommandParameter(name="Y",group=2),
-                    CommandParameter(name="Z",group=3),
-                    CommandParameter(name="E",group=4),
-                    CommandParameter(name="F",group=5)
-                    ]
-        )
-    G1 = Command(
-    name="Linear Move"
-    ,command="G1"
-    ,regex="^[gG1]{1,3}(?:\s+x-?(?P<x>[0-9.]{1,15})|\s+y-?(?P<y>[0-9.]{1,15})|\s+z-?(?P<z>[0-9.]{1,15})|\s+e-?(?P<e>[0-9.]{1,15})|\s+f-?(?P<f>[0-9.]{1,15}))*$"
-    ,displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{CommentTemplate}"
-    ,parameters = [CommandParameter("X",group=1),
-                    CommandParameter("Y",group=2),
-                    CommandParameter("Z",group=3),
-                    CommandParameter("E",group=4),
-                    CommandParameter("F",group=5)
-                    ]
-        )
-    G28 = Command(
-	    name="Go To Origin"
-	    ,command="G28"
-	    ,regex="(?i)^G28"
-	    ,displayTemplate="G28 - Go to Origin{Comment}"
-        ,parameters = [])
-    G90 = Command(
-	    name="Absolute Coordinates"
-	    ,command="G90"
-	    ,regex="(?i)^G90"
-	    ,displayTemplate="G90 - Absolute Coordinates{Comment}"
-        ,parameters = [])
-    G91 = Command(
+	G0 = Command(
+	name="Rapid Linear Move"
+	,command="G0"
+	,regex="(?i)^[gG0]{1,3}(?:\s+x(?P<x>-?[0-9.]{1,15})|\s+y(?P<y>-?[0-9.]{1,15})|\s+z(?P<z>-?[0-9.]{1,15})|\s+e(?P<e>-?[0-9.]{1,15})|\s+f?(?P<f>-?[0-9.]{1,15}))*$"
+	,displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentTemplate}"
+	,commentTemplate="{Comment}"
+	,commentSeperator=";"
+	,parameters = [ CommandParameter(name="X",group=1),
+					CommandParameter(name="Y",group=2),
+					CommandParameter(name="Z",group=3),
+					CommandParameter(name="E",group=4),
+					CommandParameter(name="F",group=5)
+					]
+		)
+	G1 = Command(
+	name="Linear Move"
+	,command="G1"
+	,regex="(?i)^[gG1]{1,3}(?:\s+x(?P<x>-?[0-9.]{1,15})|\s+y(?P<y>-?[0-9.]{1,15})|\s+z(?P<z>-?[0-9.]{1,15})|\s+e(?P<e>-?[0-9.]{1,15})|\s+f?(?P<f>-?[0-9.]{1,15}))*$"
+	,displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{CommentTemplate}"
+	,parameters = [CommandParameter("X",group=1),
+					CommandParameter("Y",group=2),
+					CommandParameter("Z",group=3),
+					CommandParameter("E",group=4),
+					CommandParameter("F",group=5)
+					]
+		)
+	G28 = Command(
+		name="Go To Origin"
+		,command="G28"
+		,regex="(?i)^G28"
+		,displayTemplate="G28 - Go to Origin{Comment}"
+		,parameters = [])
+	G90 = Command(
+		name="Absolute Coordinates"
+		,command="G90"
+		,regex="(?i)^G90"
+		,displayTemplate="G90 - Absolute Coordinates{Comment}"
+		,parameters = [])
+	G91 = Command(
 	    name="Relative Coordinates"
 	    ,command="G91"
 	    ,regex="'(?i)^G91'"
 	    ,displayTemplate="G91 - Relative Coordinates{Comment}"
         ,parameters = [])
 
-    CommandsDictionary = {
+	CommandsDictionary = {
 	    G0.Command:G0,
 	    G1.Command:G1,
 	    G28.Command:G28,
@@ -210,13 +212,11 @@ class Commands(object):
         G91.Command:G91
     }
 
-    def GetCommand(self, code):
-        
-        code = GetGcodeFromString(code)
-        if (command in self.CommandsDictionary.keys()):
-            return self.CommandsDictionary[command]
-        
-        return None
+	def GetCommand(self, code):
+		command = GetGcodeFromString(code)
+		if (command in self.CommandsDictionary.keys()):
+			return self.CommandsDictionary[command]
+		return None
 
 def GetGcodeFromString(commandString):
 	command = commandString.strip().split(' ', 1)[0].upper()
@@ -380,17 +380,21 @@ class GCode(object):
 			raise NotImplementedError
 		self.CheckY(yCoord)
 		return yCoord
-	def GetSnapshotGcode(self):
+	def GetSnapshotGcode(self, position, extruder):
 		newSnapshotGcode = SnapshotGcode()
-		if(self.Profile.snapshot.retract_before_move):
-			newSnapshotGcode.Commands.append(GetRetractGCode())
+		hasRetracted = False
+		if(self.Profile.snapshot.retract_before_move and not extruder.IsRetracted):
+			newSnapshotGcode.append(GetRetractGCode())
+			hasRetracted = True
 		for cmd in self.Printer.snapshot_gcode:
 			if(cmd.lstrip().startswith(self.Printer.snapshot_command)):
 				return "; The snapshot gcode cannot contain the snapshot command!";
 			newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
 			newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
 			newSnapshotGcode.Commands.append(cmd.format(newSnapshotGcode.X, newSnapshotGcode.Y,self.Printer.movement_speed,self.Profile.snapshot.delay))
-		if(self.Profile.snapshot.retract_before_move):
+		#Move back to previous position
+		newSnapshotGcode.Commands.append("G0 X{0} Y{1}; Return to previous position".format(position.X,position.Y))
+		if(hasRetracted):
 			newSnapshotGcode.Commands.append(GetDetractGcode()) 
 		return newSnapshotGcode
 	#

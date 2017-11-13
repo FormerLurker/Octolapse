@@ -2,8 +2,8 @@ class Extruder(object):
 	"""The extruder monitor only works with relative extruder values"""
 	def __init__(self):
 		
-		self.ExtrusionLengthTotal = 0.0,
-		self.__ExtrusionLengthTotalPrevious = 0.0,
+		self.ExtrusionLengthTotal = 0.0
+		self.__ExtrusionLengthTotalPrevious = 0.0
 		self.Extruded = 0.0
 		self.RetractionLength = 0.0
 		self.__RetractionLengthPrevious = 0.0
@@ -19,8 +19,8 @@ class Extruder(object):
 		self.__E = 0.0
 		
 	def Reset(self):
-		self.ExtrusionLengthTotal = 0.0,
-		self.__ExtrusionLengthTotalPrevious = 0.0,
+		self.ExtrusionLengthTotal = 0.0
+		self.__ExtrusionLengthTotalPrevious = 0.0
 		self.Extruded = 0.0
 		self.RetractionLength = 0.0
 		self.__RetractionLengthPrevious = 0.0
@@ -37,14 +37,16 @@ class Extruder(object):
 
 	# Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
 	def Update(self,e):
+		if(e is None):
+			e=0.0
 		self.__E = e
 		# Record the previous values
 		self.__ExtrusionLengthTotalPrevious = self.ExtrusionLengthTotal
 		self.__RetractionLengthPrevious = self.__RetractionLengthPrevious 
 		self.__IsExtrudingPrevious = self.IsExtruding
-
+		
 		# Update ExtrusionTotal,RetractionLength and ExtrusionLength
-		self.ExtrusionLengthTotal += __E;
+		self.ExtrusionLengthTotal += self.__E;
 		amountExtruded = self.__E + self.__RetractionLengthPrevious
 		if(amountExtruded > 0):
 			self.ExtrusionLength += amountExtruded
@@ -64,23 +66,28 @@ class Extruder(object):
 		self.IsDetracting = True if (self.__RetractionLengthPrevious<0 and self.__e + self.__RetractionLengthPrevious == 0) else False
 		
 	def IsTriggered(self, options):
-		if (options.OnExtruding and self.IsExtruding
-			or options.OnExtrudingStart and self.IsExtrudingStart
-			or options.OnPrimed and self.IsPriment
-			or options.OnRetracting and self.IsRetracting
-			or options.OnRetracted and self.IsRetracted
-			or options.OnDetracting and self.IsDetracting):
+		if (
+			(options.OnExtruding and self.IsExtruding)
+			or (options.OnExtrudingStart and self.IsExtrudingStart)
+			or (options.OnPrimed and self.IsPrimed)
+			or (options.OnRetracting and self.IsRetracting)
+			or (options.OnRetracted and self.IsRetracted)
+			or (options.OnDetracting and self.IsDetracting)
+		):
+			print ("Octoprint - Extruder Triggered")
 			return True
+		print ("Octoprint - Extruder is NOT triggering")
 		return False
 
 
+
 class ExtruderTriggers(object):
-	def __init__(self):
-		self.OnExtruding = True
-		self.OnExtrudingStart = True
-		self.OnPrimed = False
-		self.OnRetracting = False
-		self.OnRetracted = True
-		self.OnDetracting = True
+	def __init__(self,onExtruding,OnExtrudingStart,OnPrimed,OnRetracting,OnRetracted,OnDetracting):
+		self.OnExtruding = onExtruding
+		self.OnExtrudingStart = OnExtrudingStart
+		self.OnPrimed = OnPrimed
+		self.OnRetracting = OnRetracting
+		self.OnRetracted = OnRetracted
+		self.OnDetracting = OnDetracting
 
 		
