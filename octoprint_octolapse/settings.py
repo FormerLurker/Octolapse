@@ -46,7 +46,8 @@ def GetOctoprintSettings(settings):
 				'retract_speed' : utility.getint(settings.printer.retract_speed,defaults.printer.retract_speed),
 				'movement_speed' : utility.getint(settings.printer.movement_speed,defaults.printer.movement_speed),
 				'snapshot_command' :  utility.getstring(settings.printer.snapshot_command,defaults.printer.snapshot_command),
-				'snapshot_gcode' : utility.getstring(settings.printer.snapshot_gcode,defaults.printer.snapshot_gcode)
+				'snapshot_gcode' : utility.getstring(settings.printer.snapshot_gcode,defaults.printer.snapshot_gcode),
+				'is_e_relative' : utility.getbool(settings.printer.is_e_relative, defaults.printer.is_e_relative)
 			},
 			'profiles' : []
 		}
@@ -175,14 +176,15 @@ class Printer(object):
 		self.retract_speed = 3600
 		self.movement_speed = 3600
 		self.snapshot_command = 'snap'
-		self.snapshot_gcode = [ "G90; abs coord","G0 X{0:f} Y{1:f} F{2:d}; Move fast","M400; Wait for command to finish","G4 P{3:d} ; Wait a bit longer to allow the camera to stabilize" ]
+		self.snapshot_gcode = [ "G90;abs","G0 X{0:f} Y{1:f} F{2:d};Move","G4 P{3:d};Snap here","M400;End-Octolapse-Command" ]
+		self.is_e_relative = True
 		if(printer is not None):
 			self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
 			self.retract_speed = utility.getint(printer["retract_speed"],self.retract_speed)
 			self.movement_speed = utility.getint(printer["movement_speed"],self.movement_speed)
 			self.snapshot_command = utility.getstring(printer["snapshot_command"],self.snapshot_command)
 			self.snapshot_gcode = utility.getstring(printer["snapshot_gcode"],self.snapshot_gcode)
-		
+			self.is_e_relative = utility.getbool(printer["is_e_relative"],self.is_e_relative)
 class Stabilization(object):
 
 	def __init__(self,stabilization):

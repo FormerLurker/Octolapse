@@ -1,47 +1,55 @@
 from .extruder import *
 from .gcode import *
 from .settings import *
-import time
 
+
+import time
+def IsSnapshotCommand(command, snapshotCommand):
+		commandName = GetGcodeFromString(command)
+		snapshotCommandName = GetGcodeFromString(snapshotCommand)
+		return commandName == snapshotCommandName
 class GcodeTrigger(object):
 	"""Used to monitor gcode for a specified command."""
-	def __init__(self, extruderTriggers, command):
-		self.Extruder = Extruder()
+	def __init__(self, extruderTriggers, octoprintLogger,command):
+		self.Logger = octoprintLogger
+		self.Extruder = Extruder(octoprintLogger)
 		self.IsTriggered = False
 		self.Command = command
 		self.IsTriggered = False
-		self.__GcodeTriggerWait = False
+		self.WaitingToTrigger = False
 		self.ExtruderTriggers = extruderTriggers
-
-	def Reset():
+	
+	def Reset(self):
 		self.IsTriggered = False
 		self.HasSeenCode = False
 		self.Extruder.Reset()
 	def Update(self, position,commandName):
 		"""If the provided command matches the trigger command, sets IsTriggered to true, else false"""
 		self.IsTriggered = False
-		self.Extruder.Update(position.E)
-		#print("Octolapse - TriggerCheck:{0:s} -  {1:s}".format(commandName,self.Command))
-		if (commandName == self.Command):
-			print("Octolapse - Snap Command Found")
-			self.__GcodeTriggerWait = True
-		if(self.__GcodeTriggerWait == True):
+		self.Extruder.Update(position)
+		if (IsSnapshotCommand(commandName,self.Command)):
+			self.WaitingToTrigger = True
+		if(self.WaitingToTrigger == True):
 			if(self.Extruder.IsTriggered(self.ExtruderTriggers)):
 				self.IsTriggered = True
-				self.__GcodeTriggerWait = False
-				print("Octolapse - Triggered!!!!!!!!!!!!!!!!!!!!!!!")
+				self.WaitingToTrigger = False
+				self.Logger.info("GcodeTrigger - Triggering.")
 			else:
-				print("Octolapse - Triggered, waiting for exturder ")
+				self.Logger.info("GcodeTrigger - Triggering, waiting on exturder.")
 
 class LayerTrigger(object):
 	
-	def __init__( self,extruderTriggers, zMin, heightIncrement = None ):
+	def __init__( self,extruderTriggers, octoprintLogger,zMin, heightIncrement = None ):
 		#utilities and profiles
-		self.Extruder = Extruder()
+		self.Logger = octoprintLogger
+		self.Extruder = Extruder(octoprintLogger)
 		self.ExtruderTriggers = extruderTriggers
 		# Configuration Variables
 		self.ZMin = zMin
 		self.HeightIncrement = heightIncrement
+		if(heightIncrement == 0):
+			self.HeightIncrement = None
+		
 		# State Tracking Vars
 		self.Height = 0
 		self.__HeightPrevious = 0
@@ -81,7 +89,7 @@ class LayerTrigger(object):
 		self.IsTriggered = False
 		# Update the extruder monitor
 		# This must be done every time, so do it first
-		self.Extruder.Update(position.E)
+		self.Extruder.Update(position)
 
 		# save any previous values that will be needed later
 		self.__HeightPrevious = self.Height
@@ -111,28 +119,40 @@ class LayerTrigger(object):
 			self.IsHeightChange  = True
 		else:
 			self.IsHeightChange = False
-
-		if(HeightIncrement is not None and HeightIncrement > 0):
-			if(self.IsHeightChange):
-				self.__HeightChangeWait = True
-			if(self.__HeightChangeWait and self.Extruder.IsTriggered(self.ExtruderTriggers)):
-				self.__HeightChangeWait = False
-				self.IsTriggered = self.IsHeightChange
+		if(self.HasReachedZMin):
+			if(self.HeightIncrement is not None and self.HeightIncrement > 0):
+				if(self.IsHeightChange):
+					self.__HeightChangeWait = True
+				if(self.__HeightChangeWait and self.Extruder.IsTriggered(self.ExtruderTriggers)):
+					self.__HeightChangeWait = False
+					self.IsTriggered = True
+					self.Logger.info("HeightTrigger - Triggering.")
+				else:
+					self.Logger.info("HeightTrigger - Is triggering, waiting on extruder.")
+			else:
+				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers)
+				if(self.IsLayerChange):
+					if(self.__LayerChangeWait == False and not isTriggered):
+						self.Logger.info("LayerTrigger - Triggering, waiting on extruder.")
+					self.__LayerChangeWait = True
+				if(self.__LayerChangeWait and isTriggered):
+					self.__LayerChangeWait = False
+					self.IsTriggered = True
+					self.Logger.info("LayerTrigger - Triggering.")
+				
 		else:
-			if(self.IsLayerChange):
-				self.__LayerChangeWait = True
-			if(self.__LayerChangeWait and self.Extruder.IsTriggered(self.ExtruderTriggers)):
-				self.__LayerChangeWait = False
-				self.IsTriggered = self.IsLayerChange
+			self.Logger.info("LayerTrigger - ZMin not reached.")
 
 class TimerTrigger(object):
 	
-	def __init__(self,extruderTriggers,intervalSeconds):
+	def __init__(self,extruderTriggers,octoprintLogger,intervalSeconds):
+		self.Logger = octoprintLogger
+		self.Extruder = Extruder(octoprintLogger)
 		self.ExtruderTriggers = extruderTriggers
 		self.IntervalSeconds = intervalSeconds
-		self.Extruder = Extruder()
+		
 		self.LastTriggerTime = None
-		self.IntervalSeconds = 60.0
+		self.IntervalSeconds = intervalSeconds
 		self.TriggeredCount = 0
 		self.IsTriggered = False
 		self.PauseTime = None
@@ -149,18 +169,24 @@ class TimerTrigger(object):
 
 		# record the current time to keep things consistant
 		currentTime = time.time()
+
 		# update the exturder
-		self.Extruder.Update(position.E)
+		self.Extruder.Update(position)
 		# if the last trigger time is null, set it now.
 		if(self.LastTriggerTime is None):
 			self.LastTriggerTime = currentTime
 
 		if(self.PauseTime is not None):
+			self.Logger.info("TimerTrigger - The print was paused, adjusting the timer to compensate.  LastTriggerTime:{0}, PauseTime:{1}, CurrentTime:{2} ".format(self.LastTriggerTime, self.PauseTime, currentTime))
 			# Keep the proper interval if the print is paused
 			self.LastTriggerTime = currentTime - (self.PauseTime - self.LastTriggerTime)
-		
+			self.Logger.info("TimerTrigger - New LastTriggerTime:{0}".format(self.LastTriggerTime))
+			self.PauseTime = None
+
+		self.Logger.info('TimerTrigger - {0} second interval, {1} seconds elapsed, {2} seconds to trigger'.format(self.IntervalSeconds,currentTime-self.LastTriggerTime, self.IntervalSeconds- (currentTime-self.LastTriggerTime)))
 		# see if enough time has elapsed since the last trigger 
-		if(currentTime - lastTriggerTime > self.IntervalSeconds):
+		if(currentTime - self.LastTriggerTime > self.IntervalSeconds):
+			
 			# see if the exturder is in the right position
 			if(self.Extruder.IsTriggered(self.ExtruderTriggers)):
 				# triggered!  Update the counter
@@ -168,9 +194,13 @@ class TimerTrigger(object):
 				# Update the last trigger time.
 				self.LastTriggerTime = currentTime
 				# return true
-				IsTriggered = True
+				self.IsTriggered = True
+				self.Logger.info('TimerTrigger - Triggering.')
+			else:
+				self.Logger.info('TimerTrigger - Triggering, waiting for extruder')
+
 	# used to reset the triggers, if we want to do that for any reason.
 	def Reset(self):
 		self.IsTriggered=False
-		LastTriggerTime = None
+		self.LastTriggerTime = None
 		self.Extruder.Reset()

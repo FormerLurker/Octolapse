@@ -1,3 +1,5 @@
+FLOAT_MATH_EQUALITY_RANGE = 0.000001
+
 def getfloat(value,default):
 	try:
 		return float(value)

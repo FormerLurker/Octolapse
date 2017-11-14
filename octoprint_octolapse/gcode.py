@@ -9,8 +9,6 @@ class SnapshotGcode(object):
 		self.X = None
 		self.Y = None
 
-		
-
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
         if(parameter is None):
@@ -185,6 +183,29 @@ class Commands(object):
 					CommandParameter("F",group=5)
 					]
 		)
+	G92 = Command(
+	name="Set Absolute Position"
+	,command="G92"
+	,regex="(?i)^[gG92]{1,3}(?:\s+x(?P<x>-?[0-9.]{1,15})|\s+y(?P<y>-?[0-9.]{1,15})|\s+z(?P<z>-?[0-9.]{1,15})|\s+e(?P<e>-?[0-9.]{1,15}))*$"
+	,displayTemplate="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{CommentTemplate}"
+	,parameters = [CommandParameter("X",group=1),
+					CommandParameter("Y",group=2),
+					CommandParameter("Z",group=3),
+					CommandParameter("E",group=4)
+					]
+		)
+	M82 = Command(
+		name="Set Extruder Relative Mode"
+		,command="M82"
+		,regex="(?i)^M82"
+		,displayTemplate="M82 - Set Extruder Relative Mode{Comment}"
+		,parameters = [])
+	M83 = Command(
+		name="Set Extruder Absolute Mode"
+		,command="M83"
+		,regex="(?i)^M83"
+		,displayTemplate="M83 - Set Extruder Absolute Mode{Comment}"
+		,parameters = [])
 	G28 = Command(
 		name="Go To Origin"
 		,command="G28"
@@ -250,7 +271,8 @@ class GCode(object):
 	
 	CurrentXPathIndex = 0
 	CurrentYPathIndex = 0
-	def __init__(self,printer,profile,octoprint_printer_profile):
+	def __init__(self,printer,profile,octoprint_printer_profile,octoprintLogger):
+		self.Logger = octoprintLogger
 		self.Printer = printer
 		self.Profile = profile
 		self.OctoprintPrinterProfile = octoprint_printer_profile
@@ -383,23 +405,41 @@ class GCode(object):
 	def GetSnapshotGcode(self, position, extruder):
 		newSnapshotGcode = SnapshotGcode()
 		hasRetracted = False
+
+		if(position.IsRelative):
+			newSnapshotGcode.append("G90");
 		if(self.Profile.snapshot.retract_before_move and not extruder.IsRetracted):
 			newSnapshotGcode.append(GetRetractGCode())
 			hasRetracted = True
-		for cmd in self.Printer.snapshot_gcode:
-			if(cmd.lstrip().startswith(self.Printer.snapshot_command)):
-				return "; The snapshot gcode cannot contain the snapshot command!";
-			newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
-			newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
-			newSnapshotGcode.Commands.append(cmd.format(newSnapshotGcode.X, newSnapshotGcode.Y,self.Printer.movement_speed,self.Profile.snapshot.delay))
-		#Move back to previous position
-		newSnapshotGcode.Commands.append("G0 X{0} Y{1}; Return to previous position".format(position.X,position.Y))
+		
+		#for cmd in self.Printer.snapshot_gcode:
+		#	if(cmd.lstrip().startswith(self.Printer.snapshot_command)):
+		#		self.Logger.error("Gcode - The snapshot gcode cannot contain the snapshot command.  This would cause infinite recursion!")
+		#		return None
+		#
+		newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
+		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
+		
+		newSnapshotGcode.Commands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
+		newSnapshotGcode.Commands.append(self.GetDelayGcode())
+#Move back to previous position
+		if(position.XPrevious is not None and position.YPrevious is not None):
+			newSnapshotGcode.Commands.append(self.GetMoveGcode(position.XPrevious,position.YPrevious))
 		if(hasRetracted):
-			newSnapshotGcode.Commands.append(GetDetractGcode()) 
+			newSnapshotGcode.Commands.append(self.GetDetractGcode())
+		if(position.IsRelative):
+			newSnapshotGcode.append("G91");
+		
 		return newSnapshotGcode
 	#
+	def GetDelayGcode(self):
+		return "G4 P{0:d}".format(self.Profile.snapshot.delay)
+	
+	def GetMoveGcode(self,x,y):
+		return "G0 X{0:.3f} Y{1:.3f} F{2:.3f}".format(x,y,self.Printer.movement_speed)
+	
 	def GetRetractGcode(self):
-		return "G1 E{0:f} F{1:f}".format(self.Printer.retract_length,self.Printer.retract_speed)
+		return "G1 E{0:.3f} F{1:.3f}".format(self.Printer.retract_length,self.Printer.retract_speed)
 	#
 	def GetDetractGcode(self):
-		return "G1 E{0:f} F{1:f}".format(-1* self.Printer.retract_length,self.Printer.retract_speed)
+		return "G1 E{0:.3f} F{1:.3f}".format(-1* self.Printer.retract_length,self.Printer.retract_speed)
