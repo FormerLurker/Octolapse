@@ -200,7 +200,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or self.Triggers is None
 			or len(self.Triggers)<1
 			or self._printer is None
-			or not self._printer.is_printing()):
+			or not self._printer.snap()):
 			return cmd
 
 		snapshotCommands = []

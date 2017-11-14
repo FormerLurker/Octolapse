@@ -447,7 +447,7 @@ class GCode(object):
 		newSnapshotGcode.Commands.append(self.GetDelayGcode())
 		#Move back to previous position
 		if(position.XPrevious is not None and position.YPrevious is not None):
-			newSnapshotGcode.Commands.append(self.GetMoveGcode(position.XPrevious,position.YPrevious))
+			newSnapshotGcode.Commands.append(self.GetMoveGcode(position.X,position.Y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
 			if(not isRelativeLocal):
