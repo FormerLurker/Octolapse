@@ -11,6 +11,7 @@ from .position import *
 from octoprint.events import eventManager, Events
 from .trigger import *
 import itertools
+from .utility import *
 
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
@@ -26,9 +27,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings = None
 		self.Triggers = []
 		self.Position = None
-		self.__EndSnapshotCommand = None
+		self.__EndSnapshotCommands = []
 		self.LastSnapshotRequestTime = None
+		self.IsSnapshotQueued = False
 		self.IsPausedByOctolapse = False
+		self.SnapshotCount = 0
 	##~~ After Startup
 	def on_after_startup(self):
 		self.reload_settings()
@@ -99,7 +102,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnPrintStart(self):
 
 		self.reload_settings()
-		
+		self.SnapshotCount = 0
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
 		# create the triggers for this print
@@ -147,7 +150,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				,snapshot.layer_trigger_on_retracting
 				,snapshot.layer_trigger_on_retracted
 				,snapshot.layer_trigger_on_detracting)
-			self.Triggers.append(LayerTrigger(layerExtruderTriggers,self._logger,snapshot.layer_trigger_zmin, snapshot.layer_trigger_height))
+			self.Triggers.append(LayerTrigger(layerExtruderTriggers,self._logger,snapshot.layer_trigger_zmin, self.Settings.printer.z_hop, snapshot.layer_trigger_height))
 		# If the layer trigger is enabled, add it
 		if(snapshot.timer_trigger_enabled):
 			#Configure the extruder triggers
@@ -173,11 +176,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def OnPrintEnd(self):
 		self.ClearTriggers()
-		if(self.SnapshotCommandsSending):
-			self.TakeSnapshot()
-		self.SnapshotCommandsSending = False
-		self.WaitingForSnapshotResponse = False
+		#self.TakeSnapshot()
 		self.CaptureSnapshot.SetPrintEndTime(time.time())
+		for trigger in self.Triggers:
+			trigger.Reset()
 
 	def CurrentlyPrintingFileName(self):
 		if(self._printer is not None):
@@ -188,6 +190,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 					current_file_path = current_job_file["path"]
 					return current_file_path
 		return ""
+
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		# preconditions
@@ -200,59 +203,53 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or not self._printer.is_printing()):
 			return cmd
 
-		# timeout the snapshot request if there are problems
-		#if (self.SnapshotCommandsSending):
-	#		if( self.LastSnapshotRequestTime is not None and (time.time() - self.LastSnapshotRequestTime)*1000 > self.Settings.CurrentProfile().snapshot.delay+TIMEOUT_DELAY):
-	#			self.SnapshotCommandsSending = False
-	#			self._logger.warning("The snapshot timed out before receiving the end snapshot command.  Will try again next time.")
-	#		else:
-	#			return
-		
 		snapshotCommands = []
-		# determine if the plugin is enabled, if we have active triggere, and that we're printing
-		
-		#self._logger.info('Octolapse Debug - Intercepted GCode: {0:s}'.format(gcode))
+
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
 		# position
-
-		
 		self.Position.Update(cmd)
+
+		# If we have any triggers, update them and check for snapshot triggers
 		if(len(self.Triggers)>0):
+
 			# Loop through all of the active currentTriggers
 			for currentTrigger in self.Triggers:
-			
+				# determine what type the current trigger is and update appropriately
 				if(isinstance(currentTrigger,GcodeTrigger)):
 					currentTrigger.Update(self.Position,cmd)
 				elif(isinstance(currentTrigger,TimerTrigger)):
-					currentTrigger.Update(self.Position);
+					currentTrigger.Update(self.Position)
 				elif(isinstance(currentTrigger,LayerTrigger)):
-					currentTrigger.Update(self.Position);
-
-				
+					currentTrigger.Update(self.Position)
+				# see if the current trigger is triggering, indicting that a snapshot should be taken
 				if(currentTrigger.IsTriggered):
-				
+					# Make sure there are no position errors (unknown position, out of bounds, etc)
 					if(not self.Position.HasPositionError):
+						# get the gcode for the snapshot
 						snapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,currentTrigger.Extruder)
+						# build an array of commands to take the snapshot
 						if(snapshotGcode is not None and snapshotGcode.Commands is not None and len(snapshotGcode.Commands)>0):
-							
+							# create an array to hold the commands	
 							snapshotCommands = []
+							# loop through each command and append them to our array
 							for command in snapshotGcode.Commands:
 								## log and build in a snapshot command type
 								#self._logger.info('Line {0:d}: {1:s}'.format(command_line,command))
-								
 								snapshotCommands.append(command)
-							#set the last snapshot command
-							comm_instance._log("Octolapse: snapshot gcode queuing at position x:{0:f} y:{1:f}".format(snapshotGcode.X,snapshotGcode.Y))
 							# If the command is NOT a snapshot command (default=snap), append it to the list of commands
 							if(cmd is not None and not trigger.IsSnapshotCommand(cmd,self.Settings.printer.snapshot_command) ):
 								snapshotCommands.append(cmd)
-
+							# find the last command in the array
 							lastCommandIndex = len(snapshotCommands)-1
-							self.__EndSnapshotCommand = snapshotCommands[lastCommandIndex] + ";ENDOCTOLAPSE"
-							snapshotCommands[lastCommandIndex] = self.__EndSnapshotCommand 
-							#self.SnapshotCommandsSending = True
-							self._logger.info('Sending snapshot commands:')
+							#set the last snapshot command
+							endSnapshotCommand = snapshotCommands[lastCommandIndex] + ";ENDOCTOLAPSE"
+							#replace the current final command with the new command that includes our comment to make it unique (hopefully)
+							snapshotCommands[lastCommandIndex] = endSnapshotCommand
+							self.__EndSnapshotCommands.append(endSnapshotCommand)
+							self.SnapshotCount += 1
+							comm_instance._log("Octolapse: Taking snapshot {0} at x:{1:f} y:{2:f}.".format(self.SnapshotCount,snapshotGcode.X,snapshotGcode.Y))
+							self._logger.info("Octolapse: snapshot gcode queuing at position x:{0:f} y:{1:f}.  Sending snapshot commands:".format(snapshotGcode.X,snapshotGcode.Y))							
 							for str in snapshotCommands:
 								self._logger.info("    {0}".format(str))
 							return snapshotCommands
@@ -262,39 +259,40 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						_logger.error("Cannot take a snapshot, there are position tracking errors:{0}".format(self.Position.PositionError))
 
 		if( trigger.IsSnapshotCommand(cmd,self.Settings.printer.snapshot_command)):
-			cmd = None;
+			cmd = None
+
 		return cmd
 	
 	
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if (self.Settings is None
-			or not self.Settings.is_octolapse_enabled
-			or self.Triggers is None
-			or len(self.Triggers)<1
-			or self._printer is None
-			or not self._printer.is_printing()):
-			return
-		# timeout the snapshot request if there are problems
-		#if (self.SnapshotCommandsSending):
-	#		if( self.LastSnapshotRequestTime is not None and (time.time() - self.LastSnapshotRequestTime)*1000 > self.Settings.CurrentProfile().snapshot.delay+TIMEOUT_DELAY):
-	#			self.SnapshotCommandsSending = False
-	#			self._logger.warning("The snapshot timed out before receiving the end snapshot command.  Will try again next time.")
-	#	else:
-	#		return
+		
+		isEndSnapshotCommand = False
+		
+		if(is_sequence(cmd)):
+			for commandString in cmd:
+				if(commandString in self.__EndSnapshotCommands):
+					cmdIndex = self.__EndSnapshotCommands.index(commandString)
+					del(self.__EndSnapshotCommands[cmdIndex])
+					isEndSnapshotCommand = True
+		else:
+			if(cmd in self.__EndSnapshotCommands):
+					cmdIndex = self.__EndSnapshotCommands.index(cmd)
+					del(self.__EndSnapshotCommands[cmdIndex])
+					isEndSnapshotCommand = True
 
-		if(cmd == self.__EndSnapshotCommand):
+		if(isEndSnapshotCommand):
 			#pause here for some MS??  We'll see..
 			self.TakeSnapshot()
 			self._logger.info('Snapshot Triggered')	
 			comm_instance._log("Octolapse: Snapshot Triggered")
-			#self.SnapshotCommandsSending = False
-			#self.WaitingForSnapshotResponse = True;
+		else:
+			self._logger.info('GcodeSent - Did not find the end snapshot command(s):{0} in {1}'.format(self.__EndSnapshotCommands, cmd))
 
 	def TakeSnapshot(self):
 		snapshot = self.CaptureSnapshot
 		if(snapshot is not None):
 			try:
-				snapshot.Snap(self.CurrentlyPrintingFileName())
+				snapshot.Snap(self.CurrentlyPrintingFileName(),self.SnapshotCount)
 			except:
 					
 				a = sys.exc_info() # Info about unknown error that caused exception.                                              
@@ -303,7 +301,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				errorMessage += "\n    {0}".format(b)
 				self._logger.error('Unknown error detected:{0}'.format(errorMessage))
 			
-			self.SnapshotCommandsSending = False
 		else:
 			self._logger.info("Failed to retrieve the snapshot module!  It might work again later.")
 
@@ -354,5 +351,6 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
 		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent
+
 	}
 

@@ -118,22 +118,22 @@ class Position(object):
 				self.HasPositionError = False
 				self.PositionError = None
 				self.IsRelative = previousRelativeValue
-				self.Logger.info("Position - G28 - Go To Origin - Resseting position to 0,0,0");
+				self.Logger.info("Position - G28 - Go To Origin - Resseting position to 0,0,0")
 			elif(command.Command == "G90"):
 				if(self.IsRelative):
-					self.Logger.info("Position - G90 - Switching to Absolute Coordinates");
+					self.Logger.info("Position - G90 - Switching to Absolute Coordinates")
 				self.IsRelative = False
 			elif(command.Command == "G91"):
 				if(not self.IsRelative):
-					self.Logger.info("Position - G90 - Switching to Relative Coordinates");
+					self.Logger.info("Position - G90 - Switching to Relative Coordinates")
 				self.IsRelative = True
 			elif(command.Command == "M83"):
 				if(self.IsExtruderRelative):
-					self.Logger.info("Position - M83 - Switching Extruder to Absolute Coordinates");
+					self.Logger.info("Position - M83 - Switching Extruder to Absolute Coordinates")
 				self.IsExtruderRelative = false
 			elif(command.Command == "M82"):
 				if(not self.IsExtruderRelative):
-					self.Logger.info("Position - M82 - Switching Extruder to Relative Coordinates");
+					self.Logger.info("Position - M82 - Switching Extruder to Relative Coordinates")
 				self.IsExtruderRelative = True
 			elif(command.Command == "G92"):
 				parsedCommand = command.Parse(gcode)
@@ -148,7 +148,7 @@ class Position(object):
 				else:
 					self.UpdatePosition(x=x,y=y,z=z,e=e)
 				self.IsRelative = previousRelativeValue
-				self.Logger.info("Position - G92 - Resettings extruder to {0}.",e);
+				self.Logger.info("Position - G92 - Resettings extruder to {0}.",e)
 				self.E
 		if(not self.HasHomedAxis):
 			self.Reset()
@@ -167,7 +167,7 @@ class Position(object):
 			self.HasPositionError = True
 			self.PositionError = "Position - Unable to track printer position.  Received relative coordinates, but are unaware of the previous position!"
 			self.Logger.Error(self.PositionError)
-			return;
+			return
 		# Update the previous positions if values were supplied
 		if(x is not None):
 			x = float(x)

@@ -9,7 +9,6 @@ def GetOctoprintDefaultSettings():
 
 def GetOctoprintSettings(settings):
 		defaults = OctolapseSettings(None)
-		print (settings)
 		octoprintSettings = { "is_octolapse_enabled" : utility.getbool(settings.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			'current_profile_name' : utility.getstring(settings.current_profile_name,defaults.current_profile_name),
 			'stabilization_options' : [
@@ -47,7 +46,8 @@ def GetOctoprintSettings(settings):
 				'movement_speed' : utility.getint(settings.printer.movement_speed,defaults.printer.movement_speed),
 				'snapshot_command' :  utility.getstring(settings.printer.snapshot_command,defaults.printer.snapshot_command),
 				'snapshot_gcode' : utility.getstring(settings.printer.snapshot_gcode,defaults.printer.snapshot_gcode),
-				'is_e_relative' : utility.getbool(settings.printer.is_e_relative, defaults.printer.is_e_relative)
+				'is_e_relative' : utility.getbool(settings.printer.is_e_relative, defaults.printer.is_e_relative),
+				'z_hop' : utility.getfloat(settings.printer.z_hop, defaults.printer.z_hop)
 			},
 			'profiles' : []
 		}
@@ -96,6 +96,7 @@ def GetOctoprintSettings(settings):
 					'layer_trigger_enabled'				: utility.getbool(profile.snapshot.layer_trigger_enabled,defaultProfile.snapshot.layer_trigger_enabled),
 					'layer_trigger_height'				: utility.getint (profile.snapshot.layer_trigger_height,defaultProfile.snapshot.layer_trigger_height),
 					'layer_trigger_zmin'				: utility.getint (profile.snapshot.layer_trigger_zmin,defaultProfile.snapshot.layer_trigger_zmin),
+					'layer_trigger_require_zhop'		: utility.getbool(profile.snapshot.layer_trigger_require_zhop,defaultProfile.snapshot.layer_trigger_require_zhop),
 					'layer_trigger_on_extruding'		: utility.getbool(profile.snapshot.layer_trigger_on_extruding,defaultProfile.snapshot.layer_trigger_on_extruding),
 					'layer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.layer_trigger_on_extruding_start,defaultProfile.snapshot.layer_trigger_on_extruding_start),
 					'layer_trigger_on_primed'			: utility.getbool(profile.snapshot.layer_trigger_on_primed,defaultProfile.snapshot.layer_trigger_on_primed),
@@ -175,8 +176,9 @@ class Printer(object):
 		self.retract_length = 2.0
 		self.retract_speed = 3600
 		self.movement_speed = 3600
+		self.z_hop = 4.0
 		self.snapshot_command = 'snap'
-		self.snapshot_gcode = [ "G90;abs","G0 X{0:f} Y{1:f} F{2:d};Move","G4 P{3:d};Snap here","M400;End-Octolapse-Command" ]
+		self.snapshot_gcode = [ ]
 		self.is_e_relative = True
 		if(printer is not None):
 			self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
@@ -185,6 +187,7 @@ class Printer(object):
 			self.snapshot_command = utility.getstring(printer["snapshot_command"],self.snapshot_command)
 			self.snapshot_gcode = utility.getstring(printer["snapshot_gcode"],self.snapshot_gcode)
 			self.is_e_relative = utility.getbool(printer["is_e_relative"],self.is_e_relative)
+			self.z_hop =utility.getfloat(printer["z_hop"],self.z_hop)
 class Stabilization(object):
 
 	def __init__(self,stabilization):
@@ -228,9 +231,6 @@ class Stabilization(object):
 			self.y_relative_path = utility.getstring(stabilization["y_relative_path"],self.y_relative_path)
 			self.y_relative_path_loop = utility.getbool(stabilization["y_relative_path_loop"],self.y_relative_path_loop)
 			self.z_movement_speed_mms = utility.getint(stabilization["z_movement_speed_mms"],self.z_movement_speed_mms)
-
-
-
 class Snapshot(object):
 
 	def __init__(self,snapshot):
@@ -247,8 +247,9 @@ class Snapshot(object):
 		#Timer Trigger
 		self.timer_trigger_enabled = False
 		self.timer_trigger_seconds = 60
+		self.layer_trigger_require_zhop = True
 		self.timer_trigger_on_extruding = True
-		self.timer_trigger_on_extruding_start = True
+		self.timer_trigger_on_extruding_start = False
 		self.timer_trigger_on_primed = True
 		self.timer_trigger_on_retracting = False
 		self.timer_trigger_on_retracted = True
@@ -257,18 +258,19 @@ class Snapshot(object):
 		self.layer_trigger_enabled = True
 		self.layer_trigger_height = 0
 		self.layer_trigger_zmin = 0.5
-		self.layer_trigger_on_extruding = True
-		self.layer_trigger_on_extruding_start = True
-		self.layer_trigger_on_primed = False
+		self.layer_trigger_require_zhop = True
+		self.layer_trigger_on_extruding = False
+		self.layer_trigger_on_extruding_start = False
+		self.layer_trigger_on_primed = True
 		self.layer_trigger_on_retracting = False
-		self.layer_trigger_on_retracted = False
-		self.layer_trigger_on_detracting = False
+		self.layer_trigger_on_retracted = True
+		self.layer_trigger_on_detracting = True
 		# other settings
 		self.archive = True
 		self.delay = 1000
 		self.retract_before_move = False
-		self.output_format = "jpg";
-		self.output_filename = "{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
+		self.output_format = "jpg"
+		self.output_filename = "{FILENAME}_{SNAPSHOTNUMBER}.{OUTPUTFILEEXTENSION}"
 		self.output_directory = "./snapshots/{FILENAME}_{PRINTSTARTTIME}/"
 		self.cleanup_before_print = True
 		self.cleanup_after_print = False
@@ -298,6 +300,7 @@ class Snapshot(object):
 			self.layer_trigger_enabled				= utility.getbool(snapshot["layer_trigger_enabled"],self.layer_trigger_enabled)
 			self.layer_trigger_height				= utility.getint(snapshot["layer_trigger_height"],self.layer_trigger_height)
 			self.layer_trigger_zmin					= utility.getint(snapshot["layer_trigger_zmin"],self.layer_trigger_zmin)
+			self.layer_trigger_require_zhop			= utility.getbool(snapshot["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
 			self.layer_trigger_on_extruding			= utility.getbool(snapshot["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
 			self.layer_trigger_on_extruding_start	= utility.getbool(snapshot["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)
 			self.layer_trigger_on_primed			= utility.getbool(snapshot["layer_trigger_on_primed"],self.layer_trigger_on_primed)
@@ -343,9 +346,6 @@ class Rendering(object):
 			self.min_fps = utility.getfloat(rendering["min_fps"],self.min_fps)
 			self.output_format = utility.getstring(rendering["output_format"],self.output_format)
 			self.sync_with_timelapse =  utility.getbool(rendering["sync_with_timelapse"],self.sync_with_timelapse )
-
-
-
 class Camera(object):
 	
 	def __init__(self,camera):
@@ -400,7 +400,6 @@ class Camera(object):
 			self.led1_mode = utility.getstring(camera["led1_mode"],self.led1_frequency)
 			self.led1_frequency = utility.getint(camera["led1_frequency"],self.led1_frequency)
 			self.jpeg_quality = utility.getint(camera["jpeg_quality"],self.jpeg_quality)
-
 class Profile(object):
 	
 	
@@ -418,7 +417,6 @@ class Profile(object):
 			self.snapshot = Snapshot(profile["snapshot"])
 			self.rendering = Rendering(profile["rendering"])
 			self.camera = Camera(profile["camera"])
-
 class OctolapseSettings(object):
 	
 	# constants

@@ -50,7 +50,7 @@ class Extruder(object):
 		
 		# Update ExtrusionTotal,RetractionLength and ExtrusionLength
 		
-		self.ExtrusionLengthTotal += self.__E;
+		self.ExtrusionLengthTotal += self.__E
 		amountExtruded = self.__E + self.__RetractionLengthPrevious
 		self.RetractionLength -= amountExtruded
 		

@@ -1,7 +1,7 @@
 from .extruder import *
 from .gcode import *
 from .settings import *
-
+import utility
 
 import time
 def IsSnapshotCommand(command, snapshotCommand):
@@ -39,12 +39,15 @@ class GcodeTrigger(object):
 
 class LayerTrigger(object):
 	
-	def __init__( self,extruderTriggers, octoprintLogger,zMin, heightIncrement = None ):
+	def __init__( self,extruderTriggers, octoprintLogger,zMin, zHop, heightIncrement = None):
 		#utilities and profiles
 		self.Logger = octoprintLogger
 		self.Extruder = Extruder(octoprintLogger)
 		self.ExtruderTriggers = extruderTriggers
 		# Configuration Variables
+		self.ZHop = zHop
+		if(self.ZHop < utility.FLOAT_MATH_EQUALITY_RANGE):
+			self.ZHop = None
 		self.ZMin = zMin
 		self.HeightIncrement = heightIncrement
 		if(heightIncrement == 0):
@@ -119,18 +122,21 @@ class LayerTrigger(object):
 			self.IsHeightChange  = True
 		else:
 			self.IsHeightChange = False
+		isZHop = position.Z - self.Height >= self.ZHop and self.Extruder.IsRetracted
 		if(self.HasReachedZMin):
 			if(self.HeightIncrement is not None and self.HeightIncrement > 0):
 				if(self.IsHeightChange):
 					self.__HeightChangeWait = True
-				if(self.__HeightChangeWait and self.Extruder.IsTriggered(self.ExtruderTriggers)):
+				# only trigger if the extruder is triggering, and make sure that we enforce layer_trigger_require_zhop
+				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers) and (self.ZHop is not None and isZHop or not self.ZHop is None)
+				if(self.__HeightChangeWait and isTriggered):
 					self.__HeightChangeWait = False
 					self.IsTriggered = True
 					self.Logger.info("HeightTrigger - Triggering.")
 				else:
 					self.Logger.info("HeightTrigger - Is triggering, waiting on extruder.")
 			else:
-				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers)
+				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers) and (self.ZHop is not None and isZHop or not self.ZHop is None)
 				if(self.IsLayerChange):
 					if(self.__LayerChangeWait == False and not isTriggered):
 						self.Logger.info("LayerTrigger - Triggering, waiting on extruder.")
