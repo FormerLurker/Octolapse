@@ -102,19 +102,17 @@ class Position(object):
 				z = parsedCommand["Z"]
 				e = parsedCommand["E"]
 				
-				self.Logger.info("Position - {0} - {1} Move - X:{2:s},Y:{3:s},Z:{4:s},E:{5:s}".format(command.Command,"Relative" if self.IsRelative else "Absolute", x,y,z,e))
+				self.Logger.info("Position - {0} - {1} Move - X:{2:s},Y:{3:s},Z:{4:s},E:{5:s} - Current Absolute Position - X:{6},Y:{7},Z:{8},E:{9} ".format(command.Command,"Relative" if self.IsRelative else "Absolute", x,y,z,e,self.X, self.Y, self.Z, self.E))
 				if(self.HasPositionError and not self.IsRelative):
 					self.HasPositionError = False
 					self.PositionError = ""
 					self.Logger.info("Position - Absolute coordinates received, position error corrected")
 				self.UpdatePosition(x,y,z,e)
-				self.Logger.info("Position - Current Absolute Position - X:{0},Y:{1},Z:{2},E:{3}"
-					 .format(self.X, self.Y, self.Z, self.E))
 			elif(command.Command == "G28"):
 				previousRelativeValue = self.IsRelative
 				self.IsRelative = False
-				self.UpdatePosition(x=0,y=0,z=0,e=0)
 				self.HasHomedAxis = True
+				self.UpdatePosition(x=0,y=0,z=0,e=0)
 				self.HasPositionError = False
 				self.PositionError = None
 				self.IsRelative = previousRelativeValue
@@ -125,20 +123,23 @@ class Position(object):
 				self.IsRelative = False
 			elif(command.Command == "G91"):
 				if(not self.IsRelative):
-					self.Logger.info("Position - G90 - Switching to Relative Coordinates")
+					self.Logger.info("Position - G91 - Switching to Relative Coordinates")
 				self.IsRelative = True
 			elif(command.Command == "M83"):
 				if(self.IsExtruderRelative):
-					self.Logger.info("Position - M83 - Switching Extruder to Absolute Coordinates")
-				self.IsExtruderRelative = false
+					self.Logger.info("Position - M83 - Switching Extruder to Relative Coordinates")
+				self.IsExtruderRelative = True
 			elif(command.Command == "M82"):
 				if(not self.IsExtruderRelative):
-					self.Logger.info("Position - M82 - Switching Extruder to Relative Coordinates")
-				self.IsExtruderRelative = True
+					self.Logger.info("Position - M82 - Switching Extruder to Absolute Coordinates")
+				self.IsExtruderRelative = False
 			elif(command.Command == "G92"):
 				parsedCommand = command.Parse(gcode)
 				previousRelativeValue = self.IsRelative
+				previousExtruderRelativeValue = self.IsExtruderRelative
 				self.IsRelative = False
+				self.IsExtruderRelative = False
+
 				x = parsedCommand["X"]
 				y = parsedCommand["Y"]
 				z = parsedCommand["Z"]
@@ -148,15 +149,17 @@ class Position(object):
 				else:
 					self.UpdatePosition(x=x,y=y,z=z,e=e)
 				self.IsRelative = previousRelativeValue
-				self.Logger.info("Position - G92 - Resettings extruder to {0}.",e)
-				self.E
-		if(not self.HasHomedAxis):
-			self.Reset()
+				self.IsExtruderRelative = previousExtruderRelativeValue
+				self.Logger.info("Position - G92 - Resettings coordinates  Current Absolute Position - X:{0},Y:{1},Z:{2},E:{3}"
+					 .format(self.X, self.Y, self.Z, self.E))
+		
 
 	def UpdatePosition(self,x=None,y=None,z=None,e=None):
-				
+		if(not self.HasHomedAxis):
+			return
+
 		if(self.HasPositionError):
-			self.Logger.Error(self.PositionError)
+			self.Logger.error(self.PositionError)
 			return
 		if(
 			(

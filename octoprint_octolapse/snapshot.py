@@ -39,15 +39,15 @@ class CaptureSnapshot(object):
 
 
 	def GetSnapshotFileName(self,printerFileName,snapshotNumber):
-		dateStamp = "{0:d}".format(trunc(round(time.time(),3)*1000))
+		dateStamp = "{0:d}".format(trunc(round(time.time(),2)*100))
 		filename = self.Profile.snapshot.output_filename
 		if(not filename):
 			filename = "{FILENAME}_{SNAPSHOTNUMBER}.{OUTPUTFILEEXTENSION}"
 		filename = filename.replace("{FILENAME}",utility.getstring(printerFileName,""))
-		filename = filename.replace("{DATETIMESTAMP}","{0:d}".format(trunc(round(time.time(),3)*1000)))
+		filename = filename.replace("{DATETIMESTAMP}","{0:d}".format(trunc(round(time.time(),2)*100)))
 		filename = filename.replace("{SNAPSHOTNUMBER}","{0:05d}".format(snapshotNumber))
 		filename = filename.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
-		filename = filename.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,3)*1000)))
+		filename = filename.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,2)*100)))
 		return filename
 
 
@@ -58,7 +58,7 @@ class CaptureSnapshot(object):
 
 		directoryName = directoryName.replace("{FILENAME}",utility.getstring(printerFileName,""))
 		directoryName = directoryName.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
-		directoryName = directoryName.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,3)*1000)))
+		directoryName = directoryName.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,2)*100)))
 		return directoryName
 def DownloadSnapshotAsync(directoryName, fileName, url, logger, timeoutSeconds, username = None, password = None, ignoreSslErrors = False):
 		download_thread = threading.Thread(target=DownloadSnapshot, args=(directoryName, fileName, url, logger, timeoutSeconds, username, password, ignoreSslErrors))

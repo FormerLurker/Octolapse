@@ -94,8 +94,8 @@ def GetOctoprintSettings(settings):
 					'timer_trigger_on_retracted'		: utility.getbool(profile.snapshot.timer_trigger_on_retracted,defaultProfile.snapshot.timer_trigger_on_retracted),
 					'timer_trigger_on_detracting'		: utility.getbool(profile.snapshot.timer_trigger_on_detracting,defaultProfile.snapshot.timer_trigger_on_detracting),
 					'layer_trigger_enabled'				: utility.getbool(profile.snapshot.layer_trigger_enabled,defaultProfile.snapshot.layer_trigger_enabled),
-					'layer_trigger_height'				: utility.getint (profile.snapshot.layer_trigger_height,defaultProfile.snapshot.layer_trigger_height),
-					'layer_trigger_zmin'				: utility.getint (profile.snapshot.layer_trigger_zmin,defaultProfile.snapshot.layer_trigger_zmin),
+					'layer_trigger_height'				: utility.getfloat(profile.snapshot.layer_trigger_height,defaultProfile.snapshot.layer_trigger_height),
+					'layer_trigger_zmin'				: utility.getfloat(profile.snapshot.layer_trigger_zmin,defaultProfile.snapshot.layer_trigger_zmin),
 					'layer_trigger_require_zhop'		: utility.getbool(profile.snapshot.layer_trigger_require_zhop,defaultProfile.snapshot.layer_trigger_require_zhop),
 					'layer_trigger_on_extruding'		: utility.getbool(profile.snapshot.layer_trigger_on_extruding,defaultProfile.snapshot.layer_trigger_on_extruding),
 					'layer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.layer_trigger_on_extruding_start,defaultProfile.snapshot.layer_trigger_on_extruding_start),
@@ -256,7 +256,7 @@ class Snapshot(object):
 		self.timer_trigger_on_detracting = True
 		#Layer Trigger
 		self.layer_trigger_enabled = True
-		self.layer_trigger_height = 0
+		self.layer_trigger_height = 0.0
 		self.layer_trigger_zmin = 0.5
 		self.layer_trigger_require_zhop = True
 		self.layer_trigger_on_extruding = False
@@ -298,8 +298,8 @@ class Snapshot(object):
 			self.timer_trigger_on_retracted			= utility.getbool(snapshot["timer_trigger_on_retracted"],self.timer_trigger_on_retracted)
 			self.timer_trigger_on_detracting		= utility.getbool(snapshot["timer_trigger_on_detracting"],self.timer_trigger_on_detracting)
 			self.layer_trigger_enabled				= utility.getbool(snapshot["layer_trigger_enabled"],self.layer_trigger_enabled)
-			self.layer_trigger_height				= utility.getint(snapshot["layer_trigger_height"],self.layer_trigger_height)
-			self.layer_trigger_zmin					= utility.getint(snapshot["layer_trigger_zmin"],self.layer_trigger_zmin)
+			self.layer_trigger_height				= utility.getfloat(snapshot["layer_trigger_height"],self.layer_trigger_height)
+			self.layer_trigger_zmin					= utility.getfloat(snapshot["layer_trigger_zmin"],self.layer_trigger_zmin)
 			self.layer_trigger_require_zhop			= utility.getbool(snapshot["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
 			self.layer_trigger_on_extruding			= utility.getbool(snapshot["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
 			self.layer_trigger_on_extruding_start	= utility.getbool(snapshot["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)

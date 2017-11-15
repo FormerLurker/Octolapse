@@ -78,22 +78,22 @@ class Extruder(object):
 		retractedTriggered		= (options.OnRetracted and self.IsRetracted)
 		detractedTriggered		= (options.OnDetracting and self.IsDetracting)
 		isTriggered				= extrudingTriggered or extrudingStartTriggered or primedTriggered or retractingTriggered or retractedTriggered or detractedTriggered
-		self.Logger.info("Extruder - Trigger State - E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
-			.format( self.__E
-				, self.RetractionLength
-				, self.IsExtruding
-				, extrudingTriggered
-				, self.IsExtrudingStart
-				, extrudingStartTriggered
-				, self.IsPrimed
-				, primedTriggered
-				, self.IsRetracting
-				, retractingTriggered
-				, self.IsRetracted
-				, retractedTriggered
-				, self.IsDetracting
-				, detractedTriggered
-				, isTriggered))
+		#self.Logger.info("Extruder - Trigger State - E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
+		#	.format( self.__E
+		#		, self.RetractionLength
+		#		, self.IsExtruding
+		#		, extrudingTriggered
+		#		, self.IsExtrudingStart
+		#		, extrudingStartTriggered
+		#		, self.IsPrimed
+		#		, primedTriggered
+		#		, self.IsRetracting
+		#		, retractingTriggered
+		#		, self.IsRetracted
+		#		, retractedTriggered
+		#		, self.IsDetracting
+		#		, detractedTriggered
+		#		, isTriggered))
 		return isTriggered
 
 

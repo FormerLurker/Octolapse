@@ -3,10 +3,9 @@
     "",
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\static",
-    "\\octoprint_octolapse\\static\\gcode",
     "\\octoprint_octolapse\\static\\scripts",
     "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\.gitignore",
+  "SelectedNode": "\\octoprint_octolapse\\trigger.py",
   "PreviewInSolutionExplorer": false
 }

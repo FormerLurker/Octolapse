@@ -5,9 +5,13 @@ import operator
 
 class SnapshotGcode(object):
 	def __init__(self):
-		self.Commands = []
+		self.StartCommands = []
+		self.ReturnCommands = []
+		self.SavedCommand = None
 		self.X = None
 		self.Y = None
+		self.ReturnX = None
+		self.ReturnY = None
 
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
@@ -410,61 +414,68 @@ class GCode(object):
 		if(not self.IsYInBounds(yCoord)):
 			return None
 		return yCoord
+	
 	def GetSnapshotGcode(self, position, extruder):
 		newSnapshotGcode = SnapshotGcode()
+
+		# Create code to move from the current extruder position to the snapshot position
+		# get the X and Y coordinates of the snapshot
+		newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
+		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
 		hasRetracted = False
 
 		isRelativeLocal = position.IsRelative
 		
-		# switch to absolute coordinates if we're not already in that mode
-		if(position.IsRelative):
-			newSnapshotGcode.Commands.append(self.GetSetAbsolutePositionGcode())
-			isRelativeLocal = False
+		
 
 		# retract if necessary
 		if(self.Profile.snapshot.retract_before_move and not extruder.IsRetracted):
-			newSnapshotGcode.Commands.append(self.GetRetractGCode())
+			newSnapshotGcode.StartCommands.append(self.GetRetractGCode())
 			hasRetracted = True
-		# get the X and Y coordinates of the snapshot
-		newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
-		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
-
+		
 		# Can we hop or is the print too tall?
 		canZHop = self.Printer.z_hop > 0 and self.IsZInBounds(position.Z + self.Printer.z_hop)
 		# if we can ZHop, do
 		if(canZHop):
 			if(not isRelativeLocal):
-				newSnapshotGcode.Commands.append(self.GetSetRelativePositionGcode())
+				newSnapshotGcode.StartCommands.append(self.GetSetRelativePositionGcode())
 				isRelativeLocal = True
-			newSnapshotGcode.Commands.append(self.GetRelativeZLiftGcode())
-			newSnapshotGcode.Commands.append(self.GetSetAbsolutePositionGcode())
+			newSnapshotGcode.StartCommands.append(self.GetRelativeZLiftGcode())
+			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
 			isRelativeLocal = False
 
 		if (newSnapshotGcode.X is None or newSnapshotGcode.Y is None):
 			# either x or y is out of bounds.
 			return None
-		newSnapshotGcode.Commands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
-		newSnapshotGcode.Commands.append(self.GetDelayGcode())
+		if(not isRelativeLocal):
+			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
+			isRelativeLocal = False
+		newSnapshotGcode.StartCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
+		newSnapshotGcode.StartCommands.append(self.GetDelayGcode() );
+		
+		# create return gcode
+		#record our previous position for posterity
+		newSnapshotGcode.ReturnX = position.X
+		newSnapshotGcode.ReturnY = position.Y
+
 		#Move back to previous position
-		if(position.XPrevious is not None and position.YPrevious is not None):
-			newSnapshotGcode.Commands.append(self.GetMoveGcode(position.X,position.Y))
+		if(position.X is not None and position.Y is not None):
+			newSnapshotGcode.ReturnCommands.append(self.GetMoveGcode(position.X,position.Y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
 			if(not isRelativeLocal):
-				newSnapshotGcode.Commands.append(self.GetSetRelativePositionGcode())
+				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
 				isRelativeLocal = True
-			newSnapshotGcode.Commands.append(self.GetRelativeZLowerGcode())
-			newSnapshotGcode.Commands.append(self.GetSetAbsolutePositionGcode())
-			isRelativeLocal = False
+			newSnapshotGcode.ReturnCommands.append(self.GetRelativeZLowerGcode())
 		# detract
 		if(hasRetracted):
-			newSnapshotGcode.Commands.append(self.GetDetractGcode())
+			newSnapshotGcode.ReturnCommands.append(self.GetDetractGcode())
 
 		# set to relative or absolute based on the unmodified position state
 		if(position.IsRelative and not isRelativeLocal):
-			newSnapshotGcode.Commands.append(self.GetSetRelativePositionGcode())
+			newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
 		elif (not position.IsRelative and isRelativeLocal):
-			newSnapshotGcode.Commands.append(self.GetSetAbsolutePositionGcode())
+			newSnapshotGcode.ReturnCommands.append(self.GetSetAbsolutePositionGcode())
 			
 		return newSnapshotGcode
 	#

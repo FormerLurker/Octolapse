@@ -4,6 +4,25 @@ from .settings import *
 import utility
 
 import time
+
+
+def IsTriggering(triggers,position):
+	# Loop through all of the active currentTriggers
+	for currentTrigger in triggers:
+		# determine what type the current trigger is and update appropriately
+		if(isinstance(currentTrigger,GcodeTrigger)):
+			currentTrigger.Update(position,cmd)
+		elif(isinstance(currentTrigger,TimerTrigger)):
+			currentTrigger.Update(position)
+		elif(isinstance(currentTrigger,LayerTrigger)):
+			currentTrigger.Update(position)
+		# see if the current trigger is triggering, indicting that a snapshot should be taken
+		if(currentTrigger.IsTriggered):
+			# Make sure there are no position errors (unknown position, out of bounds, etc)
+			if(not position.HasPositionError):
+				#Triggering!
+				return currentTrigger
+	return None
 def IsSnapshotCommand(command, snapshotCommand):
 		commandName = GetGcodeFromString(command)
 		snapshotCommandName = GetGcodeFromString(snapshotCommand)
@@ -39,21 +58,24 @@ class GcodeTrigger(object):
 
 class LayerTrigger(object):
 	
-	def __init__( self,extruderTriggers, octoprintLogger,zMin, zHop, heightIncrement = None):
+	def __init__( self,extruderTriggers, octoprintLogger,zMin, zHop, requireZhop = False, heightIncrement = None ):
 		#utilities and profiles
 		self.Logger = octoprintLogger
 		self.Extruder = Extruder(octoprintLogger)
 		self.ExtruderTriggers = extruderTriggers
 		# Configuration Variables
+		
 		self.ZHop = zHop
-		if(self.ZHop < utility.FLOAT_MATH_EQUALITY_RANGE):
-			self.ZHop = None
+		self.RequireZHop = requireZhop
+		if(self.ZHop is None):
+			self.ZHop = 0
 		self.ZMin = zMin
 		self.HeightIncrement = heightIncrement
 		if(heightIncrement == 0):
 			self.HeightIncrement = None
 		
 		# State Tracking Vars
+		self.IsTriggered = False
 		self.Height = 0
 		self.__HeightPrevious = 0
 		self.ZDelta = None
@@ -86,7 +108,7 @@ class LayerTrigger(object):
 				
 	def Update(self, position):
 		"""Updates the layer monitor position.  x, y and z may be absolute, but e must always be relative"""
-
+		self.Logger.info("Layer Trigger - Updating Position.")
 		self.IsLayerChange = False
 		self.IsHeightChanged = False
 		self.IsTriggered = False
@@ -97,20 +119,25 @@ class LayerTrigger(object):
 		# save any previous values that will be needed later
 		self.__HeightPrevious = self.Height
 		self.__ZDeltaPrevious = self.ZDelta
-		
+
 		# determine if we've reached ZMin
-		if(position.Z <= self.ZMin):
+		if(not self.HasReachedZMin and position.Z <= self.ZMin and self.Extruder.IsExtruding):
 			self.HasReachedZMin = True
+			self.Logger.info("Layer Trigger - Reached ZMin:{0}.".format(self.ZMin))
+		# If we've not reached z min, leave!
+		if(not self.HasReachedZMin):
+			self.Logger.info("LayerTrigger - ZMin not reached.")
+			return;
 
 		# calculate Height
 		if self.Extruder.IsExtruding and self.HasReachedZMin and position.Z > self.Height:
 			self.Height = position.Z
-
+			self.Logger.info("Layer Trigger - Reached New Height:{0}.".format(self.Height))
 		# calculate ZDelta
 		self.ZDelta = self.Height - self.__HeightPrevious
 
 		# calculate layer change
-		if(self.__HeightPrevious < self.Height):
+		if(self.ZDelta > 0):
 			self.IsLayerChange = True
 			self.Layer += 1
 		else:
@@ -122,32 +149,42 @@ class LayerTrigger(object):
 			self.IsHeightChange  = True
 		else:
 			self.IsHeightChange = False
-		isZHop = position.Z - self.Height >= self.ZHop and self.Extruder.IsRetracted
-		if(self.HasReachedZMin):
-			if(self.HeightIncrement is not None and self.HeightIncrement > 0):
-				if(self.IsHeightChange):
-					self.__HeightChangeWait = True
-				# only trigger if the extruder is triggering, and make sure that we enforce layer_trigger_require_zhop
-				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers) and (self.ZHop is not None and isZHop or not self.ZHop is None)
-				if(self.__HeightChangeWait and isTriggered):
-					self.__HeightChangeWait = False
-					self.IsTriggered = True
-					self.Logger.info("HeightTrigger - Triggering.")
-				else:
-					self.Logger.info("HeightTrigger - Is triggering, waiting on extruder.")
-			else:
-				isTriggered = self.Extruder.IsTriggered(self.ExtruderTriggers) and (self.ZHop is not None and isZHop or not self.ZHop is None)
-				if(self.IsLayerChange):
-					if(self.__LayerChangeWait == False and not isTriggered):
-						self.Logger.info("LayerTrigger - Triggering, waiting on extruder.")
-					self.__LayerChangeWait = True
-				if(self.__LayerChangeWait and isTriggered):
-					self.__LayerChangeWait = False
-					self.IsTriggered = True
-					self.Logger.info("LayerTrigger - Triggering.")
+
+		# see if we've encountered a layer or height change
+		if(self.HeightIncrement is not None and self.HeightIncrement > 0):
+			if(self.IsHeightChange):
+				self.__HeightChangeWait = True
 				
 		else:
-			self.Logger.info("LayerTrigger - ZMin not reached.")
+			if(self.IsLayerChange):
+				self.__LayerChangeWait = True
+
+		# Is this a ZHOp?
+		isZHop = self.ZHop > 0.0 and position.Z - self.Height >= self.ZHop and (self.Extruder.IsRetracted or self.Extruder.IsDetracting)
+
+		
+		# see if the extruder is triggering
+		isExtruderTriggering = self.Extruder.IsTriggered(self.ExtruderTriggers)
+
+		if(self.__HeightChangeWait or self.__LayerChangeWait):
+			if(not isExtruderTriggering):
+				if(self.__HeightChangeWait):
+					self.Logger.info("LayerTrigger - Height change triggering, waiting on extruder.")
+				elif (self.__LayerChangeWait):
+					self.Logger.info("LayerTrigger - Layer change triggering, waiting on extruder.")
+			else:
+				if(self.RequireZHop and not isZHop):
+					self.Logger.info("LayerTrigger - Triggering - Waiting on ZHop.")
+					return
+				if(self.__HeightChangeWait):
+					self.Logger.info("LayerTrigger - Height change triggering, waiting on extruder.")
+				elif (self.__LayerChangeWait):
+					self.Logger.info("LayerTrigger - Layer change triggering, waiting on extruder.")
+				self.__LayerChangeWait = False
+				self.__HeightChangeWait = False
+				self.IsTriggered = True
+
+
 
 class TimerTrigger(object):
 	
