@@ -224,7 +224,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			):
 			self._logger.info("GcodeQueuing - Skipping trigger checks for {0} - ".format(cmd))
 			return cmd
-		currentTrigger = trigger.IsTriggering(self.Triggers,self.Position)
+		currentTrigger = trigger.IsTriggering(self.Triggers,self.Position, cmd)
 		if(currentTrigger is not None):
 			self._logger.info("GcodeQueuing - Triggering")
 			#We're triggering

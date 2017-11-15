@@ -6,7 +6,7 @@ import utility
 import time
 
 
-def IsTriggering(triggers,position):
+def IsTriggering(triggers,position,cmd):
 	# Loop through all of the active currentTriggers
 	for currentTrigger in triggers:
 		# determine what type the current trigger is and update appropriately

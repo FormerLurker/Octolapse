@@ -33,7 +33,8 @@ class CaptureSnapshot(object):
 		# set the file name
 		info.FileName = self.GetSnapshotFileName(printerFileName,snapshotNumber)
 		info.DirectoryName = self.GetSnapshotDirectoryName(printerFileName)
-		DownloadSnapshotAsync(info.DirectoryName, info.FileName, self.Profile.camera.address, self.Logger, timeoutSeconds = self.Profile.snapshot.delay/1000.0, username = self.Profile.camera.username, password = self.Profile.camera.password,ignoreSslErrors = self.Profile.camera.ignore_ssl_error )
+		# TODO:  make the snapshot timeout a separate setting
+		DownloadSnapshot(info.DirectoryName, info.FileName, self.Profile.camera.address, self.Logger, timeoutSeconds = self.Profile.snapshot.delay/1000.0*2, username = self.Profile.camera.username, password = self.Profile.camera.password,ignoreSslErrors = self.Profile.camera.ignore_ssl_error )
 
 		return info
 
@@ -74,7 +75,7 @@ def DownloadSnapshot(directoryName, fileName, url, logger, timeoutSeconds, usern
 					r=requests.get(url, auth=HTTPBasicAuth(username, password),verify = not ignoreSslErrors,timeout=float(timeoutSeconds))
 				else:
 					logger.info("Snapshot - downloading from {0:s} to {1:s}.".format(url,dir))
-					r=requests.get(url,verify = not ignoreSslErrors,timeout=timeoutSeconds)
+					r=requests.get(url,verify = not ignoreSslErrors,timeout=float(timeoutSeconds))
 			except:
 				type = sys.exc_info()[0]
 				value = sys.exc_info()[1]
