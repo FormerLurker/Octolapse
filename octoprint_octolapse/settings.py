@@ -184,7 +184,7 @@ class Printer(object):
 			self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
 			self.retract_speed = utility.getint(printer["retract_speed"],self.retract_speed)
 			self.movement_speed = utility.getint(printer["movement_speed"],self.movement_speed)
-			self.snapshot_command = utility.getstring(printer["snapshot_command"],self.snapshot_command)
+			self.snapshot_command = utility.getstring(printer,self.snapshot_command,"snapshot_command")
 			self.snapshot_gcode = utility.getstring(printer["snapshot_gcode"],self.snapshot_gcode)
 			self.is_e_relative = utility.getbool(printer["is_e_relative"],self.is_e_relative)
 			self.z_hop =utility.getfloat(printer["z_hop"],self.z_hop)
