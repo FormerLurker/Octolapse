@@ -45,7 +45,6 @@ def GetOctoprintSettings(settings):
 				'retract_speed' : utility.getint(settings.printer.retract_speed,defaults.printer.retract_speed),
 				'movement_speed' : utility.getint(settings.printer.movement_speed,defaults.printer.movement_speed),
 				'snapshot_command' :  utility.getstring(settings.printer.snapshot_command,defaults.printer.snapshot_command),
-				'snapshot_gcode' : utility.getstring(settings.printer.snapshot_gcode,defaults.printer.snapshot_gcode),
 				'is_e_relative' : utility.getbool(settings.printer.is_e_relative, defaults.printer.is_e_relative),
 				'z_hop' : utility.getfloat(settings.printer.z_hop, defaults.printer.z_hop)
 			},
@@ -177,15 +176,13 @@ class Printer(object):
 		self.retract_speed = 3600
 		self.movement_speed = 3600
 		self.z_hop = 4.0
-		self.snapshot_command = 'snap'
-		self.snapshot_gcode = [ ]
+		self.snapshot_command = "snap"
 		self.is_e_relative = True
 		if(printer is not None):
 			self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
 			self.retract_speed = utility.getint(printer["retract_speed"],self.retract_speed)
 			self.movement_speed = utility.getint(printer["movement_speed"],self.movement_speed)
 			self.snapshot_command = utility.getstring(printer,self.snapshot_command,"snapshot_command")
-			self.snapshot_gcode = utility.getstring(printer["snapshot_gcode"],self.snapshot_gcode)
 			self.is_e_relative = utility.getbool(printer["is_e_relative"],self.is_e_relative)
 			self.z_hop =utility.getfloat(printer["z_hop"],self.z_hop)
 class Stabilization(object):

@@ -6,6 +6,6 @@
     "\\octoprint_octolapse\\static\\scripts",
     "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\trigger.py",
+  "SelectedNode": "\\octoprint_octolapse\\utility.py",
   "PreviewInSolutionExplorer": false
 }
