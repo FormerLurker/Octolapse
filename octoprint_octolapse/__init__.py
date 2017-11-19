@@ -27,15 +27,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings = None
 		self.Triggers = []
 		self.Position = None
-		self.__EndSnapshotCommand = None
-		self.__EndCommand = None
 		self.IsPausedByOctolapse = False
 		self.SnapshotGcode = None
-		self.LastSnapshotRequestTime = None
-		self.IsSnapshotQueued = False
-		
 		self.SnapshotCount = 0
-		self._SavedCommand = None
 		self._IsTriggering = False
 		
 	##~~ After Startup
@@ -43,26 +37,27 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.reload_settings()
 		self._logger.info("Octolapse - loaded and active.")
 		IsStarted = True
-		
-	##~~ SettingsPlugin mixin
 
 	def reload_settings(self):
-		self.Settings = OctolapseSettings(self._settings)
-		
-		
-		
+		if(self._settings is None):
+			self._logger.error("The plugin settings (_settings) is None!")
+			return
+		self.Settings = OctolapseSettings(self._logger,self._settings)
+		#self._logger.info("Octolapse - Octoprint settings converted to octolapse settings: {0}".format(settings.GetSettingsForOctoprint(self._logger,self.Settings)))
+	##~~ SettingsPlugin mixin
+
 	def on_settings_save(self, data):
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		self.reload_settings()
+		self.Settings.debug.LogSettingsSave('Settings Saved: {0}'.format(data))
 
 	def get_settings_defaults(self):
-		defaultSettings = settings.GetOctoprintDefaultSettings()
-		self._logger.info("Octolapse - creating default settings.")
+		defaultSettings = settings.GetSettingsForOctoprint(self._logger,None)
+		self._logger.info("Octolapse - creating default settings: {0}".format(defaultSettings))
 		return defaultSettings
 
 	def get_template_configs(self):
 		self._logger.info("Octolapse - is loading template configurations.")
-		return [dict(type="settings", custom_bindings=True)]
+		return [dict(type="settings", custom_bindings=False)]
 
 	def CurrentPrinterProfile(self):
 		return self._printer_profile_manager.get_current()
@@ -70,51 +65,48 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	## EventHandlerPlugin mixin
 	def on_event(self, event, payload):
-		
-		if event == Events.PRINT_PAUSED:
-			
+
+		if(self.Settings is None or not self.Settings.is_octolapse_enabled):
+			return
+		if (event == Events.PRINT_PAUSED):
 			if(not self.IsPausedByOctolapse):
-				self._logger.info("Octolapse - Print Paused")
 				self.OnPrintPause()
 			else:
-				self._logger.info("Octolapse - Snapshot pause complete.")
-				self.SendSnapshotGcode()
-		elif event == Events.PRINT_RESUMED:
-			self.IsPausedByOctolapse = False
-			self.__EndSnapshotCommand = None
-			self.__EndCommand = None
-			self.SnapshotGcode = None
-			self._logger.info("Octolapse - Print Resumed")
-		elif event == Events.PRINT_STARTED:
-			self._logger.info("Octolapse - Print Started")
+				self.OnPrintPausedByOctolapse()
+		elif (event == Events.PRINT_RESUMED):
+			self.OnPrintResumed()
+		elif (event == Events.PRINT_STARTED):
 			self.OnPrintStart()
-		elif event in (Events.PRINT_FAILED, Events.PRINT_CANCELLED):
-			self._logger.info("Octolapse - Print Failed or Cancelled")
-			self.OnPrintEnd()
-		elif event == Events.PRINT_DONE:
+		elif (event in (Events.PRINT_FAILED, Events.PRINT_CANCELLED)):
+			self.OnPrintFailedOrCancelled()
+		elif (event == Events.PRINT_DONE):
 			self._logger.info("Octolapse - Print Done")
-			self.OnPrintEnd()
-		#elif event == Events.PRINT_RESUMED:
-		#	self._logger.info("Octolapse - Print Resumed")
-		#elif event == Events.CONNECTED:
-		#	self._logger.info("Octolapse - Printer Connected")
+			self.OnPrintCompleted()
+		
 
 	def ClearTriggers(self):
 		self.Triggers[:] = []
+	def OnPrintResumed(self):
+		self.IsPausedByOctolapse = False
+		self.SnapshotGcode = None
+		self.Settings.debug.LogPrintStateChange("Print Resumed.")
 
 	def OnPrintPause(self):
+		self.Settings.debug.LogPrintStateChange("Print Paused.")
 		if(self.Triggers is not None and len(self.Triggers)>0):
 			for trigger in self.Triggers:
 				if(type(trigger) == TimerTrigger):
 					trigger.Pause()
-	
+	def OnPrintPausedByOctolapse(self):
+		self.Settings.debug.LogPrintStateChange("Print Paused by Octolapse.")
+		self.SendSnapshotGcode()
 	def OnPrintStart(self):
-
-		self.reload_settings()
-		self.OctolapseGcode = GCode(self.Settings.printer, self.Settings.CurrentProfile(),self.CurrentPrinterProfile(),self._logger)
-		self.CaptureSnapshot = CaptureSnapshot(self.Settings.CurrentProfile(), self.Settings.printer,self._logger)
+		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
+		self.reload_settings()				
+		self.OctolapseGcode = Gcode(self.Settings.printer, self.Settings.CurrentProfile(),self.CurrentPrinterProfile(),self.Settings.debug)
+		self.CaptureSnapshot = CaptureSnapshot(self.Settings.CurrentProfile(), self.Settings.printer,self.Settings.debug)
 		self.ClearTriggers()
-		self.Position = Position(self.CurrentPrinterProfile(),self._logger,self.Settings.printer.is_e_relative)
+		self.Position = Position(self.CurrentPrinterProfile(),self.Settings.debug,self.Settings.printer.z_min,self.Settings.printer.z_hop,self.Settings.printer.is_e_relative)
 		self.SnapshotCount = 0
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
@@ -126,8 +118,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# If the gcode trigger is enabled, add it
 		if(snapshot.gcode_trigger_enabled):
 			#Configure the extruder triggers
-			self._logger.info("Creating Gcode Trigger - Gcode Command:{0},".format(self.Settings.printer.snapshot_command))
-			self._logger.info("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+			self.Settings.debug.LogInfo("Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}".format(self.Settings.printer.snapshot_command, snapshot.gcode_trigger_require_zhop))
+			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
 				.format(snapshot.gcode_trigger_on_extruding
 					,snapshot.gcode_trigger_on_extruding_start
 					,snapshot.gcode_trigger_on_primed
@@ -144,13 +136,13 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			#Add the trigger to the list
 			self.Triggers.append(
 				GcodeTrigger(
-					gcodeExtruderTriggers,self._logger,self.Settings.printer.snapshot_command
+					gcodeExtruderTriggers,self.Settings.debug,self.Settings.printer.snapshot_command, snapshot.gcode_trigger_require_zhop
 			))
 		# If the layer trigger is enabled, add it
 		if(snapshot.layer_trigger_enabled):
 			#Configure the extruder triggers
-			self._logger.info("Creating Layer Trigger - ZMin:{0}, TriggerHeight:{1} (none = layer change), RequiresZHop:{2}".format(snapshot.layer_trigger_zmin,snapshot.layer_trigger_height, snapshot.layer_trigger_require_zhop))
-			self._logger.info("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+			self.Settings.debug.LogInfo("Creating Layer Trigger - TriggerHeight:{0} (none = layer change), RequiresZHop:{1}".format(snapshot.layer_trigger_height, snapshot.layer_trigger_require_zhop))
+			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
 				.format(
 					snapshot.layer_trigger_on_extruding
 					,snapshot.layer_trigger_on_extruding_start
@@ -166,12 +158,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				,snapshot.layer_trigger_on_retracting
 				,snapshot.layer_trigger_on_retracted
 				,snapshot.layer_trigger_on_detracting)
-			self.Triggers.append(LayerTrigger(layerExtruderTriggers,self._logger,snapshot.layer_trigger_zmin, self.Settings.printer.z_hop, snapshot.layer_trigger_require_zhop, snapshot.layer_trigger_height))
+			self.Triggers.append(LayerTrigger(layerExtruderTriggers,self.Settings.debug, snapshot.layer_trigger_require_zhop, snapshot.layer_trigger_height))
 		# If the layer trigger is enabled, add it
 		if(snapshot.timer_trigger_enabled):
 			#Configure the extruder triggers
-			self._logger.info("Creating Timer Trigger - Seconds:{0},".format(snapshot.timer_trigger_seconds))
-			self._logger.info("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+			self.Settings.debug.LogInfo("Creating Timer Trigger - Seconds:{0}, RequireZHop:{1}".format(snapshot.timer_trigger_seconds, snapshot.timer_trigger_require_zhop))
+			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
 				.format(
 					snapshot.timer_trigger_on_extruding
 					,snapshot.timer_trigger_on_extruding_start
@@ -188,7 +180,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				,snapshot.timer_trigger_on_retracting
 				,snapshot.timer_trigger_on_retracted
 				,snapshot.timer_trigger_on_detracting)
-			self.Triggers.append(TimerTrigger(timerExtruderTriggers,self._logger,snapshot.timer_trigger_seconds))
+			self.Triggers.append(TimerTrigger(timerExtruderTriggers,self.Settings.debug,snapshot.timer_trigger_seconds,snapshot.timer_trigger_require_zhop))
+
+	def OnPrintFailedOrCancelled(self):
+		self.Settings.debug.LogPrintStateChange("Print Failed or Cancelled.")
+		self.OnPrintEnd()
+	def OnPrintCompleted(self):
+		self.Settings.debug.LogPrintStateChange("Print Completed!")
+		self.OnPrintEnd()
 
 	def OnPrintEnd(self):
 		self.ClearTriggers()
@@ -202,15 +201,21 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				current_job_file = current_job["file"]
 				if "path" in current_job_file and "origin" in current_job_file:
 					current_file_path = current_job_file["path"]
-					return current_file_path
+					return utility.path_leaf(ntpath.basename(current_file_path))
 		return ""
-
+	
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
 		# position
-		# 
+		#
+
+		# check for assert commands
+		if(self.Settings is not None):
+			
+			self.Settings.debug.ApplyCommands(cmd, triggers=self.Triggers, isSnapshot=self.IsPausedByOctolapse)
+
 		if(self.Position is not None):
 			self.Position.Update(cmd)
 		# preconditions
@@ -222,22 +227,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or self._printer is None
 			or self.IsPausedByOctolapse
 			):
-			self._logger.info("GcodeQueuing - Skipping trigger checks for {0} - ".format(cmd))
 			return cmd
-		currentTrigger = trigger.IsTriggering(self.Triggers,self.Position, cmd)
+		currentTrigger = trigger.IsTriggering(self.Triggers,self.Position, cmd, self.Settings.debug)
 		if(currentTrigger is not None):
-			self._logger.info("GcodeQueuing - Triggering")
 			#We're triggering
-			self.SnapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,currentTrigger.Extruder)
+			self.SnapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,self.Position.Extruder)
 			# build an array of commands to take the snapshot
 			if(self.SnapshotGcode is not None):
-				self._logger.info("Octolapse - Pausing print to capture timelapse")
+				self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command:{0}".format(self.SnapshotGcode.ReturnEndCommand()))
 				self.SnapshotGcode.SavedCommand = cmd
 				self.IsPausedByOctolapse = True
 				self._printer.pause_print()
 				return None
 			else:
-				_logger.error("Cannot take a snapshot, there are no snapshot gcode commands to execute!  Check your profile settings or re-install.")
+				self.Settings.debug.LogError("Cannot take a snapshot, there are no snapshot gcode commands to execute!  Check your profile settings or re-install.")
 
 		if( trigger.IsSnapshotCommand(cmd,self.Settings.printer.snapshot_command)):
 			cmd = None
@@ -245,49 +248,31 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(self._printer.is_paused()):
-			self._logger.info('GcodeSent - Examining command:{0} and comparing to the EndSnapshotCommand:{1} and EndReturnCommand:{2}'.format(cmd,self.__EndSnapshotCommand, self.__EndCommand))
-		
-		if(self.__EndSnapshotCommand is not None and self.__EndSnapshotCommand == cmd):
-			# end snapshot command found, take the snapshot!
-			
-			self._logger.info('GcodeSent - Taking Snapshot')
-			self.TakeSnapshot()	
-			
-		if(self.__EndCommand is not None and self.__EndCommand == cmd):
-			self._logger.info('GcodeSent - Returned to previous position, resuming print')
-			self._printer.resume_print()
-	
+		if(self.Settings is None
+			or not self.Settings.is_octolapse_enabled
+			or self.Triggers is None
+			or len(self.Triggers)<1
+			or self._printer is None):
+			return
 
-
+		if(self.IsPausedByOctolapse == True and self.SnapshotGcode is not None):	
+			if(self.SnapshotGcode.StartEndCommand() == cmd):
+				self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command Found:{0}".format(self.SnapshotGcode.StartEndCommand()))
+				self.TakeSnapshot()	
+			
+			
 		
 	def SendSnapshotGcode(self):
 		if(self.SnapshotGcode is None):
-			self._logger.error("Octolapse - Cannot send snapshot Gcode, no gcode returned")
-		self._logger.info("Octolapse - Moving to x:{0:f} y:{1:f} for snapshot.  Sending:".format(self.SnapshotGcode.X,self.SnapshotGcode.Y))
-		self.__EndSnapshotCommand = self.SnapshotGcode.StartCommands[-1] #+ ";End-Octolapse-Snapshot-Start"
-		#self.SnapshotGcode.StartCommands[-1] = self.__EndSnapshotCommand
-		for str in self.SnapshotGcode.StartCommands:
-			self._logger.info("    {0}".format(str))
-
+			self.Settings.debug.LogError("Cannot send snapshot Gcode, no gcode returned")
+		# Send commands to move to the snapshot position
 		self._printer.commands(self.SnapshotGcode.StartCommands);
-
 		# Start the return journey!
-
-		
-		#self.SnapshotGcode.ReturnCommands[-1] = self.__EndCommand
-		self._logger.info("Octolapse - Returning to previous coordinates x:{0:f} y:{1:f}.  Sending:".format(self.SnapshotGcode.ReturnX,self.SnapshotGcode.ReturnY))
-		for str in self.SnapshotGcode.ReturnCommands:
-			self._logger.info("    {0}".format(str))
 		self._printer.commands(self.SnapshotGcode.ReturnCommands)
-		
-		self._logger.info("Octolapse - Sending saved command {0}".format(self.SnapshotGcode.SavedCommand))
-		self.__EndCommand = self.SnapshotGcode.SavedCommand
 		self._printer.commands(self.SnapshotGcode.SavedCommand);
-		
-		
-		
-		
+		self.IsPausedByOctolapse = False
+		self._printer.resume_print()
+
 	def TakeSnapshot(self):
 		snapshot = self.CaptureSnapshot
 		self.SnapshotCount += 1
@@ -303,7 +288,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self._logger.error('Unknown error detected:{0}'.format(errorMessage))
 			
 		else:
-			self._logger.info("Failed to retrieve the snapshot module!  It might work again later.")
+			self.Settings.debug.LogError("Failed to retrieve the snapshot module!  It might work again later.")
 
 	
 	##~~ AssetPlugin mixin

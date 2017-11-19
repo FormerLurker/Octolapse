@@ -1,6 +1,6 @@
 <form class="form-horizontal" >
-  <div id="octoprint_settings">
-    <div data-bind="with: global_settings.settings.plugins.octolapse">
+  <div id="octolapse_settings">
+    <div data-bind="with: settings.plugins.octolapse">
       <h3>Plugin Settings</h3>
       <span class="help-inline">
         <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
@@ -13,6 +13,53 @@
         </div>
       </div>
       <div data-bind="visible: is_octolapse_enabled">
+        <div id="octolapse_printer">
+          <h3>Printer Settings</h3>
+          <div class="control-group">
+            <label class="control-label">Retraction Length</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.retract_length"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Retraction Speed</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.retract_speed"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Movement Speed</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.movement_speed"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Z-Hop</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.z_hop"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Snapshot Command</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.snapshot_command"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: printer.is_e_relative" title="Force"/>Extruder is always relative
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Minimum Z-Height Before position tracking begins</label>
+            <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: printer.z_min"/>
+            </div>
+          </div>
+        </div>
+        
         <h3>Select a profile to edit</h3>
         <div class="control-group">
           <label class="control-label">Profiles</label>
@@ -137,12 +184,20 @@
               </div>
               <div class="control-group" data-bind="visible: snapshot.gcode_trigger_enabled">
                 <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: snapshot.gcode_trigger_require_zhop" />Trigger only on ZHop
+                  </label>
+                </div>
+              </div>
+              <div class="control-group" data-bind="visible: snapshot.gcode_trigger_enabled">
+                <div class="controls">
                   <small>
                     <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
                       <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
                     </a>
                   </small>
                 </div>
+                
                 <div id="trigger_gcode_advanced" class="control-group hide">
                   <div class="controls">
                     <label class="checkbox">
@@ -175,6 +230,13 @@
                   <label class="checkbox">
                     <input type="checkbox" data-bind="checked: snapshot.timer_trigger_enabled" />Enabled
                   </label>
+                </div>
+                <div class="control-group" data-bind="visible: snapshot.timer_trigger_enabled">
+                  <div class="controls">
+                    <label class="checkbox">
+                      <input type="checkbox" data-bind="checked: snapshot.timer_trigger_require_zhop" />Trigger only on ZHop
+                    </label>
+                  </div>
                 </div>
                 <div class="control-group" data-bind="visible: snapshot.timer_trigger_enabled">
                   <label class="control-label">Seconds to Trigger</label>
@@ -226,12 +288,6 @@
                     <label class="control-label">Trigger Height (0 for trigger at layer change)</label>
                     <div class="controls">
                       <input type="text" class="input-block-level" data-bind="value: snapshot.layer_trigger_height"/>
-                    </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Minimum Z-Height Before Triggering</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: snapshot.layer_trigger_zmin"/>
                     </div>
                   </div>
                   <div class="control-group">
@@ -293,11 +349,19 @@
               </a>
             </small>
           </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: snapshot.retract_before_move" />If not retracted, retract before move
+              </label>
+            </div>
+          </div>
+          
           <div id="snapshot_trigger_advanced" class="control-group hide">
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: camera.custom_script_enabled" />Custom Script Enabled
+                  <input type="checkbox" data-bind="checked: snapshot.custom_script_enabled" />Custom Script Enabled
                   <span class="help-inline">
                     <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
                   </span>
@@ -631,36 +695,178 @@
 
           </div>
         </div>
-        <div id="octolapse_printer">
-          <h3>Printer Settings</h3>
+        <h1>Debug</h1>
+        <div class="control-group">
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: debug.enabled" title="Enable or disable all logging"/>Enabled Logging
+            </label>
+          </div>
+        </div>
+        <div data-bind="visible: debug.enabled">
           <div class="control-group">
-            <label class="control-label">Retraction Length</label>
             <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: printer.retract_length"/>
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.position_change" title="Log Position Changes"/>Log Position Changes
+              </label>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label">Retraction Speed</label>
             <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: printer.retract_speed"/>
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.position_command_received" title="Log Position Commands"/>Log Position Commands
+              </label>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.extruder_change" title="Log extruder state changes"/>Log extruder state changes
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_wait_state" title="Enable or disable the plugin"/>Log Snapshot Trigger Wait State
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_triggering" title="Enable or disable the plugin"/>Log Snapshot Triggering
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_triggering_state" title="Enable or disable the plugin"/>Log Snapshtot Triggering State
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_layer_zmin_reached" title="Log ZMin Reached"/>Log ZMin Reached
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_layer_change" title="Log Layer Change"/>Log Layer Change
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_height_change" title="Log Height Change"/>Log Height Change
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_zhop" title="Log Zhop"/>Log Zhop
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_time_remaining" title="Log Trigger Time Remaining"/>Log Trigger Time Remaining
+              </label>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label">Movement Speed</label>
             <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: printer.movement_speed"/>
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.trigger_time_unpaused" title="Log Trigger Unpause"/>Log Trigger Unpause
+              </label>
+            </div>
+          </div>
+          
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_gcode" title="Log Snapshot Gcode"/>Log Snapshot Gcode
+              </label>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_gcode_endcommand" title="Log Snapshot Endcommand Status"/>Log Snapshot Gcode Endcommand Status
+              </label>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label">Z-Hop</label>
             <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: printer.z_hop"/>
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_position" title="Log Snapshot Position"/>Log Snapshot Position
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_position_return" title="Log Snapshot Return Position"/>Log Snapshot Return Position
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_save" title="Log Snapshot Save"/>Log Snapshot Save
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_download" title="Log Snapshot Download"/>Log Snapshot Download
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.settings_save" title="Log Settings On Save"/>Log Settings On Save
+              </label>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label">Snapshot Command</label>
             <div class="controls">
-              <input type="text" class="input-block-level" data-bind="value: printer.snapshot_command"/>
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.settings_load" title="Log Settings On Save"/>Log Settings On Load
+              </label>
+            </div>
+          </div>
+          
+
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.print_state_changed" title="Log Print State Changes"/>Log Print State Changes
+              </label>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import re
 import collections
 import string
 import operator
+from .settings import *
 
 class SnapshotGcode(object):
 	def __init__(self):
@@ -12,6 +13,17 @@ class SnapshotGcode(object):
 		self.Y = None
 		self.ReturnX = None
 		self.ReturnY = None
+	def StartEndCommand(self):
+		if(len(self.StartCommands)>0):
+			return self.StartCommands[-1]
+		else:
+			return None
+	def ReturnEndCommand(self):
+		if(len(self.StartCommands)>0):
+			return self.StartCommands[-1]
+		else:
+			return None
+
 
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
@@ -228,15 +240,30 @@ class Commands(object):
 	    ,regex="'(?i)^G91'"
 	    ,displayTemplate="G91 - Relative Coordinates{Comment}"
         ,parameters = [])
+	Debug_Assert = Command(
+	    name="Debug - Assert"
+	    ,command="OCTOLAPSE_ASSERT"
+	    ,regex="(?i)^(?:\s*Octolapse_Assert)(?:\s+snapshot:(?P<Snapshot>-?(true|false))|\s+gcodetrigger:(?P<GcodeTrigger>-?(true|false))|\s+timertrigger:(?P<TimerTrigger>-?(true|false))|\s+layertrigger:(?P<LayerTrigger>-?(true|false))|\s+gcodetriggerwait:(?P<GcodeTriggerWait>-?(true|false))|\s+timertriggerwait:(?P<TimerTriggerWait>-?(true|false))|\s+layertriggerwait:(?P<LayerTriggerWait>-?(true|false)))*$"
+	,displayTemplate="Octolapse Assert: Snapshot={Snapshot}, GcodeTrigger={GcodeTrigger}, LayerTrigger={LayerTrigger}, GcodeTriggerWait={GcodeTriggerWait}, TimerTriggerWait={TimerTriggerWait}, LayerTriggerWait={LayerTriggerWait}{CommentTemplate}"
+	,parameters = [CommandParameter("Snapshot",group=1),
+					CommandParameter("GcodeTrigger",group=2),
+					CommandParameter("TimerTrigger",group=3),
+					CommandParameter("LayerTrigger",group=4),
+					CommandParameter("GcodeTriggerWait",group=5),
+					CommandParameter("TimerTriggerWait",group=6),
+					CommandParameter("LayerTriggerWait",group=7)
+					]
+		)
 
 	CommandsDictionary = {
 	    G0.Command:G0,
 	    G1.Command:G1,
 	    G28.Command:G28,
         G90.Command:G90,
-        G91.Command:G91
+        G91.Command:G91,
+		Debug_Assert.Command:Debug_Assert
     }
-
+	
 	def GetCommand(self, code):
 		command = GetGcodeFromString(code)
 		if (command in self.CommandsDictionary.keys()):
@@ -270,13 +297,12 @@ class SafeDict(dict):
             
     def __missing__(self, key):
         return '{' + key + '}'
-	
-class GCode(object):
-	
+
+class Gcode(object):	
 	CurrentXPathIndex = 0
 	CurrentYPathIndex = 0
-	def __init__(self,printer,profile,octoprint_printer_profile,octoprintLogger):
-		self.Logger = octoprintLogger
+	def __init__(self,printer,profile,octoprint_printer_profile,debugSettings):
+		self.Debug = debugSettings
 		self.Printer = printer
 		self.Profile = profile
 		self.OctoprintPrinterProfile = octoprint_printer_profile
@@ -302,31 +328,29 @@ class GCode(object):
 	def IsXInBounds(self,x):
 		
 		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (x<self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"] or x > self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])):
-			self.Logger.error('The X coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(x))
+			self.Debug.LogError('The X coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(x))
 			return False
 		elif(x<0 or x > self.OctoprintPrinterProfile["volume"]["width"]):
-			self.Logger.error('The X coordinate {0} was outside the bounds of the printer!'.format(x))
+			self.Debug.LogError('The X coordinate {0} was outside the bounds of the printer!'.format(x))
 			return False
 		return True	
-			
 	def IsYInBounds(self,y):
 		hasError = False
 		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (y<self.OctoprintPrinterProfile["volume"]["custom_box"]["y_min"] or y > self.OctoprintPrinterProfile["volume"]["custom_box"]["y_max"])):
-			self.Logger.error('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
+			self.Debug.LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
 			return False
 		elif(y<0 or y > self.OctoprintPrinterProfile["volume"]["depth"]):
-			self.Logger.error('The Y coordinate {0} was outside the bounds of the printer!'.format(y))
+			self.Debug.LogError('The Y coordinate {0} was outside the bounds of the printer!'.format(y))
 			return False
 
-		return True
-			
+		return True		
 	def IsZInBounds(self,z):
 		hasError = False
 		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (z < self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"] or z > self.OctoprintPrinterProfile["volume"]["custom_box"]["z_max"])):
-			self.Logger.error('The Z coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(z))
+			self.Debug.LogError('The Z coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(z))
 			return False
 		elif(z<0 or z > self.OctoprintPrinterProfile["volume"]["height"]):
-			self.Logger.error('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
+			self.Debug.LogError('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
 			return False
 		return True
 	def GetXCoordinateForSnapshot(self):
@@ -414,92 +438,123 @@ class GCode(object):
 		if(not self.IsYInBounds(yCoord)):
 			return None
 		return yCoord
-	
 	def GetSnapshotGcode(self, position, extruder):
-		newSnapshotGcode = SnapshotGcode()
 
+		newSnapshotGcode = SnapshotGcode()
 		# Create code to move from the current extruder position to the snapshot position
 		# get the X and Y coordinates of the snapshot
 		newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
 		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
 		hasRetracted = False
-
-		isRelativeLocal = position.IsRelative
-		
-		
-
+		previousIsRelative = position.IsRelative
+		previousExtruderRelative = position.IsExtruderRelative
 		# retract if necessary
 		if(self.Profile.snapshot.retract_before_move and not extruder.IsRetracted):
-			newSnapshotGcode.StartCommands.append(self.GetRetractGCode())
+			if(not position.IsExtruderRelative):
+				newSnapshotGcode.StartCommands.append.GetSetExtruderRelativePositionGcode()
+				position.IsExtruderRelative = True
+			newSnapshotGcode.StartCommands.append(self.GetRetractGcode())
 			hasRetracted = True
 		
 		# Can we hop or is the print too tall?
 		canZHop = self.Printer.z_hop > 0 and self.IsZInBounds(position.Z + self.Printer.z_hop)
 		# if we can ZHop, do
 		if(canZHop):
-			if(not isRelativeLocal):
+			if(not position.IsRelative):
 				newSnapshotGcode.StartCommands.append(self.GetSetRelativePositionGcode())
-				isRelativeLocal = True
+				position.IsRelative = True
 			newSnapshotGcode.StartCommands.append(self.GetRelativeZLiftGcode())
-			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
-			isRelativeLocal = False
+			
 
 		if (newSnapshotGcode.X is None or newSnapshotGcode.Y is None):
 			# either x or y is out of bounds.
 			return None
-		if(not isRelativeLocal):
+
+		#Move back to the snapshot position - make sure we're in absolute mode for this
+		if(position.IsRelative):
 			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
-			isRelativeLocal = False
+			position.IsRelative = False
 		newSnapshotGcode.StartCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
-		newSnapshotGcode.StartCommands.append(self.GetDelayGcode() );
+		newSnapshotGcode.StartCommands.append("{0}".format(self.GetDelayGcode() ));
 		
 		# create return gcode
 		#record our previous position for posterity
 		newSnapshotGcode.ReturnX = position.X
 		newSnapshotGcode.ReturnY = position.Y
 
-		#Move back to previous position
+		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
+		if(position.IsRelative):
+			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
+			position.IsRelative = False
+			
 		if(position.X is not None and position.Y is not None):
 			newSnapshotGcode.ReturnCommands.append(self.GetMoveGcode(position.X,position.Y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
-			if(not isRelativeLocal):
+			if(not position.IsRelative):
 				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
-				isRelativeLocal = True
+				position.IsRelative = True
 			newSnapshotGcode.ReturnCommands.append(self.GetRelativeZLowerGcode())
 		# detract
 		if(hasRetracted):
+			if(not position.IsExtruderRelative):
+				newSnapshotGcode.StartCommands.append.GetSetExtruderRelativePositionGcode()
+				position.IsExtruderRelative = True
 			newSnapshotGcode.ReturnCommands.append(self.GetDetractGcode())
 
-		# set to relative or absolute based on the unmodified position state
-		if(position.IsRelative and not isRelativeLocal):
-			newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
-		elif (not position.IsRelative and isRelativeLocal):
-			newSnapshotGcode.ReturnCommands.append(self.GetSetAbsolutePositionGcode())
-			
+		# reset the coordinate systems for the extruder and axis
+		if(previousIsRelative != position.IsRelative):
+			if(position.IsRelative):
+				newSnapshotGcode.ReturnCommands.append(self.GetSetAbsolutePositionGcode())
+			else:
+				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
+			position.IsRelative = previousIsRelative
+
+		if(previousExtruderRelative != position.IsExtruderRelative):
+			if(position.IsExtruderRelative):
+				newSnapshotGcode.ReturnCommands.append(self.GetSetExtruderAbslutePositionGcode())
+			else:
+				newSnapshotGcode.ReturnCommands.append(self.GetSetExtruderRelativePositionGcode())
+			position.IsExtruderRelative = previousExtruderRelative
+
+		newSnapshotGcode.ReturnCommands[-1] = "{0}".format(newSnapshotGcode.ReturnCommands[-1])
+
+
+		if(self.Debug.snapshot_gcode):
+			self.Debug.LogSnapshotGcode("Snapshot Gcode - Start:")
+			for str in newSnapshotGcode.StartCommands:
+				self.Debug.LogSnapshotGcode("    {0}".format(str))
+			self.Debug.LogSnapshotGcode("Snapshot Gcode - Return:")
+			for str in newSnapshotGcode.ReturnCommands:
+				self.Debug.LogSnapshotGcode("    {0}".format(str))
+
+		self.Debug.LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
+		self.Debug.LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
+
+		
+
+
 		return newSnapshotGcode
-	#
+
+	def GetSetExtruderRelativePositionGcode(self):
+		return "M83"
+	def GetSetExtruderAbslutePositionGcode(self):
+		return "M82"
 	def GetSetAbsolutePositionGcode(self):
 		return "G90"
 	def GetSetRelativePositionGcode(self):
 		return "G91"
-
 	def GetDelayGcode(self):
 		return "G4 P{0:d}".format(self.Profile.snapshot.delay)
-	
 	def GetMoveGcode(self,x,y):
 		return "G0 X{0:.3f} Y{1:.3f} F{2:.3f}".format(x,y,self.Printer.movement_speed)
-
 	def GetRelativeZLiftGcode(self):
 		return "G0 Z{0:.3f} F{1:.3f}".format(self.Printer.z_hop, self.Printer.movement_speed)
 	def GetRelativeZLowerGcode(self):
 		return "G0 Z{0:.3f} F{1:.3f}".format(-1.0*self.Printer.z_hop, self.Printer.movement_speed)
-
-
 	def GetRetractGcode(self):
-		return "G1 E{0:.3f} F{1:.3f}".format(self.Printer.retract_length,self.Printer.retract_speed)
-	#
+		return "G1 E{0:.3f} F{1:.3f}".format(-1*self.Printer.retract_length,self.Printer.retract_speed)
 	def GetDetractGcode(self):
-		return "G1 E{0:.3f} F{1:.3f}".format(-1* self.Printer.retract_length,self.Printer.retract_speed)
+		return "G1 E{0:.3f} F{1:.3f}".format( self.Printer.retract_length,self.Printer.retract_speed)
 	def GetResetLineNumberGcode(self,lineNumber):
 		return "M110 N{0:d}".format(lineNumber)

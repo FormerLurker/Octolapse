@@ -1,20 +1,18 @@
-$(function () {
+/*$(function () {
     function OctolapseSettingsViewModel(parameters) {
         var self = this;
         self.global_settings = parameters[0];
-
-        self.is_octolapse_enabled = ko.observable();
-        self.current_profile_name = ko.observable();
-        self.profiles = ko.observableArray();
-        self.printer = ko.observable();
-
+        //self.settings = ko.observable()
+       
+        self.settings.is_octolapse_enabled = ko.observable(self.settings.is_octolapse_enabled);
+        self.current_profile_name = ko.observable(self.current_profile_name );
+        self.is_e_relative = ko.observable(self.is_e_relative)
+        self.profiles = ko.observableArray(self.profiles);
+        self.printer = ko.observable(self.printer);
     };
     self.onBeforeBinding = function () {
-        self.settings = self.global_settings.settings.plugins.enclosure;
-        self.is_octolapse_enabled = self.settings.is_octolapse_enabled;
-        self.profiles(self.settings.profiles);
-        self.printer = self.settings.printer;
-    }
+        self.settings = self.global_settings.settings.plugins.octolapse;
+     }
 
     // This is how our plugin registers itself with the application, by adding some configuration
     // information to the global variable OCTOPRINT_VIEWMODELS
@@ -28,6 +26,7 @@ $(function () {
         ["settingsViewModel"],
 
         // Finally, this is the list of selectors for all elements we want this view model to be bound to.
-        ["#octoprint_settings"]
+        ["#octolapse_settings"]
     ]);
 });
+*/
