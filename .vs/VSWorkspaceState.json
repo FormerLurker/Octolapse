@@ -3,6 +3,7 @@
     "",
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\static",
+    "\\octoprint_octolapse\\static\\gcode",
     "\\octoprint_octolapse\\static\\js",
     "\\octoprint_octolapse\\templates"
   ],
