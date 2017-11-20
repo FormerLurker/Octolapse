@@ -88,7 +88,9 @@ def DownloadSnapshot(directoryName, fileName, url, debug, timeoutSeconds, userna
 					if not os.path.exists(path):
 						os.makedirs(path)
 				except:
-					debug.LogWarning("Download - The directory for the download file {0:s} already exists.".format(os.path.dirname(dir)))
+					type = sys.exc_info()[0]
+					value = sys.exc_info()[1]
+					debug.LogWarning("Download - An exception was thrown when trying to save a snapshot to: {0} , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
 					return
 				try:
 					with iopen(dir, 'wb') as file:
