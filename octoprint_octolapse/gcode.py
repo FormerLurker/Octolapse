@@ -475,6 +475,7 @@ class Gcode(object):
 			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
 			position.IsRelative = False
 		newSnapshotGcode.StartCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
+		newSnapshotGcode.StartCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		newSnapshotGcode.StartCommands.append("{0}".format(self.GetDelayGcode() ));
 		
 		# create return gcode
@@ -558,3 +559,6 @@ class Gcode(object):
 		return "G1 E{0:.3f} F{1:.3f}".format( self.Printer.retract_length,self.Printer.retract_speed)
 	def GetResetLineNumberGcode(self,lineNumber):
 		return "M110 N{0:d}".format(lineNumber)
+	def GetWaitForCurrentMovesToFinishGcode(self):
+		return "M400";
+		
