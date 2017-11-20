@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 import octoprint.plugin
+
 import time
 import os
 import sys
@@ -12,7 +13,7 @@ from octoprint.events import eventManager, Events
 from .trigger import *
 import itertools
 from .utility import *
-
+from .render import Render
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
 						octoprint.plugin.TemplatePlugin,
@@ -32,6 +33,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SnapshotCount = 0
 		self._IsTriggering = False
 		self.WaitForSnapshot = False
+		self.Render = None
 	##~~ After Startup
 	def on_after_startup(self):
 		self.reload_settings()
@@ -77,8 +79,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.OnPrintResumed()
 		elif (event == Events.PRINT_STARTED):
 			self.OnPrintStart()
-		elif (event in (Events.PRINT_FAILED, Events.PRINT_CANCELLED)):
-			self.OnPrintFailedOrCancelled()
+		elif (event == Events.PRINT_FAILED):
+			self.OnPrintFailed()
+		elif (event == Events.PRINT_CANCELLED):
+			self.OnPrintCancelled()
 		elif (event == Events.PRINT_DONE):
 			self._logger.info("Octolapse - Print Done")
 			self.OnPrintCompleted()
@@ -105,8 +109,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.reload_settings()				
 		self.OctolapseGcode = Gcode(self.Settings.printer, self.Settings.CurrentProfile(),self.CurrentPrinterProfile(),self.Settings.debug)
 		self.CaptureSnapshot = CaptureSnapshot(self.Settings.CurrentProfile(), self.Settings.printer,self.Settings.debug)
+		self.CaptureSnapshot.CleanSnapshots(None,'before-print')
 		self.ClearTriggers()
 		self.Position = Position(self.CurrentPrinterProfile(),self.Settings.debug,self.Settings.printer.z_min,self.Settings.printer.z_hop,self.Settings.printer.is_e_relative)
+		self.Render = Render(self.Settings.debug, self.Settings.CurrentProfile(),1,None,self.OnRenderFail,self.OnRenderComplete,None)
 		self.SnapshotCount = 0
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
@@ -181,18 +187,39 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				,snapshot.timer_trigger_on_detracting)
 			self.Triggers.append(TimerTrigger(timerExtruderTriggers,self.Settings.debug,snapshot.timer_trigger_seconds,snapshot.timer_trigger_require_zhop))
 
-	def OnPrintFailedOrCancelled(self):
-		self.Settings.debug.LogPrintStateChange("Print Failed or Cancelled.")
+	def OnPrintFailed(self):
+		self.Settings.debug.LogPrintStateChange("Print Failed.")
+		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
+		self.Settings.debug.LogInfo("Started Rendering Timelapse");
+		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-failed')
 		self.OnPrintEnd()
+	def OnPrintCancelled(self):
+		self.Settings.debug.LogPrintStateChange("Print Cancelled.")
+		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
+		self.Settings.debug.LogInfo("Started Rendering Timelapse");
+		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-cancel')
+		self.OnPrintEnd()
+
 	def OnPrintCompleted(self):
+		self.CaptureSnapshot.SetPrintEndTime(time.time())
+		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
+		self.Settings.debug.LogInfo("Started Rendering Timelapse");
 		self.Settings.debug.LogPrintStateChange("Print Completed!")
+		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-print')
 		self.OnPrintEnd()
 
 	def OnPrintEnd(self):
+		
 		self.ClearTriggers()
 		self.Position = None
-		self.CaptureSnapshot.SetPrintEndTime(time.time())
-		
+
+	def OnRenderComplete(self, *args, **kwargs):
+		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_complete')
+		self.Settings.debug.LogInfo("Rendering Complete");
+	def OnRenderFail(self, *args, **kwargs):
+		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_fail')
+		self.Settings.debug.LogInfo("Rendering Failed");
+
 	def CurrentlyPrintingFileName(self):
 		if(self._printer is not None):
 			current_job = self._printer.get_current_job()
@@ -200,7 +227,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				current_job_file = current_job["file"]
 				if "path" in current_job_file and "origin" in current_job_file:
 					current_file_path = current_job_file["path"]
-					return utility.path_leaf(ntpath.basename(current_file_path))
+					return utility.GetFilenameFromFullPath(current_file_path)
 		return ""
 	
 	

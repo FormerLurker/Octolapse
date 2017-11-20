@@ -4,6 +4,8 @@ import utility
 from .gcode import Commands, Command
 from pprint import pprint
 from .trigger import GcodeTrigger, TimerTrigger, LayerTrigger
+import os
+import sys
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
@@ -131,7 +133,8 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 					'cleanup_after_print' : utility.getbool(profile.snapshot.cleanup_after_print,defaultProfile.snapshot.cleanup_after_print),
 					'cleanup_after_cancel' : utility.getbool(profile.snapshot.cleanup_after_cancel,defaultProfile.snapshot.cleanup_after_cancel),
 					'cleanup_before_close' :  utility.getbool(profile.snapshot.cleanup_before_close,defaultProfile.snapshot.cleanup_before_close),
-					'cleanup_after_render' : utility.getbool(profile.snapshot.cleanup_after_render,defaultProfile.snapshot.cleanup_after_render),
+					'cleanup_after_render_complete' : utility.getbool(profile.snapshot.cleanup_after_render_complete,defaultProfile.snapshot.cleanup_after_render_complete),
+					'cleanup_after_render_fail' : utility.getbool(profile.snapshot.cleanup_after_render_fail,defaultProfile.snapshot.cleanup_after_render_fail),
 					'custom_script_enabled' : utility.getbool(profile.snapshot.custom_script_enabled,defaultProfile.snapshot.custom_script_enabled),
 					'script_path' : utility.getstring(profile.snapshot.script_path,defaultProfile.snapshot.script_path),
 				},
@@ -145,7 +148,14 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 					'output_format' : utility.getstring(profile.rendering.output_format,defaultProfile.rendering.output_format),
 					'output_filename' :utility.getstring(profile.rendering.output_filename,defaultProfile.rendering.output_filename),
 					'output_directory' : utility.getstring(profile.rendering.output_directory,defaultProfile.rendering.output_directory),
-					'sync_with_timelapse' :  utility.getbool(profile.rendering.sync_with_timelapse,defaultProfile.rendering.sync_with_timelapse)
+					'sync_with_timelapse' : utility.getbool(profile.rendering.sync_with_timelapse,defaultProfile.rendering.sync_with_timelapse),
+					'octoprint_timelapse_directory' : utility.getstring(profile.rendering.octoprint_timelapse_directory,defaultProfile.rendering.octoprint_timelapse_directory),
+					'ffmpeg_path' : utility.getstring(profile.rendering.ffmpeg_path,defaultProfile.rendering.ffmpeg_path),
+					'bitrate' : utility.getstring(profile.rendering.bitrate,defaultProfile.rendering.bitrate),
+					'flip_h' :  utility.getbool(profile.rendering.flip_h,defaultProfile.rendering.flip_h),
+					'flip_v' :  utility.getbool(profile.rendering.flip_v,defaultProfile.rendering.flip_v),
+					'rotate_90' :  utility.getbool(profile.rendering.rotate_90,defaultProfile.rendering.rotate_90),
+					'watermark' :  utility.getbool(profile.rendering.watermark,defaultProfile.rendering.watermark)
 				},
 				
 				'camera' : {
@@ -269,9 +279,7 @@ class Stabilization(object):
 			if("z_movement_speed_mms" in stabilization.keys()):
 				self.z_movement_speed_mms = utility.getint(stabilization["z_movement_speed_mms"],self.z_movement_speed_mms)
 class Snapshot(object):
-
 	def __init__(self,snapshot):
-
 		#Initialize defaults
 		#Gcode Trigger
 		self.gcode_trigger_enabled = True
@@ -308,12 +316,16 @@ class Snapshot(object):
 		self.retract_before_move = False
 		self.output_format = "jpg"
 		self.output_filename = "{FILENAME}_{SNAPSHOTNUMBER}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "./snapshots/{FILENAME}_{PRINTSTARTTIME}/"
+		self.output_directory = "/home/pi/Octolapse/snapshots/{FILENAME}_{PRINTSTARTTIME}/"
+		if (sys.platform == "win32"):
+			self.output_directory = "c:\\temp\\snapshots\\{FILENAME}_{PRINTSTARTTIME}\\"
 		self.cleanup_before_print = True
 		self.cleanup_after_print = False
 		self.cleanup_after_cancel = True
+		self.cleanup_after_fail = True
 		self.cleanup_before_close = False
-		self.cleanup_after_render = True
+		self.cleanup_after_render_complete = True
+		self.cleanup_after_render_fail = False
 		self.custom_script_enabled = False
 		self.script_path = ""
 		
@@ -392,20 +404,14 @@ class Snapshot(object):
 				self.cleanup_after_print = utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print)
 			if("cleanup_after_cancel" in snapshot.keys()):
 				self.cleanup_after_cancel = utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel)
+			if("cleanup_after_fail" in snapshot.keys()):
+				self.cleanup_after_fail = utility.getbool(snapshot["cleanup_after_fail"],self.cleanup_after_fail)
 			if("cleanup_before_close" in snapshot.keys()):
 				self.cleanup_before_close = utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close)
-			if("cleanup_after_render" in snapshot.keys()):
-				self.cleanup_after_render = utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render)
-			if("cleanup_before_print" in snapshot.keys()):
-				self.cleanup_before_print = utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print)
-			if("cleanup_after_print" in snapshot.keys()):
-				self.cleanup_after_print = utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print)
-			if("cleanup_after_cancel" in snapshot.keys()):
-				self.cleanup_after_cancel = utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel)
-			if("cleanup_before_close" in snapshot.keys()):
-				self.cleanup_before_close = utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close)
-			if("cleanup_after_render" in snapshot.keys()):
-				self.cleanup_after_render = utility.getbool(snapshot["cleanup_after_render"],self.cleanup_after_render)
+			if("cleanup_after_render_complete" in snapshot.keys()):
+				self.cleanup_after_render_complete = utility.getbool(snapshot["cleanup_after_render_complete"],self.cleanup_after_render_complete)
+			if("cleanup_after_render_fail" in snapshot.keys()):
+				self.cleanup_after_render_fail = utility.getbool(snapshot["cleanup_after_render_fail"],self.cleanup_after_render_fail)
 			if("custom_script_enabled" in snapshot.keys()):
 				self.custom_script_enabled = utility.getbool(snapshot["custom_script_enabled"],self.custom_script_enabled)
 			if("script_path" in snapshot.keys()):
@@ -420,8 +426,21 @@ class Rendering(object):
 		self.min_fps = 1.0
 		self.output_format = 'mp4'
 		self.output_filename = "{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "./timelapse/{FILENAME}_{PRINTENDTIME}/"
+		self.output_directory = "/home/pi/Octolapse/timelapse/{FILENAME}_{PRINTSTARTTIME}/"
+		if (sys.platform == "win32"):
+			self.output_directory = "c:\\temp\\{FILENAME}_{PRINTSTARTTIME}"
 		self.sync_with_timelapse = False
+		self.octoprint_timelapse_directory = "/home/pi/.octoprint/timelapse/"
+		if(sys.platform == "win32"):
+			self.octoprint_timelapse_directory = "{0}{1}".format(os.getenv('APPDATA'), "\\Octoprint\\timelapse")
+		self.ffmpeg_path = "/usr/bin/avconv"
+		if sys.platform == "win32":
+			self.ffmpeg_path  = "\"C:\Program Files (x86)\\FFMpeg\\bin\\ffmpeg.exe\""
+		self.bitrate = "2000K"
+		self.flip_h = False
+		self.flip_v = False
+		self.rotate_90 = False
+		self.watermark = False
 		if(rendering is not None):
 			if("enabled" in rendering.keys()):
 				self.enabled = utility.getbool(rendering["enabled"],self.enabled)
@@ -437,8 +456,27 @@ class Rendering(object):
 				self.min_fps = utility.getfloat(rendering["min_fps"],self.min_fps)
 			if("output_format" in rendering.keys()):
 				self.output_format = utility.getstring(rendering["output_format"],self.output_format)
+			if("output_filename" in rendering.keys()):
+				self.output_filename = utility.getstring(rendering["output_filename"],self.output_format)
+			if("output_directory" in rendering.keys()):
+				self.output_directory = utility.getstring(rendering["output_directory"],self.output_directory)
 			if("sync_with_timelapse" in rendering.keys()):
 				self.sync_with_timelapse = utility.getbool(rendering["sync_with_timelapse"],self.sync_with_timelapse)
+			if("octoprint_timelapse_directory" in rendering.keys()):
+				self.octoprint_timelapse_directory = utility.getbool(rendering["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
+			if("ffmpeg_path" in rendering.keys()):
+				self.ffmpeg_path = utility.getstring(rendering["ffmpeg_path"],self.ffmpeg_path)
+			if("bitrate" in rendering.keys()):
+				self.bitrate = utility.getstring(rendering["bitrate"],self.bitrate)
+			if("flip_h" in rendering.keys()):
+				self.flip_h = utility.getbool(rendering["flip_h"],self.flip_h)
+			if("flip_v" in rendering.keys()):
+				self.flip_v = utility.getbool(rendering["flip_v"],self.flip_v)
+			if("rotate_90" in rendering.keys()):
+				self.rotate_90 = utility.getbool(rendering["rotate_90"],self.rotate_90)
+			if("watermark" in rendering.keys()):
+				self.watermark = utility.getbool(rendering["watermark"],self.watermark)
+
 class Camera(object):
 	
 	def __init__(self,camera):

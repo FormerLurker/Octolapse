@@ -10,7 +10,7 @@ from urlparse import urlsplit
 from math import trunc
 from .settings import *
 import traceback
-
+import shutil
 class CaptureSnapshot(object):
 
 	def __init__(self, profile,printer,debugSettings):
@@ -28,40 +28,48 @@ class CaptureSnapshot(object):
 
 	def Snap(self,printerFileName,snapshotNumber):
 		
-		# strip off the extension
-		printerFileName = os.path.splitext(printerFileName)[0]
+		
 		info = SnapshotInfo()
 		# set the file name
-		info.FileName = self.GetSnapshotFileName(printerFileName,snapshotNumber)
-		info.DirectoryName = self.GetSnapshotDirectoryName(printerFileName)
+		info.FileName = utility.GetFilenameFromTemplate(self.Profile.snapshot.output_filename, printerFileName, self.PrintStartTime, self.Profile.snapshot.output_format, snapshotNumber)
+		info.DirectoryName = utility.GetDirectoryFromTemplate(self.Profile.snapshot.output_directory,printerFileName,self.PrintStartTime, self.Profile.snapshot.output_format)
 		# TODO:  make the snapshot timeout a separate setting
 		DownloadSnapshot(info.DirectoryName, info.FileName, self.Profile.camera.address, self.Debug, timeoutSeconds = self.Profile.snapshot.delay/1000.0*2, username = self.Profile.camera.username, password = self.Profile.camera.password,ignoreSslErrors = self.Profile.camera.ignore_ssl_error )
 
 		return info
 
-
-	def GetSnapshotFileName(self,printerFileName,snapshotNumber):
-		dateStamp = "{0:d}".format(trunc(round(time.time(),2)*100))
-		filename = self.Profile.snapshot.output_filename
-		if(not filename):
-			filename = "{FILENAME}_{SNAPSHOTNUMBER}.{OUTPUTFILEEXTENSION}"
-		filename = filename.replace("{FILENAME}",utility.getstring(printerFileName,""))
-		filename = filename.replace("{DATETIMESTAMP}","{0:d}".format(trunc(round(time.time(),2)*100)))
-		filename = filename.replace("{SNAPSHOTNUMBER}","{0:05d}".format(snapshotNumber))
-		filename = filename.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
-		filename = filename.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,2)*100)))
-		return filename
-
-
-	def GetSnapshotDirectoryName(self,printerFileName):
-		directoryName = self.Profile.snapshot.output_directory
-		if(not directoryName):
-			directoryName = "./snapshots/{FILENAME}/{PRINTSTARTTIME}"
-
-		directoryName = directoryName.replace("{FILENAME}",utility.getstring(printerFileName,""))
-		directoryName = directoryName.replace("{OUTPUTFILEEXTENSION}",utility.getstring(self.Profile.snapshot.output_format,""))
-		directoryName = directoryName.replace("{PRINTSTARTTIME}","{0:d}".format(trunc(round(self.PrintStartTime,2)*100)))
-		return directoryName
+	def CleanSnapshots(self,printerFileName, event):
+		if(event == 'before_print' and self.Profile.snapshot.cleanup_before_print):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'after_print' and self.Profile.snapshot.cleanup_after_print):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'after_fail' and self.Profile.snapshot.cleanup_after_fail):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'after_cancel' and self.Profile.snapshot.cleanup_after_cancel):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'before_close' and self.Profile.snapshot.cleanup_before_close):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'after_render_complete' and self.Profile.snapshot.cleanup_after_render_complete):
+			self._CleanSnapshots(printerFileName)
+		elif(event == 'after_render_fail' and self.Profile.snapshot.cleanup_after_render_fail):
+			self._CleanSnapshots(printerFileName)
+	def _CleanSnapshots(self,printerFileName):
+		# get snapshot directory
+		self.Debug.LogWarning("Cleaning Snapshots")
+		if(printerFileName is None):
+			path = self.Profile.snapshot.output_directory
+		else:
+			path = utility.GetDirectoryFromTemplate(self.Profile.snapshot.output_directory,printerFileName,self.PrintStartTime, self.Profile.snapshot.output_format)
+		path = os.path.dirname(path)
+		if(os.path.isdir(path)):
+			try:
+				shutil.rmtree(path)
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self.Debug.LogWarning("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
+		else:
+			self.Debug.LogWarning("Snapshot - No need to clean snapshots: they have already been removed.")
 	def DownloadSnapshotAsync(self,directoryName, fileName, url, debug, timeoutSeconds, username = None, password = None, ignoreSslErrors = False):
 			download_thread = threading.Thread(target=DownloadSnapshot, args=(directoryName, fileName, url, debug, timeoutSeconds, username, password, ignoreSslErrors))
 			self.Debug.LogSnapshotDownload("Snapshot - started async download.".format(url,dir))

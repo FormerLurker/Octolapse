@@ -59,7 +59,7 @@
             </div>
           </div>
         </div>
-        
+
         <h3>Select a profile to edit</h3>
         <div class="control-group">
           <label class="control-label">Profiles</label>
@@ -197,7 +197,7 @@
                     </a>
                   </small>
                 </div>
-                
+
                 <div id="trigger_gcode_advanced" class="control-group hide">
                   <div class="controls">
                     <label class="checkbox">
@@ -349,15 +349,16 @@
               </a>
             </small>
           </div>
-          <div class="control-group">
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" data-bind="checked: snapshot.retract_before_move" />If not retracted, retract before move
-              </label>
-            </div>
-          </div>
           
+
           <div id="snapshot_trigger_advanced" class="control-group hide">
+            <div class="control-group">
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.retract_before_move" />If not retracted, retract before move
+                </label>
+              </div>
+            </div>
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
@@ -416,10 +417,16 @@
                   <input type="checkbox" data-bind="checked: snapshot.cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
                 </label>
                 <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_fail" title="After Print Failed"/>After Print Failed
+                </label>
+                <label class="checkbox">
                   <input type="checkbox" data-bind="checked: snapshot.cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
                 </label>
                 <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render_complete" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: snapshot.cleanup_after_render_fail" title="After Timelapse Is Rendered"/>After Timelaps Rendering Fails
                 </label>
               </div>
             </div>
@@ -427,6 +434,21 @@
           <div id="octolapse_rendering">
             <h3>Rendering Options</h3>
             <div class="control-group">
+              <label class="control-label" >Path to FFMPEG</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: rendering.ffmpeg_path"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" >Bitrate</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: rendering.bitrate"/>
+              </div>
+            </div>
+
+
+            <div class="control-group">
+
               <label class="control-label" >Frames per Second (FPS)</label>
               <div class="controls">
                 <select data-bind="options: $parent.fps_calculation_options,
@@ -457,13 +479,43 @@
               </div>
             </div>
             <div class="control-group">
-
               <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
                 <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
               </a>
-
             </div>
             <div class="control-group hide" id="rendering-advanced">
+              <div class="control-group">
+                <label class="control-label">Flip Horizontal</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: rendering.flip_h" title="Flip the resulting timelapse along the horizontal axis"/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Flip Vertical</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: rendering.flip_v" title="Flip the resulting timelapse along the vertical axis"/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Rotate 90 Degrees</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: rendering.rotate_90" title="Rotate the resulting timelapse 90 degrees"/>Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Embed a watermark in the resulting timelapse</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: rendering.watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
+                  </label>
+                </div>
+              </div>
               <div class="control-group">
                 <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
                 <div class="controls">
@@ -718,7 +770,7 @@
               </label>
             </div>
           </div>
-          
+
           <div class="control-group">
             <div class="controls">
               <label class="checkbox">
@@ -797,7 +849,7 @@
               </label>
             </div>
           </div>
-          
+
 
           <div class="control-group">
             <div class="controls">
@@ -806,7 +858,7 @@
               </label>
             </div>
           </div>
-          
+
           <div class="control-group">
             <div class="controls">
               <label class="checkbox">
@@ -860,7 +912,7 @@
               </label>
             </div>
           </div>
-          
+
 
           <div class="control-group">
             <div class="controls">
