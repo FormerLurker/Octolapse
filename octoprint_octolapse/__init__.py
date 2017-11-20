@@ -31,7 +31,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SnapshotGcode = None
 		self.SnapshotCount = 0
 		self._IsTriggering = False
-		
+		self.WaitForSnapshot = False
 	##~~ After Startup
 	def on_after_startup(self):
 		self.reload_settings()
@@ -233,7 +233,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			#We're triggering
 			self.SnapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,self.Position.Extruder)
 			# build an array of commands to take the snapshot
-			if(self.SnapshotGcode is not None):
+			if(self.SnapshotGcode is not None and not self.IsPausedByOctolapse):
 				self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command:{0}".format(self.SnapshotGcode.ReturnEndCommand()))
 				self.SnapshotGcode.SavedCommand = cmd
 				self.IsPausedByOctolapse = True
@@ -256,12 +256,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return
 
 		if(self.SnapshotGcode is not None):
-			self.Settings.debug.LogSnapshotDownload("Looking for EndGcode:{0} - Current Gcode:{1}".format(self.SnapshotGcode.StartEndCommand(),cmd))
+
+			self.Settings.debug.LogSnapshotDownload("Looking for EndGcode:{0} - Current Gcode:{1}, Parsed Gcode:{2}".format(self.SnapshotGcode.StartEndCommand(),cmd,gcode))
 			if(self.SnapshotGcode.StartEndCommand() == cmd):
-				self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found:{0}".format(self.SnapshotGcode.StartEndCommand()))
-				self.TakeSnapshot()
-				self.SnapshotGcode = None
-			
+				self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found:{0}. Waiting for snapshot.".format(self.SnapshotGcode.StartEndCommand()))
+				self.WaitForSnapshot = True
+				
+	def GcodeReceived(self, comm, line, *args, **kwargs):
+		if(self.IsPausedByOctolapse and self.WaitForSnapshot):
+			self.Settings.debug.LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
+			self.IsPausedByOctolapse = False
+			self.SnapshotGcode = None
+			self.WaitForSnapshot = False
+			self.TakeSnapshot()
+			self._printer.resume_print()
+		return line
+
 	def SendSnapshotGcode(self):
 		if(self.SnapshotGcode is None):
 			self.Settings.debug.LogError("Cannot send snapshot Gcode, no gcode returned")
@@ -270,11 +280,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# Send commands to move to the snapshot position
 		self._printer.commands(self.SnapshotGcode.StartCommands);
 		# Start the return journey!
-		
 		self._printer.commands(returnCommands)
 		self._printer.commands(savedCommand);
-		self.IsPausedByOctolapse = False
-		self._printer.resume_print()
+		
 
 	def TakeSnapshot(self):
 		snapshot = self.CaptureSnapshot
@@ -336,7 +344,8 @@ def __plugin_load__():
 	__plugin_hooks__ = {
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
-		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent
+		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent,
+		"octoprint.comm.protocol.gcode.received": __plugin_implementation__.GcodeReceived,
 
 	}
 
