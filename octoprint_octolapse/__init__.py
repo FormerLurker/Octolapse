@@ -255,7 +255,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or self._printer is None):
 			return
 
-		if(self.IsPausedByOctolapse == True and self.SnapshotGcode is not None):	
+		if(self.IsPausedByOctolapse == True and self.SnapshotGcode is not None):
+			self.Settings.debug.LogSnapshotDownload("Looking for EndGcode:{0} - Current Gcode:".format(self.SnapshotGcode.StartEndCommand(),cmd))
 			if(self.SnapshotGcode.StartEndCommand() == cmd):
 				self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command Found:{0}".format(self.SnapshotGcode.StartEndCommand()))
 				self.TakeSnapshot()	

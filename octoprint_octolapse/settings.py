@@ -184,11 +184,11 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 class Printer(object):
 	
 	def __init__(self,printer):
-		self.retract_length = 2.0
-		self.retract_speed = 3600
-		self.movement_speed = 3600
-		self.z_hop = 4.0
-		self.z_min = 0.5
+		self.retract_length = 4.0
+		self.retract_speed = 4800
+		self.movement_speed = 7200
+		self.z_hop = 0.5
+		self.z_min = 0.2
 		self.snapshot_command = "snap"
 		self.is_e_relative = True
 		if(printer is not None):
