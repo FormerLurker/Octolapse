@@ -117,7 +117,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
 		self.IsPausedByOctolapse = False
-		self.WaitForSnapshot = True
+		self.WaitForSnapshot = False
 		# create the triggers for this print
 		snapshot = self.Settings.CurrentProfile().snapshot
 		# If the gcode trigger is enabled, add it
