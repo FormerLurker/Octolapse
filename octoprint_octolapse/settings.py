@@ -463,7 +463,7 @@ class Rendering(object):
 			if("sync_with_timelapse" in rendering.keys()):
 				self.sync_with_timelapse = utility.getbool(rendering["sync_with_timelapse"],self.sync_with_timelapse)
 			if("octoprint_timelapse_directory" in rendering.keys()):
-				self.octoprint_timelapse_directory = utility.getbool(rendering["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
+				self.octoprint_timelapse_directory = utility.getstring(rendering["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
 			if("ffmpeg_path" in rendering.keys()):
 				self.ffmpeg_path = utility.getstring(rendering["ffmpeg_path"],self.ffmpeg_path)
 			if("bitrate" in rendering.keys()):
