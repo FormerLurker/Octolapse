@@ -52,6 +52,13 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'snapshot_position_return'	: utility.getbool(settings.debug.snapshot_position_return,defaults.debug.snapshot_position_return),
 				'snapshot_save'				: utility.getbool(settings.debug.snapshot_save,defaults.debug.snapshot_save),
 				'snapshot_download'			: utility.getbool(settings.debug.snapshot_download,defaults.debug.snapshot_download),
+
+				'render_start'			: utility.getbool(settings.debug.render_start,defaults.debug.render_start),
+				'render_complete'			: utility.getbool(settings.debug.render_complete,defaults.debug.render_complete),
+				'render_fail'			: utility.getbool(settings.debug.render_fail,defaults.debug.render_fail),
+				'render_sync'			: utility.getbool(settings.debug.render_sync,defaults.debug.render_sync),
+				'snapshot_clean'			: utility.getbool(settings.debug.snapshot_clean,defaults.debug.snapshot_clean),
+
 				'settings_save'				: utility.getbool(settings.debug.settings_save,defaults.debug.settings_save),
 				'settings_load'				: utility.getbool(settings.debug.settings_load,defaults.debug.settings_load),
 				'print_state_changed'		: utility.getbool(settings.debug.print_state_changed,defaults.debug.print_state_changed),
@@ -602,6 +609,11 @@ class DebugSettings(object):
 		self.snapshot_position_return = False
 		self.snapshot_save = False
 		self.snapshot_download = False
+		self.render_start = False
+		self.render_complete = False
+		self.render_fail = False
+		self.render_sync = False
+		self.snapshot_clean = False
 		self.settings_save = False
 		self.settings_load = False
 		self.print_state_changed = False
@@ -646,6 +658,16 @@ class DebugSettings(object):
 				self.snapshot_save = utility.getbool(debug["snapshot_save"],self.snapshot_save)
 			if("snapshot_download" in debug.keys()):
 				self.snapshot_download = utility.getbool(debug["snapshot_download"],self.snapshot_download)
+			if("render_start" in debug.keys()):
+				self.render_start = utility.getbool(debug["render_start"],self.snapshot_download)
+			if("render_complete" in debug.keys()):
+				self.render_complete = utility.getbool(debug["render_complete"],self.render_complete)
+			if("render_fail" in debug.keys()):
+				self.render_fail = utility.getbool(debug["render_fail"],self.snapshot_download)
+			if("render_sync" in debug.keys()):
+				self.render_sync = utility.getbool(debug["render_sync"],self.snapshot_download)
+			if("snapshot_clean" in debug.keys()):
+				self.snapshot_clean = utility.getbool(debug["snapshot_clean"],self.snapshot_clean)
 			if("settings_save" in debug.keys()):
 				self.settings_save = utility.getbool(debug["settings_save"],self.settings_save)
 			if("settings_load" in debug.keys()):
@@ -722,6 +744,22 @@ class DebugSettings(object):
 	def LogSnapshotDownload(self,message):
 		if(self.snapshot_download):
 			self.LogInfo(message)
+	def LogRenderStart(self,message):
+		if(self.render_start):
+			self.LogInfo(message)
+	def LogRenderComplete(self,message):
+		if(self.render_complete):
+			self.LogInfo(message)
+	def LogRenderFail(self,message):
+		if(self.render_fail):
+			self.LogInfo(message)
+	def LogRenderSync(self,message):
+		if(self.render_sync):
+			self.LogInfo(message)
+	def LogSnapshotClean(self,message):
+		if(self.snapshot_clean):
+			self.LogInfo(message)
+
 	def LogSettingsSave(self,message):
 		if(self.settings_save):
 			self.LogInfo(message)

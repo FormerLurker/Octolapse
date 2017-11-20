@@ -55,7 +55,7 @@ class CaptureSnapshot(object):
 			self._CleanSnapshots(printerFileName)
 	def _CleanSnapshots(self,printerFileName):
 		# get snapshot directory
-		self.Debug.LogWarning("Cleaning Snapshots")
+		self.Debug.LogSnapshotClean("Cleaning")
 		if(printerFileName is None):
 			path = self.Profile.snapshot.output_directory
 		else:

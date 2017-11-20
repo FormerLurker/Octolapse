@@ -14,6 +14,7 @@ from .trigger import *
 import itertools
 from .utility import *
 from .render import Render
+import shutil
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
 						octoprint.plugin.TemplatePlugin,
@@ -191,22 +192,26 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def OnPrintFailed(self):
 		self.Settings.debug.LogPrintStateChange("Print Failed.")
-		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
-		self.Settings.debug.LogInfo("Started Rendering Timelapse");
 		if(not self.IsRendering):
+			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
+		if(not self.IsRendering):
+			self.Settings.debug.LogInfo("Started Rendering Timelapse");
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-failed')
 		self.OnPrintEnd()
 	def OnPrintCancelled(self):
 		self.Settings.debug.LogPrintStateChange("Print Cancelled.")
-		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
-		self.Settings.debug.LogInfo("Started Rendering Timelapse");
+		if(not self.IsRendering):
+			self.Settings.debug.LogInfo("Started Rendering Timelapse");
+			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
 		if(not self.IsRendering):
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-cancel')
 		self.OnPrintEnd()
 	def OnPrintCompleted(self):
 		self.CaptureSnapshot.SetPrintEndTime(time.time())
-		self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
-		self.Settings.debug.LogInfo("Started Rendering Timelapse");
+		if(not self.IsRendering):
+			self.Settings.debug.LogInfo("Started Rendering Timelapse");
+			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
+		
 		self.Settings.debug.LogPrintStateChange("Print Completed!")
 		if(not self.IsRendering):
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-print')
@@ -219,16 +224,30 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 
 	def OnRenderStart(self, *args, **kwargs):
+		self.Settings.debug.LogRenderStart("Starting.")
 		self.IsRendering = False
 
 	def OnRenderComplete(self, *args, **kwargs):
+		filePath = args[0]
+		self.Settings.debug.LogRenderComplete("Completed rendering {0}.".format(args[0]))
+		rendering = self.Settings.CurrentProfile().rendering
+		if(rendering.sync_with_timelapse):
+			self.Settings.debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(filePath,rendering.octoprint_timelapse_directory ))
+			try:
+				shutil.move(filePath,rendering.octoprint_timelapse_directory)
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self.Settings.debug.LogError("Could move the timelapse at {0} to the octoprint timelaspse directory as {1}. Error Type:{2}, Details:{3}".format(filePath,rendering.octoprint_timelapse_directory,type,value))
+		
+
 		self.IsRendering = False
 		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_complete')
-		self.Settings.debug.LogInfo("Rendering Complete");
+		
 	def OnRenderFail(self, *args, **kwargs):
 		self.IsRendering = False
 		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_fail')
-		self.Settings.debug.LogInfo("Rendering Failed");
+		self.Settings.debug.LogRenderFail("Failed.")
 
 	def CurrentlyPrintingFileName(self):
 		if(self._printer is not None):

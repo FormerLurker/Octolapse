@@ -907,6 +907,41 @@
           <div class="control-group">
             <div class="controls">
               <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.render_start" title="Log Rendering Start"/>Log Rendering Start
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.render_complete" title="Log Render Complete"/>Log Render Complete
+              </label>
+            </div>
+          </div>
+            <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.render_fail" title="Log Render Failure"/>Log Render Failure
+              </label>
+            </div>
+          </div>
+            <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.render_sync" title="Log Render Synchronization With Octoprint Timelapse Plugin"/>Log Render Synchronization With Octoprint Timelapse Plugin
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: debug.snapshot_clean" title="Log Cleaning of Snapshots"/>Log Cleaning of Snapshots
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
                 <input type="checkbox" data-bind="checked: debug.settings_save" title="Log Settings On Save"/>Log Settings On Save
               </label>
             </div>

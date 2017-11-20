@@ -6,7 +6,7 @@ import time
 import fnmatch
 import datetime
 import sys
-import shutil
+
 import utility
 import sarge
 class Render(object):
@@ -21,7 +21,7 @@ class Render(object):
 		self.OnAlways = onAlways
 		self.TimelapseRenderJobs = []
 	def Process(self, printName, printStartTime, printEndTime):
-		
+		self.Debug.LogRenderStart("Starting.")
 		# Get the capture file and directory info
 		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Profile.snapshot.output_directory,printName,printStartTime, self.Profile.snapshot.output_format)
 		snapshotFileNameTemplate  = utility.GetFilenameFromTemplate(self.Profile.snapshot.output_filename, printName, printStartTime, self.Profile.snapshot.output_format, "%05d")
@@ -38,8 +38,6 @@ class Render(object):
 						   , self.Profile.rendering.output_format
 						   , self.Profile.rendering.ffmpeg_path
 						   , self.Profile.rendering.bitrate
-						   , self.Profile.rendering.sync_with_timelapse
-						   , self.Profile.rendering.octoprint_timelapse_directory
 						   , self.Profile.rendering.flip_h
 						   , self.Profile.rendering.flip_v
 						   , self.Profile.rendering.rotate_90
@@ -62,7 +60,7 @@ class TimelapseRenderJob(object):
 
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
-	def __init__(self, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, ffmpegPath, bitrate, syncWithOctoprint, octoprintTimelapseDirectory, flipH=False, flipV=False, rotate90=False, watermark=False,
+	def __init__(self, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, ffmpegPath, bitrate, flipH=False, flipV=False, rotate90=False, watermark=False,
 	             fps=25, threads=1,
 	             on_start=None, on_success=None, on_fail=None, on_always=None):
 		self._printFileName = printFileName
@@ -71,8 +69,7 @@ class TimelapseRenderJob(object):
 		self._output_dir = output_dir
 		self._output_file_name = output_name
 		self._outputFormat = outputFormat
-		self._syncWithOctoprint = syncWithOctoprint
-		self.octoprint_timelapse_directory = octoprintTimelapseDirectory
+		
 		self._fps = fps
 		self._threads = threads
 		self._ffmpeg = ffmpegPath
@@ -147,18 +144,10 @@ class TimelapseRenderJob(object):
 		with self.render_job_lock:
 			try:
 				self._notify_callback("start", output)
-				self._logger.warn("command_str:{0}".format(command_str))
+				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
 				if p.returncode == 0:
 					self._notify_callback("success", output)
-					if(self._syncWithOctoprint):
-						self._logger.warn("Syncronizing timelapse with the built in timelapse plugin.")
-						try:
-							shutil.move(output,self.octoprint_timelapse_directory)
-						except:
-							type = sys.exc_info()[0]
-							value = sys.exc_info()[1]
-							self._logger.warn("Could move the timelapse at {0} to the octoprint timelaspse directory as {1}. Error Type:{2}, Details:{3}".format(output, self.octoprint_timelapse_directory,type,value))
 				else:
 					returncode = p.returncode
 					stdout_text = p.stdout.text
