@@ -110,9 +110,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SnapshotCount = 0
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
-		self.__EndSnapshotCommand = None
-		self.__EndCommand = None
 		self.IsPausedByOctolapse = False
+		self.WaitForSnapshot = True
 		# create the triggers for this print
 		snapshot = self.Settings.CurrentProfile().snapshot
 		# If the gcode trigger is enabled, add it
@@ -255,8 +254,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or self._printer is None):
 			return
 
-		if(self.SnapshotGcode is not None):
-
+		if(self.SnapshotGcode is not None and not self.WaitForSnapshot):
 			self.Settings.debug.LogSnapshotDownload("Looking for EndGcode:{0} - Current Gcode:{1}, Parsed Gcode:{2}".format(self.SnapshotGcode.StartEndCommand(),cmd,gcode))
 			if(self.SnapshotGcode.StartEndCommand() == cmd):
 				self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found:{0}. Waiting for snapshot.".format(self.SnapshotGcode.StartEndCommand()))
