@@ -218,7 +218,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Position = None
 
 
-	def OnRenderStart(self):
+	def OnRenderStart(self, *args, **kwargs):
 		self.IsRendering = False
 
 	def OnRenderComplete(self, *args, **kwargs):
