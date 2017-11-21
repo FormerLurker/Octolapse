@@ -15,6 +15,7 @@ import itertools
 from .utility import *
 from .render import Render
 import shutil
+from .camera import CameraControl
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
 						octoprint.plugin.TemplatePlugin,
@@ -23,6 +24,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	TIMEOUT_DELAY = 1000
 	IsStarted = False
 	def __init__(self):
+		self.Camera = None
 		self.OctolapseGcode = None
 		self.CaptureSnapshot = None
 		self.PrintStartTime = time.time()
@@ -108,7 +110,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SendSnapshotGcode()
 	def OnPrintStart(self):
 		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
-		self.reload_settings()				
+		self.reload_settings()
+		self.Camera = CameraControl(self.Settings.CurrentProfile().camera, self.Settings.debug)
+		self.Camera.ApplySettings()
 		self.OctolapseGcode = Gcode(self.Settings.printer, self.Settings.CurrentProfile(),self.CurrentPrinterProfile(),self.Settings.debug)
 		self.CaptureSnapshot = CaptureSnapshot(self.Settings.CurrentProfile(), self.Settings.printer,self.Settings.debug)
 		if(not self.IsRendering):

@@ -62,6 +62,8 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'settings_save'				: utility.getbool(settings.debug.settings_save,defaults.debug.settings_save),
 				'settings_load'				: utility.getbool(settings.debug.settings_load,defaults.debug.settings_load),
 				'print_state_changed'		: utility.getbool(settings.debug.print_state_changed,defaults.debug.print_state_changed),
+				'camera_settings_apply'		: utility.getbool(settings.debug.camera_settings_apply,defaults.debug.camera_settings_apply)
+				
 
 			},
 			'printer' :
@@ -168,6 +170,8 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'camera' : {
 					
 					'address' : utility.getstring(profile.camera.address,defaultProfile.camera.address),
+					'snapshot_request_template' : utility.getstring(profile.camera.snapshot_request_template,defaultProfile.camera.snapshot_request_template),
+					'apply_settings_before_print' : utility.getbool(profile.camera.apply_settings_before_print,defaultProfile.camera.apply_settings_before_print),
 					'ignore_ssl_error' : utility.getbool(profile.camera.ignore_ssl_error,defaultProfile.camera.ignore_ssl_error),
 					'password' : utility.getstring(profile.camera.password,defaultProfile.camera.password),
 					'username' : utility.getstring(profile.camera.username,defaultProfile.camera.username),
@@ -190,7 +194,29 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 					'zoom' : utility.getint(profile.camera.zoom,defaultProfile.camera.zoom),
 					'led1_mode' :  utility.getstring(profile.camera.led1_mode,defaultProfile.camera.led1_mode),
 					'led1_frequency' : utility.getint(profile.camera.led1_frequency,defaultProfile.camera.led1_frequency),
-					'jpeg_quality' : utility.getint(profile.camera.jpeg_quality,defaultProfile.camera.jpeg_quality)
+					'jpeg_quality' : utility.getint(profile.camera.jpeg_quality,defaultProfile.camera.jpeg_quality),
+					'brightness_request_template' :  utility.getstring(profile.camera.brightness_request_template,defaultProfile.camera.brightness_request_template),
+					'contrast_request_template' :  utility.getstring(profile.camera.contrast_request_template,defaultProfile.camera.contrast_request_template),
+					'saturation_request_template' :  utility.getstring(profile.camera.saturation_request_template,defaultProfile.camera.saturation_request_template),
+					'white_balance_auto_request_template' :  utility.getstring(profile.camera.white_balance_auto_request_template,defaultProfile.camera.white_balance_auto_request_template),
+					'gain_request_template' :  utility.getstring(profile.camera.gain_request_template,defaultProfile.camera.gain_request_template),
+					'powerline_frequency_request_template' :  utility.getstring(profile.camera.powerline_frequency_request_template,defaultProfile.camera.powerline_frequency_request_template),
+					'white_balance_temperature_request_template' :  utility.getstring(profile.camera.white_balance_temperature_request_template,defaultProfile.camera.white_balance_temperature_request_template),
+					'sharpness_request_template' :  utility.getstring(profile.camera.sharpness_request_template,defaultProfile.camera.sharpness_request_template),
+					'backlight_compensation_enabled_request_template' :  utility.getstring(profile.camera.backlight_compensation_enabled_request_template,defaultProfile.camera.backlight_compensation_enabled_request_template),
+					'exposure_type_request_template' :  utility.getstring(profile.camera.exposure_type_request_template,defaultProfile.camera.exposure_type_request_template),
+					'exposure_request_template' :  utility.getstring(profile.camera.exposure_request_template,defaultProfile.camera.exposure_request_template),
+					'exposure_auto_priority_enabled_request_template' :  utility.getstring(profile.camera.exposure_auto_priority_enabled_request_template,defaultProfile.camera.exposure_auto_priority_enabled_request_template),
+					'pan_request_template' :  utility.getstring(profile.camera.pan_request_template,defaultProfile.camera.pan_request_template),
+					'tilt_request_template' :  utility.getstring(profile.camera.tilt_request_template,defaultProfile.camera.tilt_request_template),
+					'autofocus_enabled_request_template' :  utility.getstring(profile.camera.autofocus_enabled_request_template,defaultProfile.camera.autofocus_enabled_request_template),
+					'focus_request_template' :  utility.getstring(profile.camera.focus_request_template,defaultProfile.camera.focus_request_template),
+					'zoom_request_template' :  utility.getstring(profile.camera.zoom_request_template,defaultProfile.camera.zoom_request_template),
+					'led1_mode_request_template' :  utility.getstring(profile.camera.led1_mode_request_template,defaultProfile.camera.led1_mode_request_template),
+					'led1_frequency_request_template' :  utility.getstring(profile.camera.led1_frequency_request_template,defaultProfile.camera.led1_frequency_request_template),
+					'jpeg_quality_request_template' :  utility.getstring(profile.camera.jpeg_quality_request_template,defaultProfile.camera.jpeg_quality_request_template),
+					
+					
 				}
 			}
 			octoprintSettings["profiles"].append(newProfile)
@@ -487,35 +513,59 @@ class Rendering(object):
 class Camera(object):
 	
 	def __init__(self,camera):
-
-		
-		self.address = "http://127.0.0.1/webcam/?action=snapshot"
+		self.apply_settings_before_print = True
+		self.address = "http://127.0.0.1/webcam/"
+		self.snapshot_request_template = "{camera_address}?action=snapshot"
 		self.ignore_ssl_error = False
 		self.username = ""
 		self.password = ""
 		self.brightness = 128
+		self.brightness_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963776&group=1&value={value}"
 		self.contrast = 128
+		self.contrast_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963777&group=1&value={value}"
 		self.saturation = 128
+		self.saturation_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963778&group=1&value={value}"
 		self.white_balance_auto = True
+		self.white_balance_auto_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963788&group=1&value={value}"
 		self.gain = 0
+		self.gain_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963795&group=1&value={value}"
 		self.powerline_frequency = 60
+		self.powerline_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963800&group=1&value={value}"
 		self.white_balance_temperature = 4000
+		self.white_balance_temperature_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963802&group=1&value={value}"
 		self.sharpness = 128
+		self.sharpness_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963803&group=1&value={value}"
 		self.backlight_compensation_enabled = False
+		self.backlight_compensation_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963804&group=1&value={value}"
 		self.exposure_type = True
+		self.exposure_type_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094849&group=1&value={value}"
 		self.exposure = 250
+		self.exposure_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094850&group=1&value={value}"
 		self.exposure_auto_priority_enabled = True
+		self.exposure_auto_priority_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094851&group=1&value={value}"
 		self.pan = 0
+		self.pan_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094856&group=1&value={value}"
 		self.tilt = 0
+		self.tilt_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094857&group=1&value={value}"
 		self.autofocus_enabled = True
+		self.autofocus_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094860&group=1&value={value}"
 		self.focus = 35
+		self.focus_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094858&group=1&value={value}"
 		self.zoom = 100
+		self.zoom_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094861&group=1&value={value}"
 		self.led1_mode = 'auto'
+		self.led1_mode_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062213&group=1&value={value}"
 		self.led1_frequency = 0
+		self.led1_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062214&group=1&value={value}"
 		self.jpeg_quality = 80
+		self.jpeg_quality_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}"
+
+
 		if(not camera is None):
 			if("address" in camera.keys()):
 				self.address = utility.getstring(camera["address"],self.address)
+			if("apply_settings_before_print" in camera.keys()):
+				self.apply_settings_before_print = utility.getbool(camera["apply_settings_before_print"],self.apply_settings_before_print)
 			if("ignore_ssl_error" in camera.keys()):
 				self.ignore_ssl_error = utility.getbool(camera["ignore_ssl_error"],self.ignore_ssl_error)
 			if("username" in camera.keys()):
@@ -562,6 +612,48 @@ class Camera(object):
 				self.led1_frequency = utility.getint(camera["led1_frequency"],self.led1_frequency)
 			if("jpeg_quality" in camera.keys()):
 				self.jpeg_quality = utility.getint(camera["jpeg_quality"],self.jpeg_quality)
+			if("snapshot_request_template" in camera.keys()):
+				self.snapshot_request_template = utility.getstring(camera["snapshot_request_template"],self.snapshot_request_template)
+			if("brightness_request_template" in camera.keys()):
+				self.brightness_request_template = utility.getstring(camera["brightness_request_template"],self.brightness_request_template)
+			if("contrast_request_template" in camera.keys()):
+				self.contrast_request_template = utility.getstring(camera["contrast_request_template"],self.contrast_request_template)
+			if("saturation_request_template" in camera.keys()):
+				self.saturation_request_template = utility.getstring(camera["saturation_request_template"],self.saturation_request_template)
+			if("white_balance_auto_request_template" in camera.keys()):
+				self.white_balance_auto_request_template = utility.getstring(camera["white_balance_auto_request_template"],self.white_balance_auto_request_template)
+			if("gain_request_template" in camera.keys()):
+				self.gain_request_template = utility.getstring(camera["gain_request_template"],self.gain_request_template)
+			if("powerline_frequency_request_template" in camera.keys()):
+				self.powerline_frequency_request_template = utility.getstring(camera["powerline_frequency_request_template"],self.powerline_frequency_request_template)
+			if("white_balance_temperature_request_template" in camera.keys()):
+				self.white_balance_temperature_request_template = utility.getstring(camera["white_balance_temperature_request_template"],self.white_balance_temperature_request_template)
+			if("sharpness_request_template" in camera.keys()):
+				self.sharpness_request_template = utility.getstring(camera["sharpness_request_template"],self.sharpness_request_template)
+			if("backlight_compensation_enabled_request_template" in camera.keys()):
+				self.backlight_compensation_enabled_request_template = utility.getstring(camera["backlight_compensation_enabled_request_template"],self.backlight_compensation_enabled_request_template)
+			if("exposure_type_request_template" in camera.keys()):
+				self.exposure_type_request_template = utility.getstring(camera["exposure_type_request_template"],self.exposure_type_request_template)
+			if("exposure_request_template" in camera.keys()):
+				self.exposure_request_template = utility.getstring(camera["exposure_request_template"],self.exposure_request_template)
+			if("exposure_auto_priority_enabled_request_template" in camera.keys()):
+				self.exposure_auto_priority_enabled_request_template = utility.getstring(camera["exposure_auto_priority_enabled_request_template"],self.exposure_auto_priority_enabled_request_template)
+			if("pan_request_template" in camera.keys()):
+				self.pan_request_template = utility.getstring(camera["pan_request_template"],self.pan_request_template)
+			if("tilt_request_template" in camera.keys()):
+				self.tilt_request_template = utility.getstring(camera["tilt_request_template"],self.tilt_request_template)
+			if("autofocus_enabled_request_template" in camera.keys()):
+				self.autofocus_enabled_request_template = utility.getstring(camera["autofocus_enabled_request_template"],self.autofocus_enabled_request_template)
+			if("focus_request_template" in camera.keys()):
+				self.focus_request_template = utility.getstring(camera["focus_request_template"],self.focus_request_template)
+			if("led1_mode_request_template" in camera.keys()):
+				self.led1_mode_request_template = utility.getstring(camera["led1_mode_request_template"],self.led1_mode_request_template)
+			if("led1_frequency_request_template" in camera.keys()):
+				self.led1_frequency_request_template = utility.getstring(camera["led1_frequency_request_template"],self.led1_frequency_request_template)
+			if("jpeg_quality_request_template" in camera.keys()):
+				self.jpeg_quality_request_template = utility.getstring(camera["jpeg_quality_request_template"],self.jpeg_quality_request_template)
+			if("zoom_request_template" in camera.keys()):
+				self.zoom_request_template = utility.getstring(camera["zoom_request_template"],self.zoom_request_template)
 class Profile(object):
 	def __init__(self,profile):
 		self.name = "Default"
@@ -617,6 +709,7 @@ class DebugSettings(object):
 		self.settings_save = False
 		self.settings_load = False
 		self.print_state_changed = False
+		self.camera_settings_apply = False
 		if(debug is not None):
 			if("enabled" in debug.keys()):
 				self.enabled = utility.getbool(debug["enabled"],self.enabled)
@@ -674,7 +767,9 @@ class DebugSettings(object):
 				self.settings_save = utility.getbool(debug["settings_load"],self.settings_save)
 			if("print_state_changed" in debug.keys()):
 				self.print_state_changed = utility.getbool(debug["print_state_changed"],self.print_state_changed)
-
+			if("camera_settings_apply" in debug.keys()):
+				self.camera_settings_apply = utility.getbool(debug["camera_settings_apply"],self.camera_settings_apply)
+			
 	def LogInfo(self,message):
 		if(self.enabled):
 			self.Logger.info(message)
@@ -766,6 +861,10 @@ class DebugSettings(object):
 	def LogPrintStateChange(self,message):
 		if(self.print_state_changed):
 			self.LogInfo(message)
+	def LogCameraSettingsApply(self,message):
+		if(self.camera_settings_apply):
+			self.LogInfo(message)
+			
 	def ApplyCommands(self, cmd, triggers, isSnapshot):
 		# see if the command is our debug command
 		command = Command()

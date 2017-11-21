@@ -1,3 +1,4 @@
+# coding=utf-8
 import ntpath
 import math
 import time

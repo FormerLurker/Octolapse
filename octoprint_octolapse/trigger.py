@@ -1,8 +1,8 @@
+# coding=utf-8
 from .position import *
 from .gcode import *
 from .settings import *
 import utility
-
 import time
 
 

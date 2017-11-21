@@ -573,6 +573,13 @@
               </div>
             </div>
             <div class="control-group">
+              <label class="control-label">Snapshot Request Template</label>
+              <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: camera.snapshot_request_template"/>
+              </div>
+            </div>
+            
+            <div class="control-group">
               <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
                 <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
               </a>
@@ -599,7 +606,14 @@
                   <input type="text" class="input-block-level" data-bind="value: camera.password"/>
                 </div>
               </div>
-
+              <div class="control-group">
+                <label class="control-label">Auto-Apply Camera Settings Before Print</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: camera.apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
+                  </label>
+                </div>
+              </div>
               <div class="control-group">
                 <label class="control-label">Brightness (0-255)</label>
                 <div class="controls">
@@ -749,6 +763,145 @@
                   <input type="text" class="input-block-level" data-bind="value: camera.jpeg_quality"/>
                 </div>
               </div>
+              
+              <div class="control-group">
+                <label class="control-label">Brightness Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.brightness_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Contrast Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.contrast_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Saturation Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.saturation_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">White Balance Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.white_balance_auto_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Gain Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.gain_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Powerline Frequency Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.powerline_frequency_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">White Balance Temperature Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.white_balance_temperature_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Sharpness Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.sharpness_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Backlight Compensation Enabled Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.backlight_compensation_enabled_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Exposure Type Request Templatey</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.exposure_type_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Exposure Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.exposure_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Auto Priority Enabled Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.exposure_auto_priority_enabled_request_template"/>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Pan Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.pan_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Tilt Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.tilt_request_template"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Autofocus Enabled Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.autofocus_enabled_request_template"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Focus Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.focus_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Zoom Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.zoom_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Led1 Mode Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.led1_mode_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Led1 Frequency Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.led1_frequency_request_template"/>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label class="control-label">Jpeg Quality Request Template</label>
+                <div class="controls">
+                  <input type="text" class="input-block-level" data-bind="value: camera.jpeg_quality_request_template"/>
+                </div>
+              </div>
+
             </div>
 
           </div>

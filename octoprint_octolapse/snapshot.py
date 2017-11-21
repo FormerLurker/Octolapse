@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 import sys
 import time
@@ -11,6 +12,7 @@ from math import trunc
 from .settings import *
 import traceback
 import shutil
+from .camera import *
 class CaptureSnapshot(object):
 
 	def __init__(self, profile,printer,debugSettings):
@@ -34,7 +36,8 @@ class CaptureSnapshot(object):
 		info.FileName = utility.GetFilenameFromTemplate(self.Profile.snapshot.output_filename, printerFileName, self.PrintStartTime, self.Profile.snapshot.output_format, snapshotNumber)
 		info.DirectoryName = utility.GetDirectoryFromTemplate(self.Profile.snapshot.output_directory,printerFileName,self.PrintStartTime, self.Profile.snapshot.output_format)
 		# TODO:  make the snapshot timeout a separate setting
-		DownloadSnapshot(info.DirectoryName, info.FileName, self.Profile.camera.address, self.Debug, timeoutSeconds = self.Profile.snapshot.delay/1000.0*2, username = self.Profile.camera.username, password = self.Profile.camera.password,ignoreSslErrors = self.Profile.camera.ignore_ssl_error )
+		url = camera.FormatRequestTemplate(self.Profile.camera.addres, self.Profile.camera.snapshot_request_template,"")
+		DownloadSnapshot(info.DirectoryName, info.FileName, url, self.Debug, timeoutSeconds = self.Profile.snapshot.delay/1000.0*2, username = self.Profile.camera.username, password = self.Profile.camera.password,ignoreSslErrors = self.Profile.camera.ignore_ssl_error )
 
 		return info
 

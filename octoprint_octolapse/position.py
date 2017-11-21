@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 from .gcode import Commands, Command
 from .settings import *
