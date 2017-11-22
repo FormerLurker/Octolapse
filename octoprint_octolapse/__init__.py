@@ -24,6 +24,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	TIMEOUT_DELAY = 1000
 	IsStarted = False
 	def __init__(self):
+		self.CameraControl = None
 		self.Camera = None
 		self.OctolapseGcode = None
 		self.CaptureSnapshot = None
@@ -49,26 +50,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self._logger.error("The plugin settings (_settings) is None!")
 			return
 		self.Settings = OctolapseSettings(self._logger,self._settings)
+		self.Camera = self.Settings.CurrentCamera()
 		#self._logger.info("Octolapse - Octoprint settings converted to octolapse settings: {0}".format(settings.GetSettingsForOctoprint(self._logger,self.Settings)))
 	##~~ SettingsPlugin mixin
 
 	def on_settings_save(self, data):
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		self.Settings.debug.LogSettingsSave('Settings Saved: {0}'.format(data))
-
 	def get_settings_defaults(self):
 		defaultSettings = settings.GetSettingsForOctoprint(self._logger,None)
 		self._logger.info("Octolapse - creating default settings: {0}".format(defaultSettings))
 		return defaultSettings
-
 	def get_template_configs(self):
 		self._logger.info("Octolapse - is loading template configurations.")
 		return [dict(type="settings", custom_bindings=False)]
-
 	def CurrentPrinterProfile(self):
 		return self._printer_profile_manager.get_current()
-
-	
 	## EventHandlerPlugin mixin
 	def on_event(self, event, payload):
 
@@ -90,15 +87,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif (event == Events.PRINT_DONE):
 			self._logger.info("Octolapse - Print Done")
 			self.OnPrintCompleted()
-		
-
 	def ClearTriggers(self):
 		self.Triggers[:] = []
 	def OnPrintResumed(self):
 		self.IsPausedByOctolapse = False
 		self.SnapshotGcode = None
 		self.Settings.debug.LogPrintStateChange("Print Resumed.")
-
 	def OnPrintPause(self):
 		self.Settings.debug.LogPrintStateChange("Print Paused.")
 		if(self.Triggers is not None and len(self.Triggers)>0):
@@ -109,91 +103,39 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.debug.LogPrintStateChange("Print Paused by Octolapse.")
 		self.SendSnapshotGcode()
 	def OnPrintStart(self):
-		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
 		self.reload_settings()
-		self.Camera = CameraControl(self.Settings.CurrentProfile().camera, self.Settings.debug)
-		self.Camera.ApplySettings()
-		self.OctolapseGcode = Gcode(self.Settings.printer, self.Settings.CurrentProfile(),self.CurrentPrinterProfile(),self.Settings.debug)
-		self.CaptureSnapshot = CaptureSnapshot(self.Settings.CurrentProfile(), self.Settings.printer,self.Settings.debug)
+		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
+		self.CameraControl = CameraControl(self.Settings)
+		self.OctolapseGcode = Gcode(self.Settings,self.CurrentPrinterProfile())
+		self.CaptureSnapshot = CaptureSnapshot(self.Settings)
 		if(not self.IsRendering):
 			self.CaptureSnapshot.CleanSnapshots(None,'before-print')
 		self.ClearTriggers()
-		self.Position = Position(self.CurrentPrinterProfile(),self.Settings.debug,self.Settings.printer.z_min,self.Settings.printer.z_hop,self.Settings.printer.is_e_relative)
-		self.Render = Render(self.Settings.debug, self.Settings.CurrentProfile(),1,self.OnRenderStart,self.OnRenderFail,self.OnRenderComplete,None)
+		self.Position = Position(self.Settings,self.CurrentPrinterProfile())
+		self.Render = Render(self.Settings,1,self.OnRenderStart,self.OnRenderFail,self.OnRenderComplete,None)
 		self.SnapshotCount = 0
 		self.CaptureSnapshot.SetPrintStartTime(time.time())
 		self.CaptureSnapshot.SetPrintEndTime(None)
 		self.IsPausedByOctolapse = False
 		self.WaitForSnapshot = False
 		# create the triggers for this print
-		snapshot = self.Settings.CurrentProfile().snapshot
+		snapshot = self.Settings.CurrentSnapshot()
 		# If the gcode trigger is enabled, add it
 		if(snapshot.gcode_trigger_enabled):
-			#Configure the extruder triggers
-			self.Settings.debug.LogInfo("Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}".format(self.Settings.printer.snapshot_command, snapshot.gcode_trigger_require_zhop))
-			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
-				.format(snapshot.gcode_trigger_on_extruding
-					,snapshot.gcode_trigger_on_extruding_start
-					,snapshot.gcode_trigger_on_primed
-					,snapshot.gcode_trigger_on_retracting
-					,snapshot.gcode_trigger_on_retracted
-					,snapshot.gcode_trigger_on_detracting)
-			)
-			gcodeExtruderTriggers = ExtruderTriggers(snapshot.gcode_trigger_on_extruding
-				,snapshot.gcode_trigger_on_extruding_start
-				,snapshot.gcode_trigger_on_primed
-				,snapshot.gcode_trigger_on_retracting
-				,snapshot.gcode_trigger_on_retracted
-				,snapshot.gcode_trigger_on_detracting)
 			#Add the trigger to the list
-			self.Triggers.append(
-				GcodeTrigger(
-					gcodeExtruderTriggers,self.Settings.debug,self.Settings.printer.snapshot_command, snapshot.gcode_trigger_require_zhop
-			))
+			self.Triggers.append(GcodeTrigger(self.Settings))
 		# If the layer trigger is enabled, add it
 		if(snapshot.layer_trigger_enabled):
 			#Configure the extruder triggers
-			self.Settings.debug.LogInfo("Creating Layer Trigger - TriggerHeight:{0} (none = layer change), RequiresZHop:{1}".format(snapshot.layer_trigger_height, snapshot.layer_trigger_require_zhop))
-			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
-				.format(
-					snapshot.layer_trigger_on_extruding
-					,snapshot.layer_trigger_on_extruding_start
-					,snapshot.layer_trigger_on_primed
-					,snapshot.layer_trigger_on_retracting
-					,snapshot.layer_trigger_on_retracted
-					,snapshot.layer_trigger_on_detracting)
-			)
-			layerExtruderTriggers = ExtruderTriggers(
-				snapshot.layer_trigger_on_extruding
-				,snapshot.layer_trigger_on_extruding_start
-				,snapshot.layer_trigger_on_primed
-				,snapshot.layer_trigger_on_retracting
-				,snapshot.layer_trigger_on_retracted
-				,snapshot.layer_trigger_on_detracting)
-			self.Triggers.append(LayerTrigger(layerExtruderTriggers,self.Settings.debug, snapshot.layer_trigger_require_zhop, snapshot.layer_trigger_height))
+			
+			self.Triggers.append(LayerTrigger(self.Settings))
 		# If the layer trigger is enabled, add it
 		if(snapshot.timer_trigger_enabled):
 			#Configure the extruder triggers
-			self.Settings.debug.LogInfo("Creating Timer Trigger - Seconds:{0}, RequireZHop:{1}".format(snapshot.timer_trigger_seconds, snapshot.timer_trigger_require_zhop))
-			self.Settings.debug.LogInfo("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
-				.format(
-					snapshot.timer_trigger_on_extruding
-					,snapshot.timer_trigger_on_extruding_start
-					,snapshot.timer_trigger_on_primed
-					,snapshot.timer_trigger_on_retracting
-					,snapshot.timer_trigger_on_retracted
-					,snapshot.timer_trigger_on_detracting)
-			)
-			#Configure the extruder triggers
-			timerExtruderTriggers = ExtruderTriggers(
-				snapshot.timer_trigger_on_extruding
-				,snapshot.timer_trigger_on_extruding_start
-				,snapshot.timer_trigger_on_primed
-				,snapshot.timer_trigger_on_retracting
-				,snapshot.timer_trigger_on_retracted
-				,snapshot.timer_trigger_on_detracting)
-			self.Triggers.append(TimerTrigger(timerExtruderTriggers,self.Settings.debug,snapshot.timer_trigger_seconds,snapshot.timer_trigger_require_zhop))
-
+			
+			self.Triggers.append(TimerTrigger(self.Settings))
+		if(self.Camera.apply_settings_before_print):
+			self.CameraControl.ApplySettings()
 	def OnPrintFailed(self):
 		self.Settings.debug.LogPrintStateChange("Print Failed.")
 		if(not self.IsRendering):
@@ -234,7 +176,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnRenderComplete(self, *args, **kwargs):
 		filePath = args[0]
 		self.Settings.debug.LogRenderComplete("Completed rendering {0}.".format(args[0]))
-		rendering = self.Settings.CurrentProfile().rendering
+		rendering = self.Settings.CurrentRendering()
 		if(rendering.sync_with_timelapse):
 			self.Settings.debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(filePath,rendering.octoprint_timelapse_directory ))
 			try:

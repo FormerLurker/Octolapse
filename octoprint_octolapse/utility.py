@@ -50,7 +50,7 @@ def GetFilenameFromFullPath(path):
 	head, tail = ntpath.split(baseName)
 	fileName = tail or ntpath.basename(head)
 	return os.path.splitext(fileName)[0]
-	
+
 
 def GetFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber=None, printEndTime = None):
 
@@ -76,3 +76,16 @@ def GetDirectoryFromTemplate(directoryTemplate, printName, printStartTime, outpu
 	if(printEndTime is not None):
 		directoryTemplate = directoryTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
 	return directoryTemplate
+
+class SafeDict(dict):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        index = 0
+
+        for key in self.keys():
+            self.keys[index] = str(key)
+            index += 1
+            
+    def __missing__(self, key):
+        return '{' + key + '}'
+

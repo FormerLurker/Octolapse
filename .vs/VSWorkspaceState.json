@@ -5,8 +5,9 @@
     "\\octoprint_octolapse\\static",
     "\\octoprint_octolapse\\static\\gcode",
     "\\octoprint_octolapse\\static\\js",
+    "\\octoprint_octolapse\\static\\scripts",
     "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\position.py",
+  "SelectedNode": "\\octoprint_octolapse\\snapshot.py",
   "PreviewInSolutionExplorer": false
 }

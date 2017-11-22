@@ -34,16 +34,30 @@ def IsSnapshotCommand(command, snapshotCommand):
 		return commandName == snapshotCommandName
 class GcodeTrigger(object):
 	"""Used to monitor gcode for a specified command."""
-	def __init__(self, extruderTriggers, debugSettings,command,requireZHop):
-		
-		self.Debug = debugSettings
+	def __init__(self, octolapseSettings ):
+		self.Settings = octolapseSettings
+		self.Debug = self.Settings.debug
+		self.Printer = self.Settings.CurrentPrinter()
+		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.IsTriggered = False
-		self.Command = command
 		self.IsTriggered = False
 		self.IsWaiting = False
-		self.ExtruderTriggers = extruderTriggers
-		self.RequireZHop = requireZHop
-	
+		self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
+		self.ExtruderTriggers = ExtruderTriggers(self.Snapshot.gcode_trigger_on_extruding
+				,self.Snapshot.gcode_trigger_on_extruding_start
+				,self.Snapshot.gcode_trigger_on_primed
+				,self.Snapshot.gcode_trigger_on_retracting
+				,self.Snapshot.gcode_trigger_on_retracted
+				,self.Snapshot.gcode_trigger_on_detracting)
+		self.Debug.LogTriggerCreate("Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}".format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop))
+		self.Debug.LogTriggerCreate("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+				.format(self.Snapshot.gcode_trigger_on_extruding
+					,self.Snapshot.gcode_trigger_on_extruding_start
+					,self.Snapshot.gcode_trigger_on_primed
+					,self.Snapshot.gcode_trigger_on_retracting
+					,self.Snapshot.gcode_trigger_on_retracted
+					,self.Snapshot.gcode_trigger_on_detracting)
+			)
 	def Reset(self):
 		self.IsTriggered = False
 		self.HasSeenCode = False
@@ -51,10 +65,9 @@ class GcodeTrigger(object):
 	def Update(self, position,commandName):
 		"""If the provided command matches the trigger command, sets IsTriggered to true, else false"""
 		self.IsTriggered = False
-		if (IsSnapshotCommand(commandName,self.Command)):
+		if (IsSnapshotCommand(commandName,self.Printer.snapshot_command)):
 			self.IsWaiting = True
 		if(self.IsWaiting == True):
-
 			if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
 				if(self.RequireZHop and not position.IsZHop):
 					self.Debug.LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
@@ -67,20 +80,23 @@ class GcodeTrigger(object):
 
 class LayerTrigger(object):
 	
-	def __init__( self,extruderTriggers, debugSettings, requireZHop, heightIncrement ):
+	def __init__( self,octolapseSettings):
+		self.Settings = octolapseSettings
 		#utilities and profiles
-		self.Debug = debugSettings
-		self.ExtruderTriggers = extruderTriggers
+		self.Debug = self.Settings.debug
+		self.Snapshot = self.Settings.CurrentSnapshot()
+		self.ExtruderTriggers = ExtruderTriggers(
+				self.Snapshot.layer_trigger_on_extruding
+				,self.Snapshot.layer_trigger_on_extruding_start
+				,self.Snapshot.layer_trigger_on_primed
+				,self.Snapshot.layer_trigger_on_retracting
+				,self.Snapshot.layer_trigger_on_retracted
+				,self.Snapshot.layer_trigger_on_detracting)
 		# Configuration Variables
-		
-		
-		self.RequireZHop = requireZHop
-
-		
-		self.HeightIncrement = heightIncrement
-		if(heightIncrement == 0):
+		self.RequireZHop = self.Snapshot.layer_trigger_require_zhop
+		self.HeightIncrement = self.Snapshot.layer_trigger_height
+		if(self.HeightIncrement == 0):
 			self.HeightIncrement = None
-		
 		# State Tracking Vars
 		self.IsWaiting = False
 		self.IsTriggered = False
@@ -88,6 +104,17 @@ class LayerTrigger(object):
 		# private flags
 		self.__LayerChangeWait = False
 		self.__HeightChangeWait = False
+		self.Debug.LogTriggerCreate("Creating Layer Trigger - TriggerHeight:{0} (none = layer change), RequiresZHop:{1}".format(self.Snapshot.layer_trigger_height, self.Snapshot.layer_trigger_require_zhop))
+		self.Debug.LogTriggerCreate("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+				.format(
+					self.Snapshot.layer_trigger_on_extruding
+					,self.Snapshot.layer_trigger_on_extruding_start
+					,self.Snapshot.layer_trigger_on_primed
+					,self.Snapshot.layer_trigger_on_retracting
+					,self.Snapshot.layer_trigger_on_retracted
+					,self.Snapshot.layer_trigger_on_detracting)
+			)
+			
 
 	def Reset(self):
 		"""Resets all state tracking variables and flags.  Does not change the settings (ZMin, HeightIncrement)"""
@@ -148,17 +175,37 @@ class LayerTrigger(object):
 
 class TimerTrigger(object):
 	
-	def __init__(self,extruderTriggers,debugSettings,intervalSeconds,requireZHop):
-		self.Debug = debugSettings
-		self.ExtruderTriggers = extruderTriggers
-		self.IntervalSeconds = intervalSeconds
-		self.RequireZHop = requireZHop
+	def __init__(self,octolapseSettings):
+		self.Settings = octolapseSettings
+		self.Debug = self.Settings.debug
+		self.Snapshot = self.Settings.CurrentSnapshot()
+		self.ExtruderTriggers = ExtruderTriggers(
+				self.Snapshot.timer_trigger_on_extruding
+				,self.Snapshot.timer_trigger_on_extruding_start
+				,self.Snapshot.timer_trigger_on_primed
+				,self.Snapshot.timer_trigger_on_retracting
+				,self.Snapshot.timer_trigger_on_retracted
+				,self.Snapshot.timer_trigger_on_detracting)
+		self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
+		self.RequireZHop = self.Snapshot.timer_trigger_require_zhop
 		self.LastTriggerTime = None
-		self.IntervalSeconds = intervalSeconds
+		self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
 		self.TriggeredCount = 0
 		self.IsTriggered = False
 		self.IsWaiting = False
 		self.PauseTime = None
+
+		self.Debug.LogTriggerCreate("Creating Timer Trigger - Seconds:{0}, RequireZHop:{1}".format(self.Snapshot.timer_trigger_seconds, self.Snapshot.timer_trigger_require_zhop))
+		self.Debug.LogTriggerCreate("Extruder Triggers - On Extruding:{0}, On Extruding Start:{1}, On Primed:{2}, On Retracting:{3}, On Retracted:{4}, On Detracting:{5}"
+				.format(
+					self.Snapshot.timer_trigger_on_extruding
+					,self.Snapshot.timer_trigger_on_extruding_start
+					,self.Snapshot.timer_trigger_on_primed
+					,self.Snapshot.timer_trigger_on_retracting
+					,self.Snapshot.timer_trigger_on_retracted
+					,self.Snapshot.timer_trigger_on_detracting)
+			)
+			#Configure the extruder triggers
 	def Pause(self):
 		self.PauseTime = time.time()
 		

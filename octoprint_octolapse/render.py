@@ -11,9 +11,11 @@ import utility
 import sarge
 class Render(object):
 
-	def __init__(self, debug, profile, threadCount, onStart=None, onFail = None, onSuccess=None, onAlways = None):
-		self.Debug = debug
-		self.Profile = profile
+	def __init__(self, settings, threadCount, onStart=None, onFail = None, onSuccess=None, onAlways = None):
+		self.Settings = settings
+		self.Debug = self.Settings.debug
+		self.Snapshot = self.Settings.CurrentSnapshot()
+		self.Rendering = self.Settings.CurrentRendering();
 		self.ThreadCount = threadCount
 		self.OnStart = onStart
 		self.OnFail = onFail
@@ -23,26 +25,26 @@ class Render(object):
 	def Process(self, printName, printStartTime, printEndTime):
 		self.Debug.LogRenderStart("Starting.")
 		# Get the capture file and directory info
-		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Profile.snapshot.output_directory,printName,printStartTime, self.Profile.snapshot.output_format)
-		snapshotFileNameTemplate  = utility.GetFilenameFromTemplate(self.Profile.snapshot.output_filename, printName, printStartTime, self.Profile.snapshot.output_format, "%05d")
+		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,printName,printStartTime, self.Snapshot.output_format)
+		snapshotFileNameTemplate  = utility.GetFilenameFromTemplate(self.Snapshot.output_filename, printName, printStartTime, self.Snapshot.output_format, "%05d")
 		# get the output file and directory info
-		outputDirectory = utility.GetDirectoryFromTemplate(self.Profile.rendering.output_directory,printName,printStartTime, self.Profile.rendering.output_format,printEndTime)
-		#self.Debug.LogInfo("OutputDirectory: {0}, Template:{1}, PrintName:{2}, printStartTime:{3}, outputFormat:{4}, printEndTime:{5}".format(outputDirectory,self.Profile.rendering.output_directory,printName,printStartTime, self.Profile.rendering.output_format,printEndTime))
-		outputFilename = utility.GetFilenameFromTemplate(self.Profile.rendering.output_filename, printName, printStartTime, self.Profile.rendering.output_format, "",printEndTime)
+		outputDirectory = utility.GetDirectoryFromTemplate(self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime)
+		#self.Debug.LogInfo("OutputDirectory: {0}, Template:{1}, PrintName:{2}, printStartTime:{3}, outputFormat:{4}, printEndTime:{5}".format(outputDirectory,self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime))
+		outputFilename = utility.GetFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format, "",printEndTime)
 		
 		job = TimelapseRenderJob(printName,
 							snapshotDirectory
 						   , snapshotFileNameTemplate
 						   , outputDirectory
 						   , outputFilename
-						   , self.Profile.rendering.output_format
-						   , self.Profile.rendering.ffmpeg_path
-						   , self.Profile.rendering.bitrate
-						   , self.Profile.rendering.flip_h
-						   , self.Profile.rendering.flip_v
-						   , self.Profile.rendering.rotate_90
-						   , self.Profile.rendering.watermark
-						   , fps = self.Profile.rendering.fps
+						   , self.Rendering.output_format
+						   , self.Rendering.ffmpeg_path
+						   , self.Rendering.bitrate
+						   , self.Rendering.flip_h
+						   , self.Rendering.flip_v
+						   , self.Rendering.rotate_90
+						   , self.Rendering.watermark
+						   , fps = self.Rendering.fps
 						   , threads= self.ThreadCount
 						   , on_start= self.OnStart
 						   , on_success = self.OnSuccess
@@ -60,9 +62,7 @@ class TimelapseRenderJob(object):
 
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
-	def __init__(self, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, ffmpegPath, bitrate, flipH=False, flipV=False, rotate90=False, watermark=False,
-	             fps=25, threads=1,
-	             on_start=None, on_success=None, on_fail=None, on_always=None):
+	def __init__(self, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps, threads,on_start=None, on_success=None, on_fail=None, on_always=None):
 		self._printFileName = printFileName
 		self._capture_dir = capture_dir
 		self._capture_file_template = capture_template
@@ -110,16 +110,17 @@ class TimelapseRenderJob(object):
 		                      self._output_file_name)
 
 		try:
-			path = os.path.dirname(self._output_dir)
-			if not os.path.exists(path):
-				os.makedirs(path)
+			#path = os.path.dirname(self._output_dir)
+			self._logger.warn("Creating the directory at {0}".format(self._output_dir))
+			if not os.path.exists(self._output_dir):
+				os.makedirs(self._output_dir)
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self._logger.warn("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
+			self._logger.warn("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
 			return
 
-		#self._logger.warn("Render - capture_dir:{0}, _capture_file_template:{1}, output_dir:{2}, _output_file_name:{3}, input path:{4}, output path:{5}".format(self._capture_dir, self._capture_file_template, self._output_dir, self._output_file_name,input,output))
+		self._logger.warn("Render - capture_dir:{0}, _capture_file_template:{1}, output_dir:{2}, _output_file_name:{3}, input path:{4}, output path:{5}".format(self._capture_dir, self._capture_file_template, self._output_dir, self._output_file_name,input,output))
 		for i in range(4):
 			if os.path.exists(input % i):
 				break
@@ -145,6 +146,7 @@ class TimelapseRenderJob(object):
 			try:
 				self._notify_callback("start", output)
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
+					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
 				if p.returncode == 0:
 					self._notify_callback("success", output)
@@ -184,7 +186,11 @@ class TimelapseRenderJob(object):
 		### See unit tests in test/timelapse/test_timelapse_renderjob.py
 
 		logger = logging.getLogger(__name__)
-
+		ffmpeg = ffmpeg.strip()
+		
+    
+		if (sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"'))):
+			ffmpeg = "\"{0}\"".format(ffmpeg)
 		command = [
 			ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input), '-vcodec', 'mpeg2video',
 			'-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate),

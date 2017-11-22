@@ -30,3 +30,6 @@
     ]);
 });
 */
+$(document).ready(function () {
+    console.log("Octolapse Ready!");
+});

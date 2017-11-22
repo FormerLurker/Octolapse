@@ -6,6 +6,7 @@ from pprint import pprint
 from .trigger import GcodeTrigger, TimerTrigger, LayerTrigger
 import os
 import sys
+import uuid
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
@@ -14,10 +15,9 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 		defaults = OctolapseSettings(octoprintLogger,None)
 		if(settings is None):
 			settings = defaults
-		octoprintSettings = {	
+		octoprintSettings = {
+			'version' :  utility.getstring(settings.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(settings.is_octolapse_enabled,defaults.is_octolapse_enabled),
-			'current_profile_name' : utility.getstring(settings.current_profile_name,defaults.current_profile_name),
-
 			'stabilization_options' :
 			[
 				dict(value='disabled',name='Disabled')
@@ -37,6 +37,7 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'position_command_received'	: utility.getbool(settings.debug.position_command_received,defaults.debug.position_command_received),
 				'extruder_change'			: utility.getbool(settings.debug.extruder_change,defaults.debug.extruder_change),
 				'extruder_triggered'		: utility.getbool(settings.debug.extruder_triggered,defaults.debug.extruder_triggered),
+				'trigger_create'			: utility.getbool(settings.debug.trigger_create,defaults.debug.trigger_create),
 				'trigger_wait_state'		: utility.getbool(settings.debug.trigger_wait_state,defaults.debug.trigger_wait_state),
 				'trigger_triggering'		: utility.getbool(settings.debug.trigger_triggering,defaults.debug.trigger_triggering),
 				'trigger_triggering_state'	: utility.getbool(settings.debug.trigger_triggering_state,defaults.debug.trigger_triggering_state),
@@ -52,174 +53,198 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'snapshot_position_return'	: utility.getbool(settings.debug.snapshot_position_return,defaults.debug.snapshot_position_return),
 				'snapshot_save'				: utility.getbool(settings.debug.snapshot_save,defaults.debug.snapshot_save),
 				'snapshot_download'			: utility.getbool(settings.debug.snapshot_download,defaults.debug.snapshot_download),
-
-				'render_start'			: utility.getbool(settings.debug.render_start,defaults.debug.render_start),
+				'render_start'				: utility.getbool(settings.debug.render_start,defaults.debug.render_start),
 				'render_complete'			: utility.getbool(settings.debug.render_complete,defaults.debug.render_complete),
-				'render_fail'			: utility.getbool(settings.debug.render_fail,defaults.debug.render_fail),
-				'render_sync'			: utility.getbool(settings.debug.render_sync,defaults.debug.render_sync),
+				'render_fail'				: utility.getbool(settings.debug.render_fail,defaults.debug.render_fail),
+				'render_sync'				: utility.getbool(settings.debug.render_sync,defaults.debug.render_sync),
 				'snapshot_clean'			: utility.getbool(settings.debug.snapshot_clean,defaults.debug.snapshot_clean),
-
 				'settings_save'				: utility.getbool(settings.debug.settings_save,defaults.debug.settings_save),
 				'settings_load'				: utility.getbool(settings.debug.settings_load,defaults.debug.settings_load),
 				'print_state_changed'		: utility.getbool(settings.debug.print_state_changed,defaults.debug.print_state_changed),
 				'camera_settings_apply'		: utility.getbool(settings.debug.camera_settings_apply,defaults.debug.camera_settings_apply)
-				
+			},
+			'current_printer_guid' : utility.getstring(settings.current_printer_guid,defaults.current_printer_guid),
+			'printers' : [],
+			'current_stabilization_guid' : utility.getstring(settings.current_stabilization_guid,defaults.current_stabilization_guid),
+			'stabilizations' : [],
+			'current_snapshot_guid' : utility.getstring(settings.current_snapshot_guid,defaults.current_snapshot_guid),
+			'snapshots' : [],
+			'current_rendering_guid' : utility.getstring(settings.current_rendering_guid,defaults.current_rendering_guid),
+			'renderings' : [],
+			'current_camera_guid' : utility.getstring(settings.current_camera_guid,defaults.current_camera_guid),
+			'cameras'	: []
 
-			},
-			'printer' :
-			{
-				'retract_length' :  utility.getint(settings.printer.retract_length,defaults.printer.retract_length),
-				'retract_speed' : utility.getint(settings.printer.retract_speed,defaults.printer.retract_speed),
-				'movement_speed' : utility.getint(settings.printer.movement_speed,defaults.printer.movement_speed),
-				'is_e_relative' : utility.getbool(settings.printer.is_e_relative, defaults.printer.is_e_relative),
-				'z_hop' : utility.getfloat(settings.printer.z_hop, defaults.printer.z_hop),
-				'z_min'				: utility.getfloat(settings.printer.z_min,defaults.printer.z_min),
-				'snapshot_command' :  utility.getstring(settings.printer.snapshot_command,defaults.printer.snapshot_command),
-			},
-			'profiles' : []
 		}
-		
-		defaultProfile = defaults.CurrentProfile()
-		for key, profile in settings.profiles.items():
-			newProfile = {
-				'name' : utility.getstring(profile.name,defaultProfile.name),
-				'description' : utility.getstring(profile.description,defaultProfile.description),
-				'stabilization' : {
-					'x_movement_speed' : utility.getint(profile.stabilization.x_movement_speed,defaultProfile.stabilization.x_movement_speed),
-					'x_type' : utility.getstring(profile.stabilization.x_type,defaultProfile.stabilization.x_type),
-					'x_fixed_coordinate' : utility.getfloat(profile.stabilization.x_fixed_coordinate,defaultProfile.stabilization.x_fixed_coordinate),
-					'x_fixed_path' : utility.getobject(profile.stabilization.x_fixed_path,defaultProfile.stabilization.x_fixed_path),
-					'x_fixed_path_loop' : utility.getbool(profile.stabilization.x_fixed_path_loop,defaultProfile.stabilization.x_fixed_path_loop),
-					'x_relative' : utility.getfloat(profile.stabilization.x_relative,defaultProfile.stabilization.x_relative),
-					'x_relative_print' : utility.getfloat(profile.stabilization.x_relative_print,defaultProfile.stabilization.x_relative_print),
-					'x_relative_path' : utility.getobject(profile.stabilization.x_relative_path,defaultProfile.stabilization.x_relative_path),
-					'x_relative_path_loop' : utility.getbool(profile.stabilization.x_relative_path_loop,defaultProfile.stabilization.x_relative_path_loop),
-					'y_movement_speed_mms' : utility.getint(profile.stabilization.y_movement_speed_mms,defaultProfile.stabilization.y_movement_speed_mms),
-					'y_type' : utility.getstring(profile.stabilization.y_type,defaultProfile.stabilization.y_type),
-					'y_fixed_coordinate' : utility.getfloat(profile.stabilization.y_fixed_coordinate,defaultProfile.stabilization.y_fixed_coordinate),
-					'y_fixed_path' : utility.getobject(profile.stabilization.y_fixed_path,defaultProfile.stabilization.y_fixed_path),
-					'y_fixed_path_loop' : utility.getbool(profile.stabilization.y_fixed_path_loop,defaultProfile.stabilization.y_fixed_path_loop),
-					'y_relative' : utility.getfloat(profile.stabilization.y_relative,defaultProfile.stabilization.y_relative),
-					'y_relative_print' : utility.getfloat(profile.stabilization.y_relative_print,defaultProfile.stabilization.y_relative_print),
-					'y_relative_path' : utility.getobject(profile.stabilization.y_relative_path,defaultProfile.stabilization.y_relative_path),
-					'y_relative_path_loop' : utility.getbool(profile.stabilization.y_relative_path_loop,defaultProfile.stabilization.y_relative_path_loop),
-					'z_movement_speed_mms' : utility.getint(profile.stabilization.z_movement_speed_mms,defaultProfile.stabilization.z_movement_speed_mms)
-				},
-				'snapshot' : {
-					'gcode_trigger_enabled'				: utility.getbool(profile.snapshot.gcode_trigger_enabled,defaultProfile.snapshot.gcode_trigger_enabled),
-					'gcode_trigger_require_zhop'		: utility.getbool(profile.snapshot.gcode_trigger_require_zhop,defaultProfile.snapshot.gcode_trigger_require_zhop),
-					'gcode_trigger_on_extruding'		: utility.getbool(profile.snapshot.gcode_trigger_on_extruding,defaultProfile.snapshot.gcode_trigger_on_extruding),
-					'gcode_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.gcode_trigger_on_extruding_start,defaultProfile.snapshot.gcode_trigger_on_extruding_start),
-					'gcode_trigger_on_primed'			: utility.getbool(profile.snapshot.gcode_trigger_on_primed,defaultProfile.snapshot.gcode_trigger_on_primed),
-					'gcode_trigger_on_retracting'		: utility.getbool(profile.snapshot.gcode_trigger_on_retracting,defaultProfile.snapshot.gcode_trigger_on_retracting),
-					'gcode_trigger_on_retracted'		: utility.getbool(profile.snapshot.gcode_trigger_on_retracted,defaultProfile.snapshot.gcode_trigger_on_retracted),
-					'gcode_trigger_on_detracting'		: utility.getbool(profile.snapshot.gcode_trigger_on_detracting,defaultProfile.snapshot.gcode_trigger_on_detracting),
-					'timer_trigger_enabled'				: utility.getbool(profile.snapshot.timer_trigger_enabled,defaultProfile.snapshot.timer_trigger_enabled),
-					'timer_trigger_require_zhop'		: utility.getbool(profile.snapshot.timer_trigger_require_zhop,defaultProfile.snapshot.timer_trigger_require_zhop),
-					'timer_trigger_seconds'				: utility.getint(profile.snapshot.timer_trigger_seconds,defaultProfile.snapshot.timer_trigger_seconds),
-					'timer_trigger_on_extruding'		: utility.getbool(profile.snapshot.timer_trigger_on_extruding,defaultProfile.snapshot.timer_trigger_on_extruding),
-					'timer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.timer_trigger_on_extruding_start,defaultProfile.snapshot.timer_trigger_on_extruding_start),
-					'timer_trigger_on_primed'			: utility.getbool(profile.snapshot.timer_trigger_on_primed,defaultProfile.snapshot.timer_trigger_on_primed),
-					'timer_trigger_on_retracting'		: utility.getbool(profile.snapshot.timer_trigger_on_retracting,defaultProfile.snapshot.timer_trigger_on_retracting),
-					'timer_trigger_on_retracted'		: utility.getbool(profile.snapshot.timer_trigger_on_retracted,defaultProfile.snapshot.timer_trigger_on_retracted),
-					'timer_trigger_on_detracting'		: utility.getbool(profile.snapshot.timer_trigger_on_detracting,defaultProfile.snapshot.timer_trigger_on_detracting),
-					'layer_trigger_enabled'				: utility.getbool(profile.snapshot.layer_trigger_enabled,defaultProfile.snapshot.layer_trigger_enabled),
-					'layer_trigger_height'				: utility.getfloat(profile.snapshot.layer_trigger_height,defaultProfile.snapshot.layer_trigger_height),
-					'layer_trigger_require_zhop'		: utility.getbool(profile.snapshot.layer_trigger_require_zhop,defaultProfile.snapshot.layer_trigger_require_zhop),
-					'layer_trigger_on_extruding'		: utility.getbool(profile.snapshot.layer_trigger_on_extruding,defaultProfile.snapshot.layer_trigger_on_extruding),
-					'layer_trigger_on_extruding_start'	: utility.getbool(profile.snapshot.layer_trigger_on_extruding_start,defaultProfile.snapshot.layer_trigger_on_extruding_start),
-					'layer_trigger_on_primed'			: utility.getbool(profile.snapshot.layer_trigger_on_primed,defaultProfile.snapshot.layer_trigger_on_primed),
-					'layer_trigger_on_retracting'		: utility.getbool(profile.snapshot.layer_trigger_on_retracting,defaultProfile.snapshot.layer_trigger_on_retracting),
-					'layer_trigger_on_retracted'		: utility.getbool(profile.snapshot.layer_trigger_on_retracted,defaultProfile.snapshot.layer_trigger_on_retracted),
-					'layer_trigger_on_detracting'		: utility.getbool(profile.snapshot.layer_trigger_on_detracting,defaultProfile.snapshot.layer_trigger_on_detracting),
-					'archive' : utility.getbool(profile.snapshot.archive,defaultProfile.snapshot.archive),
-					'delay' : utility.getint(profile.snapshot.delay,defaultProfile.snapshot.delay),
-					'output_format' : utility.getstring(profile.snapshot.output_format,defaultProfile.snapshot.output_format),
-					'output_filename' :utility.getstring(profile.snapshot.output_filename,defaultProfile.snapshot.output_filename),
-					'output_directory' : utility.getstring(profile.snapshot.output_directory,defaultProfile.snapshot.output_directory),
-					'retract_before_move' : utility.getbool(profile.snapshot.retract_before_move,defaultProfile.snapshot.retract_before_move),
-					'cleanup_before_print' : utility.getbool(profile.snapshot.cleanup_before_print,defaultProfile.snapshot.cleanup_before_print),
-					'cleanup_after_print' : utility.getbool(profile.snapshot.cleanup_after_print,defaultProfile.snapshot.cleanup_after_print),
-					'cleanup_after_cancel' : utility.getbool(profile.snapshot.cleanup_after_cancel,defaultProfile.snapshot.cleanup_after_cancel),
-					'cleanup_before_close' :  utility.getbool(profile.snapshot.cleanup_before_close,defaultProfile.snapshot.cleanup_before_close),
-					'cleanup_after_render_complete' : utility.getbool(profile.snapshot.cleanup_after_render_complete,defaultProfile.snapshot.cleanup_after_render_complete),
-					'cleanup_after_render_fail' : utility.getbool(profile.snapshot.cleanup_after_render_fail,defaultProfile.snapshot.cleanup_after_render_fail),
-					'custom_script_enabled' : utility.getbool(profile.snapshot.custom_script_enabled,defaultProfile.snapshot.custom_script_enabled),
-					'script_path' : utility.getstring(profile.snapshot.script_path,defaultProfile.snapshot.script_path),
-				},
-				'rendering' : {
-					'enabled' : utility.getbool(profile.rendering.enabled,defaultProfile.rendering.enabled),
-					'fps_calculation_type' : utility.getstring(profile.rendering.fps_calculation_type,defaultProfile.rendering.fps_calculation_type),
-					'run_length_seconds' : utility.getfloat(profile.rendering.run_length_seconds,defaultProfile.rendering.run_length_seconds),
-					'fps' : utility.getfloat(profile.rendering.fps,defaultProfile.rendering.fps),
-					'max_fps' : utility.getfloat(profile.rendering.max_fps,defaultProfile.rendering.max_fps),
-					'min_fps' : utility.getfloat(profile.rendering.min_fps,defaultProfile.rendering.min_fps),
-					'output_format' : utility.getstring(profile.rendering.output_format,defaultProfile.rendering.output_format),
-					'output_filename' :utility.getstring(profile.rendering.output_filename,defaultProfile.rendering.output_filename),
-					'output_directory' : utility.getstring(profile.rendering.output_directory,defaultProfile.rendering.output_directory),
-					'sync_with_timelapse' : utility.getbool(profile.rendering.sync_with_timelapse,defaultProfile.rendering.sync_with_timelapse),
-					'octoprint_timelapse_directory' : utility.getstring(profile.rendering.octoprint_timelapse_directory,defaultProfile.rendering.octoprint_timelapse_directory),
-					'ffmpeg_path' : utility.getstring(profile.rendering.ffmpeg_path,defaultProfile.rendering.ffmpeg_path),
-					'bitrate' : utility.getstring(profile.rendering.bitrate,defaultProfile.rendering.bitrate),
-					'flip_h' :  utility.getbool(profile.rendering.flip_h,defaultProfile.rendering.flip_h),
-					'flip_v' :  utility.getbool(profile.rendering.flip_v,defaultProfile.rendering.flip_v),
-					'rotate_90' :  utility.getbool(profile.rendering.rotate_90,defaultProfile.rendering.rotate_90),
-					'watermark' :  utility.getbool(profile.rendering.watermark,defaultProfile.rendering.watermark)
-				},
-				
-				'camera' : {
-					
-					'address' : utility.getstring(profile.camera.address,defaultProfile.camera.address),
-					'snapshot_request_template' : utility.getstring(profile.camera.snapshot_request_template,defaultProfile.camera.snapshot_request_template),
-					'apply_settings_before_print' : utility.getbool(profile.camera.apply_settings_before_print,defaultProfile.camera.apply_settings_before_print),
-					'ignore_ssl_error' : utility.getbool(profile.camera.ignore_ssl_error,defaultProfile.camera.ignore_ssl_error),
-					'password' : utility.getstring(profile.camera.password,defaultProfile.camera.password),
-					'username' : utility.getstring(profile.camera.username,defaultProfile.camera.username),
-					'brightness' : utility.getint(profile.camera.brightness,defaultProfile.camera.brightness),
-					'contrast' : utility.getint(profile.camera.contrast,defaultProfile.camera.contrast),
-					'saturation' : utility.getint(profile.camera.saturation,defaultProfile.camera.saturation),
-					'white_balance_auto' : utility.getbool(profile.camera.white_balance_auto,defaultProfile.camera.white_balance_auto),
-					'gain' : utility.getint(profile.camera.gain,defaultProfile.camera.gain),
-					'powerline_frequency' : utility.getint(profile.camera.powerline_frequency,defaultProfile.camera.powerline_frequency),
-					'white_balance_temperature' : utility.getint(profile.camera.white_balance_temperature,defaultProfile.camera.white_balance_temperature),
-					'sharpness' : utility.getint(profile.camera.sharpness,defaultProfile.camera.sharpness),
-					'backlight_compensation_enabled' :  utility.getbool(profile.camera.backlight_compensation_enabled,defaultProfile.camera.backlight_compensation_enabled),
-					'exposure_type' : utility.getbool(profile.camera.exposure_type,defaultProfile.camera.exposure_type),
-					'exposure' : utility.getint(profile.camera.exposure,defaultProfile.camera.exposure),
-					'exposure_auto_priority_enabled' : utility.getbool(profile.camera.exposure_auto_priority_enabled,defaultProfile.camera.exposure_auto_priority_enabled),
-					'pan' : utility.getint(profile.camera.pan,defaultProfile.camera.pan),
-					'tilt' : utility.getint(profile.camera.tilt,defaultProfile.camera.tilt),
-					'autofocus_enabled' : utility.getbool(profile.camera.autofocus_enabled,defaultProfile.camera.autofocus_enabled),
-					'focus' : utility.getint(profile.camera.focus,defaultProfile.camera.focus),
-					'zoom' : utility.getint(profile.camera.zoom,defaultProfile.camera.zoom),
-					'led1_mode' :  utility.getstring(profile.camera.led1_mode,defaultProfile.camera.led1_mode),
-					'led1_frequency' : utility.getint(profile.camera.led1_frequency,defaultProfile.camera.led1_frequency),
-					'jpeg_quality' : utility.getint(profile.camera.jpeg_quality,defaultProfile.camera.jpeg_quality),
-					'brightness_request_template' :  utility.getstring(profile.camera.brightness_request_template,defaultProfile.camera.brightness_request_template),
-					'contrast_request_template' :  utility.getstring(profile.camera.contrast_request_template,defaultProfile.camera.contrast_request_template),
-					'saturation_request_template' :  utility.getstring(profile.camera.saturation_request_template,defaultProfile.camera.saturation_request_template),
-					'white_balance_auto_request_template' :  utility.getstring(profile.camera.white_balance_auto_request_template,defaultProfile.camera.white_balance_auto_request_template),
-					'gain_request_template' :  utility.getstring(profile.camera.gain_request_template,defaultProfile.camera.gain_request_template),
-					'powerline_frequency_request_template' :  utility.getstring(profile.camera.powerline_frequency_request_template,defaultProfile.camera.powerline_frequency_request_template),
-					'white_balance_temperature_request_template' :  utility.getstring(profile.camera.white_balance_temperature_request_template,defaultProfile.camera.white_balance_temperature_request_template),
-					'sharpness_request_template' :  utility.getstring(profile.camera.sharpness_request_template,defaultProfile.camera.sharpness_request_template),
-					'backlight_compensation_enabled_request_template' :  utility.getstring(profile.camera.backlight_compensation_enabled_request_template,defaultProfile.camera.backlight_compensation_enabled_request_template),
-					'exposure_type_request_template' :  utility.getstring(profile.camera.exposure_type_request_template,defaultProfile.camera.exposure_type_request_template),
-					'exposure_request_template' :  utility.getstring(profile.camera.exposure_request_template,defaultProfile.camera.exposure_request_template),
-					'exposure_auto_priority_enabled_request_template' :  utility.getstring(profile.camera.exposure_auto_priority_enabled_request_template,defaultProfile.camera.exposure_auto_priority_enabled_request_template),
-					'pan_request_template' :  utility.getstring(profile.camera.pan_request_template,defaultProfile.camera.pan_request_template),
-					'tilt_request_template' :  utility.getstring(profile.camera.tilt_request_template,defaultProfile.camera.tilt_request_template),
-					'autofocus_enabled_request_template' :  utility.getstring(profile.camera.autofocus_enabled_request_template,defaultProfile.camera.autofocus_enabled_request_template),
-					'focus_request_template' :  utility.getstring(profile.camera.focus_request_template,defaultProfile.camera.focus_request_template),
-					'zoom_request_template' :  utility.getstring(profile.camera.zoom_request_template,defaultProfile.camera.zoom_request_template),
-					'led1_mode_request_template' :  utility.getstring(profile.camera.led1_mode_request_template,defaultProfile.camera.led1_mode_request_template),
-					'led1_frequency_request_template' :  utility.getstring(profile.camera.led1_frequency_request_template,defaultProfile.camera.led1_frequency_request_template),
-					'jpeg_quality_request_template' :  utility.getstring(profile.camera.jpeg_quality_request_template,defaultProfile.camera.jpeg_quality_request_template),
-					
-					
-				}
+
+		defaultPrinter = defaults.CurrentPrinter()
+		for key,printer in settings.printers.items():
+			newPrinter = {
+				'name'				: utility.getstring(printer.name,defaultPrinter.name),
+				'guid'				: utility.getstring(printer.guid,defaultPrinter.guid),
+				'retract_length'	: utility.getint(printer.retract_length,defaultPrinter.retract_length),
+				'retract_speed'		: utility.getint(printer.retract_speed,defaultPrinter.retract_speed),
+				'movement_speed'	: utility.getint(printer.movement_speed,defaultPrinter.movement_speed),
+				'is_e_relative'		: utility.getbool(printer.is_e_relative, defaultPrinter.is_e_relative),
+				'z_hop'				: utility.getfloat(printer.z_hop, defaultPrinter.z_hop),
+				'z_min'				: utility.getfloat(printer.z_min,defaultPrinter.z_min),
+				'snapshot_command'	: utility.getstring(printer.snapshot_command,defaultPrinter.snapshot_command),
 			}
-			octoprintSettings["profiles"].append(newProfile)
+
+			octoprintSettings["printers"].append(newPrinter)
+
+		defaultStabilization = defaults.CurrentStabilization()
+		for key,stabilization in settings.stabilizations.items():
+			newStabilization = {
+				'name'					: utility.getstring(stabilization.name,defaultStabilization.name),
+				'guid'					: utility.getstring(stabilization.guid,defaultStabilization.guid),
+				'x_movement_speed'		: utility.getint(stabilization.x_movement_speed,defaultStabilization.x_movement_speed),
+				'x_type'				: utility.getstring(stabilization.x_type,defaultStabilization.x_type),
+				'x_fixed_coordinate'	: utility.getfloat(stabilization.x_fixed_coordinate,defaultStabilization.x_fixed_coordinate),
+				'x_fixed_path'			: utility.getobject(stabilization.x_fixed_path,defaultStabilization.x_fixed_path),
+				'x_fixed_path_loop'		: utility.getbool(stabilization.x_fixed_path_loop,defaultStabilization.x_fixed_path_loop),
+				'x_relative'			: utility.getfloat(stabilization.x_relative,defaultStabilization.x_relative),
+				'x_relative_print'		: utility.getfloat(stabilization.x_relative_print,defaultStabilization.x_relative_print),
+				'x_relative_path'		: utility.getobject(stabilization.x_relative_path,defaultStabilization.x_relative_path),
+				'x_relative_path_loop'	: utility.getbool(stabilization.x_relative_path_loop,defaultStabilization.x_relative_path_loop),
+				'y_movement_speed_mms'	: utility.getint(stabilization.y_movement_speed_mms,defaultStabilization.y_movement_speed_mms),
+				'y_type'				: utility.getstring(stabilization.y_type,defaultStabilization.y_type),
+				'y_fixed_coordinate'	: utility.getfloat(stabilization.y_fixed_coordinate,defaultStabilization.y_fixed_coordinate),
+				'y_fixed_path'			: utility.getobject(stabilization.y_fixed_path,defaultStabilization.y_fixed_path),
+				'y_fixed_path_loop'		: utility.getbool(stabilization.y_fixed_path_loop,defaultStabilization.y_fixed_path_loop),
+				'y_relative'			: utility.getfloat(stabilization.y_relative,defaultStabilization.y_relative),
+				'y_relative_print'		: utility.getfloat(stabilization.y_relative_print,defaultStabilization.y_relative_print),
+				'y_relative_path'		: utility.getobject(stabilization.y_relative_path,defaultStabilization.y_relative_path),
+				'y_relative_path_loop'	: utility.getbool(stabilization.y_relative_path_loop,defaultStabilization.y_relative_path_loop),
+				'z_movement_speed_mms'	: utility.getint(stabilization.z_movement_speed_mms,defaultStabilization.z_movement_speed_mms)
+			}
+			octoprintSettings["stabilizations"].append(newStabilization)
+
+		defaultSnapshot = defaults.CurrentSnapshot()
+		for key,snapshot in settings.snapshots.items():
+			newSnapshot = {
+				'name'								: utility.getstring(snapshot.name,defaultSnapshot.name),
+				'guid'								: utility.getstring(snapshot.guid,defaultSnapshot.guid),
+				'gcode_trigger_enabled'				: utility.getbool(snapshot.gcode_trigger_enabled,defaultSnapshot.gcode_trigger_enabled),
+				'gcode_trigger_require_zhop'		: utility.getbool(snapshot.gcode_trigger_require_zhop,defaultSnapshot.gcode_trigger_require_zhop),
+				'gcode_trigger_on_extruding'		: utility.getbool(snapshot.gcode_trigger_on_extruding,defaultSnapshot.gcode_trigger_on_extruding),
+				'gcode_trigger_on_extruding_start'	: utility.getbool(snapshot.gcode_trigger_on_extruding_start,defaultSnapshot.gcode_trigger_on_extruding_start),
+				'gcode_trigger_on_primed'			: utility.getbool(snapshot.gcode_trigger_on_primed,defaultSnapshot.gcode_trigger_on_primed),
+				'gcode_trigger_on_retracting'		: utility.getbool(snapshot.gcode_trigger_on_retracting,defaultSnapshot.gcode_trigger_on_retracting),
+				'gcode_trigger_on_retracted'		: utility.getbool(snapshot.gcode_trigger_on_retracted,defaultSnapshot.gcode_trigger_on_retracted),
+				'gcode_trigger_on_detracting'		: utility.getbool(snapshot.gcode_trigger_on_detracting,defaultSnapshot.gcode_trigger_on_detracting),
+				'timer_trigger_enabled'				: utility.getbool(snapshot.timer_trigger_enabled,defaultSnapshot.timer_trigger_enabled),
+				'timer_trigger_require_zhop'		: utility.getbool(snapshot.timer_trigger_require_zhop,defaultSnapshot.timer_trigger_require_zhop),
+				'timer_trigger_seconds'				: utility.getint(snapshot.timer_trigger_seconds,defaultSnapshot.timer_trigger_seconds),
+				'timer_trigger_on_extruding'		: utility.getbool(snapshot.timer_trigger_on_extruding,defaultSnapshot.timer_trigger_on_extruding),
+				'timer_trigger_on_extruding_start'	: utility.getbool(snapshot.timer_trigger_on_extruding_start,defaultSnapshot.timer_trigger_on_extruding_start),
+				'timer_trigger_on_primed'			: utility.getbool(snapshot.timer_trigger_on_primed,defaultSnapshot.timer_trigger_on_primed),
+				'timer_trigger_on_retracting'		: utility.getbool(snapshot.timer_trigger_on_retracting,defaultSnapshot.timer_trigger_on_retracting),
+				'timer_trigger_on_retracted'		: utility.getbool(snapshot.timer_trigger_on_retracted,defaultSnapshot.timer_trigger_on_retracted),
+				'timer_trigger_on_detracting'		: utility.getbool(snapshot.timer_trigger_on_detracting,defaultSnapshot.timer_trigger_on_detracting),
+				'layer_trigger_enabled'				: utility.getbool(snapshot.layer_trigger_enabled,defaultSnapshot.layer_trigger_enabled),
+				'layer_trigger_height'				: utility.getfloat(snapshot.layer_trigger_height,defaultSnapshot.layer_trigger_height),
+				'layer_trigger_require_zhop'		: utility.getbool(snapshot.layer_trigger_require_zhop,defaultSnapshot.layer_trigger_require_zhop),
+				'layer_trigger_on_extruding'		: utility.getbool(snapshot.layer_trigger_on_extruding,defaultSnapshot.layer_trigger_on_extruding),
+				'layer_trigger_on_extruding_start'	: utility.getbool(snapshot.layer_trigger_on_extruding_start,defaultSnapshot.layer_trigger_on_extruding_start),
+				'layer_trigger_on_primed'			: utility.getbool(snapshot.layer_trigger_on_primed,defaultSnapshot.layer_trigger_on_primed),
+				'layer_trigger_on_retracting'		: utility.getbool(snapshot.layer_trigger_on_retracting,defaultSnapshot.layer_trigger_on_retracting),
+				'layer_trigger_on_retracted'		: utility.getbool(snapshot.layer_trigger_on_retracted,defaultSnapshot.layer_trigger_on_retracted),
+				'layer_trigger_on_detracting'		: utility.getbool(snapshot.layer_trigger_on_detracting,defaultSnapshot.layer_trigger_on_detracting),
+				'delay'								: utility.getint(snapshot.delay,defaultSnapshot.delay),
+				'output_format'						: utility.getstring(snapshot.output_format,defaultSnapshot.output_format),
+				'output_filename'					: utility.getstring(snapshot.output_filename,defaultSnapshot.output_filename),
+				'output_directory'					: utility.getstring(snapshot.output_directory,defaultSnapshot.output_directory),
+				'retract_before_move'				: utility.getbool(snapshot.retract_before_move,defaultSnapshot.retract_before_move),
+				'cleanup_before_print'				: utility.getbool(snapshot.cleanup_before_print,defaultSnapshot.cleanup_before_print),
+				'cleanup_after_print'				: utility.getbool(snapshot.cleanup_after_print,defaultSnapshot.cleanup_after_print),
+				'cleanup_after_cancel'				: utility.getbool(snapshot.cleanup_after_cancel,defaultSnapshot.cleanup_after_cancel),
+				'cleanup_after_fail'				: utility.getbool(snapshot.cleanup_after_fail,defaultSnapshot.cleanup_after_fail),
+				'cleanup_before_close'				: utility.getbool(snapshot.cleanup_before_close,defaultSnapshot.cleanup_before_close),
+				'cleanup_after_render_complete'		: utility.getbool(snapshot.cleanup_after_render_complete,defaultSnapshot.cleanup_after_render_complete),
+				'cleanup_after_render_fail'			: utility.getbool(snapshot.cleanup_after_render_fail,defaultSnapshot.cleanup_after_render_fail),
+				'custom_script_enabled'				: utility.getbool(snapshot.custom_script_enabled,defaultSnapshot.custom_script_enabled),
+				'script_path'						: utility.getstring(snapshot.script_path,defaultSnapshot.script_path)
+			}
+			octoprintSettings["snapshots"].append(newSnapshot)
+
+		defaultRendering = defaults.CurrentRendering()
+		for key,rendering in settings.renderings.items():
+			newRendering = {
+				'name'								: utility.getstring(rendering.name,defaultRendering.name),
+				'guid'								: utility.getstring(rendering.guid,defaultRendering.guid),
+				'enabled'							: utility.getbool(rendering.enabled,defaultRendering.enabled),
+				'fps_calculation_type'				: utility.getstring(rendering.fps_calculation_type,defaultRendering.fps_calculation_type),
+				'run_length_seconds'				: utility.getfloat(rendering.run_length_seconds,defaultRendering.run_length_seconds),
+				'fps'								: utility.getfloat(rendering.fps,defaultRendering.fps),
+				'max_fps'							: utility.getfloat(rendering.max_fps,defaultRendering.max_fps),
+				'min_fps'							: utility.getfloat(rendering.min_fps,defaultRendering.min_fps),
+				'output_format'						: utility.getstring(rendering.output_format,defaultRendering.output_format),
+				'output_filename'					: utility.getstring(rendering.output_filename,defaultRendering.output_filename),
+				'output_directory'					: utility.getstring(rendering.output_directory,defaultRendering.output_directory),
+				'sync_with_timelapse'				: utility.getbool(rendering.sync_with_timelapse,defaultRendering.sync_with_timelapse),
+				'octoprint_timelapse_directory'		: utility.getstring(rendering.octoprint_timelapse_directory,defaultRendering.octoprint_timelapse_directory),
+				'ffmpeg_path'						: utility.getstring(rendering.ffmpeg_path,defaultRendering.ffmpeg_path),
+				'bitrate'							: utility.getstring(rendering.bitrate,defaultRendering.bitrate),
+				'flip_h'							: utility.getbool(rendering.flip_h,defaultRendering.flip_h),
+				'flip_v'							: utility.getbool(rendering.flip_v,defaultRendering.flip_v),
+				'rotate_90'							: utility.getbool(rendering.rotate_90,defaultRendering.rotate_90),
+				'watermark'							: utility.getbool(rendering.watermark,defaultRendering.watermark)
+			}
+			octoprintSettings["renderings"].append(newRendering)
+
+		defaultCamera = defaults.CurrentCamera()
+		for key,camera in settings.cameras.items():
+			newCamera = {
+				'name'												: utility.getstring(camera.name,defaultCamera.name),
+				'guid'												: utility.getstring(camera.guid,defaultCamera.guid),
+				'address'											: utility.getstring(camera.address,defaultCamera.address),
+				'snapshot_request_template'							: utility.getstring(camera.snapshot_request_template,defaultCamera.snapshot_request_template),
+				'apply_settings_before_print'						: utility.getbool(camera.apply_settings_before_print,defaultCamera.apply_settings_before_print),
+				'ignore_ssl_error'									: utility.getbool(camera.ignore_ssl_error,defaultCamera.ignore_ssl_error),
+				'password'											: utility.getstring(camera.password,defaultCamera.password),
+				'username'											: utility.getstring(camera.username,defaultCamera.username),
+				'brightness'										: utility.getint(camera.brightness,defaultCamera.brightness),
+				'contrast'											: utility.getint(camera.contrast,defaultCamera.contrast),
+				'saturation'										: utility.getint(camera.saturation,defaultCamera.saturation),
+				'white_balance_auto'								: utility.getbool(camera.white_balance_auto,defaultCamera.white_balance_auto),
+				'gain'												: utility.getint(camera.gain,defaultCamera.gain),
+				'powerline_frequency'								: utility.getint(camera.powerline_frequency,defaultCamera.powerline_frequency),
+				'white_balance_temperature'							: utility.getint(camera.white_balance_temperature,defaultCamera.white_balance_temperature),
+				'sharpness'											: utility.getint(camera.sharpness,defaultCamera.sharpness),
+				'backlight_compensation_enabled'					: utility.getbool(camera.backlight_compensation_enabled,defaultCamera.backlight_compensation_enabled),
+				'exposure_type'										: utility.getbool(camera.exposure_type,defaultCamera.exposure_type),
+				'exposure'											: utility.getint(camera.exposure,defaultCamera.exposure),
+				'exposure_auto_priority_enabled'					: utility.getbool(camera.exposure_auto_priority_enabled,defaultCamera.exposure_auto_priority_enabled),
+				'pan'												: utility.getint(camera.pan,defaultCamera.pan),
+				'tilt'												: utility.getint(camera.tilt,defaultCamera.tilt),
+				'autofocus_enabled'									: utility.getbool(camera.autofocus_enabled,defaultCamera.autofocus_enabled),
+				'focus'												: utility.getint(camera.focus,defaultCamera.focus),
+				'zoom'												: utility.getint(camera.zoom,defaultCamera.zoom),
+				'led1_mode'											: utility.getstring(camera.led1_mode,defaultCamera.led1_mode),
+				'led1_frequency'									: utility.getint(camera.led1_frequency,defaultCamera.led1_frequency),
+				'jpeg_quality'										: utility.getint(camera.jpeg_quality,defaultCamera.jpeg_quality),
+				'brightness_request_template'						: utility.getstring(camera.brightness_request_template,defaultCamera.brightness_request_template),
+				'contrast_request_template'							: utility.getstring(camera.contrast_request_template,defaultCamera.contrast_request_template),
+				'saturation_request_template'						: utility.getstring(camera.saturation_request_template,defaultCamera.saturation_request_template),
+				'white_balance_auto_request_template'				: utility.getstring(camera.white_balance_auto_request_template,defaultCamera.white_balance_auto_request_template),
+				'gain_request_template'								: utility.getstring(camera.gain_request_template,defaultCamera.gain_request_template),
+				'powerline_frequency_request_template'				: utility.getstring(camera.powerline_frequency_request_template,defaultCamera.powerline_frequency_request_template),
+				'white_balance_temperature_request_template'		: utility.getstring(camera.white_balance_temperature_request_template,defaultCamera.white_balance_temperature_request_template),
+				'sharpness_request_template'						: utility.getstring(camera.sharpness_request_template,defaultCamera.sharpness_request_template),
+				'backlight_compensation_enabled_request_template'	: utility.getstring(camera.backlight_compensation_enabled_request_template,defaultCamera.backlight_compensation_enabled_request_template),
+				'exposure_type_request_template'					: utility.getstring(camera.exposure_type_request_template,defaultCamera.exposure_type_request_template),
+				'exposure_request_template'							: utility.getstring(camera.exposure_request_template,defaultCamera.exposure_request_template),
+				'exposure_auto_priority_enabled_request_template'	: utility.getstring(camera.exposure_auto_priority_enabled_request_template,defaultCamera.exposure_auto_priority_enabled_request_template),
+				'pan_request_template'								: utility.getstring(camera.pan_request_template,defaultCamera.pan_request_template),
+				'tilt_request_template'								: utility.getstring(camera.tilt_request_template,defaultCamera.tilt_request_template),
+				'autofocus_enabled_request_template'				: utility.getstring(camera.autofocus_enabled_request_template,defaultCamera.autofocus_enabled_request_template),
+				'focus_request_template'							: utility.getstring(camera.focus_request_template,defaultCamera.focus_request_template),
+				'zoom_request_template'								: utility.getstring(camera.zoom_request_template,defaultCamera.zoom_request_template),
+				'led1_mode_request_template'						: utility.getstring(camera.led1_mode_request_template,defaultCamera.led1_mode_request_template),
+				'led1_frequency_request_template'					: utility.getstring(camera.led1_frequency_request_template,defaultCamera.led1_frequency_request_template),
+				'jpeg_quality_request_template'						: utility.getstring(camera.jpeg_quality_request_template,defaultCamera.jpeg_quality_request_template)
+			}
+			octoprintSettings["cameras"].append(newCamera)
 
 		return octoprintSettings
 
@@ -227,6 +252,8 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 class Printer(object):
 	
 	def __init__(self,printer):
+		self.guid = str(uuid.uuid4())
+		self.name = "Default"
 		self.retract_length = 4.0
 		self.retract_speed = 4800
 		self.movement_speed = 7200
@@ -235,6 +262,10 @@ class Printer(object):
 		self.snapshot_command = "snap"
 		self.is_e_relative = True
 		if(printer is not None):
+			if("guid" in printer):
+				self.guid = utility.getstring(printer["guid"],self.guid)
+			if("name" in printer.keys()):
+				self.name = utility.getstring(printer["name"],self.guid)
 			if("retract_length" in printer.keys()):
 				self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
 			if("retract_speed" in printer.keys()):
@@ -252,6 +283,8 @@ class Printer(object):
 class Stabilization(object):
 
 	def __init__(self,stabilization):
+		self.guid = str(uuid.uuid4())
+		self.name = "Default"
 		self.x_movement_speed = 0
 		self.x_type = "fixed_coordinate"
 		self.x_fixed_coordinate = 0.0
@@ -273,6 +306,10 @@ class Stabilization(object):
 		self.z_movement_speed_mms = 0
 		
 		if(stabilization is not None):
+			if("guid" in stabilization.keys()):
+				self.guid = utility.getstring(stabilization["guid"],self.guid)
+			if("name" in stabilization.keys()):
+				self.name = utility.getstring(stabilization["name"],self.name)
 			if("x_movement_speed" in stabilization.keys()):
 				self.x_movement_speed = utility.getint(stabilization["x_movement_speed"],self.x_movement_speed)
 			if("x_type" in stabilization.keys()):
@@ -313,6 +350,8 @@ class Stabilization(object):
 				self.z_movement_speed_mms = utility.getint(stabilization["z_movement_speed_mms"],self.z_movement_speed_mms)
 class Snapshot(object):
 	def __init__(self,snapshot):
+		self.guid = str(uuid.uuid4())
+		self.name = "Default"
 		#Initialize defaults
 		#Gcode Trigger
 		self.gcode_trigger_enabled = True
@@ -365,6 +404,10 @@ class Snapshot(object):
 		if(snapshot is not None):
 			#Initialize all values according to the provided snapshot, use defaults if
 			#the values are null or incorrectly formatted
+			if("guid" in snapshot.keys()):
+				self.guid = utility.getstring(snapshot["guid"],self.guid)
+			if("name" in snapshot.keys()):
+				self.name = utility.getstring(snapshot["name"],self.name)
 			if("gcode_trigger_enabled" in snapshot.keys()):
 				self.gcode_trigger_enabled = utility.getbool(snapshot["gcode_trigger_enabled"],self.gcode_trigger_enabled)
 			if("gcode_trigger_require_zhop" in snapshot.keys()):
@@ -405,8 +448,6 @@ class Snapshot(object):
 				self.layer_trigger_height = utility.getfloat(snapshot["layer_trigger_height"],self.layer_trigger_height)
 			if("layer_trigger_require_zhop" in snapshot.keys()):
 				self.layer_trigger_require_zhop = utility.getbool(snapshot["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
-			else:
-				print ('Key not found!')
 			if("layer_trigger_on_extruding" in snapshot.keys()):
 				self.layer_trigger_on_extruding = utility.getbool(snapshot["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
 			if("layer_trigger_on_extruding_start" in snapshot.keys()):
@@ -451,6 +492,8 @@ class Snapshot(object):
 				self.script_path = utility.getstring(snapshot["script_path"],self.script_path)
 class Rendering(object):
 	def __init__(self,rendering):
+		self.guid = str(uuid.uuid4())
+		self.name = "Default"
 		self.enabled = True
 		self.fps_calculation_type = 'duration'
 		self.run_length_seconds = 10
@@ -475,6 +518,10 @@ class Rendering(object):
 		self.rotate_90 = False
 		self.watermark = False
 		if(rendering is not None):
+			if("guid" in rendering.keys()):
+				self.guid = utility.getstring(rendering["guid"],self.guid)
+			if("name" in rendering.keys()):
+				self.name = utility.getstring(rendering["name"],self.name)
 			if("enabled" in rendering.keys()):
 				self.enabled = utility.getbool(rendering["enabled"],self.enabled)
 			if("fps_calculation_type" in rendering.keys()):
@@ -509,10 +556,11 @@ class Rendering(object):
 				self.rotate_90 = utility.getbool(rendering["rotate_90"],self.rotate_90)
 			if("watermark" in rendering.keys()):
 				self.watermark = utility.getbool(rendering["watermark"],self.watermark)
-
 class Camera(object):
 	
 	def __init__(self,camera):
+		self.guid = str(uuid.uuid4())
+		self.name = "Default"
 		self.apply_settings_before_print = True
 		self.address = "http://127.0.0.1/webcam/"
 		self.snapshot_request_template = "{camera_address}?action=snapshot"
@@ -560,8 +608,11 @@ class Camera(object):
 		self.jpeg_quality = 80
 		self.jpeg_quality_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}"
 
-
 		if(not camera is None):
+			if("guid" in camera.keys()):
+				self.guid = utility.getstring(camera["guid"],self.guid)
+			if("name" in camera.keys()):
+				self.name = utility.getstring(camera["name"],self.name)
 			if("address" in camera.keys()):
 				self.address = utility.getstring(camera["address"],self.address)
 			if("apply_settings_before_print" in camera.keys()):
@@ -654,28 +705,6 @@ class Camera(object):
 				self.jpeg_quality_request_template = utility.getstring(camera["jpeg_quality_request_template"],self.jpeg_quality_request_template)
 			if("zoom_request_template" in camera.keys()):
 				self.zoom_request_template = utility.getstring(camera["zoom_request_template"],self.zoom_request_template)
-class Profile(object):
-	def __init__(self,profile):
-		self.name = "Default"
-		self.description = "Fixed XY at back left - relative stabilization (0,100)"
-		self.stabilization = Stabilization(None)
-		self.snapshot = Snapshot(None)
-		self.rendering = Rendering(None)
-		self.camera = Camera(None)
-		if(profile is not None):
-
-			self.name = utility.getstring(profile["name"],self.name)
-			if("description" in profile.keys()):
-				self.description = utility.getstring(profile["description"],self.description)
-			if("stabilization" in profile.keys()):
-				self.stabilization = Stabilization(profile["stabilization"])
-			if("snapshot" in profile.keys()):
-				self.snapshot = Snapshot(profile["snapshot"])
-			if("rendering" in profile.keys()):
-				self.rendering = Rendering(profile["rendering"])
-			if("camera" in profile.keys()):
-				self.camera = Camera(profile["camera"])
-
 class DebugSettings(object):
 	Logger = None
 	def __init__(self,octoprintLogger,debug):
@@ -686,6 +715,7 @@ class DebugSettings(object):
 		self.position_command_received = False
 		self.extruder_change = False
 		self.extruder_triggered = False
+		self.trigger_create = False
 		self.trigger_wait_state = False
 		self.trigger_triggering = False
 		self.trigger_triggering_state = False
@@ -721,6 +751,8 @@ class DebugSettings(object):
 				self.extruder_change = utility.getbool(debug["extruder_change"],self.extruder_change)
 			if("extruder_triggered" in debug.keys()):
 				self.extruder_triggered = utility.getbool(debug["extruder_triggered"],self.extruder_triggered)
+			if("trigger_create" in debug.keys()):
+				self.trigger_create = utility.getbool(debug["trigger_create"],self.trigger_create)
 			if("trigger_wait_state" in debug.keys()):
 				self.trigger_wait_state = utility.getbool(debug["trigger_wait_state"],self.trigger_wait_state)
 			if("trigger_triggering" in debug.keys()):
@@ -790,6 +822,9 @@ class DebugSettings(object):
 			self.LogInfo(message)
 	def LogExtruderTriggered(self,message):
 		if(self.extruder_triggered):
+			self.LogInfo(message)
+	def LogTriggerCreate(self,message):
+		if(self.trigger_create):
 			self.LogInfo(message)
 	def LogTriggerWaitState(self,message):
 		if(self.trigger_wait_state):
@@ -899,44 +934,118 @@ class DebugSettings(object):
 							assert trigger.IsTriggered == layerTrigger
 						if(layerTriggerWait is not None):
 							assert trigger.IsWaiting == layerTriggerWait
-
-
 class OctolapseSettings(object):
 	
 	# constants
 	def __init__(self, octoprintLogger,settings=None):
+		self.version = "0.1.0"
 		
-		self.current_profile_name = "Default"
 		self.is_octolapse_enabled = True
-		self.printer = Printer(None)
-		self.profiles = { "Default" : Profile(None) }
 		self.debug = DebugSettings(octoprintLogger,None)
-		
+
+		printer = Printer(None)
+		self.current_printer_guid = printer.guid
+		self.printers = {printer.guid : printer}
+
+		stabilization = Stabilization(None)
+		self.current_stabilization_guid = stabilization.guid
+		self.stabilizations = {stabilization.guid:stabilization}
+
+		snapshot = Snapshot(None)
+		self.current_snapshot_guid = snapshot.guid
+		self.snapshots = {snapshot.guid:snapshot}
+
+		rendering = Rendering(None)
+		self.current_rendering_guid = rendering.guid
+		self.renderings = {rendering.guid:rendering}
+
+		camera = Camera(None)
+		self.current_camera_guid = camera.guid
+		self.cameras = {camera.guid:camera}
+
+
 		if(settings is not None):
-			self.current_profile_name = utility.getstring(settings.get(["current_profile_name"]),self.current_profile_name)
 			self.is_octolapse_enabled = utility.getbool(settings.get(["is_octolapse_enabled"]),self.is_octolapse_enabled)
 			self.debug = DebugSettings(octoprintLogger,settings.get(["debug"]))
 			self.printer = Printer(settings.get(["printer"]))
-			profiles = settings.get(["profiles"])
-			if(profiles is not None):
-				for profile in profiles:
-					if("name" in profile.keys()):
-						octoprintLogger.info("Creating profile: {0}".format(profile["name"]))
-						self.profiles[profile["name"]] = Profile(profile)
+			self.current_printer_guid = utility.getstring(settings.get(["current_printer_guid"]),self.current_printer_guid)
+			_printers = settings.get(["printers"])
+			if(_printers is not None):
+				self.printers = {}
+				for printer in _printers:
+					#octoprintLogger.info("Creating printer '{0}' with guid '{1}'".format(printer["name"], printer["guid"]))
+					self.printers[printer["guid"]] = Printer(printer)
+				if(self.current_printer_guid not in self.printers.keys()):
+					self.current_printer_guid = self.printers[0].guid
 
-    # Profiles
-	def CurrentProfile(self):
-		if(len(self.profiles.keys()) == 0):
-			profile = Profile()
-			self.Proflies[profile.name] = profile
-			self.current_profile_name = profile.name
-			
-			return profile
-		if(self.current_profile_name not in self.profiles.keys()):
-			self.current_profile_name = self.profiles.itervalues().next().name
-		return self.profiles[self.current_profile_name]
+			self.current_stabilization_guid = utility.getstring(settings.get(["current_stabilization_guid"]),self.current_stabilization_guid)
+			_stabilizations = settings.get(["stabilizations"])
+			if(_stabilizations is not None):
+				self.stabilization = {}
+				for stabilization in _stabilizations:
+					#octoprintLogger.info("Creating stabilization: {0}-{1}".format(stabilization["name"], stabilization["guid"]))
+					self.stabilizations[stabilization["guid"]] = Stabilization(stabilization)
+				if(self.current_stabilization_guid not in self.stabilizations.keys()):
+					self.current_stabilization_guid = self.stabilizations[0].guid
 
-	def Profile(self,profileName):
-		return self.profiles[profileName]
+			self.current_snapshot_guid = utility.getstring(settings.get(["current_snapshot_guid"]),self.current_snapshot_guid)
+			_snapshots = settings.get(["snapshots"])
+			if(_snapshots is not None):
+				self.snapshots = {}
+				for snapshot in _snapshots:
+					#octoprintLogger.info("Creating snapshot: {0} - {1}".format(snapshot["name"], snapshot["guid"]))
+					self.snapshots[snapshot["guid"]] = Snapshot(snapshot)
+				if(self.current_snapshot_guid not in self.snapshots.keys()):
+					self.current_snapshot_guid = self.snapshots[0].guid
+			self.current_rendering_guid = utility.getstring(settings.get(["current_rendering_guid"]),self.current_rendering_guid)
+			_renderings = settings.get(["renderings"])
+			if(_renderings is not None):
+				self.renderings = {}
+				for rendering in _renderings:
+					#octoprintLogger.info("Creating rendering: {0} - {1}".format(rendering["name"],rendering["guid"]))
+					self.renderings[rendering["guid"]] = Rendering(rendering)
+				if(self.current_rendering_guid not in self.renderings.keys()):
+					self.current_rendering_guid = self.renderings[0].guid
+
+			self.current_camera_guid = utility.getstring(settings.get(["current_camera_guid"]),self.current_camera_guid)
+			_cameras = settings.get(["cameras"])
+			if(_cameras is not None):
+				self.cameras = {}
+				for camera in _cameras:
+					#octoprintLogger.info("Creating camera: {0} - {1}".format(camera["name"],camera["guid"]))
+					self.cameras[camera["guid"]] = Camera(camera)
+				if(self.current_camera_guid not in self.cameras.keys()):
+					self.current_camera_guid = self.cameras[0].guid
+	def CurrentStabilization(self):
+		if(len(self.stabilizations.keys()) == 0):
+			stabilization = Stabilization(None)
+			self.stabilizations[stabilization.guid] = stabilization
+			self.current_stabilization_guid = stabilization.guid
+		return self.stabilizations[self.current_stabilization_guid]
+	def CurrentSnapshot(self):
+		if(len(self.snapshots.keys()) == 0):
+			snapshot = Snapshot(None)
+			self.snapshots[snapshot.guid] = snapshot
+			self.current_snapshot_guid = snapshot.guid
+		return self.snapshots[self.current_snapshot_guid]
+	def CurrentRendering(self):
+		if(len(self.renderings.keys()) == 0):
+			rendering = Rendering(None)
+			self.renderings[rendering.guid] = rendering
+			self.current_rendering_guid = rendering.guid
+		return self.renderings[self.current_rendering_guid]
+	def CurrentPrinter(self):
+		if(len(self.printers.keys()) == 0):
+			printer = Printer(None)
+			self.printers[printer.guid] = printer
+			self.current_printer_guid = printer.guid
+		return self.printers[self.current_printer_guid]
+	def CurrentCamera(self):
+		if(len(self.cameras.keys()) == 0):
+			camera = Camera(None)
+			self.cameras[camera.guid] = camera
+			self.current_camera_guid = camera.guid
+		return self.cameras[self.current_camera_guid]
+
 	
 
