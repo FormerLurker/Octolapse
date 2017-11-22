@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 import octoprint.plugin
-
+import uuid
 import time
 import os
 import sys
@@ -56,14 +56,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def on_settings_save(self, data):
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		self.Settings.debug.LogSettingsSave('Settings Saved: {0}'.format(data))
+		#for printer in self._settings.get(["printers"]):
+		#	if(printer.get(["guid"]).startswith("NewPrinterGuid_")):
+		#		newGuid = str(uuid.uuid4())
+		#		if (self._settings.get(["current_printer_guid"]) == printer.guid):
+		#			self._settings.set(["current_printer_guid"],newGuid)
+		#		printer.guid = newGuid
+		
+		self.Settings.debug.LogSettingsSave('Settings Saved: {0}'.format(self._settings))
+		
 	def get_settings_defaults(self):
 		defaultSettings = settings.GetSettingsForOctoprint(self._logger,None)
 		self._logger.info("Octolapse - creating default settings: {0}".format(defaultSettings))
 		return defaultSettings
 	def get_template_configs(self):
 		self._logger.info("Octolapse - is loading template configurations.")
-		return [dict(type="settings", custom_bindings=False)]
+		return [dict(type="settings", custom_bindings=True)]
 	def CurrentPrinterProfile(self):
 		return self._printer_profile_manager.get_current()
 	## EventHandlerPlugin mixin

@@ -1,6 +1,6 @@
 <form class="form-horizontal" >
   <div id="octolapse_settings">
-    <div data-bind="with: settings.plugins.octolapse">
+    <div data-bind="with: global_settings.settings.plugins.octolapse">
       <h3>Octolapse Settings</h3>
       <span class="help-inline">
         <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
@@ -14,10 +14,15 @@
       </div>
       <div data-bind="visible: is_octolapse_enabled">
         <div id="octolapse_printer">
-          <div id="octolapse_printer_active" >
+          <div class="control-group">
+            <div class="controls">
+              <button class="btn pull-right" data-bind="click: function() { $root.addPrinter(); }">Add New Printer</button>
+            </div>
+          </div>
+          <div id="octolapse_printer_active" class="control-group" >
             <label class="control-label">Active Printer Profile</label>
             <div class="controls">
-              <select data-bind="foreach: printers, value: current_printer_guid">
+              <select name="current_printer_guid" data-bind="foreach: printers, value: current_printer_guid">
                 <option data-bind="text:name, value:guid"></option>
               </select>
             </div>
@@ -26,12 +31,27 @@
                 <i class="fa icon-black fa-caret-right"></i> Edit Selected Printer Settings
               </a>
             </div>
+            
           </div>
           <div id="octolapse_printer_settings" class="hide">
             <div id="octolapse_printers" data-bind="foreach:printers">
-              
-              <div id="octolapse_active_printer" data-bind="visible: guid = $parent.current_printer_guid">
+
+              <div id="octolapse_active_printer" data-bind="visible: guid() == $parent.current_printer_guid()">
+                
                 <input type="hidden"  data-bind="value : guid" />
+                <div class="control-group">
+                  <div class="controls">
+                    <a title="Delete Printer" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removePrinter($data); }">
+                      <i class="icon-trash"></i>
+                    </a>
+                  </div>
+                </div>
+                <div class="control-group">
+                  <label class="control-label">Profile Name</label>
+                  <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: name"/>
+                  </div>
+                </div>
                 <div class="control-group">
                   <label class="control-label">Retraction Length</label>
                   <div class="controls">
