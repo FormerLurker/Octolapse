@@ -104,16 +104,16 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 				'x_fixed_path_loop'		: utility.getbool(stabilization.x_fixed_path_loop,defaultStabilization.x_fixed_path_loop),
 				'x_relative'			: utility.getfloat(stabilization.x_relative,defaultStabilization.x_relative),
 				'x_relative_print'		: utility.getfloat(stabilization.x_relative_print,defaultStabilization.x_relative_print),
-				'x_relative_path'		: utility.getobject(stabilization.x_relative_path,defaultStabilization.x_relative_path),
+				'x_relative_path'		: utility.getstring(stabilization.x_relative_path,defaultStabilization.x_relative_path),
 				'x_relative_path_loop'	: utility.getbool(stabilization.x_relative_path_loop,defaultStabilization.x_relative_path_loop),
 				'y_movement_speed_mms'	: utility.getint(stabilization.y_movement_speed_mms,defaultStabilization.y_movement_speed_mms),
 				'y_type'				: utility.getstring(stabilization.y_type,defaultStabilization.y_type),
 				'y_fixed_coordinate'	: utility.getfloat(stabilization.y_fixed_coordinate,defaultStabilization.y_fixed_coordinate),
-				'y_fixed_path'			: utility.getobject(stabilization.y_fixed_path,defaultStabilization.y_fixed_path),
+				'y_fixed_path'			: utility.getstring(stabilization.y_fixed_path,defaultStabilization.y_fixed_path),
 				'y_fixed_path_loop'		: utility.getbool(stabilization.y_fixed_path_loop,defaultStabilization.y_fixed_path_loop),
 				'y_relative'			: utility.getfloat(stabilization.y_relative,defaultStabilization.y_relative),
 				'y_relative_print'		: utility.getfloat(stabilization.y_relative_print,defaultStabilization.y_relative_print),
-				'y_relative_path'		: utility.getobject(stabilization.y_relative_path,defaultStabilization.y_relative_path),
+				'y_relative_path'		: utility.getstring(stabilization.y_relative_path,defaultStabilization.y_relative_path),
 				'y_relative_path_loop'	: utility.getbool(stabilization.y_relative_path_loop,defaultStabilization.y_relative_path_loop),
 				'z_movement_speed_mms'	: utility.getint(stabilization.z_movement_speed_mms,defaultStabilization.z_movement_speed_mms)
 			}
@@ -288,20 +288,20 @@ class Stabilization(object):
 		self.x_movement_speed = 0
 		self.x_type = "fixed_coordinate"
 		self.x_fixed_coordinate = 0.0
-		self.x_fixed_path = []
+		self.x_fixed_path = ""
 		self.x_fixed_path_loop = True
 		self.x_relative = 100.0
 		self.x_relative_print = 100.0
-		self.x_relative_path = []
+		self.x_relative_path = ""
 		self.x_relative_path_loop = True
 		self.y_movement_speed_mms = 0
 		self.y_type = 'fixed_coordinate'
 		self.y_fixed_coordinate = 0.0
-		self.y_fixed_path = []
+		self.y_fixed_path = ""
 		self.y_fixed_path_loop = True
 		self.y_relative = 100.0
 		self.y_relative_print = 100.0
-		self.y_relative_path = []
+		self.y_relative_path = ""
 		self.y_relative_path_loop = True
 		self.z_movement_speed_mms = 0
 		

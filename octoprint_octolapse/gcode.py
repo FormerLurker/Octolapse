@@ -5,6 +5,7 @@ import string
 import operator
 from .settings import *
 import utility
+import sys
 # global functions
 def GetGcodeFromString(commandString):
 	command = commandString.strip().split(' ', 1)[0].upper()
@@ -290,12 +291,49 @@ class Gcode(object):
 	CurrentYPathIndex = 0
 	def __init__(self,octolapseSettings,octoprint_printer_profile):
 		self.Settings = octolapseSettings
+		self.Debug = octolapseSettings.debug
 		self.Stabilization = self.Settings.CurrentStabilization()
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.Printer = self.Settings.CurrentPrinter()
 		self.OctoprintPrinterProfile = octoprint_printer_profile
 		self.CurrentXPathIndex = 0
 		self.CurrentYPathIndex = 0
+		self.XFixedPath_loop = self.Stabilization.x_fixed_path_loop
+		self.YFixedPath_loop = self.Stabilization.y_fixed_path_loop
+		self.XRelativePath_loop = self.Stabilization.x_relative_path_loop
+		self.YRelativePath_loop = self.Stabilization.y_relative_path_loop
+		try:
+			self.XFixedPath = map(float, self.Stabilization.x_fixed_path.split(','))
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XFixedPath:{2}".format(type,value,self.Stabilization.x_fixed_path))
+			self.XFixedPath = ["0"]
+
+		try:
+			self.YFixedPath = map(float, self.Stabilization.y_fixed_path.split(','))
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YFixedPath:{2}".format(type,value,self.Stabilization.y_fixed_path))
+			self.YFixedPath = ["0"]
+
+		try:
+			self.XRelativePath = map(float, self.Stabilization.x_relative_path.split(','))	
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XRelativePath:{2}".format(type,value,self.Stabilization.x_relative_path))
+			self.XRelativePath = ["0"]
+
+		try:
+			self.YRelativePath = map(float, self.Stabilization.y_relative_path.split(','))
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YRelativePath:{2}".format(type,value,self.Stabilization.y_relative_path))
+			self.YRelativePath = ["0"]
+
 	def GetBedRelativeX(self,percent):
 		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
 			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
@@ -345,39 +383,43 @@ class Gcode(object):
 		xCoord = 0
 		if (self.Stabilization.x_type == "fixed_coordinate"):
 			xCoord = self.Stabilization.x_fixed_coordinate
+			print("X - Fixed - Coordinate:{0}".format(xCoord))
 		elif (self.Stabilization.x_type == "relative"):
 			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			xCoord = self.GetBedRelativeX(self.Stabilization.x_relative)
+			print("X - Relative - Coordinate:{0}".format(xCoord))
 		elif (self.Stabilization.x_type == "fixed_path"):
 			# if there are no paths return the fixed coordinate
-			if(len(self.Stabilization.x_fixed_path) == 0):
+			if(len(self.XFixedPath) == 0):
 				xCoord = self.Stabilization.x_fixed_coordinate
 			# if we have reached the end of the path
-			elif(self.CurrentXPathIndex >= len(self.Stabilization.x_fixed_path)):
+			elif(self.CurrentXPathIndex >= len(self.XFixedPath)):
 				#If we are looping through the paths, reset the index to 0
-				if(self.Stabilization.x_fixed_path_loop):
+				if(self.XFixedPath_loop):
 						self.CurrentXPathIndex = 0
 				else:
-					self.CurrentXPathIndex = len(self.Stabilization.x_fixed_path)
-			xCoord = self.Stabilization.x_fixed_path[self.CurrentXPathIndex]
+					self.CurrentXPathIndex = len(self.XFixedPath)
+			xCoord = float(self.XFixedPath[self.CurrentXPathIndex])
+			print("X - Fixed - Path:{0}".format(xCoord))
 			self.CurrentXPathIndex += 1
 		elif (self.Stabilization.x_type == "relative_path"):
 			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			# if there are no paths return the fixed coordinate
-			if(len(self.Stabilization.x_relative_path) == 0):
+			if(len(self.XRelativePath) == 0):
 				xCoord = self.GetBedRelativeX(self.Stabilization.x_relative)
 			# if we have reached the end of the path
-			elif(self.CurrentXPathIndex >= len(self.Stabilization.x_relative_path)):
+			elif(self.CurrentXPathIndex >= len(self.XRelativePath)):
 				#If we are looping through the paths, reset the index to 0
-				if(self.Stabilization.x_relative_path_loop):
+				if(self.XRelativePath_loop):
 						self.CurrentXPathIndex = 0
 				else:
-					self.CurrentXPathIndex = len(self.Stabilization.x_relative_path)
-			xRel = self.Stabilization.x_relative_path[self.CurrentXPathIndex]
+					self.CurrentXPathIndex = len(self.XRelativePath)
+			xRel = float(self.XRelativePath[self.CurrentXPathIndex])
 			self.CurrentXPathIndex += 1
 			xCoord = self.GetBedRelativeX(xRel)
+			print("X - Relative - Path:{0}".format(xCoord))
 		else:
 			raise NotImplementedError
 		if(not self.IsXInBounds(xCoord)):
@@ -387,39 +429,43 @@ class Gcode(object):
 		yCoord = 0
 		if (self.Stabilization.y_type == "fixed_coordinate"):
 			yCoord = self.Stabilization.y_fixed_coordinate
+			print("Y - Fixed - Coord:{0}".format(yCoord))
 		elif (self.Stabilization.y_type == "relative"):
 			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			yCoord = self.GetBedRelativeY(self.Stabilization.y_relative)
+			print("Y - Relative - Coord:{0}".format(yCoord))
 		elif (self.Stabilization.y_type == "fixed_path"):
 			# if there are no paths return the fixed coordinate
-			if(len(self.Stabilization.y_fixed_path) == 0):
+			if(len(self.YFixedPath) == 0):
 				yCoord = self.Stabilization.y_fixed_coordinate
 			# if we have reached the end of the path
-			elif(self.CurrentYPathIndex >= len(self.Stabilization.y_fixed_path)):
+			elif(self.CurrentYPathIndex >= len(self.YFixedPath)):
 				#If we are looping through the paths, reset the index to 0
-				if(self.Stabilization.y_fixed_path_loop):
+				if(self.YFixedPath_loop):
 						self.CurrentYPathIndex = 0
 				else:
-					self.CurrentYPathIndex = len(self.Stabilization.y_fixed_path)
-			yCoord = self.Stabilization.y_fixed_path[self.CurrentYPathIndex]
+					self.CurrentYPathIndex = len(self.YFixedPath)
+			yCoord = float(self.YFixedPath[self.CurrentYPathIndex])
+			print("Y - Fixed - Path:{0}".format(yCoord))
 			self.CurrentYPathIndex += 1
 		elif (self.Stabilization.y_type == "relative_path"):
 			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			# if there are no paths return the fixed coordinate
-			if(len(self.Stabilization.y_relative_path) == 0):
+			if(len(self.YRelativePath) == 0):
 				yCoord =  self.GetBedRelativeY(self.Stabilization.y_relative)
 			# if we have reached the end of the path
-			elif(self.CurrentYPathIndex >= len(self.Stabilization.y_relative_path)):
+			elif(self.CurrentYPathIndex >= len(self.YRelativePath)):
 				#If we are looping through the paths, reset the index to 0
-				if(self.Stabilization.y_relative_path_loop):
+				if(self.YRelativePath_loop):
 						self.CurrentYPathIndex = 0
 				else:
-					self.CurrentYPathIndex = len(self.Stabilization.y_relative_path)
-			yRel = self.Stabilization.y_relative_path[self.CurrentYPathIndex]
+					self.CurrentYPathIndex = len(self.YRelativePath)
+			yRel = float(self.YRelativePath[self.CurrentYPathIndex])
 			self.CurrentYPathIndex += 1
 			yCoord =  self.GetBedRelativeY(yRel)
+			print("Y - Relative - Path:{0}".format(yCoord))
 		else:
 			raise NotImplementedError
 

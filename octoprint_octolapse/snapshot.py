@@ -118,7 +118,7 @@ class SnapshotJob(object):
 					r=requests.get(self.Url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 				else:
 					self.Debug.LogSnapshotDownload("Snapshot - downloading from {0:s} to {1:s}.".format(self.Url,dir))
-					r=requests.get(self.Url,verify = not self.IgnoreSUslError,timeout=float(self.TimeoutSeconds))
+					r=requests.get(self.Url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 			except:
 				type = sys.exc_info()[0]
 				value = sys.exc_info()[1]

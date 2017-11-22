@@ -13,7 +13,6 @@
         </div>
       </div>
       <div data-bind="visible: is_octolapse_enabled">
-
         <div id="octolapse_printer">
           <div id="octolapse_printer_active" >
             <label class="control-label">Active Printer Profile</label>
@@ -30,7 +29,9 @@
           </div>
           <div id="octolapse_printer_settings" class="hide">
             <div id="octolapse_printers" data-bind="foreach:printers">
+              
               <div id="octolapse_active_printer" data-bind="visible: guid = $parent.current_printer_guid">
+                <input type="hidden"  data-bind="value : guid" />
                 <div class="control-group">
                   <label class="control-label">Retraction Length</label>
                   <div class="controls">
@@ -78,7 +79,6 @@
             </div>
           </div>
         </div>
-
         <div id="octolapse_stabilization">
           <div id="octolapse_stabilization_active" >
             <label class="control-label">Active Stabilization Profile</label>
@@ -95,6 +95,7 @@
           </div>
           <div id="octolapse_stabilization_settings" class="hide">
             <div id="octolapse_stabilizations" data-bind="foreach:stabilizations">
+              <input type="hidden"  data-bind="value : guid" />
               <div id="octolapse_stabilization_x">
                 <h4>X-Stabilization Options</h4>
 
@@ -201,6 +202,7 @@
           </div>
           <div id="octolapse_snapshot_settings" class="hide">
             <div id="octolapse_snapshots" data-bind="foreach:snapshots">
+              <input type="hidden"  data-bind="value : guid" />
               <h4>Snapshot Triggers</h4>
               <div>
                 <label class="control-label">Snapshot On Gcode</label>
@@ -476,6 +478,7 @@
           <div id="octolapse_rendering_settings" class="hide">
 
             <div id="octolapse_renderings" data-bind="foreach:renderings">
+              <input type="hidden"  data-bind="value : guid" />
               <h4>Rendering Options</h4>
               <div class="control-group">
                 <label class="control-label" >Path to FFMPEG</label>
@@ -628,6 +631,7 @@
           <div id="octolapse_camera_settings" class="hide">
 
             <div id="octolapse_cameras" data-bind="foreach:cameras">
+              <input type="hidden"  data-bind="value : guid" />
               <h4>Camera Settings</h4>
               <div class="control-group">
                 <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
@@ -969,7 +973,6 @@
             </div>
           </div>
         </div>
-
         <div id="octolapse_debug">
             <div id="octolapse_debug_active" class="control-group" >
               <label class="control-label">Debug Dettings</label>

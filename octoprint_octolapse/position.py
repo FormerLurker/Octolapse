@@ -16,11 +16,11 @@ class Position(object):
 		self.YPrevious = None
 		self.Z = None
 		self.ZPrevious = None
-		self.E = None
-		self.EPrevious = None
+		self.E = 0
+		self.EPrevious = 0
 		self.IsRelative = None
 		self.Extruder = Extruder(octolapseSettings)
-		self.IsExtruderRelative = None
+		self.IsExtruderRelative = True
 		
 		#StateTracking Vars
 		self.Height = None
@@ -280,47 +280,61 @@ class Position(object):
 	def UpdatePosition(self,x=None,y=None,z=None,e=None):
 		if(not self.HasHomedAxis):
 			return
+		if(self.IsRelative is not None ):
+			# Update the previous positions if values were supplied
+			if(x is not None):
+				x = float(x)
+				#self.XPrevious = self.X
+				if(self.IsRelative is not None):
+					if(self.IsRelative):
+						if(self.X is None):
+							self.X = 0
+							self.XPrevious = 0
 
-		# Update the previous positions if values were supplied
-		if(x is not None):
-			x = float(x)
-			#self.XPrevious = self.X
-			if(self.IsRelative is not None):
-				if(self.IsRelative):
-					self.X += x
-				else:
-					self.X = x
+						self.X += x
+					else:
+						self.X = x
 
-		if(y is not None):
-			y = float(y)
-			if(self.IsRelative is not None):
-				if(self.IsRelative):
-					self.Y += y
-				else:
-					self.Y = y
+			if(y is not None):
+				y = float(y)
+				if(self.IsRelative is not None):
+					if(self.IsRelative):
+						if(self.Y is None):
+							self.Y = 0
+							self.YPrevious = 0
+						self.Y += y
+					else:
+						self.Y = y
 
-		if(z is not None):
-			z = float(z)
-			if(self.IsRelative is not None):
-				if(self.IsRelative):
-					self.Z += z
-				else:
-					self.Z = z
-
-		if(e is not None):
-			e = float(e)
-			if(self.IsExtruderRelative is not None):
-				if(self.IsExtruderRelative):
-					if(self.E is None):
-						self.E = 0
-					self.E += e
-				else:
-					self.E = e
+			if(z is not None):
+				z = float(z)
+				if(self.IsRelative is not None):
+					if(self.IsRelative):
+						if(self.Z is None):
+							self.Z = 0
+							self.ZPrevious = 0
+						self.Z += z
+					else:
+						self.Z = z
+		if(self.IsExtruderRelative is not None):
+			if(e is not None):
+				e = float(e)
+				if(self.IsExtruderRelative is not None):
+					if(self.IsExtruderRelative):
+						if(self.E is None):
+							self.E = 0
+							self.EPrevious = 0
+						self.E += e
+					else:
+						self.E = e
 
 		if(not self.IsInBounds()):
 			self.HasPositionError = True
 			self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(self.GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
 			self.Settings.debug.LogError(self.PositionError)
+		else:
+			self.HasPositionError = False
+			self.PositionError = None
 	def IsInBounds(self):
 
 		isInBounds = True
