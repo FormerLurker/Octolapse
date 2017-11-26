@@ -6,6 +6,6 @@
     "\\octoprint_octolapse\\static\\scripts",
     "\\octoprint_octolapse\\templates"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\gcode.py",
+  "SelectedNode": "\\octoprint_octolapse\\__init__.py",
   "PreviewInSolutionExplorer": false
 }
