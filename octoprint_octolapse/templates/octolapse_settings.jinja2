@@ -4,8 +4,6 @@
       <div class="well">
         <h3>Octolapse Settings</h3>
       </div>
-
-
       <span class="help-inline">
         <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
       </span>
@@ -17,36 +15,36 @@
         </div>
       </div>
       <div data-bind="visible: is_octolapse_enabled">
-        <div id="octolapse_printer" class="panel panel-primary">
+        <div id="printer_profiles" class="panel panel-default">
           <div class="panel-heading">
-            Active Printer Profile
             <div class="row">
-              <div class="span10">
+              <div class="span2 text-right">
+                <span class="text-info">Active Profile</span>
+              </div>
+              <div class="span5">
                 <select name="current_printer_guid" data-bind="foreach: printers, value: current_printer_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span2">
-                <button class="btn btn-default" type="button" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_printer_settings.hide' }">
-                  Settings<i class="fa icon-black fa-caret-right"></i>
-                </button>
-
+              <div class="span5 text-right">
+                <div id="printer_profile_controls" class="toggle-off">
+                  <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentPrinter(); }">Copy</button>
+                  <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentPrinter(); }">Defaults</button>
+                  <a title="Delete Printer" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCurrentPrinter(); }">
+                    <i class="icon-trash"></i>
+                  </a>
+                </div>
               </div>
             </div>
-           
           </div>
-          <div id="octolapse_printer_settings" class="panel-body hide">
-            <div id="octolapse_printers" data-bind="foreach:printers">
-              <div id="octolapse_active_printer" data-bind="visible: guid() == $parent.current_printer_guid()">
-                <div class="control-group">
-                  <div class="controls">
-                    <button class="btn pull-right" data-bind="click: function() { $root.addPrinter($data); }">Copy</button>
-                    <button class="btn pull-right" data-bind="click: function() { $root.resetPrinter($data); }">Defaults</button>
-                    <a title="Delete Printer" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removePrinter($data); }">
-                      <i class="icon-trash"></i>
-                    </a>
-                  </div>
-                </div>
+          <div class="panel-body">
+            <div>
+              <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #printer_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #printers","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #printer_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <i class="fa icon-black icon-print"></i>&nbsp;Printer Settings&nbsp;<i id="printer_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+              </button>
+            </div>
+            <div id="printers" data-bind="foreach:printers" class="settings toggle-off">
+              <div data-bind="visible: guid() == $parent.current_printer_guid()">
                 <input type="hidden"  data-bind="value : guid" />
                 <div class="control-group">
                   <label class="control-label">Printer Profile Name</label>
@@ -99,167 +97,173 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-
-
-        <div id="octolapse_stabilization" class="well">
-          <div id="octolapse_stabilization_header">
-            <div id="octolapse_stabilization_active" class="control-group" >
-              <label class="control-label">Active Stabilization Profile</label>
-              <div class="controls">
+        <div id="stabilization_profiles" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="span2 text-right">
+                <span class="text-info">Active Profile</span>
+              </div>
+              <div class="span5">
                 <select name="current_stabilization_guid" data-bind="foreach: stabilizations, value: current_stabilization_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="controls">
-                <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_stabilization_settings.hide' }">
-                  <i class="fa icon-black fa-caret-right"></i> Edit Selected Printer Settings
-                </a>
-              </div>
-            </div>
-          </div>
-          <div id="octolapse_stabilization_settings" class="hide">
-            <div id="octolapse_stabilizations" data-bind="foreach:stabilizations">
-              <div id="octolapse_active_stabilization" data-bind="visible: guid() == $parent.current_stabilization_guid()">
-                <input type="hidden"  data-bind="value : guid" />
-                <div class="control-group">
-                  <div class="controls">
-                    <button class="btn pull-right" data-bind="click: function() { $root.addStabilization($data); }">Copy</button>
-                    <button class="btn pull-right" data-bind="click: function() { $root.resetStabilization($data); }">Defaults</button>
-                    <a title="Delete Stabilization" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeStabilization($data); }">
-                      <i class="icon-trash"></i>
-                    </a>
-                  </div>
-
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Profile Name</label>
-                  <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: name"/>
-                  </div>
-                </div>
-                <div id="octolapse_stabilization_x">
-                  <h4>X-Stabilization Options</h4>
-
-                  <div class="control-group">
-                    <label class="control-label">Stabilization Type</label>
-                    <div class="controls">
-                      <select data-bind="options: $parent.stabilization_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: x_type"></select>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
-                    <label class="control-label">Fixed Coordinate</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: x_fixed_coordinate"/>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
-                    <label class="control-label">Fixed Path</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: x_fixed_path"/>
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
-                      </label>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: x_type() === 'relative'">
-                    <label class="control-label">Relative Coordinate</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: x_relative"/>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
-                    <label class="control-label">Relative Path</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: x_relative_path"/>
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div id="octolapse_stabilization_y">
-                  <h4>Y-Stabilization Options</h4>
-                  <div class="control-group">
-                    <label class="control-label">Stabilization Type</label>
-                    <div class="controls">
-                      <select data-bind="options: $parent.stabilization_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: y_type"></select>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
-                    <label class="control-label">Fixed Coordinate</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: y_fixed_coordinate"/>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
-                    <label class="control-label">Fixed Path</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: y_fixed_path"/>
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
-                      </label>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: y_type() === 'relative'">
-                    <label class="control-label">Relative Coordinate</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: y_relative"/>
-                    </div>
-                  </div>
-                  <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
-                    <label class="control-label">Relative Path</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: y_relative_path"/>
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
-                      </label>
-                    </div>
-                  </div>
+              <div class="span5 text-right">
+                <div id="stabilization_profile_controls" class="toggle-off" >
+                  <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentStabilization(); }">Copy</button>
+                  <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentStabilization(); }">Defaults</button>
+                  <a title="Delete Stabilization" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCurrentStabilization(); }">
+                    <i class="icon-trash"></i>
+                  </a>
                 </div>
               </div>
             </div>
           </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="span12">
+                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #stabilization_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #stabilizations","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #stabilization_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                  <i class="fa icon-black icon-print"></i>&nbsp;Stabilization Settings&nbsp;<i id="stabilization_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+                </button>
+              </div>
+            </div>
+            <div id="stabilizations" data-bind="foreach:stabilizations" class="settings toggle-off row">
+              <div class="span12">
+                <div data-bind="visible: guid() == $parent.current_stabilization_guid()">
+                  <input type="hidden"  data-bind="value : guid" />
+                  <div class="control-group">
+                    <label class="control-label">Profile Name</label>
+                    <div class="controls">
+                      <input type="text" class="input-block-level" data-bind="value: name"/>
+                    </div>
+                  </div>
+                  <div id="octolapse_stabilization_x">
+                    <h4>X-Stabilization Options</h4>
+
+                    <div class="control-group">
+                      <label class="control-label">Stabilization Type</label>
+                      <div class="controls">
+                        <select data-bind="options: $parent.stabilization_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   optionsCaption: 'Select One...',
+                                   value: x_type"></select>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
+                      <label class="control-label">Fixed Coordinate</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: x_fixed_coordinate"/>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
+                      <label class="control-label">Fixed Path</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: x_fixed_path"/>
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
+                        </label>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: x_type() === 'relative'">
+                      <label class="control-label">Relative Coordinate</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: x_relative"/>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
+                      <label class="control-label">Relative Path</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: x_relative_path"/>
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="octolapse_stabilization_y">
+                    <h4>Y-Stabilization Options</h4>
+                    <div class="control-group">
+                      <label class="control-label">Stabilization Type</label>
+                      <div class="controls">
+                        <select data-bind="options: $parent.stabilization_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   optionsCaption: 'Select One...',
+                                   value: y_type"></select>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
+                      <label class="control-label">Fixed Coordinate</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: y_fixed_coordinate"/>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
+                      <label class="control-label">Fixed Path</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: y_fixed_path"/>
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
+                        </label>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: y_type() === 'relative'">
+                      <label class="control-label">Relative Coordinate</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: y_relative"/>
+                      </div>
+                    </div>
+                    <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
+                      <label class="control-label">Relative Path</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: y_relative_path"/>
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
         </div>
-        <div id="octolapse_snapshot" class="well">
-          <div id="octolapse_snapshot_header">
-            <div id="octolapse_snapshot_active" class="control-group" >
-              <label class="control-label">Active Snapshot Profile</label>
-              <div class="controls">
+        <div id="snapshot_profiles" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="span2 text-right">
+                <span class="text-info">Active Profile</span>
+              </div>
+              <div class="span5">
                 <select name="current_snapshot_guid" data-bind="foreach: snapshots, value: current_snapshot_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="controls">
-                <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_snapshot_settings.hide' }">
-                  <i class="fa icon-black fa-caret-right"></i> Edit Selected Printer Settings
-                </a>
+              <div class="span5 text-right">
+                <div id="snapshot_profile_controls" class="toggle-off" >
+                  <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentSnapshot(); }">Copy</button>
+                  <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentSnapshot(); }">Defaults</button>
+                  <a title="Delete Snapshot" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCurrentSnapshot(); }">
+                    <i class="icon-trash"></i>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-          <div id="octolapse_snapshot_settings" class="hide">
-            <div id="octolapse_snapshots" data-bind="foreach:snapshots">
+          <div class="panel-body">
+            <div>
+              <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #snapshot_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #snapshots","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #snapshot_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <i class="fa icon-black icon-print"></i>&nbsp;Snapshot Settings&nbsp;<i id="snapshot_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+              </button>
+            </div>
+            <div id="snapshots" data-bind="foreach:snapshots" class="settings toggle-off">
               <div id="octolapse_active_snapshot"  data-bind="visible: guid() == $parent.current_snapshot_guid()">
                 <input type="hidden"  data-bind="value : guid" />
-                <div class="control-group">
-                  <div class="controls">
-                    <button class="btn pull-right" data-bind="click: function() { $root.addSnapshot($data); }">Copy</button>
-                    <button class="btn pull-right" data-bind="click: function() { $root.resetSnapshot($data); }">Defaults</button>
-                    <a title="Delete Snapshot" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeSnapshot($data); }">
-                      <i class="icon-trash"></i>
-                    </a>
-                  </div>
-                </div>
                 <div class="control-group">
                   <label class="control-label">Snapshot Profile Name</label>
                   <div class="controls">
@@ -291,26 +295,28 @@
                       </small>
                     </div>
 
-                    <div id="trigger_gcode_advanced" class="control-group hide">
-                      <div class="controls">
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding" />Trigger On Extruding
-                        </label>
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding_start" />Trigger On Extruding Start
-                        </label>
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_primed"/>Trigger On Extruder Primed
-                        </label>
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_retracting" />Trigger On Filament Retract
-                        </label>
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_retracted" />Trigger On Filament Retracted
-                        </label>
-                        <label class="checkbox">
-                          <input type="checkbox" data-bind="checked: gcode_trigger_on_detracting" />Trigger On Filament Detracting
-                        </label>
+                    <div id="trigger_gcode_advanced" class="hide">
+                      <div class="control-group">
+                        <div class="controls">
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding" />Trigger On Extruding
+                          </label>
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding_start" />Trigger On Extruding Start
+                          </label>
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_primed"/>Trigger On Extruder Primed
+                          </label>
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_retracting" />Trigger On Filament Retract
+                          </label>
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_retracted" />Trigger On Filament Retracted
+                          </label>
+                          <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: gcode_trigger_on_detracting" />Trigger On Filament Detracting
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -524,35 +530,40 @@
             </div>
           </div>
         </div>
-        <div id="octolapse_rendering" class="well">
-          <div id="octolapse_rendering_header">
-            <div id="octolapse_rendering_active" class="control-group" >
-              <label class="control-label">Active Rendering Profile</label>
-              <div class="controls">
+        <div id="rendering_profiles" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="row">
+
+              <div class="span2 text-right">
+                <span class="text-info">Active Profile</span>
+              </div>
+              <div class="span5">
                 <select name="current_rendering_guid" data-bind="foreach: renderings, value: current_rendering_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="controls">
-                <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_rendering_settings.hide' }">
-                  <i class="fa icon-black fa-caret-right"></i> Edit Selected Printer Settings
-                </a>
+              <div class="span5 text-right">
+                <div id="rendering_profile_controls" class="toggle-off" >
+                  <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentRendering(); }">Copy</button>
+                  <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentRendering(); }">Defaults</button>
+                  <a title="Delete Rendering" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCurrentRendering(); }">
+                    <i class="icon-trash"></i>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-          <div id="octolapse_rendering_settings" class="hide">
-            <div id="octolapse_renderings" data-bind="foreach:renderings">
+          <div class="panel-body">
+            <div class="row">
+              <div class="span12">
+                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #rendering_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #rendering_profiles #renderings","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #rendering_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                  <i class="fa icon-black icon-print"></i>&nbsp;Rendering Settings&nbsp;<i id="rendering_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+                </button>
+              </div>
+            </div>
+            <div id="renderings" data-bind="foreach:renderings" class="settings toggle-off">
               <div id="octolapse_active_rendering_settings"  data-bind="visible: guid() == $parent.current_rendering_guid()">
                 <input type="hidden"  data-bind="value : guid" />
-                <div class="control-group">
-                  <div class="controls">
-                    <button class="btn pull-right" data-bind="click: function() { $root.addRendering($data); }">Copy</button>
-                    <button class="btn pull-right" data-bind="click: function() { $root.resetRendering($data); }">Defaults</button>
-                    <a title="Delete Rendering" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeRendering($data); }">
-                      <i class="icon-trash"></i>
-                    </a>
-                  </div>
-                </div>
                 <div class="control-group">
                   <label class="control-label">Rendering Profile Name</label>
                   <div class="controls">
@@ -690,393 +701,405 @@
             </div>
           </div>
         </div>
-        <div id="octolapse_camera" class="well">
-          <div id="octolapse_camera_header">
-            <div id="octolapse_camera_active" class="control-group" >
-              <label class="control-label">Active Camera Profile</label>
-              <div class="controls">
+        <div id="camera_profiles" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="row">
+
+              <div class="span2 text-right">
+                <span class="text-info">Active Profile</span>
+              </div>
+              <div class="span5">
                 <select name="current_camera_guid" data-bind="foreach: cameras, value: current_camera_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="controls">
-                <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_camera_settings.hide' }">
-                  <i class="fa icon-black fa-caret-right"></i> Edit Selected Camera Settings
-                </a>
-              </div>
-            </div>
-          </div>
-          <div id="octolapse_camera_settings" class="hide">
-            <div id="octolapse_cameras" data-bind="foreach:cameras">
-              <div id="octolapse_active_camera_settings" data-bind="visible: guid() == $parent.current_camera_guid()">
-                <div class="control-group">
-                  <div class="controls">
-                    <button class="btn pull-right" data-bind="click: function() { $root.addCamera($data); }">Copy</button>
-                    <button class="btn pull-right" data-bind="click: function() { $root.resetCamera($root); }">Defaults</button>
-                    <a title="Delete Camera" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCamera($data); }">
-                      <i class="icon-trash"></i>
-                    </a>
-                  </div>
-                </div>
-                <input type="hidden"  data-bind="value : guid" />
-                <div class="control-group">
-                  <label class="control-label">Camera Profile Name</label>
-                  <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: name"/>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
-                  <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: address"/>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Snapshot Request Template</label>
-                  <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: snapshot_request_template"/>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
-                    <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
+              <div class="span5 text-right">
+                <div id="camera_profile_controls" class="toggle-off" >
+                  <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentCamera(); }">Copy</button>
+                  <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentCamera(); }">Defaults</button>
+                  <a title="Delete Camera" class="btn btn-danger pull-right"  data-bind="click: function() { $root.removeCurrentCamera(); }">
+                    <i class="icon-trash"></i>
                   </a>
                 </div>
-                <div id="camera-advanced" class="control-group hide">
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="row">
+              <div class="span12">
+                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #camera_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #camera_profiles #cameras","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #camera_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                  <i class="fa icon-black icon-print"></i>&nbsp;Camera Settings&nbsp;<i id="camera_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+                </button>
+              </div>
+            </div>
+            <div id="cameras" data-bind="foreach:cameras" class="settings toggle-off">
+              <div id="octolapse_active_camera_settings" data-bind="visible: guid() == $parent.current_camera_guid()">
+                <div class="control-group">
+                  <input type="hidden"  data-bind="value : guid" />
                   <div class="control-group">
-                    <label class="control-label">Ignore any SSL errors at the camera address.</label>
+                    <label class="control-label">Camera Profile Name</label>
                     <div class="controls">
-                      <input type="checkbox" data-bind="checked: ignore_ssl_error" />Ignore SSL
-                      <span class="help-inline">
-                        <span class="label label-important">Attention</span>Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
-                      </span>
+                      <input type="text" class="input-block-level" data-bind="value: name"/>
                     </div>
                   </div>
                   <div class="control-group">
-                    <label class="control-label">If required, enter a username to be sent with the camera snapshot request</label>
+                    <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
                     <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: username"/>
+                      <input type="text" class="input-block-level" data-bind="value: address"/>
                     </div>
                   </div>
                   <div class="control-group">
-                    <label class="control-label">If required, enter a password to be sent with the camera snapshot request</label>
+                    <label class="control-label">Snapshot Request Template</label>
                     <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: password"/>
+                      <input type="text" class="input-block-level" data-bind="value: snapshot_request_template"/>
                     </div>
                   </div>
                   <div class="control-group">
-                    <label class="control-label">Auto-Apply Camera Settings Before Print</label>
-                    <div class="controls">
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
-                      </label>
-                    </div>
+                    <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
+                      <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
+                    </a>
                   </div>
-                  <div class="control-group">
-                    <label class="control-label">Brightness (0-255)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: brightness"/>
+                  <div id="camera-advanced" class="control-group hide">
+                    <div class="control-group">
+                      <label class="control-label">Ignore any SSL errors at the camera address.</label>
+                      <div class="controls">
+                        <input type="checkbox" data-bind="checked: ignore_ssl_error" />Ignore SSL
+                        <span class="help-inline">
+                          <span class="label label-important">Attention</span>Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Contrast (0-255)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: contrast"/>
+                    <div class="control-group">
+                      <label class="control-label">If required, enter a username to be sent with the camera snapshot request</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: username"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Saturation (0-255)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: saturation"/>
+                    <div class="control-group">
+                      <label class="control-label">If required, enter a password to be sent with the camera snapshot request</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: password"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Auto White Balance</label>
-                    <div class="controls">
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
-                      </label>
+                    <div class="control-group">
+                      <label class="control-label">Auto-Apply Camera Settings Before Print</label>
+                      <div class="controls">
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Gain</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: gain"/>
+                    <div class="control-group">
+                      <label class="control-label">Brightness (0-255)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: brightness"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Powerline Frequency</label>
-                    <div class="controls">
-                      <select data-bind="value: powerline_frequency">
-                        <option value="50">50</option>
-                        <option value="60">60</option>
-                      </select>
+                    <div class="control-group">
+                      <label class="control-label">Contrast (0-255)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: contrast"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">White Balance Temeprature (in Kelvin)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: white_balance_temperature"/>
+                    <div class="control-group">
+                      <label class="control-label">Saturation (0-255)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: saturation"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Sharpness (0-255)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: sharpness"/>
+                    <div class="control-group">
+                      <label class="control-label">Auto White Balance</label>
+                      <div class="controls">
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Backlight Compensation</label>
-                    <div class="controls">
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
-                      </label>
+                    <div class="control-group">
+                      <label class="control-label">Gain</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: gain"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Powerline Frequency</label>
-                    <div class="controls">
-                      <select data-bind="value: powerline_frequency">
-                        <option value="50">50</option>
-                        <option value="60">60</option>
-                      </select>
+                    <div class="control-group">
+                      <label class="control-label">Powerline Frequency</label>
+                      <div class="controls">
+                        <select data-bind="value: powerline_frequency">
+                          <option value="50">50</option>
+                          <option value="60">60</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Exposure Type</label>
-                    <div class="controls">
-                      <select data-bind="value: exposure_type">
-                        <option value="auto">Auto</option>
-                        <option value="manual">Manual</option>
-                        <option value="aperture_priority">Aperture Priority Mode</option>
-                      </select>
+                    <div class="control-group">
+                      <label class="control-label">White Balance Temeprature (in Kelvin)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: white_balance_temperature"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Exposure</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: exposure"/>
+                    <div class="control-group">
+                      <label class="control-label">Sharpness (0-255)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: sharpness"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Exposure Auto Priority</label>
-                    <div class="controls">
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
-                      </label>
+                    <div class="control-group">
+                      <label class="control-label">Backlight Compensation</label>
+                      <div class="controls">
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Pan</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: pan"/>
+                    <div class="control-group">
+                      <label class="control-label">Powerline Frequency</label>
+                      <div class="controls">
+                        <select data-bind="value: powerline_frequency">
+                          <option value="50">50</option>
+                          <option value="60">60</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Tilt</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: tilt"/>
+                    <div class="control-group">
+                      <label class="control-label">Exposure Type</label>
+                      <div class="controls">
+                        <select data-bind="value: exposure_type">
+                          <option value="auto">Auto</option>
+                          <option value="manual">Manual</option>
+                          <option value="aperture_priority">Aperture Priority Mode</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Autofocus Enabled</label>
-                    <div class="controls">
-                      <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus."/>Enabled
-                      </label>
+                    <div class="control-group">
+                      <label class="control-label">Exposure</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: exposure"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: focus"/>
+                    <div class="control-group">
+                      <label class="control-label">Exposure Auto Priority</label>
+                      <div class="controls">
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Zoom</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: zoom"/>
+                    <div class="control-group">
+                      <label class="control-label">Pan</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: pan"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Led 1 Mode</label>
-                    <div class="controls">
-                      <select data-bind="value: led1_mode">
-                        <option value="off">Off</option>
-                        <option value="on">On</option>
-                        <option value="blink">Blink</option>
-                        <option value="auto">Auto</option>
-                      </select>
+                    <div class="control-group">
+                      <label class="control-label">Tilt</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: tilt"/>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Led 1 Frequency</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: led1_frequency"/>
+                    <div class="control-group">
+                      <label class="control-label">Autofocus Enabled</label>
+                      <div class="controls">
+                        <label class="checkbox">
+                          <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus."/>Enabled
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Jpeg Quality</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: jpeg_quality"/>
+                    <div class="control-group">
+                      <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: focus"/>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Zoom</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: zoom"/>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Led 1 Mode</label>
+                      <div class="controls">
+                        <select data-bind="value: led1_mode">
+                          <option value="off">Off</option>
+                          <option value="on">On</option>
+                          <option value="blink">Blink</option>
+                          <option value="auto">Auto</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Led 1 Frequency</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: led1_frequency"/>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Jpeg Quality</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: jpeg_quality"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Brightness Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Contrast Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Saturation Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">White Balance Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Gain Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: gain_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Powerline Frequency Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">White Balance Temperature Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Sharpness Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Backlight Compensation Enabled Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Exposure Type Request Templatey</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Exposure Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Auto Priority Enabled Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Pan Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: pan_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Tilt Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Autofocus Enabled Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
+                      </div>
+                    </div>
+                    <div class="control-group">
+                      <label class="control-label">Focus Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: focus_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Zoom Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Led1 Mode Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Led1 Frequency Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
+                      </div>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">Jpeg Quality Request Template</label>
+                      <div class="controls">
+                        <input type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="control-group">
-                    <label class="control-label">Brightness Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Contrast Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Saturation Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">White Balance Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Gain Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: gain_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Powerline Frequency Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">White Balance Temperature Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Sharpness Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Backlight Compensation Enabled Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Exposure Type Request Templatey</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Exposure Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Auto Priority Enabled Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Pan Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: pan_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Tilt Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
-                    </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Autofocus Enabled Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
-                    </div>
-                  </div>
-                  <div class="control-group">
-                    <label class="control-label">Focus Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: focus_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Zoom Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Led1 Mode Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Led1 Frequency Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
-                    </div>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">Jpeg Quality Request Template</label>
-                    <div class="controls">
-                      <input type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
-                    </div>
-                  </div>
                 </div>
 
+
               </div>
-
-
             </div>
           </div>
+
         </div>
-        <div id="octolapse_debug" class="well">
-          <div id="octolapse_debug_active" class="control-group" >
-            <label class="control-label">Debug Dettings</label>
-            <div class="controls">
-              <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_debug_settings.hide' }">
-                <i class="fa icon-black fa-caret-right"></i> Edit Debug Settings
-              </a>
+        <div id="octolapse_debug" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="span12">
+                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #debug_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #debug","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                  <i class="fa icon-black icon-print"></i>&nbsp;Debug Settings&nbsp;<i id="debug_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
+                </button>
+              </div>
             </div>
+
+
           </div>
-          <div id="octolapse_debug_settings" class="hide">
+          <di id="debug" class="panel-body toggle-off">
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
@@ -1292,9 +1315,11 @@
                 </div>
               </div>
             </div>
-          </div>
+          </di>
         </div>
+
       </div>
     </div>
   </div>
+
 </form>

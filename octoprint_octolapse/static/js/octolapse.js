@@ -65,7 +65,17 @@ $(function () {
             return -1;
         }
 
-        self.addPrinter = function (currentPrinter) {
+        self.currentPrinter = function () {
+            var guid = this.global_settings.settings.plugins.octolapse.current_printer_guid();
+            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.printers(),
+                function (item) {
+                    return item.guid() === guid;
+                }
+            );
+            return this.global_settings.settings.plugins.octolapse.printers()[index];
+        }
+        self.copyCurrentPrinter = function () {
+            var currentPrinter = self.currentPrinter();
             self.newPrinterNumber++;
             var newGuid = "NewPrinterGuid_" + (self.newPrinterNumber);
             
@@ -83,38 +93,42 @@ $(function () {
             });
             self.settings.current_printer_guid(newGuid);
         };
-        self.resetPrinter = function (definition) {
-            var guid = definition.guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.printers(),
-                function (item) {
-                    return item.guid() === guid;
-                });
-            
-            var currentPrinter = this.global_settings.settings.plugins.octolapse.printers()[index];
+        self.resetCurrentPrinter = function () {
+            var printer = self.currentPrinter();
             var defaultPrinter = this.global_settings.settings.plugins.octolapse.default_printer;
             //Set default values
-            currentPrinter.retract_length(defaultPrinter.retract_length());
-            currentPrinter.retract_speed(defaultPrinter.retract_speed());
-            currentPrinter.movement_speed(defaultPrinter.movement_speed());
-            currentPrinter.is_e_relative(defaultPrinter.is_e_relative());
-            currentPrinter.z_hop(defaultPrinter.z_hop());
-            currentPrinter.z_min(defaultPrinter.z_min());
-            currentPrinter.snapshot_command(defaultPrinter.snapshot_command());
+            printer.retract_length(defaultPrinter.retract_length());
+            printer.retract_speed(defaultPrinter.retract_speed());
+            printer.movement_speed(defaultPrinter.movement_speed());
+            printer.is_e_relative(defaultPrinter.is_e_relative());
+            printer.z_hop(defaultPrinter.z_hop());
+            printer.z_min(defaultPrinter.z_min());
+            printer.snapshot_command(defaultPrinter.snapshot_command());
         };
-        self.removePrinter = function (definition) {
+        self.removeCurrentPrinter = function () {
             
             if (self.global_settings.settings.plugins.octolapse.printers().length <= 1) {
                 alert("You may not delete the last active printer");
                 return;
             }
                 
-            self.global_settings.settings.plugins.octolapse.printers.remove(definition);
+            self.global_settings.settings.plugins.octolapse.printers.remove(self.currentPrinter());
             self.global_settings.settings.plugins.octolapse.current_printer_guid(
                 self.global_settings.settings.plugins.octolapse.printers()[0].guid);
 
         };
-        
-        self.addStabilization = function (currentStabilization) {
+
+        self.currentStabilization = function () {
+            var guid = this.global_settings.settings.plugins.octolapse.current_stabilization_guid();
+            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.stabilizations(),
+                function (item) {
+                    return item.guid() === guid;
+                }
+            );
+            return this.global_settings.settings.plugins.octolapse.stabilizations()[index];
+        }
+        self.copyCurrentStabilization = function () {
+            var currentStabilization = self.currentStabilization();
             self.newStabilizationNumber++;
             var newGuid = "NewStabilizationGuid_" + (self.newStabilizationNumber);
 
@@ -144,13 +158,8 @@ $(function () {
             });
             self.settings.current_stabilization_guid(newGuid);
         };
-        self.resetStabilization = function (definition) {
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.stabilizations(),
-                function (item) {
-                    return item.guid() === definition.guid();
-                });
-            console.log(index);
-            var currentStabilization = this.global_settings.settings.plugins.octolapse.stabilizations()[index];
+        self.resetCurrentStabilization = function () {
+            var currentStabilization = self.currentStabilization();
             var defaultStabilization = this.global_settings.settings.plugins.octolapse.default_stabilization;
 
             currentStabilization.x_movement_speed(defaultStabilization.x_movement_speed());
@@ -174,18 +183,29 @@ $(function () {
             currentStabilization.z_movement_speed_mms(defaultStabilization.z_movement_speed_mms());
 
         };
-        self.removeStabilization = function (definition) {
+        self.removeCurrentStabilization = function () {
+
             if (self.global_settings.settings.plugins.octolapse.stabilizations().length <= 1) {
                 alert("You may not delete the last active stabilization");
                 return;
             }
-
-            self.global_settings.settings.plugins.octolapse.stabilizations.remove(definition);
+            var currentStabilization = self.currentStabilization();
+            self.global_settings.settings.plugins.octolapse.stabilizations.remove(currentStabilization);
             self.global_settings.settings.plugins.octolapse.current_stabilization_guid(
                 self.global_settings.settings.plugins.octolapse.stabilizations()[0].guid);
         };
 
-        self.addSnapshot = function (currentSnapshot) {
+        self.currentSnapshot = function () {
+            var guid = this.global_settings.settings.plugins.octolapse.current_snapshot_guid();
+            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.snapshots(),
+                function (item) {
+                    return item.guid() === guid;
+                }
+            );
+            return this.global_settings.settings.plugins.octolapse.snapshots()[index];
+        }
+        self.copyCurrentSnapshot = function () {
+            var currentSnapshot = self.currentSnapshot();
             self.newSnapshotNumber++;
             var newGuid = "NewSnapshotGuid_" + (self.newSnapshotNumber);
 
@@ -240,23 +260,18 @@ $(function () {
             });
             self.settings.current_snapshot_guid(newGuid);
         };
-        self.removeSnapshot = function (definition) {
+        self.removeCurrentSnapshot = function (definition) {
             if (self.global_settings.settings.plugins.octolapse.snapshots().length <= 1) {
                 alert("You may not delete the last active snapshot");
                 return;
             }
-
-            self.global_settings.settings.plugins.octolapse.snapshots.remove(definition);
+            var currentSnapshot = self.currentSnapshot();
+            self.global_settings.settings.plugins.octolapse.snapshots.remove(currentSnapshot);
             self.global_settings.settings.plugins.octolapse.current_snapshot_guid(
                 self.global_settings.settings.plugins.octolapse.snapshots()[0].guid);
         };
-        self.resetSnapshot = function (definition) {
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.snapshots(),
-                function (item) {
-                    return item.guid() === definition.guid();
-                });
-            console.log(index);
-            var currentSnapshot = this.global_settings.settings.plugins.octolapse.snapshots()[index];
+        self.resetCurrentSnapshot = function (definition) {
+            var currentSnapshot = self.currentSnapshot();
             var defaultSnapshot = this.global_settings.settings.plugins.octolapse.default_snapshot;
 
             currentSnapshot.gcode_trigger_enabled(defaultSnapshot.gcode_trigger_enabled());
@@ -304,7 +319,17 @@ $(function () {
 
         };
 
-        self.addRendering = function (currentRendering) {
+        self.currentRendering = function () {
+            var guid = this.global_settings.settings.plugins.octolapse.current_rendering_guid();
+            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.renderings(),
+                function (item) {
+                    return item.guid() === guid;
+                }
+            );
+            return this.global_settings.settings.plugins.octolapse.renderings()[index];
+        }
+        self.copyCurrentRendering = function () {
+            var currentRendering = self.currentRendering();
             self.newRenderingNumber++;
             var newGuid = "NewRenderingGuid_" + (self.newRenderingNumber);
 
@@ -333,27 +358,21 @@ $(function () {
 
             self.settings.current_rendering_guid(newGuid);
         };
-        self.removeRendering = function (definition) {
+        self.removeCurrentRendering = function () {
             
 
             if (self.global_settings.settings.plugins.octolapse.renderings().length <= 1) {
                 alert("You may not delete the last active rendering");
                 return;
             }
-
-            self.global_settings.settings.plugins.octolapse.renderings.remove(definition);
+            var currentRendering = self.currentRendering();
+            self.global_settings.settings.plugins.octolapse.renderings.remove(currentRendering);
             self.global_settings.settings.plugins.octolapse.current_rendering_guid(
                 self.global_settings.settings.plugins.octolapse.renderings()[0].guid);
 
         };
-
-        self.resetRendering = function (definition) {
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.renderings(),
-                function (item) {
-                    return item.guid() === definition.guid();
-                });
-            console.log(index);
-            var currentRendering = this.global_settings.settings.plugins.octolapse.renderings()[index];
+        self.resetCurrentRendering = function () {
+            var currentRendering = self.currentRendering();
             var defaultRendering = this.global_settings.settings.plugins.octolapse.default_rendering;
 
             //Set default values
@@ -377,7 +396,17 @@ $(function () {
             
         };
 
-        self.addCamera = function (currentCamera) {
+        self.currentCamera = function () {
+            var guid = this.global_settings.settings.plugins.octolapse.current_camera_guid();
+            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.cameras(),
+                function (item) {
+                    return item.guid() === guid;
+                }
+            );
+            return this.global_settings.settings.plugins.octolapse.cameras()[index];
+        }
+        self.copyCurrentCamera = function () {
+            var currentCamera = self.currentCamera();
             self.newCameraNumber++;
             var newGuid = "NewCameraGuid_" + (self.newCameraNumber);
 
@@ -434,25 +463,20 @@ $(function () {
             });
             self.settings.current_camera_guid(newGuid);
         };
-        self.removeCamera = function (definition) {
+        self.removeCurrentCamera = function () {
 
             if (self.global_settings.settings.plugins.octolapse.cameras().length <= 1) {
                 alert("You may not delete the last active camera");
                 return;
             }
-
-            self.global_settings.settings.plugins.octolapse.cameras.remove(definition);
+            var currentCamera = self.currentCamera();
+            self.global_settings.settings.plugins.octolapse.cameras.remove(currentCamera);
             self.global_settings.settings.plugins.octolapse.current_camera_guid(
                 self.global_settings.settings.plugins.octolapse.cameras()[0].guid);
 
         };
-        self.resetCamera = function (definition) {
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.cameras(),
-                function (item) {
-                    return item.guid() === definition.guid();
-                });
-            console.log(index);
-            var currentCamera = this.global_settings.settings.plugins.octolapse.cameras()[index];
+        self.resetCurrentCamera = function () {
+            var currentCamera = self.currentCamera();
             var defaultCamera = this.global_settings.settings.plugins.octolapse.default_camera;
             //Set default values
 
@@ -503,6 +527,8 @@ $(function () {
             currentCamera.jpeg_quality(defaultCamera.jpeg_quality());
             currentCamera.jpeg_quality_request_template(defaultCamera.jpeg_quality_request_template());
         };
+
+        self.toggle = Octolapse.Toggle;
     };
 
     // This is how our plugin registers itself with the application, by adding some configuration
@@ -522,8 +548,45 @@ $(function () {
 });
 
 
+var Octolapse = {};
+
+// found this gem from https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
+if (!String.format) {
+    String.format = function (format) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        return format.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined'
+                    ? args[number]
+                    : match
+                ;
+        });
+    };
+}
+Octolapse.toggle = function (caller, args) {
+
+    var elements = args.elements;
+    elements.forEach(function(item, index) {
+        element = $(item.selector);
+        onClass = item.onClass;
+        offClass = item.offClass;
+        if (element.hasClass(onClass)) {
+            element.removeClass(onClass);
+            element.addClass(offClass);
+        } else {
+            element.removeClass(offClass);
+            element.addClass(onClass);
+        }
+    });
+};
+
+
+
 $(document).ready(function () {
-    console.log("Octolapse Ready!");
+    $("#octolapse_settings .toggle").click(function () {
+        var args = $(this).attr("data-toggle");
+        Octolapse.toggle(this, JSON.parse(args));
+    });
+
 });
 
 

@@ -39,6 +39,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.WaitForSnapshot = False
 		self.Render = None
 		self.IsRendering = False
+		self.WaitForPosition=True;
 	##~~ After Startup
 	def on_after_startup(self):
 		self.reload_settings()
@@ -172,7 +173,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.OnPrintEnd()
 
 	def OnPrintEnd(self):
-		
 		self.ClearTriggers()
 		self.Position = None
 
@@ -212,7 +212,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 					current_file_path = current_job_file["path"]
 					return utility.GetFilenameFromFullPath(current_file_path)
 		return ""
-	
+
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		# update the position tracker so that we know where all of the axis are.
@@ -269,16 +269,23 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			if(self.SnapshotGcode.StartEndCommand() == cmd):
 				self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found:{0}. Waiting for snapshot.".format(self.SnapshotGcode.StartEndCommand()))
 				self.WaitForSnapshot = True
-				
+
+	
 	def GcodeReceived(self, comm, line, *args, **kwargs):
-		if(self.IsPausedByOctolapse and self.WaitForSnapshot):
-			self.Settings.debug.LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
-			self.IsPausedByOctolapse = False
-			self.SnapshotGcode = None
-			self.WaitForSnapshot = False
-			self.TakeSnapshot()
-			self._printer.resume_print()
+		if(self.IsPausedByOctolapse):
+			if(self.WaitForSnapshot):
+				self.Settings.debug.LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
+				self.IsPausedByOctolapse = False
+				self.SnapshotGcode = None
+				self.WaitForSnapshot = False
+				self.TakeSnapshot()
+				self._printer.resume_print()
+			else if(self.WaitForPosition):
+
 		return line
+	def GetPosition(self):
+		self.WaitForPosition=True;
+		self._printer.commands("M114");
 
 	def SendSnapshotGcode(self):
 		if(self.SnapshotGcode is None):

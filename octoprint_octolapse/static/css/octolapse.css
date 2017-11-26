@@ -2,6 +2,7 @@
     margin-left: 0px;
 }
 
+
 .panel {
     margin-bottom: 20px;
     background-color: #fff;
@@ -11,10 +12,40 @@
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
 
+@-webkit-keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}  
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+#octolapse_settings {
+    margin-right:15px;
+}
+#octolapse_settings .toggle-off {
+    display: none;
+    -webkit-animation: fadeOut 1s;
+    animation: fadeOut 1s;
+}
+
+
+#octolapse_settings .toggle-on {
+    display: block;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
+    
+}
+
+/*Bootstrap 3 css to make life easier*/
 .panel-body {
 padding: 15px;
 }
-
+#octolapse_settings .settings {
+    padding-top: 15px;
+    margin-top:15px;
+    border-top:5px solid;
+}
 .panel-heading {
 padding: 10px 15px;
 border-bottom: 1px solid transparent;
@@ -415,11 +446,6 @@ border-bottom-color: #ebccd1;
 }
 
 
-.panel-body:before,
-.panel-body:after {
-display: table;
-content: " ";
-}
 
 .panel-body:after {
 clear: both;
