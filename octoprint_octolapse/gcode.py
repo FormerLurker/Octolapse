@@ -13,34 +13,25 @@ def GetGcodeFromString(commandString):
 	if(ix>-1):
 		command = command[0:ix]
 	return command
+
+class PositionGcode(object):
+	def __init__(self):
+		self.GcodeCommands = []
+
+	def EndIndex(self):
+		return len(self.GcodeCommands)-1
+
+
 class SnapshotGcode(object):
 	def __init__(self):
-	
-		self.StartCommands = []
-		self.ReturnCommands = []
-	
-		self.SavedCommand = None
+		self.GcodeCommands = []
 		self.X = None
 		self.Y = None
-		self.ReturnX = None
-		self.ReturnY = None
-
-	def ByIndex(self, index):
-		if(index < len(self.StartCommands)):
-			return self.StartCommands[index]
-		elif(index >= len(self.StartCommands) and index < self.CommandCount()):
-			return self.ReturnCommands[index - len(self.StartCommands)]
-		else:
-			return None
-			
-			
-	def CommandCount(self):
-		return len(self.StartCommands) + len(self.ReturnCommands)
-	def StartEndIndex(self):
-		return len(self.StartCommands) - 1
-		
-	def ReturnEndCommand(self):
-		return self.CommandCount() - 1
+		self.SnapshotIndex = -1
+	def EndIndex(self):
+		return len(self.GcodeCommands)-1
+	def SetSnapshotIndex(self):
+		self.SnapshotIndex = self.EndIndex()
 		
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
@@ -498,9 +489,18 @@ class Gcode(object):
 		if(not self.IsYInBounds(yCoord)):
 			return None
 		return yCoord
-	def GetSnapshotGcode(self, position, extruder):
+
+	def CreatePositionGcode(self):
+		newPositionGcode = PositionGcode()
+		# add commands to fetch the current position
+		#newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
+		return newPositionGcode
+
+	def CreateSnapshotGcode(self, position, extruder):
 		if(position.X is None or position.Y is None or position.Z is None):
 			return None
+		commandIndex = 0
 
 		newSnapshotGcode = SnapshotGcode()
 		# Create code to move from the current extruder position to the snapshot position
@@ -510,12 +510,13 @@ class Gcode(object):
 		hasRetracted = False
 		previousIsRelative = position.IsRelative
 		previousExtruderRelative = position.IsExtruderRelative
+
 		# retract if necessary
 		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
 			if(not position.IsExtruderRelative):
-				newSnapshotGcode.StartCommands.append.GetSetExtruderRelativePositionGcode()
+				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderRelativePositionGcode())
 				position.IsExtruderRelative = True
-			newSnapshotGcode.StartCommands.append(self.GetRetractGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetRetractGcode())
 			hasRetracted = True
 		
 		# Can we hop or is the print too tall?
@@ -524,9 +525,9 @@ class Gcode(object):
 		# if we can ZHop, do
 		if(canZHop):
 			if(not position.IsRelative):
-				newSnapshotGcode.StartCommands.append(self.GetSetRelativePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
 				position.IsRelative = True
-			newSnapshotGcode.StartCommands.append(self.GetRelativeZLiftGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetRelativeZLiftGcode())
 			
 
 		if (newSnapshotGcode.X is None or newSnapshotGcode.Y is None):
@@ -535,12 +536,15 @@ class Gcode(object):
 
 		#Move back to the snapshot position - make sure we're in absolute mode for this
 		if(position.IsRelative):
-			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			position.IsRelative = False
-		newSnapshotGcode.StartCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
-		newSnapshotGcode.StartCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
-		newSnapshotGcode.StartCommands.append("{0}".format(self.GetDelayGcode() ));
-		
+		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
+		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
+
+		# mark the snapshot command index
+		newSnapshotGcode.SetSnapshotIndex()
+
 		# create return gcode
 		#record our previous position for posterity
 		newSnapshotGcode.ReturnX = position.X
@@ -548,55 +552,50 @@ class Gcode(object):
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
 		if(position.IsRelative):
-			newSnapshotGcode.StartCommands.append(self.GetSetAbsolutePositionGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			position.IsRelative = False
 			
 		if(position.X is not None and position.Y is not None):
-			newSnapshotGcode.ReturnCommands.append(self.GetMoveGcode(position.X,position.Y))
+			newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(position.X,position.Y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
 			if(not position.IsRelative):
-				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
 				position.IsRelative = True
-			newSnapshotGcode.ReturnCommands.append(self.GetRelativeZLowerGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetRelativeZLowerGcode())
 		# detract
 		if(hasRetracted):
 			if(not position.IsExtruderRelative):
-				newSnapshotGcode.StartCommands.append.GetSetExtruderRelativePositionGcode()
+				newSnapshotGcode.GcodeCommands.append.GetSetExtruderRelativePositionGcode()
 				position.IsExtruderRelative = True
-			newSnapshotGcode.ReturnCommands.append(self.GetDetractGcode())
+			newSnapshotGcode.GcodeCommands.append(self.GetDetractGcode())
 
 		# reset the coordinate systems for the extruder and axis
 		if(previousIsRelative != position.IsRelative):
 			if(position.IsRelative):
-				newSnapshotGcode.ReturnCommands.append(self.GetSetAbsolutePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			else:
 				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
 			position.IsRelative = previousIsRelative
 
 		if(previousExtruderRelative != position.IsExtruderRelative):
 			if(position.IsExtruderRelative):
-				newSnapshotGcode.ReturnCommands.append(self.GetSetExtruderAbslutePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderAbslutePositionGcode())
 			else:
-				newSnapshotGcode.ReturnCommands.append(self.GetSetExtruderRelativePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderRelativePositionGcode())
 			position.IsExtruderRelative = previousExtruderRelative
 
-		newSnapshotGcode.ReturnCommands[-1] = "{0}".format(newSnapshotGcode.ReturnCommands[-1])
-
+		newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
 
 		if(self.Settings.debug.snapshot_gcode):
-			self.Settings.debug.LogSnapshotGcode("Snapshot Gcode - Start:")
-			for str in newSnapshotGcode.StartCommands:
+			self.Settings.debug.LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
+			for str in newSnapshotGcode.GcodeCommands:
 				self.Settings.debug.LogSnapshotGcode("    {0}".format(str))
-			self.Settings.debug.LogSnapshotGcode("Snapshot Gcode - Return:")
-			for str in newSnapshotGcode.ReturnCommands:
-				self.Settings.debug.LogSnapshotGcode("    {0}".format(str))
+				
+			
 
 		self.Settings.debug.LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
 		self.Settings.debug.LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
-
-		
-
 
 		return newSnapshotGcode
 
@@ -624,4 +623,6 @@ class Gcode(object):
 		return "M110 N{0:d}".format(lineNumber)
 	def GetWaitForCurrentMovesToFinishGcode(self):
 		return "M400";
+	def GetPositionGcode(self):
+		return "M114";
 		

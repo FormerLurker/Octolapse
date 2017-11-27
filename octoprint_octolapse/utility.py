@@ -55,6 +55,8 @@ def GetExtensionFromFileName(fileName):
 	extension = os.path.splitext(filename)[1]
 	return extension
 
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.00000):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def GetFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber=None, printEndTime = None):
 
