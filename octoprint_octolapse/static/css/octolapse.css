@@ -43,8 +43,8 @@ padding: 15px;
 }
 #octolapse_settings .settings {
     padding-top: 15px;
-    margin-top:15px;
-    border-top:5px solid;
+    margin-top: 15px;
+    border-top: 1px solid #ddd;
 }
 .panel-heading {
 padding: 10px 15px;

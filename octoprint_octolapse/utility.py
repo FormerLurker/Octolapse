@@ -51,6 +51,10 @@ def GetFilenameFromFullPath(path):
 	fileName = tail or ntpath.basename(head)
 	return os.path.splitext(fileName)[0]
 
+def GetExtensionFromFileName(fileName):
+	extension = os.path.splitext(filename)[1]
+	return extension
+
 
 def GetFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber=None, printEndTime = None):
 

@@ -32,6 +32,28 @@ class Render(object):
 		#self.Debug.LogInfo("OutputDirectory: {0}, Template:{1}, PrintName:{2}, printStartTime:{3}, outputFormat:{4}, printEndTime:{5}".format(outputDirectory,self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime))
 		outputFilename = utility.GetFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format, "",printEndTime)
 		
+		# get the number of frames
+		foundFile = False
+		imageIndex = 0
+
+		fps = self.Rendering.fps
+		if(self.Rendering.fps_calculation_type == 'duration'):
+			imageIndex = 0
+			while(foundFile):
+				foundFile = False
+				imagePath = "{0}{1}".format(outputDirectory, outputFileName) % imageIndex
+				if(os.path.isfile(fname)):
+					foundFile = True
+					imageIndex += 1
+
+			fps = float(imageIndex)/float(self.Rendering.run_length_seconds)
+			if(fps > self.Rendering.max_fps):
+				fps = self.Rendering.max_fps
+			elif(fps < self.Rendering.min_fps):
+				fps = self.Rendering.min_fps
+			self.Debug.LogInfo("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}".format(self.Rendering.fps_calculation_type,fps, imageIndex,self.Rendering.run_length_seconds))
+		else:
+			self.Debug.LogInfo("FPS Calculation Type:{0}, Fps:{0}".format(self.Rendering.fps_calculation_type,imageIndex,fps))
 		job = TimelapseRenderJob(printName,
 							snapshotDirectory
 						   , snapshotFileNameTemplate
@@ -44,7 +66,7 @@ class Render(object):
 						   , self.Rendering.flip_v
 						   , self.Rendering.rotate_90
 						   , self.Rendering.watermark
-						   , fps = self.Rendering.fps
+						   , fps 
 						   , threads= self.ThreadCount
 						   , on_start= self.OnStart
 						   , on_success = self.OnSuccess
@@ -69,8 +91,8 @@ class TimelapseRenderJob(object):
 		self._output_dir = output_dir
 		self._output_file_name = output_name
 		self._outputFormat = outputFormat
-		
 		self._fps = fps
+		
 		self._threads = threads
 		self._ffmpeg = ffmpegPath
 		self._bitrate = bitrate
@@ -118,7 +140,7 @@ class TimelapseRenderJob(object):
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
 			self._logger.warn("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
-			return
+			return	
 
 		self._logger.warn("Render - capture_dir:{0}, _capture_file_template:{1}, output_dir:{2}, _output_file_name:{3}, input path:{4}, output path:{5}".format(self._capture_dir, self._capture_file_template, self._output_dir, self._output_file_name,input,output))
 		for i in range(4):

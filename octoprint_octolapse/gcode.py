@@ -15,23 +15,33 @@ def GetGcodeFromString(commandString):
 	return command
 class SnapshotGcode(object):
 	def __init__(self):
+	
 		self.StartCommands = []
 		self.ReturnCommands = []
+	
 		self.SavedCommand = None
 		self.X = None
 		self.Y = None
 		self.ReturnX = None
 		self.ReturnY = None
-	def StartEndCommand(self):
-		if(len(self.StartCommands)>0):
-			return self.StartCommands[-1]
+
+	def ByIndex(self, index):
+		if(index < len(self.StartCommands)):
+			return self.StartCommands[index]
+		elif(index >= len(self.StartCommands) and index < self.CommandCount()):
+			return self.ReturnCommands[index - len(self.StartCommands)]
 		else:
 			return None
+			
+			
+	def CommandCount(self):
+		return len(self.StartCommands) + len(self.ReturnCommands)
+	def StartEndIndex(self):
+		return len(self.StartCommands) - 1
+		
 	def ReturnEndCommand(self):
-		if(len(self.StartCommands)>0):
-			return self.StartCommands[-1]
-		else:
-			return None
+		return self.CommandCount() - 1
+		
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
         if(parameter is None):
@@ -244,6 +254,12 @@ class Commands(object):
 	    ,regex="'(?i)^G91"
 	    ,displayTemplate="G91 - Relative Coordinates{Comment}"
         ,parameters = [])
+	M114 = Command(
+		name="Get Position"
+		,command="M114"
+		,regex="(?i)^M114"
+		,displayTemplate="M114 - Relative Coordinates{Comment}"
+		)
 	Debug_Assert = Command(
 	    name="Debug - Assert"
 	    ,command="OCTOLAPSE_ASSERT"
@@ -268,7 +284,7 @@ class Commands(object):
 	    G28.Command:G28,
         G90.Command:G90,
         G91.Command:G91,
-
+		M114.Command:M114,
 		Debug_Assert.Command:Debug_Assert
     }
 	
@@ -278,12 +294,18 @@ class Commands(object):
 			return self.CommandsDictionary[command]
 		return None
 class Responses(object):
-    def __init__(self,name, command, regex, template):
+    def __init__(self):
         self.M114 = Command(
 	        name="Get Position"
 	        ,command="M114"
-	        ,regex="(?i)^X:([-+]?[0-9.]+) Y:([-+]?[0-9.]+) Z:([-+]?[0-9.]+) E:([-+]?[0-9.]+)"
+	        ,regex="(?i)^[O][k\K][\s]+X:([-+]?[0-9.]+) Y:([-+]?[0-9.]+) Z:([-+]?[0-9.]+) E:([-+]?[0-9.]+)"
 	        ,displayTemplate="Position: X={0}, Y={1}, Z={2}, E={3}"
+			,parameters = [
+				CommandParameter("X",group=1),
+				CommandParameter("Y",group=2),
+				CommandParameter("Z",group=3),
+				CommandParameter("E",group=4)
+			]
         )
 
 class Gcode(object):	
@@ -379,9 +401,11 @@ class Gcode(object):
 			self.Settings.debug.LogError('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
 			return False
 		return True
-	def GetXCoordinateForSnapshot(self):
+	def GetXCoordinateForSnapshot(self,position):
 		xCoord = 0
-		if (self.Stabilization.x_type == "fixed_coordinate"):
+		if(self.Stabilization.x_type == "disabled"):
+			xCoodr = position.X
+		elif (self.Stabilization.x_type == "fixed_coordinate"):
 			xCoord = self.Stabilization.x_fixed_coordinate
 			print("X - Fixed - Coordinate:{0}".format(xCoord))
 		elif (self.Stabilization.x_type == "relative"):
@@ -425,9 +449,11 @@ class Gcode(object):
 		if(not self.IsXInBounds(xCoord)):
 			return None
 		return xCoord	
-	def GetYCoordinateForSnapshot(self):
+	def GetYCoordinateForSnapshot(self,position):
 		yCoord = 0
-		if (self.Stabilization.y_type == "fixed_coordinate"):
+		if(self.Stabilization.y_type == "disabled"):
+			yCoodr = position.Y
+		elif (self.Stabilization.y_type == "fixed_coordinate"):
 			yCoord = self.Stabilization.y_fixed_coordinate
 			print("Y - Fixed - Coord:{0}".format(yCoord))
 		elif (self.Stabilization.y_type == "relative"):
@@ -479,8 +505,8 @@ class Gcode(object):
 		newSnapshotGcode = SnapshotGcode()
 		# Create code to move from the current extruder position to the snapshot position
 		# get the X and Y coordinates of the snapshot
-		newSnapshotGcode.X = self.GetXCoordinateForSnapshot()
-		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot()
+		newSnapshotGcode.X = self.GetXCoordinateForSnapshot(position)
+		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot(position)
 		hasRetracted = False
 		previousIsRelative = position.IsRelative
 		previousExtruderRelative = position.IsExtruderRelative

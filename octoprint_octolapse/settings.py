@@ -31,6 +31,11 @@ def GetSettingsForOctoprint(octoprintLogger,settings):
 					dict(value='static',name='Static FPS (higher FPS = better quality/shorter videos)')
 					,dict(value='duration',name='Fixed Run Length (FPS = Total Frames/Run Length Seconds)')
 			],
+			'snapshot_formats' : [
+					dict(value='.jpg',name='jpg',visible=True)
+					,dict(value='.jpeg',name='jpeg',visible=False)
+					,dict(value='.bmp',name='bmp',visible=True)
+			],
 			'current_printer_guid' : utility.getstring(settings.current_printer_guid,defaults.current_printer_guid),
 			'printers' : [],
 			'current_stabilization_guid' : utility.getstring(settings.current_stabilization_guid,defaults.current_stabilization_guid),

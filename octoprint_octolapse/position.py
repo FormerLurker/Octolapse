@@ -20,6 +20,7 @@ class Position(object):
 		self.EPrevious = 0
 		self.IsRelative = None
 		self.Extruder = Extruder(octolapseSettings)
+		self.IsExtruderAlwaysRelative = self.Printer.is_e_relative
 		self.IsExtruderRelative = True
 		
 		#StateTracking Vars
@@ -83,6 +84,10 @@ class Position(object):
 		self.PositionError = None
 		self.IsRelative = None
 		self.IsExtruderRelative = None
+		if(self.IsExtruderAlwaysRelative):
+			self.IsExtruderRelative = True
+			self.E=0
+			self.EPrevious = 0
 		
 		# State Tracking Vars
 		self.Height = None
@@ -178,24 +183,28 @@ class Position(object):
 					self.EPrevious = 0
 				self.IsExtruderRelative = True
 			elif(command.Command == "M82"):
-				if(self.IsExtruderRelative is None or not self.IsExtruderRelative):
-					self.Settings.debug.LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
-				self.IsExtruderRelative = False
-				self.E = 0
-				self.EPrevious = 0
-				self.UpdatePosition(x=None, y=None, z=None, e=0)
+				if(not self.IsExtruderAlwaysRelative):
+					if(self.IsExtruderRelative is None or not self.IsExtruderRelative):
+						self.Settings.debug.LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
+					self.IsExtruderRelative = False
+					self.E = 0
+					self.EPrevious = 0
+					self.UpdatePosition(x=None, y=None, z=None, e=0)
+				else:
+					self.Settings.debug.LogPositionCommandReceived("Received M82 - Ignoring, extruder is always relative.")
 			elif(command.Command == "G92"):
 				self.Settings.debug.LogPositionCommandReceived("Received G92 - Switching Extruder to Absolute Coordinates")
 				parsedCommand = command.Parse(gcode)
 				if(parsedCommand):
 					previousRelativeValue = self.IsRelative
-					previousExtruderRelativeValue = self.IsExtruderRelative
+					previousExtruderRelativeValue = self.IsExtruderRelative or self.IsExtruderAlwaysRelative
 					
 					x = parsedCommand["X"]
 					y = parsedCommand["Y"]
 					z = parsedCommand["Z"]
 					e = parsedCommand["E"]
 					self.IsRelative = x is not None or y is not None or z is not None
+					
 					self.IsExtruderRelative = e is not None
 
 					if(x is None and y is None and z is None and e is None):

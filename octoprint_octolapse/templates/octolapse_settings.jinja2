@@ -18,15 +18,15 @@
         <div id="printer_profiles" class="panel panel-default">
           <div class="panel-heading">
             <div class="row">
-              <div class="span2 text-right">
-                <span class="text-info">Active Profile</span>
+              <div class="span4 text-right">
+                <span class="text-info">Active Printer Profile</span>
               </div>
-              <div class="span5">
+              <div class="span4">
                 <select name="current_printer_guid" data-bind="foreach: printers, value: current_printer_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span5 text-right">
+              <div class="span4 text-right">
                 <div id="printer_profile_controls" class="toggle-off">
                   <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentPrinter(); }">Copy</button>
                   <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentPrinter(); }">Defaults</button>
@@ -39,7 +39,7 @@
           </div>
           <div class="panel-body">
             <div>
-              <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #printer_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #printers","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #printer_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+              <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #printer_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #printers","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #printer_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                 <i class="fa icon-black icon-print"></i>&nbsp;Printer Settings&nbsp;<i id="printer_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
               </button>
             </div>
@@ -102,15 +102,15 @@
         <div id="stabilization_profiles" class="panel panel-default">
           <div class="panel-heading">
             <div class="row">
-              <div class="span2 text-right">
-                <span class="text-info">Active Profile</span>
+              <div class="span4 text-right">
+                <span class="text-info">Active Stabilization Profile</span>
               </div>
-              <div class="span5">
+              <div class="span4">
                 <select name="current_stabilization_guid" data-bind="foreach: stabilizations, value: current_stabilization_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span5 text-right">
+              <div class="span4 text-right">
                 <div id="stabilization_profile_controls" class="toggle-off" >
                   <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentStabilization(); }">Copy</button>
                   <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentStabilization(); }">Defaults</button>
@@ -124,7 +124,7 @@
           <div class="panel-body">
             <div class="row">
               <div class="span12">
-                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #stabilization_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #stabilizations","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #stabilization_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #stabilization_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #stabilizations","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #stabilization_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                   <i class="fa icon-black icon-print"></i>&nbsp;Stabilization Settings&nbsp;<i id="stabilization_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
                 </button>
               </div>
@@ -236,15 +236,15 @@
         <div id="snapshot_profiles" class="panel panel-default">
           <div class="panel-heading">
             <div class="row">
-              <div class="span2 text-right">
-                <span class="text-info">Active Profile</span>
+              <div class="span4 text-right">
+                <span class="text-info">Active Snapshot Profile</span>
               </div>
-              <div class="span5">
+              <div class="span4">
                 <select name="current_snapshot_guid" data-bind="foreach: snapshots, value: current_snapshot_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span5 text-right">
+              <div class="span4 text-right">
                 <div id="snapshot_profile_controls" class="toggle-off" >
                   <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentSnapshot(); }">Copy</button>
                   <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentSnapshot(); }">Defaults</button>
@@ -257,7 +257,7 @@
           </div>
           <div class="panel-body">
             <div>
-              <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #snapshot_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #snapshots","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #snapshot_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+              <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #snapshot_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #snapshots","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #snapshot_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                 <i class="fa icon-black icon-print"></i>&nbsp;Snapshot Settings&nbsp;<i id="snapshot_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
               </button>
             </div>
@@ -534,15 +534,15 @@
           <div class="panel-heading">
             <div class="row">
 
-              <div class="span2 text-right">
-                <span class="text-info">Active Profile</span>
+              <div class="span4 text-right">
+                <span class="text-info">Active Rendering Profile</span>
               </div>
-              <div class="span5">
+              <div class="span4">
                 <select name="current_rendering_guid" data-bind="foreach: renderings, value: current_rendering_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span5 text-right">
+              <div class="span4 text-right">
                 <div id="rendering_profile_controls" class="toggle-off" >
                   <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentRendering(); }">Copy</button>
                   <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentRendering(); }">Defaults</button>
@@ -556,7 +556,7 @@
           <div class="panel-body">
             <div class="row">
               <div class="span12">
-                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #rendering_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #rendering_profiles #renderings","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #rendering_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #rendering_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #rendering_profiles #renderings","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #rendering_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                   <i class="fa icon-black icon-print"></i>&nbsp;Rendering Settings&nbsp;<i id="rendering_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
                 </button>
               </div>
@@ -705,15 +705,15 @@
           <div class="panel-heading">
             <div class="row">
 
-              <div class="span2 text-right">
-                <span class="text-info">Active Profile</span>
+              <div class="span4 text-right">
+                <span class="text-info">Active Camera Profile</span>
               </div>
-              <div class="span5">
+              <div class="span4">
                 <select name="current_camera_guid" data-bind="foreach: cameras, value: current_camera_guid">
                   <option data-bind="text:name, value:guid"></option>
                 </select>
               </div>
-              <div class="span5 text-right">
+              <div class="span4 text-right">
                 <div id="camera_profile_controls" class="toggle-off" >
                   <button class="btn pull-right" data-bind="click: function() { $root.copyCurrentCamera(); }">Copy</button>
                   <button class="btn pull-right" data-bind="click: function() { $root.resetCurrentCamera(); }">Defaults</button>
@@ -728,7 +728,7 @@
           <div class="panel-body">
             <div class="row">
               <div class="span12">
-                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #camera_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #camera_profiles #cameras","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #camera_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #camera_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #camera_profiles #cameras","onClass": "toggle-on","offClass": "toggle-off"},{"selector": "#octolapse_settings #camera_profile_controls","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                   <i class="fa icon-black icon-print"></i>&nbsp;Camera Settings&nbsp;<i id="camera_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
                 </button>
               </div>
@@ -1091,7 +1091,7 @@
           <div class="panel-heading">
             <div class="row">
               <div class="span12">
-                <button class="btn btn-primary input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #debug_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #debug","onClass": "toggle-on","offClass": "toggle-off"}]}'>
+                <button class="btn btn-default input-block-level toggle " type="button" data-toggle='{"elements": [{"selector": "#octolapse_settings #debug_settings_toggle","onClass": "fa-caret-down","offClass": "fa-caret-right"},{"selector": "#octolapse_settings #debug","onClass": "toggle-on","offClass": "toggle-off"}]}'>
                   <i class="fa icon-black icon-print"></i>&nbsp;Debug Settings&nbsp;<i id="debug_settings_toggle" class="toggle-caret fa icon-black fa-caret-right"></i>
                 </button>
               </div>

@@ -34,12 +34,17 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Position = None
 		self.IsPausedByOctolapse = False
 		self.SnapshotGcode = None
+		self.SavedCommand = None
 		self.SnapshotCount = 0
 		self._IsTriggering = False
 		self.WaitForSnapshot = False
 		self.Render = None
 		self.IsRendering = False
 		self.WaitForPosition=True;
+		self.Responses = Responses();
+		self.Commands = Commands();
+		self.SendingCommands = False;
+		self.CommandIndex = 0;
 	##~~ After Startup
 	def on_after_startup(self):
 		self.reload_settings()
@@ -99,8 +104,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def ClearTriggers(self):
 		self.Triggers[:] = []
 	def OnPrintResumed(self):
-		self.IsPausedByOctolapse = False
-		self.SnapshotGcode = None
+		
 		self.Settings.debug.LogPrintStateChange("Print Resumed.")
 	def OnPrintPause(self):
 		self.Settings.debug.LogPrintStateChange("Print Paused.")
@@ -110,7 +114,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 					trigger.Pause()
 	def OnPrintPausedByOctolapse(self):
 		self.Settings.debug.LogPrintStateChange("Print Paused by Octolapse.")
-		self.SendSnapshotGcode()
+		self.GetPositionForSnapshotReturn()
 	def OnPrintStart(self):
 		self.reload_settings()
 		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
@@ -171,16 +175,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not self.IsRendering):
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-print')
 		self.OnPrintEnd()
-
 	def OnPrintEnd(self):
 		self.ClearTriggers()
 		self.Position = None
-
-
 	def OnRenderStart(self, *args, **kwargs):
 		self.Settings.debug.LogRenderStart("Starting.")
 		self.IsRendering = False
-
 	def OnRenderComplete(self, *args, **kwargs):
 		filePath = args[0]
 		self.Settings.debug.LogRenderComplete("Completed rendering {0}.".format(args[0]))
@@ -197,12 +197,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 		self.IsRendering = False
 		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_complete')
-		
 	def OnRenderFail(self, *args, **kwargs):
 		self.IsRendering = False
 		self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after_render_fail')
 		self.Settings.debug.LogRenderFail("Failed.")
-
 	def CurrentlyPrintingFileName(self):
 		if(self._printer is not None):
 			current_job = self._printer.get_current_job()
@@ -212,8 +210,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 					current_file_path = current_job_file["path"]
 					return utility.GetFilenameFromFullPath(current_file_path)
 		return ""
-
-	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
@@ -240,11 +236,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		currentTrigger = trigger.IsTriggering(self.Triggers,self.Position, cmd, self.Settings.debug)
 		if(currentTrigger is not None):
 			#We're triggering
-			self.SnapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,self.Position.Extruder)
+			
 			# build an array of commands to take the snapshot
-			if(self.SnapshotGcode is not None and not self.IsPausedByOctolapse):
-				self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command:{0}".format(self.SnapshotGcode.ReturnEndCommand()))
-				self.SnapshotGcode.SavedCommand = cmd
+			if(not self.IsPausedByOctolapse):
+				self.SavedCommand = cmd;
 				self.IsPausedByOctolapse = True
 				self._printer.pause_print()
 				return None
@@ -254,8 +249,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if( trigger.IsSnapshotCommand(cmd,self.Settings.printer.snapshot_command)):
 			cmd = None
 		return cmd
-	
-	
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		if(self.Settings is None
 			or not self.Settings.is_octolapse_enabled
@@ -264,35 +257,89 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			or self._printer is None):
 			return
 
-		if(self.SnapshotGcode is not None and not self.WaitForSnapshot):
-			self.Settings.debug.LogSnapshotDownload("Looking for EndGcode:{0} - Current Gcode:{1}, Parsed Gcode:{2}".format(self.SnapshotGcode.StartEndCommand(),cmd,gcode))
-			if(self.SnapshotGcode.StartEndCommand() == cmd):
-				self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found:{0}. Waiting for snapshot.".format(self.SnapshotGcode.StartEndCommand()))
-				self.WaitForSnapshot = True
+		if(self.SendingCommands):
+			sentCommand =self.SnapshotGcode.ByIndex(self.CommandIndex)
+			self.Settings.debug.LogSnapshotDownload("Looking for snapshot command index {0}.  Command Send:{1}, Command Expected:{2}".format(self.CommandIndex, cmd, sentCommand))
 
-	
+			if(cmd == sentCommand):
+				if(self.CommandIndex == self.SnapshotGcode.StartEndIndex() and not self.WaitForSnapshot):
+					self.Settings.debug.LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found, waiting for snapshot.")
+					self.WaitForSnapshot = True
+
+				self.CommandIndex+=1
+
+				if(self.CommandIndex >= self.SnapshotGcode.CommandCount()):
+					self.Settings.debug.LogSnapshotDownload("Sent the final snapshot command, resuming print.")
+					self.ResetSnapshotState()
+					self._printer.resume_print()
+			
+
+
 	def GcodeReceived(self, comm, line, *args, **kwargs):
 		if(self.IsPausedByOctolapse):
 			if(self.WaitForSnapshot):
-				self.Settings.debug.LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
-				self.IsPausedByOctolapse = False
-				self.SnapshotGcode = None
 				self.WaitForSnapshot = False
+				self.Settings.debug.LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
 				self.TakeSnapshot()
-				self._printer.resume_print()
-			else if(self.WaitForPosition):
-
+			elif(self.WaitForPosition):
+				self.ReceivePositionForSnapshotReturn(line)
 		return line
-	def GetPosition(self):
-		self.WaitForPosition=True;
-		self._printer.commands("M114");
 
+	def ResetSnapshotState(self):
+		self.IsPausedByOctolapse = False
+		self.SnapshotGcode = None
+		self.WaitForSnapshot = False
+		
+		self.WaitForPosition = False
+		self.CommandIndex=0
+		self.SendingCommands = False
+		
+		
+	
+	def GetPositionForSnapshotReturn(self):
+		self.WaitForPosition=True;
+		self._printer.commands(self.Commands.M114.Command);
+
+	def ReceivePositionForSnapshotReturn(self, line):
+		parsedResponse = self.Responses.M114.Parse(line)
+		self.Settings.debug.LogSnapshotPositionReturn("Snapshot return position received - response:{0}, parsedResponse:{1}".format(line,parsedResponse))
+		if(parsedResponse):
+
+			x=parsedResponse["X"]
+			y=parsedResponse["Y"]
+			z=parsedResponse["Z"]
+			e=parsedResponse["E"]
+
+			self.Settings.debug.LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
+			previousX = self.Position.X
+			previousY = self.Position.Y
+			previousZ = self.Position.Z
+			if(previousX != x):
+				self.Settings.debug.LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  This could indicate a problem in the GCode, or a bug in octolapse's position tracking routine.")
+
+			self.Position.UpdatePosition(x,y,z,e)
+			
+			self.SnapshotGcode = self.OctolapseGcode.GetSnapshotGcode(self.Position,self.Position.Extruder)
+			if(self.SnapshotGcode is None):
+				self.Settings.debug.LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
+				self.ResetSnapshotState();
+				return;
+
+			self.Settings.debug.LogSnapshotGcodeEndcommand("End Gcode Command:{0}".format(self.SnapshotGcode.ReturnEndCommand()))
+			self.SnapshotGcode.SavedCommand = self.SavedCommand
+			self.WaitForPosition = False
+			self.SendSnapshotGcode()
+
+
+	
 	def SendSnapshotGcode(self):
 		if(self.SnapshotGcode is None):
 			self.Settings.debug.LogError("Cannot send snapshot Gcode, no gcode returned")
+
 		returnCommands = self.SnapshotGcode.ReturnCommands
 		savedCommand = self.SnapshotGcode.SavedCommand
 		# Send commands to move to the snapshot position
+		self.SendingCommands = True
 		self._printer.commands(self.SnapshotGcode.StartCommands);
 		# Start the return journey!
 		self._printer.commands(returnCommands)
