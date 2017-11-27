@@ -41,6 +41,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._IsTriggering = False
 		self.Render = None
 		self.IsRendering = False
+		self.HasRendered = False
 		self.Responses = Responses();
 		self.Commands = Commands();
 		self.PositionCommandIndex = 0;
@@ -138,6 +139,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.CaptureSnapshot.SetPrintEndTime(None)
 		self.IsPausedByOctolapse = False
 		self.WaitForSnapshot = False
+		self.HasRendered = False
 		# create the triggers for this print
 		snapshot = self.Settings.CurrentSnapshot()
 		# If the gcode trigger is enabled, add it
@@ -158,15 +160,18 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.CameraControl.ApplySettings()
 	def OnPrintFailed(self):
 		self.Settings.debug.LogPrintStateChange("Print Failed.")
-		if(not self.IsRendering):
+		if(not self.IsRendering and not self.HasRendered):
+			self.IsRendering = True
+			self.Settings.debug.LogInfo("Started Rendering Timelapse");
+			
 			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
 		if(not self.IsRendering):
-			self.Settings.debug.LogInfo("Started Rendering Timelapse");
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-failed')
 		self.OnPrintEnd()
 	def OnPrintCancelled(self):
 		self.Settings.debug.LogPrintStateChange("Print Cancelled.")
-		if(not self.IsRendering):
+		if(not self.IsRendering and not self.HasRendered):
+			self.IsRendering = True
 			self.Settings.debug.LogInfo("Started Rendering Timelapse");
 			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
 		if(not self.IsRendering):
@@ -174,10 +179,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.OnPrintEnd()
 	def OnPrintCompleted(self):
 		self.CaptureSnapshot.SetPrintEndTime(time.time())
-		if(not self.IsRendering):
+		if(not self.IsRendering and not self.HasRendered):
 			self.Settings.debug.LogInfo("Started Rendering Timelapse");
+			self.IsRendering = True
 			self.Render.Process(self.CurrentlyPrintingFileName(),  self.CaptureSnapshot.PrintStartTime, self.CaptureSnapshot.PrintEndTime);
-		
 		self.Settings.debug.LogPrintStateChange("Print Completed!")
 		if(not self.IsRendering):
 			self.CaptureSnapshot.CleanSnapshots(self.CurrentlyPrintingFileName(),'after-print')
@@ -187,8 +192,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Position = None
 	def OnRenderStart(self, *args, **kwargs):
 		self.Settings.debug.LogRenderStart("Starting.")
-		self.IsRendering = False
 	def OnRenderComplete(self, *args, **kwargs):
+		self.HasRendered = True
 		filePath = args[0]
 		self.Settings.debug.LogRenderComplete("Completed rendering {0}.".format(args[0]))
 		rendering = self.Settings.CurrentRendering()
@@ -314,8 +319,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.ReceivePositionForSnapshotReturn(line)
 			else:
 				self.Settings.debug.LogSnapshotGcodeEndcommand("Received From Printer:{0}".format(line))
-		elif(self.Settings is not None):
-			self.Settings.debug.LogInfo("Received Response:{0}".format(line))
 		return line
 	def ResetSnapshotState(self):
 		self.IsPausedByOctolapse = False

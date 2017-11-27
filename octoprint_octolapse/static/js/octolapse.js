@@ -1,3 +1,4 @@
+
 $(function () {
     function OctolapseSettingsViewModel(parameters) {
         var self = this;
@@ -35,7 +36,6 @@ $(function () {
 
         self.onBeforeBinding = function () {
             self.settings = self.global_settings.settings.plugins.octolapse;
-
             self.is_octolapse_enabled(self.settings.is_octolapse_enabled);
             self.current_printer_guid(self.settings.current_printer_guid);
             self.current_stabilization_guid(self.settings.current_stabilization_guid);
@@ -49,7 +49,6 @@ $(function () {
             self.default_rendering(self.settings.default_rendering);
             self.default_camera(self.settings.default_camera);
 
-            console.log(self.default_stabilization);
             self.printers(self.settings.printers);
             self.stabilizations(self.settings.stabilizations);
             self.snapshots(self.settings.snapshots);

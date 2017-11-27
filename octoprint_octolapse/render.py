@@ -33,25 +33,30 @@ class Render(object):
 		outputFilename = utility.GetFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format, "",printEndTime)
 		
 		# get the number of frames
-		foundFile = False
+		foundFile = True
 		imageIndex = 0
 
 		fps = self.Rendering.fps
 		if(self.Rendering.fps_calculation_type == 'duration'):
-			imageIndex = 0
+			imageIndex = 1
 			while(foundFile):
 				foundFile = False
-				imagePath = "{0}{1}".format(outputDirectory, outputFileName) % imageIndex
-				if(os.path.isfile(fname)):
+				imagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageIndex
+				
+				if(os.path.isfile(imagePath)):
 					foundFile = True
 					imageIndex += 1
-
-			fps = float(imageIndex)/float(self.Rendering.run_length_seconds)
+					self.Debug.LogInfo("Found image:{0}".format(imagePath))
+				else:
+					self.Debug.LogInfo("Could not find image:{0}".format(imagePath))
+			imageCount = imageIndex - 1
+			self.Debug.LogInfo("Found {0} images.".format(imageCount))
+			fps = float(imageCount)/float(self.Rendering.run_length_seconds)
 			if(fps > self.Rendering.max_fps):
 				fps = self.Rendering.max_fps
 			elif(fps < self.Rendering.min_fps):
 				fps = self.Rendering.min_fps
-			self.Debug.LogInfo("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}".format(self.Rendering.fps_calculation_type,fps, imageIndex,self.Rendering.run_length_seconds))
+			self.Debug.LogInfo("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self.Rendering.fps_calculation_type,fps, imageCount,self.Rendering.run_length_seconds,self.Rendering.max_fps,self.Rendering.min_fps))
 		else:
 			self.Debug.LogInfo("FPS Calculation Type:{0}, Fps:{0}".format(self.Rendering.fps_calculation_type,imageIndex,fps))
 		job = TimelapseRenderJob(printName,

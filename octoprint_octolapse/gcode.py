@@ -366,7 +366,8 @@ class Gcode(object):
 		return ((max-min)*(percent/100.0))+min
 	def IsXInBounds(self,x):
 		
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (x<self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"] or x > self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])):
+		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
+		if( customBox is not None and customBox != False  and (x<self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"] or x > self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])):
 			self.Settings.debug.LogError('The X coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(x))
 			return False
 		elif(x<0 or x > self.OctoprintPrinterProfile["volume"]["width"]):
@@ -375,9 +376,15 @@ class Gcode(object):
 		return True	
 	def IsYInBounds(self,y):
 		hasError = False
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (y<self.OctoprintPrinterProfile["volume"]["custom_box"]["y_min"] or y > self.OctoprintPrinterProfile["volume"]["custom_box"]["y_max"])):
-			self.Settings.debug.LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
-			return False
+		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
+		self.Settings.debug.LogInfo("CustomBox:{0}".format(customBox))
+		if(customBox != False):
+			yMin = float(customBox["y_min"])
+			yMax = float(customBox["y_max"])
+			self.Settings.debug.LogInfo("Testing coordinates for custom print area: y:{0}, y_min:{1}, y_max:{2}:".format(y,yMin,yMax))
+			if((y<yMin or y > yMax)):
+				self.Settings.debug.LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
+				return False
 		elif(y<0 or y > self.OctoprintPrinterProfile["volume"]["depth"]):
 			self.Settings.debug.LogError('The Y coordinate {0} was outside the bounds of the printer!'.format(y))
 			return False
@@ -385,7 +392,8 @@ class Gcode(object):
 		return True		
 	def IsZInBounds(self,z):
 		hasError = False
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] == True and (z < self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"] or z > self.OctoprintPrinterProfile["volume"]["custom_box"]["z_max"])):
+		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
+		if( customBox is not None and customBox != False  and (z < self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"] or z > self.OctoprintPrinterProfile["volume"]["custom_box"]["z_max"])):
 			self.Settings.debug.LogError('The Z coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(z))
 			return False
 		elif(z<0 or z > self.OctoprintPrinterProfile["volume"]["height"]):
