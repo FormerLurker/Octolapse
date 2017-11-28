@@ -7,7 +7,8 @@ $(function () {
         self.is_octolapse_enabled = ko.observable();
 
         self.current_printer_guid = ko.observable();
-        self.printers = ko.observableArray();
+        self.current_printer = ko.observable();
+
         self.newPrinterNumber = 0;
 
         self.current_stabilization_guid = ko.observable();
@@ -27,17 +28,18 @@ $(function () {
         self.newCameraNumber = 0;
 
         self.default_printer = ko.observable();
-        
+
         self.default_stabilization = ko.observable();
         self.default_snapshot = ko.observable();
         self.default_rendering = ko.observable();
         self.default_camera = ko.observable();
-        
+
 
         self.onBeforeBinding = function () {
             self.settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(self.settings.is_octolapse_enabled);
             self.current_printer_guid(self.settings.current_printer_guid);
+            self.current_printer(self.currentPrinter());
             self.current_stabilization_guid(self.settings.current_stabilization_guid);
             self.current_snapshot_guid(self.settings.current_snapshot_guid);
             self.current_rendering_guid(self.settings.current_rendering_guid);
@@ -49,7 +51,7 @@ $(function () {
             self.default_rendering(self.settings.default_rendering);
             self.default_camera(self.settings.default_camera);
 
-            self.printers(self.settings.printers);
+            //self.printers(self.settings.printers);
             self.stabilizations(self.settings.stabilizations);
             self.snapshots(self.settings.snapshots);
             self.renderings(self.settings.renderings);
@@ -77,7 +79,7 @@ $(function () {
             var currentPrinter = self.currentPrinter();
             self.newPrinterNumber++;
             var newGuid = "NewPrinterGuid_" + (self.newPrinterNumber);
-            
+
             self.global_settings.settings.plugins.octolapse.printers.push({
                 name: ko.observable("New Printer" +
                     + (self.newPrinterNumber)),
@@ -105,12 +107,12 @@ $(function () {
             printer.snapshot_command(defaultPrinter.snapshot_command());
         };
         self.removeCurrentPrinter = function () {
-            
+
             if (self.global_settings.settings.plugins.octolapse.printers().length <= 1) {
                 alert("You may not delete the last active printer");
                 return;
             }
-                
+
             self.global_settings.settings.plugins.octolapse.printers.remove(self.currentPrinter());
             self.global_settings.settings.plugins.octolapse.current_printer_guid(
                 self.global_settings.settings.plugins.octolapse.printers()[0].guid);
@@ -358,7 +360,7 @@ $(function () {
             self.settings.current_rendering_guid(newGuid);
         };
         self.removeCurrentRendering = function () {
-            
+
 
             if (self.global_settings.settings.plugins.octolapse.renderings().length <= 1) {
                 alert("You may not delete the last active rendering");
@@ -392,7 +394,7 @@ $(function () {
             currentRendering.flip_v(defaultRendering.flip_v());
             currentRendering.rotate_90(defaultRendering.rotate_90());
             currentRendering.watermark(defaultRendering.watermark());
-            
+
         };
 
         self.currentCamera = function () {
@@ -546,7 +548,6 @@ $(function () {
     ]);
 });
 
-
 var Octolapse = {};
 
 // found this gem from https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
@@ -555,8 +556,8 @@ if (!String.format) {
         var args = Array.prototype.slice.call(arguments, 1);
         return format.replace(/{(\d+)}/g, function (match, number) {
             return typeof args[number] != 'undefined'
-                    ? args[number]
-                    : match
+                ? args[number]
+                : match
                 ;
         });
     };
@@ -564,7 +565,7 @@ if (!String.format) {
 Octolapse.toggle = function (caller, args) {
 
     var elements = args.elements;
-    elements.forEach(function(item, index) {
+    elements.forEach(function (item, index) {
         element = $(item.selector);
         onClass = item.onClass;
         offClass = item.offClass;

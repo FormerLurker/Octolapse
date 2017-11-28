@@ -1,5 +1,6 @@
-<form class="form-horizontal" >
-  <div id="octolapse_settings">
+
+<form class="form-horizontal" data-bind="submit: validateSettings" >
+  <div id="octolapse_settings">  
     <div data-bind="with: global_settings.settings.plugins.octolapse">
       <div class="well">
         <h3>Octolapse Settings</h3>
@@ -49,37 +50,37 @@
                 <div class="control-group">
                   <label class="control-label">Printer Profile Name</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: name"/>
+                    <input type="text" class="input-block-level" data-bind="value: name" required/>
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Retraction Length</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: retract_length"/>
+                    <input type="number" class="input-block-level" data-bind="value: retract_length, attr: {placeholder: $root.default_printer.retract_length}" step="0.05" min="0.05" max="100.0" required/>
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Retraction Speed</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: retract_speed"/>
+                    <input type="number" class="input-block-level" data-bind="value: retract_speed" step="10" min="10" max="9999999" required/>
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Movement Speed</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: movement_speed"/>
+                    <input type="number" class="input-block-level" data-bind="value: movement_speed" step="10" min="10" max="9999999" required/> 
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Z-Hop</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: z_hop"/>
+                    <input  type="number"  class="input-block-level" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required/>
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Snapshot Command</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: snapshot_command"/>
+                    <input type="text" class="input-block-level" data-bind="value: snapshot_command" required/>
                   </div>
                 </div>
                 <div class="control-group">
@@ -92,7 +93,7 @@
                 <div class="control-group">
                   <label class="control-label">Minimum Z-Height Before position tracking begins</label>
                   <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: z_min"/>
+                    <input type="number" class="input-block-level" data-bind="value: z_min" step="0.05" min="0.0" max="9999990.0" required/>
                   </div>
                 </div>
               </div>

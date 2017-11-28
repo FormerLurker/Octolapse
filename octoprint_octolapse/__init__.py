@@ -52,35 +52,34 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.WaitForSnapshot = False
 		self.SendingSavedCommand = False
 		
+	def reload_settings(self):
+		
+		self.Settings.Update(self._settings)
+		self.Settings.Save(self._settings)
+		self._settings.save(True)
+		
 	##~~ After Startup
 	def on_after_startup(self):
-		self.reload_settings()
+
+		self.Settings = OctolapseSettings(self._logger,self._settings)
 		self._logger.info("Octolapse - loaded and active.")
 		IsStarted = True
 
-	def reload_settings(self):
-		if(self._settings is None):
-			self._logger.error("The plugin settings (_settings) is None!")
-			return
-		self.Settings = OctolapseSettings(self._logger,self._settings)
-		self.Camera = self.Settings.CurrentCamera()
+	
+	def on_settings_save(self,data):
+		
+		
+		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+		
+		return None
 		#self._logger.info("Octolapse - Octoprint settings converted to octolapse settings: {0}".format(settings.GetSettingsForOctoprint(self._logger,self.Settings)))
 	##~~ SettingsPlugin mixin
-
-	def on_settings_save(self, data):
-		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		#for printer in self._settings.get(["printers"]):
-		#	if(printer.get(["guid"]).startswith("NewPrinterGuid_")):
-		#		newGuid = str(uuid.uuid4())
-		#		if (self._settings.get(["current_printer_guid"]) == printer.guid):
-		#			self._settings.set(["current_printer_guid"],newGuid)
-		#		printer.guid = newGuid
-		
-		self.Settings.debug.LogSettingsSave('Settings Saved: {0}'.format(self._settings))
+	
 		
 	def get_settings_defaults(self):
-		defaultSettings = settings.GetSettingsForOctoprint(self._logger,None)
-		self._logger.info("Octolapse - creating default settings: {0}".format(defaultSettings))
+		self.Settings = OctolapseSettings(self._logger)
+		defaultSettings = self.Settings.ToOctoprintSettings()
+		self.Settings.debug.LogSettingsLoad("Loading default settings: {0}".format(defaultSettings))
 		return defaultSettings
 	def get_template_configs(self):
 		self._logger.info("Octolapse - is loading template configurations.")
@@ -108,6 +107,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif (event == Events.PRINT_DONE):
 			self._logger.info("Octolapse - Print Done")
 			self.OnPrintCompleted()
+		elif (event == Events.SETTINGS_UPDATED):
+			self._logger.info("Detected settings save, reloading and cleaning settings.")
+			self.reload_settings()
+			
 	def ClearTriggers(self):
 		self.Triggers[:] = []
 	def OnPrintResumed(self):
@@ -123,7 +126,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.debug.LogPrintStateChange("Print Paused by Octolapse.")
 		
 	def OnPrintStart(self):
-		self.reload_settings()
 		self.ResetSnapshotState()
 		self.Settings.debug.LogPrintStateChange("Octolapse - Print Started.")
 		self.CameraControl = CameraControl(self.Settings)
@@ -156,7 +158,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			#Configure the extruder triggers
 			
 			self.Triggers.append(TimerTrigger(self.Settings))
-		if(self.Camera.apply_settings_before_print):
+		if(self.Settings.CurrentCamera().apply_settings_before_print):
 			self.CameraControl.ApplySettings()
 	def OnPrintFailed(self):
 		self.Settings.debug.LogPrintStateChange("Print Failed.")
@@ -261,7 +263,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				return None
 		
 
-		if( trigger.IsSnapshotCommand(cmd,self.Settings.printer.snapshot_command)):
+		if( trigger.IsSnapshotCommand(cmd,self.Settings.CurrentPrinter().snapshot_command)):
 			cmd = None
 		return cmd
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):

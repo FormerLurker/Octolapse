@@ -1,4 +1,6 @@
 # coding=utf-8
+from octoprint.plugin import PluginSettings
+
 import time
 import utility
 from .gcode import Commands, Command
@@ -11,99 +13,42 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
 
-def GetSettingsForOctoprint(octoprintLogger,settings):
-		defaults = OctolapseSettings(octoprintLogger,None)
-		if(settings is None):
-			settings = defaults
-		octoprintSettings = {
-			'version' :  utility.getstring(settings.version,defaults.version),
-			"is_octolapse_enabled": utility.getbool(settings.is_octolapse_enabled,defaults.is_octolapse_enabled),
-			'stabilization_options' :
-			[
-				dict(value='disabled',name='Disabled')
-				,dict(value='fixed_coordinate',name='Fixed (Millimeters)')
-				,dict(value='fixed_path',name='CSV Separated List of Y Coordinates (Millimeters)')
-				,dict(value='relative',name='Relative to Bed(percent)')
-				,dict(value='relative_path',name='Relative CSV (percent).')
-			
-			],
-			'fps_calculation_options' : [
-					dict(value='static',name='Static FPS (higher FPS = better quality/shorter videos)')
-					,dict(value='duration',name='Fixed Run Length (FPS = Total Frames/Run Length Seconds)')
-			],
-			'snapshot_formats' : [
-					dict(value='.jpg',name='jpg',visible=True)
-					,dict(value='.jpeg',name='jpeg',visible=False)
-					,dict(value='.bmp',name='bmp',visible=True)
-			],
-			'current_printer_guid' : utility.getstring(settings.current_printer_guid,defaults.current_printer_guid),
-			'printers' : [],
-			'current_stabilization_guid' : utility.getstring(settings.current_stabilization_guid,defaults.current_stabilization_guid),
-			'stabilizations' : [],
-			'current_snapshot_guid' : utility.getstring(settings.current_snapshot_guid,defaults.current_snapshot_guid),
-			'snapshots' : [],
-			'current_rendering_guid' : utility.getstring(settings.current_rendering_guid,defaults.current_rendering_guid),
-			'renderings' : [],
-			'current_camera_guid' : utility.getstring(settings.current_camera_guid,defaults.current_camera_guid),
-			'cameras'	: []
-		}
-		
-		for key,printer in settings.printers.items():
-			octoprintSettings["printers"].append(printer.ToOctoprintSettings())
-		octoprintSettings["default_printer"] = defaults.CurrentPrinter().ToOctoprintSettings()
 
-		for key,stabilization in settings.stabilizations.items():
-			octoprintSettings["stabilizations"].append(stabilization.ToOctoprintSettings())
-		octoprintSettings["default_stabilization"] = defaults.CurrentStabilization().ToOctoprintSettings()
-
-		for key,snapshot in settings.snapshots.items():
-			octoprintSettings["snapshots"].append(snapshot.ToOctoprintSettings())
-		octoprintSettings["default_snapshot"] = defaults.CurrentSnapshot().ToOctoprintSettings()
-		
-		for key,rendering in settings.renderings.items():
-			octoprintSettings["renderings"].append(rendering.ToOctoprintSettings())
-		octoprintSettings["default_rendering"] = defaults.CurrentRendering().ToOctoprintSettings()
-
-		for key,camera in settings.cameras.items():
-			octoprintSettings["cameras"].append(camera.ToOctoprintSettings())
-		octoprintSettings["default_camera"] = defaults.CurrentCamera().ToOctoprintSettings()
-
-		octoprintSettings["debug"] = settings.debug.ToOctoprintSettings()
-		octoprintSettings["debug_defaults"] = defaults.debug.ToOctoprintSettings()
-
-		return octoprintSettings
 
 class Printer(object):
 	
-	def __init__(self,printer):
-		self.guid = str(uuid.uuid4())
-		self.name = "Default"
-		self.retract_length = 4.0
-		self.retract_speed = 4800
-		self.movement_speed = 7200
-		self.z_hop = 0.5
-		self.z_min = 0.2
-		self.snapshot_command = "snap"
-		self.is_e_relative = True
+	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
+			  ,retract_speed=4800,movement_speed=7200,z_hop=0.5,z_min=0.2,snapshot_command="snap", is_e_relative=True ):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
+		self.retract_length = retract_length
+		self.retract_speed = retract_speed
+		self.movement_speed = movement_speed
+		self.z_hop = z_hop
+		self.z_min = z_min
+		self.snapshot_command = snapshot_command
+		self.is_e_relative = is_e_relative
 		if(printer is not None):
-			if("guid" in printer):
-				self.guid = utility.getstring(printer["guid"],self.guid)
-			if("name" in printer.keys()):
-				self.name = utility.getstring(printer["name"],self.guid)
-			if("retract_length" in printer.keys()):
-				self.retract_length = utility.getfloat(printer["retract_length"],self.retract_length)
-			if("retract_speed" in printer.keys()):
-				self.retract_speed = utility.getint(printer["retract_speed"],self.retract_speed)
-			if("movement_speed" in printer.keys()):
-				self.movement_speed = utility.getint(printer["movement_speed"],self.movement_speed)
-			if("snapshot_command" in printer.keys()):
-				self.snapshot_command = utility.getstring(printer["snapshot_command"],self.snapshot_command)
-			if("is_e_relative" in printer.keys()):
-				self.is_e_relative = utility.getbool(printer["is_e_relative"],self.is_e_relative)
-			if("z_hop" in printer.keys()):
-				self.z_hop = utility.getfloat(printer["z_hop"],self.z_hop)
-			if("z_min" in printer.keys()):
-				self.z_min = utility.getfloat(printer["z_min"],self.z_min)
+			self.Update(printer)
+	def Update(self,changes):
+		if("guid" in changes):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.guid)
+		if("retract_length" in changes.keys()):
+			self.retract_length = utility.getfloat(changes["retract_length"],self.retract_length)
+		if("retract_speed" in changes.keys()):
+			self.retract_speed = utility.getint(changes["retract_speed"],self.retract_speed)
+		if("movement_speed" in changes.keys()):
+			self.movement_speed = utility.getint(changes["movement_speed"],self.movement_speed)
+		if("snapshot_command" in changes.keys()):
+			self.snapshot_command = utility.getstring(changes["snapshot_command"],self.snapshot_command)
+		if("is_e_relative" in changes.keys()):
+			self.is_e_relative = utility.getbool(changes["is_e_relative"],self.is_e_relative)
+		if("z_hop" in changes.keys()):
+			self.z_hop = utility.getfloat(changes["z_hop"],self.z_hop)
+		if("z_min" in changes.keys()):
+			self.z_min = utility.getfloat(changes["z_min"],self.z_min)
 
 	def ToOctoprintSettings(self):
 		return {
@@ -121,9 +66,9 @@ class Printer(object):
 		
 class Stabilization(object):
 	
-	def __init__(self,stabilization):
-		self.guid = str(uuid.uuid4())
-		self.name = "Default"
+	def __init__(self,stabilization=None, guid = None, name = "Default Stabilization"):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
 		self.x_movement_speed = 0
 		self.x_type = "fixed_coordinate"
 		self.x_fixed_coordinate = 0.0
@@ -145,48 +90,51 @@ class Stabilization(object):
 		self.z_movement_speed_mms = 0
 		
 		if(stabilization is not None):
-			if("guid" in stabilization.keys()):
-				self.guid = utility.getstring(stabilization["guid"],self.guid)
-			if("name" in stabilization.keys()):
-				self.name = utility.getstring(stabilization["name"],self.name)
-			if("x_movement_speed" in stabilization.keys()):
-				self.x_movement_speed = utility.getint(stabilization["x_movement_speed"],self.x_movement_speed)
-			if("x_type" in stabilization.keys()):
-				self.x_type = utility.getstring(stabilization["x_type"],self.x_type)
-			if("x_fixed_coordinate" in stabilization.keys()):
-				self.x_fixed_coordinate = utility.getfloat(stabilization["x_fixed_coordinate"],self.x_fixed_coordinate)
-			if("x_fixed_path" in stabilization.keys()):
-				self.x_fixed_path = utility.getstring(stabilization["x_fixed_path"],self.x_fixed_path)
-			if("x_fixed_path_loop" in stabilization.keys()):
-				self.x_fixed_path_loop = utility.getbool(stabilization["x_fixed_path_loop"],self.x_fixed_path_loop)
-			if("x_relative" in stabilization.keys()):
-				self.x_relative = utility.getfloat(stabilization["x_relative"],self.x_relative)
-			if("x_relative_print" in stabilization.keys()):
-				self.x_relative_print = utility.getfloat(stabilization["x_relative_print"],self.x_relative_print)
-			if("x_relative_path" in stabilization.keys()):
-				self.x_relative_path = utility.getstring(stabilization["x_relative_path"],self.x_relative_path)
-			if("x_relative_path_loop" in stabilization.keys()):
-				self.x_relative_path_loop = utility.getbool(stabilization["x_relative_path_loop"],self.x_relative_path_loop)
-			if("y_movement_speed_mms" in stabilization.keys()):
-				self.y_movement_speed_mms = utility.getint(stabilization["y_movement_speed_mms"],self.y_movement_speed_mms)
-			if("y_type" in stabilization.keys()):
-				self.y_type = utility.getstring(stabilization["y_type"],self.y_type)
-			if("y_fixed_coordinate" in stabilization.keys()):
-				self.y_fixed_coordinate = utility.getfloat(stabilization["y_fixed_coordinate"],self.y_fixed_coordinate)
-			if("y_fixed_path" in stabilization.keys()):
-				self.y_fixed_path = utility.getstring(stabilization["y_fixed_path"],self.y_fixed_path)
-			if("y_fixed_path_loop" in stabilization.keys()):
-				self.y_fixed_path_loop = utility.getbool(stabilization["y_fixed_path_loop"],self.y_fixed_path_loop)
-			if("y_relative" in stabilization.keys()):
-				self.y_relative = utility.getfloat(stabilization["y_relative"],self.y_relative)
-			if("y_relative_print" in stabilization.keys()):
-				self.y_relative_print = utility.getfloat(stabilization["y_relative_print"],self.y_relative_print)
-			if("y_relative_path" in stabilization.keys()):
-				self.y_relative_path = utility.getstring(stabilization["y_relative_path"],self.y_relative_path)
-			if("y_relative_path_loop" in stabilization.keys()):
-				self.y_relative_path_loop = utility.getbool(stabilization["y_relative_path_loop"],self.y_relative_path_loop)
-			if("z_movement_speed_mms" in stabilization.keys()):
-				self.z_movement_speed_mms = utility.getint(stabilization["z_movement_speed_mms"],self.z_movement_speed_mms)
+			self.Update(stabilization)
+	def Update(self, changes):
+		if("guid" in changes.keys()):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.name)
+		if("x_movement_speed" in changes.keys()):
+			self.x_movement_speed = utility.getint(changes["x_movement_speed"],self.x_movement_speed)
+		if("x_type" in changes.keys()):
+			self.x_type = utility.getstring(changes["x_type"],self.x_type)
+		if("x_fixed_coordinate" in changes.keys()):
+			self.x_fixed_coordinate = utility.getfloat(changes["x_fixed_coordinate"],self.x_fixed_coordinate)
+		if("x_fixed_path" in changes.keys()):
+			self.x_fixed_path = utility.getstring(changes["x_fixed_path"],self.x_fixed_path)
+		if("x_fixed_path_loop" in changes.keys()):
+			self.x_fixed_path_loop = utility.getbool(changes["x_fixed_path_loop"],self.x_fixed_path_loop)
+		if("x_relative" in changes.keys()):
+			self.x_relative = utility.getfloat(changes["x_relative"],self.x_relative)
+		if("x_relative_print" in changes.keys()):
+			self.x_relative_print = utility.getfloat(changes["x_relative_print"],self.x_relative_print)
+		if("x_relative_path" in changes.keys()):
+			self.x_relative_path = utility.getstring(changes["x_relative_path"],self.x_relative_path)
+		if("x_relative_path_loop" in changes.keys()):
+			self.x_relative_path_loop = utility.getbool(changes["x_relative_path_loop"],self.x_relative_path_loop)
+		if("y_movement_speed_mms" in changes.keys()):
+			self.y_movement_speed_mms = utility.getint(changes["y_movement_speed_mms"],self.y_movement_speed_mms)
+		if("y_type" in changes.keys()):
+			self.y_type = utility.getstring(changes["y_type"],self.y_type)
+		if("y_fixed_coordinate" in changes.keys()):
+			self.y_fixed_coordinate = utility.getfloat(changes["y_fixed_coordinate"],self.y_fixed_coordinate)
+		if("y_fixed_path" in changes.keys()):
+			self.y_fixed_path = utility.getstring(changes["y_fixed_path"],self.y_fixed_path)
+		if("y_fixed_path_loop" in changes.keys()):
+			self.y_fixed_path_loop = utility.getbool(changes["y_fixed_path_loop"],self.y_fixed_path_loop)
+		if("y_relative" in changes.keys()):
+			self.y_relative = utility.getfloat(changes["y_relative"],self.y_relative)
+		if("y_relative_print" in changes.keys()):
+			self.y_relative_print = utility.getfloat(changes["y_relative_print"],self.y_relative_print)
+		if("y_relative_path" in changes.keys()):
+			self.y_relative_path = utility.getstring(changes["y_relative_path"],self.y_relative_path)
+		if("y_relative_path_loop" in changes.keys()):
+			self.y_relative_path_loop = utility.getbool(changes["y_relative_path_loop"],self.y_relative_path_loop)
+		if("z_movement_speed_mms" in changes.keys()):
+			self.z_movement_speed_mms = utility.getint(changes["z_movement_speed_mms"],self.z_movement_speed_mms)
+
 	
 	def ToOctoprintSettings(self):
 		return {
@@ -215,9 +163,9 @@ class Stabilization(object):
 	
 class Snapshot(object):
 
-	def __init__(self,snapshot):
-		self.guid = str(uuid.uuid4())
-		self.name = "Default"
+	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
 		#Initialize defaults
 		#Gcode Trigger
 		self.gcode_trigger_enabled = True
@@ -268,94 +216,96 @@ class Snapshot(object):
 		self.script_path = ""
 		
 		if(snapshot is not None):
-			#Initialize all values according to the provided snapshot, use defaults if
-			#the values are null or incorrectly formatted
-			if("guid" in snapshot.keys()):
-				self.guid = utility.getstring(snapshot["guid"],self.guid)
-			if("name" in snapshot.keys()):
-				self.name = utility.getstring(snapshot["name"],self.name)
-			if("gcode_trigger_enabled" in snapshot.keys()):
-				self.gcode_trigger_enabled = utility.getbool(snapshot["gcode_trigger_enabled"],self.gcode_trigger_enabled)
-			if("gcode_trigger_require_zhop" in snapshot.keys()):
-				self.gcode_trigger_require_zhop = utility.getbool(snapshot["gcode_trigger_require_zhop"],self.gcode_trigger_require_zhop)
-			if("gcode_trigger_on_extruding" in snapshot.keys()):
-				self.gcode_trigger_on_extruding = utility.getbool(snapshot["gcode_trigger_on_extruding"],self.gcode_trigger_on_extruding)
-			if("gcode_trigger_on_extruding_start" in snapshot.keys()):
-				self.gcode_trigger_on_extruding_start = utility.getbool(snapshot["gcode_trigger_on_extruding_start"],self.gcode_trigger_on_extruding_start)
-			if("gcode_trigger_on_primed" in snapshot.keys()):
-				self.gcode_trigger_on_primed = utility.getbool(snapshot["gcode_trigger_on_primed"],self.gcode_trigger_on_primed)
-			if("gcode_trigger_on_retracting" in snapshot.keys()):
-				self.gcode_trigger_on_retracting = utility.getbool(snapshot["gcode_trigger_on_retracting"],self.gcode_trigger_on_retracting)
-			if("gcode_trigger_on_retracted" in snapshot.keys()):
-				self.gcode_trigger_on_retracted = utility.getbool(snapshot["gcode_trigger_on_retracted"],self.gcode_trigger_on_retracted)
-			if("gcode_trigger_on_detracting" in snapshot.keys()):
-				self.gcode_trigger_on_detracting = utility.getbool(snapshot["gcode_trigger_on_detracting"],self.gcode_trigger_on_detracting)
-			if("timer_trigger_enabled" in snapshot.keys()):
-				self.timer_trigger_enabled = utility.getbool(snapshot["timer_trigger_enabled"],self.timer_trigger_enabled)
-			if("timer_trigger_require_zhop" in snapshot.keys()):
-				self.timer_trigger_require_zhop = utility.getbool(snapshot["timer_trigger_require_zhop"],self.timer_trigger_require_zhop)
-			if("timer_trigger_seconds" in snapshot.keys()):
-				self.timer_trigger_seconds = utility.getint(snapshot["timer_trigger_seconds"],self.timer_trigger_seconds)
-			if("timer_trigger_on_extruding" in snapshot.keys()):
-				self.timer_trigger_on_extruding = utility.getbool(snapshot["timer_trigger_on_extruding"],self.timer_trigger_on_extruding)
-			if("timer_trigger_on_extruding_start" in snapshot.keys()):
-				self.timer_trigger_on_extruding_start = utility.getbool(snapshot["timer_trigger_on_extruding_start"],self.timer_trigger_on_extruding_start)
-			if("timer_trigger_on_primed" in snapshot.keys()):
-				self.timer_trigger_on_primed = utility.getbool(snapshot["timer_trigger_on_primed"],self.timer_trigger_on_primed)
-			if("timer_trigger_on_retracting" in snapshot.keys()):
-				self.timer_trigger_on_retracting = utility.getbool(snapshot["timer_trigger_on_retracting"],self.timer_trigger_on_retracting)
-			if("timer_trigger_on_retracted" in snapshot.keys()):
-				self.timer_trigger_on_retracted = utility.getbool(snapshot["timer_trigger_on_retracted"],self.timer_trigger_on_retracted)
-			if("timer_trigger_on_detracting" in snapshot.keys()):
-				self.timer_trigger_on_detracting = utility.getbool(snapshot["timer_trigger_on_detracting"],self.timer_trigger_on_detracting)
-			if("layer_trigger_enabled" in snapshot.keys()):
-				self.layer_trigger_enabled = utility.getbool(snapshot["layer_trigger_enabled"],self.layer_trigger_enabled)
-			if("layer_trigger_height" in snapshot.keys()):
-				self.layer_trigger_height = utility.getfloat(snapshot["layer_trigger_height"],self.layer_trigger_height)
-			if("layer_trigger_require_zhop" in snapshot.keys()):
-				self.layer_trigger_require_zhop = utility.getbool(snapshot["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
-			if("layer_trigger_on_extruding" in snapshot.keys()):
-				self.layer_trigger_on_extruding = utility.getbool(snapshot["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
-			if("layer_trigger_on_extruding_start" in snapshot.keys()):
-				self.layer_trigger_on_extruding_start = utility.getbool(snapshot["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)
-			if("layer_trigger_on_primed" in snapshot.keys()):
-				self.layer_trigger_on_primed = utility.getbool(snapshot["layer_trigger_on_primed"],self.layer_trigger_on_primed)
-			if("layer_trigger_on_retracting" in snapshot.keys()):
-				self.layer_trigger_on_retracting = utility.getbool(snapshot["layer_trigger_on_retracting"],self.layer_trigger_on_retracting)
-			if("layer_trigger_on_retracted" in snapshot.keys()):
-				self.layer_trigger_on_retracted = utility.getbool(snapshot["layer_trigger_on_retracted"],self.layer_trigger_on_retracted)
-			if("layer_trigger_on_detracting" in snapshot.keys()):
-				self.layer_trigger_on_detracting = utility.getbool(snapshot["layer_trigger_on_detracting"],self.layer_trigger_on_detracting)
-			if("archive" in snapshot.keys()):
-				self.archive = utility.getbool(snapshot["archive"],self.archive)
-			if("delay" in snapshot.keys()):
-				self.delay = utility.getint(snapshot["delay"],self.delay)
-			if("retract_before_move" in snapshot.keys()):
-				self.retract_before_move = utility.getbool(snapshot["retract_before_move"],self.retract_before_move)
-			if("output_format" in snapshot.keys()):
-				self.output_format = utility.getstring(snapshot["output_format"],self.output_format)
-			if("output_filename" in snapshot.keys()):
-				self.output_filename = utility.getstring(snapshot["output_filename"],self.output_filename)
-			if("output_directory" in snapshot.keys()):
-				self.output_directory = utility.getstring(snapshot["output_directory"],self.output_directory)
-			if("cleanup_before_print" in snapshot.keys()):
-				self.cleanup_before_print = utility.getbool(snapshot["cleanup_before_print"],self.cleanup_before_print)
-			if("cleanup_after_print" in snapshot.keys()):
-				self.cleanup_after_print = utility.getbool(snapshot["cleanup_after_print"],self.cleanup_after_print)
-			if("cleanup_after_cancel" in snapshot.keys()):
-				self.cleanup_after_cancel = utility.getbool(snapshot["cleanup_after_cancel"],self.cleanup_after_cancel)
-			if("cleanup_after_fail" in snapshot.keys()):
-				self.cleanup_after_fail = utility.getbool(snapshot["cleanup_after_fail"],self.cleanup_after_fail)
-			if("cleanup_before_close" in snapshot.keys()):
-				self.cleanup_before_close = utility.getbool(snapshot["cleanup_before_close"],self.cleanup_before_close)
-			if("cleanup_after_render_complete" in snapshot.keys()):
-				self.cleanup_after_render_complete = utility.getbool(snapshot["cleanup_after_render_complete"],self.cleanup_after_render_complete)
-			if("cleanup_after_render_fail" in snapshot.keys()):
-				self.cleanup_after_render_fail = utility.getbool(snapshot["cleanup_after_render_fail"],self.cleanup_after_render_fail)
-			if("custom_script_enabled" in snapshot.keys()):
-				self.custom_script_enabled = utility.getbool(snapshot["custom_script_enabled"],self.custom_script_enabled)
-			if("script_path" in snapshot.keys()):
-				self.script_path = utility.getstring(snapshot["script_path"],self.script_path)
+			self.Update(snapshot)
+	def Update(self, changes):
+		#Initialize all values according to the provided changes, use defaults if
+		#the values are null or incorrectly formatted
+		if("guid" in changes.keys()):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.name)
+		if("gcode_trigger_enabled" in changes.keys()):
+			self.gcode_trigger_enabled = utility.getbool(changes["gcode_trigger_enabled"],self.gcode_trigger_enabled)
+		if("gcode_trigger_require_zhop" in changes.keys()):
+			self.gcode_trigger_require_zhop = utility.getbool(changes["gcode_trigger_require_zhop"],self.gcode_trigger_require_zhop)
+		if("gcode_trigger_on_extruding" in changes.keys()):
+			self.gcode_trigger_on_extruding = utility.getbool(changes["gcode_trigger_on_extruding"],self.gcode_trigger_on_extruding)
+		if("gcode_trigger_on_extruding_start" in changes.keys()):
+			self.gcode_trigger_on_extruding_start = utility.getbool(changes["gcode_trigger_on_extruding_start"],self.gcode_trigger_on_extruding_start)
+		if("gcode_trigger_on_primed" in changes.keys()):
+			self.gcode_trigger_on_primed = utility.getbool(changes["gcode_trigger_on_primed"],self.gcode_trigger_on_primed)
+		if("gcode_trigger_on_retracting" in changes.keys()):
+			self.gcode_trigger_on_retracting = utility.getbool(changes["gcode_trigger_on_retracting"],self.gcode_trigger_on_retracting)
+		if("gcode_trigger_on_retracted" in changes.keys()):
+			self.gcode_trigger_on_retracted = utility.getbool(changes["gcode_trigger_on_retracted"],self.gcode_trigger_on_retracted)
+		if("gcode_trigger_on_detracting" in changes.keys()):
+			self.gcode_trigger_on_detracting = utility.getbool(changes["gcode_trigger_on_detracting"],self.gcode_trigger_on_detracting)
+		if("timer_trigger_enabled" in changes.keys()):
+			self.timer_trigger_enabled = utility.getbool(changes["timer_trigger_enabled"],self.timer_trigger_enabled)
+		if("timer_trigger_require_zhop" in changes.keys()):
+			self.timer_trigger_require_zhop = utility.getbool(changes["timer_trigger_require_zhop"],self.timer_trigger_require_zhop)
+		if("timer_trigger_seconds" in changes.keys()):
+			self.timer_trigger_seconds = utility.getint(changes["timer_trigger_seconds"],self.timer_trigger_seconds)
+		if("timer_trigger_on_extruding" in changes.keys()):
+			self.timer_trigger_on_extruding = utility.getbool(changes["timer_trigger_on_extruding"],self.timer_trigger_on_extruding)
+		if("timer_trigger_on_extruding_start" in changes.keys()):
+			self.timer_trigger_on_extruding_start = utility.getbool(changes["timer_trigger_on_extruding_start"],self.timer_trigger_on_extruding_start)
+		if("timer_trigger_on_primed" in changes.keys()):
+			self.timer_trigger_on_primed = utility.getbool(changes["timer_trigger_on_primed"],self.timer_trigger_on_primed)
+		if("timer_trigger_on_retracting" in changes.keys()):
+			self.timer_trigger_on_retracting = utility.getbool(changes["timer_trigger_on_retracting"],self.timer_trigger_on_retracting)
+		if("timer_trigger_on_retracted" in changes.keys()):
+			self.timer_trigger_on_retracted = utility.getbool(changes["timer_trigger_on_retracted"],self.timer_trigger_on_retracted)
+		if("timer_trigger_on_detracting" in changes.keys()):
+			self.timer_trigger_on_detracting = utility.getbool(changes["timer_trigger_on_detracting"],self.timer_trigger_on_detracting)
+		if("layer_trigger_enabled" in changes.keys()):
+			self.layer_trigger_enabled = utility.getbool(changes["layer_trigger_enabled"],self.layer_trigger_enabled)
+		if("layer_trigger_height" in changes.keys()):
+			self.layer_trigger_height = utility.getfloat(changes["layer_trigger_height"],self.layer_trigger_height)
+		if("layer_trigger_require_zhop" in changes.keys()):
+			self.layer_trigger_require_zhop = utility.getbool(changes["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
+		if("layer_trigger_on_extruding" in changes.keys()):
+			self.layer_trigger_on_extruding = utility.getbool(changes["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
+		if("layer_trigger_on_extruding_start" in changes.keys()):
+			self.layer_trigger_on_extruding_start = utility.getbool(changes["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)
+		if("layer_trigger_on_primed" in changes.keys()):
+			self.layer_trigger_on_primed = utility.getbool(changes["layer_trigger_on_primed"],self.layer_trigger_on_primed)
+		if("layer_trigger_on_retracting" in changes.keys()):
+			self.layer_trigger_on_retracting = utility.getbool(changes["layer_trigger_on_retracting"],self.layer_trigger_on_retracting)
+		if("layer_trigger_on_retracted" in changes.keys()):
+			self.layer_trigger_on_retracted = utility.getbool(changes["layer_trigger_on_retracted"],self.layer_trigger_on_retracted)
+		if("layer_trigger_on_detracting" in changes.keys()):
+			self.layer_trigger_on_detracting = utility.getbool(changes["layer_trigger_on_detracting"],self.layer_trigger_on_detracting)
+		if("archive" in changes.keys()):
+			self.archive = utility.getbool(changes["archive"],self.archive)
+		if("delay" in changes.keys()):
+			self.delay = utility.getint(changes["delay"],self.delay)
+		if("retract_before_move" in changes.keys()):
+			self.retract_before_move = utility.getbool(changes["retract_before_move"],self.retract_before_move)
+		if("output_format" in changes.keys()):
+			self.output_format = utility.getstring(changes["output_format"],self.output_format)
+		if("output_filename" in changes.keys()):
+			self.output_filename = utility.getstring(changes["output_filename"],self.output_filename)
+		if("output_directory" in changes.keys()):
+			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
+		if("cleanup_before_print" in changes.keys()):
+			self.cleanup_before_print = utility.getbool(changes["cleanup_before_print"],self.cleanup_before_print)
+		if("cleanup_after_print" in changes.keys()):
+			self.cleanup_after_print = utility.getbool(changes["cleanup_after_print"],self.cleanup_after_print)
+		if("cleanup_after_cancel" in changes.keys()):
+			self.cleanup_after_cancel = utility.getbool(changes["cleanup_after_cancel"],self.cleanup_after_cancel)
+		if("cleanup_after_fail" in changes.keys()):
+			self.cleanup_after_fail = utility.getbool(changes["cleanup_after_fail"],self.cleanup_after_fail)
+		if("cleanup_before_close" in changes.keys()):
+			self.cleanup_before_close = utility.getbool(changes["cleanup_before_close"],self.cleanup_before_close)
+		if("cleanup_after_render_complete" in changes.keys()):
+			self.cleanup_after_render_complete = utility.getbool(changes["cleanup_after_render_complete"],self.cleanup_after_render_complete)
+		if("cleanup_after_render_fail" in changes.keys()):
+			self.cleanup_after_render_fail = utility.getbool(changes["cleanup_after_render_fail"],self.cleanup_after_render_fail)
+		if("custom_script_enabled" in changes.keys()):
+			self.custom_script_enabled = utility.getbool(changes["custom_script_enabled"],self.custom_script_enabled)
+		if("script_path" in changes.keys()):
+			self.script_path = utility.getstring(changes["script_path"],self.script_path)
 
 	def ToOctoprintSettings(self):
 		return {
@@ -405,9 +355,9 @@ class Snapshot(object):
 		}
 	
 class Rendering(object):
-	def __init__(self,rendering):
-		self.guid = str(uuid.uuid4())
-		self.name = "Default"
+	def __init__(self,rendering=None, guid = None, name = "Default Rendering"):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
 		self.enabled = True
 		self.fps_calculation_type = 'duration'
 		self.run_length_seconds = 10
@@ -432,44 +382,46 @@ class Rendering(object):
 		self.rotate_90 = False
 		self.watermark = False
 		if(rendering is not None):
-			if("guid" in rendering.keys()):
-				self.guid = utility.getstring(rendering["guid"],self.guid)
-			if("name" in rendering.keys()):
-				self.name = utility.getstring(rendering["name"],self.name)
-			if("enabled" in rendering.keys()):
-				self.enabled = utility.getbool(rendering["enabled"],self.enabled)
-			if("fps_calculation_type" in rendering.keys()):
-				self.fps_calculation_type = rendering["fps_calculation_type"]
-			if("run_length_seconds" in rendering.keys()):
-				self.run_length_seconds = utility.getfloat(rendering["run_length_seconds"],self.run_length_seconds)
-			if("fps" in rendering.keys()):
-				self.fps = utility.getfloat(rendering["fps"],self.fps)
-			if("max_fps" in rendering.keys()):
-				self.max_fps = utility.getfloat(rendering["max_fps"],self.max_fps)
-			if("min_fps" in rendering.keys()):
-				self.min_fps = utility.getfloat(rendering["min_fps"],self.min_fps)
-			if("output_format" in rendering.keys()):
-				self.output_format = utility.getstring(rendering["output_format"],self.output_format)
-			if("output_filename" in rendering.keys()):
-				self.output_filename = utility.getstring(rendering["output_filename"],self.output_format)
-			if("output_directory" in rendering.keys()):
-				self.output_directory = utility.getstring(rendering["output_directory"],self.output_directory)
-			if("sync_with_timelapse" in rendering.keys()):
-				self.sync_with_timelapse = utility.getbool(rendering["sync_with_timelapse"],self.sync_with_timelapse)
-			if("octoprint_timelapse_directory" in rendering.keys()):
-				self.octoprint_timelapse_directory = utility.getstring(rendering["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
-			if("ffmpeg_path" in rendering.keys()):
-				self.ffmpeg_path = utility.getstring(rendering["ffmpeg_path"],self.ffmpeg_path)
-			if("bitrate" in rendering.keys()):
-				self.bitrate = utility.getstring(rendering["bitrate"],self.bitrate)
-			if("flip_h" in rendering.keys()):
-				self.flip_h = utility.getbool(rendering["flip_h"],self.flip_h)
-			if("flip_v" in rendering.keys()):
-				self.flip_v = utility.getbool(rendering["flip_v"],self.flip_v)
-			if("rotate_90" in rendering.keys()):
-				self.rotate_90 = utility.getbool(rendering["rotate_90"],self.rotate_90)
-			if("watermark" in rendering.keys()):
-				self.watermark = utility.getbool(rendering["watermark"],self.watermark)
+			self.Update(rendering)
+	def Update(self, changes):
+		if("guid" in changes.keys()):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.name)
+		if("enabled" in changes.keys()):
+			self.enabled = utility.getbool(changes["enabled"],self.enabled)
+		if("fps_calculation_type" in changes.keys()):
+			self.fps_calculation_type = changes["fps_calculation_type"]
+		if("run_length_seconds" in changes.keys()):
+			self.run_length_seconds = utility.getfloat(changes["run_length_seconds"],self.run_length_seconds)
+		if("fps" in changes.keys()):
+			self.fps = utility.getfloat(changes["fps"],self.fps)
+		if("max_fps" in changes.keys()):
+			self.max_fps = utility.getfloat(changes["max_fps"],self.max_fps)
+		if("min_fps" in changes.keys()):
+			self.min_fps = utility.getfloat(changes["min_fps"],self.min_fps)
+		if("output_format" in changes.keys()):
+			self.output_format = utility.getstring(changes["output_format"],self.output_format)
+		if("output_filename" in changes.keys()):
+			self.output_filename = utility.getstring(changes["output_filename"],self.output_format)
+		if("output_directory" in changes.keys()):
+			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
+		if("sync_with_timelapse" in changes.keys()):
+			self.sync_with_timelapse = utility.getbool(changes["sync_with_timelapse"],self.sync_with_timelapse)
+		if("octoprint_timelapse_directory" in changes.keys()):
+			self.octoprint_timelapse_directory = utility.getstring(changes["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
+		if("ffmpeg_path" in changes.keys()):
+			self.ffmpeg_path = utility.getstring(changes["ffmpeg_path"],self.ffmpeg_path)
+		if("bitrate" in changes.keys()):
+			self.bitrate = utility.getstring(changes["bitrate"],self.bitrate)
+		if("flip_h" in changes.keys()):
+			self.flip_h = utility.getbool(changes["flip_h"],self.flip_h)
+		if("flip_v" in changes.keys()):
+			self.flip_v = utility.getbool(changes["flip_v"],self.flip_v)
+		if("rotate_90" in changes.keys()):
+			self.rotate_90 = utility.getbool(changes["rotate_90"],self.rotate_90)
+		if("watermark" in changes.keys()):
+			self.watermark = utility.getbool(changes["watermark"],self.watermark)
 
 	def ToOctoprintSettings(self):
 		return {
@@ -496,9 +448,9 @@ class Rendering(object):
 
 class Camera(object):
 	
-	def __init__(self,camera):
-		self.guid = str(uuid.uuid4())
-		self.name = "Default"
+	def __init__(self,camera=None, guid = None, name = "Default Camera"):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
 		self.apply_settings_before_print = True
 		self.address = "http://127.0.0.1/webcam/"
 		self.snapshot_request_template = "{camera_address}?action=snapshot"
@@ -547,102 +499,104 @@ class Camera(object):
 		self.jpeg_quality_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}"
 
 		if(not camera is None):
-			if("guid" in camera.keys()):
-				self.guid = utility.getstring(camera["guid"],self.guid)
-			if("name" in camera.keys()):
-				self.name = utility.getstring(camera["name"],self.name)
-			if("address" in camera.keys()):
-				self.address = utility.getstring(camera["address"],self.address)
-			if("apply_settings_before_print" in camera.keys()):
-				self.apply_settings_before_print = utility.getbool(camera["apply_settings_before_print"],self.apply_settings_before_print)
-			if("ignore_ssl_error" in camera.keys()):
-				self.ignore_ssl_error = utility.getbool(camera["ignore_ssl_error"],self.ignore_ssl_error)
-			if("username" in camera.keys()):
-				self.username = utility.getstring(camera["username"],self.username)
-			if("password" in camera.keys()):
-				self.password = utility.getstring(camera["password"],self.password)
-			if("brightness" in camera.keys()):
-				self.brightness = utility.getint(camera["brightness"],self.brightness)
-			if("contrast" in camera.keys()):
-				self.contrast = utility.getint(camera["contrast"],self.contrast)
-			if("saturation" in camera.keys()):
-				self.saturation = utility.getint(camera["saturation"],self.saturation)
-			if("white_balance_auto" in camera.keys()):
-				self.white_balance_auto = utility.getbool(camera["white_balance_auto"],self.white_balance_auto)
-			if("gain" in camera.keys()):
-				self.gain = utility.getint(camera["gain"],self.gain)
-			if("powerline_frequency" in camera.keys()):
-				self.powerline_frequency = utility.getint(camera["powerline_frequency"],self.powerline_frequency)
-			if("white_balance_temperature" in camera.keys()):
-				self.white_balance_temperature = utility.getint(camera["white_balance_temperature"],self.white_balance_temperature)
-			if("sharpness" in camera.keys()):
-				self.sharpness = utility.getint(camera["sharpness"],self.sharpness)
-			if("backlight_compensation_enabled" in camera.keys()):
-				self.backlight_compensation_enabled = utility.getbool(camera["backlight_compensation_enabled"],self.backlight_compensation_enabled)
-			if("exposure_type" in camera.keys()):
-				self.exposure_type = utility.getbool(camera["exposure_type"],self.exposure_type)
-			if("exposure" in camera.keys()):
-				self.exposure = utility.getint(camera["exposure"],self.exposure)
-			if("exposure_auto_priority_enabled" in camera.keys()):
-				self.exposure_auto_priority_enabled = utility.getbool(camera["exposure_auto_priority_enabled"],self.exposure_auto_priority_enabled)
-			if("pan" in camera.keys()):
-				self.pan = utility.getint(camera["pan"],self.pan)
-			if("tilt" in camera.keys()):
-				self.tilt = utility.getint(camera["tilt"],self.tilt)
-			if("autofocus_enabled" in camera.keys()):
-				self.autofocus_enabled = utility.getbool(camera["autofocus_enabled"],self.autofocus_enabled)
-			if("focus" in camera.keys()):
-				self.focus = utility.getint(camera["focus"],self.focus)
-			if("zoom" in camera.keys()):
-				self.zoom = utility.getint(camera["zoom"],self.zoom)
-			if("led1_mode" in camera.keys()):
-				self.led1_mode = utility.getstring(camera["led1_mode"],self.led1_frequency)
-			if("led1_frequency" in camera.keys()):
-				self.led1_frequency = utility.getint(camera["led1_frequency"],self.led1_frequency)
-			if("jpeg_quality" in camera.keys()):
-				self.jpeg_quality = utility.getint(camera["jpeg_quality"],self.jpeg_quality)
-			if("snapshot_request_template" in camera.keys()):
-				self.snapshot_request_template = utility.getstring(camera["snapshot_request_template"],self.snapshot_request_template)
-			if("brightness_request_template" in camera.keys()):
-				self.brightness_request_template = utility.getstring(camera["brightness_request_template"],self.brightness_request_template)
-			if("contrast_request_template" in camera.keys()):
-				self.contrast_request_template = utility.getstring(camera["contrast_request_template"],self.contrast_request_template)
-			if("saturation_request_template" in camera.keys()):
-				self.saturation_request_template = utility.getstring(camera["saturation_request_template"],self.saturation_request_template)
-			if("white_balance_auto_request_template" in camera.keys()):
-				self.white_balance_auto_request_template = utility.getstring(camera["white_balance_auto_request_template"],self.white_balance_auto_request_template)
-			if("gain_request_template" in camera.keys()):
-				self.gain_request_template = utility.getstring(camera["gain_request_template"],self.gain_request_template)
-			if("powerline_frequency_request_template" in camera.keys()):
-				self.powerline_frequency_request_template = utility.getstring(camera["powerline_frequency_request_template"],self.powerline_frequency_request_template)
-			if("white_balance_temperature_request_template" in camera.keys()):
-				self.white_balance_temperature_request_template = utility.getstring(camera["white_balance_temperature_request_template"],self.white_balance_temperature_request_template)
-			if("sharpness_request_template" in camera.keys()):
-				self.sharpness_request_template = utility.getstring(camera["sharpness_request_template"],self.sharpness_request_template)
-			if("backlight_compensation_enabled_request_template" in camera.keys()):
-				self.backlight_compensation_enabled_request_template = utility.getstring(camera["backlight_compensation_enabled_request_template"],self.backlight_compensation_enabled_request_template)
-			if("exposure_type_request_template" in camera.keys()):
-				self.exposure_type_request_template = utility.getstring(camera["exposure_type_request_template"],self.exposure_type_request_template)
-			if("exposure_request_template" in camera.keys()):
-				self.exposure_request_template = utility.getstring(camera["exposure_request_template"],self.exposure_request_template)
-			if("exposure_auto_priority_enabled_request_template" in camera.keys()):
-				self.exposure_auto_priority_enabled_request_template = utility.getstring(camera["exposure_auto_priority_enabled_request_template"],self.exposure_auto_priority_enabled_request_template)
-			if("pan_request_template" in camera.keys()):
-				self.pan_request_template = utility.getstring(camera["pan_request_template"],self.pan_request_template)
-			if("tilt_request_template" in camera.keys()):
-				self.tilt_request_template = utility.getstring(camera["tilt_request_template"],self.tilt_request_template)
-			if("autofocus_enabled_request_template" in camera.keys()):
-				self.autofocus_enabled_request_template = utility.getstring(camera["autofocus_enabled_request_template"],self.autofocus_enabled_request_template)
-			if("focus_request_template" in camera.keys()):
-				self.focus_request_template = utility.getstring(camera["focus_request_template"],self.focus_request_template)
-			if("led1_mode_request_template" in camera.keys()):
-				self.led1_mode_request_template = utility.getstring(camera["led1_mode_request_template"],self.led1_mode_request_template)
-			if("led1_frequency_request_template" in camera.keys()):
-				self.led1_frequency_request_template = utility.getstring(camera["led1_frequency_request_template"],self.led1_frequency_request_template)
-			if("jpeg_quality_request_template" in camera.keys()):
-				self.jpeg_quality_request_template = utility.getstring(camera["jpeg_quality_request_template"],self.jpeg_quality_request_template)
-			if("zoom_request_template" in camera.keys()):
-				self.zoom_request_template = utility.getstring(camera["zoom_request_template"],self.zoom_request_template)
+			self.Update(camera)
+	def Update(self, changes):
+		if("guid" in changes.keys()):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.name)
+		if("address" in changes.keys()):
+			self.address = utility.getstring(changes["address"],self.address)
+		if("apply_settings_before_print" in changes.keys()):
+			self.apply_settings_before_print = utility.getbool(changes["apply_settings_before_print"],self.apply_settings_before_print)
+		if("ignore_ssl_error" in changes.keys()):
+			self.ignore_ssl_error = utility.getbool(changes["ignore_ssl_error"],self.ignore_ssl_error)
+		if("username" in changes.keys()):
+			self.username = utility.getstring(changes["username"],self.username)
+		if("password" in changes.keys()):
+			self.password = utility.getstring(changes["password"],self.password)
+		if("brightness" in changes.keys()):
+			self.brightness = utility.getint(changes["brightness"],self.brightness)
+		if("contrast" in changes.keys()):
+			self.contrast = utility.getint(changes["contrast"],self.contrast)
+		if("saturation" in changes.keys()):
+			self.saturation = utility.getint(changes["saturation"],self.saturation)
+		if("white_balance_auto" in changes.keys()):
+			self.white_balance_auto = utility.getbool(changes["white_balance_auto"],self.white_balance_auto)
+		if("gain" in changes.keys()):
+			self.gain = utility.getint(changes["gain"],self.gain)
+		if("powerline_frequency" in changes.keys()):
+			self.powerline_frequency = utility.getint(changes["powerline_frequency"],self.powerline_frequency)
+		if("white_balance_temperature" in changes.keys()):
+			self.white_balance_temperature = utility.getint(changes["white_balance_temperature"],self.white_balance_temperature)
+		if("sharpness" in changes.keys()):
+			self.sharpness = utility.getint(changes["sharpness"],self.sharpness)
+		if("backlight_compensation_enabled" in changes.keys()):
+			self.backlight_compensation_enabled = utility.getbool(changes["backlight_compensation_enabled"],self.backlight_compensation_enabled)
+		if("exposure_type" in changes.keys()):
+			self.exposure_type = utility.getbool(changes["exposure_type"],self.exposure_type)
+		if("exposure" in changes.keys()):
+			self.exposure = utility.getint(changes["exposure"],self.exposure)
+		if("exposure_auto_priority_enabled" in changes.keys()):
+			self.exposure_auto_priority_enabled = utility.getbool(changes["exposure_auto_priority_enabled"],self.exposure_auto_priority_enabled)
+		if("pan" in changes.keys()):
+			self.pan = utility.getint(changes["pan"],self.pan)
+		if("tilt" in changes.keys()):
+			self.tilt = utility.getint(changes["tilt"],self.tilt)
+		if("autofocus_enabled" in changes.keys()):
+			self.autofocus_enabled = utility.getbool(changes["autofocus_enabled"],self.autofocus_enabled)
+		if("focus" in changes.keys()):
+			self.focus = utility.getint(changes["focus"],self.focus)
+		if("zoom" in changes.keys()):
+			self.zoom = utility.getint(changes["zoom"],self.zoom)
+		if("led1_mode" in changes.keys()):
+			self.led1_mode = utility.getstring(changes["led1_mode"],self.led1_frequency)
+		if("led1_frequency" in changes.keys()):
+			self.led1_frequency = utility.getint(changes["led1_frequency"],self.led1_frequency)
+		if("jpeg_quality" in changes.keys()):
+			self.jpeg_quality = utility.getint(changes["jpeg_quality"],self.jpeg_quality)
+		if("snapshot_request_template" in changes.keys()):
+			self.snapshot_request_template = utility.getstring(changes["snapshot_request_template"],self.snapshot_request_template)
+		if("brightness_request_template" in changes.keys()):
+			self.brightness_request_template = utility.getstring(changes["brightness_request_template"],self.brightness_request_template)
+		if("contrast_request_template" in changes.keys()):
+			self.contrast_request_template = utility.getstring(changes["contrast_request_template"],self.contrast_request_template)
+		if("saturation_request_template" in changes.keys()):
+			self.saturation_request_template = utility.getstring(changes["saturation_request_template"],self.saturation_request_template)
+		if("white_balance_auto_request_template" in changes.keys()):
+			self.white_balance_auto_request_template = utility.getstring(changes["white_balance_auto_request_template"],self.white_balance_auto_request_template)
+		if("gain_request_template" in changes.keys()):
+			self.gain_request_template = utility.getstring(changes["gain_request_template"],self.gain_request_template)
+		if("powerline_frequency_request_template" in changes.keys()):
+			self.powerline_frequency_request_template = utility.getstring(changes["powerline_frequency_request_template"],self.powerline_frequency_request_template)
+		if("white_balance_temperature_request_template" in changes.keys()):
+			self.white_balance_temperature_request_template = utility.getstring(changes["white_balance_temperature_request_template"],self.white_balance_temperature_request_template)
+		if("sharpness_request_template" in changes.keys()):
+			self.sharpness_request_template = utility.getstring(changes["sharpness_request_template"],self.sharpness_request_template)
+		if("backlight_compensation_enabled_request_template" in changes.keys()):
+			self.backlight_compensation_enabled_request_template = utility.getstring(changes["backlight_compensation_enabled_request_template"],self.backlight_compensation_enabled_request_template)
+		if("exposure_type_request_template" in changes.keys()):
+			self.exposure_type_request_template = utility.getstring(changes["exposure_type_request_template"],self.exposure_type_request_template)
+		if("exposure_request_template" in changes.keys()):
+			self.exposure_request_template = utility.getstring(changes["exposure_request_template"],self.exposure_request_template)
+		if("exposure_auto_priority_enabled_request_template" in changes.keys()):
+			self.exposure_auto_priority_enabled_request_template = utility.getstring(changes["exposure_auto_priority_enabled_request_template"],self.exposure_auto_priority_enabled_request_template)
+		if("pan_request_template" in changes.keys()):
+			self.pan_request_template = utility.getstring(changes["pan_request_template"],self.pan_request_template)
+		if("tilt_request_template" in changes.keys()):
+			self.tilt_request_template = utility.getstring(changes["tilt_request_template"],self.tilt_request_template)
+		if("autofocus_enabled_request_template" in changes.keys()):
+			self.autofocus_enabled_request_template = utility.getstring(changes["autofocus_enabled_request_template"],self.autofocus_enabled_request_template)
+		if("focus_request_template" in changes.keys()):
+			self.focus_request_template = utility.getstring(changes["focus_request_template"],self.focus_request_template)
+		if("led1_mode_request_template" in changes.keys()):
+			self.led1_mode_request_template = utility.getstring(changes["led1_mode_request_template"],self.led1_mode_request_template)
+		if("led1_frequency_request_template" in changes.keys()):
+			self.led1_frequency_request_template = utility.getstring(changes["led1_frequency_request_template"],self.led1_frequency_request_template)
+		if("jpeg_quality_request_template" in changes.keys()):
+			self.jpeg_quality_request_template = utility.getstring(changes["jpeg_quality_request_template"],self.jpeg_quality_request_template)
+		if("zoom_request_template" in changes.keys()):
+			self.zoom_request_template = utility.getstring(changes["zoom_request_template"],self.zoom_request_template)
 
 	def ToOctoprintSettings(self):
 		return {
@@ -732,67 +686,69 @@ class DebugSettings(object):
 		self.print_state_changed = False
 		self.camera_settings_apply = False
 		if(debug is not None):
-			if("enabled" in debug.keys()):
-				self.enabled = utility.getbool(debug["enabled"],self.enabled)
-			if("position_change" in debug.keys()):
-				self.position_change = utility.getbool(debug["position_change"],self.position_change)
-			if("position_command_received" in debug.keys()):
-				self.position_command_received = utility.getbool(debug["position_command_received"],self.position_command_received)
-			if("extruder_change" in debug.keys()):
-				self.extruder_change = utility.getbool(debug["extruder_change"],self.extruder_change)
-			if("extruder_triggered" in debug.keys()):
-				self.extruder_triggered = utility.getbool(debug["extruder_triggered"],self.extruder_triggered)
-			if("trigger_create" in debug.keys()):
-				self.trigger_create = utility.getbool(debug["trigger_create"],self.trigger_create)
-			if("trigger_wait_state" in debug.keys()):
-				self.trigger_wait_state = utility.getbool(debug["trigger_wait_state"],self.trigger_wait_state)
-			if("trigger_triggering" in debug.keys()):
-				self.trigger_triggering = utility.getbool(debug["trigger_triggering"],self.trigger_triggering)
-			if("trigger_triggering_state" in debug.keys()):
-				self.trigger_triggering_state = utility.getbool(debug["trigger_triggering_state"],self.trigger_triggering_state)
-			if("trigger_layer_zmin_reached" in debug.keys()):
-				self.trigger_layer_zmin_reached = utility.getbool(debug["trigger_layer_zmin_reached"],self.trigger_layer_zmin_reached)
-			if("trigger_layer_change" in debug.keys()):
-				self.trigger_layer_change = utility.getbool(debug["trigger_layer_change"],self.trigger_layer_change)
-			if("trigger_height_change" in debug.keys()):
-				self.trigger_height_change = utility.getbool(debug["trigger_height_change"],self.trigger_height_change)
-			if("trigger_time_remaining" in debug.keys()):
-				self.trigger_time_remaining = utility.getbool(debug["trigger_time_remaining"],self.trigger_time_remaining)
-			if("trigger_time_unpaused" in debug.keys()):
-				self.trigger_time_unpaused = utility.getbool(debug["trigger_time_unpaused"],self.trigger_time_unpaused)
-			if("trigger_zhop" in debug.keys()):
-				self.trigger_zhop = utility.getbool(debug["trigger_zhop"],self.trigger_zhop )
-			if("snapshot_gcode" in debug.keys()):
-				self.snapshot_gcode = utility.getbool(debug["snapshot_gcode"],self.snapshot_gcode)
-			if("snapshot_gcode_endcommand" in debug.keys()):
-				self.snapshot_gcode_endcommand = utility.getbool(debug["snapshot_gcode_endcommand"],self.snapshot_gcode_endcommand) 
-			if("snapshot_position" in debug.keys()):
-				self.snapshot_position = utility.getbool(debug["snapshot_position"],self.snapshot_position)
-			if("snapshot_position_return" in debug.keys()):
-				self.snapshot_position_return = utility.getbool(debug["snapshot_position_return"],self.snapshot_position_return)
-			if("snapshot_save" in debug.keys()):
-				self.snapshot_save = utility.getbool(debug["snapshot_save"],self.snapshot_save)
-			if("snapshot_download" in debug.keys()):
-				self.snapshot_download = utility.getbool(debug["snapshot_download"],self.snapshot_download)
-			if("render_start" in debug.keys()):
-				self.render_start = utility.getbool(debug["render_start"],self.snapshot_download)
-			if("render_complete" in debug.keys()):
-				self.render_complete = utility.getbool(debug["render_complete"],self.render_complete)
-			if("render_fail" in debug.keys()):
-				self.render_fail = utility.getbool(debug["render_fail"],self.snapshot_download)
-			if("render_sync" in debug.keys()):
-				self.render_sync = utility.getbool(debug["render_sync"],self.snapshot_download)
-			if("snapshot_clean" in debug.keys()):
-				self.snapshot_clean = utility.getbool(debug["snapshot_clean"],self.snapshot_clean)
-			if("settings_save" in debug.keys()):
-				self.settings_save = utility.getbool(debug["settings_save"],self.settings_save)
-			if("settings_load" in debug.keys()):
-				self.settings_save = utility.getbool(debug["settings_load"],self.settings_save)
-			if("print_state_changed" in debug.keys()):
-				self.print_state_changed = utility.getbool(debug["print_state_changed"],self.print_state_changed)
-			if("camera_settings_apply" in debug.keys()):
-				self.camera_settings_apply = utility.getbool(debug["camera_settings_apply"],self.camera_settings_apply)
-
+			self.Update(debug)
+			
+	def Update(self, changes):
+		if("enabled" in changes.keys()):
+			self.enabled = utility.getbool(changes["enabled"],self.enabled)
+		if("position_change" in changes.keys()):
+			self.position_change = utility.getbool(changes["position_change"],self.position_change)
+		if("position_command_received" in changes.keys()):
+			self.position_command_received = utility.getbool(changes["position_command_received"],self.position_command_received)
+		if("extruder_change" in changes.keys()):
+			self.extruder_change = utility.getbool(changes["extruder_change"],self.extruder_change)
+		if("extruder_triggered" in changes.keys()):
+			self.extruder_triggered = utility.getbool(changes["extruder_triggered"],self.extruder_triggered)
+		if("trigger_create" in changes.keys()):
+			self.trigger_create = utility.getbool(changes["trigger_create"],self.trigger_create)
+		if("trigger_wait_state" in changes.keys()):
+			self.trigger_wait_state = utility.getbool(changes["trigger_wait_state"],self.trigger_wait_state)
+		if("trigger_triggering" in changes.keys()):
+			self.trigger_triggering = utility.getbool(changes["trigger_triggering"],self.trigger_triggering)
+		if("trigger_triggering_state" in changes.keys()):
+			self.trigger_triggering_state = utility.getbool(changes["trigger_triggering_state"],self.trigger_triggering_state)
+		if("trigger_layer_zmin_reached" in changes.keys()):
+			self.trigger_layer_zmin_reached = utility.getbool(changes["trigger_layer_zmin_reached"],self.trigger_layer_zmin_reached)
+		if("trigger_layer_change" in changes.keys()):
+			self.trigger_layer_change = utility.getbool(changes["trigger_layer_change"],self.trigger_layer_change)
+		if("trigger_height_change" in changes.keys()):
+			self.trigger_height_change = utility.getbool(changes["trigger_height_change"],self.trigger_height_change)
+		if("trigger_time_remaining" in changes.keys()):
+			self.trigger_time_remaining = utility.getbool(changes["trigger_time_remaining"],self.trigger_time_remaining)
+		if("trigger_time_unpaused" in changes.keys()):
+			self.trigger_time_unpaused = utility.getbool(changes["trigger_time_unpaused"],self.trigger_time_unpaused)
+		if("trigger_zhop" in changes.keys()):
+			self.trigger_zhop = utility.getbool(changes["trigger_zhop"],self.trigger_zhop )
+		if("snapshot_gcode" in changes.keys()):
+			self.snapshot_gcode = utility.getbool(changes["snapshot_gcode"],self.snapshot_gcode)
+		if("snapshot_gcode_endcommand" in changes.keys()):
+			self.snapshot_gcode_endcommand = utility.getbool(changes["snapshot_gcode_endcommand"],self.snapshot_gcode_endcommand) 
+		if("snapshot_position" in changes.keys()):
+			self.snapshot_position = utility.getbool(changes["snapshot_position"],self.snapshot_position)
+		if("snapshot_position_return" in changes.keys()):
+			self.snapshot_position_return = utility.getbool(changes["snapshot_position_return"],self.snapshot_position_return)
+		if("snapshot_save" in changes.keys()):
+			self.snapshot_save = utility.getbool(changes["snapshot_save"],self.snapshot_save)
+		if("snapshot_download" in changes.keys()):
+			self.snapshot_download = utility.getbool(changes["snapshot_download"],self.snapshot_download)
+		if("render_start" in changes.keys()):
+			self.render_start = utility.getbool(changes["render_start"],self.snapshot_download)
+		if("render_complete" in changes.keys()):
+			self.render_complete = utility.getbool(changes["render_complete"],self.render_complete)
+		if("render_fail" in changes.keys()):
+			self.render_fail = utility.getbool(changes["render_fail"],self.snapshot_download)
+		if("render_sync" in changes.keys()):
+			self.render_sync = utility.getbool(changes["render_sync"],self.snapshot_download)
+		if("snapshot_clean" in changes.keys()):
+			self.snapshot_clean = utility.getbool(changes["snapshot_clean"],self.snapshot_clean)
+		if("settings_save" in changes.keys()):
+			self.settings_save = utility.getbool(changes["settings_save"],self.settings_save)
+		if("settings_load" in changes.keys()):
+			self.settings_save = utility.getbool(changes["settings_load"],self.settings_save)
+		if("print_state_changed" in changes.keys()):
+			self.print_state_changed = utility.getbool(changes["print_state_changed"],self.print_state_changed)
+		if("camera_settings_apply" in changes.keys()):
+			self.camera_settings_apply = utility.getbool(changes["camera_settings_apply"],self.camera_settings_apply)
 	def ToOctoprintSettings(self):
 		return {
 				'enabled'					: self.enabled,
@@ -918,6 +874,9 @@ class DebugSettings(object):
 	def LogSettingsSave(self,message):
 		if(self.settings_save):
 			self.LogInfo(message)
+	def LogSettingsLoad(self,message):
+		if(self.settings_load):
+			self.LogInfo(message)
 	def LogPrintStateChange(self,message):
 		if(self.print_state_changed):
 			self.LogInfo(message)
@@ -960,7 +919,12 @@ class DebugSettings(object):
 						if(layerTriggerWait is not None):
 							assert trigger.IsWaiting == layerTriggerWait
 class OctolapseSettings(object):
-	
+	DefaultPrinter = Printer(name="Default Printer", guid="88a173b1-0071-4d93-84fa-6662af279e5e");
+	DefaultStabilization = Stabilization(name="Default Stabilization", guid="2a0d92b3-6dc3-4d28-9564-8ecacec92412");
+	DefaultSnapshot = Snapshot(name="Default Snapshot", guid="fae0ca93-8c06-450e-a734-eb29426769ca");
+	DefaultRendering = Rendering(name="Default Rendering", guid="4257a753-bb4b-4c9f-9f2d-4032b4b2dc9a");
+	DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
+
 	# constants
 	def __init__(self, octoprintLogger,settings=None):
 		self.version = "0.1.0"
@@ -968,72 +932,28 @@ class OctolapseSettings(object):
 		self.is_octolapse_enabled = True
 		self.debug = DebugSettings(octoprintLogger,None)
 
-		printer = Printer(None)
+		printer = self.DefaultPrinter
 		self.current_printer_guid = printer.guid
 		self.printers = {printer.guid : printer}
 
-		stabilization = Stabilization(None)
+		stabilization = self.DefaultStabilization
 		self.current_stabilization_guid = stabilization.guid
 		self.stabilizations = {stabilization.guid:stabilization}
 
-		snapshot = Snapshot(None)
+		snapshot = self.DefaultSnapshot
 		self.current_snapshot_guid = snapshot.guid
 		self.snapshots = {snapshot.guid:snapshot}
 
-		rendering = Rendering(None)
+		rendering = self.DefaultRendering
 		self.current_rendering_guid = rendering.guid
 		self.renderings = {rendering.guid:rendering}
 
-		camera = Camera(None)
+		camera = self.DefaultCamera
 		self.current_camera_guid = camera.guid
 		self.cameras = {camera.guid:camera}
-
-
 		if(settings is not None):
-			self.is_octolapse_enabled = utility.getbool(settings.get(["is_octolapse_enabled"]),self.is_octolapse_enabled)
-			self.debug = DebugSettings(octoprintLogger,settings.get(["debug"]))
-			self.printer = Printer(settings.get(["printer"]))
-
-			self.current_printer_guid = utility.getstring(settings.get(["current_printer_guid"]),self.current_printer_guid)
-			_printers = settings.get(["printers"])
-			if(_printers is not None):
-				self.printers = {}
-				for printer in _printers:
-					#octoprintLogger.info("Creating printer '{0}' with guid '{1}'".format(printer["name"], printer["guid"]))
-					self.printers[printer["guid"]] = Printer(printer)
-			
-			self.current_stabilization_guid = utility.getstring(settings.get(["current_stabilization_guid"]),self.current_stabilization_guid)
-			_stabilizations = settings.get(["stabilizations"])
-			if(_stabilizations is not None):
-				self.stabilization = {}
-				for stabilization in _stabilizations:
-					#octoprintLogger.info("Creating stabilization: {0}-{1}".format(stabilization["name"], stabilization["guid"]))
-					self.stabilizations[stabilization["guid"]] = Stabilization(stabilization)
-			
-			self.current_snapshot_guid = utility.getstring(settings.get(["current_snapshot_guid"]),self.current_snapshot_guid)
-			_snapshots = settings.get(["snapshots"])
-			if(_snapshots is not None):
-				self.snapshots = {}
-				for snapshot in _snapshots:
-					#octoprintLogger.info("Creating snapshot: {0} - {1}".format(snapshot["name"], snapshot["guid"]))
-					self.snapshots[snapshot["guid"]] = Snapshot(snapshot)
-
-			self.current_rendering_guid = utility.getstring(settings.get(["current_rendering_guid"]),self.current_rendering_guid)
-			_renderings = settings.get(["renderings"])
-			if(_renderings is not None):
-				self.renderings = {}
-				for rendering in _renderings:
-					#octoprintLogger.info("Creating rendering: {0} - {1}".format(rendering["name"],rendering["guid"]))
-					self.renderings[rendering["guid"]] = Rendering(rendering)
-
-			self.current_camera_guid = utility.getstring(settings.get(["current_camera_guid"]),self.current_camera_guid)
-			_cameras = settings.get(["cameras"])
-			if(_cameras is not None):
-				self.cameras = {}
-				for camera in _cameras:
-					#octoprintLogger.info("Creating camera: {0} - {1}".format(camera["name"],camera["guid"]))
-					self.cameras[camera["guid"]] = Camera(camera)
-
+			self.Update(settings)
+	
 	def CurrentStabilization(self):
 		if(len(self.stabilizations.keys()) == 0):
 			stabilization = Stabilization(None)
@@ -1064,6 +984,204 @@ class OctolapseSettings(object):
 			self.cameras[camera.guid] = camera
 			self.current_camera_guid = camera.guid
 		return self.cameras[self.current_camera_guid]
-
 	
+
+	def Update(self, changes):
+		
+		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
+		if (HasKey(changes,"current_printer_guid")) : self.current_printer_guid = str(GetValue(changes,"current_printer_guid",self.current_printer_guid))
+		if (HasKey(changes,"current_stabilization_guid"))  : self.current_stabilization_guid = str(GetValue(changes,"current_stabilization_guid",self.current_stabilization_guid))
+		if (HasKey(changes,"current_snapshot_guid")) : self.current_snapshot_guid = str(GetValue(changes,"current_snapshot_guid",self.current_snapshot_guid))
+		if (HasKey(changes,"current_rendering_guid"))  : self.current_rendering_guid = str(GetValue(changes,"current_rendering_guid",self.current_rendering_guid))
+		if (HasKey(changes,"current_camera_guid")) : self.current_camera_guid = str(GetValue(changes,"current_camera_guid",self.current_camera_guid))
+		if (HasKey(changes,"debug")) : self.debug.Update(GetValue(changes,"debug",None))
+
+		if (HasKey(changes,"printers")):
+			print("Has Printers")
+			printers = GetValue(changes,"printers",None)
+			print("Printers:{0}".format(printers))
+			for printer in printers:
+				originalGuid = printer["guid"]
+				
+				if(printer["guid"].startswith("NewPrinterGuid_")):
+					print("Has New Guid")
+					printer["guid"] = str(uuid.uuid4())
+					if(originalGuid == self.current_printer_guid):
+						self.current_printer_guid = printer["guid"]
+						print("Changing current printer guid")
+					
+				if(printer["guid"] in self.printers):
+					print("Updating existin printer")
+					if(originalGuid != printer["guid"]):
+						self.printers[printer["guid"]] = self.printers.pop(originalGuid)
+					self.printers[printer["guid"]].Update(printer)
+				else:
+					print("Adding new printer: {0}".format(printer))
+					self.printers[printer["guid"]] = Printer(printer)
+
+		if(HasKey(changes,"stabilizations")):
+			for stabilization in GetValue(changes,"stabilizations",None):
+				guid = stabilization["guid"]
+				if(guid.startswith("NewStabilizationGuid_")):
+					newGuid = str(uuid.uuid4())
+					if(guid == self.current_stabilization_guid):
+						self.current_stabilization_guid = newGuid
+					self.stabilizations[newGuid] = self.stabilizations.pop(guid)
+					guid = newGuid
+				if(guid in self.stabilizations):
+					self.stabilizations[guid].Update(stabilization)
+				else:
+					self.stabilizations[guid] = Stabilization(stabilization)
+
+		if(HasKey(changes,"snapshots")):
+			for snapshot in GetValue(changes,"snapshots",None):
+				guid = snapshot["guid"]
+				if(guid.startswith("NewSnapshotGuid_")):
+					newGuid = str(uuid.uuid4())
+					if(guid == self.current_snapshot_guid):
+						self.current_snapshot_guid = newGuid
+					self.snapshots[newGuid] = self.snapshots.pop(guid)
+					guid = newGuid
+				if(guid in self.snapshots):
+					self.snapshots[guid].Update(snapshot)
+				else:
+					self.snapshots[guid] = Snapshot(snapshot)
+
+		if(HasKey(changes,"renderings")):
+			for rendering in GetValue(changes,"renderings",None):
+				guid = rendering["guid"]
+				if(guid.startswith("NewRenderingGuid_")):
+					newGuid = str(uuid.uuid4())
+					if(guid == self.current_rendering_guid):
+						self.current_rendering_guid = newGuid
+					self.renderings[newGuid] = self.renderings.pop(guid)
+					guid = newGuid
+				if(guid in self.renderings):
+					self.renderings[guid].Update(rendering)
+				else:
+					self.renderings[guid] = Rendering(rendering)
+
+		if(HasKey(changes,"cameras")):
+			for camera in GetValue(changes,"cameras",None):
+				guid = camera["guid"]
+				if(guid.startswith("NewCameraGuid_")):
+					newGuid = str(uuid.uuid4())
+					if(guid == self.current_camera_guid):
+						self.current_camera_guid = newGuid
+					self.cameras[newGuid] = self.cameras.pop(guid)
+					guid = newGuid
+				if(guid in self.cameras):
+					self.cameras[guid].Update(camera)
+				else:
+					self.cameras[guid] = Camera(camera)
+	def Save(self, settings):
+		
+		settings.set_boolean(["is_octolapse_enabled"], self.is_octolapse_enabled)
+		settings.set(["current_printer_guid"], self.current_printer_guid)
+		settings.set(["current_stabilization_guid"], self.current_stabilization_guid)
+		settings.set(["current_snapshot_guid"], self.current_snapshot_guid)
+		settings.set(["current_rendering_guid"], self.current_rendering_guid)
+		settings.set(["current_camera_guid"], self.current_camera_guid)
+		printers = []
+		for key, printer in self.printers.items():
+			printers.append(printer.ToOctoprintSettings())
+
+		settings.set(["printers"], printers);
+
+		stabilizations = []
+		for key, stabilization in self.stabilizations.items():
+			stabilizations.append(stabilization.ToOctoprintSettings())
+		settings.set(["stabilizations"], stabilizations);
+
+		snapshots = []
+		for key, snapshot in self.snapshots.items():
+			snapshots.append(snapshot.ToOctoprintSettings())
+		settings.set(["snapshots"], snapshots);
+
+		renderings = []
+		for key, rendering in self.renderings.items():
+			renderings.append(rendering.ToOctoprintSettings())
+		settings.set(["renderings"], renderings);
+
+		cameras = []
+		for key, camera in self.cameras.items():
+			cameras.append(camera.ToOctoprintSettings())
+		settings.set(["cameras"], cameras);
+
+		settings.set(["debug"], self.debug.ToOctoprintSettings());
+
+	def ToOctoprintSettings(self):
+		defaults = OctolapseSettings(self.debug.Logger)
+		
+		octoprintSettings = {
+			'version' :  utility.getstring(self.version,defaults.version),
+			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
+			'stabilization_options' :
+			[
+				dict(value='disabled',name='Disabled')
+				,dict(value='fixed_coordinate',name='Fixed (Millimeters)')
+				,dict(value='fixed_path',name='CSV Separated List of Y Coordinates (Millimeters)')
+				,dict(value='relative',name='Relative to Bed(percent)')
+				,dict(value='relative_path',name='Relative CSV (percent).')
+			
+			],
+			'fps_calculation_options' : [
+					dict(value='static',name='Static FPS (higher FPS = better quality/shorter videos)')
+					,dict(value='duration',name='Fixed Run Length (FPS = Total Frames/Run Length Seconds)')
+			],
+			'snapshot_formats' : [
+					dict(value='.jpg',name='jpg',visible=True)
+					,dict(value='.jpeg',name='jpeg',visible=False)
+					,dict(value='.bmp',name='bmp',visible=True)
+			],
+			'current_printer_guid' : utility.getstring(self.current_printer_guid,defaults.current_printer_guid),
+			'printers' : [],
+			'current_stabilization_guid' : utility.getstring(self.current_stabilization_guid,defaults.current_stabilization_guid),
+			'stabilizations' : [],
+			'current_snapshot_guid' : utility.getstring(self.current_snapshot_guid,defaults.current_snapshot_guid),
+			'snapshots' : [],
+			'current_rendering_guid' : utility.getstring(self.current_rendering_guid,defaults.current_rendering_guid),
+			'renderings' : [],
+			'current_camera_guid' : utility.getstring(self.current_camera_guid,defaults.current_camera_guid),
+			'cameras'	: []
+		}
+		
+		for key,printer in self.printers.items():
+			octoprintSettings["printers"].append(printer.ToOctoprintSettings())
+
+		octoprintSettings["default_printer"] = defaults.CurrentPrinter().ToOctoprintSettings()
+
+		for key,stabilization in self.stabilizations.items():
+			octoprintSettings["stabilizations"].append(stabilization.ToOctoprintSettings())
+		octoprintSettings["default_stabilization"] = defaults.CurrentStabilization().ToOctoprintSettings()
+
+		for key,snapshot in self.snapshots.items():
+			octoprintSettings["snapshots"].append(snapshot.ToOctoprintSettings())
+		octoprintSettings["default_snapshot"] = defaults.CurrentSnapshot().ToOctoprintSettings()
+		
+		for key,rendering in self.renderings.items():
+			octoprintSettings["renderings"].append(rendering.ToOctoprintSettings())
+		octoprintSettings["default_rendering"] = defaults.CurrentRendering().ToOctoprintSettings()
+
+		for key,camera in self.cameras.items():
+			octoprintSettings["cameras"].append(camera.ToOctoprintSettings())
+		octoprintSettings["default_camera"] = defaults.CurrentCamera().ToOctoprintSettings()
+
+		octoprintSettings["debug"] = self.debug.ToOctoprintSettings()
+		octoprintSettings["debug_defaults"] = defaults.debug.ToOctoprintSettings()
+
+		return octoprintSettings
+
+def HasKey(object,key):
+	if(isinstance(object,dict)):
+		return key in object
+	elif(isinstance(object,PluginSettings)):
+		return object.has([key])
+def GetValue(object,key,default=None):
+	if(isinstance(object,dict) and key in object):
+		return key in object
+	elif(isinstance(object,PluginSettings) and object.has([key])):
+		return object.get([key])
+	else:
+		return default
 
