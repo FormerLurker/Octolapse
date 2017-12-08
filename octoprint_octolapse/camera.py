@@ -50,7 +50,7 @@ class CameraSettingJob(object):
 		self.Password = camera.password
 		self.IgnoreSslError = camera.ignore_ssl_error
 		self.TimeoutSeconds = timeout
-		self.Debug = Settings.debug
+		
 		self.Template = template
 		self.Value = value
 		self.SettingName = settingName
@@ -64,18 +64,18 @@ class CameraSettingJob(object):
 			url = FormatRequestTemplate(self.Address, self.Template,self.Value)	
 			try:
 				if(len(self.Username)>0):
-					self.Debug.LogCameraSettingsApply("Camera Settings Apply - {0} - Authenticating and applying settings at {1:s}.".format(self.SettingName,url))
+					self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings Apply - {0} - Authenticating and applying settings at {1:s}.".format(self.SettingName,url))
 					r=requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 				else:
-					self.Debug.LogCameraSettingsApply("Camera Settings Apply - {0} - Applying settings at {1:s}.".format(self.SettingName,url))
+					self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings Apply - {0} - Applying settings at {1:s}.".format(self.SettingName,url))
 					r=requests.get(url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 
 				if r.status_code != requests.codes.ok:
-					self.Debug.LogCameraSettingsApply("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(self.SettingName, self.Value))
+					self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(self.SettingName, self.Value))
 				else:
-					self.Debug.LogCameraSettingsApply("Camera - Unable to adjust settings for {0}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(self.SettingName, r.status_code, url))
+					self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera - Unable to adjust settings for {0}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(self.SettingName, r.status_code, url))
 			except:
 				type = sys.exc_info()[0]
 				self.Value = sys.exc_info()[1]
-				self.Debug.LogError("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, self.SettingName, url, self.Value))
+				self.Settings.CurrentDebugProfile().LogError("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, self.SettingName, url, self.Value))
 				return

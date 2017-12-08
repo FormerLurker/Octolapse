@@ -95,3 +95,12 @@ class SafeDict(dict):
     def __missing__(self, key):
         return '{' + key + '}'
 
+def CurrentlyPrintingFileName(octoprintPrinter):
+		if(octoprintPrinter is not None):
+			current_job = octoprintPrinter.get_current_job()
+			if current_job is not None and "file" in current_job:
+				current_job_file = current_job["file"]
+				if "path" in current_job_file and "origin" in current_job_file:
+					current_file_path = current_job_file["path"]
+					return GetFilenameFromFullPath(current_file_path)
+		return ""

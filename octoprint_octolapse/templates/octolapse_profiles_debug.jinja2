@@ -1,0 +1,210 @@
+<script type="text/html" id="debug-template">
+  <div class="control-group">
+    <label class="control-label">Printer Profile Name:</label>
+    <div class="controls">
+      <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: enabled" title="Enable or disable all logging"/>Enabled Logging
+      </label>
+    </div>
+  </div>
+  <div data-bind="visible: enabled">
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: position_change" title="Log Position Changes"/>Log Position Changes
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind=" position_command_received" title="Log Position Commands"/>Log Position Commands
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: extruder_change" title="Log extruder state changes"/>Log extruder state changes
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_create" title="Log snapshot trigger creation"/>Log Snapshot Trigger Create
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_wait_state" title="Log snapshot trigger wait state"/>Log Snapshot Trigger Wait State
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_triggering" title="Log snapshot trigger is triggering"/>Log Snapshot Triggering
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_triggering_state" title="Log snapshot trigger state"/>Log Snapshtot Triggering State
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_layer_zmin_reached" title="Log ZMin Reached"/>Log ZMin Reached
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_layer_change" title="Log Layer Change"/>Log Layer Change
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_height_change" title="Log Height Change"/>Log Height Change
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_zhop" title="Log Zhop"/>Log Zhop
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_time_remaining" title="Log Trigger Time Remaining"/>Log Trigger Time Remaining
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: trigger_time_unpaused" title="Log Trigger Unpause"/>Log Trigger Unpause
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_gcode" title="Log Snapshot Gcode"/>Log Snapshot Gcode
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_gcode_endcommand" title="Log Snapshot Endcommand Status"/>Log Snapshot Gcode Endcommand Status
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_position" title="Log Snapshot Position"/>Log Snapshot Position
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_position_return" title="Log Snapshot Return Position"/>Log Snapshot Return Position
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_save" title="Log Snapshot Save"/>Log Snapshot Save
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_download" title="Log Snapshot Download"/>Log Snapshot Download
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: render_start" title="Log Rendering Start"/>Log Rendering Start
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: render_complete" title="Log Render Complete"/>Log Render Complete
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: render_fail" title="Log Render Failure"/>Log Render Failure
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: render_sync" title="Log Render Synchronization With Octoprint Timelapse Plugin"/>Log Render Synchronization With Octoprint Timelapse Plugin
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_clean" title="Log Cleaning of Snapshots"/>Log Cleaning of Snapshots
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: settings_save" title="Log Settings On Save"/>Log Settings On Save
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: settings_load" title="Log Settings On Save"/>Log Settings On Load
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: print_state_changed" title="Log Print State Changes"/>Log Print State Changes
+        </label>
+      </div>
+    </div>
+  </div>
+</script>
+
+
+

@@ -11,10 +11,6 @@ import sys
 import uuid
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
-
-
-
-
 class Printer(object):
 	
 	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
@@ -29,12 +25,23 @@ class Printer(object):
 		self.snapshot_command = snapshot_command
 		self.is_e_relative = is_e_relative
 		if(printer is not None):
-			self.Update(printer)
+			if(isinstance(printer,Printer)):
+				self.guid = printer.guid
+				self.name = printer.name
+				self.retract_length = printer.retract_length
+				self.retract_speed = printer.retract_speed
+				self.movement_speed = printer.movement_speed
+				self.z_hop = printer.z_hop
+				self.z_min = printer.z_min
+				self.snapshot_command = printer.snapshot_command
+				self.is_e_relative = printer.is_e_relative
+			else:
+				self.Update(printer)
 	def Update(self,changes):
-		if("guid" in changes):
+		if("guid" in changes.keys()):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
-			self.name = utility.getstring(changes["name"],self.guid)
+			self.name = utility.getstring(changes["name"],self.name)
 		if("retract_length" in changes.keys()):
 			self.retract_length = utility.getfloat(changes["retract_length"],self.retract_length)
 		if("retract_speed" in changes.keys()):
@@ -50,7 +57,7 @@ class Printer(object):
 		if("z_min" in changes.keys()):
 			self.z_min = utility.getfloat(changes["z_min"],self.z_min)
 
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
 		
 			'name'				: self.name,
@@ -135,8 +142,7 @@ class Stabilization(object):
 		if("z_movement_speed_mms" in changes.keys()):
 			self.z_movement_speed_mms = utility.getint(changes["z_movement_speed_mms"],self.z_movement_speed_mms)
 
-	
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
 			'name'					: self.name,
 			'guid'					: self.guid,
@@ -307,7 +313,7 @@ class Snapshot(object):
 		if("script_path" in changes.keys()):
 			self.script_path = utility.getstring(changes["script_path"],self.script_path)
 
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
 			'name'								: self.name,
 			'guid'								: self.guid,
@@ -381,7 +387,7 @@ class Rendering(object):
 		self.flip_v = False
 		self.rotate_90 = False
 		self.watermark = False
-		if(rendering is not None):
+		if(not rendering is None):
 			self.Update(rendering)
 	def Update(self, changes):
 		if("guid" in changes.keys()):
@@ -423,7 +429,7 @@ class Rendering(object):
 		if("watermark" in changes.keys()):
 			self.watermark = utility.getbool(changes["watermark"],self.watermark)
 
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
 				'guid'								: self.guid,
 				'name'								: self.name,
@@ -598,7 +604,7 @@ class Camera(object):
 		if("zoom_request_template" in changes.keys()):
 			self.zoom_request_template = utility.getstring(changes["zoom_request_template"],self.zoom_request_template)
 
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
 				'name'												: self.name,
 				'guid'												: self.guid,
@@ -650,9 +656,11 @@ class Camera(object):
 				'jpeg_quality_request_template'						: self.jpeg_quality_request_template,
 			}
 
-class DebugSettings(object):
+class DebugProfile(object):
 	Logger = None
-	def __init__(self,octoprintLogger,debug):
+	def __init__(self,octoprintLogger, debugProfile = None, guid = None, name = "Default Debug Profile"):
+		self.guid = guid if guid else str(uuid.uuid4())
+		self.name = name
 		self.Logger = octoprintLogger
 		self.Commands = Commands()
 		self.enabled = False
@@ -685,10 +693,14 @@ class DebugSettings(object):
 		self.settings_load = False
 		self.print_state_changed = False
 		self.camera_settings_apply = False
-		if(debug is not None):
-			self.Update(debug)
+		if(debugProfile is not None):
+			self.Update(debugProfile)
 			
 	def Update(self, changes):
+		if("guid" in changes.keys()):
+			self.guid = utility.getstring(changes["guid"],self.guid)
+		if("name" in changes.keys()):
+			self.name = utility.getstring(changes["name"],self.name)
 		if("enabled" in changes.keys()):
 			self.enabled = utility.getbool(changes["enabled"],self.enabled)
 		if("position_change" in changes.keys()):
@@ -744,13 +756,15 @@ class DebugSettings(object):
 		if("settings_save" in changes.keys()):
 			self.settings_save = utility.getbool(changes["settings_save"],self.settings_save)
 		if("settings_load" in changes.keys()):
-			self.settings_save = utility.getbool(changes["settings_load"],self.settings_save)
+			self.settings_load = utility.getbool(changes["settings_load"],self.settings_load)
 		if("print_state_changed" in changes.keys()):
 			self.print_state_changed = utility.getbool(changes["print_state_changed"],self.print_state_changed)
 		if("camera_settings_apply" in changes.keys()):
 			self.camera_settings_apply = utility.getbool(changes["camera_settings_apply"],self.camera_settings_apply)
-	def ToOctoprintSettings(self):
+	def ToDict(self):
 		return {
+				'name'						: self.name,
+				'guid'						: self.guid,
 				'enabled'					: self.enabled,
 				'position_change'			: self.position_change,
 				'position_command_received'	: self.position_command_received,
@@ -782,7 +796,6 @@ class DebugSettings(object):
 				'print_state_changed'		: self.print_state_changed,
 				'camera_settings_apply'		: self.camera_settings_apply
 			}
-
 	def LogInfo(self,message):
 		if(self.enabled):
 			self.Logger.info(message)
@@ -870,7 +883,6 @@ class DebugSettings(object):
 	def LogSnapshotClean(self,message):
 		if(self.snapshot_clean):
 			self.LogInfo(message)
-
 	def LogSettingsSave(self,message):
 		if(self.settings_save):
 			self.LogInfo(message)
@@ -918,39 +930,49 @@ class DebugSettings(object):
 							assert trigger.IsTriggered == layerTrigger
 						if(layerTriggerWait is not None):
 							assert trigger.IsWaiting == layerTriggerWait
+
 class OctolapseSettings(object):
+	Version = 1.0
 	DefaultPrinter = Printer(name="Default Printer", guid="88a173b1-0071-4d93-84fa-6662af279e5e");
 	DefaultStabilization = Stabilization(name="Default Stabilization", guid="2a0d92b3-6dc3-4d28-9564-8ecacec92412");
 	DefaultSnapshot = Snapshot(name="Default Snapshot", guid="fae0ca93-8c06-450e-a734-eb29426769ca");
 	DefaultRendering = Rendering(name="Default Rendering", guid="4257a753-bb4b-4c9f-9f2d-4032b4b2dc9a");
 	DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
-
+	DefaultDebugProfile = None;
+	Logger = None;
 	# constants
 	def __init__(self, octoprintLogger,settings=None):
+		self.Logger = octoprintLogger;
+		self.DefaultDebugProfile =DebugProfile(octoprintLogger = octoprintLogger, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.version = "0.1.0"
 		
 		self.is_octolapse_enabled = True
-		self.debug = DebugSettings(octoprintLogger,None)
+		
 
 		printer = self.DefaultPrinter
-		self.current_printer_guid = printer.guid
+		self.current_printer_profile_guid = printer.guid
 		self.printers = {printer.guid : printer}
 
 		stabilization = self.DefaultStabilization
-		self.current_stabilization_guid = stabilization.guid
+		self.current_stabilization_profile_guid = stabilization.guid
 		self.stabilizations = {stabilization.guid:stabilization}
 
 		snapshot = self.DefaultSnapshot
-		self.current_snapshot_guid = snapshot.guid
+		self.current_snapshot_profile_guid = snapshot.guid
 		self.snapshots = {snapshot.guid:snapshot}
 
 		rendering = self.DefaultRendering
-		self.current_rendering_guid = rendering.guid
+		self.current_rendering_profile_guid = rendering.guid
 		self.renderings = {rendering.guid:rendering}
 
 		camera = self.DefaultCamera
-		self.current_camera_guid = camera.guid
+		self.current_camera_profile_guid = camera.guid
 		self.cameras = {camera.guid:camera}
+
+		debugProfile = self.DefaultDebugProfile
+		self.current_debug_profile_guid = debugProfile.guid
+		self.debug_profiles = {debugProfile.guid:debugProfile}
+
 		if(settings is not None):
 			self.Update(settings)
 	
@@ -958,162 +980,108 @@ class OctolapseSettings(object):
 		if(len(self.stabilizations.keys()) == 0):
 			stabilization = Stabilization(None)
 			self.stabilizations[stabilization.guid] = stabilization
-			self.current_stabilization_guid = stabilization.guid
-		return self.stabilizations[self.current_stabilization_guid]
+			self.current_stabilization_profile_guid = stabilization.guid
+		return self.stabilizations[self.current_stabilization_profile_guid]
 	def CurrentSnapshot(self):
 		if(len(self.snapshots.keys()) == 0):
 			snapshot = Snapshot(None)
 			self.snapshots[snapshot.guid] = snapshot
-			self.current_snapshot_guid = snapshot.guid
-		return self.snapshots[self.current_snapshot_guid]
+			self.current_snapshot_profile_guid = snapshot.guid
+		return self.snapshots[self.current_snapshot_profile_guid]
 	def CurrentRendering(self):
 		if(len(self.renderings.keys()) == 0):
 			rendering = Rendering(None)
 			self.renderings[rendering.guid] = rendering
-			self.current_rendering_guid = rendering.guid
-		return self.renderings[self.current_rendering_guid]
+			self.current_rendering_profile_guid = rendering.guid
+		return self.renderings[self.current_rendering_profile_guid]
 	def CurrentPrinter(self):
 		if(len(self.printers.keys()) == 0):
-			printer = Printer(None)
+			printer = Printer(printer = None)
 			self.printers[printer.guid] = printer
-			self.current_printer_guid = printer.guid
-		return self.printers[self.current_printer_guid]
+			self.current_printer_profile_guid = printer.guid
+		return self.printers[self.current_printer_profile_guid]
 	def CurrentCamera(self):
 		if(len(self.cameras.keys()) == 0):
-			camera = Camera(None)
+			camera = Camera(camera = None)
 			self.cameras[camera.guid] = camera
-			self.current_camera_guid = camera.guid
-		return self.cameras[self.current_camera_guid]
-	
-
+			self.current_camera_profile_guid = camera.guid
+		return self.cameras[self.current_camera_profile_guid]
+	def CurrentDebugProfile(self):
+		if(len(self.debug_profiles.keys()) == 0):
+			debug_profile = DebugProfile(self.Logger, debug_profiles = None)
+			self.debug_profiles[debug_profile.guid] = debug_profile
+			self.current_debug_profile_guid = debug_profile.guid
+		return self.debug_profiles[self.current_debug_profile_guid]
 	def Update(self, changes):
-		
-		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
-		if (HasKey(changes,"current_printer_guid")) : self.current_printer_guid = str(GetValue(changes,"current_printer_guid",self.current_printer_guid))
-		if (HasKey(changes,"current_stabilization_guid"))  : self.current_stabilization_guid = str(GetValue(changes,"current_stabilization_guid",self.current_stabilization_guid))
-		if (HasKey(changes,"current_snapshot_guid")) : self.current_snapshot_guid = str(GetValue(changes,"current_snapshot_guid",self.current_snapshot_guid))
-		if (HasKey(changes,"current_rendering_guid"))  : self.current_rendering_guid = str(GetValue(changes,"current_rendering_guid",self.current_rendering_guid))
-		if (HasKey(changes,"current_camera_guid")) : self.current_camera_guid = str(GetValue(changes,"current_camera_guid",self.current_camera_guid))
-		if (HasKey(changes,"debug")) : self.debug.Update(GetValue(changes,"debug",None))
+			
 
-		if (HasKey(changes,"printers")):
-			print("Has Printers")
+		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
+		if (HasKey(changes,"current_printer_profile_guid")) : self.current_printer_profile_guid = str(GetValue(changes,"current_printer_profile_guid",self.current_printer_profile_guid))
+		if (HasKey(changes,"current_stabilization_profile_guid"))  : self.current_stabilization_profile_guid = str(GetValue(changes,"current_stabilization_profile_guid",self.current_stabilization_profile_guid))
+		if (HasKey(changes,"current_snapshot_profile_guid")) : self.current_snapshot_profile_guid = str(GetValue(changes,"current_snapshot_profile_guid",self.current_snapshot_profile_guid))
+		if (HasKey(changes,"current_rendering_profile_guid"))  : self.current_rendering_profile_guid = str(GetValue(changes,"current_rendering_profile_guid",self.current_rendering_profile_guid))
+		if (HasKey(changes,"current_camera_profile_guid")) : self.current_camera_profile_guid = str(GetValue(changes,"current_camera_profile_guid",self.current_camera_profile_guid))
+		if (HasKey(changes,"current_debug_profile_guid")) : self.current_debug_profile_guid = str(GetValue(changes,"current_debug_profile_guid",self.current_debug_profile_guid))
+
+		if(HasKey(changes,"printers")):
+			self.printers = {}
 			printers = GetValue(changes,"printers",None)
-			print("Printers:{0}".format(printers))
 			for printer in printers:
-				originalGuid = printer["guid"]
-				
-				if(printer["guid"].startswith("NewPrinterGuid_")):
-					print("Has New Guid")
+				if(printer["guid"] == ""):
 					printer["guid"] = str(uuid.uuid4())
-					if(originalGuid == self.current_printer_guid):
-						self.current_printer_guid = printer["guid"]
-						print("Changing current printer guid")
-					
-				if(printer["guid"] in self.printers):
-					print("Updating existin printer")
-					if(originalGuid != printer["guid"]):
-						self.printers[printer["guid"]] = self.printers.pop(originalGuid)
-					self.printers[printer["guid"]].Update(printer)
-				else:
-					print("Adding new printer: {0}".format(printer))
-					self.printers[printer["guid"]] = Printer(printer)
+				self.printers[printer["guid"]] = Printer(printer = printer)
 
 		if(HasKey(changes,"stabilizations")):
-			for stabilization in GetValue(changes,"stabilizations",None):
-				guid = stabilization["guid"]
-				if(guid.startswith("NewStabilizationGuid_")):
-					newGuid = str(uuid.uuid4())
-					if(guid == self.current_stabilization_guid):
-						self.current_stabilization_guid = newGuid
-					self.stabilizations[newGuid] = self.stabilizations.pop(guid)
-					guid = newGuid
-				if(guid in self.stabilizations):
-					self.stabilizations[guid].Update(stabilization)
-				else:
-					self.stabilizations[guid] = Stabilization(stabilization)
+			self.stabilizations = {}
+			stabilizations = GetValue(changes,"stabilizations",None)
+			for stabilization in stabilizations:
+				if(stabilization["guid"] == ""):
+					stabilization["guid"] = str(uuid.uuid4())
+				self.stabilizations[stabilization["guid"]] = Stabilization(stabilization = stabilization)
 
 		if(HasKey(changes,"snapshots")):
-			for snapshot in GetValue(changes,"snapshots",None):
-				guid = snapshot["guid"]
-				if(guid.startswith("NewSnapshotGuid_")):
-					newGuid = str(uuid.uuid4())
-					if(guid == self.current_snapshot_guid):
-						self.current_snapshot_guid = newGuid
-					self.snapshots[newGuid] = self.snapshots.pop(guid)
-					guid = newGuid
-				if(guid in self.snapshots):
-					self.snapshots[guid].Update(snapshot)
-				else:
-					self.snapshots[guid] = Snapshot(snapshot)
+			self.snapshots = {}
+			snapshots = GetValue(changes,"snapshots",None)
+			for snapshot in snapshots:
+				if(snapshot["guid"] == ""):
+					snapshot["guid"] = str(uuid.uuid4())
+				self.snapshots[snapshot["guid"]] = Snapshot(snapshot = snapshot)
 
 		if(HasKey(changes,"renderings")):
-			for rendering in GetValue(changes,"renderings",None):
-				guid = rendering["guid"]
-				if(guid.startswith("NewRenderingGuid_")):
-					newGuid = str(uuid.uuid4())
-					if(guid == self.current_rendering_guid):
-						self.current_rendering_guid = newGuid
-					self.renderings[newGuid] = self.renderings.pop(guid)
-					guid = newGuid
-				if(guid in self.renderings):
-					self.renderings[guid].Update(rendering)
+			renderings = GetValue(changes,"renderings",None)
+			for rendering in renderings:
+				originalRenderingGuid = rendering["guid"]
+				if(rendering["guid"].startswith("NewRenderingGuid_")):
+					rendering["guid"] = str(uuid.uuid4())
+					if(originalRenderingGuid == self.current_rendering_profile_guid):
+						self.current_rendering_profile_guid = rendering["guid"]
+				if(rendering["guid"] in self.renderings):
+					if(originalRenderingGuid != rendering["guid"]):
+						self.renderings[rendering["guid"]] = self.renderings.pop(originalRenderingGuid)
+					self.renderings[rendering["guid"]].Update(rendering)
 				else:
-					self.renderings[guid] = Rendering(rendering)
+					self.renderings[rendering["guid"]] = Rendering(rendering = rendering)
 
 		if(HasKey(changes,"cameras")):
-			for camera in GetValue(changes,"cameras",None):
-				guid = camera["guid"]
-				if(guid.startswith("NewCameraGuid_")):
-					newGuid = str(uuid.uuid4())
-					if(guid == self.current_camera_guid):
-						self.current_camera_guid = newGuid
-					self.cameras[newGuid] = self.cameras.pop(guid)
-					guid = newGuid
-				if(guid in self.cameras):
-					self.cameras[guid].Update(camera)
-				else:
-					self.cameras[guid] = Camera(camera)
-	def Save(self, settings):
+			self.cameras = {}
+			cameras = GetValue(changes,"cameras",None)
+			for camera in cameras:
+				if(camera["guid"] == ""):
+					camera["guid"] = str(uuid.uuid4())
+				self.cameras[camera["guid"]] = Camera(camera = camera)
+
+		if(HasKey(changes,"debug_profiles")):
+			self.debug_profiles = {}
+			debugProfiles = GetValue(changes,"debug_profiles",None)
+			for debugProfile in debugProfiles:
+				if(debugProfile["guid"] == ""):
+					debugProfile["guid"] = str(uuid.uuid4())
+				self.debug_profiles[debugProfile["guid"]] = DebugProfile(self.Logger, debugProfile = debugProfile)
+
+	def ToDict(self):
+		defaults = OctolapseSettings(self.CurrentDebugProfile().Logger)
 		
-		settings.set_boolean(["is_octolapse_enabled"], self.is_octolapse_enabled)
-		settings.set(["current_printer_guid"], self.current_printer_guid)
-		settings.set(["current_stabilization_guid"], self.current_stabilization_guid)
-		settings.set(["current_snapshot_guid"], self.current_snapshot_guid)
-		settings.set(["current_rendering_guid"], self.current_rendering_guid)
-		settings.set(["current_camera_guid"], self.current_camera_guid)
-		printers = []
-		for key, printer in self.printers.items():
-			printers.append(printer.ToOctoprintSettings())
-
-		settings.set(["printers"], printers);
-
-		stabilizations = []
-		for key, stabilization in self.stabilizations.items():
-			stabilizations.append(stabilization.ToOctoprintSettings())
-		settings.set(["stabilizations"], stabilizations);
-
-		snapshots = []
-		for key, snapshot in self.snapshots.items():
-			snapshots.append(snapshot.ToOctoprintSettings())
-		settings.set(["snapshots"], snapshots);
-
-		renderings = []
-		for key, rendering in self.renderings.items():
-			renderings.append(rendering.ToOctoprintSettings())
-		settings.set(["renderings"], renderings);
-
-		cameras = []
-		for key, camera in self.cameras.items():
-			cameras.append(camera.ToOctoprintSettings())
-		settings.set(["cameras"], cameras);
-
-		settings.set(["debug"], self.debug.ToOctoprintSettings());
-
-	def ToOctoprintSettings(self):
-		defaults = OctolapseSettings(self.debug.Logger)
-		
-		octoprintSettings = {
+		settingsDict = {
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			'stabilization_options' :
@@ -1134,52 +1102,121 @@ class OctolapseSettings(object):
 					,dict(value='.jpeg',name='jpeg',visible=False)
 					,dict(value='.bmp',name='bmp',visible=True)
 			],
-			'current_printer_guid' : utility.getstring(self.current_printer_guid,defaults.current_printer_guid),
+			'current_printer_profile_guid' : utility.getstring(self.current_printer_profile_guid,defaults.current_printer_profile_guid),
 			'printers' : [],
-			'current_stabilization_guid' : utility.getstring(self.current_stabilization_guid,defaults.current_stabilization_guid),
+			'current_stabilization_profile_guid' : utility.getstring(self.current_stabilization_profile_guid,defaults.current_stabilization_profile_guid),
 			'stabilizations' : [],
-			'current_snapshot_guid' : utility.getstring(self.current_snapshot_guid,defaults.current_snapshot_guid),
+			'current_snapshot_profile_guid' : utility.getstring(self.current_snapshot_profile_guid,defaults.current_snapshot_profile_guid),
 			'snapshots' : [],
-			'current_rendering_guid' : utility.getstring(self.current_rendering_guid,defaults.current_rendering_guid),
+			'current_rendering_profile_guid' : utility.getstring(self.current_rendering_profile_guid,defaults.current_rendering_profile_guid),
 			'renderings' : [],
-			'current_camera_guid' : utility.getstring(self.current_camera_guid,defaults.current_camera_guid),
-			'cameras'	: []
+			'current_camera_profile_guid' : utility.getstring(self.current_camera_profile_guid,defaults.current_camera_profile_guid),
+			'cameras'	: [],
+			'current_debug_profile_guid' : utility.getstring(self.current_debug_profile_guid,defaults.current_debug_profile_guid),
+			'debug_profiles'	: []
 		}
 		
 		for key,printer in self.printers.items():
-			octoprintSettings["printers"].append(printer.ToOctoprintSettings())
-
-		octoprintSettings["default_printer"] = defaults.CurrentPrinter().ToOctoprintSettings()
+			settingsDict["printers"].append(printer.ToDict())
+		settingsDict["default_printer_profile"] = self.DefaultPrinter.ToDict()
 
 		for key,stabilization in self.stabilizations.items():
-			octoprintSettings["stabilizations"].append(stabilization.ToOctoprintSettings())
-		octoprintSettings["default_stabilization"] = defaults.CurrentStabilization().ToOctoprintSettings()
+			settingsDict["stabilizations"].append(stabilization.ToDict())
+		settingsDict["default_stabilization_profile"] = self.DefaultStabilization.ToDict()
 
 		for key,snapshot in self.snapshots.items():
-			octoprintSettings["snapshots"].append(snapshot.ToOctoprintSettings())
-		octoprintSettings["default_snapshot"] = defaults.CurrentSnapshot().ToOctoprintSettings()
+			settingsDict["snapshots"].append(snapshot.ToDict())
+		settingsDict["default_snapshot_profile"] = self.DefaultSnapshot.ToDict()
 		
 		for key,rendering in self.renderings.items():
-			octoprintSettings["renderings"].append(rendering.ToOctoprintSettings())
-		octoprintSettings["default_rendering"] = defaults.CurrentRendering().ToOctoprintSettings()
+			settingsDict["renderings"].append(rendering.ToDict())
+		settingsDict["default_rendering_profile"] = self.DefaultRendering.ToDict()
 
 		for key,camera in self.cameras.items():
-			octoprintSettings["cameras"].append(camera.ToOctoprintSettings())
-		octoprintSettings["default_camera"] = defaults.CurrentCamera().ToOctoprintSettings()
+			settingsDict["cameras"].append(camera.ToDict())
+		settingsDict["default_camera_profile"] = self.DefaultCamera.ToDict()
 
-		octoprintSettings["debug"] = self.debug.ToOctoprintSettings()
-		octoprintSettings["debug_defaults"] = defaults.debug.ToOctoprintSettings()
+		for key,debugProfile in self.debug_profiles.items():
+			settingsDict["debug_profiles"].append(debugProfile.ToDict())
+		settingsDict["default_debug_profile"] = self.DefaultDebugProfile.ToDict()
 
-		return octoprintSettings
+		return settingsDict
 
+	#Add/Update/Remove/set current profile
+	def addUpdateProfile(self, profileType, profile):
+		# check the guid.  If it is null or empty, assign a new value.
+		guid = profile["guid"];
+		if(guid is None or guid == ""):
+			guid = str(uuid.uuid4());
+			profile["guid"] = guid
+		newProfile = None;
+
+		if(profileType == "Printer"):
+			newProfile = Printer(profile)
+			self.printers[guid] = newProfile
+		elif(profileType == "Stabilization"):
+			newProfile = Stabilization(profile)
+			self.stabilizations[guid] = newProfile
+		elif(profileType == "Snapshot"):
+			newProfile = Snapshot(profile)
+			self.snapshots[guid] = newProfile
+		elif(profileType == "Rendering"):
+			newProfile = Rendering(profile)
+			self.renderings[guid] = newProfile
+		elif(profileType == "Camera"):
+			newProfile = Camera(profile)
+			self.cameras[guid] = newProfile
+		elif(profileType == "Debug"):
+			newProfile = DebugProfile(self.Logger, debugProfile = profile)
+			self.debug_profiles[guid] = newProfile
+		else:
+			raise ValueError('An unknown profile type ' + str(profileType) + ' was received.')
+
+		return newProfile
+
+	def removeProfile(self, profileType, guid):
+
+		if(profileType == "Printer"):
+			del self.printers[guid];
+		elif(profileType == "Stabilization"):
+			del self.stabilizations[guid];
+		elif(profileType == "Snapshot"):
+			del self.snapshots[guid];
+		elif(profileType == "Rendering"):
+			del self.renderings[guid];
+		elif(profileType == "Camera"):
+			del self.cameras[guid];
+		elif(profileType == "Debug"):
+			del self.debug_profiles[guid];
+		else:
+			raise ValueError('An unknown profile type ' + str(profileType) + ' was received.')
+
+	def setCurrentProfile(self, profileType, guid):
+		
+		if(profileType == "Printer"):
+			self.current_printer_profile_guid = guid;
+		elif(profileType == "Stabilization"):
+			self.current_stabilization_profile_guid = guid;
+		elif(profileType == "Snapshot"):
+			self.current_snapshot_profile_guid = guid;
+		elif(profileType == "Rendering"):
+			self.current_rendering_profile_guid = guid;
+		elif(profileType == "Camera"):
+			self.current_camera_profile_guid = guid;
+		elif(profileType == "Debug"):
+			self.current_debug_profile_guid = guid;
+		else:
+			raise ValueError('An unknown profile type ' + str(profileType) + ' was received.')
+		
 def HasKey(object,key):
 	if(isinstance(object,dict)):
 		return key in object
 	elif(isinstance(object,PluginSettings)):
 		return object.has([key])
+
 def GetValue(object,key,default=None):
 	if(isinstance(object,dict) and key in object):
-		return key in object
+		return object[key]
 	elif(isinstance(object,PluginSettings) and object.has([key])):
 		return object.get([key])
 	else:

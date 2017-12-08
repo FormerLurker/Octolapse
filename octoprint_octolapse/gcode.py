@@ -304,7 +304,7 @@ class Gcode(object):
 	CurrentYPathIndex = 0
 	def __init__(self,octolapseSettings,octoprint_printer_profile):
 		self.Settings = octolapseSettings
-		self.Debug = octolapseSettings.debug
+		
 		self.Stabilization = self.Settings.CurrentStabilization()
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.Printer = self.Settings.CurrentPrinter()
@@ -320,7 +320,7 @@ class Gcode(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XFixedPath:{2}".format(type,value,self.Stabilization.x_fixed_path))
+			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XFixedPath:{2}".format(type,value,self.Stabilization.x_fixed_path))
 			self.XFixedPath = ["0"]
 
 		try:
@@ -328,7 +328,7 @@ class Gcode(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YFixedPath:{2}".format(type,value,self.Stabilization.y_fixed_path))
+			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YFixedPath:{2}".format(type,value,self.Stabilization.y_fixed_path))
 			self.YFixedPath = ["0"]
 
 		try:
@@ -336,7 +336,7 @@ class Gcode(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XRelativePath:{2}".format(type,value,self.Stabilization.x_relative_path))
+			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XRelativePath:{2}".format(type,value,self.Stabilization.x_relative_path))
 			self.XRelativePath = ["0"]
 
 		try:
@@ -344,7 +344,7 @@ class Gcode(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Debug.LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YRelativePath:{2}".format(type,value,self.Stabilization.y_relative_path))
+			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YRelativePath:{2}".format(type,value,self.Stabilization.y_relative_path))
 			self.YRelativePath = ["0"]
 
 	def GetBedRelativeX(self,percent):

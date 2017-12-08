@@ -1,0 +1,65 @@
+<script type="text/html" id="printer-template">
+  <div class="control-group">
+    <label class="control-label">Printer Profile Name:</label>
+    <div class="controls">
+      <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Retraction Length</label>
+    <div class="controls">
+      <input name="retract_length" type="number" class="form-input span2" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+
+  </div>
+  <div class="control-group">
+    <label class="control-label">Retraction Speed</label>
+
+    <div class="controls">
+      <input name="retract_speed" type="number" class="form-input span2" data-bind="value: retract_speed" step="10" min="10" max="9999999" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Movement Speed</label>
+    <div class="controls">
+      <input name="movement_speed" type="number" class="form-input span2" data-bind="value: movement_speed" step="10" min="10" max="9999999" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Z-Hop</label>
+    <div class="controls">
+      <input name="z_hop" type="number" class="form-input span2" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+
+  </div>
+  <div class="control-group">
+    <label class="control-label">Snapshot Command</label>
+    <div class="controls">
+      <input name="snapshot_command" type="text" class="form-input span2" data-bind="value: snapshot_command" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input name="is_e_relative" class="form-input" type="checkbox" data-bind="checked: is_e_relative" />Extruder is always relative
+        <div class="error_label_container text-error" ></div>
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Minimum Z-Height Before position tracking begins</label>
+    <div class="controls">
+      <input name="z_min" type="number" class="form-input span2" data-bind="value: z_min" step="0.05" min="0.0" max="9999990.0" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+</script>
+
+
+

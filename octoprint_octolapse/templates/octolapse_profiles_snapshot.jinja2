@@ -1,0 +1,277 @@
+<script type="text/html" id="snapshot-template">
+  <input type="hidden"  data-bind="value : guid" />
+  <div class="control-group">
+    <label class="control-label">Snapshot Profile Name</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: name"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div>
+    <label class="control-label">Snapshot On Gcode</label>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_trigger_enabled" />Enabled
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop" />Trigger only on ZHop
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
+      <div class="controls">
+        <small>
+          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
+            <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
+          </a>
+        </small>
+      </div>
+
+      <div id="trigger_gcode_advanced" class="hide">
+        <div class="control-group">
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding" />Trigger On Extruding
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_extruding_start" />Trigger On Extruding Start
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_primed"/>Trigger On Extruder Primed
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_retracting" />Trigger On Filament Retract
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_retracted" />Trigger On Filament Retracted
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: gcode_trigger_on_detracting" />Trigger On Filament Detracting
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div>
+    <label class="control-label">Timer Trigger:</label>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: timer_trigger_enabled" />Enabled
+        </label>
+      </div>
+      <div class="control-group" data-bind="visible: timer_trigger_enabled">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_require_zhop" />Trigger only on ZHop
+          </label>
+        </div>
+      </div>
+      <div class="control-group" data-bind="visible: timer_trigger_enabled">
+        <label class="control-label">Seconds to Trigger</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: timer_trigger_seconds"/>
+          <div class="error_label_container text-error" ></div>
+          <small>
+            <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
+              <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
+            </a>
+          </small>
+        </div>
+      </div>
+    </div>
+    <div id="trigger_timer_advanced" class="hide">
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_extruding" />Trigger On Extruding
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_extruding_start" />Trigger On Extruding Start
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_primed"/>Trigger On Extruder Primed
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_retracting" />Trigger On Filament Retract
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_retracted" />Trigger On Filament Retracted
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_on_detracting" />Trigger On Filament Detracting
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <label class="control-label">Layer/Height Trigger:</label>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_enabled" />Enabled
+        </label>
+      </div>
+      <div class="control-group" data-bind="visible: layer_trigger_enabled">
+        <div class="control-group">
+          <label class="control-label">Trigger Height (0 for trigger at layer change)</label>
+          <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: layer_trigger_height"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" data-bind="checked: layer_trigger_require_zhop" />Trigger only on ZHop
+            </label>
+          </div>
+        </div>
+        <div class="controls">
+          <small>
+            <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_height_advanced.hide' }">
+              <i class="fa fa-caret-right"></i> {{ _('Advanced Layer/Height Trigger Options') }}
+            </a>
+          </small>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="trigger_height_advanced" class="hide">
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_extruding" />Trigger On Extruding
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_extruding_start" />Trigger On Extruding Start
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_primed"/>Trigger On Extruder Primed
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_retracting" />Trigger On Filament Retract
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_retracted" />Trigger On Filament Retracted
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: layer_trigger_on_detracting" />Trigger On Filament Detracting
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Delay (Milliseconds) before taking a snapshot</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: delay"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <small>
+      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
+        <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
+      </a>
+    </small>
+  </div>
+  <div id="snapshot_trigger_advanced" class="control-group hide">
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: retract_before_move" />If not retracted, retract before move
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: custom_script_enabled" />Custom Script Enabled
+          <span class="help-inline">
+            <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">A custom script that will capture a snapshot (full path)</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: script_path"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" >Output File Format</label>
+      <div class="controls">
+        <select data-bind="value: output_format">
+          <option value="jpg">jpg</option>
+          <option value="gif">gif</option>
+          <option value="bmp">bmp</option>
+        </select>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Output File Name</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: output_filename"/>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+        </span>
+      </div>
+
+    </div>
+    <div class="control-group">
+      <label class="control-label">Output File Directory</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: output_directory"/>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+        </span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Delete Snapshots Files:</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_before_print" title="Before Print Starts"/>Before Print Starts
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_after_print" title="After Print Completes"/>After Print Completes
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_after_fail" title="After Print Failed"/>After Print Failed
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_after_render_complete" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: cleanup_after_render_fail" title="After Timelapse Is Rendered"/>After Timelaps Rendering Fails
+        </label>
+      </div>
+    </div>
+  </div>
+
+</script>
+
+
+

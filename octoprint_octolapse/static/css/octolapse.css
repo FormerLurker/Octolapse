@@ -2,7 +2,10 @@
     margin-left: 0px;
 }
 
-
+a.disabled {
+    color: #ccc;
+    cursor: default;
+}
 .panel {
     margin-bottom: 20px;
     background-color: #fff;
@@ -11,7 +14,62 @@
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
+#octolapse_add_edit_profile_form{
+    margin:0;
+}
+#octolapse_add_edit_profile_dialog .alert {
+    margin: 5px 0px;
+    padding: 5px;
+}
 
+#octolapse_add_edit_profile_dialog .modal-footer {
+    padding: 9px 10px 10px;
+}
+
+#octolapse_add_edit_profile_dialog .modal-body {
+    padding: 5px 15px;
+}
+
+#octolapse_add_edit_profile_dialog .row-fluid [class*="span"] {
+    text-align: left;
+}
+#octolapse_add_edit_profile_dialog div.checked {
+    display: none;
+}
+#octolapse_add_edit_profile_dialog input[type=number] {
+    text-align: left;
+}
+
+.shake {
+    -webkit-animation: shakeIt 0.25s linear 4;
+    -moz-animation: shakeIt 0.25s linear 4;
+    -ms-animation: shakeIt 0.25s linear 4;
+    -o-animation: shakeIt 0.25s linear 4;
+    animation: shakeIt 0.25s linear 4;
+    border-color: #C00;
+}
+
+@keyframes shakeIt {
+    0% {
+        transform: translateX(0px);
+    }
+
+    25% {
+        transform: translateX(10px);
+    }
+
+    75% {
+        transform: translateX(-10px);
+    }
+
+    100% {
+        transform: translateX(0px);
+    }
+}
+
+input.error {
+    border-color: #f39c12;
+}
 @-webkit-keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -28,8 +86,6 @@
     -webkit-animation: fadeOut 1s;
     animation: fadeOut 1s;
 }
-
-
 #octolapse_settings .toggle-on {
     display: block;
     -webkit-animation: fadeIn 1s;

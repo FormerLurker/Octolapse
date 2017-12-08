@@ -1,571 +1,366 @@
-
-$(function () {
-    function OctolapseSettingsViewModel(parameters) {
+var Octolapse;
+$(function() {
+    Octolapse.SettingsViewModel = function(parameters) {
+        // Create a reference to this object
         var self = this;
-        self.global_settings = parameters[0];
+        // Add this object to our Octolapse namespace
+        Octolapse.Settings = this;
+        // Create an empty add/edit profile so that the initial binding to the empty template works without errors.
+        Octolapse.Settings.AddEditProfile = ko.observable({ "templateName": "empty-template", "profileObservable": ko.observable() });
+        // Assign the Octoprint settings to our namespace
+        Octolapse.Settings.global_settings = parameters[0];
+        // Create other observables
+        Octolapse.Settings.is_octolapse_enabled = ko.observable();
 
-        self.is_octolapse_enabled = ko.observable();
-
-        self.current_printer_guid = ko.observable();
-        self.current_printer = ko.observable();
-
-        self.newPrinterNumber = 0;
-
-        self.current_stabilization_guid = ko.observable();
-        self.stabilizations = ko.observableArray();
-        self.newStabilizationNumber = 0;
-
-        self.current_snapshot_guid = ko.observable();
-        self.snapshots = ko.observableArray();
-        self.newSnapshotNumber = 0;
-
-        self.current_rendering_guid = ko.observable();
-        self.renderings = ko.observableArray();
-        self.newRenderingNumber = 0;
-
-        self.current_camera_guid = ko.observable();
-        self.cameras = ko.observableArray();
-        self.newCameraNumber = 0;
-
-        self.default_printer = ko.observable();
-
-        self.default_stabilization = ko.observable();
-        self.default_snapshot = ko.observable();
-        self.default_rendering = ko.observable();
-        self.default_camera = ko.observable();
-
-
-        self.onBeforeBinding = function () {
+        // Called before octoprint binds the viewmodel to the plugin
+        self.onBeforeBinding = function() {
+            // Assign values to each observable
             self.settings = self.global_settings.settings.plugins.octolapse;
-            self.is_octolapse_enabled(self.settings.is_octolapse_enabled);
-            self.current_printer_guid(self.settings.current_printer_guid);
-            self.current_printer(self.currentPrinter());
-            self.current_stabilization_guid(self.settings.current_stabilization_guid);
-            self.current_snapshot_guid(self.settings.current_snapshot_guid);
-            self.current_rendering_guid(self.settings.current_rendering_guid);
-            self.current_camera_guid(self.settings.current_camera_guid);
+            console.log("is_octolapse_enabled");
+            Octolapse.Settings.is_octolapse_enabled(self.settings.is_octolapse_enabled());
+            Octolapse.apiKey = self.global_settings.settings.api.key();
 
-            self.default_printer(self.settings.default_printer);
-            self.default_stabilization(self.settings.default_stabilization);
-            self.default_snapshot(self.settings.default_snapshot);
-            self.default_rendering(self.settings.default_rendering);
-            self.default_camera(self.settings.default_camera);
+            /*
+                Create our printers view model
+            */
+            console.log(self.settings.printers);
+            var printerSettings =
+                {
+                    'current_profile_guid': self.settings.current_printer_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.printers)
+                    , 'default_profile': ko.toJS(self.settings.default_printer_profile)
+                    , 'profileOptions': { 'printer_options': ko.observable()}
+                    , 'profileViewModelCreateFunction': Octolapse.PrinterProfileViewModel
+                    , 'profileValidationRules': Octolapse.PrinterProfileValidationRules
+                    , 'bindingElementId': 'octolapse_printer_tab'
+                    , 'addEditTemplateName': 'printer-template'
+                    , 'profileTypeName': 'Printer'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            console.log(printerSettings);
+            Octolapse.Printers = new Octolapse.ProfilesViewModel(printerSettings);
 
-            //self.printers(self.settings.printers);
-            self.stabilizations(self.settings.stabilizations);
-            self.snapshots(self.settings.snapshots);
-            self.renderings(self.settings.renderings);
-            self.cameras(self.settings.cameras);
+            var stabilizationSettings =
+                {
+                    'current_profile_guid': self.settings.current_stabilization_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.stabilizations)
+                    , 'default_profile': ko.toJS(self.settings.default_stabilization_profile)
+                    , 'profileOptions': { 'stabilization_options': self.settings.stabilization_options }
+                    , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
+                    , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
+                    , 'bindingElementId': 'octolapse_stabilization_tab'
+                    , 'addEditTemplateName': 'stabilization-template'
+                    , 'profileTypeName': 'Stabilization'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
+
+            var snapshotSettings =
+                {
+                    'current_profile_guid': self.settings.current_snapshot_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.snapshots)
+                    , 'default_profile': ko.toJS(self.settings.default_snapshot_profile)
+                    , 'profileOptions': { 'snapshot_options': self.settings.snapshot_options }
+                    , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
+                    , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
+                    , 'bindingElementId': 'octolapse_snapshot_tab'
+                    , 'addEditTemplateName': 'snapshot-template'
+                    , 'profileTypeName': 'Snapshot'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            Octolapse.Snapshots = new Octolapse.ProfilesViewModel(snapshotSettings);
+
+            var renderingSettings =
+                {
+                    'current_profile_guid': self.settings.current_rendering_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.renderings)
+                    , 'default_profile': ko.toJS(self.settings.default_rendering_profile)
+                    , 'profileOptions': { 'rendering_options': self.settings.rendering_options }
+                    , 'profileViewModelCreateFunction': Octolapse.RenderingProfileViewModel
+                    , 'profileValidationRules': Octolapse.RenderingProfileValidationRules
+                    , 'bindingElementId': 'octolapse_rendering_tab'
+                    , 'addEditTemplateName': 'rendering-template'
+                    , 'profileTypeName': 'Rendering'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            Octolapse.Renderings = new Octolapse.ProfilesViewModel(renderingSettings);
+
+            var cameraSettings =
+                {
+                    'current_profile_guid': self.settings.current_camera_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.cameras)
+                    , 'default_profile': ko.toJS(self.settings.default_camera_profile)
+                    , 'profileOptions': { 'camera_options': self.settings.camera_options }
+                    , 'profileViewModelCreateFunction': Octolapse.CameraProfileViewModel
+                    , 'profileValidationRules': Octolapse.CameraProfileValidationRules
+                    , 'bindingElementId': 'octolapse_camera_tab'
+                    , 'addEditTemplateName': 'camera-template'
+                    , 'profileTypeName': 'Camera'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            Octolapse.Cameras = new Octolapse.ProfilesViewModel(cameraSettings);
+            
+            var debugSettings =
+                {
+                    'current_profile_guid': self.settings.current_debug_profile_guid()
+                    , 'profiles': ko.toJS(self.settings.debug_profiles)
+                    , 'default_profile': ko.toJS(self.settings.default_debug_profile)
+                    , 'profileOptions': { 'debug_profile_options': self.settings.debug_profile_options }
+                    , 'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel
+                    , 'profileValidationRules': Octolapse.DebugProfileValidationRules
+                    , 'bindingElementId': 'octolapse_debug_tab'
+                    , 'addEditTemplateName': 'debug-template'
+                    , 'profileTypeName': 'Debug'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            console.log(debugSettings);
+            Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
         }
-        self.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (predicate.call(predicateOwner, array[i])) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        self.currentPrinter = function () {
-            var guid = this.global_settings.settings.plugins.octolapse.current_printer_guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.printers(),
-                function (item) {
-                    return item.guid() === guid;
-                }
-            );
-            return this.global_settings.settings.plugins.octolapse.printers()[index];
-        }
-        self.copyCurrentPrinter = function () {
-            var currentPrinter = self.currentPrinter();
-            self.newPrinterNumber++;
-            var newGuid = "NewPrinterGuid_" + (self.newPrinterNumber);
-
-            self.global_settings.settings.plugins.octolapse.printers.push({
-                name: ko.observable("New Printer" +
-                    + (self.newPrinterNumber)),
-                guid: ko.observable(newGuid),
-                retract_length: ko.observable(currentPrinter.retract_length()),
-                retract_speed: ko.observable(currentPrinter.retract_speed()),
-                movement_speed: ko.observable(currentPrinter.movement_speed()),
-                is_e_relative: ko.observable(currentPrinter.is_e_relative()),
-                z_hop: ko.observable(currentPrinter.z_hop()),
-                z_min: ko.observable(currentPrinter.z_min()),
-                snapshot_command: ko.observable(currentPrinter.snapshot_command())
-            });
-            self.settings.current_printer_guid(newGuid);
-        };
-        self.resetCurrentPrinter = function () {
-            var printer = self.currentPrinter();
-            var defaultPrinter = this.global_settings.settings.plugins.octolapse.default_printer;
-            //Set default values
-            printer.retract_length(defaultPrinter.retract_length());
-            printer.retract_speed(defaultPrinter.retract_speed());
-            printer.movement_speed(defaultPrinter.movement_speed());
-            printer.is_e_relative(defaultPrinter.is_e_relative());
-            printer.z_hop(defaultPrinter.z_hop());
-            printer.z_min(defaultPrinter.z_min());
-            printer.snapshot_command(defaultPrinter.snapshot_command());
-        };
-        self.removeCurrentPrinter = function () {
-
-            if (self.global_settings.settings.plugins.octolapse.printers().length <= 1) {
-                alert("You may not delete the last active printer");
+        /*
+            Show and hide the settings tabs based on the enabled parameter
+        */
+        self.toggleOctolapseEnabled = function(enabled) {
+            isEnabled = enabled();
+            if (isEnabled == null) {
                 return;
             }
+            $settings = $('#octolapse_settings');
+            $settings.hide();
+            data = JSON.stringify({ "enabled": isEnabled });
+            console.log(data);
+            $.ajax({
+                url: "/plugin/octolapse/setEnabled",
+                type: "POST",
+                data: data,
+                headers: { 'X-Api-Key': Octolapse.apiKey },
+                contentType: "application/json",
+                dataType: "json",
+                success: function(data) {
+                    console.log("return data from setEnabled:")
 
-            self.global_settings.settings.plugins.octolapse.printers.remove(self.currentPrinter());
-            self.global_settings.settings.plugins.octolapse.current_printer_guid(
-                self.global_settings.settings.plugins.octolapse.printers()[0].guid);
-
-        };
-
-        self.currentStabilization = function () {
-            var guid = this.global_settings.settings.plugins.octolapse.current_stabilization_guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.stabilizations(),
-                function (item) {
-                    return item.guid() === guid;
+                    $settings = $('#octolapse_settings');
+                    if (data.enabled)
+                        $settings.show();
+                    else
+                        $settings.hide();
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to enable/disable octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
-            );
-            return this.global_settings.settings.plugins.octolapse.stabilizations()[index];
-        }
-        self.copyCurrentStabilization = function () {
-            var currentStabilization = self.currentStabilization();
-            self.newStabilizationNumber++;
-            var newGuid = "NewStabilizationGuid_" + (self.newStabilizationNumber);
-
-            self.global_settings.settings.plugins.octolapse.stabilizations.push({
-                name: ko.observable("New Stabilization" +
-                    + (self.newStabilizationNumber)),
-                guid: ko.observable(newGuid),
-                x_movement_speed: ko.observable(currentStabilization.x_movement_speed()),
-                x_type: ko.observable(currentStabilization.x_type()),
-                x_fixed_coordinate: ko.observable(currentStabilization.x_fixed_coordinate()),
-                x_fixed_path: ko.observable(currentStabilization.x_fixed_path()),
-                x_fixed_path_loop: ko.observable(currentStabilization.x_fixed_path_loop()),
-                x_relative: ko.observable(currentStabilization.x_relative()),
-                x_relative_print: ko.observable(currentStabilization.x_relative_print()),
-                x_relative_path: ko.observable(currentStabilization.x_relative_path()),
-                x_relative_path_loop: ko.observable(currentStabilization.x_relative_path_loop()),
-                y_movement_speed_mms: ko.observable(currentStabilization.y_movement_speed_mms()),
-                y_type: ko.observable(currentStabilization.y_type()),
-                y_fixed_coordinate: ko.observable(currentStabilization.y_fixed_coordinate()),
-                y_fixed_path: ko.observable(currentStabilization.y_fixed_path()),
-                y_fixed_path_loop: ko.observable(currentStabilization.y_fixed_path_loop()),
-                y_relative: ko.observable(currentStabilization.y_relative()),
-                y_relative_print: ko.observable(currentStabilization.y_relative_print()),
-                y_relative_path: ko.observable(currentStabilization.y_relative_path()),
-                y_relative_path_loop: ko.observable(currentStabilization.y_relative_path_loop()),
-                z_movement_speed_mms: ko.observable(currentStabilization.z_movement_speed_mms())
-            });
-            self.settings.current_stabilization_guid(newGuid);
-        };
-        self.resetCurrentStabilization = function () {
-            var currentStabilization = self.currentStabilization();
-            var defaultStabilization = this.global_settings.settings.plugins.octolapse.default_stabilization;
-
-            currentStabilization.x_movement_speed(defaultStabilization.x_movement_speed());
-            currentStabilization.x_type(defaultStabilization.x_type());
-            currentStabilization.x_fixed_coordinate(defaultStabilization.x_fixed_coordinate());
-            currentStabilization.x_fixed_path(defaultStabilization.x_fixed_path());
-            currentStabilization.x_fixed_path_loop(defaultStabilization.x_fixed_path_loop());
-            currentStabilization.x_relative(defaultStabilization.x_relative());
-            currentStabilization.x_relative_print(defaultStabilization.x_relative_print());
-            currentStabilization.x_relative_path(defaultStabilization.x_relative_path());
-            currentStabilization.x_relative_path_loop(defaultStabilization.x_relative_path_loop());
-            currentStabilization.y_movement_speed_mms(defaultStabilization.y_movement_speed_mms());
-            currentStabilization.y_type(defaultStabilization.y_type());
-            currentStabilization.y_fixed_coordinate(defaultStabilization.y_fixed_coordinate());
-            currentStabilization.y_fixed_path(defaultStabilization.y_fixed_path());
-            currentStabilization.y_fixed_path_loop(defaultStabilization.y_fixed_path_loop());
-            currentStabilization.y_relative(defaultStabilization.y_relative());
-            currentStabilization.y_relative_print(defaultStabilization.y_relative_print());
-            currentStabilization.y_relative_path(defaultStabilization.y_relative_path());
-            currentStabilization.y_relative_path_loop(defaultStabilization.y_relative_path_loop());
-            currentStabilization.z_movement_speed_mms(defaultStabilization.z_movement_speed_mms());
-
-        };
-        self.removeCurrentStabilization = function () {
-
-            if (self.global_settings.settings.plugins.octolapse.stabilizations().length <= 1) {
-                alert("You may not delete the last active stabilization");
-                return;
-            }
-            var currentStabilization = self.currentStabilization();
-            self.global_settings.settings.plugins.octolapse.stabilizations.remove(currentStabilization);
-            self.global_settings.settings.plugins.octolapse.current_stabilization_guid(
-                self.global_settings.settings.plugins.octolapse.stabilizations()[0].guid);
-        };
-
-        self.currentSnapshot = function () {
-            var guid = this.global_settings.settings.plugins.octolapse.current_snapshot_guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.snapshots(),
-                function (item) {
-                    return item.guid() === guid;
-                }
-            );
-            return this.global_settings.settings.plugins.octolapse.snapshots()[index];
-        }
-        self.copyCurrentSnapshot = function () {
-            var currentSnapshot = self.currentSnapshot();
-            self.newSnapshotNumber++;
-            var newGuid = "NewSnapshotGuid_" + (self.newSnapshotNumber);
-
-            self.global_settings.settings.plugins.octolapse.snapshots.push({
-                name: ko.observable("New Snapshot" +
-                    + (self.newSnapshotNumber)),
-                guid: ko.observable(newGuid),
-                gcode_trigger_enabled: ko.observable(currentSnapshot.gcode_trigger_enabled()),
-                gcode_trigger_require_zhop: ko.observable(currentSnapshot.gcode_trigger_require_zhop()),
-                gcode_trigger_on_extruding: ko.observable(currentSnapshot.gcode_trigger_on_extruding()),
-                gcode_trigger_on_extruding_start: ko.observable(currentSnapshot.gcode_trigger_on_extruding_start()),
-                gcode_trigger_on_primed: ko.observable(currentSnapshot.gcode_trigger_on_primed()),
-                gcode_trigger_on_retracting: ko.observable(currentSnapshot.gcode_trigger_on_retracting()),
-                gcode_trigger_on_retracted: ko.observable(currentSnapshot.gcode_trigger_on_retracted()),
-                gcode_trigger_on_detracting: ko.observable(currentSnapshot.gcode_trigger_on_detracting()),
-
-                timer_trigger_enabled: ko.observable(currentSnapshot.timer_trigger_enabled()),
-                timer_trigger_seconds: ko.observable(currentSnapshot.timer_trigger_seconds()),
-                timer_trigger_require_zhop: ko.observable(currentSnapshot.timer_trigger_require_zhop()),
-                timer_trigger_on_extruding: ko.observable(currentSnapshot.timer_trigger_on_extruding()),
-                timer_trigger_on_extruding_start: ko.observable(currentSnapshot.timer_trigger_on_extruding_start()),
-                timer_trigger_on_primed: ko.observable(currentSnapshot.timer_trigger_on_primed()),
-                timer_trigger_on_retracting: ko.observable(currentSnapshot.timer_trigger_on_retracting()),
-                timer_trigger_on_retracted: ko.observable(currentSnapshot.timer_trigger_on_retracted()),
-                timer_trigger_on_detracting: ko.observable(currentSnapshot.timer_trigger_on_detracting()),
-
-                layer_trigger_enabled: ko.observable(currentSnapshot.layer_trigger_enabled()),
-                layer_trigger_height: ko.observable(currentSnapshot.layer_trigger_height()),
-                layer_trigger_require_zhop: ko.observable(currentSnapshot.layer_trigger_require_zhop()),
-                layer_trigger_on_extruding: ko.observable(currentSnapshot.layer_trigger_on_extruding()),
-                layer_trigger_on_extruding_start: ko.observable(currentSnapshot.layer_trigger_on_extruding_start()),
-                layer_trigger_on_primed: ko.observable(currentSnapshot.layer_trigger_on_primed()),
-                layer_trigger_on_retracting: ko.observable(currentSnapshot.layer_trigger_on_retracting()),
-                layer_trigger_on_retracted: ko.observable(currentSnapshot.layer_trigger_on_retracted()),
-                layer_trigger_on_detracting: ko.observable(currentSnapshot.layer_trigger_on_detracting()),
-
-                archive: ko.observable(currentSnapshot.archive()),
-                delay: ko.observable(currentSnapshot.delay()),
-                retract_before_move: ko.observable(currentSnapshot.retract_before_move()),
-                output_format: ko.observable(currentSnapshot.output_format()),
-                output_filename: ko.observable(currentSnapshot.output_filename()),
-                output_directory: ko.observable(currentSnapshot.output_directory()),
-                cleanup_before_print: ko.observable(currentSnapshot.cleanup_before_print()),
-                cleanup_after_print: ko.observable(currentSnapshot.cleanup_after_print()),
-                cleanup_after_cancel: ko.observable(currentSnapshot.cleanup_after_cancel()),
-                cleanup_after_fail: ko.observable(currentSnapshot.cleanup_after_fail()),
-                cleanup_before_close: ko.observable(currentSnapshot.cleanup_before_close()),
-                cleanup_after_render_complete: ko.observable(currentSnapshot.cleanup_after_render_complete()),
-                cleanup_after_render_fail: ko.observable(currentSnapshot.cleanup_after_render_fail()),
-                custom_script_enabled: ko.observable(currentSnapshot.custom_script_enabled()),
-                script_path: ko.observable(currentSnapshot.script_path())
-            });
-            self.settings.current_snapshot_guid(newGuid);
-        };
-        self.removeCurrentSnapshot = function (definition) {
-            if (self.global_settings.settings.plugins.octolapse.snapshots().length <= 1) {
-                alert("You may not delete the last active snapshot");
-                return;
-            }
-            var currentSnapshot = self.currentSnapshot();
-            self.global_settings.settings.plugins.octolapse.snapshots.remove(currentSnapshot);
-            self.global_settings.settings.plugins.octolapse.current_snapshot_guid(
-                self.global_settings.settings.plugins.octolapse.snapshots()[0].guid);
-        };
-        self.resetCurrentSnapshot = function (definition) {
-            var currentSnapshot = self.currentSnapshot();
-            var defaultSnapshot = this.global_settings.settings.plugins.octolapse.default_snapshot;
-
-            currentSnapshot.gcode_trigger_enabled(defaultSnapshot.gcode_trigger_enabled());
-            currentSnapshot.gcode_trigger_require_zhop(defaultSnapshot.gcode_trigger_require_zhop());
-            currentSnapshot.gcode_trigger_on_extruding(defaultSnapshot.gcode_trigger_on_extruding());
-            currentSnapshot.gcode_trigger_on_extruding_start(defaultSnapshot.gcode_trigger_on_extruding_start());
-            currentSnapshot.gcode_trigger_on_primed(defaultSnapshot.gcode_trigger_on_primed());
-            currentSnapshot.gcode_trigger_on_retracting(defaultSnapshot.gcode_trigger_on_retracting());
-            currentSnapshot.gcode_trigger_on_retracted(defaultSnapshot.gcode_trigger_on_retracted());
-            currentSnapshot.gcode_trigger_on_detracting(defaultSnapshot.gcode_trigger_on_detracting());
-            currentSnapshot.timer_trigger_enabled(defaultSnapshot.timer_trigger_enabled());
-            currentSnapshot.timer_trigger_seconds(defaultSnapshot.timer_trigger_seconds());
-            currentSnapshot.timer_trigger_require_zhop(defaultSnapshot.timer_trigger_require_zhop());
-            currentSnapshot.timer_trigger_on_extruding(defaultSnapshot.timer_trigger_on_extruding());
-            currentSnapshot.timer_trigger_on_extruding_start(defaultSnapshot.timer_trigger_on_extruding_start());
-            currentSnapshot.timer_trigger_on_primed(defaultSnapshot.timer_trigger_on_primed());
-            currentSnapshot.timer_trigger_on_retracting(defaultSnapshot.timer_trigger_on_retracting());
-            currentSnapshot.timer_trigger_on_retracted(defaultSnapshot.timer_trigger_on_retracted());
-            currentSnapshot.timer_trigger_on_detracting(defaultSnapshot.timer_trigger_on_detracting());
-            currentSnapshot.layer_trigger_enabled(defaultSnapshot.layer_trigger_enabled());
-            currentSnapshot.layer_trigger_height(defaultSnapshot.layer_trigger_height());
-            currentSnapshot.layer_trigger_require_zhop(defaultSnapshot.layer_trigger_require_zhop());
-            currentSnapshot.layer_trigger_on_extruding(defaultSnapshot.layer_trigger_on_extruding());
-            currentSnapshot.layer_trigger_on_extruding_start(defaultSnapshot.layer_trigger_on_extruding_start());
-            currentSnapshot.layer_trigger_on_primed(defaultSnapshot.layer_trigger_on_primed());
-            currentSnapshot.layer_trigger_on_retracting(defaultSnapshot.layer_trigger_on_retracting());
-            currentSnapshot.layer_trigger_on_retracted(defaultSnapshot.layer_trigger_on_retracted());
-            currentSnapshot.layer_trigger_on_detracting(defaultSnapshot.layer_trigger_on_detracting());
-
-            currentSnapshot.archive(defaultSnapshot.archive());
-            currentSnapshot.delay(defaultSnapshot.delay());
-            currentSnapshot.retract_before_move(defaultSnapshot.retract_before_move());
-            currentSnapshot.output_format(defaultSnapshot.output_format());
-            currentSnapshot.output_filename(defaultSnapshot.output_filename());
-            currentSnapshot.output_directory(defaultSnapshot.output_directory());
-            currentSnapshot.cleanup_before_print(defaultSnapshot.cleanup_before_print());
-            currentSnapshot.cleanup_after_print(defaultSnapshot.cleanup_after_print());
-            currentSnapshot.cleanup_after_cancel(defaultSnapshot.cleanup_after_cancel());
-            currentSnapshot.cleanup_after_fail(defaultSnapshot.cleanup_after_fail());
-            currentSnapshot.cleanup_before_close(defaultSnapshot.cleanup_before_close());
-            currentSnapshot.cleanup_after_render_complete(defaultSnapshot.cleanup_after_render_complete());
-            currentSnapshot.cleanup_after_render_fail(defaultSnapshot.cleanup_after_render_fail());
-            currentSnapshot.custom_script_enabled(defaultSnapshot.custom_script_enabled());
-            currentSnapshot.script_path(defaultSnapshot.script_path());
-
-        };
-
-        self.currentRendering = function () {
-            var guid = this.global_settings.settings.plugins.octolapse.current_rendering_guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.renderings(),
-                function (item) {
-                    return item.guid() === guid;
-                }
-            );
-            return this.global_settings.settings.plugins.octolapse.renderings()[index];
-        }
-        self.copyCurrentRendering = function () {
-            var currentRendering = self.currentRendering();
-            self.newRenderingNumber++;
-            var newGuid = "NewRenderingGuid_" + (self.newRenderingNumber);
-
-            self.global_settings.settings.plugins.octolapse.renderings.push({
-                name: ko.observable("New Rendering" +
-                    + (self.newRenderingNumber)),
-                guid: ko.observable(newGuid),
-                enabled: ko.observable(currentRendering.enabled()),
-                fps_calculation_type: ko.observable(currentRendering.fps_calculation_type()),
-                run_length_seconds: ko.observable(currentRendering.run_length_seconds()),
-                fps: ko.observable(currentRendering.fps()),
-                max_fps: ko.observable(currentRendering.max_fps()),
-                min_fps: ko.observable(currentRendering.min_fps()),
-                output_format: ko.observable(currentRendering.output_format()),
-                output_filename: ko.observable(currentRendering.output_filename()),
-                output_directory: ko.observable(currentRendering.output_directory()),
-                sync_with_timelapse: ko.observable(currentRendering.sync_with_timelapse()),
-                octoprint_timelapse_directory: ko.observable(currentRendering.octoprint_timelapse_directory()),
-                ffmpeg_path: ko.observable(currentRendering.ffmpeg_path()),
-                bitrate: ko.observable(currentRendering.bitrate()),
-                flip_h: ko.observable(currentRendering.flip_h()),
-                flip_v: ko.observable(currentRendering.flip_v()),
-                rotate_90: ko.observable(currentRendering.rotate_90()),
-                watermark: ko.observable(currentRendering.watermark())
             });
 
-            self.settings.current_rendering_guid(newGuid);
-        };
-        self.removeCurrentRendering = function () {
-
-
-            if (self.global_settings.settings.plugins.octolapse.renderings().length <= 1) {
-                alert("You may not delete the last active rendering");
-                return;
-            }
-            var currentRendering = self.currentRendering();
-            self.global_settings.settings.plugins.octolapse.renderings.remove(currentRendering);
-            self.global_settings.settings.plugins.octolapse.current_rendering_guid(
-                self.global_settings.settings.plugins.octolapse.renderings()[0].guid);
-
-        };
-        self.resetCurrentRendering = function () {
-            var currentRendering = self.currentRendering();
-            var defaultRendering = this.global_settings.settings.plugins.octolapse.default_rendering;
-
-            //Set default values
-            currentRendering.enabled(defaultRendering.enabled());
-            currentRendering.fps_calculation_type(defaultRendering.fps_calculation_type());
-            currentRendering.run_length_seconds(defaultRendering.run_length_seconds());
-            currentRendering.fps(defaultRendering.fps());
-            currentRendering.max_fps(defaultRendering.max_fps());
-            currentRendering.min_fps(defaultRendering.min_fps());
-            currentRendering.output_format(defaultRendering.output_format());
-            currentRendering.output_filename(defaultRendering.output_filename());
-            currentRendering.output_directory(defaultRendering.output_directory());
-            currentRendering.sync_with_timelapse(defaultRendering.sync_with_timelapse());
-            currentRendering.octoprint_timelapse_directory(defaultRendering.octoprint_timelapse_directory());
-            currentRendering.ffmpeg_path(defaultRendering.ffmpeg_path());
-            currentRendering.bitrate(defaultRendering.bitrate());
-            currentRendering.flip_h(defaultRendering.flip_h());
-            currentRendering.flip_v(defaultRendering.flip_v());
-            currentRendering.rotate_90(defaultRendering.rotate_90());
-            currentRendering.watermark(defaultRendering.watermark());
-
-        };
-
-        self.currentCamera = function () {
-            var guid = this.global_settings.settings.plugins.octolapse.current_camera_guid();
-            var index = self.arrayFirstIndexOf(this.global_settings.settings.plugins.octolapse.cameras(),
-                function (item) {
-                    return item.guid() === guid;
-                }
-            );
-            return this.global_settings.settings.plugins.octolapse.cameras()[index];
         }
-        self.copyCurrentCamera = function () {
-            var currentCamera = self.currentCamera();
-            self.newCameraNumber++;
-            var newGuid = "NewCameraGuid_" + (self.newCameraNumber);
-
-            self.global_settings.settings.plugins.octolapse.cameras.push({
-                name: ko.observable("New Camera" +
-                    + (self.newCameraNumber)),
-                guid: ko.observable(newGuid),
-                apply_settings_before_print: ko.observable(currentCamera.apply_settings_before_print()),
-                address: ko.observable(currentCamera.address()),
-                snapshot_request_template: ko.observable(currentCamera.snapshot_request_template()),
-                ignore_ssl_error: ko.observable(currentCamera.ignore_ssl_error()),
-                username: ko.observable(currentCamera.username()),
-                password: ko.observable(currentCamera.password()),
-                brightness: ko.observable(currentCamera.brightness()),
-                brightness_request_template: ko.observable(currentCamera.brightness_request_template()),
-                contrast: ko.observable(currentCamera.contrast()),
-                contrast_request_template: ko.observable(currentCamera.contrast_request_template()),
-                saturation: ko.observable(currentCamera.saturation()),
-                saturation_request_template: ko.observable(currentCamera.saturation_request_template()),
-                white_balance_auto: ko.observable(currentCamera.white_balance_auto()),
-                white_balance_auto_request_template: ko.observable(currentCamera.white_balance_auto_request_template()),
-                gain: ko.observable(currentCamera.gain()),
-                gain_request_template: ko.observable(currentCamera.gain_request_template()),
-                powerline_frequency: ko.observable(currentCamera.powerline_frequency()),
-                powerline_frequency_request_template: ko.observable(currentCamera.powerline_frequency_request_template()),
-                white_balance_temperature: ko.observable(currentCamera.white_balance_temperature()),
-                white_balance_temperature_request_template: ko.observable(currentCamera.white_balance_temperature_request_template()),
-                sharpness: ko.observable(currentCamera.sharpness()),
-                sharpness_request_template: ko.observable(currentCamera.sharpness_request_template()),
-                backlight_compensation_enabled: ko.observable(currentCamera.backlight_compensation_enabled()),
-                backlight_compensation_enabled_request_template: ko.observable(currentCamera.backlight_compensation_enabled_request_template()),
-                exposure_type: ko.observable(currentCamera.exposure_type()),
-                exposure_type_request_template: ko.observable(currentCamera.exposure_type_request_template()),
-                exposure: ko.observable(currentCamera.exposure()),
-                exposure_request_template: ko.observable(currentCamera.exposure_request_template()),
-                exposure_auto_priority_enabled: ko.observable(currentCamera.exposure_auto_priority_enabled()),
-                exposure_auto_priority_enabled_request_template: ko.observable(currentCamera.exposure_auto_priority_enabled_request_template()),
-                pan: ko.observable(currentCamera.pan()),
-                pan_request_template: ko.observable(currentCamera.pan_request_template()),
-                tilt: ko.observable(currentCamera.tilt()),
-                tilt_request_template: ko.observable(currentCamera.tilt_request_template()),
-                autofocus_enabled: ko.observable(currentCamera.autofocus_enabled()),
-                autofocus_enabled_request_template: ko.observable(currentCamera.autofocus_enabled_request_template()),
-                focus: ko.observable(currentCamera.focus()),
-                focus_request_template: ko.observable(currentCamera.focus_request_template()),
-                zoom: ko.observable(currentCamera.zoom()),
-                zoom_request_template: ko.observable(currentCamera.zoom_request_template()),
-                led1_mode: ko.observable(currentCamera.led1_mode()),
-                led1_mode_request_template: ko.observable(currentCamera.led1_mode_request_template()),
-                led1_frequency: ko.observable(currentCamera.led1_frequency()),
-                led1_frequency_request_template: ko.observable(currentCamera.led1_frequency_request_template()),
-                jpeg_quality: ko.observable(currentCamera.jpeg_quality()),
-                jpeg_quality_request_template: ko.observable(currentCamera.jpeg_quality_request_template()),
-            });
-            self.settings.current_camera_guid(newGuid);
-        };
-        self.removeCurrentCamera = function () {
-
-            if (self.global_settings.settings.plugins.octolapse.cameras().length <= 1) {
-                alert("You may not delete the last active camera");
-                return;
+        /*
+            Profile Add/Update routine for showAddEditDialog
+        */
+        self.addUpdateProfile = function(profile) {
+            switch (profile.templateName) {
+                case "printer-template":
+                    Octolapse.Printers.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "stabilization-template":
+                    Octolapse.Stabilizations.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "snapshot-template":
+                    Octolapse.Snapshots.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "rendering-template":
+                    Octolapse.Renderings.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "camera-template":
+                    Octolapse.Cameras.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "debug-template":
+                    Octolapse.DebugProfiles.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                default:
+                    alert("Cannot save the object, the template (" + profile.templateName + ") is unknown!");
+                    break;
             }
-            var currentCamera = self.currentCamera();
-            self.global_settings.settings.plugins.octolapse.cameras.remove(currentCamera);
-            self.global_settings.settings.plugins.octolapse.current_camera_guid(
-                self.global_settings.settings.plugins.octolapse.cameras()[0].guid);
 
         };
-        self.resetCurrentCamera = function () {
-            var currentCamera = self.currentCamera();
-            var defaultCamera = this.global_settings.settings.plugins.octolapse.default_camera;
-            //Set default values
 
-            currentCamera.apply_settings_before_print(defaultCamera.apply_settings_before_print());
-            currentCamera.address(defaultCamera.address());
-            currentCamera.snapshot_request_template(defaultCamera.snapshot_request_template());
-            currentCamera.ignore_ssl_error(defaultCamera.ignore_ssl_error());
-            currentCamera.username(defaultCamera.username());
-            currentCamera.password(defaultCamera.password());
-            currentCamera.brightness(defaultCamera.brightness());
-            currentCamera.brightness_request_template(defaultCamera.brightness_request_template());
-            currentCamera.contrast(defaultCamera.contrast());
-            currentCamera.contrast_request_template(defaultCamera.contrast_request_template());
-            currentCamera.saturation(defaultCamera.saturation());
-            currentCamera.saturation_request_template(defaultCamera.saturation_request_template());
-            currentCamera.white_balance_auto(defaultCamera.white_balance_auto());
-            currentCamera.white_balance_auto_request_template(defaultCamera.white_balance_auto_request_template());
-            currentCamera.gain(defaultCamera.gain());
-            currentCamera.gain_request_template(defaultCamera.gain_request_template());
-            currentCamera.powerline_frequency(defaultCamera.powerline_frequency());
-            currentCamera.powerline_frequency_request_template(defaultCamera.powerline_frequency_request_template());
-            currentCamera.white_balance_temperature(defaultCamera.white_balance_temperature());
-            currentCamera.white_balance_temperature_request_template(defaultCamera.white_balance_temperature_request_template());
-            currentCamera.sharpness(defaultCamera.sharpness());
-            currentCamera.sharpness_request_template(defaultCamera.sharpness_request_template());
-            currentCamera.backlight_compensation_enabled(defaultCamera.backlight_compensation_enabled());
-            currentCamera.backlight_compensation_enabled_request_template(defaultCamera.backlight_compensation_enabled_request_template());
-            currentCamera.exposure_type(defaultCamera.exposure_type());
-            currentCamera.exposure_type_request_template(defaultCamera.exposure_type_request_template());
-            currentCamera.exposure(defaultCamera.exposure());
-            currentCamera.exposure_request_template(defaultCamera.exposure_request_template());
-            currentCamera.exposure_auto_priority_enabled(defaultCamera.exposure_auto_priority_enabled());
-            currentCamera.exposure_auto_priority_enabled_request_template(defaultCamera.exposure_auto_priority_enabled_request_template());
-            currentCamera.pan(defaultCamera.pan());
-            currentCamera.pan_request_template(defaultCamera.pan_request_template());
-            currentCamera.tilt(defaultCamera.tilt());
-            currentCamera.tilt_request_template(defaultCamera.tilt_request_template());
-            currentCamera.autofocus_enabled(defaultCamera.autofocus_enabled());
-            currentCamera.autofocus_enabled_request_template(defaultCamera.autofocus_enabled_request_template());
-            currentCamera.focus(defaultCamera.focus());
-            currentCamera.focus_request_template(defaultCamera.focus_request_template());
-            currentCamera.zoom(defaultCamera.zoom());
-            currentCamera.zoom_request_template(defaultCamera.zoom_request_template());
-            currentCamera.led1_mode(defaultCamera.led1_mode());
-            currentCamera.led1_mode_request_template(defaultCamera.led1_mode_request_template());
-            currentCamera.led1_frequency(defaultCamera.led1_frequency());
-            currentCamera.led1_frequency_request_template(defaultCamera.led1_frequency_request_template());
-            currentCamera.jpeg_quality(defaultCamera.jpeg_quality());
-            currentCamera.jpeg_quality_request_template(defaultCamera.jpeg_quality_request_template());
+        
+    
+        
+        /*
+            Modal Dialog Functions
+        */
+        // hide the modal dialog
+        self.hideAddEditDialog = function(sender, event) {
+            $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
+        // show the modal dialog
+        self.showAddEditDialog = function(options, sender) {
+            // Create all the variables we want to store for callbacks
+            dialog = this;
+            dialog.sender = sender;
+            dialog.profileObservable = options.profileObservable;
+            dialog.templateName = options.templateName
+            dialog.$addEditDialog = $("#octolapse_add_edit_profile_dialog");
+            dialog.$addEditForm = dialog.$addEditDialog.find("#octolapse_add_edit_profile_form");
+            dialog.$cancelButton = $("a.cancel", dialog.$addEditDialog);
+            dialog.$saveButton = $("a.save", dialog.$addEditDialog);
+            dialog.$defaultButton = $("a.set-defaults", dialog.$addEditDialog);
+            dialog.$dialogTitle = $("h3.modal-title", dialog.$addEditDialog);
+            dialog.$summary = dialog.$addEditForm.find("#add_edit_validation_summary");
+            dialog.$errorCount = dialog.$summary.find(".error-count");
+            dialog.$errorList = dialog.$summary.find("ul.error-list");
+            dialog.$modalBody = dialog.$addEditDialog.find(".modal-body");
 
-        self.toggle = Octolapse.Toggle;
-    };
+            // Create all of the validation rules
+            rules = {
+                rules: options.validationRules.rules,
+                messages: options.validationRules.messages,
+                errorPlacement: function(error, element) {
+                    var field_error = $(element).parent().parent().find(".error_label_container");
+                    console.log("Placing errors:" + error);
+                    $(error).addClass("text-error");
+                    field_error.html(error);
+                    field_error.removeClass("checked");
+                },
+                highlight: function(element, errorClass) {
+                    console.log("Highlighting");
+                    $(element).parent().parent().addClass(errorClass);
+                    var field_error = $(element).parent().parent().find(".error_label_container");
+                    field_error.removeClass("checked");
+                },
+                unhighlight: function(element, errorClass) {
+                    console.log("Unhighlighting");
+                    $(element).parent().parent().removeClass(errorClass);
+                    var field_error = $(element).parent().parent().find(".error_label_container");
+                    field_error.addClass("checked");
+                },
+                invalidHandler: function() {
+                    console.log("Invalid Form");
+                    dialog.$errorCount.empty();
+                    dialog.$summary.show();
+                    numErrors = dialog.validator.numberOfInvalids()
+                    if (numErrors == 1)
+                        dialog.$errorCount.text("1 field is invalid");
+                    else
+                        dialog.$errorCount.text(numErrors + " fields are invalid");
+                },
+                errorContainer: "#add_edit_validation_summary",
+                success: function(label) {
+                    console.log("Success");
+                    label.html("&nbsp;");
+                    label.parent().addClass('checked');
+                    $(label).parent().parent().parent().removeClass('error')
+                },
+                onfocusout: function(element, event) {
+                    dialog.validator.form();
+                }
+            };
+            dialog.validator = null;
+            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
+            dialog.$addEditDialog.on("hidden.bs.modal", function() {
+                // Clear out error summary
+                dialog.$errorCount.empty();
+                dialog.$errorList.empty();
+                dialog.$summary.hide();
+                // Destroy the validator if it exists, both to save on resources, and to clear out any leftover junk.
+                if (dialog.validator != null) {
+                    dialog.validator.destroy()
+                    dialog.validator = null;
+                }
+            });
+            // configure the dialog shown event
+            dialog.$addEditDialog.on("show.bs.modal", function() {
+                Octolapse.Settings.AddEditProfile({ "profileObservable": dialog.profileObservable, "templateName": dialog.templateName  });
+                // Adjust the margins, height and position
+                dialog.$addEditDialog.css({
+                    width: 'auto',
+                    'margin-left': function() { return -($(this).width() / 2); }
+                });
+            })
+            // Configure the show event
+            dialog.$addEditDialog.on("shown.bs.modal", function() {
+                dialog.validator = dialog.$addEditForm.validate(rules);
+                // Set title
+                dialog.$dialogTitle.text(options.title);
+                // Remove any click event bindings from the cancel button
+                dialog.$cancelButton.unbind("click");
+                // Called when the user clicks the cancel button in any add/update dialog
+                dialog.$cancelButton.bind("click", function() {
+                    // Hide the dialog
+                    self.hideAddEditDialog();
+                });
+                // remove any click event bindings from the defaults button
+                dialog.$defaultButton.unbind("click");
+                dialog.$defaultButton.bind("click", function() {
+                    newProfile = dialog.sender.getResetProfile(Octolapse.Settings.AddEditProfile().profileObservable())
+                    Octolapse.Settings.AddEditProfile().profileObservable(newProfile);
+                    
+                });
 
-    // This is how our plugin registers itself with the application, by adding some configuration
-    // information to the global variable OCTOPRINT_VIEWMODELS
+
+                
+                // Remove any click event bindings from the save button
+                dialog.$saveButton.unbind("click");
+                // Called when a user clicks the save button on any add/update dialog.
+                dialog.$saveButton.bind("click", function() {
+                    if (dialog.$addEditForm.valid()) {
+                        // the form is valid, add or update the profile
+                        self.addUpdateProfile(Octolapse.Settings.AddEditProfile());
+                    }
+                    else {
+                        // The form is invalid, add a shake animation to inform the user
+                        $(dialog.$addEditDialog).addClass('shake');
+                        // set a timeout so the dialog stops shaking
+                        setTimeout(function() { $(dialog.$addEditDialog).removeClass('shake'); }, 500);
+                    }
+                });
+            });
+            // Open the add/edit profile dialog
+            dialog.$addEditDialog.modal();
+        };
+    }
+    // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
-        // This is the constructor to call for instantiating the plugin
-        OctolapseSettingsViewModel,
-
-        // This is a list of dependencies to inject into the plugin, the order which you request
-        // here is the order in which the dependencies will be injected into your view model upon
-        // instantiation via the parameters argument
-        ["settingsViewModel"],
-
-        // Finally, this is the list of selectors for all elements we want this view model to be bound to.
-        ["#octolapse_settings"]
+        Octolapse.SettingsViewModel
+        , ["settingsViewModel"]
+        , ["#octolapse_plugin_settings"]
     ]);
+
+
 });
 
-var Octolapse = {};
-
-// found this gem from https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
-if (!String.format) {
-    String.format = function (format) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        return format.replace(/{(\d+)}/g, function (match, number) {
-            return typeof args[number] != 'undefined'
-                ? args[number]
-                : match
-                ;
-        });
-    };
+// Finds the first index of an array with the matching predicate
+Octolapse.arrayFirstIndexOf = function(array, predicate, predicateOwner) {
+    for (var i = 0, j = array.length; i < j; i++) {
+        if (predicate.call(predicateOwner, array[i])) {
+            return i;
+        }
+    }
+    return -1;
 }
-Octolapse.toggle = function (caller, args) {
-
+// Retruns an observable sorted by name(), case insensitive
+Octolapse.nameSort = function(observable) {
+    return observable().sort(
+        function(left, right) {
+            leftName = left.name().toLowerCase();
+            rightName = right.name().toLowerCase();
+            return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
+        });
+};
+// Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
+// It will apply the on or off class to the result of each selector, which should return exactly one result.
+Octolapse.toggle = function(caller, args) {
     var elements = args.elements;
-    elements.forEach(function (item, index) {
+    elements.forEach(function(item, index) {
         element = $(item.selector);
         onClass = item.onClass;
         offClass = item.offClass;
@@ -578,17 +373,13 @@ Octolapse.toggle = function (caller, args) {
         }
     });
 };
-
-
-
-$(document).ready(function () {
-    $("#octolapse_settings .toggle").click(function () {
+// Apply the toggle click event to every element within our settings that has the .toggle class
+$(document).ready(function() {
+    $("#octolapse_settings .toggle").click(function() {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
     });
 
 });
-
-
 
 

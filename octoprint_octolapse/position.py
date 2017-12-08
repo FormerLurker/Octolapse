@@ -103,7 +103,7 @@ class Position(object):
 		if(self.IsPositionChange):
 			message = "Position Change - {0} - {1} Move From(X:{2:s},Y:{3:s},Z:{4:s},E:{5:s}) - To(X:{6},Y:{7},Z:{8},E:{9})"
 			message = message.format(command.Command,"Relative" if self.IsRelative else "Absolute", x,y,z,e,self.X, self.Y, self.Z, self.E)
-			self.Settings.debug.LogPositionChange(message)
+			self.Settings.CurrentDebugProfile().LogPositionChange(message)
 	def Update(self,gcode):
 		# disect the gcode and use it to update our position
 		self.HasPositionChanged = False
@@ -125,7 +125,7 @@ class Position(object):
 				#Movement
 				parsedCommand = command.Parse(gcode)
 				if(parsedCommand):
-					self.Settings.debug.LogPositionCommandReceived("Received {0}".format(command.Name))
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received {0}".format(command.Name))
 					x = parsedCommand["X"]
 					y = parsedCommand["Y"]
 					z = parsedCommand["Z"]
@@ -138,7 +138,7 @@ class Position(object):
 								self.PositionError = ""
 							self.UpdatePosition(x,y,z,e=None)
 						else:
-							self.Settings.debug.LogError("Position - Unable to update the x,y,z axis coordinates, no coordinate system has been selected (absolute/relative).")
+							self.Settings.CurrentDebugProfile().LogError("Position - Unable to update the x,y,z axis coordinates, no coordinate system has been selected (absolute/relative).")
 					if(e is not None):
 						if(self.IsExtruderRelative is not None):
 							if(self.HasPositionError and not self.IsExtruderRelative):
@@ -146,11 +146,11 @@ class Position(object):
 								self.PositionError = ""
 							self.UpdatePosition(x=None,y=None,z=None,e=e)
 						else:
-							self.Settings.debug.LogError("Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative).")
+							self.Settings.CurrentDebugProfile().LogError("Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative).")
 				else:
-					self.Settings.debug.LogError("Position - Unable to parse the gcode command: {0}".format(gcode))
+					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the gcode command: {0}".format(gcode))
 			elif(command.Command == "G28"):
-				self.Settings.debug.LogPositionCommandReceived("Received G28 - Homing to {0}".format(self.GetFormattedCoordinates(0,0,0,self.E)))
+				self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G28 - Homing to {0}".format(self.GetFormattedCoordinates(0,0,0,self.E)))
 				if(self.IsRelative is not None):
 					previousRelativeValue = self.IsRelative
 					previousExtruderRelativeValue = self.IsExtruderRelative
@@ -163,37 +163,37 @@ class Position(object):
 					self.IsRelative = previousRelativeValue
 					self.IsExtruderRelative = previousExtruderRelativeValue
 				else:
-					self.Settings.debug.LogError("Position - Cannot set the origin coordinates, no coordinate system has been specified (absolute,relative)!  Gcode command: {0}".format(gcode))
+					self.Settings.CurrentDebugProfile().LogError("Position - Cannot set the origin coordinates, no coordinate system has been specified (absolute,relative)!  Gcode command: {0}".format(gcode))
 			elif(command.Command == "G90"):
 				if(self.IsRelative is None or self.IsRelative):
-					self.Settings.debug.LogPositionCommandReceived("Received G90 - Switching to Absolute Coordinates.")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Switching to Absolute Coordinates.")
 				else:
-					self.Settings.debug.LogPositionCommandReceived("Received G90 - Already in absolute coordinates.")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Already in absolute coordinates.")
 				self.IsRelative = False
 			elif(command.Command == "G91"):
 				if(self.IsRelative is None or not self.IsRelative):
-					self.Settings.debug.LogPositionCommandReceived("Received G91 - Switching to Relative Coordinates")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Switching to Relative Coordinates")
 				else:
-					self.Settings.debug.LogPositionCommandReceived("Received G91 - Already using relative Coordinates")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Already using relative Coordinates")
 				self.IsRelative = True
 			elif(command.Command == "M83"):
 				if(self.IsExtruderRelative is None or self.IsExtruderRelative):
-					self.Settings.debug.LogPositionCommandReceived("Received M83 - Switching Extruder to Relative Coordinates")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M83 - Switching Extruder to Relative Coordinates")
 					self.E = 0
 					self.EPrevious = 0
 				self.IsExtruderRelative = True
 			elif(command.Command == "M82"):
 				if(not self.IsExtruderAlwaysRelative):
 					if(self.IsExtruderRelative is None or not self.IsExtruderRelative):
-						self.Settings.debug.LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
+						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
 					self.IsExtruderRelative = False
 					self.E = 0
 					self.EPrevious = 0
 					self.UpdatePosition(x=None, y=None, z=None, e=0)
 				else:
-					self.Settings.debug.LogPositionCommandReceived("Received M82 - Ignoring, extruder is always relative.")
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M82 - Ignoring, extruder is always relative.")
 			elif(command.Command == "G92"):
-				self.Settings.debug.LogPositionCommandReceived("Received G92 - Switching Extruder to Absolute Coordinates")
+				self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G92 - Switching Extruder to Absolute Coordinates")
 				parsedCommand = command.Parse(gcode)
 				if(parsedCommand):
 					previousRelativeValue = self.IsRelative
@@ -219,14 +219,14 @@ class Position(object):
 					if(previousExtruderRelativeValue is not None):
 						self.IsExtruderRelative = previousExtruderRelativeValue
 				else:
-					self.Settings.debug.LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
+					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
 			if(self.X != self.XPrevious
 				or self.Y != self.YPrevious
 				or self.Z != self.ZPrevious
 				or self.ERelative() != 0
 			):
 				self.HasPositionChanged = True;
-				self.Settings.debug.LogPositionChange("Position Change - {0} move from - {1} - to- {2}".format("Relative" if self.IsRelative else "Absolute", self.GetFormattedCoordinates(self.XPrevious,self.YPrevious,self.ZPrevious,self.EPrevious),self.GetFormattedCoordinates(self.X, self.Y, self.Z, self.E)))
+				self.Settings.CurrentDebugProfile().LogPositionChange("Position Change - {0} move from - {1} - to- {2}".format("Relative" if self.IsRelative else "Absolute", self.GetFormattedCoordinates(self.XPrevious,self.YPrevious,self.ZPrevious,self.EPrevious),self.GetFormattedCoordinates(self.X, self.Y, self.Z, self.E)))
 
 		# Update the extruder monitor
 		self.Extruder.Update(self)
@@ -235,15 +235,15 @@ class Position(object):
 		# determine if we've reached ZMin
 		if(not self.HasReachedZMin and self.Z <= self.Printer.z_min and self.Extruder.IsExtruding):
 			self.HasReachedZMin = True
-			self.Settings.debug.LogPositionZminReached("Position - Reached ZMin:{0}.".format(self.Printer.z_min))
+			self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - Reached ZMin:{0}.".format(self.Printer.z_min))
 		# If we've not reached z min, leave!
 		if(not self.HasReachedZMin):
-			self.Settings.debug.LogPositionZminReached("Position - ZMin not reached.")
+			self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - ZMin not reached.")
 		else:
 			# calculate Height
 			if self.Extruder.IsExtruding and self.HasReachedZMin and self.Z > self.Height:
 				self.Height = self.Z
-				self.Settings.debug.LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
+				self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
 
 			# calculate ZDelta
 			if(self.Height is not None and self.HeightPrevious is not None):
@@ -253,18 +253,18 @@ class Position(object):
 			if(self.ZDelta is not None and self.ZDelta > 0):
 				self.IsLayerChange = True
 				self.Layer += 1
-				self.Settings.debug.LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
+				self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
 			else:
 				self.IsLayerChange = False
 
 			# Is this a ZHOp?
-			self.Settings.debug.LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
+			self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
 				self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
 			))
 			if(self.ZRelative() is not None):
 				self.IsZHop = self.Printer.z_hop > 0.0 and self.ZRelative() >= self.Printer.z_hop and (not self.Extruder.IsExtruding)
 			if(self.IsZHop):
-				self.Settings.debug.LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
+				self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
 		
 
 	def GetFormattedCoordinates(self,x,y,z,e):
@@ -340,7 +340,7 @@ class Position(object):
 		if(not self.IsInBounds()):
 			self.HasPositionError = True
 			self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(self.GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
-			self.Settings.debug.LogError(self.PositionError)
+			self.Settings.CurrentDebugProfile().LogError(self.PositionError)
 		else:
 			self.HasPositionError = False
 			self.PositionError = None
@@ -472,7 +472,7 @@ class Extruder(object):
 			self.HasChange = True
 
 		if(self.HasChanged):
-			self.Settings.debug.LogExtruderChange("Extruder Changed: E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
+			self.Settings.CurrentDebugProfile().LogExtruderChange("Extruder Changed: E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
 			.format( self.__E
 				, self.RetractionLength
 				, self.IsExtruding
@@ -499,7 +499,7 @@ class Extruder(object):
 		detractedTriggered		= (options.OnDetracting and self.IsDetracting)
 		isTriggered				= extrudingTriggered or extrudingStartTriggered or primedTriggered or retractingTriggered or retractedTriggered or detractedTriggered
 		if(isTriggered):
-			self.Settings.debug.LogExtruderTriggered("Triggered E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
+			self.Settings.CurrentDebugProfile().LogExtruderTriggered("Triggered E:{0}, Retraction:{1} IsExtruding:{2}-{3}, IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, IsDetracting:{12}-{13}, IsTriggered:{14}"
 			.format( self.__E
 				, self.RetractionLength
 				, self.IsExtruding
