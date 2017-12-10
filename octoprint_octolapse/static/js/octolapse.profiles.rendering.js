@@ -14,8 +14,6 @@ $(function() {
         self.output_filename = ko.observable(values.output_filename);
         self.output_directory = ko.observable(values.output_directory);
         self.sync_with_timelapse = ko.observable(values.sync_with_timelapse);
-        self.octoprint_timelapse_directory = ko.observable(values.octoprint_timelapse_directory);
-        self.ffmpeg_path = ko.observable(values.ffmpeg_path);
         self.bitrate = ko.observable(values.bitrate);
         self.flip_h = ko.observable(values.flip_h);
         self.flip_v = ko.observable(values.flip_v);
@@ -24,7 +22,11 @@ $(function() {
     }
     Octolapse.RenderingProfileValidationRules = {
         rules: {
-            name: "required"
+            name: "required",
+            ffmpeg_path: "required",
+            bitrate: "required",
+            fps_calculation_type: "required",
+            fps: { number: true, min: 0.0 }
         },
         messages: {
             name: "Please enter a name for your profile",

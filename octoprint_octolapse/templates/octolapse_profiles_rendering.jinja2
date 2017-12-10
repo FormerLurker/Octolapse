@@ -9,141 +9,138 @@
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label" >Path to FFMPEG</label>
+    <label class="control-label">Timelapse Generation</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: ffmpeg_path"/>
-      <div class="error_label_container text-error" ></div>
+      <label class="checkbox">
+        <input name="sync_with_timelapse" type="checkbox" data-bind="checked: enabled" title="Enable or disable timelapse generation"/>Enabled
+      </label>
     </div>
   </div>
-  <div class="control-group">
-    <label class="control-label" >Bitrate</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: bitrate"/>
-      <div class="error_label_container text-error" ></div>
+  <div class="collapsible" data-bind="visible: enabled">
+    <div class="control-group">
+      <label class="control-label" >Bitrate</label>
+      <div class="controls">
+        <input name="bitrate" type="text" class="input-block-level" data-bind="value: bitrate"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label" >Frames per Second (FPS)</label>
-    <div class="controls">
-      <select data-bind="options: $parent.fps_calculation_options,
+    <div class="control-group">
+      <label class="control-label" >Frames per Second (FPS)</label>
+      <div class="controls">
+        <select name="fps_calculation_type" data-bind="options: Octolapse.Renderings.profileOptions.rendering_fps_calculation_options,
                                  optionsText: 'name',
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: fps_calculation_type"></select>
-      <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
-  </div>
-  <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
-    <label class="control-label" >Static FPS</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: fps"/>
-      <div class="error_label_container text-error" ></div>
+    <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
+      <label class="control-label" >Static FPS</label>
+      <div class="controls">
+        <input name="fps" type="text" class="input-block-level" data-bind="value: fps"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
-  </div>
-  <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
-    <label class="control-label" >Fixed Run Length in Seconds</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: run_length_seconds"/>
-      <div class="error_label_container text-error" ></div>
+    <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
+      <label class="control-label" >Fixed Run Length in Seconds</label>
+      <div class="controls">
+        <input name="run_length_seconds" type="text" class="input-block-level" data-bind="value: run_length_seconds"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Sync Output with Timelapse Control</label>
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
-      </label>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label" >Path to octoprint timelapse plugin directory</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: octoprint_timelapse_directory"/>
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
-    <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
-      <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
-    </a>
-  </div>
-  <div class="control-group hide" id="rendering-advanced">
     <div class="control-group">
-      <label class="control-label">Flip Horizontal</label>
+      <label class="control-label">Sync Output with the default Timelapse plugin</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: flip_h" title="Flip the resulting timelapse along the horizontal axis"/>Enabled
+          <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
         </label>
       </div>
     </div>
+
     <div class="control-group">
-      <label class="control-label">Flip Vertical</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: flip_v" title="Flip the resulting timelapse along the vertical axis"/>Enabled
-        </label>
-      </div>
+      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
+        <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
+      </a>
     </div>
-    <div class="control-group">
-      <label class="control-label">Rotate 90 Degrees</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: rotate_90" title="Rotate the resulting timelapse 90 degrees"/>Enabled
-        </label>
+    <div class="control-group hide" id="rendering-advanced">
+      <div class="control-group">
+        <label class="control-label">Flip Horizontal</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input name="flip_h" type="checkbox" data-bind="checked: flip_h" title="Flip the resulting timelapse along the horizontal axis"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Embed a watermark in the resulting timelapse</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
-        </label>
+      <div class="control-group">
+        <label class="control-label">Flip Vertical</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input name="flip_v" type="checkbox" data-bind="checked: flip_v" title="Flip the resulting timelapse along the vertical axis"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: max_fps"/>
-        <div class="error_label_container text-error" ></div>
+      <div class="control-group">
+        <label class="control-label">Rotate 90 Degrees</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input name="rotate_90" type="checkbox" data-bind="checked: rotate_90" title="Rotate the resulting timelapse 90 degrees"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label" >Minimum FPS - calculated FPS can be no less than this value.</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: min_fps"/>
-        <div class="error_label_container text-error" ></div>
+      <div class="control-group">
+        <label class="control-label">Embed a watermark in the resulting timelapse</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input name="watermark" type="checkbox" data-bind="checked: watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label" >Output File Format</label>
-      <div class="controls">
-        <select data-bind="value: output_format">
-          <option value="mp4">MP4</option>
-          <option value="mpeg">MPEG</option>
-          <option value="gif">GIF</option>
-        </select>
-        <div class="error_label_container text-error" ></div>
+      <div class="control-group">
+        <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
+        <div class="controls">
+          <input name="max_fps" type="text" class="input-block-level" data-bind="value: max_fps"/>
+          <div class="error_label_container text-error" ></div>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Output File Name</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: output_filename"/>
-        <div class="error_label_container text-error" ></div>
+      <div class="control-group">
+        <label class="control-label" >Minimum FPS - calculated FPS can be no less than this value.</label>
+        <div class="controls">
+          <input name="min_fps" type="text" class="input-block-level" data-bind="value: min_fps"/>
+          <div class="error_label_container text-error" ></div>
+        </div>
       </div>
-      <span class="help-inline">
-        <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-      </span>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Output File Directory</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: output_directory"/>
-        <div class="error_label_container text-error" ></div>
+      <div class="control-group">
+        <label class="control-label" >Output File Format</label>
+        <div class="controls">
+          <select name="output_format" data-bind="options: Octolapse.Renderings.profileOptions.rendering_output_format_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: output_format"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
       </div>
-      <span class="help-inline">
-        <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-      </span>
+      <div class="control-group">
+        <label class="control-label">Output File Name</label>
+        <div class="controls">
+          <input name="output_filename" type="text" class="input-block-level" data-bind="value: output_filename"/>
+          <div class="error_label_container text-error" ></div>
+        </div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+        </span>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Output File Directory</label>
+        <div class="controls">
+          <input name="output_directory" type="text" class="input-block-level" data-bind="value: output_directory"/>
+          <div class="error_label_container text-error" ></div>
+        </div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
+        </span>
+      </div>
     </div>
   </div>
 </script>

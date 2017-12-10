@@ -6,6 +6,7 @@ $(function() {
         self.name = ko.observable(values.name);
         self.guid = ko.observable(values.guid);
         self.enabled = ko.observable(values.enabled);
+        self.log_to_console = ko.observable(values.log_to_console);
         self.position_change = ko.observable(values.position_change);
         self.position_command_received = ko.observable(values.position_command_received);
         self.extruder_change = ko.observable(values.extruder_change);

@@ -17,6 +17,13 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
+          <input type="checkbox" data-bind="checked: log_to_console" title="Log Position Changes"/>Write all output to the console
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
           <input type="checkbox" data-bind="checked: position_change" title="Log Position Changes"/>Log Position Changes
         </label>
       </div>
@@ -24,7 +31,7 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind=" position_command_received" title="Log Position Commands"/>Log Position Commands
+          <input type="checkbox" data-bind="checked: position_command_received" title="Log Position Commands"/>Log Position Commands
         </label>
       </div>
     </div>

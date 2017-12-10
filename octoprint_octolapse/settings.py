@@ -2,10 +2,12 @@
 from octoprint.plugin import PluginSettings
 
 import time
+from datetime import datetime
 import utility
 from .gcode import Commands, Command
 from pprint import pprint
 from .trigger import GcodeTrigger, TimerTrigger, LayerTrigger
+import logging
 import os
 import sys
 import uuid
@@ -207,10 +209,12 @@ class Snapshot(object):
 		self.delay = 1000
 		self.retract_before_move = False
 		self.output_format = "jpg"
-		self.output_filename = "{FILENAME}_{SNAPSHOTNUMBER}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "/home/pi/Octolapse/snapshots/{FILENAME}_{PRINTSTARTTIME}/"
+		self.output_filename = "{FILENAME}_{PRINTSTARTTIME}/{FILENAME}"
 		if (sys.platform == "win32"):
-			self.output_directory = "c:\\temp\\snapshots\\{FILENAME}_{PRINTSTARTTIME}\\"
+			self.output_filename = "{FILENAME}_{PRINTSTARTTIME}\\{FILENAME}"
+		self.output_directory = "{DATADIRECTORY}/snapshots/"
+		if (sys.platform == "win32"):
+			self.output_directory = "{DATADIRECTORY}\\snapshots\\"
 		self.cleanup_before_print = True
 		self.cleanup_after_print = False
 		self.cleanup_after_cancel = True
@@ -376,12 +380,6 @@ class Rendering(object):
 		if (sys.platform == "win32"):
 			self.output_directory = "c:\\temp\\{FILENAME}_{PRINTSTARTTIME}"
 		self.sync_with_timelapse = False
-		self.octoprint_timelapse_directory = "/home/pi/.octoprint/timelapse/"
-		if(sys.platform == "win32"):
-			self.octoprint_timelapse_directory = "{0}{1}".format(os.getenv('APPDATA'), "\\Octoprint\\timelapse")
-		self.ffmpeg_path = "/usr/bin/avconv"
-		if sys.platform == "win32":
-			self.ffmpeg_path  = "\"C:\Program Files (x86)\\FFMpeg\\bin\\ffmpeg.exe\""
 		self.bitrate = "2000K"
 		self.flip_h = False
 		self.flip_v = False
@@ -414,10 +412,6 @@ class Rendering(object):
 			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
 		if("sync_with_timelapse" in changes.keys()):
 			self.sync_with_timelapse = utility.getbool(changes["sync_with_timelapse"],self.sync_with_timelapse)
-		if("octoprint_timelapse_directory" in changes.keys()):
-			self.octoprint_timelapse_directory = utility.getstring(changes["octoprint_timelapse_directory"],self.octoprint_timelapse_directory)
-		if("ffmpeg_path" in changes.keys()):
-			self.ffmpeg_path = utility.getstring(changes["ffmpeg_path"],self.ffmpeg_path)
 		if("bitrate" in changes.keys()):
 			self.bitrate = utility.getstring(changes["bitrate"],self.bitrate)
 		if("flip_h" in changes.keys()):
@@ -443,8 +437,6 @@ class Rendering(object):
 				'output_filename'					: self.output_filename,
 				'output_directory'					: self.output_directory,
 				'sync_with_timelapse'				: self.sync_with_timelapse,
-				'octoprint_timelapse_directory'		: self.octoprint_timelapse_directory,
-				'ffmpeg_path'						: self.ffmpeg_path,
 				'bitrate'							: self.bitrate,
 				'flip_h'							: self.flip_h,
 				'flip_v'							: self.flip_v,
@@ -658,12 +650,28 @@ class Camera(object):
 
 class DebugProfile(object):
 	Logger = None
-	def __init__(self,octoprintLogger, debugProfile = None, guid = None, name = "Default Debug Profile"):
+	FormatString = '%(asctime)s - %(levelname)s - %(message)s'
+	ConsoleFormatString = '{asctime} - {levelname} - {message}'
+	def __init__(self, logFilePath, debugProfile = None, guid = None, name = "Default Debug Profile"):
+		self.logFilePath = logFilePath
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
-		self.Logger = octoprintLogger
+
+		# Configure the logger if it has not been created
+		if(DebugProfile.Logger is None):
+			DebugProfile.Logger = logging.getLogger("Octolapse")
+			# Remove existing handlers
+			DebugProfile.Logger.handlers = []
+			# Create the handler
+			logHandler = logging.FileHandler(self.logFilePath)
+			logHandler.setFormatter(logging.Formatter(DebugProfile.FormatString))
+			DebugProfile.Logger.addHandler(logHandler)
+			DebugProfile.Logger.setLevel(logging.NOTSET)
+		
 		self.Commands = Commands()
+		self.log_to_console = True
 		self.enabled = False
+		
 		self.position_change = False
 		self.position_command_received = False
 		self.extruder_change = False
@@ -703,6 +711,8 @@ class DebugProfile(object):
 			self.name = utility.getstring(changes["name"],self.name)
 		if("enabled" in changes.keys()):
 			self.enabled = utility.getbool(changes["enabled"],self.enabled)
+		if("log_to_console" in changes.keys()):
+			self.log_to_console = utility.getbool(changes["log_to_console"],self.log_to_console)
 		if("position_change" in changes.keys()):
 			self.position_change = utility.getbool(changes["position_change"],self.position_change)
 		if("position_command_received" in changes.keys()):
@@ -766,6 +776,7 @@ class DebugProfile(object):
 				'name'						: self.name,
 				'guid'						: self.guid,
 				'enabled'					: self.enabled,
+				'log_to_console'			: self.log_to_console,
 				'position_change'			: self.position_change,
 				'position_command_received'	: self.position_command_received,
 				'extruder_change'			: self.extruder_change,
@@ -796,15 +807,25 @@ class DebugProfile(object):
 				'print_state_changed'		: self.print_state_changed,
 				'camera_settings_apply'		: self.camera_settings_apply
 			}
+
+	def LogToConsole(self,levelName , message):
+		if(self.log_to_console):
+			try:
+				print(DebugProfile.ConsoleFormatString.format(asctime = str(datetime.now()) ,levelname= levelName ,message=message))
+			except:
+				print(message)
 	def LogInfo(self,message):
 		if(self.enabled):
-			self.Logger.info(message)
+			DebugProfile.Logger.info(message)
+			self.LogToConsole('info', message)
 	def LogWarning(self,message):
 		if(self.enabled):
-			self.Logger.warning(message)
+			DebugProfile.Logger.warning(message)
+			self.LogToConsole('warn', message)
 	def LogError(self,message):
 		if(self.enabled):
-			self.Logger.error(message)
+			DebugProfile.Logger.error(message)
+			self.LogToConsole('error', message)
 	def LogPositionChange(self,message):
 		if(self.position_change ):
 			self.LogInfo(message)
@@ -896,40 +917,43 @@ class DebugProfile(object):
 		if(self.camera_settings_apply):
 			self.LogInfo(message)
 			
-	def ApplyCommands(self, cmd, triggers, isSnapshot):
+	def ApplyCommands(self, cmd, timelapseSettings, snapshotState):
+
 		# see if the command is our debug command
 		command = Command()
 		command = self.Commands.GetCommand(cmd)
 		if(command is not None):
 			if(command.Command == Commands.Debug_Assert.Command):
 				# make sure our assert conditions are true or throw an exception
-				command.Parse(cmd)
-				snapshot = command.Parameters["Snapshot"]
-				
-				gcodeTrigger = command.Parameters["GcodeTrigger"]
-				gcodeTriggerWait = command.Parameters["GcodeTriggerWait"]
-				timerTrigger = command.Parameters["TimerTrigger"]
-				timerTriggerWait = command.Parameters["TimerTriggerWait"]
-				layerTrigger = command.Parameters["LayerTrigger"]
-				layerTriggerWait = command.Parameters["LayerTriggerWait"]
-				if(snapshot is not None):
-					assert isSnapshot == snapshot
-				for trigger in triggers:
-					if(isinstance(trigger,GcodeTrigger)):
-						if(gcodeTrigger is not None):
-							assert trigger.IsTriggered == gcodeTrigger
-						if(gcodeTriggerWait is not None):
-							assert trigger.IsWaiting == gcodeTriggerWait
-					if(isinstance(trigger,TimerTrigger)):
-						if(timerTrigger is not None):
-							assert trigger.IsTriggered == timerTrigger
-						if(timerTriggerWait is not None):
-							assert trigger.IsWaiting == timerTriggerWait
-					if(isinstance(trigger,LayerTrigger)):
-						if(layerTrigger is not None):
-							assert trigger.IsTriggered == layerTrigger
-						if(layerTriggerWait is not None):
-							assert trigger.IsWaiting == layerTriggerWait
+				if(timelapseSettings is not None):
+					command.Parse(cmd)
+					snapshot = command.Parameters["Snapshot"]
+					gcodeTrigger = command.Parameters["GcodeTrigger"]
+					gcodeTriggerWait = command.Parameters["GcodeTriggerWait"]
+					timerTrigger = command.Parameters["TimerTrigger"]
+					timerTriggerWait = command.Parameters["TimerTriggerWait"]
+					layerTrigger = command.Parameters["LayerTrigger"]
+					layerTriggerWait = command.Parameters["LayerTriggerWait"]
+					triggers = timelapseSettings['Triggers']
+					if(snapshot is not None and snapshotState is not None):
+						isSnapshot = snapshotState['IsPausedByOctolapse']
+						assert isSnapshot == snapshot
+					for trigger in triggers:
+						if(isinstance(trigger,GcodeTrigger)):
+							if(gcodeTrigger is not None):
+								assert trigger.IsTriggered == gcodeTrigger
+							if(gcodeTriggerWait is not None):
+								assert trigger.IsWaiting == gcodeTriggerWait
+						if(isinstance(trigger,TimerTrigger)):
+							if(timerTrigger is not None):
+								assert trigger.IsTriggered == timerTrigger
+							if(timerTriggerWait is not None):
+								assert trigger.IsWaiting == timerTriggerWait
+						if(isinstance(trigger,LayerTrigger)):
+							if(layerTrigger is not None):
+								assert trigger.IsTriggered == layerTrigger
+							if(layerTriggerWait is not None):
+								assert trigger.IsWaiting == layerTriggerWait
 
 class OctolapseSettings(object):
 	Version = 1.0
@@ -941,9 +965,9 @@ class OctolapseSettings(object):
 	DefaultDebugProfile = None;
 	Logger = None;
 	# constants
-	def __init__(self, octoprintLogger,settings=None):
-		self.Logger = octoprintLogger;
-		self.DefaultDebugProfile =DebugProfile(octoprintLogger = octoprintLogger, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
+	def __init__(self, logFilePath,  settings=None):
+		self.LogFilePath = logFilePath
+		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.version = "0.1.0"
 		
 		self.is_octolapse_enabled = True
@@ -1008,7 +1032,7 @@ class OctolapseSettings(object):
 		return self.cameras[self.current_camera_profile_guid]
 	def CurrentDebugProfile(self):
 		if(len(self.debug_profiles.keys()) == 0):
-			debug_profile = DebugProfile(self.Logger, debug_profiles = None)
+			debug_profile = DebugProfile(self.LogFilePath, debug_profiles = None)
 			self.debug_profiles[debug_profile.guid] = debug_profile
 			self.current_debug_profile_guid = debug_profile.guid
 		return self.debug_profiles[self.current_debug_profile_guid]
@@ -1076,31 +1100,57 @@ class OctolapseSettings(object):
 			for debugProfile in debugProfiles:
 				if(debugProfile["guid"] == ""):
 					debugProfile["guid"] = str(uuid.uuid4())
-				self.debug_profiles[debugProfile["guid"]] = DebugProfile(self.Logger, debugProfile = debugProfile)
+				self.debug_profiles[debugProfile["guid"]] = DebugProfile(self.LogFilePath, debugProfile = debugProfile)
 
 	def ToDict(self):
-		defaults = OctolapseSettings(self.CurrentDebugProfile().Logger)
+		defaults = OctolapseSettings(self.LogFilePath)
 		
 		settingsDict = {
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
-			'stabilization_options' :
+			'stabilization_type_options' :
 			[
 				dict(value='disabled',name='Disabled')
-				,dict(value='fixed_coordinate',name='Fixed (Millimeters)')
-				,dict(value='fixed_path',name='CSV Separated List of Y Coordinates (Millimeters)')
-				,dict(value='relative',name='Relative to Bed(percent)')
-				,dict(value='relative_path',name='Relative CSV (percent).')
+				,dict(value='fixed_coordinate',name='Fixed Coordinate')
+				,dict(value='fixed_path',name='List of Fixed Coordinates')
+				,dict(value='relative',name='Relative Coordinates (0-100)')
+				,dict(value='relative_path',name='List of Relative Coordinates')
 			
 			],
-			'fps_calculation_options' : [
-					dict(value='static',name='Static FPS (higher FPS = better quality/shorter videos)')
-					,dict(value='duration',name='Fixed Run Length (FPS = Total Frames/Run Length Seconds)')
+			
+			'snapshot_format_options' : [
+					dict(value='autodetect',name='Auto Detect',visible=True)
+					,dict(value='jpg',name='jpg',visible=True)
+					,dict(value='jpeg',name='jpeg',visible=False)
+					,dict(value='bmp',name='BMP',visible=True)
+					,dict(value='gif',name='GIF',visible=True)
+					,dict(value='png',name='PNG',visible=True)
 			],
-			'snapshot_formats' : [
-					dict(value='.jpg',name='jpg',visible=True)
-					,dict(value='.jpeg',name='jpeg',visible=False)
-					,dict(value='.bmp',name='bmp',visible=True)
+			'rendering_fps_calculation_options' : [
+					dict(value='static',name='Static FPS')
+					,dict(value='duration',name='Fixed Run Length')
+			],
+			'rendering_output_format_options' : [
+					dict(value='avi',name='AVI')
+					,dict(value='flv',name='FLV')
+					,dict(value='gif',name='GIF')
+					,dict(value='mp4',name='MP4')
+					,dict(value='mpeg',name='MPEG')
+			],
+			'camera_powerline_frequency_options' : [
+				dict(value='50',name='50 HZ (Europe, China, India, etc)')
+					,dict(value='60',name='60 HZ (North/South America, Japan, etc')
+			],
+			'camera_exposure_type_options' : [
+				dict(value='auto',name='Auto')
+				,dict(value='manual',name='Manual (based on exposure setting)')
+				,dict(value='aperture_priority',name='Aperture Priority Mode')
+			],
+			'camera_led_1_mode_options' : [
+				dict(value='on',name='On')
+				,dict(value='off',name='Off')
+				,dict(value='blink',name='Blink')
+				,dict(value='auto',name='Auto')
 			],
 			'current_printer_profile_guid' : utility.getstring(self.current_printer_profile_guid,defaults.current_printer_profile_guid),
 			'printers' : [],
@@ -1167,7 +1217,7 @@ class OctolapseSettings(object):
 			newProfile = Camera(profile)
 			self.cameras[guid] = newProfile
 		elif(profileType == "Debug"):
-			newProfile = DebugProfile(self.Logger, debugProfile = profile)
+			newProfile = DebugProfile(self.LogFilePath,debugProfile = profile)
 			self.debug_profiles[guid] = newProfile
 		else:
 			raise ValueError('An unknown profile type ' + str(profileType) + ' was received.')

@@ -316,7 +316,12 @@ class Gcode(object):
 		self.XRelativePath_loop = self.Stabilization.x_relative_path_loop
 		self.YRelativePath_loop = self.Stabilization.y_relative_path_loop
 		try:
-			self.XFixedPath = map(float, self.Stabilization.x_fixed_path.split(','))
+			self.XFixedPath = []
+			items = self.Stabilization.x_fixed_path.split(',')
+			for item in items:
+				item = item.strip()
+				if(len(item)>0):
+					self.XFixedPath.append(float(item))
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
@@ -324,7 +329,12 @@ class Gcode(object):
 			self.XFixedPath = ["0"]
 
 		try:
-			self.YFixedPath = map(float, self.Stabilization.y_fixed_path.split(','))
+			self.YFixedPath = []
+			items = self.Stabilization.y_fixed_path.split(',')
+			for item in items:
+				item = item.strip()
+				if(len(item)>0):
+					self.YFixedPath.append(float(item))
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
@@ -332,7 +342,13 @@ class Gcode(object):
 			self.YFixedPath = ["0"]
 
 		try:
-			self.XRelativePath = map(float, self.Stabilization.x_relative_path.split(','))	
+			self.XRelativePath = []
+			items = self.Stabilization.x_relative_path.split(',')
+			for item in items:
+				item = item.strip()
+				if(len(item)>0):
+					self.XRelativePath.append(float(item))
+
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
@@ -340,7 +356,12 @@ class Gcode(object):
 			self.XRelativePath = ["0"]
 
 		try:
-			self.YRelativePath = map(float, self.Stabilization.y_relative_path.split(','))
+			self.YRelativePath = []
+			items = self.Stabilization.y_relative_path.split(',')
+			for item in items:
+				item = item.strip()
+				if(len(item)>0):
+					self.YRelativePath.append(float(item))
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
@@ -368,25 +389,25 @@ class Gcode(object):
 		
 		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
 		if( customBox is not None and customBox != False  and (x<self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"] or x > self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])):
-			self.Settings.debug.LogError('The X coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(x))
+			self.Settings.CurrentDebugProfile().LogError('The X coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(x))
 			return False
 		elif(x<0 or x > self.OctoprintPrinterProfile["volume"]["width"]):
-			self.Settings.debug.LogError('The X coordinate {0} was outside the bounds of the printer!'.format(x))
+			self.Settings.CurrentDebugProfile().LogError('The X coordinate {0} was outside the bounds of the printer!'.format(x))
 			return False
 		return True	
 	def IsYInBounds(self,y):
 		hasError = False
 		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
-		self.Settings.debug.LogInfo("CustomBox:{0}".format(customBox))
+		self.Settings.CurrentDebugProfile().LogInfo("CustomBox:{0}".format(customBox))
 		if(customBox != False):
 			yMin = float(customBox["y_min"])
 			yMax = float(customBox["y_max"])
-			self.Settings.debug.LogInfo("Testing coordinates for custom print area: y:{0}, y_min:{1}, y_max:{2}:".format(y,yMin,yMax))
+			self.Settings.CurrentDebugProfile().LogInfo("Testing coordinates for custom print area: y:{0}, y_min:{1}, y_max:{2}:".format(y,yMin,yMax))
 			if((y<yMin or y > yMax)):
-				self.Settings.debug.LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
+				self.Settings.CurrentDebugProfile().LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
 				return False
 		elif(y<0 or y > self.OctoprintPrinterProfile["volume"]["depth"]):
-			self.Settings.debug.LogError('The Y coordinate {0} was outside the bounds of the printer!'.format(y))
+			self.Settings.CurrentDebugProfile().LogError('The Y coordinate {0} was outside the bounds of the printer!'.format(y))
 			return False
 
 		return True		
@@ -394,10 +415,10 @@ class Gcode(object):
 		hasError = False
 		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
 		if( customBox is not None and customBox != False  and (z < self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"] or z > self.OctoprintPrinterProfile["volume"]["custom_box"]["z_max"])):
-			self.Settings.debug.LogError('The Z coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(z))
+			self.Settings.CurrentDebugProfile().LogError('The Z coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(z))
 			return False
 		elif(z<0 or z > self.OctoprintPrinterProfile["volume"]["height"]):
-			self.Settings.debug.LogError('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
+			self.Settings.CurrentDebugProfile().LogError('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
 			return False
 		return True
 	def GetXCoordinateForSnapshot(self,position):
@@ -595,15 +616,15 @@ class Gcode(object):
 
 		newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
 
-		if(self.Settings.debug.snapshot_gcode):
-			self.Settings.debug.LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
+		if(self.Settings.CurrentDebugProfile().snapshot_gcode):
+			self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
 			for str in newSnapshotGcode.GcodeCommands:
-				self.Settings.debug.LogSnapshotGcode("    {0}".format(str))
+				self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
 				
 			
 
-		self.Settings.debug.LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
-		self.Settings.debug.LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
+		self.Settings.CurrentDebugProfile().LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
+		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
 
 		return newSnapshotGcode
 

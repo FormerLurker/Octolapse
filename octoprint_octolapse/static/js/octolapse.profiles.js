@@ -7,7 +7,7 @@ $(function() {
         self.profiles = ko.observableArray();
         self.default_profile = ko.observable();
         self.current_profile_guid = ko.observable();
-        self.profileOptions = null
+        self.profileOptions = null;
         self.profileViewModelCreate = settings.profileViewModelCreateFunction;
         self.addEditTemplateName = settings.addEditTemplateName;
         self.profileValidationRules = settings.profileValidationRules;
@@ -34,7 +34,6 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function(newProfile) {
-                    console.log(newProfile);
                     newProfile = new self.profileViewModelCreate(newProfile); // Create our profile viewmodel
                     if (isNewProfile)
                         self.profiles.push(newProfile); // Since it's new, just add it.

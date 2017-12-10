@@ -1,5 +1,21 @@
 var Octolapse;
-$(function() {
+$(function () {
+    // Add custom validator for csv floats
+    $.validator.addMethod('csvFloat', function (value) {
+        return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
+    }, 'Please enter a list of decimals separated by commas.');
+    // Add a custom validator for csv floats between 0 and 100
+    $.validator.addMethod('csvRelative', function (value) {
+        return /^(\s*\d{0,2}(\.\d+)?|100(\.0+)?)(\s*,\s*\d{0,2}(\.\d+)?|100(\.0+)?)*\s*$/.test(value);
+    }, 'Please enter a list of decimals between 0.0 and 100.0 separated by commas.');
+
+    
+    $.validator.addMethod('integer', function (value) {
+        return /^-?\d+$/.test(value);
+    }, 'Please enter an integer value.');
+    $.validator.addMethod('integerPositive', function (value) {
+        return /^\d+$/.test(value);
+    }, 'Please enter a positive integer value.');
     Octolapse.SettingsViewModel = function(parameters) {
         // Create a reference to this object
         var self = this;
@@ -16,20 +32,18 @@ $(function() {
         self.onBeforeBinding = function() {
             // Assign values to each observable
             self.settings = self.global_settings.settings.plugins.octolapse;
-            console.log("is_octolapse_enabled");
             Octolapse.Settings.is_octolapse_enabled(self.settings.is_octolapse_enabled());
             Octolapse.apiKey = self.global_settings.settings.api.key();
 
             /*
                 Create our printers view model
             */
-            console.log(self.settings.printers);
             var printerSettings =
                 {
                     'current_profile_guid': self.settings.current_printer_profile_guid()
                     , 'profiles': ko.toJS(self.settings.printers)
                     , 'default_profile': ko.toJS(self.settings.default_printer_profile)
-                    , 'profileOptions': { 'printer_options': ko.observable()}
+                    , 'profileOptions': null
                     , 'profileViewModelCreateFunction': Octolapse.PrinterProfileViewModel
                     , 'profileValidationRules': Octolapse.PrinterProfileValidationRules
                     , 'bindingElementId': 'octolapse_printer_tab'
@@ -39,7 +53,6 @@ $(function() {
                     , 'removeProfilePath': 'removeProfile'
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
-            console.log(printerSettings);
             Octolapse.Printers = new Octolapse.ProfilesViewModel(printerSettings);
 
             var stabilizationSettings =
@@ -47,7 +60,7 @@ $(function() {
                     'current_profile_guid': self.settings.current_stabilization_profile_guid()
                     , 'profiles': ko.toJS(self.settings.stabilizations)
                     , 'default_profile': ko.toJS(self.settings.default_stabilization_profile)
-                    , 'profileOptions': { 'stabilization_options': self.settings.stabilization_options }
+                    , 'profileOptions': { 'stabilization_type_options': self.settings.stabilization_type_options }
                     , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
                     , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
                     , 'bindingElementId': 'octolapse_stabilization_tab'
@@ -57,14 +70,14 @@ $(function() {
                     , 'removeProfilePath': 'removeProfile'
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
+            
             Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
-
             var snapshotSettings =
                 {
                     'current_profile_guid': self.settings.current_snapshot_profile_guid()
                     , 'profiles': ko.toJS(self.settings.snapshots)
                     , 'default_profile': ko.toJS(self.settings.default_snapshot_profile)
-                    , 'profileOptions': { 'snapshot_options': self.settings.snapshot_options }
+                    , 'profileOptions': { 'snapshot_format_options': self.settings.snapshot_format_options }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'
@@ -78,10 +91,15 @@ $(function() {
 
             var renderingSettings =
                 {
+                    
+			
                     'current_profile_guid': self.settings.current_rendering_profile_guid()
                     , 'profiles': ko.toJS(self.settings.renderings)
                     , 'default_profile': ko.toJS(self.settings.default_rendering_profile)
-                    , 'profileOptions': { 'rendering_options': self.settings.rendering_options }
+                    , 'profileOptions': {
+                        'rendering_fps_calculation_options': self.settings.rendering_fps_calculation_options
+                        , 'rendering_output_format_options': self.settings.rendering_output_format_options
+                    }
                     , 'profileViewModelCreateFunction': Octolapse.RenderingProfileViewModel
                     , 'profileValidationRules': Octolapse.RenderingProfileValidationRules
                     , 'bindingElementId': 'octolapse_rendering_tab'
@@ -92,13 +110,16 @@ $(function() {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Renderings = new Octolapse.ProfilesViewModel(renderingSettings);
-
             var cameraSettings =
                 {
                     'current_profile_guid': self.settings.current_camera_profile_guid()
                     , 'profiles': ko.toJS(self.settings.cameras)
                     , 'default_profile': ko.toJS(self.settings.default_camera_profile)
-                    , 'profileOptions': { 'camera_options': self.settings.camera_options }
+                    , 'profileOptions': {
+                        'camera_powerline_frequency_options': self.settings.camera_powerline_frequency_options
+                        , 'camera_exposure_type_options': self.settings.camera_exposure_type_options
+                        , 'camera_led_1_mode_options': self.settings.camera_led_1_mode_options
+                    }
                     , 'profileViewModelCreateFunction': Octolapse.CameraProfileViewModel
                     , 'profileValidationRules': Octolapse.CameraProfileValidationRules
                     , 'bindingElementId': 'octolapse_camera_tab'
@@ -125,8 +146,9 @@ $(function() {
                     , 'removeProfilePath': 'removeProfile'
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
-            console.log(debugSettings);
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
+
+            self.global_settings.settings.plugins.octolapse = null;
         }
         /*
             Show and hide the settings tabs based on the enabled parameter
@@ -139,7 +161,6 @@ $(function() {
             $settings = $('#octolapse_settings');
             $settings.hide();
             data = JSON.stringify({ "enabled": isEnabled });
-            console.log(data);
             $.ajax({
                 url: "/plugin/octolapse/setEnabled",
                 type: "POST",
@@ -148,8 +169,6 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function(data) {
-                    console.log("return data from setEnabled:")
-
                     $settings = $('#octolapse_settings');
                     if (data.enabled)
                         $settings.show();
@@ -224,27 +243,26 @@ $(function() {
             rules = {
                 rules: options.validationRules.rules,
                 messages: options.validationRules.messages,
+                ignore: ".ignore_hidden_errors:hidden",
                 errorPlacement: function(error, element) {
-                    var field_error = $(element).parent().parent().find(".error_label_container");
-                    console.log("Placing errors:" + error);
-                    $(error).addClass("text-error");
-                    field_error.html(error);
-                    field_error.removeClass("checked");
+                    var $field_error = $(element).parent().parent().find(".error_label_container");
+                    $field_error.html(error);
+                    $field_error.removeClass("checked");
+                    
                 },
                 highlight: function(element, errorClass) {
-                    console.log("Highlighting");
-                    $(element).parent().parent().addClass(errorClass);
-                    var field_error = $(element).parent().parent().find(".error_label_container");
-                    field_error.removeClass("checked");
+                    //$(element).parent().parent().addClass(errorClass);
+                    var $field_error = $(element).parent().parent().find(".error_label_container");
+                    $field_error.removeClass("checked");
+                    $field_error.addClass(errorClass);
                 },
                 unhighlight: function(element, errorClass) {
-                    console.log("Unhighlighting");
-                    $(element).parent().parent().removeClass(errorClass);
-                    var field_error = $(element).parent().parent().find(".error_label_container");
-                    field_error.addClass("checked");
+                    //$(element).parent().parent().removeClass(errorClass);
+                    var $field_error = $(element).parent().parent().find(".error_label_container");
+                    $field_error.addClass("checked");
+                    $field_error.removeClass(errorClass);
                 },
                 invalidHandler: function() {
-                    console.log("Invalid Form");
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
                     numErrors = dialog.validator.numberOfInvalids()
@@ -255,7 +273,6 @@ $(function() {
                 },
                 errorContainer: "#add_edit_validation_summary",
                 success: function(label) {
-                    console.log("Success");
                     label.html("&nbsp;");
                     label.parent().addClass('checked');
                     $(label).parent().parent().parent().removeClass('error')
@@ -281,6 +298,9 @@ $(function() {
             dialog.$addEditDialog.on("show.bs.modal", function() {
                 Octolapse.Settings.AddEditProfile({ "profileObservable": dialog.profileObservable, "templateName": dialog.templateName  });
                 // Adjust the margins, height and position
+                // Set title
+                dialog.$dialogTitle.text(options.title);
+
                 dialog.$addEditDialog.css({
                     width: 'auto',
                     'margin-left': function() { return -($(this).width() / 2); }
@@ -289,8 +309,7 @@ $(function() {
             // Configure the show event
             dialog.$addEditDialog.on("shown.bs.modal", function() {
                 dialog.validator = dialog.$addEditForm.validate(rules);
-                // Set title
-                dialog.$dialogTitle.text(options.title);
+                
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog
@@ -298,6 +317,7 @@ $(function() {
                     // Hide the dialog
                     self.hideAddEditDialog();
                 });
+
                 // remove any click event bindings from the defaults button
                 dialog.$defaultButton.unbind("click");
                 dialog.$defaultButton.bind("click", function() {
@@ -305,8 +325,6 @@ $(function() {
                     Octolapse.Settings.AddEditProfile().profileObservable(newProfile);
                     
                 });
-
-
                 
                 // Remove any click event bindings from the save button
                 dialog.$saveButton.unbind("click");
@@ -317,11 +335,34 @@ $(function() {
                         self.addUpdateProfile(Octolapse.Settings.AddEditProfile());
                     }
                     else {
+                        // Search for any hidden elements that are invalid
+                        console.log("Checking ofr hidden field error");
+                        $fieldErrors = dialog.$addEditForm.find('.error_label_container.error')
+                        $fieldErrors.each(function (index, element) {
+                            // Check to make sure the field is hidden.  If it's not, don't bother showing the parent container.
+                            // This can happen if more than one field is invalid in a hidden form
+                            $errorContainer = $(element);
+                            if (!$errorContainer.is(":visible")) {
+                                console.log("Hidden error found, showing");
+                                $collapsableContainer = $errorContainer.parents(".collapsible");
+                                if ($collapsableContainer.length > 0)
+                                    // The containers may be nested, show each
+                                    $collapsableContainer.each(function (index, container) {
+                                        console.log("Showing the collapsed container");
+                                        $(container).show();
+                                    });
+                            }
+
+                        });
+
+
+
                         // The form is invalid, add a shake animation to inform the user
                         $(dialog.$addEditDialog).addClass('shake');
                         // set a timeout so the dialog stops shaking
-                        setTimeout(function() { $(dialog.$addEditDialog).removeClass('shake'); }, 500);
+                        setTimeout(function () { $(dialog.$addEditDialog).removeClass('shake'); }, 500);
                     }
+                    
                 });
             });
             // Open the add/edit profile dialog
@@ -376,10 +417,15 @@ Octolapse.toggle = function(caller, args) {
 // Apply the toggle click event to every element within our settings that has the .toggle class
 $(document).ready(function() {
     $("#octolapse_settings .toggle").click(function() {
-        var args = $(this).attr("data-toggle");
-        Octolapse.toggle(this, JSON.parse(args));
+        Octolapse.ToggleElement(this);
     });
 
+
 });
+
+Octolapse.ToggleElement = function (element) {
+    var args = $(this).attr("data-toggle");
+    Octolapse.toggle(this, JSON.parse(args));
+};
 
 

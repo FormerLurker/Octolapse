@@ -4,7 +4,7 @@
   <div class="control-group">
     <label class="control-label">Profile Name</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: name"/>
+      <input type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -14,45 +14,48 @@
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
-        <select data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_options,
+        <select name ="x_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    optionsCaption: 'Select One...',
                                    value: x_type"></select>
+        <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: x_fixed_coordinate"/>
+        <input name ="x_fixed_coordinate" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: x_fixed_path"/>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
-        </label>
+        <input name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
         <div class="error_label_container text-error" ></div>
+        <label class="checkbox">
+          <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
+        </label>
+        
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'relative'">
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: x_relative"/>
+        <input name="x_relative" type="text" class="input-block-leve form-input ignore_hidden_errors " data-bind="value: x_relative"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
-      <label class="control-label">Relative Path</label>
+      <label class="control-label">Relative Path</label> 
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: x_relative_path"/>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
-        </label>
+        <input name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
         <div class="error_label_container text-error" ></div>
+        <label class="checkbox">
+          <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
+        </label>
+        
       </div>
     </div>
   </div>
@@ -61,45 +64,47 @@
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
-        <select data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_options,
+        <select name="y_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    optionsCaption: 'Select One...',
                                    value: y_type"></select>
+        <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: y_fixed_coordinate"/>
+        <input name="y_fixed_coordinate" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: y_fixed_path"/>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
-        </label>
+        <input name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
         <div class="error_label_container text-error" ></div>
+        <label class="checkbox">
+          <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
+        </label>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'relative'">
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: y_relative"/>
+        <input name="y_relative" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
       <label class="control-label">Relative Path</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: y_relative_path"/>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
-        </label>
+        <input name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
         <div class="error_label_container text-error" ></div>
+        <label class="checkbox">
+          <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
+        </label>
+        
       </div>
     </div>
   </div>

@@ -34,7 +34,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SnapshotState = None # Holds all state and gcode required to take a snapshot.
 		self.Responses = Responses() # Used to decode responses from the 3d printer
 		self.Commands = Commands() # used to parse and generate gcode 
-		self.SettingsFilePath = None
+		self.IsPrinting = False
 		
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
@@ -49,7 +49,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
 	def addUpdateProfile(self):
 		requestValues = flask.request.get_json()
-		self.Settings.CurrentDebugProfile().LogError(requestValues);
 		profileType = requestValues["profileType"];
 		profile = requestValues["profile"]
 		updatedProfile = self.Settings.addUpdateProfile(profileType, profile)
@@ -74,43 +73,93 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.setCurrentProfile(profileType, guid)
 		self.SaveSettings()
 		return json.dumps({'success':True, 'guid':requestValues["guid"]}), 200, {'ContentType':'application/json'} 
-	
-	def LoadSettings(self):
-		# if the settings file does not exist, create one from the default settings
-		if(not os.path.isfile(self.SettingsFilePath)):
-			# create new settings from defaults
-			self.Settings = OctolapseSettings(self._logger)
-			# save the defaults
-			self.SaveSettings();
-		else:
-			# Load settings from file
-			data = json.load(open(self.SettingsFilePath));
 
-			if(self.Settings == None):
-				#  create a new settings object
-				self.Settings = OctolapseSettings(self._logger,data);
-			else:
-				# update an existing settings object
-				self.Settings.Update(data);
+	def SettingsFilePath(self):
+		return "{0}{1}settings.json".format(self.get_plugin_data_folder(),os.sep)
+
+	def LogFilePath(self):
+		return self._settings.get_plugin_logfile_path();
+	def LoadSettings(self):
+		try:
+			# if the settings file does not exist, create one from the default settings
 			
+			createNewSettings = False
+
+			if(not os.path.isfile(self.SettingsFilePath())):
+				# create new settings from defaults
+				self.Settings = OctolapseSettings(self.LogFilePath())
+				self.Settings.CurrentDebugProfile().LogSettingsLoad("Creating new settings file from defaults.")			
+				createNewSettings = True
+			else:
+				# Load settings from file
+				if(self.Settings is not None):
+					self.Settings.CurrentDebugProfile().LogSettingsLoad("Loading existings settings file from: {0}.".format(self.SettingsFilePath()))
+				else:
+					self._logger.info("Loading existing settings file from: {0}.".format(self.SettingsFilePath()))
+				with open(self.SettingsFilePath()) as settingsJson:
+					data = json.load(settingsJson);
+				if(self.Settings == None):
+					#  create a new settings object
+					self.Settings = OctolapseSettings(self.LogFilePath(), data);
+					self.Settings.CurrentDebugProfile().LogSettingsLoad("Settings loaded.  Created new settings object: {0}.".format(data))			
+				else:
+					# update an existing settings object
+					self.Settings.CurrentDebugProfile().LogSettingsLoad("Settings loaded.  Updating existing settings object: {0}.".format(data))			
+					self.Settings.Update(data)	
+			# Extract any settings from octoprint that would be useful to our users.
+			self.CopyOctoprintDefaultSettings(applyToCurrentProfiles=createNewSettings)
+
+			if(createNewSettings):
+				# No file existed, so we must have created default settings.  Save them!
+				self.Settings.SaveSettings()
+			return self.Settings.ToDict();
+		except TypeError,e:
+			self._logger.exception("Could not load octolapse settings.  Details: {0}".format(e))
+	def CopyOctoprintDefaultSettings(self, applyToCurrentProfiles = False):
+		# move some octoprint defaults if they exist for the webcam
+		# specifically the address, the bitrate and the ffmpeg directory.
+		webcamSettings = self._settings.settings.get(["webcam"])
+
+		# Attempt to get the camera address and snapshot template from Octoprint settings
+		if("snapshot" in webcamSettings ):
+			snapshotUrl = webcamSettings["snapshot"]
+			from urlparse import urlparse
+			# we are doing some templating so we have to try to separate the
+			# camera base address from the querystring.  This will probably not work
+			# for all cameras.
+			try:
+				o = urlparse(snapshotUrl)
+				cameraAddress = o.scheme + "://" + o.netloc + o.path
+				self.Settings.CurrentDebugProfile().LogInfo("Setting octolapse camera address to {0}.".format(cameraAddress))
+				snapshotAction = urlparse(snapshotUrl).query
+				snapshotRequestTemplate = "{camera_address}?" + snapshotAction;
+				self.Settings.CurrentDebugProfile().LogInfo("Setting octolapse camera snapshot template to {0}.".format(snapshotRequestTemplate))
+				self.Settings.DefaultCamera.address = cameraAddress
+				self.Settings.DefaultCamera.snapshot_request_template = snapshotRequestTemplate
+				if(applyToCurrentProfiles):
+					self.Settings.CurrentCamera().address = cameraAddress;
+					self.Settings.CurrentCamera().snapshot_request_template = snapshotRequestTemplate
+			except TypeError, e:
+				self.Settings.CurrentDebugProfile().LogError("Unable to parse the snapshot address from Octoprint's settings, using system default. Details: {0}".format(e))
+
+		# Attempt to set the bitrate
+		if("bitrate" in webcamSettings):
+			bitrate = webcamSettings["bitrate"]
+			self.Settings.DefaultCamera.bitrate = bitrate
+			if(applyToCurrentProfiles):
+				self.Settings.CurrentCamera().bitrate = bitrate
+
 	def SaveSettings(self):
 		# Save setting from file
-		self._logger.warn("Saving settings.")
 		settings = self.Settings.ToDict();
-		with open(self.SettingsFilePath, 'w') as outfile:
+		self.Settings.CurrentDebugProfile().LogSettingsSave("Saving Settings.".format(settings))
+		
+		with open(self.SettingsFilePath(), 'w') as outfile:
 			json.dump(settings, outfile)
+		self.Settings.CurrentDebugProfile().LogSettingsSave("Settings saved: {0}".format(settings))
 		return None
 
-	def get_settings_defaults(self):
-		return dict(load=None)
-
-	def on_settings_load(self):
-		self.SettingsFilePath = "{0}{1}settings.json".format(self._basefolder,os.sep)
-		self.LoadSettings()
-		return self.Settings.ToDict();
-
 	#def on_settings_initialized(self):
-		
 	
 	def CurrentPrinterProfile(self):
 		"""Get the plugin's current printer profile"""
@@ -137,19 +186,32 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'PositionCommandIndex': 0
 		}
 	def CreateTimelaspeSettings(self):
+		
 		self.ResetSnapshotState()
+		webcam = self._settings.settings.get(["webcam"])
+		ffmpegPath = ""
+		if("ffmpeg" in webcam):
+			ffmpegPath = webcam["ffmpeg"]
+		if(self.Settings.CurrentRendering().enabled and ffmpegPath == ""):
+			return {'success':False, 'error':"No ffmpeg path is set.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG."}
+
+		if(not os.path.isfile(ffmpegPath)):
+			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
 		self.TimelapseSettings = {
 			'CameraControl': CameraControl(self.Settings),
 			'OctolapseGcode': Gcode(self.Settings,self.CurrentPrinterProfile()),
 			'Printer': Printer(self.Settings.CurrentPrinter()),
-			'CaptureSnapshot': CaptureSnapshot(self.Settings,printStartTime=time.time()),
+			'CaptureSnapshot': CaptureSnapshot(self.Settings,  self.get_plugin_data_folder(), printStartTime=time.time()),
 			'Position': Position(self.Settings,self.CurrentPrinterProfile()),
-			'Render': Render(self.Settings,1,self.OnRenderStart,self.OnRenderFail,self.OnRenderComplete,None),
+			'Render': Render(self.Settings,self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"),  ffmpegPath,1,onStart = self.OnRenderStart,onFail=self.OnRenderFail, onSuccess = self.OnRenderSuccess, onAlways = self.OnRenderingComplete, onAfterSyncFail = self.OnSyncronizeRenderingFail, onAfterSycnSuccess = self.OnSyncronizeRenderingComplete),
 			'SnapshotCount': 0,
 			'CurrentPrintFileName': utility.CurrentlyPrintingFileName(self._printer),
 			'Triggers': [],
-			'IsRendering': False
+			'IsRendering': False,
+			'SnapshotRequestCount': 0
 			}
+
+
 		# create the triggers for this print
 		snapshot = self.Settings.CurrentSnapshot()
 		# If the gcode trigger is enabled, add it
@@ -163,17 +225,30 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(snapshot.timer_trigger_enabled):
 			self.TimelapseSettings['Triggers'].append(TimerTrigger(self.Settings))
 
+		return {'success':True}
+
+	def ResetTimelapseSettings(self):
+		if(self.TimelapseSettings is not None):
+			if(self.TimelapseSettings["SnapshotRequestCount"] == 0 and not self.TimelapseSettings["IsRendering"]):
+				self.TimelapseSettings = None
+				self.ResetSnapshotState()
+	## EVENTS
+	#########
+	def get_settings_defaults(self):
+		return dict(load=None)
+	
+	def on_settings_load(self):
+		octoprint.plugin.SettingsPlugin.on_settings_load(self)
+		return self.LoadSettings()
+	
 	def get_template_configs(self):
 		self._logger.info("Octolapse - is loading template configurations.")
 		return [dict(type="settings", custom_bindings=True)]
 
-	## EVENTS
-	#########
-	# After Startup
 	def on_after_startup(self):
-
 		self._logger.info("Octolapse - loaded and active.")
 		IsStarted = True
+	
 	# Event Mixin Handler
 	def on_event(self, event, payload):
 		# If we're not enabled, get outta here!
@@ -199,8 +274,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.OnPrintCompleted()
 		elif (event == Events.SETTINGS_UPDATED):
 			self._logger.info("Detected settings save, reloading and cleaning settings.")
-			
-			
+		
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
 
@@ -215,72 +289,45 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused by Octolapse.")
 			
 	def OnPrintStart(self):
+		
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started.")
-		self.CreateTimelaspeSettings()
-		# Clean snapshots
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(None,'before-print')
+		self.IsPrinting = True
+		settingsCreatedResult = self.CreateTimelaspeSettings()
+		if(not settingsCreatedResult["success"]):
+			# display a warning
+			self.Settings.CurrentDebugProfile().LogWarning("Unable to create timelapse settings: {0}".format(settingsCreatedResult["error"]))
+			# cancel the print
+			self._printer.cancel_print()
+			return
+		
 		if(self.Settings.CurrentCamera().apply_settings_before_print):
-			self.TimelapseSettings['CameraControl'].ApplySettings()
+				self.TimelapseSettings['CameraControl'].ApplySettings()
 	def OnPrintFailed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['IsRendering'] = True
-			self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
-			self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'],  self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime);
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(self.TimelapseSettings['CurrentPrintFileName'],'after-failed')
 		self.OnPrintEnd()
 	def OnPrintCancelled(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['IsRendering'] = True
-			self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
-			self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'],  self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime);
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(self.TimelapseSettings['CurrentPrintFileName'],'after-cancel')
 		self.OnPrintEnd()
 	def OnPrintCompleted(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
 		self.TimelapseSettings['CaptureSnapshot'].PrintEndTime = time.time()
-		if(not self.TimelapseSettings['IsRendering']):
-			self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
-			self.TimelapseSettings['IsRendering'] = True
-			self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'],  self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime);
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed!")
-		if(not self.TimelapseSettings['IsRendering']):
-			self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(self.TimelapseSettings['CurrentPrintFileName'],'after-print')
 		self.OnPrintEnd()
 	def OnPrintEnd(self):
+		self.IsPrinting = False
+
+		self.RenderTimelapse()
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 
-	# RENDERING EVENTS
-	def OnRenderStart(self, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogRenderStart("Starting.")
-
-	def OnRenderComplete(self, *args, **kwargs):
-		filePath = args[0]
-		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering {0}.".format(args[0]))
-		# using the live settings here, so the user can change them while printing
-		if(self.Settings.CurrentRendering().sync_with_timelapse):
-			self.Settings.CurrentDebugProfile().LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(filePath,self.TimelapseSettings['Render'].octoprint_timelapse_directory ))
-			try:
-				shutil.move(filePath,self.TimelapseSettings['Render'].octoprint_timelapse_directory)
-			except:
-				type = sys.exc_info()[0]
-				value = sys.exc_info()[1]
-				self.Settings.CurrentDebugProfile().LogError("Could move the timelapse at {0} to the octoprint timelaspse directory as {1}. Error Type:{2}, Details:{3}".format(filePath,self.TimelapseSettings['Render'].octoprint_timelapse_directory,type,value))
-		self.TimelapseSettings['IsRendering'] = False
-		self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(self.TimelapseSettings['CurrentPrintFileName'],'after_render_complete')
-	def OnRenderFail(self, *args, **kwargs):
-		self.TimelapseSettings['IsRendering'] = False
-		self.TimelapseSettings['CaptureSnapshot'].CleanSnapshots(self.TimelapseSettings['CurrentPrintFileName'],'after_render_fail')
-		self.Settings.CurrentDebugProfile().LogRenderFail("Failed.")
+	
+	
 
 	def IsTimelapseActive(self):
 		if (# wait for the snapshot command to finish sending, or wait for the snapshot delay in case of timeouts)
 			self.Settings is None
 			or self.TimelapseSettings is None
+			or self.SnapshotState is None
+			or not self.IsPrinting
 			or not self.Settings.is_octolapse_enabled
 			or self.TimelapseSettings['Triggers'] is None
 			or len(self.TimelapseSettings['Triggers'])<1
@@ -297,17 +344,19 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.TimelapseSettings['Position'].Update(cmd)
 
 		# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.
-		
+
+		#Apply any debug assert commands
+		if(self.Settings is not None):
+			self.Settings.CurrentDebugProfile().ApplyCommands(cmd, self.TimelapseSettings, self.SnapshotState)
+
 		if(not self.IsTimelapseActive()):
 			return cmd
 
-		#Apply any debug assert commands
-		self.Settings.debug.ApplyCommands(cmd, triggers=self.TimelapseSettings['Triggers'], isSnapshot=self.SnapshotState['IsPausedByOctolapse'])
-
+		
 		if(self.SnapshotState['IsPausedByOctolapse']):
 			return cmd
 		
-		currentTrigger = trigger.IsTriggering(self.TimelapseSettings['Triggers'],self.TimelapseSettings['Position'], cmd, self.Settings.debug)
+		currentTrigger = trigger.IsTriggering(self.TimelapseSettings['Triggers'],self.TimelapseSettings['Position'], cmd, self.Settings.CurrentDebugProfile())
 		if(currentTrigger is not None):
 			#We're triggering
 			
@@ -329,7 +378,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			cmd = None
 
 		return cmd
-
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		if(not self.IsTimelapseActive() ):
 			return
@@ -368,10 +416,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif(self.SnapshotState['SendingSavedCommand']):
 			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Looking for saved command.  Command Sent:{0}, Command Expected:{1}".format( cmd, self.SnapshotState['SavedCommand']))
 			if(cmd == self.SnapshotState['SavedCommand']):
-				self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming the print.")
-				self.ResetSnapshotState()
-				self._printer.resume_print()
-
+				self.Settings.CurrentDebugProfile().LogSnapshotDownload("Save Command Received.")
+				self.EndSnapshot()
 	def GcodeReceived(self, comm, line, *args, **kwargs):
 		if(not self.IsTimelapseActive() ):
 			return line
@@ -380,6 +426,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			if(self.SnapshotState['WaitForSnapshot']):
 				self.SnapshotState['WaitForSnapshot'] = False
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
+				
 				self.TakeSnapshot()
 			elif(self.SnapshotState['WaitForPosition']):
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Trying to parse received line for position:{0}".format(line))
@@ -410,13 +457,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			previousX = self.TimelapseSettings['Position'].X
 			previousY = self.TimelapseSettings['Position'].Y
 			previousZ = self.TimelapseSettings['Position'].Z
-			if(utility.isclose(previousX, x,abs_tol=1e-8)
-				and utility.isclose(previousY, y,abs_tol=1e-8)
-				and utility.isclose(previousZ, z,abs_tol=1e-8)
+			if(
+				(previousX is None or utility.isclose(previousX, x,abs_tol=1e-8))
+				and (previousY is None or utility.isclose(previousY, y,abs_tol=1e-8))
+				and (previousZ is None or utility.isclose(previousZ, z,abs_tol=1e-8))
 				):
 				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
 			else:
-				self.Settings.CurrentDebugProfile().LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  Expected (x:{0},y:{1},z:{2}), Received (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
+				self.Settings.CurrentDebugProfile().LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
 
 			self.TimelapseSettings['Position'].UpdatePosition(x,y,z,e)
 			self.SnapshotState['RequestingPosition'] = False
@@ -429,33 +477,156 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 		if(self.SnapshotState['SnapshotGcodes'] is None):
 			self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
-			self.ResetSnapshotState();
+			self.AbortSnapshot()
 			return;
 		
 		self.SnapshotState['SendingSnapshotCommands'] = True
 		self._printer.commands(self.SnapshotState['SnapshotGcodes'].GcodeCommands);
+
+	def AbortSnapshot(self, message):
+		"""Stops the current snapshot, but continues.  Eventually this will display a user notification"""
+		# Todo:  Display a message for the user
 		
+		# End the current snapshot
+		self.EndSnapshot()
+
+	def EndSnapshot(self):
+		# Cleans up the variables and resumes the print once the snapshot is finished, and the extruder is in the proper position 
+		isPaused = self.SnapshotState["IsPausedByOctolapse"]
+		# reset the snapshot variables
+		self.ResetSnapshotState();
+
+		# if octolapse paused the print, resume it
+		if(isPaused):
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
+			self._printer.resume_print()
+
+	def StopTimelapse(self, message):
+		"""Stops the current timelapse and clears out the variables"""
+		self.ResetSnapshotState();
+		self.ResetTimelapseSettings();
+		
+
 	def SendSavedCommand(self):
 		SendingSavedCommand = True
 		self._printer.commands(self.SnapshotState['SavedCommand']);
 
 	def TakeSnapshot(self):
+		# Increment the number of outstanding snapshot requests
+		self.TimelapseSettings["SnapshotRequestCount"] += 1
+		
 		snapshot = self.TimelapseSettings['CaptureSnapshot']
+		try:
+			snapshot.Snap(self.TimelapseSettings['CurrentPrintFileName'],self.TimelapseSettings['SnapshotCount'],onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess)
+		except:
+			a = sys.exc_info() # Info about unknown error that caused exception.                                              
+			errorMessage = "    {0}".format(a)
+			b = [ str(p) for p in a ]
+			errorMessage += "\n    {0}".format(b)
+			self.Settings.CurrentDebugProfile().LogError('Unknown error detected:{0}'.format(errorMessage))
+		
+	def OnSnapshotSuccess(self, *args, **kwargs):
+		if(self.TimelapseSettings == None):
+			self.Settings.self.Settings.CurrentDebugProfile().LogError("There are no timelapse settings, cannot rename the snapshot!")
+			EndSnapshot()
+			return
+		# Increment the number of snapshots received
 		self.TimelapseSettings['SnapshotCount'] += 1
-		if(snapshot is not None):
-			try:
-				snapshot.Snap(self.TimelapseSettings['CurrentPrintFileName'],self.TimelapseSettings['SnapshotCount'])
-			except:
-					
-				a = sys.exc_info() # Info about unknown error that caused exception.                                              
-				errorMessage = "    {0}".format(a)
-				b = [ str(p) for p in a ]
-				errorMessage += "\n    {0}".format(b)
-				self._logger.error('Unknown error detected:{0}'.format(errorMessage))
-			
-		else:
-			self.Settings.CurrentDebugProfile().LogError("Failed to retrieve the snapshot module!  It might work again later.")
+		# get the save path
+		snapshotInfo = args[0]
+		# get the current file name
+		newSnapshotName = snapshotInfo.GetFullPath(self.TimelapseSettings['SnapshotCount'])
+		self.Settings.CurrentDebugProfile().LogSnapshotSave("Renaming snapshot {0} to {1}".format(snapshotInfo.GetTempFullPath(),newSnapshotName))
+		# create the output directory if it does not exist
+		try:
+			path = os.path.dirname(newSnapshotName)
+			if not os.path.exists(path):
+				os.makedirs(path)
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Settings.CurrentDebugProfile().LogWarning("An exception was thrown when trying to create a directory for the downloaded snapshot: {0}  , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
+			return
 
+		# rename the current file
+		try:
+
+			shutil.move(snapshotInfo.GetTempFullPath(),newSnapshotName)
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			self.Settings.CurrentDebugProfile().LogError("Could rename the snapshot {0} to {1}!   Error Type:{2}, Details:{3}".format(shapshotInfo.GetTempFullPath(), newSnapshotName,type,value))
+
+	def OnSnapshotComplete(self, *args, **kwargs):
+		self.TimelapseSettings["SnapshotRequestCount"] -= 1
+		# It's possible that a rendering is waiting to be generated if we were waiting for a snapshot to complete.
+		if(self.TimelapseSettings["SnapshotRequestCount"] == 0 and self.TimelapseSettings['IsRendering'] == True):
+			self.RenderTimelapse()
+
+	# RENDERING Functions and Events
+	def RenderTimelapse(self):
+		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
+		if(self.TimelapseSettings is not None):
+			self.TimelapseSettings['IsRendering'] = True
+			if(not self.TimelapseSettings["SnapshotRequestCount"] == 0):
+				self.Settings.CurrentDebugProfile().LogRenderStart("Waiting for {0} download(s) to complete before starting timelapse generation.".format(self.TimelapseSettings["SnapshotRequestCount"]))
+			else:
+				if(self.TimelapseSettings["Render"].Rendering.enabled):
+					self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
+					self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'], self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime)
+				# in every case reset the timelapse settings.  we want all of the settings to be reset and the current timelapse ended.  The rendering will take place in the background.
+				self.TimelapseSettings["IsRendering"] = False
+				self.ResetTimelapseSettings();
+		else:
+			self.Settings.CurrentDebugProfile().LogWarning("The timelapse was terminated before it could be created.")
+	def OnRenderStart(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering the timelapse.")
+		finalFilename = args[0]
+		baseFileName = args[1]
+		#Notify Octoprint
+		payload = dict(gcode="unknown",movie=finalFilename,movie_basename=baseFileName,movie_prefix="from Octolapse")
+		eventManager().fire(Events.MOVIE_RENDERING, payload)
+	def OnRenderSuccess(self, *args, **kwargs):
+		finalFilename = args[0]
+		baseFileName = args[1]
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
+	def OnRenderingComplete(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering, ending timelapse.")
+	def OnRenderFail(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderFail("The timelapse rendering failed.")
+
+		#Notify Octoprint
+		finalFilename = args[0]
+		baseFileName = args[1]
+		returnCode = args[2]
+		reason = args[3]
+		
+		payload = dict(gcode="unknown",
+				movie=finalFilename,
+				movie_basename=baseFileName ,
+				returncode=returnCode,
+				reason = reason)
+		eventManager().fire(Events.MOVIE_FAILED, payload)
+	def OnSyncronizeRenderingComplete(self, *args, **kwargs):
+		finalFilename = args[0]
+		baseFileName = args[1]
+		# Notify the user of success and refresh the default timelapse control
+		payload = dict(gcode="unknown",
+				movie=finalFilename,
+				movie_basename=baseFileName ,
+				movie_prefix="from Octolapse")
+		eventManager().fire(Events.MOVIE_DONE, payload)
+	def OnSyncronizeRenderingFail(self, *args, **kwargs):
+		finalFilename = args[0]
+		baseFileName = args[1]
+		# Notify the user of success and refresh the default timelapse control
+		payload = dict(gcode="unknown",
+				movie=finalFilename,
+				movie_basename=baseFileName ,
+				movie_prefix="from Octolapse",
+				returncode=0,
+				reason="See the octolapse log for details.")
+		eventManager().fire(Events.MOVIE_FAILED, payload)
 	
 	##~~ AssetPlugin mixin
 	def get_assets(self):

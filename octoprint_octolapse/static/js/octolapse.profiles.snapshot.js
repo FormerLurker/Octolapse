@@ -51,10 +51,12 @@ $(function() {
     }
     Octolapse.SnapshotProfileValidationRules = {
         rules: {
-            name: "required"
+            name: "required",
+            script_path: "required"
         },
         messages: {
             name: "Please enter a name for your profile",
+            script_path: "Please enter a path to your custom script"
         }
     };
 });

@@ -4,9 +4,8 @@
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\static",
     "\\octoprint_octolapse\\static\\js",
-    "\\octoprint_octolapse\\static\\scripts",
-    "\\octoprint_octolapse\\templates"
+    "\\octoprint_octolapse\\static\\scripts"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\settings.py",
+  "SelectedNode": "\\octoprint_octolapse\\__init__.py",
   "PreviewInSolutionExplorer": false
 }

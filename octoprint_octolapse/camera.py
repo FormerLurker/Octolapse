@@ -45,6 +45,7 @@ class CameraSettingJob(object):
 
 	def __init__(self, Settings, template, value, settingName, timeout = 5):
 		camera = Settings.CurrentCamera()
+		self.Settings = Settings
 		self.Address = camera.address
 		self.Username = camera.username
 		self.Password = camera.password

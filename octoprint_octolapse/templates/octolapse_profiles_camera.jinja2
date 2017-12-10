@@ -99,10 +99,13 @@
     <div class="control-group">
       <label class="control-label">Powerline Frequency</label>
       <div class="controls">
-        <select data-bind="value: powerline_frequency">
-          <option value="50">50</option>
-          <option value="60">60</option>
-        </select>
+        
+        
+        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: powerline_frequency"></select>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -128,24 +131,15 @@
         </label>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Powerline Frequency</label>
-      <div class="controls">
-        <select data-bind="value: powerline_frequency">
-          <option value="50">50</option>
-          <option value="60">60</option>
-        </select>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
+    
     <div class="control-group">
       <label class="control-label">Exposure Type</label>
-      <div class="controls">
-        <select data-bind="value: exposure_type">
-          <option value="auto">Auto</option>
-          <option value="manual">Manual</option>
-          <option value="aperture_priority">Aperture Priority Mode</option>
-        </select>
+      <div class="controls">       
+        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: exposure_type"></select>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -203,12 +197,11 @@
     <div class="control-group">
       <label class="control-label">Led 1 Mode</label>
       <div class="controls">
-        <select data-bind="value: led1_mode">
-          <option value="off">Off</option>
-          <option value="on">On</option>
-          <option value="blink">Blink</option>
-          <option value="auto">Auto</option>
-        </select>
+        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: led1_mode"></select>
       </div>
     </div>
     <div class="control-group">

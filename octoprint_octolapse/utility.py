@@ -58,29 +58,37 @@ def GetExtensionFromFileName(fileName):
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.00000):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def GetFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber=None, printEndTime = None):
+def GetRenderingFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, printEndTime):
 
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
 	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
 	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
 	fileTemplate = fileTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
-	if(snapshotNumber is not None):
-		if(isinstance(snapshotNumber,int) or isinstance(snapshotNumber,float)):
-			fileTemplate = fileTemplate.replace("{SNAPSHOTNUMBER}","{0:05d}".format(snapshotNumber))
-		else:
-			fileTemplate = fileTemplate.replace("{SNAPSHOTNUMBER}",snapshotNumber)
-	if(printEndTime is not None):
-		fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
+	fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
 	
-	return fileTemplate
+	return "{0}.{1}".format(fileTemplate, outputExtension)
 
-def GetDirectoryFromTemplate(directoryTemplate, printName, printStartTime, outputExtension,printEndTime = None):
+def GetSnapshotFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber):
+
+	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
+	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
+	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
+	fileTemplate = fileTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
+	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
+	# if the snapshot number is an int, make sure the front is padded with enough 0s for FFMPEG
+	if(isinstance(snapshotNumber,int)):
+		snapshotNumber = "{0:05d}".format(snapshotNumber)
+	return "{0}{1}.{2}".format(fileTemplate,snapshotNumber , outputExtension)
+
+def GetDirectoryFromTemplate(directoryTemplate, dataDirectory, printName, printStartTime, outputExtension, printEndTime = None):
 	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
 	directoryTemplate = directoryTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
 	if(printEndTime is not None):
 		directoryTemplate = directoryTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
+	directoryTemplate = directoryTemplate.replace("{DATADIRECTORY}",dataDirectory)
+		
 	return directoryTemplate
 
 class SafeDict(dict):

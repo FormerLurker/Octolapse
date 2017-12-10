@@ -6,13 +6,20 @@ import time
 import fnmatch
 import datetime
 import sys
-
+import shutil
 import utility
 import sarge
+
+
+
+
 class Render(object):
 
-	def __init__(self, settings, threadCount, onStart=None, onFail = None, onSuccess=None, onAlways = None):
+	def __init__(self, settings, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount,  onStart=None, onFail = None, onSuccess=None, onAlways = None, onAfterSyncFail = None,onAfterSycnSuccess = None ):
 		self.Settings = settings
+		self.DataDirectory = dataDirectory
+		self.OctoprintTimelapseFolder = octoprintTimelapseFolder
+		self.FfmpegPath = ffmpegPath
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.Rendering = self.Settings.CurrentRendering();
 		self.ThreadCount = threadCount
@@ -20,16 +27,20 @@ class Render(object):
 		self.OnFail = onFail
 		self.OnSuccess = onSuccess
 		self.OnAlways = onAlways
+		self.OnAfterSyncFail = onAfterSyncFail
+		self.OnAfterSycnSuccess = onAfterSycnSuccess
 		self.TimelapseRenderJobs = []
+
 	def Process(self, printName, printStartTime, printEndTime):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Starting.")
 		# Get the capture file and directory info
-		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,printName,printStartTime, self.Snapshot.output_format)
-		snapshotFileNameTemplate  = utility.GetFilenameFromTemplate(self.Snapshot.output_filename, printName, printStartTime, self.Snapshot.output_format, "%05d")
+		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printName,printStartTime, self.Snapshot.output_format)
+		snapshotFileNameTemplate  = utility.GetSnapshotFilenameFromTemplate(self.Snapshot.output_filename, printName, printStartTime, self.Snapshot.output_format, "%05d")
 		# get the output file and directory info
-		outputDirectory = utility.GetDirectoryFromTemplate(self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime)
+		outputDirectory = utility.GetDirectoryFromTemplate(self.Rendering.output_directory,self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)
 		#self.Settings.CurrentDebugProfile().LogInfo("OutputDirectory: {0}, Template:{1}, PrintName:{2}, printStartTime:{3}, outputFormat:{4}, printEndTime:{5}".format(outputDirectory,self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime))
-		outputFilename = utility.GetFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format, "",printEndTime)
+		outputFilename = utility.GetRenderingFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format,printEndTime)
+		
 		
 		# get the number of frames
 		foundFile = True
@@ -58,13 +69,17 @@ class Render(object):
 			self.Settings.CurrentDebugProfile().LogInfo("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self.Rendering.fps_calculation_type,fps, imageCount,self.Rendering.run_length_seconds,self.Rendering.max_fps,self.Rendering.min_fps))
 		else:
 			self.Settings.CurrentDebugProfile().LogInfo("FPS Calculation Type:{0}, Fps:{0}".format(self.Rendering.fps_calculation_type,imageIndex,fps))
-		job = TimelapseRenderJob(printName,
-							snapshotDirectory
+		job = TimelapseRenderJob(
+							self.Settings.CurrentDebugProfile()
+							, printName
+						   , snapshotDirectory
 						   , snapshotFileNameTemplate
 						   , outputDirectory
 						   , outputFilename
+						   
 						   , self.Rendering.output_format
-						   , self.Rendering.ffmpeg_path
+						   , self.OctoprintTimelapseFolder
+						   , self.FfmpegPath
 						   , self.Rendering.bitrate
 						   , self.Rendering.flip_h
 						   , self.Rendering.flip_v
@@ -75,7 +90,12 @@ class Render(object):
 						   , on_start= self.OnStart
 						   , on_success = self.OnSuccess
 						   , on_fail = self.OnFail
-						   , on_always = self.OnAlways)
+						   , on_always = self.OnAlways
+						   , on_after_sync_fail = self.OnAfterSyncFail
+						   , on_after_sync_success = self.OnAfterSycnSuccess
+						   , cleanAfterSuccess = self.Snapshot.cleanup_after_render_complete
+						   , cleanAfterFail = self.Snapshot.cleanup_after_render_complete
+						   , syncWithTimelapse = self.Rendering.sync_with_timelapse)
 		job.process()
 
 	
@@ -88,13 +108,19 @@ class TimelapseRenderJob(object):
 
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
-	def __init__(self, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps, threads,on_start=None, on_success=None, on_fail=None, on_always=None):
+	def __init__(self, debug, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, octoprintTimelapseFolder,  ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps
+			  , threads,on_start=None, on_success=None, on_fail=None, on_always=None, on_after_sync_success = None, on_after_sync_fail = None
+			  , cleanAfterSuccess = False
+			  , cleanAfterFail = False
+			  , syncWithTimelapse = False):
+		self._debug = debug;
 		self._printFileName = printFileName
 		self._capture_dir = capture_dir
 		self._capture_file_template = capture_template
 		self._output_dir = output_dir
 		self._output_file_name = output_name
 		self._outputFormat = outputFormat
+		self._octoprintTimelapseFolder = octoprintTimelapseFolder
 		self._fps = fps
 		
 		self._threads = threads
@@ -108,9 +134,13 @@ class TimelapseRenderJob(object):
 		self._on_success = on_success
 		self._on_fail = on_fail
 		self._on_always = on_always
+		self._on_after_sync_success = on_after_sync_success
+		self._on_after_sync_fail = on_after_sync_fail
 		self._thread = None
 		self._logger = logging.getLogger(__name__)
-
+		self.cleanAfterSuccess = cleanAfterSuccess 
+		self.cleanAfterFail = cleanAfterFail 
+		self.syncWithTimelapse = syncWithTimelapse
 	def process(self):
 		"""Processes the job."""
 
@@ -124,17 +154,21 @@ class TimelapseRenderJob(object):
 
 		
 		if self._ffmpeg is None:
-			self._logger.warn("Cannot create movie, path to ffmpeg is unset")
+			self._debug.LogWarning("Cannot create movie, path to ffmpeg is unset")
 			return
 		if self._bitrate is None:
-			self._logger.warn("Cannot create movie, desired bitrate is unset")
+			self._debug.LogWarning("Cannot create movie, desired bitrate is unset")
 			return
 
 		input = os.path.join(self._capture_dir,
 		                     self._capture_file_template)
+
+		
+
 		output = os.path.join(self._output_dir,
 		                      self._output_file_name)
 
+		baseOutputFileName = utility.GetFilenameFromFullPath(output)
 		try:
 			#path = os.path.dirname(self._output_dir)
 			self._logger.warn("Creating the directory at {0}".format(self._output_dir))
@@ -143,16 +177,15 @@ class TimelapseRenderJob(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self._logger.warn("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
+			self._debug.LogError("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
 			return	
 
-		self._logger.warn("Render - capture_dir:{0}, _capture_file_template:{1}, output_dir:{2}, _output_file_name:{3}, input path:{4}, output path:{5}".format(self._capture_dir, self._capture_file_template, self._output_dir, self._output_file_name,input,output))
 		for i in range(4):
 			if os.path.exists(input % i):
 				break
 		else:
-			self._logger.warn("Cannot create a movie, no frames captured")
-			self._notify_callback("fail", output, returncode=0, stdout="", stderr="", reason="no_frames")
+			self._debug.LogWarning("Cannot create a movie, no frames captured")
+			self._notify_callback("fail", output, baseOutputFileName,0,'no_frames')
 			return
 
 		watermark = None
@@ -166,27 +199,70 @@ class TimelapseRenderJob(object):
 		# prepare ffmpeg command
 		command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._bitrate, self._threads, input, output, self._outputFormat,
 		                                                 hflip=self._flip_h, vflip=self._flip_v, rotate=self._rotate_90, watermark=watermark )
-		self._logger.debug("Executing command: {}".format(command_str))
-
+		success = False
 		with self.render_job_lock:
 			try:
-				self._notify_callback("start", output)
+				self._notify_callback("start", output, baseOutputFileName)
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
 				if p.returncode == 0:
-					self._notify_callback("success", output)
+					self._notify_callback("success", output,baseOutputFileName)
+					success = True
 				else:
 					returncode = p.returncode
 					stdout_text = p.stdout.text
 					stderr_text = p.stderr.text
-					self._logger.warn("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
-					self._notify_callback("fail", output, returncode=returncode, stdout=stdout_text, stderr=stderr_text, reason="returncode")
+					self._debug.LogWarning("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
+					self._notify_callback("fail", output, baseOutputFileName, returncode,stderr_text)
 			except:
-				self._logger.exception("Could not render movie due to unknown error")
-				self._notify_callback("fail", output, reason="unknown")
+				self._debug.LogError("Could not render movie due to unknown error")
+				# clean after fail
+				self._notify_callback("fail", output, baseOutputFileName,0,'unknown')
 			finally:
-				self._notify_callback("always", output)
+				self._notify_callback("always")
+
+		cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
+		if(cleanSnapshots):
+			self._CleanSnapshots()
+
+		
+		if(self.syncWithTimelapse):
+			
+			finalFileaName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName)
+			# Move the timelapse to the Octoprint timelapse folder.
+			try:
+				# get the timelapse folder for the Octoprint timelapse plugin
+				self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileaName))
+				shutil.move(output,finalFileaName)
+				
+				self._notify_callback("after_sync_success", finalFileaName, baseOutputFileName)
+
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self._debug.LogError("Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileaName,type,value))
+				self._notify_callback("after_sync_fail", finalFileaName, baseOutputFileName)
+				
+
+
+	def _CleanSnapshots(self):
+		
+		# get snapshot directory
+		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(self._capture_dir))
+
+		
+		path = os.path.dirname(self._capture_dir)
+		if(os.path.isdir(path)):
+			try:
+				shutil.rmtree(path)
+				self._debug.LogSnapshotClean("Snapshots cleaned.")
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self._debug.LogWarning("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
+		else:
+			self._debug.LogWarning("Snapshot - No need to clean snapshots: they have already been removed.")	
 
 	@classmethod
 	def _create_ffmpeg_command_string(cls, ffmpeg, fps, bitrate, threads, input, output, outputFormat = 'vob',hflip=False, vflip=False,

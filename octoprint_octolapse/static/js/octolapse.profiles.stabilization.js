@@ -27,6 +27,17 @@ $(function() {
     Octolapse.StabilizationProfileValidationRules = {
         rules: {
             name: "required"
+            ,x_type: "required"
+            ,x_fixed_coordinate: { number: true, required: true }
+            , x_fixed_path: {csvFloat: true}
+            , x_relative: {number: true,min:0.0, max:100.0 }
+            , x_relative_path: { csvRelative: true }
+            , y_type: "required"
+            , y_fixed_coordinate: { number: true, required: true }
+            , y_fixed_path: { csvFloat: true }
+            , y_relative: { number: true, min: 0.0, max: 100.0 }
+            , y_relative_path: { csvRelative: true }
+
         },
         messages: {
             name: "Please enter a name for your profile",
