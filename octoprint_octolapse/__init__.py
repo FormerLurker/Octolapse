@@ -454,11 +454,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			#TODO:  Remove this logging after debug
 			self.Settings.CurrentDebugProfile().LogWarning("Paused - GcodeReceived: {0}, SnapshotState:{1}".format(line, pformat(self.SnapshotState)))
 			if(self.SnapshotState['WaitForSnapshotPosition']):
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot position:{0}".format(line))
 				self.ReceivePositionOfSnapshot(line)
 				
 			elif(self.SnapshotState['WaitForSnapshotReturnPosition']):
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Trying to parse received line for position:{0}".format(line))
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot return position:{0}".format(line))
 				self.ReceivePositionForSnapshotReturn(line)
 			else:
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received From Printer:{0}".format(line))
@@ -477,7 +477,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("This occurred right AFTER  position request gcode was sent.")
 	def ReceivePositionForSnapshotReturn(self, line):
 		parsedResponse = self.Responses.M114.Parse(line)
-		
 		if(parsedResponse != False):
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - response:{0}, parsedResponse:{1}".format(line,parsedResponse))
 			x=float(parsedResponse["X"])
@@ -505,7 +504,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def ReceivePositionOfSnapshot(self, line):
 		parsedResponse = self.Responses.M114.Parse(line)
-		
 		if(parsedResponse != False):
 
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position verification received - response:{0}, parsedResponse:{1}".format(line,parsedResponse))
@@ -531,6 +529,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			
 			self.TakeSnapshot()
 		else:
+			self.SnapshotState["PositionAttempts"]+=1
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Received reponse is not the expected position response: Received: {0}".format(line))
 
 	def SendSnapshotGcode(self):

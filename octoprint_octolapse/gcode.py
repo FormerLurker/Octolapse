@@ -624,7 +624,7 @@ class Gcode(object):
 			if(position.IsRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			else:
-				newSnapshotGcode.ReturnCommands.append(self.GetSetRelativePositionGcode())
+				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
 			position.IsRelative = previousIsRelative
 
 		if(previousExtruderRelative != position.IsExtruderRelative):
