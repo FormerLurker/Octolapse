@@ -39,7 +39,6 @@ class GcodeTrigger(object):
 		self.Printer = self.Settings.CurrentPrinter()
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.IsTriggered = False
-		self.IsTriggered = False
 		self.IsWaiting = False
 		self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
 		self.ExtruderTriggers = ExtruderTriggers(self.Snapshot.gcode_trigger_on_extruding
@@ -64,6 +63,11 @@ class GcodeTrigger(object):
 	def Update(self, position,commandName):
 		"""If the provided command matches the trigger command, sets IsTriggered to true, else false"""
 		self.IsTriggered = False
+		# Don't update the trigger if we don't have a homed axis
+		if(not position.HasHomedAxis):
+			self.IsTriggered = False
+			return
+
 		if (IsSnapshotCommand(commandName,self.Printer.snapshot_command)):
 			self.IsWaiting = True
 		if(self.IsWaiting == True):
@@ -125,10 +129,11 @@ class LayerTrigger(object):
 
 	def Update(self, position):
 		"""Updates the layer monitor position.  x, y and z may be absolute, but e must always be relative"""
-		
 		self.IsTriggered = False
-		
-		
+		# Don't update the trigger if we don't have a homed axis
+		if(not position.HasHomedAxis):
+			self.IsTriggered = False
+			return
 
 		# calculate height increment changed
 		if(self.HeightIncrement is not None and self.HeightIncrement> 0 and position.IsLayerChange and position.Height // self.HeightIncrement > self.HeightIncrement):
@@ -212,8 +217,12 @@ class TimerTrigger(object):
 
 	def Update(self,position):
 
-		# reset the state flags
 		self.IsTriggered = False
+		# Don't update the trigger if we don't have a homed axis
+		if(not position.HasHomedAxis):
+			self.IsTriggered = False
+			return
+
 
 		# record the current time to keep things consistant
 		currentTime = time.time()

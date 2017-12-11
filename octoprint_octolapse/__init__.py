@@ -446,9 +446,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def ReceivePositionForSnapshotReturn(self, line):
 		parsedResponse = self.Responses.M114.Parse(line)
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - response:{0}, parsedResponse:{1}".format(line,parsedResponse))
+		
 		if(parsedResponse != False):
-
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - response:{0}, parsedResponse:{1}".format(line,parsedResponse))
 			x=float(parsedResponse["X"])
 			y=float(parsedResponse["Y"])
 			z=float(parsedResponse["Z"])
