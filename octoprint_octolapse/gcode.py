@@ -289,7 +289,7 @@ class Responses(object):
         self.M114 = Command(
 	        name="Get Position"
 	        ,command="M114"
-	        ,regex="(?i)^[O][k\K][\s]+X:([-+]?[0-9.]+) Y:([-+]?[0-9.]+) Z:([-+]?[0-9.]+) E:([-+]?[0-9.]+)"
+	        ,regex="(?i)^X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+)[\s]*?"
 	        ,displayTemplate="Position: X={0}, Y={1}, Z={2}, E={3}"
 			,parameters = [
 				CommandParameter("X",group=1),
@@ -522,7 +522,7 @@ class Gcode(object):
 	def CreatePositionGcode(self):
 		newPositionGcode = PositionGcode()
 		# add commands to fetch the current position
-		#newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
 		return newPositionGcode
 
