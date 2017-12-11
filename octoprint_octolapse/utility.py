@@ -58,14 +58,15 @@ def GetExtensionFromFileName(fileName):
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.00000):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def GetRenderingFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, printEndTime):
+def GetRenderingFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, printEndTime = None):
 
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
 	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
 	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
 	fileTemplate = fileTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
-	fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
+	if(printEndTime is not None):
+		fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
 	
 	return "{0}.{1}".format(fileTemplate, outputExtension)
 
