@@ -442,6 +442,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def GcodeReceived(self, comm, line, *args, **kwargs):
 		if(not self.IsTimelapseActive() ):
+			if(self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
+				self.Settings.CurrentDebugProfile().LogError("We are paused, but not IsTimelapseActive returned false!  TimelapseSettings:{0}, SnapshotState:{1}, IsPrinting:{2}, IsOctolapseEnabled:{3}".format(self.TimelapseSettings, self.SnapshotState, self.IsPrinting, self.Settings.is_octolapse_enabled ))
 			return line
 
 		if(self.SnapshotState['IsPausedByOctolapse']):
