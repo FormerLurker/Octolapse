@@ -32,6 +32,16 @@ class SnapshotGcode(object):
 		return len(self.GcodeCommands)-1
 	def SetSnapshotIndex(self):
 		self.SnapshotIndex = self.EndIndex()
+
+	def SnapshotCommands(self):
+		if(len(self.GcodeCommands)>0):
+			return self.GcodeCommands[0:self.SnapshotIndex+1]
+		return []
+
+	def ReturnCommands(self):
+		if(len(self.GcodeCommands)> self.SnapshotIndex+1):
+			return self.GcodeCommands[self.SnapshotIndex+1:]
+		return []
 		
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
