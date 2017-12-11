@@ -172,6 +172,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'IsPausedByOctolapse': False, # Did octolapse pause the print in order to take a snapshot?
 			'RequestingPosition': False, # Are we in the middle of a position request?
 			'WaitForPosition': False, # If true, we have sent a position request to the 3d printer, but haven't yet received a response
+			'ApplyingCameraSettings': False, # are we trying to adjust the camera?  
 			'SendingSnapshotCommands': False, # If true, we are in the process of sending gcode to the printer to take a snapshot
 			'WaitForSnapshot': False, # If true, we have sent all the gcode necessary to move to the snapshot position and are waiting for a response so that we can take the snapshot.
 			'SendingReturnCommands': False,
@@ -199,7 +200,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not os.path.isfile(ffmpegPath)):
 			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
 		self.TimelapseSettings = {
-			'CameraControl': CameraControl(self.Settings),
+			'CameraControl': CameraControl(self.Settings, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted),
 			'OctolapseGcode': Gcode(self.Settings,self.CurrentPrinterProfile()),
 			'Printer': Printer(self.Settings.CurrentPrinter()),
 			'CaptureSnapshot': CaptureSnapshot(self.Settings,  self.get_plugin_data_folder(), printStartTime=time.time()),
@@ -258,7 +259,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._logger.info("Printer event received:{0}.".format(event))
 		if (event == Events.PRINT_PAUSED):
 			# If octolapse has paused the print, we are taking a snapshot
-			if(not self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
+			if(not self.SnapshotState is not None and (self.SnapshotState['IsPausedByOctolapse'] or self.SnapshotState['ApplyingCameraSettings'])):
 				self.OnPrintPausedByOctolapse() # octolapse pause
 			else:
 				self.OnPrintPause() # regular pause
@@ -302,7 +303,26 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return
 		
 		if(self.Settings.CurrentCamera().apply_settings_before_print):
-				self.TimelapseSettings['CameraControl'].ApplySettings()
+			self.SnapshotState['ApplyingCameraSettings'] = True
+			self._printer.pause_print();
+			self.TimelapseSettings['CameraControl'].ApplySettings()
+
+	def OnCameraSettingsSuccess(self, *args, **kwargs):
+		numSettings = args[0]
+		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Successfully applied all {0} camera settings.".format(numSettings))
+
+	def OnCameraSettingsFail(self, *args, **kwargs):
+		numSettings = args[0]
+		errorMessages = args[1]
+		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - {0} of {1} settings failed.  Details:".format(len(errorMessages), numSettings))
+		for message in errorMessages:
+			self.Settings.CurrentDebugProfile().LogCameraSettingsApply(message)
+		
+	def OnCameraSettingsCompelted(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
+		self.SnapshotState['ApplyingCameraSettings'] = False
+		self._printer.resume_print()
+
 	def OnPrintFailed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
 		self.OnPrintEnd()
@@ -469,9 +489,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
 
 			self.TimelapseSettings['Position'].UpdatePosition(x,y,z,e)
-			self.SnapshotState['RequestingPosition'] = False
 			self.SnapshotState['WaitForPosition'] = False
 			self.SendSnapshotGcode()
+		else:
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Received reponse is not the expected position response: Received: {0}".format(line))
+
 
 	def SendSnapshotGcode(self):
 		self.SnapshotState['SnapshotCommandIndex']=0
@@ -486,7 +508,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._printer.commands(self.SnapshotState['SnapshotGcodes'].SnapshotCommands());
 
 	def SendReturnGcode(self):
-		
+		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Sending Snapshot Return Code")
 		if(self.SnapshotState['SnapshotGcodes'] is None):
 			self.Settings.CurrentDebugProfile().LogError("Cannot return to original position, no snapshot gcode available.  Aborting print, otherwise we'll print a pile of spaghetti.  Sorry :(")
 			# We have to stop the print, this is a critical error.
@@ -509,17 +531,15 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# reset the snapshot variables
 		self.ResetSnapshotState();
 
-		# if octolapse paused the print, resume it
-		if(isPaused):
-			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
-			self._printer.resume_print()
+		# if the print is paused, resume!
+		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
+		self._printer.resume_print()
 
 	def StopTimelapse(self, message):
 		"""Stops the current timelapse and clears out the variables"""
 		self.ResetSnapshotState();
 		self.ResetTimelapseSettings();
 		
-
 	def SendSavedCommand(self):
 		SendingSavedCommand = True
 		self._printer.commands(self.SnapshotState['SavedCommand']);
@@ -573,7 +593,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
 			self.Settings.CurrentDebugProfile().LogError("Could rename the snapshot {0} to {1}!   Error Type:{2}, Details:{3}".format(shapshotInfo.GetTempFullPath(), newSnapshotName,type,value))
-
+	def OnSnapshotFail(self, *args, **kwargs):
+		reason = args[0]
+		self.LogSnapshotDownload("Failed to download the snapshot.  Reason:{0}".format(reason))
 	def OnSnapshotComplete(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Snapshot Completed.")
 		#TODO:  Do we need this anymore?  Maybe not :)

@@ -84,6 +84,7 @@ class SnapshotJob(object):
 	def _process(self):
 		with self.snapshot_job_lock:
 			success = False
+			failReason = "unknown"
 			dir = "{0:s}{1:s}".format(self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
 			r=None
 			try:
@@ -96,36 +97,38 @@ class SnapshotJob(object):
 
 				if r.status_code == requests.codes.ok:
 					try:
+						# make the directory
 						path = os.path.dirname(dir)
 						if not os.path.exists(path):
 							os.makedirs(path)
+						# try to download the file.
+						try:
+							with iopen(dir, 'wb') as file:
+								for chunk in r.iter_content(1024):
+									if chunk:
+										file.write(chunk)
+								self.Settings.CurrentDebugProfile().LogSnapshotSave("Snapshot - Snapshot saved to disk at {0}".format(dir))
+								success = True
+						except:
+							type = sys.exc_info()[0]
+							value = sys.exc_info()[1]
+							failReason = "Snapshot Save - An exception of type:{0} was raised while saving the retrieved shapshot to disk: Error:{1} Stack Trace:{2}".format(type, value, traceback.print_stack())
 					except:
 						type = sys.exc_info()[0]
 						value = sys.exc_info()[1]
-						self.Settings.CurrentDebugProfile().LogWarning("Download - An exception was thrown when trying to save a snapshot to: {0} , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
-						return
-					try:
-						with iopen(dir, 'wb') as file:
-							for chunk in r.iter_content(1024):
-								if chunk:
-									file.write(chunk)
-							self.Settings.CurrentDebugProfile().LogSnapshotSave("Snapshot - Snapshot saved to disk at {0}".format(dir))
-							success = True
-					except:
-						type = sys.exc_info()[0]
-						value = sys.exc_info()[1]
-						self.Settings.CurrentDebugProfile().LogError("Snapshot - An exception of type:{0} was raised while saving the retrieved shapshot to disk: Error:{1} Traceback:{2}".format(type, value, traceback.format_exc()))
+						failReason = "Snapshot Directory Create - An exception was thrown when trying to create a directory to hold the snapshot download:Directory {0} , ExceptionType:{1}, Exception Value:{2}, Stack Trace:{3}".format(os.path.dirname(dir),type,value, traceback.print_stack())
+					
 				else:
-					self.Settings.CurrentDebugProfile().LogWarning("Snapshot - failed with status code:{0}".format(r.status_code))
+					failReason = "Snapshot Download - failed with status code:{0}".format(r.status_code)
 			except:
 				type = sys.exc_info()[0]
 				value = sys.exc_info()[1]
-				self.Settings.CurrentDebugProfile().LogError("Download - An exception of type:{0} was raised during snapshot download:Error:{1}".format(type, value))
+				failReason = "Snapshot Download- An exception of type:{0} was raised during snapshot download:Error:{1}".format(type, value)
 
 			if(success):
 				self._notify_callback("success", self.SnapshotInfo)
 			else:
-				self._notify_callback("fail")
+				self._notify_callback("fail", failReason)
 
 			self._notify_callback("complete")
 				
