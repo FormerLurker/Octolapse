@@ -403,7 +403,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(self.SnapshotState['RequestingPosition'] and not self.SnapshotState['WaitForPosition']):
 			positionCommand =self.SnapshotState['PositionGcodes'].GcodeCommands[self.SnapshotState['PositionCommandIndex']]
 			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Looking for position command index {0}.  Command Sent:{1}, Command Expected:{2}".format(self.SnapshotState['PositionCommandIndex'], cmd, positionCommand))
-			if(cmd == positionCommand):
+			if(cmd == positionCommand  and not self.SnapshotState['WaitForPosition']):
 				self.Settings.CurrentDebugProfile().LogSnapshotDownload("Found the position command.")
 				if(self.SnapshotState['PositionCommandIndex'] >= self.SnapshotState['PositionGcodes'].EndIndex() and not self.SnapshotState['WaitForPosition']):
 					self.SnapshotState['WaitForPosition']= True
@@ -441,6 +441,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def GcodeReceived(self, comm, line, *args, **kwargs):
 		
 		if(self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
+			self.Settings.CurrentDebugProfile().LogError("Response received from printer while waiting:{0}".format(line))
 			if(self.SnapshotState['WaitForSnapshot']):
 				self.SnapshotState['WaitForSnapshot'] = False
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))

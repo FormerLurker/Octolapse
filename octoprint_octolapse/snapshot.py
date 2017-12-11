@@ -41,13 +41,12 @@ class CaptureSnapshot(object):
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
 		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
+		if(self.Snapshot.delay == 0):
+			newSnapshotJob.Process()
+		else:
+			t = threading.Timer( self.Snapshot.delay/1000.0, StartSnapshotJob, [newSnapshotJob])
+			t.start()
 		
-		t = threading.Timer( self.Snapshot.delay/1000.0, StartSnapshotJob, [newSnapshotJob])
-		t.start()
-		
-			
-	
-
 
 def requests_image(file_url,path):
     suffix_list = ['jpg', 'gif', 'png', 'tif', 'svg',]
@@ -117,7 +116,6 @@ class SnapshotJob(object):
 						type = sys.exc_info()[0]
 						value = sys.exc_info()[1]
 						failReason = "Snapshot Directory Create - An exception was thrown when trying to create a directory to hold the snapshot download:Directory {0} , ExceptionType:{1}, Exception Value:{2}, Stack Trace:{3}".format(os.path.dirname(dir),type,value, traceback.print_stack())
-					
 				else:
 					failReason = "Snapshot Download - failed with status code:{0}".format(r.status_code)
 			except:

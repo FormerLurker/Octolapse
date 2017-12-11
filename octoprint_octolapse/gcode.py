@@ -579,7 +579,7 @@ class Gcode(object):
 			position.IsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
-		newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
+		#newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
 
 		# mark the snapshot command index
 		newSnapshotGcode.SetSnapshotIndex()
