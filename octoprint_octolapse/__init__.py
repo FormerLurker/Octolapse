@@ -111,7 +111,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 			if(createNewSettings):
 				# No file existed, so we must have created default settings.  Save them!
-				self.Settings.SaveSettings()
+				self.SaveSettings()
 			return self.Settings.ToDict();
 		except TypeError,e:
 			self._logger.exception("Could not load octolapse settings.  Details: {0}".format(e))
