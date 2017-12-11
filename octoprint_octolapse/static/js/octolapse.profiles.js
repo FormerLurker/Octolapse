@@ -30,7 +30,7 @@ $(function() {
                 url: "/plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
                 data: JSON.stringify(data),
-                headers: { 'X-Api-Key': Octolapse.apiKey },
+                
                 contentType: "application/json",
                 dataType: "json",
                 success: function(newProfile) {
@@ -64,7 +64,6 @@ $(function() {
                 url: "/plugin/octolapse/" + self.removeProfilePath,
                 type: "POST",
                 data: JSON.stringify(data),
-                headers: { 'X-Api-Key': Octolapse.apiKey },
                 contentType: "application/json",
                 dataType: "json",
                 success: function() {
@@ -84,7 +83,6 @@ $(function() {
                 url: "/plugin/octolapse/" + self.setCurrentProfilePath,
                 type: "POST",
                 data: JSON.stringify(data),
-                headers: { 'X-Api-Key': Octolapse.apiKey },
                 contentType: "application/json",
                 dataType: "json",
                 success: function(result) {

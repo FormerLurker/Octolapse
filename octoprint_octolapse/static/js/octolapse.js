@@ -33,7 +33,7 @@ $(function () {
             // Assign values to each observable
             self.settings = self.global_settings.settings.plugins.octolapse;
             Octolapse.Settings.is_octolapse_enabled(self.settings.is_octolapse_enabled());
-            Octolapse.apiKey = self.global_settings.settings.api.key();
+            
 
             /*
                 Create our printers view model
@@ -165,7 +165,6 @@ $(function () {
                 url: "/plugin/octolapse/setEnabled",
                 type: "POST",
                 data: data,
-                headers: { 'X-Api-Key': Octolapse.apiKey },
                 contentType: "application/json",
                 dataType: "json",
                 success: function(data) {

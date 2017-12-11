@@ -376,9 +376,9 @@ class Rendering(object):
 		self.min_fps = 1.0
 		self.output_format = 'mp4'
 		self.output_filename = "{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "/home/pi/Octolapse/timelapse/{FILENAME}_{PRINTSTARTTIME}/"
+		self.output_directory = "{DATADIRECTORY}/timelapses/"
 		if (sys.platform == "win32"):
-			self.output_directory = "c:\\temp\\{FILENAME}_{PRINTSTARTTIME}"
+			self.output_directory = "{DATADIRECTORY}\\timelapses\\"
 		self.sync_with_timelapse = False
 		self.bitrate = "2000K"
 		self.flip_h = False
