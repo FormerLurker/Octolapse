@@ -3,6 +3,7 @@ import ntpath
 import math
 import time
 import os
+
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 def getfloat(value,default,key=None):
@@ -113,3 +114,4 @@ def CurrentlyPrintingFileName(octoprintPrinter):
 					current_file_path = current_job_file["path"]
 					return GetFilenameFromFullPath(current_file_path)
 		return ""
+

@@ -659,7 +659,7 @@ class DebugProfile(object):
 
 		# Configure the logger if it has not been created
 		if(DebugProfile.Logger is None):
-			DebugProfile.Logger = logging.getLogger("Octolapse")
+			DebugProfile.Logger = logging.getLogger("Octolapse Plugin")
 			# Remove existing handlers
 			DebugProfile.Logger.handlers = []
 			# Create the handler

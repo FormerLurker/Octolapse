@@ -6,6 +6,7 @@ import operator
 from .settings import *
 import utility
 import sys
+
 # global functions
 def GetGcodeFromString(commandString):
 	command = commandString.strip().split(' ', 1)[0].upper()
@@ -15,18 +16,26 @@ def GetGcodeFromString(commandString):
 	return command
 
 class PositionGcode(object):
+	
 	def __init__(self):
 		self.GcodeCommands = []
 
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
 
-
+	
 class SnapshotGcode(object):
+	def default(self, o):
+		return o.__dict__
+
 	def __init__(self):
 		self.GcodeCommands = []
 		self.X = None
+		self.ReturnX = None
 		self.Y = None
+		self.ReturnY = None
+		self.Z = None
+		self.ReturnZ = None
 		self.SnapshotIndex = -1
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
@@ -56,40 +65,38 @@ class CommandParameter(object):
             self.Group = parameter.Group
             self.Order = parameter.Order
 class CommandParameters(collections.MutableMapping):
-    def __init__(self, *args, **kwargs):
-        self.store = dict()
-        self.update(dict(*args, **kwargs))  # use the free update to set keys
+	def __init__(self, *args, **kwargs):
+		self.store = dict()
+		self.update(dict(*args, **kwargs))  # use the free update to set keys
 
-
-    def __getitem__(self,key):
+	def __getitem__(self,key):
 		if(self.__keytransform__(key) in self.store.keys()):
 			return self.store[self.__keytransform__(key)]
 		return None
 
-    def __setitem__(self,key,value):
+	def __setitem__(self,key,value):
+		order = len(self.store) + 1
+		if(type(value) in [float,int]):
+			if(self.__keytransform__(key) not in self.store):
+				self.store[self.__keytransform__(key)] = CommandParameter(name=key,value=value,order = order)
+			else:
+				self.store[self.__keytransform__(key)].Value = value
+		elif(isinstance(value,CommandParameter)):
+			if(value.Order is None):
+				value.Order = order
+			self.store[self.__keytransform__(key)] = value
 
-        order = len(self.store) + 1
-        if(type(value) in [float,int]):
-            if(self.__keytransform__(key) not in self.store):
-                self.store[self.__keytransform__(key)] = CommandParameter(name=key,value=value,order = order)
-            else:
-                self.store[self.__keytransform__(key)].Value = value
-        elif(isinstance(value,CommandParameter)):
-            if(value.Order is None):
-                value.Order = order
-            self.store[self.__keytransform__(key)] = value
-            
-    def __delitem__(self, key):
-        del self.store[self.__keytransform__(key)]
+	def __delitem__(self, key):
+		del self.store[self.__keytransform__(key)]
 
-    def __iter__(self):
-        return iter(self.store)
+	def __iter__(self):
+		return iter(self.store)
 
-    def __len__(self):
-        return len(self.store)
+	def __len__(self):
+		return len(self.store)
 
-    def __keytransform__(self, key):
-        return key
+	def __keytransform__(self, key):
+		return key
 class Command(object):
     def __init__(self,name=None, command=None, regex=None, displayTemplate=None, commentTemplate="{Comment}",commentSeperator=";",comment=None, parameters=None):
         if(type(command) is Command):
@@ -532,7 +539,7 @@ class Gcode(object):
 	def CreatePositionGcode(self):
 		newPositionGcode = PositionGcode()
 		# add commands to fetch the current position
-		newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		#newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())  # Cant use m400 without something after it, and we can't wait for it in the usual way...
 		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
 		return newPositionGcode
 
@@ -579,8 +586,10 @@ class Gcode(object):
 			position.IsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		# removed delay, it might not be necessaray
 		#newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
-
+		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
+		newSnapshotGcode.GcodeCommands.append(self.GetPositionGcode())
 		# mark the snapshot command index
 		newSnapshotGcode.SetSnapshotIndex()
 
@@ -588,6 +597,7 @@ class Gcode(object):
 		#record our previous position for posterity
 		newSnapshotGcode.ReturnX = position.X
 		newSnapshotGcode.ReturnY = position.Y
+		newSnapshotGcode.ReturnZ = position.Z
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
 		if(position.IsRelative):
