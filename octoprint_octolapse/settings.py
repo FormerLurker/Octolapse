@@ -666,7 +666,7 @@ class DebugProfile(object):
 			logHandler = logging.FileHandler(self.logFilePath)
 			logHandler.setFormatter(logging.Formatter(DebugProfile.FormatString))
 			DebugProfile.Logger.addHandler(logHandler)
-			DebugProfile.Logger.setLevel(logging.NOTSET)
+			DebugProfile.Logger.setLevel(logging.DEBUG)
 		
 		self.Commands = Commands()
 		self.log_to_console = True
