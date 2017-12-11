@@ -38,14 +38,14 @@
     <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
       <label class="control-label" >Static FPS</label>
       <div class="controls">
-        <input name="fps" type="text" class="input-block-level" data-bind="value: fps"/>
+        <input name="fps" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: fps"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
       <label class="control-label" >Fixed Run Length in Seconds</label>
       <div class="controls">
-        <input name="run_length_seconds" type="text" class="input-block-level" data-bind="value: run_length_seconds"/>
+        <input name="run_length_seconds" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: run_length_seconds"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>

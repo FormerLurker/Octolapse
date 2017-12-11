@@ -26,7 +26,7 @@ $(function() {
             ffmpeg_path: "required",
             bitrate: "required",
             fps_calculation_type: "required",
-            fps: { number: true, min: 0.0 }
+            fps: { required:true, number: true, min: 0.0 }
         },
         messages: {
             name: "Please enter a name for your profile",

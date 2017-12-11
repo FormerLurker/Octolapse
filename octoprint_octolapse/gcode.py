@@ -299,7 +299,7 @@ class Responses(object):
         self.M114 = Command(
 	        name="Get Position"
 	        ,command="M114"
-	        ,regex=".+?(?i)X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+)[\s]*?"
+	        ,regex="(?i).*?X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+).*?"
 	        ,displayTemplate="Position: X={0}, Y={1}, Z={2}, E={3}"
 			,parameters = [
 				CommandParameter("X",group=1),
