@@ -335,8 +335,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed!")
 		self.OnPrintEnd()
 	def OnPrintEnd(self):
-		self.IsPrinting = False
-
 		self.RenderTimelapse()
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 
@@ -416,11 +414,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif(self.SnapshotState['SendingSnapshotCommands']):
 			snapshotCommand = self.SnapshotState['SnapshotGcodes'].GcodeCommands[self.SnapshotState['SnapshotCommandIndex']]
 			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Looking for SnapshotGcode command index {0}.  Command Sent:{1}, Command Expected:{2}".format(self.SnapshotState['SnapshotCommandIndex'], cmd, snapshotCommand))
-			if(cmd == snapshotCommand):
+			if(cmd == snapshotCommand and not self.SnapshotState['WaitForSnapshot']):
 				if(self.SnapshotState['SnapshotCommandIndex'] >= self.SnapshotState['SnapshotGcodes'].SnapshotIndex):
-					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found, waiting for snapshot.")
-					self.SnapshotState['WaitForSnapshot'] = True
 					self.SnapshotState['SendingSnapshotCommands'] = False
+					self.SnapshotState['WaitForSnapshot'] = True
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found, waiting for snapshot.")
 				self.SnapshotState['SnapshotCommandIndex'] += 1
 			
 		elif(self.SnapshotState['SendingReturnCommands']):
@@ -441,12 +439,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.EndSnapshot()
 
 	def GcodeReceived(self, comm, line, *args, **kwargs):
-		if(not self.IsTimelapseActive() ):
-			if(self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
-				self.Settings.CurrentDebugProfile().LogError("We are paused, but not IsTimelapseActive returned false!  TimelapseSettings:{0}, SnapshotState:{1}, IsPrinting:{2}, IsOctolapseEnabled:{3}".format(self.TimelapseSettings, self.SnapshotState, self.IsPrinting, self.Settings.is_octolapse_enabled ))
-			return line
-
-		if(self.SnapshotState['IsPausedByOctolapse']):
+		
+		if(self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
 			if(self.SnapshotState['WaitForSnapshot']):
 				self.SnapshotState['WaitForSnapshot'] = False
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot:{0}".format(line))
@@ -556,7 +550,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		
 		snapshot = self.TimelapseSettings['CaptureSnapshot']
 		try:
-			snapshot.Snap(self.TimelapseSettings['CurrentPrintFileName'],self.TimelapseSettings['SnapshotCount'],onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess)
+			snapshot.Snap(self.TimelapseSettings['CurrentPrintFileName'],self.TimelapseSettings['SnapshotCount'],onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess, onFail = self.OnSnapshotFail)
 		except:
 			a = sys.exc_info() # Info about unknown error that caused exception.                                              
 			errorMessage = "    {0}".format(a)
@@ -618,6 +612,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 					self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'], self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime)
 				# in every case reset the timelapse settings.  we want all of the settings to be reset and the current timelapse ended.  The rendering will take place in the background.
 				self.TimelapseSettings["IsRendering"] = False
+				self.IsPrinting = False
 				self.ResetTimelapseSettings();
 		else:
 			self.Settings.CurrentDebugProfile().LogWarning("The timelapse was terminated before it could be created.")
