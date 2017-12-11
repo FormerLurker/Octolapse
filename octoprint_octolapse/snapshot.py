@@ -15,8 +15,9 @@ import shutil
 import camera
 import uuid
 
+def StartSnapshotJob(job):
+	job.Process();
 
-	
 class CaptureSnapshot(object):
 
 	def __init__(self, settings,dataDirectory, printStartTime, printEndTime=None):
@@ -38,10 +39,14 @@ class CaptureSnapshot(object):
 		info.FileName = "{0}.{1}".format(snapshotGuid, self.Snapshot.output_format)
 		info.DirectoryName = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printerFileName, self.PrintStartTime, self.Snapshot.output_format)
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
-		
-		SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = self.Snapshot.delay/1000.0*2, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail).Process()
+
+		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = self.Snapshot.delay/1000.0*2, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
+		t = threading.Timer( self.Snapshot.delay/2.0/1000.0, StartSnapshotJob, [newSnapshotJob])
+		t.start()
 
 	
+
+
 def requests_image(file_url,path):
     suffix_list = ['jpg', 'gif', 'png', 'tif', 'svg',]
     file_name =  urlsplit(file_url)[2].split('/')[-1]

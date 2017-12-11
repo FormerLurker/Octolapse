@@ -438,8 +438,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def SendPositionRequestGcode(self):
 		# Send commands to move to the snapshot position
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Requesting position for snapshot return.")
+
+		
 		self.SnapshotState['PositionGcodes'] = self.TimelapseSettings['OctolapseGcode'].CreatePositionGcode()
-		self.Settings.CurrentDebugProfile().LogInfo(self.SnapshotState['PositionGcodes'])
+		for line in self.SnapshotState["PositionGcodes"].GcodeCommands:
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(line)
 		self.SnapshotState['RequestingPosition'] = True
 		self.SnapshotState['PositionCommandIndex']=0
 		self._printer.commands(self.SnapshotState['PositionGcodes'].GcodeCommands);
@@ -635,7 +638,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# core UI here.
 		return dict(
 			js = [
-				"js/octolapse.js"
+				"js/jquery.validate.min.js"
+				,"js/octolapse.js"
 				,"js/octolapse.profiles.js"
 				,"js/octolapse.profiles.printer.js"
 				,"js/octolapse.profiles.stabilization.js"
