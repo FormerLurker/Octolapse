@@ -1,5 +1,51 @@
-var Octolapse;
+
 $(function () {
+
+    Octolapse = this;
+    // Finds the first index of an array with the matching predicate
+    Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
+        for (var i = 0, j = array.length; i < j; i++) {
+            if (predicate.call(predicateOwner, array[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    // Retruns an observable sorted by name(), case insensitive
+    Octolapse.nameSort = function (observable) {
+        return observable().sort(
+            function (left, right) {
+                leftName = left.name().toLowerCase();
+                rightName = right.name().toLowerCase();
+                return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
+            });
+    };
+    // Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
+    // It will apply the on or off class to the result of each selector, which should return exactly one result.
+    Octolapse.toggle = function (caller, args) {
+        var elements = args.elements;
+        elements.forEach(function (item, index) {
+            element = $(item.selector);
+            onClass = item.onClass;
+            offClass = item.offClass;
+            if (element.hasClass(onClass)) {
+                element.removeClass(onClass);
+                element.addClass(offClass);
+            } else {
+                element.removeClass(offClass);
+                element.addClass(onClass);
+            }
+        });
+    };
+    // Apply the toggle click event to every element within our settings that has the .toggle class
+
+
+    Octolapse.ToggleElement = function (element) {
+        var args = $(this).attr("data-toggle");
+        Octolapse.toggle(this, JSON.parse(args));
+    };
+
+
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
@@ -375,56 +421,12 @@ $(function () {
         , ["#octolapse_plugin_settings"]
     ]);
 
-
-});
-
-// Finds the first index of an array with the matching predicate
-Octolapse.arrayFirstIndexOf = function(array, predicate, predicateOwner) {
-    for (var i = 0, j = array.length; i < j; i++) {
-        if (predicate.call(predicateOwner, array[i])) {
-            return i;
-        }
-    }
-    return -1;
-}
-// Retruns an observable sorted by name(), case insensitive
-Octolapse.nameSort = function(observable) {
-    return observable().sort(
-        function(left, right) {
-            leftName = left.name().toLowerCase();
-            rightName = right.name().toLowerCase();
-            return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
-        });
-};
-// Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
-// It will apply the on or off class to the result of each selector, which should return exactly one result.
-Octolapse.toggle = function(caller, args) {
-    var elements = args.elements;
-    elements.forEach(function(item, index) {
-        element = $(item.selector);
-        onClass = item.onClass;
-        offClass = item.offClass;
-        if (element.hasClass(onClass)) {
-            element.removeClass(onClass);
-            element.addClass(offClass);
-        } else {
-            element.removeClass(offClass);
-            element.addClass(onClass);
-        }
-    });
-};
-// Apply the toggle click event to every element within our settings that has the .toggle class
-$(document).ready(function() {
-    $("#octolapse_settings .toggle").click(function() {
+    $("#octolapse_settings .toggle").click(function () {
         Octolapse.ToggleElement(this);
     });
-
-
 });
 
-Octolapse.ToggleElement = function (element) {
-    var args = $(this).attr("data-toggle");
-    Octolapse.toggle(this, JSON.parse(args));
-};
+
+
 
 
