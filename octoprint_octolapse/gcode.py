@@ -654,6 +654,7 @@ class Gcode(object):
 		return "G90"
 	def GetSetRelativePositionGcode(self):
 		return "G91"
+	
 	def GetDelayGcode(self):
 		return "G4 P{0:d}".format(self.Snapshot.delay)
 	def GetMoveGcode(self,x,y):

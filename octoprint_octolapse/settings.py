@@ -701,6 +701,8 @@ class DebugProfile(object):
 		self.settings_load = False
 		self.print_state_changed = False
 		self.camera_settings_apply = False
+		self.gcode_sent_all = False
+		
 		if(debugProfile is not None):
 			self.Update(debugProfile)
 			
@@ -771,6 +773,9 @@ class DebugProfile(object):
 			self.print_state_changed = utility.getbool(changes["print_state_changed"],self.print_state_changed)
 		if("camera_settings_apply" in changes.keys()):
 			self.camera_settings_apply = utility.getbool(changes["camera_settings_apply"],self.camera_settings_apply)
+		if("gcode_sent_all" in changes.keys()):
+			self.gcode_sent_all = utility.getbool(changes["gcode_sent_all"],self.gcode_sent_all)
+
 	def ToDict(self):
 		return {
 				'name'						: self.name,
@@ -805,7 +810,8 @@ class DebugProfile(object):
 				'settings_save'				: self.settings_save,
 				'settings_load'				: self.settings_load,
 				'print_state_changed'		: self.print_state_changed,
-				'camera_settings_apply'		: self.camera_settings_apply
+				'camera_settings_apply'		: self.camera_settings_apply,
+				'gcode_sent_all'				: self.gcode_sent_all
 			}
 
 	def LogToConsole(self,levelName , message):
@@ -916,7 +922,9 @@ class DebugProfile(object):
 	def LogCameraSettingsApply(self,message):
 		if(self.camera_settings_apply):
 			self.LogInfo(message)
-			
+	def LogSentGcode(self,message):
+		if(self.gcode_sent_all):
+			self.LogInfo(message)
 	def ApplyCommands(self, cmd, timelapseSettings, snapshotState):
 
 		# see if the command is our debug command
