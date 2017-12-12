@@ -658,19 +658,25 @@ class Gcode(object):
 	def GetDelayGcode(self):
 		return "G4 P{0:d}".format(self.Snapshot.delay)
 	def GetMoveGcode(self,x,y):
-		return "G0 X{0:.3f} Y{1:.3f} F{2:.3f}".format(x,y,self.Printer.movement_speed)
+		return "G1 X{0:.3f} Y{1:.3f}{2}".format(x,y,self.GetF(self.Printer.movement_speed))
 	def GetRelativeZLiftGcode(self):
-		return "G0 Z{0:.3f} F{1:.3f}".format(self.Printer.z_hop, self.Printer.movement_speed)
+		return "G1 Z{0:.3f}{1}".format(self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
 	def GetRelativeZLowerGcode(self):
-		return "G0 Z{0:.3f} F{1:.3f}".format(-1.0*self.Printer.z_hop, self.Printer.movement_speed)
+		return "G1 Z{0:.3f}{1}".format(-1.0*self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
 	def GetRetractGcode(self):
-		return "G1 E{0:.3f} F{1:.3f}".format(-1*self.Printer.retract_length,self.Printer.retract_speed)
+		return "G1 E{0:.3f}{2}".format(-1*self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
 	def GetDetractGcode(self):
-		return "G1 E{0:.3f} F{1:.3f}".format( self.Printer.retract_length,self.Printer.retract_speed)
+		return "G1 E{0:.3f}{1}".format( self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
 	def GetResetLineNumberGcode(self,lineNumber):
 		return "M110 N{0:d}".format(lineNumber)
 	def GetWaitForCurrentMovesToFinishGcode(self):
 		return "M400";
 	def GetPositionGcode(self):
 		return "M114";
+
+	def GetF(self, speed):
+		if(speed<1):
+			return ""
+		return " F{0:.3f}".format(speed)
+
 		

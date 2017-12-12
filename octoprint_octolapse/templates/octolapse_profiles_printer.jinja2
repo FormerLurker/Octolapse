@@ -15,17 +15,17 @@
 
   </div>
   <div class="control-group">
-    <label class="control-label">Retraction Speed</label>
+    <label class="control-label">Retraction Speed - (0 for current extruder axis speed)</label>
 
     <div class="controls">
-      <input name="retract_speed" type="number" class="form-input span2" data-bind="value: retract_speed" step="10" min="10" max="9999999" required="true" />
+      <input name="retract_speed" type="number" class="form-input span2" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Movement Speed</label>
+    <label class="control-label">Movement Speed - (0 for current movement speed)</label>
     <div class="controls">
-      <input name="movement_speed" type="number" class="form-input span2" data-bind="value: movement_speed" step="10" min="10" max="9999999" required="true" />
+      <input name="movement_speed" type="number" class="form-input span2" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
