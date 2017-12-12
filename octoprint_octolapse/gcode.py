@@ -555,13 +555,14 @@ class Gcode(object):
 		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot(position)
 		hasRetracted = False
 		previousIsRelative = position.IsRelative
-		previousExtruderRelative = position.IsExtruderRelative
-
+		currentIsRelative = previousIsRelative
+		previousExtruderRelative = position.IsExtruderRelative()
+		currentExtruderRelative = previousExtruderRelative
 		# retract if necessary
 		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
-			if(not position.IsExtruderRelative):
+			if(not currentExtruderRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderRelativePositionGcode())
-				position.IsExtruderRelative = True
+				currentExtruderRelative = True
 			newSnapshotGcode.GcodeCommands.append(self.GetRetractGcode())
 			hasRetracted = True
 		
@@ -570,9 +571,9 @@ class Gcode(object):
 		canZHop =  self.Printer.z_hop > 0 and self.IsZInBounds(position.Z + self.Printer.z_hop)
 		# if we can ZHop, do
 		if(canZHop):
-			if(not position.IsRelative):
+			if(not currentIsRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
-				position.IsRelative = True
+				currentIsRelative = True
 			newSnapshotGcode.GcodeCommands.append(self.GetRelativeZLiftGcode())
 			
 
@@ -581,9 +582,9 @@ class Gcode(object):
 			return None
 
 		#Move back to the snapshot position - make sure we're in absolute mode for this
-		if(position.IsRelative):
+		if(currentIsRelative):
 			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
-			position.IsRelative = False
+			currentIsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		# removed delay, it might not be necessaray
@@ -600,39 +601,38 @@ class Gcode(object):
 		newSnapshotGcode.ReturnZ = position.Z
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-		if(position.IsRelative):
+		if(currentIsRelative):
 			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
-			position.IsRelative = False
+			currentIsRelative = False
 			
 		if(position.X is not None and position.Y is not None):
 			newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(position.X,position.Y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
-			if(not position.IsRelative):
+			if(not currentIsRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
-				position.IsRelative = True
+				currentIsRelative = True
 			newSnapshotGcode.GcodeCommands.append(self.GetRelativeZLowerGcode())
 		# detract
 		if(hasRetracted):
-			if(not position.IsExtruderRelative):
+			if(not currentExtruderRelative):
 				newSnapshotGcode.GcodeCommands.append.GetSetExtruderRelativePositionGcode()
-				position.IsExtruderRelative = True
+				currentExtruderRelative = True
 			newSnapshotGcode.GcodeCommands.append(self.GetDetractGcode())
 
 		# reset the coordinate systems for the extruder and axis
-		if(previousIsRelative != position.IsRelative):
-			if(position.IsRelative):
+		if(previousIsRelative != currentIsRelative):
+			if(currentIsRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			else:
 				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
-			position.IsRelative = previousIsRelative
+			currentIsRelative = previousIsRelative
 
-		if(previousExtruderRelative != position.IsExtruderRelative):
-			if(position.IsExtruderRelative):
-				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderAbslutePositionGcode())
-			else:
+		if(previousExtruderRelative != currentExtruderRelative):
+			if(previousExtruderRelative):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderRelativePositionGcode())
-			position.IsExtruderRelative = previousExtruderRelative
+			else:
+				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderAbslutePositionGcode())
 
 		newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
 
@@ -640,9 +640,7 @@ class Gcode(object):
 			self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
 			for str in newSnapshotGcode.GcodeCommands:
 				self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
-				
 			
-
 		self.Settings.CurrentDebugProfile().LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
 
