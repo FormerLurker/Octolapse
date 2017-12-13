@@ -563,7 +563,7 @@ class Gcode(object):
 	def GetRelativeZLowerGcode(self):
 		return "G1 Z{0:.3f}{1}".format(-1.0*self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
 	def GetRetractGcode(self):
-		return "G1 E{0:.3f}{2}".format(-1*self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
+		return "G1 E{0:.3f}{1}".format(-1*self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
 	def GetDetractGcode(self):
 		return "G1 E{0:.3f}{1}".format( self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
 	def GetResetLineNumberGcode(self,lineNumber):
