@@ -72,7 +72,20 @@ class Printer(object):
 			'z_min'				: self.z_min,
 			'snapshot_command'	: self.snapshot_command,
 		}
-		
+
+class StabilizationPath(object):
+	def __init__(self):
+		self.Axis = ""
+		self.Path = []
+		self.CoordinateSystem = ""
+		self.Index = 0
+		self.Loop = True
+		self.InvertLoop = True
+		self.Increment = 1
+		self.CurrentPosition = None
+		self.Type = 'disabled'
+		self.Options = {}
+
 class Stabilization(object):
 	
 	def __init__(self,stabilization=None, guid = None, name = "Default Stabilization"):
@@ -83,23 +96,28 @@ class Stabilization(object):
 		self.x_fixed_coordinate = 0.0
 		self.x_fixed_path = ""
 		self.x_fixed_path_loop = True
+		self.x_fixed_path_invert_loop = True
 		self.x_relative = 100.0
 		self.x_relative_print = 100.0
 		self.x_relative_path = ""
 		self.x_relative_path_loop = True
+		self.x_relative_path_invert_loop = True
 		self.y_movement_speed_mms = 0
 		self.y_type = 'fixed_coordinate'
 		self.y_fixed_coordinate = 0.0
 		self.y_fixed_path = ""
 		self.y_fixed_path_loop = True
+		self.y_fixed_path_invert_loop = True
 		self.y_relative = 100.0
 		self.y_relative_print = 100.0
 		self.y_relative_path = ""
 		self.y_relative_path_loop = True
+		self.y_relative_path_invert_loop = True
 		self.z_movement_speed_mms = 0
 		
 		if(stabilization is not None):
 			self.Update(stabilization)
+
 	def Update(self, changes):
 		if("guid" in changes.keys()):
 			self.guid = utility.getstring(changes["guid"],self.guid)
@@ -115,6 +133,8 @@ class Stabilization(object):
 			self.x_fixed_path = utility.getstring(changes["x_fixed_path"],self.x_fixed_path)
 		if("x_fixed_path_loop" in changes.keys()):
 			self.x_fixed_path_loop = utility.getbool(changes["x_fixed_path_loop"],self.x_fixed_path_loop)
+		if("x_fixed_path_invert_loop" in changes.keys()):
+			self.x_fixed_path_invert_loop = utility.getbool(changes["x_fixed_path_invert_loop"],self.x_fixed_path_invert_loop)
 		if("x_relative" in changes.keys()):
 			self.x_relative = utility.getfloat(changes["x_relative"],self.x_relative)
 		if("x_relative_print" in changes.keys()):
@@ -123,6 +143,8 @@ class Stabilization(object):
 			self.x_relative_path = utility.getstring(changes["x_relative_path"],self.x_relative_path)
 		if("x_relative_path_loop" in changes.keys()):
 			self.x_relative_path_loop = utility.getbool(changes["x_relative_path_loop"],self.x_relative_path_loop)
+		if("x_relative_path_invert_loop" in changes.keys()):
+			self.x_relative_path_invert_loop = utility.getbool(changes["x_relative_path_invert_loop"],self.x_relative_path_invert_loop)
 		if("y_movement_speed_mms" in changes.keys()):
 			self.y_movement_speed_mms = utility.getint(changes["y_movement_speed_mms"],self.y_movement_speed_mms)
 		if("y_type" in changes.keys()):
@@ -133,6 +155,8 @@ class Stabilization(object):
 			self.y_fixed_path = utility.getstring(changes["y_fixed_path"],self.y_fixed_path)
 		if("y_fixed_path_loop" in changes.keys()):
 			self.y_fixed_path_loop = utility.getbool(changes["y_fixed_path_loop"],self.y_fixed_path_loop)
+		if("y_fixed_path_invert_loop" in changes.keys()):
+			self.y_fixed_path_invert_loop = utility.getbool(changes["y_fixed_path_invert_loop"],self.y_fixed_path_invert_loop)
 		if("y_relative" in changes.keys()):
 			self.y_relative = utility.getfloat(changes["y_relative"],self.y_relative)
 		if("y_relative_print" in changes.keys()):
@@ -141,34 +165,93 @@ class Stabilization(object):
 			self.y_relative_path = utility.getstring(changes["y_relative_path"],self.y_relative_path)
 		if("y_relative_path_loop" in changes.keys()):
 			self.y_relative_path_loop = utility.getbool(changes["y_relative_path_loop"],self.y_relative_path_loop)
+		if("y_relative_path_invert_loop" in changes.keys()):
+			self.y_relative_path_invert_loop = utility.getbool(changes["y_relative_path_invert_loop"],self.y_relative_path_invert_loop)
 		if("z_movement_speed_mms" in changes.keys()):
 			self.z_movement_speed_mms = utility.getint(changes["z_movement_speed_mms"],self.z_movement_speed_mms)
-
+	
 	def ToDict(self):
 		return {
-			'name'					: self.name,
-			'guid'					: self.guid,
-			'x_movement_speed'		: self.x_movement_speed,
-			'x_type'				: self.x_type,
-			'x_fixed_coordinate'	: self.x_fixed_coordinate,
-			'x_fixed_path'			: self.x_fixed_path,
-			'x_fixed_path_loop'		: self.x_fixed_path_loop,
-			'x_relative'			: self.x_relative,
-			'x_relative_print'		: self.x_relative_print,
-			'x_relative_path'		: self.x_relative_path,
-			'x_relative_path_loop'	: self.x_relative_path_loop,
-			'y_movement_speed_mms'	: self.y_movement_speed_mms,
-			'y_type'				: self.y_type,
-			'y_fixed_coordinate'	: self.y_fixed_coordinate,
-			'y_fixed_path'			: self.y_fixed_path,
-			'y_fixed_path_loop'		: self.y_fixed_path_loop,
-			'y_relative'			: self.y_relative,
-			'y_relative_print'		: self.y_relative_print,
-			'y_relative_path'		: self.y_relative_path,
-			'y_relative_path_loop'	: self.y_relative_path_loop,
-			'z_movement_speed_mms'	: self.z_movement_speed_mms
+			'name'							: self.name,
+			'guid'							: self.guid,
+			'x_movement_speed'				: self.x_movement_speed,
+			'x_type'						: self.x_type,
+			'x_coordinate'					: self.x_fixed_coordinate,
+			'x_fixed_path'					: self.x_fixed_path,
+			'x_fixed_path_loop'				: self.x_fixed_path_loop,
+			'x_fixed_path_invert_loop'		: self.x_fixed_path_invert_loop,
+			'x_relative'					: self.x_relative,
+			'x_relative_print'				: self.x_relative_print,
+			'x_relative_path'				: self.x_relative_path,
+			'x_relative_path_invert_loop'	: self.x_relative_path_invert_loop,
+			'y_movement_speed_mms'			: self.y_movement_speed_mms,
+			'y_type'						: self.y_type,
+			'y_fixed_coordinate'			: self.y_fixed_coordinate,
+			'y_fixed_path'					: self.y_fixed_path,
+			'y_fixed_path_loop'				: self.y_fixed_path_loop,
+			'y_fixed_path_invert_loop'		: self.y_fixed_path_invert_loop,
+			'y_relative'					: self.y_relative,
+			'y_relative_print'				: self.y_relative_print,
+			'y_relative_path'				: self.y_relative_path,
+			'y_relative_path_loop'			: self.y_relative_path_loop,
+			'y_relative_path_invert_loop'	: self.y_relative_path_invert_loop,
+			'z_movement_speed_mms'			: self.z_movement_speed_mms
 		}
-	
+
+	def GetStabilizationPaths(self):
+		xStabilizationPath = StabilizationPath()
+		xStabilizationPath.Axis = "X"
+		if(self.x_type == 'fixed_coordinate'):
+			xStabilizationPath.Path.append(self.x_fixed_coordinate)
+			xStabilizationPath.CoordinateSystem = 'absolute'
+		elif(self.x_type == 'relative'):
+			xStabilizationPath.Path.append(self.x_relative)
+			xStabilizationPath.CoordinateSystem = 'bed_relative'
+		elif(self.x_type == 'fixed_path'):
+			xStabilizationPath.Path = self.ParseCSVPath(self.x_fixed_path)
+			xStabilizationPath.CoordinateSystem = 'absolute'
+			xStabilizationPath.Loop = self.x_fixed_path_loop
+			xStabilizationPath.InvertLoop = self.x_fixed_path_invert_loop
+		elif(self.x_type == 'relative_path'):
+			xStabilizationPath.Path = self.ParseCSVPath(self.x_relative_path)
+			xStabilizationPath.CoordinateSystem = 'bed_relative'
+			xStabilizationPath.Loop = self.x_relative_path_loop
+			xStabilizationPath.InvertLoop = self.x_relative_path_invert_loop
+
+		yStabilizationPath = StabilizationPath()
+		yStabilizationPath.Axis = "Y"
+		if(self.y_type == 'fiyed_coordinate'):
+			yStabilizationPath.Path.append(self.y_fiyed_coordinate)
+			yStabilizationPath.CoordinateSystem = 'absolute'
+		elif(self.y_type == 'relative'):
+			yStabilizationPath.Path.append(self.y_relative)
+			yStabilizationPath.CoordinateSystem = 'bed_relative'
+		elif(self.y_type == 'fiyed_path'):
+			yStabilizationPath.Path = self.y_fixed_path
+			yStabilizationPath.CoordinateSystem = 'absolute'
+			yStabilizationPath.Loop =self.y_fixed_path_loop
+			yStabilizationPath.InvertLoop = self.y_fixed_path_invert_loop
+		elif(self.y_type == 'relative_path'):
+			yStabilizationPath.Path = self.y_relative_path
+			yStabilizationPath.CoordinateSystem = 'bed_relative'
+			yStabilizationPath.Loop = self.y_fixed_path_loop
+			yStabilizationPath.InvertLoop = self.y_relative_path_invert_loop
+		
+		return dict(
+				X=xStabilizationPath ,
+				Y=yStabilizationPath
+			)
+
+	def ParseCSVPath(self, pathCsv):
+		"""Converts a list of floats separated by commas into an array of floats."""
+		path = []
+		items = pathCsv.split(',')
+		for item in items:
+			item = item.strip()
+			if(len(item)>0):
+				path.append(float(item))
+		return path
+		
 class Snapshot(object):
 
 	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
@@ -660,12 +743,13 @@ class DebugProfile(object):
 		# Configure the logger if it has not been created
 		if(DebugProfile.Logger is None):
 			DebugProfile.Logger = logging.getLogger("Octolapse Plugin")
+			
 			# Remove existing handlers
-			DebugProfile.Logger.handlers = []
+			#DebugProfile.Logger.handlers = []
 			# Create the handler
-			logHandler = logging.FileHandler(self.logFilePath)
-			logHandler.setFormatter(logging.Formatter(DebugProfile.FormatString))
-			DebugProfile.Logger.addHandler(logHandler)
+			#logHandler = logging.FileHandler(self.logFilePath)
+			#logHandler.setFormatter(logging.Formatter(DebugProfile.FormatString))
+			#DebugProfile.Logger.addHandler(logHandler)
 			DebugProfile.Logger.setLevel(logging.DEBUG)
 		
 		self.Commands = Commands()
@@ -822,16 +906,25 @@ class DebugProfile(object):
 				print(message)
 	def LogInfo(self,message):
 		if(self.enabled):
-			DebugProfile.Logger.info(message)
-			self.LogToConsole('info', message)
+			try:
+				DebugProfile.Logger.info(message)
+				self.LogToConsole('info', message)
+			except:
+				return
 	def LogWarning(self,message):
 		if(self.enabled):
-			DebugProfile.Logger.warning(message)
-			self.LogToConsole('warn', message)
+			try:
+				DebugProfile.Logger.warning(message)
+				self.LogToConsole('warn', message)
+			except:
+				return
 	def LogError(self,message):
 		if(self.enabled):
-			DebugProfile.Logger.error(message)
-			self.LogToConsole('error', message)
+			try:
+				DebugProfile.Logger.error(message)
+				self.LogToConsole('error', message)
+			except:
+				return
 	def LogPositionChange(self,message):
 		if(self.position_change ):
 			self.LogInfo(message)

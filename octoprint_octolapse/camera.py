@@ -91,7 +91,7 @@ class CameraSettingJob(object):
 					type = sys.exc_info()[0]
 					value = sys.exc_info()[1]
 					success = False
-					errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}, Stack Trace:{4}".format(type, settingName, url, value,traceback.print_stack()))
+					errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
 
 			if(success != False):
 				success = True

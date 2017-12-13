@@ -14,7 +14,6 @@ def GetGcodeFromString(commandString):
 	if(ix>-1):
 		command = command[0:ix]
 	return command
-
 class PositionGcode(object):
 	
 	def __init__(self):
@@ -22,8 +21,6 @@ class PositionGcode(object):
 
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
-
-	
 class SnapshotGcode(object):
 	def default(self, o):
 		return o.__dict__
@@ -51,7 +48,6 @@ class SnapshotGcode(object):
 		if(len(self.GcodeCommands)> self.SnapshotIndex+1):
 			return self.GcodeCommands[self.SnapshotIndex+1:]
 		return []
-		
 class CommandParameter(object):
     def __init__(self,name=None,group=None,value=None,parameter=None,order=None):
         if(parameter is None):
@@ -321,87 +317,11 @@ class Gcode(object):
 	CurrentYPathIndex = 0
 	def __init__(self,octolapseSettings,octoprint_printer_profile):
 		self.Settings = octolapseSettings
-		
-		self.Stabilization = self.Settings.CurrentStabilization()
+		self.StabilizationPaths = self.Settings.CurrentStabilization().GetStabilizationPaths()
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.Printer = self.Settings.CurrentPrinter()
 		self.OctoprintPrinterProfile = octoprint_printer_profile
-		self.CurrentXPathIndex = 0
-		self.CurrentYPathIndex = 0
-		self.XFixedPath_loop = self.Stabilization.x_fixed_path_loop
-		self.YFixedPath_loop = self.Stabilization.y_fixed_path_loop
-		self.XRelativePath_loop = self.Stabilization.x_relative_path_loop
-		self.YRelativePath_loop = self.Stabilization.y_relative_path_loop
-		try:
-			self.XFixedPath = []
-			items = self.Stabilization.x_fixed_path.split(',')
-			for item in items:
-				item = item.strip()
-				if(len(item)>0):
-					self.XFixedPath.append(float(item))
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XFixedPath:{2}".format(type,value,self.Stabilization.x_fixed_path))
-			self.XFixedPath = ["0"]
-
-		try:
-			self.YFixedPath = []
-			items = self.Stabilization.y_fixed_path.split(',')
-			for item in items:
-				item = item.strip()
-				if(len(item)>0):
-					self.YFixedPath.append(float(item))
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YFixedPath:{2}".format(type,value,self.Stabilization.y_fixed_path))
-			self.YFixedPath = ["0"]
-
-		try:
-			self.XRelativePath = []
-			items = self.Stabilization.x_relative_path.split(',')
-			for item in items:
-				item = item.strip()
-				if(len(item)>0):
-					self.XRelativePath.append(float(item))
-
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, XRelativePath:{2}".format(type,value,self.Stabilization.x_relative_path))
-			self.XRelativePath = ["0"]
-
-		try:
-			self.YRelativePath = []
-			items = self.Stabilization.y_relative_path.split(',')
-			for item in items:
-				item = item.strip()
-				if(len(item)>0):
-					self.YRelativePath.append(float(item))
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogError("Gcode - An exception was thrown when trying to save a create one of the stabilization paths.  ExceptionType:{0}, Exception Value:{1}, YRelativePath:{2}".format(type,value,self.Stabilization.y_relative_path))
-			self.YRelativePath = ["0"]
-
-	def GetBedRelativeX(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].width)
-	def GetBedRelativeY(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["y_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["y_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].depth)
-	def GetBedRelativeZ(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].height)
-	def GetRelativeCoordinate(self,percent,min,max):
-		return ((max-min)*(percent/100.0))+min
+		
 	def IsXInBounds(self,x):
 		
 		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
@@ -438,103 +358,76 @@ class Gcode(object):
 			self.Settings.CurrentDebugProfile().LogError('The Z coordinate {0} was outside the bounds of the printer!'.format(z))
 			return False
 		return True
-	def GetXCoordinateForSnapshot(self,position):
-		xCoord = 0
-		if(self.Stabilization.x_type == "disabled"):
-			xCoodr = position.X
-		elif (self.Stabilization.x_type == "fixed_coordinate"):
-			xCoord = self.Stabilization.x_fixed_coordinate
-			print("X - Fixed - Coordinate:{0}".format(xCoord))
-		elif (self.Stabilization.x_type == "relative"):
-			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
-				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
-			xCoord = self.GetBedRelativeX(self.Stabilization.x_relative)
-			print("X - Relative - Coordinate:{0}".format(xCoord))
-		elif (self.Stabilization.x_type == "fixed_path"):
-			# if there are no paths return the fixed coordinate
-			if(len(self.XFixedPath) == 0):
-				xCoord = self.Stabilization.x_fixed_coordinate
-			# if we have reached the end of the path
-			elif(self.CurrentXPathIndex >= len(self.XFixedPath)):
-				#If we are looping through the paths, reset the index to 0
-				if(self.XFixedPath_loop):
-						self.CurrentXPathIndex = 0
-				else:
-					self.CurrentXPathIndex = len(self.XFixedPath)
-			xCoord = float(self.XFixedPath[self.CurrentXPathIndex])
-			print("X - Fixed - Path:{0}".format(xCoord))
-			self.CurrentXPathIndex += 1
-		elif (self.Stabilization.x_type == "relative_path"):
-			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
-				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
-			# if there are no paths return the fixed coordinate
-			if(len(self.XRelativePath) == 0):
-				xCoord = self.GetBedRelativeX(self.Stabilization.x_relative)
-			# if we have reached the end of the path
-			elif(self.CurrentXPathIndex >= len(self.XRelativePath)):
-				#If we are looping through the paths, reset the index to 0
-				if(self.XRelativePath_loop):
-						self.CurrentXPathIndex = 0
-				else:
-					self.CurrentXPathIndex = len(self.XRelativePath)
-			xRel = float(self.XRelativePath[self.CurrentXPathIndex])
-			self.CurrentXPathIndex += 1
-			xCoord = self.GetBedRelativeX(xRel)
-			print("X - Relative - Path:{0}".format(xCoord))
-		else:
-			raise NotImplementedError
-		if(not self.IsXInBounds(xCoord)):
-			return None
-		return xCoord	
-	def GetYCoordinateForSnapshot(self,position):
-		yCoord = 0
-		if(self.Stabilization.y_type == "disabled"):
-			yCoodr = position.Y
-		elif (self.Stabilization.y_type == "fixed_coordinate"):
-			yCoord = self.Stabilization.y_fixed_coordinate
-			print("Y - Fixed - Coord:{0}".format(yCoord))
-		elif (self.Stabilization.y_type == "relative"):
-			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
-				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
-			yCoord = self.GetBedRelativeY(self.Stabilization.y_relative)
-			print("Y - Relative - Coord:{0}".format(yCoord))
-		elif (self.Stabilization.y_type == "fixed_path"):
-			# if there are no paths return the fixed coordinate
-			if(len(self.YFixedPath) == 0):
-				yCoord = self.Stabilization.y_fixed_coordinate
-			# if we have reached the end of the path
-			elif(self.CurrentYPathIndex >= len(self.YFixedPath)):
-				#If we are looping through the paths, reset the index to 0
-				if(self.YFixedPath_loop):
-						self.CurrentYPathIndex = 0
-				else:
-					self.CurrentYPathIndex = len(self.YFixedPath)
-			yCoord = float(self.YFixedPath[self.CurrentYPathIndex])
-			print("Y - Fixed - Path:{0}".format(yCoord))
-			self.CurrentYPathIndex += 1
-		elif (self.Stabilization.y_type == "relative_path"):
-			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
-				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
-			# if there are no paths return the fixed coordinate
-			if(len(self.YRelativePath) == 0):
-				yCoord =  self.GetBedRelativeY(self.Stabilization.y_relative)
-			# if we have reached the end of the path
-			elif(self.CurrentYPathIndex >= len(self.YRelativePath)):
-				#If we are looping through the paths, reset the index to 0
-				if(self.YRelativePath_loop):
-						self.CurrentYPathIndex = 0
-				else:
-					self.CurrentYPathIndex = len(self.YRelativePath)
-			yRel = float(self.YRelativePath[self.CurrentYPathIndex])
-			self.CurrentYPathIndex += 1
-			yCoord =  self.GetBedRelativeY(yRel)
-			print("Y - Relative - Path:{0}".format(yCoord))
-		else:
-			raise NotImplementedError
 
-		if(not self.IsYInBounds(yCoord)):
-			return None
-		return yCoord
+	def GetSnapshotPosition(self,xPos,yPos):
+		xPath = self.StabilizationPaths["X"]
+		xPath.CurrentPosition = xPos
+		yPath = self.StabilizationPaths["Y"]
+		yPath.CurrentPosition = yPos
+
+		coords = dict(X=self.GetSnapshotCoordinate(xPath), Y=self.GetSnapshotCoordinate(yPath))
+
+		if(not self.IsXInBounds(coords["X"])):
+			coords["X"] = None
+		if(not self.IsYInBounds(coords["Y"])):
+			coords["Y"] = None
+
+		return coords
+
+	def GetSnapshotCoordinate(self, path):
+		if(path.Type == 'disabled'):
+			return path.CurrentPosition
+		
+		# Get the current coordinate from the path
+		coord = self.Path[path.Index]
+		# move our index forward or backward
+		path.Index += path.Increment
+		
+		if(path.Index >= len(path)):
+			if(path.InvertLoop):
+				path.Index = len(path-1)
+				path.Increment = -1
+			else:
+				path.Index = 0
+		elif(path.Index < 0):
+			if(path.InvertLoop):
+				path.Index = 0
+				path.Increment = 1
+			else:
+				path.Index = len(path-1)
+		if(path.CoordinateSystem == "absolute"):
+			return coord
+		elif(path.CoordinateSystem == "bed_relative"):
+			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
+				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
+			return 	self.GetBedRelativeCoordinate(path.Axis,coord)
+
+	def GetBedRelativeX(self,axis,coord):
+		if(axis == "X"):
+			GetBedRelativeX(self,coord)
+		elif(axis == "Y"):
+			GetBedRelativeY(self,coord)
+		elif(axis == "Z"):
+		  GetBedRelativeZ(self,coord)
+
+	def GetBedRelativeX(self,percent):
+		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
+			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
+		else:
+			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].width)
+	def GetBedRelativeY(self,percent):
+		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
+			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["y_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["y_max"])
+		else:
+			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].depth)
+	def GetBedRelativeZ(self,percent):
+		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
+			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
+		else:
+			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].height)
+	def GetRelativeCoordinate(self,percent,min,max):
+		return ((max-min)*(percent/100.0))+min
+
 
 	def CreatePositionGcode(self):
 		newPositionGcode = PositionGcode()
@@ -543,20 +436,23 @@ class Gcode(object):
 		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
 		return newPositionGcode
 
-	def CreateSnapshotGcode(self, position, extruder):
-		if(position.X is None or position.Y is None or position.Z is None):
+	def CreateSnapshotGcode(self, x,y,z, isRelative, isExtruderRelative, extruder, savedCommand = None):
+		if(x is None or y is None or z is None):
 			return None
 		commandIndex = 0
 
 		newSnapshotGcode = SnapshotGcode()
 		# Create code to move from the current extruder position to the snapshot position
 		# get the X and Y coordinates of the snapshot
-		newSnapshotGcode.X = self.GetXCoordinateForSnapshot(position)
-		newSnapshotGcode.Y = self.GetYCoordinateForSnapshot(position)
+		snapshotPosition = self.GetSnapshotPosition(x,y)
+		newSnapshotGcode.X = snapshotPosition["X"]
+		newSnapshotGcode.Y = snapshotPosition["Y"]
 		hasRetracted = False
-		previousIsRelative = position.IsRelative
+		#todo:  make sure the relative values are from the previous command!  It's possible that we've triggered when switching
+		#from relative to absolute!
+		previousIsRelative = isRelative
 		currentIsRelative = previousIsRelative
-		previousExtruderRelative = position.IsExtruderRelative()
+		previousExtruderRelative = isExtruderRelative
 		currentExtruderRelative = previousExtruderRelative
 		# retract if necessary
 		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
@@ -568,7 +464,7 @@ class Gcode(object):
 		
 		# Can we hop or is the print too tall?
 		
-		canZHop =  self.Printer.z_hop > 0 and self.IsZInBounds(position.Z + self.Printer.z_hop)
+		canZHop =  self.Printer.z_hop > 0 and self.IsZInBounds(z + self.Printer.z_hop)
 		# if we can ZHop, do
 		if(canZHop):
 			if(not currentIsRelative):
@@ -586,7 +482,8 @@ class Gcode(object):
 			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			currentIsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
-		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
+		# removing the M400.  I think it messes stuff up sometimes.
+		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		# removed delay, it might not be necessaray
 		#newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
@@ -596,17 +493,17 @@ class Gcode(object):
 
 		# create return gcode
 		#record our previous position for posterity
-		newSnapshotGcode.ReturnX = position.X
-		newSnapshotGcode.ReturnY = position.Y
-		newSnapshotGcode.ReturnZ = position.Z
+		newSnapshotGcode.ReturnX = x
+		newSnapshotGcode.ReturnY = y
+		newSnapshotGcode.ReturnZ = z
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
 		if(currentIsRelative):
 			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			currentIsRelative = False
 			
-		if(position.X is not None and position.Y is not None):
-			newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(position.X,position.Y))
+		if(x is not None and y is not None):
+			newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(x,y))
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
 			if(not currentIsRelative):
@@ -633,13 +530,15 @@ class Gcode(object):
 				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderRelativePositionGcode())
 			else:
 				newSnapshotGcode.GcodeCommands.append(self.GetSetExtruderAbslutePositionGcode())
+		# What the hell was this for?!
+		#newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
+		# add the saved command, if there is one
+		if(savedCommand is not None):
+			newSnapshotGcode.GcodeCommands.append(savedCommand)
 
-		newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
-
-		if(self.Settings.CurrentDebugProfile().snapshot_gcode):
-			self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
-			for str in newSnapshotGcode.GcodeCommands:
-				self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
+		self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
+		for str in newSnapshotGcode.GcodeCommands:
+			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
 			
 		self.Settings.CurrentDebugProfile().LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
