@@ -37,6 +37,9 @@
         <label class="checkbox">
           <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
         </label>
+        <label class="checkbox">
+          <input name="x_fixed_path_invet loop" type="checkbox" data-bind="checked: x_fixed_path_invert_loop" />Invert Loop
+        </label>
         
       </div>
     </div>
@@ -55,7 +58,9 @@
         <label class="checkbox">
           <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
         </label>
-        
+        <label class="checkbox">
+          <input name="x_relative_path_invert_loop" type="checkbox" data-bind="checked: x_relative_path_invert_loop" />Invert Loop
+        </label>
       </div>
     </div>
   </div>
@@ -87,6 +92,9 @@
         <label class="checkbox">
           <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
         </label>
+        <label class="checkbox">
+          <input name="y_fixed_path_invert_loop" type="checkbox" data-bind="checked: y_fixed_path_invert_loop" />Invert Loop
+        </label>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'relative'">
@@ -103,6 +111,9 @@
         <div class="error_label_container text-error" ></div>
         <label class="checkbox">
           <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
+        </label>
+        <label class="checkbox">
+          <input name="y_relative_path_invert_loop" type="checkbox" data-bind="checked: y_relative_path_invert_loop" />Invert Loop
         </label>
         
       </div>
