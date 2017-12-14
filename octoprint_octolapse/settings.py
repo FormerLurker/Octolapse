@@ -183,7 +183,7 @@ class Stabilization(object):
 			'x_relative'					: self.x_relative,
 			'x_relative_print'				: self.x_relative_print,
 			'x_relative_path'				: self.x_relative_path,
-			'x_relative_path_loop'			: self.x_relative_path_invert_loop,
+			'x_relative_path_loop'			: self.x_relative_path_loop,
 			'x_relative_path_invert_loop'	: self.x_relative_path_invert_loop,
 			'y_movement_speed_mms'			: self.y_movement_speed_mms,
 			'y_type'						: self.y_type,

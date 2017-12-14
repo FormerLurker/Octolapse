@@ -514,9 +514,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(isReturn):
 			#todo:  Do we need to re-request the position like we do for the return?  Maybe...
 			if( not 
-			(previousX is None or utility.isclose(previousX, x,abs_tol=1e-8))
-			and (previousY is None or utility.isclose(previousY, y,abs_tol=1e-8))
-			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=1e-8))
+			(previousX is None or utility.isclose(previousX, x,abs_tol=1e-3))
+			and (previousY is None or utility.isclose(previousY, y,abs_tol=1e-3))
+			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=1e-3))
 			):
 				self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
 				# return position information received
@@ -545,8 +545,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5}".format(x,y,z,e,snapshotGcodes.X,snapshotGcodes.Y))
 
-			if((utility.isclose(snapshotGcodes.X, x,abs_tol=1e-8))
-				and (utility.isclose( snapshotGcodes.Y, y,abs_tol=1e-8))
+			if((utility.isclose(snapshotGcodes.X, x,abs_tol=1e-3))
+				and (utility.isclose( snapshotGcodes.Y, y,abs_tol=1e-3))
 			):
 				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
 				self.SnapshotState['RequestingSnapshotPosition'] = False
