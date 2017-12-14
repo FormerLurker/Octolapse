@@ -106,23 +106,29 @@ class Position(object):
 			return  self.IsExtruderAlwaysRelative or (self._isExtruderRelative is not None and self._isExtruderRelative)
 
 
-		
 	def Update(self,gcode):
-		# disect the gcode and use it to update our position
+		
+		
+		command = self.Commands.GetCommand(gcode)
+		# reset state variables
+		self.IsLayerChange = False
+		self.IsZHop = False
 		self.HasPositionChanged = False
+		
+		# Movement detected, set the previous values
+		# disect the gcode and use it to update our position
 		self.XPrevious = self.X
 		self.YPrevious = self.Y
 		self.ZPrevious = self.Z
 		self.EPrevious = self.E
-		# reset state variables
-		self.IsLayerChange = False
-
-		self.IsZHop = False
+		
 		# save any previous values that will be needed later
 		self.HeightPrevious = self.Height
 		self.ZDeltaPrevious = self.ZDelta
 
-		command = self.Commands.GetCommand(gcode)
+			
+
+		# apply the command to the position tracker
 		if(command is not None):
 			if(command.Command in ["G0","G1"]):
 				#Movement
@@ -226,9 +232,8 @@ class Position(object):
 				self.HasPositionChanged = True;
 				self.Settings.CurrentDebugProfile().LogPositionChange("Position Change - {0} move from - {1} - to- {2}".format("Relative" if self.IsRelative else "Absolute", self.GetFormattedCoordinates(self.XPrevious,self.YPrevious,self.ZPrevious,self.EPrevious),self.GetFormattedCoordinates(self.X, self.Y, self.Z, self.E)))
 
-		# Update the extruder monitor
+		# Update the extruder monitor if there was movement
 		self.Extruder.Update(self)
-		# track any layer/height increment changes
 
 		# determine if we've reached ZMin
 		if(not self.HasReachedZMin and self.Z <= self.Printer.z_min and self.Extruder.IsExtruding):

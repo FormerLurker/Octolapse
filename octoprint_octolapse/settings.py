@@ -202,6 +202,7 @@ class Stabilization(object):
 	def GetStabilizationPaths(self):
 		xStabilizationPath = StabilizationPath()
 		xStabilizationPath.Axis = "X"
+		xStabilizationPath.Type = self.x_type
 		if(self.x_type == 'fixed_coordinate'):
 			xStabilizationPath.Path.append(self.x_fixed_coordinate)
 			xStabilizationPath.CoordinateSystem = 'absolute'
@@ -221,6 +222,7 @@ class Stabilization(object):
 
 		yStabilizationPath = StabilizationPath()
 		yStabilizationPath.Axis = "Y"
+		yStabilizationPath.Type = self.y_type
 		if(self.y_type == 'fiyed_coordinate'):
 			yStabilizationPath.Path.append(self.y_fiyed_coordinate)
 			yStabilizationPath.CoordinateSystem = 'absolute'
@@ -228,12 +230,12 @@ class Stabilization(object):
 			yStabilizationPath.Path.append(self.y_relative)
 			yStabilizationPath.CoordinateSystem = 'bed_relative'
 		elif(self.y_type == 'fiyed_path'):
-			yStabilizationPath.Path = self.y_fixed_path
+			yStabilizationPath.Path = self.ParseCSVPath(self.y_fixed_path)
 			yStabilizationPath.CoordinateSystem = 'absolute'
 			yStabilizationPath.Loop =self.y_fixed_path_loop
 			yStabilizationPath.InvertLoop = self.y_fixed_path_invert_loop
 		elif(self.y_type == 'relative_path'):
-			yStabilizationPath.Path = self.y_relative_path
+			yStabilizationPath.Path = self.ParseCSVPath(self.y_relative_path)
 			yStabilizationPath.CoordinateSystem = 'bed_relative'
 			yStabilizationPath.Loop = self.y_fixed_path_loop
 			yStabilizationPath.InvertLoop = self.y_relative_path_invert_loop

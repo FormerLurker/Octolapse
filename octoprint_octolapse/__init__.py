@@ -235,11 +235,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 		return {'success':True}
 
-	def ResetTimelapseSettings(self):
+	def StopTimelapse(self):
+		self.IsPrinting = False
 		if(self.TimelapseSettings is not None):
-			if(self.TimelapseSettings["SnapshotRequestCount"] == 0 and not self.TimelapseSettings["IsRendering"]):
-				self.TimelapseSettings = None
-				self.ResetSnapshotState()
+			self.TimelapseSettings = None
+		if(self.SnapshotState is not None):
+			self.SnapshotState = None
 	## EVENTS
 	#########
 	def get_settings_defaults(self):
@@ -285,15 +286,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
 		elif(event == Events.POSITION_UPDATE and self.SnapshotState is not None):
 			if(self.SnapshotState['IsPausedByOctolapse'] ):
+				
 				# we just paused the printer.  Octoprint gives us a position automatically here!
 				# This will be our return position
 				if(self.SnapshotState['RequestingReturnPosition']):
 					self.SnapshotState['RequestingReturnPosition'] = False
+					self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
+					
 					self.PositionReceived(payload,True)
 				elif(self.SnapshotState['RequestingSnapshotPosition']):
 					self.SnapshotState['RequestingSnapshotPosition'] = False
+					self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot position received by Octolapse.")
 					self.PositionReceived(payload,False)
-				
+				else:
+					self.Settings.CurrentDebugProfile().LogPrintStateChange("Position received by Octolapse while paused, but was declined.")
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
 
@@ -352,7 +358,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed!")
 		self.OnPrintEnd()
 	def OnPrintEnd(self):
+		# render the timelapse if it's enabled
 		self.RenderTimelapse()
+		# in every case reset the timelapse settings.  we want all of the settings to be reset and the current timelapse ended.  The rendering will take place in the background.
+		self.StopTimelapse();
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 		
 	def IsTimelapseActive(self):
@@ -372,7 +381,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
 		# position
-		#
+
 		if(self.TimelapseSettings is not None):
 			self.TimelapseSettings['Position'].Update(cmd)
 		# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.
@@ -383,8 +392,41 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not self.IsTimelapseActive()):
 			return None
 
+
+		# if we have sent an m114 command
 		if(self.SnapshotState['IsPausedByOctolapse']):
-			return None
+			
+			# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
+			if(cmd in ['M105']):
+				return None, # suppress the command
+			#elif(self.SnapshotState['RequestingReturnPosition']):
+			#	# we need to suppress any M114 commands that we haven't sent
+			if(self.SnapshotState["SendingSnapshotCommands"]):
+				# suppress any commands that aren't within our list commands
+				snapshotCommandIndex = self.SnapshotState['SnapshotCommandIndex']
+				snapshotGcodes = self.SnapshotState['SnapshotGcodes']
+				snapshotCommand = snapshotGcodes.GcodeCommands[snapshotCommandIndex]
+				if(cmd not in snapshotGcodes.GcodeCommands):
+					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
+					return None , # suppress the command
+				# If the command is the snapshot command, set our state variables
+				# we have to do this in queuing, or else octoprint will sometimes snag the event before we know it was sent!  Crazy, and difficult to debug
+				snapshotIndex = self.SnapshotState['SnapshotGcodes'].SnapshotIndex
+				if(cmd == snapshotCommand):
+					if(snapshotCommandIndex == snapshotIndex):
+						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Queuing, requesting position.")
+						# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
+						self.SnapshotState['RequestingSnapshotPosition'] = True
+
+					self.SnapshotState['SnapshotCommandIndex'] += 1
+					if(snapshotCommandIndex >= snapshotGcodes.EndIndex() and not self.SnapshotState["RequestingSnapshotPosition"]):
+						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Return Gcode Command Found, ending the snapshot.")
+						self.EndSnapshot()
+						
+				else:
+					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The current command index {0} does not equal the snapshot index {1}, or the queuing command {2} does not equal the the snapshot command {3}.".format(snapshotCommandIndex,snapshotIndex, cmd, snapshotCommand))
+
+			return None  # leave the comand alone
 		
 		currentTrigger = trigger.IsTriggering(self.TimelapseSettings['Triggers'],self.TimelapseSettings['Position'], cmd, self.Settings.CurrentDebugProfile())
 		isPrinterSnapshotCommand = trigger.IsSnapshotCommand(cmd,self.Settings.CurrentPrinter().snapshot_command)
@@ -394,16 +436,17 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				# start a fresh snapshot!				
 				self.ResetSnapshotState()
 				# we don't want to execute the current command.  We have saved it for later.
-				if(isPrinterSnapshotCommand):
-					cmd = None
+				# but we don't want to send the snapshot command to the printer, or any of the SupporessedSavedCommands (gcode.py)
+				if(isPrinterSnapshotCommand or cmd in self.Commands.SuppressedSavedCommands):
+					self.SnapshotState['SavedCommand'] = None # this will suppress the command since it won't be added to our snapshot commands list
+				else:
+					self.SnapshotState['SavedCommand'] = cmd; # this will cause the command to be added to the end of our snapshot commands
 
-				self.SnapshotState['SavedCommand'] = cmd;
 				# pausing the print after setting these two flags to true will a position request, which will trigger a snapshot
 				self.SnapshotState['IsPausedByOctolapse'] = True
 				self.SnapshotState['RequestingReturnPosition'] = True
 				self._printer.pause_print()
-				
-				#self.SendPositionRequestGcode(True)
+				self.SendReturnPositionRequestGcode()
 				return None,
 		if(isPrinterSnapshotCommand ):
 			# in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
@@ -411,55 +454,27 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 		return None
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(not self.IsTimelapseActive()):
-			return
-		if(self.SnapshotState['SendingSnapshotCommands']):
-			snapshotCommandIndex = self.SnapshotState['SnapshotCommandIndex']
-			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
-			snapshotCommand = snapshotGcodes.GcodeCommands[snapshotCommandIndex]
-			snapshotIndex = self.SnapshotState['SnapshotGcodes'].SnapshotIndex
-			requestingSnapshotPosition = self.SnapshotState['RequestingSnapshotPosition']
-			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Monitoring Snapshot Commands - Sent to Printer:{0}, Snapshot Command - Index:{1} command:{2}".format(cmd, snapshotCommandIndex, snapshotCommand))
-			if(cmd == snapshotCommand and not requestingSnapshotPosition):
-				self.SnapshotState['SnapshotCommandIndex'] += 1
-				if(snapshotCommandIndex == snapshotIndex):
-					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Found, requesting position.")
-					self.SendPositionRequestGcode(False)
-				elif(snapshotCommandIndex == snapshotGcodes.EndIndex()):
-					self.EndSnapshot()
-				
-					
-		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 
-	def GcodeReceived(self, comm, line, *args, **kwargs):
-		
-		#if(self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
-			#TODO:  Remove this logging after debug
-			#self.Settings.CurrentDebugProfile().LogWarning("Paused - GcodeReceived: {0}, SnapshotState:{1}".format(line, pformat(self.SnapshotState)))
-			
-			#if(self.SnapshotState['WaitForSnapshotPosition']):
-			#	self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot position:{0}".format(line))
-			#	self.ReceivePositionOfSnapshot(line)
-			#	
-			#elif(self.SnapshotState['WaitForSnapshotReturnPosition']):
-			#	self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End wait for snapshot return position:{0}".format(line))
-			#	self.ReceivePositionForSnapshotReturn(line)
-			#else:
-			#	self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received From Printer:{0}".format(line))
-		return line
+		if(self.IsTimelapseActive()):
+			self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 
-	def SendPositionRequestGcode(self,isReturn):
+	def SendReturnPositionRequestGcode(self):
 		# Send commands to move to the snapshot position
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Requesting position for snapshot return.")
-		self.SnapshotState['PositionGcodes'] = self.TimelapseSettings['OctolapseGcode'].CreatePositionGcode()
-		for line in self.SnapshotState["PositionGcodes"].GcodeCommands:
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(line)
-		if(isReturn):
-			self.SnapshotState['RequestingReturnPosition'] = True
-		else:
-			self.SnapshotState['RequestingSnapshotPosition'] = True
 		
-		self._printer.commands("M114");
+		self.SnapshotState['PositionGcodes'] = self.TimelapseSettings['OctolapseGcode'].CreatePositionGcode()
+		if(self.SnapshotState['PositionGcodes'] is None):
+			self.Settings.CurrentDebugProfile().LogError("Aborting snapshot - No position gcodes were returned for a position request:  IsReturnPosition:{0}".format(isReturn))
+			self.AbortSnapshot()
+			return;
+		
+		
+		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M114).")
+		
+		
+		self.SnapshotState['RequestingReturnPosition'] = True
+		self._printer.commands("M114"); # we need to manually request it here
+		
+		
 	def PositionReceived(self, payload, isReturn):
 		x=payload["x"]
 		y=payload["y"]
@@ -468,15 +483,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		previousX = self.TimelapseSettings['Position'].XPrevious
 		previousY = self.TimelapseSettings['Position'].YPrevious
 		previousZ = self.TimelapseSettings['Position'].ZPrevious
-		if(
+		if( not 
 			(previousX is None or utility.isclose(previousX, x,abs_tol=1e-8))
 			and (previousY is None or utility.isclose(previousY, y,abs_tol=1e-8))
 			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=1e-8))
 			):
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
-		else:
 			self.Settings.CurrentDebugProfile().LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
 		if(isReturn):
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
 			# make sure the SnapshotCommandIndex = 0
 			# Todo: ensure this is unnecessary
 			self.SnapshotState['SnapshotCommandIndex']=0
@@ -490,12 +504,13 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
 				self.AbortSnapshot("No Snapshot Gcode was Generated")
 				return;
-			# We are now sending snapshot commands
-			#Todo:  Change this to use a state name.  We can get rid of a few variables and clean up the code
+
+			self.SnapshotState['RequestingReturnPosition'] = False
 			self.SnapshotState['SendingSnapshotCommands'] = True
 			# send our commands to the printer
 			self._printer.commands(self.SnapshotState['SnapshotGcodes'].SnapshotCommands());
 		else:
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
 			self.TakeSnapshot()
 
 	def AbortSnapshot(self, message):
@@ -507,29 +522,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def EndSnapshot(self):
 		# Cleans up the variables and resumes the print once the snapshot is finished, and the extruder is in the proper position 
-		isPaused = self.SnapshotState["IsPausedByOctolapse"]
+		
 		# reset the snapshot variables
 		self.ResetSnapshotState();
-
 		# if the print is paused, resume!
-		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
-		self._printer.resume_print()
-
-	def StopTimelapse(self, message):
-		"""Stops the current timelapse and clears out the variables"""
-		self.ResetSnapshotState();
-		self.ResetTimelapseSettings();
-			
-		# TODO:  test to see if we need this
-		# It's possible that a rendering is waiting to be generated if we were waiting for a snapshot to complete.
-		#if(self.TimelapseSettings["SnapshotRequestCount"] == 0 and self.TimelapseSettings['IsRendering'] == True):
-		#	self.RenderTimelapse()
+		if(self._printer.is_paused()):
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
+			self._printer.resume_print()
+		
 	def TakeSnapshot(self):
 		# Increment the number of outstanding snapshot requests
 		self.TimelapseSettings["SnapshotRequestCount"] += 1
 		
 		snapshot = self.TimelapseSettings['CaptureSnapshot']
+		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
 		try:
+			
 			snapshot.Snap(self.TimelapseSettings['CurrentPrintFileName'],self.TimelapseSettings['SnapshotCount'],onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess, onFail = self.OnSnapshotFail)
 		except:
 			a = sys.exc_info() # Info about unknown error that caused exception.                                              
@@ -541,7 +549,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnSnapshotSuccess(self, *args, **kwargs):
 		if(self.TimelapseSettings == None):
 			self.Settings.self.Settings.CurrentDebugProfile().LogError("There are no timelapse settings, cannot rename the snapshot!")
-			EndSnapshot()
+			self.EndSnapshot()
 			return
 		# Increment the number of snapshots received
 		self.TimelapseSettings['SnapshotCount'] += 1
@@ -574,8 +582,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.LogSnapshotDownload("Failed to download the snapshot.  Reason:{0}".format(reason))
 	def OnSnapshotComplete(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Snapshot Completed.")
-		#TODO:  Do we need this anymore?  Maybe not :)
-		self.TimelapseSettings["SnapshotRequestCount"] -= 1
 		self._printer.commands(self.SnapshotState['SnapshotGcodes'].ReturnCommands());
 		
 	# RENDERING Functions and Events
@@ -583,16 +589,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
 		if(self.TimelapseSettings is not None):
 			self.TimelapseSettings['IsRendering'] = True
-			if(not self.TimelapseSettings["SnapshotRequestCount"] == 0):
-				self.Settings.CurrentDebugProfile().LogRenderStart("Waiting for {0} download(s) to complete before starting timelapse generation.".format(self.TimelapseSettings["SnapshotRequestCount"]))
-			else:
-				if(self.TimelapseSettings["Render"].Rendering.enabled):
-					self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
-					self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'], self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime)
-				# in every case reset the timelapse settings.  we want all of the settings to be reset and the current timelapse ended.  The rendering will take place in the background.
-				self.TimelapseSettings["IsRendering"] = False
-				self.IsPrinting = False
-				self.ResetTimelapseSettings();
+			if(self.TimelapseSettings["Render"].Rendering.enabled):
+				self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
+				self.TimelapseSettings['Render'].Process(self.TimelapseSettings['CurrentPrintFileName'], self.TimelapseSettings['CaptureSnapshot'].PrintStartTime, self.TimelapseSettings['CaptureSnapshot'].PrintEndTime)
 		else:
 			self.Settings.CurrentDebugProfile().LogWarning("The timelapse was terminated before it could be created.")
 	def OnRenderStart(self, *args, **kwargs):
@@ -697,8 +696,6 @@ def __plugin_load__():
 	__plugin_hooks__ = {
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
-		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent,
-		"octoprint.comm.protocol.gcode.received": __plugin_implementation__.GcodeReceived,
-
+		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent
 	}
 

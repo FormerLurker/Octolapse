@@ -191,6 +191,7 @@ class Command(object):
         else:
             return False  
 class Commands(object):
+	SuppressedSavedCommands = ["M105"]
 	G0 = Command(
 	name="Rapid Linear Move"
 	,command="G0"
@@ -379,13 +380,13 @@ class Gcode(object):
 			return path.CurrentPosition
 		
 		# Get the current coordinate from the path
-		coord = self.Path[path.Index]
+		coord = path.Path[path.Index]
 		# move our index forward or backward
 		path.Index += path.Increment
 		
-		if(path.Index >= len(path)):
+		if(path.Index >= len(path.Path)):
 			if(path.InvertLoop):
-				path.Index = len(path-1)
+				path.Index = len(path.Path)-1
 				path.Increment = -1
 			else:
 				path.Index = 0
@@ -394,7 +395,8 @@ class Gcode(object):
 				path.Index = 0
 				path.Increment = 1
 			else:
-				path.Index = len(path-1)
+				path.Index = len(path.Path)-1
+
 		if(path.CoordinateSystem == "absolute"):
 			return coord
 		elif(path.CoordinateSystem == "bed_relative"):
@@ -402,14 +404,16 @@ class Gcode(object):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			return 	self.GetBedRelativeCoordinate(path.Axis,coord)
 
-	def GetBedRelativeX(self,axis,coord):
+	def GetBedRelativeCoordinate(self,axis,coord):
+		relCoord = None
 		if(axis == "X"):
-			GetBedRelativeX(self,coord)
+			relCoord = self.GetBedRelativeX(coord)
 		elif(axis == "Y"):
-			GetBedRelativeY(self,coord)
+			relCoord = self.GetBedRelativeY(coord)
 		elif(axis == "Z"):
-		  GetBedRelativeZ(self,coord)
+			relCoord = self.GetBedRelativeZ(coord)
 
+		return relCoord
 	def GetBedRelativeX(self,percent):
 		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
 			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
@@ -426,7 +430,7 @@ class Gcode(object):
 		else:
 			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].height)
 	def GetRelativeCoordinate(self,percent,min,max):
-		return ((max-min)*(percent/100.0))+min
+		return ((float(max)-float(min))*(percent/100.0))+float(min)
 
 
 	def CreatePositionGcode(self):

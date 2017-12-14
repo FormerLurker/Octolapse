@@ -76,7 +76,6 @@ class Render(object):
 						   , snapshotFileNameTemplate
 						   , outputDirectory
 						   , outputFilename
-						   
 						   , self.Rendering.output_format
 						   , self.OctoprintTimelapseFolder
 						   , self.FfmpegPath

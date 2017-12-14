@@ -194,7 +194,7 @@ $(function () {
                 };
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
 
-            self.global_settings.settings.plugins.octolapse = null;
+            
         }
         /*
             Show and hide the settings tabs based on the enabled parameter

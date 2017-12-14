@@ -41,10 +41,14 @@ class CaptureSnapshot(object):
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
 		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
+
 		if(self.Snapshot.delay == 0):
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Starting Snapshot Download Job Immediately.")
 			newSnapshotJob.Process()
 		else:
-			t = threading.Timer( self.Snapshot.delay/1000.0, StartSnapshotJob, [newSnapshotJob])
+			delaySeconds = self.Snapshot.delay/1000.0
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Starting Snapshot Download Job in {0} seconds.".format(delaySeconds))
+			t = threading.Timer( delaySeconds, StartSnapshotJob, [newSnapshotJob])
 			t.start()
 class SnapshotJob(object):
 	snapshot_job_lock = threading.RLock()
