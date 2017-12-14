@@ -437,7 +437,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.SnapshotState['IsPausedByOctolapse'] = True
 				self.SnapshotState['RequestingReturnPosition'] = True
 				self._printer.pause_print()
-				self.SendReturnPositionRequestGcode()
+				self.SendPositionRequestGcode(True)
 				return None,
 		if(isPrinterSnapshotCommand ):
 			# in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
@@ -468,12 +468,15 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.SnapshotState['RequestingSnapshotPosition'] = True
 
 
-	def SendReturnPositionRequestGcode(self):
+	def SendPositionRequestGcode(self, isReturn):
 		# Send commands to move to the snapshot position
-		
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M114).")
-		self.SnapshotState['RequestingReturnPosition'] = True
-		self._printer.commands("M114"); # we need to manually request it here
+		if(isReturn):
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M400, M114).")
+			self.SnapshotState['RequestingReturnPosition'] = True
+		else:
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot position (M400, M114).")
+			self.SnapshotState['RequestingSnapshotPosition'] = True
+		self._printer.commands(["M400","M114"]); # we need to manually request it here
 		
 	def PositionReceived(self, payload):
 		isReturn = None
@@ -567,11 +570,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return 
 
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Re-requesting our present location with a delay of {0} seconds. Try number {1} of {2}".format(reRequestDelaySeconds,  self.SnapshotState['PositionRequestAttempts'], maxRetryAttempts))
-		t = threading.Timer( reRequestDelaySeconds, self.SendSnapshotPositionRequest)
+		t = threading.Timer( reRequestDelaySeconds, self.SendPositionRequestGcode, [False])
 		t.start()
 
-	def SendSnapshotPositionRequest(self):
-		self._printer.commands("M114");
+	
 	def AbortSnapshot(self, message):
 		"""Stops the current snapshot, but continues.  Eventually this will display a user notification"""
 		# Todo:  Display a message for the user

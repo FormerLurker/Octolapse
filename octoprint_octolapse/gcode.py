@@ -34,7 +34,6 @@ class SnapshotGcode(object):
 		self.Z = None
 		self.ReturnZ = None
 		self.SnapshotIndex = -1
-		self.DwellIndex = -1
 		self.SnapshotMoveIndex = -1
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
@@ -42,8 +41,6 @@ class SnapshotGcode(object):
 		self.SnapshotIndex = self.EndIndex()
 	def SetSnapshotMoveIndex(self):
 		self.SnapshotMoveIndex = self.EndIndex()
-	def SetDwellIndex(self):
-		self.DwellIndex = self.EndIndex()
 
 	def SnapshotCommands(self):
 		if(len(self.GcodeCommands)>0):
@@ -496,8 +493,8 @@ class Gcode(object):
 		# removing the M400.  I think it messes stuff up sometimes.
 		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		# Dwell with time 0 so that we wait until the move is finished before retrieving the position
-		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode());
-		#newSnapshotGcode.SetDwellIndex()
+		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode());
+		
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
 		newSnapshotGcode.GcodeCommands.append(self.GetPositionGcode())
 		# mark the snapshot command index
