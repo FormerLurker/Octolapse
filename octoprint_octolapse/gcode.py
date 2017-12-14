@@ -34,10 +34,14 @@ class SnapshotGcode(object):
 		self.Z = None
 		self.ReturnZ = None
 		self.SnapshotIndex = -1
+		self.DwellIndex = -1
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
 	def SetSnapshotIndex(self):
 		self.SnapshotIndex = self.EndIndex()
+
+	def SetDwellIndex(self):
+		self.DwellIndex = self.EndIndex()
 
 	def SnapshotCommands(self):
 		if(len(self.GcodeCommands)>0):
@@ -436,7 +440,7 @@ class Gcode(object):
 	def CreatePositionGcode(self):
 		newPositionGcode = PositionGcode()
 		# add commands to fetch the current position
-		#newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())  # Cant use m400 without something after it, and we can't wait for it in the usual way...
+		newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())  # Cant use m400 without something after it, and we can't wait for it in the usual way...
 		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
 		return newPositionGcode
 
@@ -489,7 +493,8 @@ class Gcode(object):
 		# removing the M400.  I think it messes stuff up sometimes.
 		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		# Dwell with time 0 so that we wait until the move is finished before retrieving the position
-		newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode(0)));
+		newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetWaitForCurrentMovesToFinishGcode()));
+		newSnapshotGcode.SetDwellIndex()
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
 		newSnapshotGcode.GcodeCommands.append(self.GetPositionGcode())
 		# mark the snapshot command index

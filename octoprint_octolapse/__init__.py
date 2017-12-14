@@ -7,6 +7,7 @@ import time
 import os
 import sys
 import json
+import threading
 from pprint import pformat
 import flask
 import requests
@@ -186,7 +187,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			
 			#Snapshot Gcode Execution Tracking
 			'SnapshotCommandIndex':  0,
-			'PositionCommandIndex': 0
+			'PositionCommandIndex': 0,
+			'PositionRequestAttempts':0
 		}
 
 	def PrintSnapshotState(self):
@@ -285,21 +287,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif (event == Events.SETTINGS_UPDATED):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
 		elif(event == Events.POSITION_UPDATE and self.SnapshotState is not None):
+			
 			if(self.SnapshotState['IsPausedByOctolapse'] ):
+				self.PositionReceived(payload)
 				
-				# we just paused the printer.  Octoprint gives us a position automatically here!
-				# This will be our return position
-				if(self.SnapshotState['RequestingReturnPosition']):
-					self.SnapshotState['RequestingReturnPosition'] = False
-					self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
-					
-					self.PositionReceived(payload,True)
-				elif(self.SnapshotState['RequestingSnapshotPosition']):
-					self.SnapshotState['RequestingSnapshotPosition'] = False
-					self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot position received by Octolapse.")
-					self.PositionReceived(payload,False)
-				else:
-					self.Settings.CurrentDebugProfile().LogPrintStateChange("Position received by Octolapse while paused, but was declined.")
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
 
@@ -414,10 +405,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				snapshotIndex = self.SnapshotState['SnapshotGcodes'].SnapshotIndex
 				if(cmd == snapshotCommand):
 					if(snapshotCommandIndex == snapshotIndex):
-						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Gcode Command Queuing, requesting position.")
-						# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
-						self.SnapshotState['RequestingSnapshotPosition'] = True
-
+						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End snapshot position request gcode command queued.")
 					self.SnapshotState['SnapshotCommandIndex'] += 1
 					if(snapshotCommandIndex >= snapshotGcodes.EndIndex() and not self.SnapshotState["RequestingSnapshotPosition"]):
 						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Return Gcode Command Found, ending the snapshot.")
@@ -457,6 +445,25 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 		if(self.IsTimelapseActive()):
 			self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
+		else:
+			return
+		# Look for the dwell command.  Once we receive it, we should start looking for a snapshot position (m114)!
+
+		if(self.SnapshotState["SendingSnapshotCommands"]):
+			# Get the dwell command
+			
+			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
+			dwellIndex = snapshotGcodes.DwellIndex
+			# make sure this command is in our snapshot gcode list, else ignore
+			if(cmd not in snapshotGcodes.GcodeCommands):
+				return
+
+			dwellCommand = snapshotGcodes.GcodeCommands[dwellIndex]
+			if(cmd == dwellCommand):
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Dwell command sent, looking for snapshot position.")
+				# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
+				self.SnapshotState['RequestingSnapshotPosition'] = True
+
 
 	def SendReturnPositionRequestGcode(self):
 		# Send commands to move to the snapshot position
@@ -474,8 +481,26 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SnapshotState['RequestingReturnPosition'] = True
 		self._printer.commands("M114"); # we need to manually request it here
 		
-		
-	def PositionReceived(self, payload, isReturn):
+	def PositionReceived(self, payload):
+		isReturn = None
+		# octoprint sends a position requests when we pause, which can mess our $H1t up, so ignore it
+		if(payload["reason"] == "pause"): # lucky for us there is a reason attached.  I'd LOVE to be able to attach a reason (or any note) to a command and have it returned!
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Ignored position that was originally requested by Octoprint.")
+			return
+		if(self.SnapshotState['RequestingReturnPosition']):
+			# if we are getting the return position, set our snapshot state flag and set isReturn = true
+			
+			isReturn = True
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
+		elif(self.SnapshotState['RequestingSnapshotPosition']):
+			# if we are getting the snapshot position, set our snapshot state flag and set isReturn = false
+			
+			isReturn = False
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot position received by Octolapse.")
+		else:
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Position received by Octolapse while paused, but was declined.")
+			return
+
 		x=payload["x"]
 		y=payload["y"]
 		z=payload["z"]
@@ -483,14 +508,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		previousX = self.TimelapseSettings['Position'].XPrevious
 		previousY = self.TimelapseSettings['Position'].YPrevious
 		previousZ = self.TimelapseSettings['Position'].ZPrevious
-		if( not 
+		
+		
+		
+		if(isReturn):
+			#todo:  Do we need to re-request the position like we do for the return?  Maybe...
+			if( not 
 			(previousX is None or utility.isclose(previousX, x,abs_tol=1e-8))
 			and (previousY is None or utility.isclose(previousY, y,abs_tol=1e-8))
 			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=1e-8))
 			):
-			self.Settings.CurrentDebugProfile().LogWarning("The position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
-		if(isReturn):
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
+				self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
+				# return position information received
+				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
+
 			# make sure the SnapshotCommandIndex = 0
 			# Todo: ensure this is unnecessary
 			self.SnapshotState['SnapshotCommandIndex']=0
@@ -510,9 +541,39 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			# send our commands to the printer
 			self._printer.commands(self.SnapshotState['SnapshotGcodes'].SnapshotCommands());
 		else:
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
-			self.TakeSnapshot()
+			# snapshot position information received
+			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5}".format(x,y,z,e,snapshotGcodes.X,snapshotGcodes.Y))
 
+			if((utility.isclose(snapshotGcodes.X, x,abs_tol=1e-8))
+				and (utility.isclose( snapshotGcodes.Y, y,abs_tol=1e-8))
+			):
+				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
+				self.SnapshotState['RequestingSnapshotPosition'] = False
+				self.TakeSnapshot()
+			else:
+				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is incorrect.")
+				self.ResendSnapshotPositionRequest()
+				
+	def ResendSnapshotPositionRequest(self):
+		# rety 20 times with a .25 second delay between attempts
+		maxRetryAttempts = 20
+		reRequestDelaySeconds = .25 
+		self.SnapshotState['PositionRequestAttempts'] += 1
+		# todo:  make the retry attempts a setting, as well as the request delay
+		
+		if(self.SnapshotState['PositionRequestAttempts']>maxRetryAttempts):
+			message = "The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot".format(maxRetryAttempts)
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(message)
+			self.AbortSnapshot(message)
+			return 
+
+		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Re-requesting our present location with a delay of {0} seconds. Try number {1} of {2}".format(reRequestDelaySeconds,  self.SnapshotState['PositionRequestAttempts'], maxRetryAttempts))
+		t = threading.Timer( reRequestDelaySeconds, self.SendSnapshotPositionRequest)
+		t.start()
+
+	def SendSnapshotPositionRequest(self):
+		self._printer.commands("M114");
 	def AbortSnapshot(self, message):
 		"""Stops the current snapshot, but continues.  Eventually this will display a user notification"""
 		# Todo:  Display a message for the user
