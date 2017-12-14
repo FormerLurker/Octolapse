@@ -31,7 +31,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.BlueprintPlugin):
 	TIMEOUT_DELAY = 1000
 	IsStarted = False
-	# Todo:  Create a setting for for this value in Printers
+	# Todo:  Create a setting for this value in Printers
 	PRINTER_POSITION_TOLERANCE_MM = 0.005
 	# Todo:  Create a settings for these values within 'snapshot'
 	SNAPSHOT_POSITION_REQUEST_RETRY_ATTEMPTS = 10
@@ -568,9 +568,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# todo:  make the retry attempts a setting, as well as the request delay
 		
 		if(self.SnapshotState['PositionRequestAttempts'] > maxRetryAttempts):
-			message = "The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot".format(maxRetryAttempts)
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(message)
-			self.AbortSnapshot(message)
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot.".format(maxRetryAttempts))
+			# we're giving up and no longer requesting a snapshot position.
+			self.SnapshotState['RequestingSnapshotPosition'] = False
+			self.SendSnapshotReturnCommands()
 			return 
 
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Re-requesting our present location with a delay of {0} seconds. Try number {1} of {2}".format(reRequestDelaySeconds,  self.SnapshotState['PositionRequestAttempts'], maxRetryAttempts))
@@ -648,6 +649,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.LogSnapshotDownload("Failed to download the snapshot.  Reason:{0}".format(reason))
 	def OnSnapshotComplete(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Snapshot Completed.")
+		self.SendSnapshotReturnCommands()
+
+	def SendSnapshotReturnCommands(self):
+		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Sending Snapshot Return Commands.")
 		self._printer.commands(self.SnapshotState['SnapshotGcodes'].ReturnCommands());
 		
 	# RENDERING Functions and Events
