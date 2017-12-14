@@ -26,6 +26,7 @@ class Printer(object):
 		self.z_min = z_min
 		self.snapshot_command = snapshot_command
 		self.is_e_relative = is_e_relative
+		self.printer_position_confirmation_tolerance = 0.005
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
@@ -37,6 +38,7 @@ class Printer(object):
 				self.z_min = printer.z_min
 				self.snapshot_command = printer.snapshot_command
 				self.is_e_relative = printer.is_e_relative
+				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
 			else:
 				self.Update(printer)
 	def Update(self,changes):
@@ -58,7 +60,9 @@ class Printer(object):
 			self.z_hop = utility.getfloat(changes["z_hop"],self.z_hop)
 		if("z_min" in changes.keys()):
 			self.z_min = utility.getfloat(changes["z_min"],self.z_min)
-
+		if("printer_position_confirmation_tolerance" in changes.keys()):
+			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
+			
 	def ToDict(self):
 		return {
 		
@@ -71,6 +75,7 @@ class Printer(object):
 			'z_hop'				: self.z_hop,
 			'z_min'				: self.z_min,
 			'snapshot_command'	: self.snapshot_command,
+			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance
 		}
 
 class StabilizationPath(object):
@@ -291,6 +296,9 @@ class Snapshot(object):
 		self.layer_trigger_on_retracted = True
 		self.layer_trigger_on_detracting = True
 		# other settings
+		self.position_request_retry_attemps = 10 # ***
+		self.position_request_retry_delay_ms = 200# ***
+
 		self.archive = True
 		self.delay = 1000
 		self.retract_before_move = False
@@ -372,6 +380,12 @@ class Snapshot(object):
 			self.layer_trigger_on_retracted = utility.getbool(changes["layer_trigger_on_retracted"],self.layer_trigger_on_retracted)
 		if("layer_trigger_on_detracting" in changes.keys()):
 			self.layer_trigger_on_detracting = utility.getbool(changes["layer_trigger_on_detracting"],self.layer_trigger_on_detracting)
+
+		# other settings
+		if("position_request_retry_attemps" in changes.keys()):
+			self.position_request_retry_attemps = utility.getfloat(changes["position_request_retry_attemps"],self.position_request_retry_attemps)
+		if("position_request_retry_delay_ms" in changes.keys()):
+			self.position_request_retry_delay_ms = utility.getfloat(changes["position_request_retry_delay_ms"],self.position_request_retry_delay_ms)
 		if("archive" in changes.keys()):
 			self.archive = utility.getbool(changes["archive"],self.archive)
 		if("delay" in changes.keys()):
@@ -433,6 +447,8 @@ class Snapshot(object):
 			'layer_trigger_on_retracting'		: self.layer_trigger_on_retracting,
 			'layer_trigger_on_retracted'		: self.layer_trigger_on_retracted,
 			'layer_trigger_on_detracting'		: self.layer_trigger_on_detracting,
+			'position_request_retry_attemps'	: self.position_request_retry_attemps,
+			'position_request_retry_delay_ms'	: self.position_request_retry_delay_ms,
 			'archive'							: self.archive,
 			'delay'								: self.delay,
 			'output_format'						: self.output_format,

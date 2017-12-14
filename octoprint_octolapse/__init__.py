@@ -31,11 +31,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.BlueprintPlugin):
 	TIMEOUT_DELAY = 1000
 	IsStarted = False
-	# Todo:  Create a setting for this value in Printers
-	PRINTER_POSITION_TOLERANCE_MM = 0.005
-	# Todo:  Create a settings for these values within 'snapshot'
-	SNAPSHOT_POSITION_REQUEST_RETRY_ATTEMPTS = 10
-	SNAPSHOT_POSITION_REQUEST_DELAYMS = 200
+	
 	def __init__(self):
 		self.Settings = None
 		self.TimelapseSettings = None # Holds all settings that we will use to create a timelapse.  Created when the print starts, destroyed after the print and rendering completes
@@ -214,6 +210,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
 		self.TimelapseSettings = {
 			'CameraControl': CameraControl(self.Settings, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted),
+			'SnapshotPositionRetryAttempts' : self.Settings.CurrentSnapshot().position_request_retry_attemps,
+			'SnapshotPositionRetryDelayMs' : self.Settings.CurrentSnapshot().position_request_retry_delay_ms,
 			'OctolapseGcode': Gcode(self.Settings,self.CurrentPrinterProfile()),
 			'Printer': Printer(self.Settings.CurrentPrinter()),
 			'CaptureSnapshot': CaptureSnapshot(self.Settings,  self.get_plugin_data_folder(), printStartTime=time.time()),
@@ -455,17 +453,17 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# Look for the dwell command.  Once we receive it, we should start looking for a snapshot position (m114)!
 
 		if(self.SnapshotState["SendingSnapshotCommands"]):
-			# Get the dwell command
 			
 			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
-			dwellIndex = snapshotGcodes.DwellIndex
 			# make sure this command is in our snapshot gcode list, else ignore
 			if(cmd not in snapshotGcodes.GcodeCommands):
 				return
-
-			dwellCommand = snapshotGcodes.GcodeCommands[dwellIndex]
-			if(cmd == dwellCommand):
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Dwell command sent, looking for snapshot position.")
+			
+			# Get the move command index and command 
+			snapshotMoveIndex = snapshotGcodes.SnapshotMoveIndex
+			moveCommand = snapshotGcodes.GcodeCommands[snapshotMoveIndex]
+			if(cmd == moveCommand):
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent, looking for snapshot position.")
 				# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
 				self.SnapshotState['RequestingSnapshotPosition'] = True
 
@@ -473,16 +471,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def SendReturnPositionRequestGcode(self):
 		# Send commands to move to the snapshot position
 		
-		self.SnapshotState['PositionGcodes'] = self.TimelapseSettings['OctolapseGcode'].CreatePositionGcode()
-		if(self.SnapshotState['PositionGcodes'] is None):
-			self.Settings.CurrentDebugProfile().LogError("Aborting snapshot - No position gcodes were returned for a position request:  IsReturnPosition:{0}".format(isReturn))
-			self.AbortSnapshot()
-			return;
-		
-		
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M114).")
-		
-		
 		self.SnapshotState['RequestingReturnPosition'] = True
 		self._printer.commands("M114"); # we need to manually request it here
 		
@@ -518,10 +507,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		
 		if(isReturn):
 			#todo:  Do we need to re-request the position like we do for the return?  Maybe...
+			printerTolerance = self.TimelapseSettings["Printer"].printer_position_confirmation_tolerance
 			if( not 
-			(previousX is None or utility.isclose(previousX, x,abs_tol=self.PRINTER_POSITION_TOLERANCE_MM))
-			and (previousY is None or utility.isclose(previousY, y,abs_tol=self.PRINTER_POSITION_TOLERANCE_MM))
-			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=self.PRINTER_POSITION_TOLERANCE_MM))
+			(previousX is None or utility.isclose(previousX, x,abs_tol=printerTolerance))
+			and (previousY is None or utility.isclose(previousY, y,abs_tol=printerTolerance))
+			and (previousZ is None or utility.isclose(previousZ, z,abs_tol=printerTolerance))
 			):
 				self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,previousX,previousY,previousZ))
 				# return position information received
@@ -550,8 +540,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5}".format(x,y,z,e,snapshotGcodes.X,snapshotGcodes.Y))
 
-			if((utility.isclose(snapshotGcodes.X, x,abs_tol=self.PRINTER_POSITION_TOLERANCE_MM))
-				and (utility.isclose( snapshotGcodes.Y, y,abs_tol=self.PRINTER_POSITION_TOLERANCE_MM))
+			printerTolerance = self.TimelapseSettings["Printer"].printer_position_confirmation_tolerance
+			if((utility.isclose(snapshotGcodes.X, x,abs_tol=printerTolerance))
+				and (utility.isclose( snapshotGcodes.Y, y,abs_tol=printerTolerance))
 			):
 				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
 				self.SnapshotState['RequestingSnapshotPosition'] = False
@@ -561,9 +552,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.ResendSnapshotPositionRequest()
 				
 	def ResendSnapshotPositionRequest(self):
+
 		# rety 20 times with a .25 second delay between attempts
-		maxRetryAttempts = self.SNAPSHOT_POSITION_REQUEST_RETRY_ATTEMPTS
-		reRequestDelaySeconds = self.SNAPSHOT_POSITION_REQUEST_DELAYMS / 1000.0
+		maxRetryAttempts = self.TimelapseSettings['SnapshotPositionRetryAttempts']
+		reRequestDelaySeconds = self.TimelapseSettings['SnapshotPositionRetryDelayMs'] / 1000.0
 		self.SnapshotState['PositionRequestAttempts'] += 1
 		# todo:  make the retry attempts a setting, as well as the request delay
 		

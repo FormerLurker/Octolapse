@@ -32,7 +32,9 @@ $(function() {
         self.layer_trigger_on_retracting = ko.observable(values.layer_trigger_on_retracting);
         self.layer_trigger_on_retracted = ko.observable(values.layer_trigger_on_retracted);
         self.layer_trigger_on_detracting = ko.observable(values.layer_trigger_on_detracting);
-        
+
+        self.position_request_retry_attemps = ko.observable(values.position_request_retry_attemps);
+        self.position_request_retry_delay_ms = ko.observable(values.position_request_retry_delay_ms);
         self.archive = ko.observable(values.archive);
         self.delay = ko.observable(values.delay);
         self.retract_before_move = ko.observable(values.retract_before_move);
