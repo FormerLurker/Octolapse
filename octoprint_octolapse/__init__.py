@@ -476,7 +476,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		else:
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot position (M400, M114).")
 			self.SnapshotState['RequestingSnapshotPosition'] = True
-		self._printer.commands(["M400","M114"]); # we need to manually request it here
+		self._printer.commands("M114"); 
 		
 	def PositionReceived(self, payload):
 		isReturn = None

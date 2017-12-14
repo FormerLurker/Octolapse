@@ -490,10 +490,8 @@ class Gcode(object):
 			currentIsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		newSnapshotGcode.SetSnapshotMoveIndex()
-		# removing the M400.  I think it messes stuff up sometimes.
-		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
 		# Dwell with time 0 so that we wait until the move is finished before retrieving the position
-		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode());
+		newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode());
 		
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
 		newSnapshotGcode.GcodeCommands.append(self.GetPositionGcode())
