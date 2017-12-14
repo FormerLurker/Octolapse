@@ -488,8 +488,8 @@ class Gcode(object):
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		# removing the M400.  I think it messes stuff up sometimes.
 		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())
-		# removed delay, it might not be necessaray
-		#newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode() ));
+		# Dwell with time 0 so that we wait until the move is finished before retrieving the position
+		newSnapshotGcode.GcodeCommands.append("{0}".format(self.GetDelayGcode(0)));
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
 		newSnapshotGcode.GcodeCommands.append(self.GetPositionGcode())
 		# mark the snapshot command index
@@ -558,8 +558,8 @@ class Gcode(object):
 	def GetSetRelativePositionGcode(self):
 		return "G91"
 	
-	def GetDelayGcode(self):
-		return "G4 P{0:d}".format(self.Snapshot.delay)
+	def GetDelayGcode(self, delay):
+		return "G4 P{0:d}".format(delay)
 	def GetMoveGcode(self,x,y):
 		return "G1 X{0:.3f} Y{1:.3f}{2}".format(x,y,self.GetF(self.Printer.movement_speed))
 	def GetRelativeZLiftGcode(self):
