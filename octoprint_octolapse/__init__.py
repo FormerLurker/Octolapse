@@ -176,7 +176,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			#State Flags
 			'IsPausedByOctolapse': False, # Did octolapse pause the print in order to take a snapshot?
 			'RequestingPosition': False, # Are we in the middle of a position request?
-			'ApplyingCameraSettings': False, # are we trying to adjust the camera?  
 			'SendingSnapshotCommands': False, # If true, we are in the process of sending gcode to the printer to take a snapshot
 			'RequestingReturnPosition': False, # If true, we have sent a position request to the 3d printer, but haven't yet received a response
 			'RequestingSnapshotPosition': False, # If true, we have sent all the gcode necessary to move to the snapshot position and are waiting for a response so that we can take the snapshot.
@@ -209,7 +208,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not os.path.isfile(ffmpegPath)):
 			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
 		self.TimelapseSettings = {
-			'CameraControl': CameraControl(self.Settings, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted),
+			
 			'SnapshotPositionRetryAttempts' : self.Settings.CurrentSnapshot().position_request_retry_attemps,
 			'SnapshotPositionRetryDelayMs' : self.Settings.CurrentSnapshot().position_request_retry_delay_ms,
 			'OctolapseGcode': Gcode(self.Settings,self.CurrentPrinterProfile()),
@@ -272,7 +271,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
 		if (event == Events.PRINT_PAUSED):
 			# If octolapse has paused the print, we are taking a snapshot
-			if(not self.SnapshotState is not None and (self.SnapshotState['IsPausedByOctolapse'] or self.SnapshotState['ApplyingCameraSettings'])):
+			if(not self.SnapshotState is not None and self.SnapshotState['IsPausedByOctolapse']):
 				self.OnPrintPausedByOctolapse() # octolapse pause
 			else:
 				self.OnPrintPause() # regular pause
@@ -308,22 +307,24 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused by Octolapse.")
 			
 	def OnPrintStart(self):
-		
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started.")
-		self.IsPrinting = True
+		if(self.Settings.CurrentCamera().apply_settings_before_print):
+			cameraControl = CameraControl(self.Settings, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
+			cameraControl.ApplySettings()
+		
+		self.StartTimelapse()
+		
+
+	def StartTimelapse(self):
 		settingsCreatedResult = self.CreateTimelaspeSettings()
 		if(not settingsCreatedResult["success"]):
-			# display a warning
 			self.Settings.CurrentDebugProfile().LogWarning("Unable to create timelapse settings: {0}".format(settingsCreatedResult["error"]))
 			# cancel the print
 			self._printer.cancel_print()
 			return
-		
-		if(self.Settings.CurrentCamera().apply_settings_before_print):
-			self.SnapshotState['ApplyingCameraSettings'] = True
-			self._printer.pause_print();
-			self.TimelapseSettings['CameraControl'].ApplySettings()
+		self.IsPrinting = True
 
+			
 	def OnCameraSettingsSuccess(self, *args, **kwargs):
 		numSettings = args[0]
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Successfully applied all {0} camera settings.".format(numSettings))
@@ -337,8 +338,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		
 	def OnCameraSettingsCompelted(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
-		self.SnapshotState['ApplyingCameraSettings'] = False
-		self._printer.resume_print()
+		
 
 	def OnPrintFailed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
@@ -466,7 +466,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent, looking for snapshot position.")
 				# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
 				self.SnapshotState['RequestingSnapshotPosition'] = True
-
 
 	def SendPositionRequestGcode(self, isReturn):
 		# Send commands to move to the snapshot position

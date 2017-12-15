@@ -230,7 +230,7 @@ class Position(object):
 				or self.ERelative() != 0
 			):
 				self.HasPositionChanged = True;
-				self.Settings.CurrentDebugProfile().LogPositionChange("Position Change - {0} move from - {1} - to- {2}".format("Relative" if self.IsRelative else "Absolute", self.GetFormattedCoordinates(self.XPrevious,self.YPrevious,self.ZPrevious,self.EPrevious),self.GetFormattedCoordinates(self.X, self.Y, self.Z, self.E)))
+				
 
 		# Update the extruder monitor if there was movement
 		self.Extruder.Update(self)
@@ -261,9 +261,9 @@ class Position(object):
 				self.IsLayerChange = False
 
 			# Is this a ZHOp?
-			self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
-				self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
-			))
+			#self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
+			#	self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
+			#))
 			if(self.ZRelative() is not None):
 				self.IsZHop = self.Printer.z_hop > 0.0 and self.ZRelative() >= self.Printer.z_hop and (not self.Extruder.IsExtruding)
 			if(self.IsZHop):

@@ -32,13 +32,13 @@ class Render(object):
 		self.TimelapseRenderJobs = []
 
 	def Process(self, printName, printStartTime, printEndTime):
-		self.Settings.CurrentDebugProfile().LogRenderStart("Starting.")
+		self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
 		# Get the capture file and directory info
 		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printName,printStartTime, self.Snapshot.output_format)
 		snapshotFileNameTemplate  = utility.GetSnapshotFilenameFromTemplate(self.Snapshot.output_filename, printName, printStartTime, self.Snapshot.output_format, "%05d")
 		# get the output file and directory info
 		outputDirectory = utility.GetDirectoryFromTemplate(self.Rendering.output_directory,self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)
-		#self.Settings.CurrentDebugProfile().LogInfo("OutputDirectory: {0}, Template:{1}, PrintName:{2}, printStartTime:{3}, outputFormat:{4}, printEndTime:{5}".format(outputDirectory,self.Rendering.output_directory,printName,printStartTime, self.Rendering.output_format,printEndTime))
+
 		outputFilename = utility.GetRenderingFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format,printEndTime)
 		
 		
@@ -56,19 +56,19 @@ class Render(object):
 				if(os.path.isfile(imagePath)):
 					foundFile = True
 					imageIndex += 1
-					self.Settings.CurrentDebugProfile().LogInfo("Found image:{0}".format(imagePath))
+					self.Settings.CurrentDebugProfile().LogRenderStart("Found image:{0}".format(imagePath))
 				else:
-					self.Settings.CurrentDebugProfile().LogInfo("Could not find image:{0}".format(imagePath))
+					self.Settings.CurrentDebugProfile().LogRenderStart("Could not find image:{0}, search complete.".format(imagePath))
 			imageCount = imageIndex - 1
-			self.Settings.CurrentDebugProfile().LogInfo("Found {0} images.".format(imageCount))
+			self.Settings.CurrentDebugProfile().LogRenderStart("Found {0} images.".format(imageCount))
 			fps = float(imageCount)/float(self.Rendering.run_length_seconds)
 			if(fps > self.Rendering.max_fps):
 				fps = self.Rendering.max_fps
 			elif(fps < self.Rendering.min_fps):
 				fps = self.Rendering.min_fps
-			self.Settings.CurrentDebugProfile().LogInfo("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self.Rendering.fps_calculation_type,fps, imageCount,self.Rendering.run_length_seconds,self.Rendering.max_fps,self.Rendering.min_fps))
+			self.Settings.CurrentDebugProfile().LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self.Rendering.fps_calculation_type,fps, imageCount,self.Rendering.run_length_seconds,self.Rendering.max_fps,self.Rendering.min_fps))
 		else:
-			self.Settings.CurrentDebugProfile().LogInfo("FPS Calculation Type:{0}, Fps:{0}".format(self.Rendering.fps_calculation_type,imageIndex,fps))
+			self.Settings.CurrentDebugProfile().LogRenderStart("FPS Calculation Type:{0}, Fps:{0}".format(self.Rendering.fps_calculation_type,imageIndex,fps))
 		job = TimelapseRenderJob(
 							self.Settings.CurrentDebugProfile()
 							, printName

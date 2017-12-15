@@ -14,13 +14,7 @@ def GetGcodeFromString(commandString):
 	if(ix>-1):
 		command = command[0:ix]
 	return command
-class PositionGcode(object):
-	
-	def __init__(self):
-		self.GcodeCommands = []
 
-	def EndIndex(self):
-		return len(self.GcodeCommands)-1
 class SnapshotGcode(object):
 	def default(self, o):
 		return o.__dict__
@@ -339,11 +333,9 @@ class Gcode(object):
 	def IsYInBounds(self,y):
 		hasError = False
 		customBox = self.OctoprintPrinterProfile["volume"]["custom_box"]
-		self.Settings.CurrentDebugProfile().LogInfo("CustomBox:{0}".format(customBox))
 		if(customBox != False):
 			yMin = float(customBox["y_min"])
 			yMax = float(customBox["y_max"])
-			self.Settings.CurrentDebugProfile().LogInfo("Testing coordinates for custom print area: y:{0}, y_min:{1}, y_max:{2}:".format(y,yMin,yMax))
 			if((y<yMin or y > yMax)):
 				self.Settings.CurrentDebugProfile().LogError('The Y coordinate {0} was outside the bounds of the printer!  The print area is currently set to a custom box within the octoprint printer profile settings.'.format(y))
 				return False
@@ -389,13 +381,19 @@ class Gcode(object):
 		
 		if(path.Index >= len(path.Path)):
 			if(path.InvertLoop):
-				path.Index = len(path.Path)-1
+				if(len(path.Path)>1):
+					path.Index = len(path.Path)-2
+				else:
+					path.Index = 0
 				path.Increment = -1
 			else:
 				path.Index = 0
 		elif(path.Index < 0):
 			if(path.InvertLoop):
-				path.Index = 0
+				if(len(path.Path)>1):
+					path.Index = 1
+				else:
+					path.Index = 0
 				path.Increment = 1
 			else:
 				path.Index = len(path.Path)-1
@@ -434,14 +432,6 @@ class Gcode(object):
 			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"].height)
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
-
-
-	def CreatePositionGcode(self):
-		newPositionGcode = PositionGcode()
-		# add commands to fetch the current position
-		#newPositionGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode())  # Cant use m400 without something after it, and we can't wait for it in the usual way...
-		newPositionGcode.GcodeCommands.append(self.GetPositionGcode())
-		return newPositionGcode
 
 	def CreateSnapshotGcode(self, x,y,z, isRelative, isExtruderRelative, extruder, savedCommand = None):
 		if(x is None or y is None or z is None):

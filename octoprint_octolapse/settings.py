@@ -228,13 +228,13 @@ class Stabilization(object):
 		yStabilizationPath = StabilizationPath()
 		yStabilizationPath.Axis = "Y"
 		yStabilizationPath.Type = self.y_type
-		if(self.y_type == 'fiyed_coordinate'):
-			yStabilizationPath.Path.append(self.y_fiyed_coordinate)
+		if(self.y_type == 'fixed_coordinate'):
+			yStabilizationPath.Path.append(self.y_fixed_coordinate)
 			yStabilizationPath.CoordinateSystem = 'absolute'
 		elif(self.y_type == 'relative'):
 			yStabilizationPath.Path.append(self.y_relative)
 			yStabilizationPath.CoordinateSystem = 'bed_relative'
-		elif(self.y_type == 'fiyed_path'):
+		elif(self.y_type == 'fixed_path'):
 			yStabilizationPath.Path = self.ParseCSVPath(self.y_fixed_path)
 			yStabilizationPath.CoordinateSystem = 'absolute'
 			yStabilizationPath.Loop =self.y_fixed_path_loop
