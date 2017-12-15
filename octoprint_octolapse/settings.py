@@ -575,7 +575,7 @@ class Camera(object):
 		self.sharpness_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963803&group=1&value={value}"
 		self.backlight_compensation_enabled = False
 		self.backlight_compensation_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963804&group=1&value={value}"
-		self.exposure_type = True
+		self.exposure_type = 1
 		self.exposure_type_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094849&group=1&value={value}"
 		self.exposure = 250
 		self.exposure_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094850&group=1&value={value}"
@@ -634,7 +634,7 @@ class Camera(object):
 		if("backlight_compensation_enabled" in changes.keys()):
 			self.backlight_compensation_enabled = utility.getbool(changes["backlight_compensation_enabled"],self.backlight_compensation_enabled)
 		if("exposure_type" in changes.keys()):
-			self.exposure_type = utility.getbool(changes["exposure_type"],self.exposure_type)
+			self.exposure_type = utility.getint(changes["exposure_type"],self.exposure_type)
 		if("exposure" in changes.keys()):
 			self.exposure = utility.getint(changes["exposure"],self.exposure)
 		if("exposure_auto_priority_enabled" in changes.keys()):
@@ -1262,9 +1262,9 @@ class OctolapseSettings(object):
 					,dict(value='60',name='60 HZ (North/South America, Japan, etc')
 			],
 			'camera_exposure_type_options' : [
-				dict(value='auto',name='Auto')
-				,dict(value='manual',name='Manual (based on exposure setting)')
-				,dict(value='aperture_priority',name='Aperture Priority Mode')
+				dict(value='0',name='Auto')
+				,dict(value='1',name='Manual (based on exposure setting)')
+				,dict(value='3',name='Aperture Priority Mode')
 			],
 			'camera_led_1_mode_options' : [
 				dict(value='on',name='On')

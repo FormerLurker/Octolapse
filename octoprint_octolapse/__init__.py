@@ -179,7 +179,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'SendingSnapshotCommands': False, # If true, we are in the process of sending gcode to the printer to take a snapshot
 			'RequestingReturnPosition': False, # If true, we have sent a position request to the 3d printer, but haven't yet received a response
 			'RequestingSnapshotPosition': False, # If true, we have sent all the gcode necessary to move to the snapshot position and are waiting for a response so that we can take the snapshot.
-			
+			'MoveCommandSent': False, # has the move command been sent to the printer.
 			#Snapshot Gcode
 			'PositionGcodes': None, # gcode to retrieve a position from the printer.  Used before creating snapshot gcode
 			'SnapshotGcodes': None, # gcode used to move the printer to the snapshot position and to return to the previous position.  Stores index of the snapshot gcode.
@@ -455,17 +455,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(self.SnapshotState["SendingSnapshotCommands"]):
 			
 			snapshotGcodes = self.SnapshotState['SnapshotGcodes']
+			
 			# make sure this command is in our snapshot gcode list, else ignore
 			if(cmd not in snapshotGcodes.GcodeCommands):
 				return
 			
-			# Get the move command index and command 
+			# Get the move command index and command
+			moveCommandSent = self.SnapshotState['MoveCommandSent']
 			snapshotMoveIndex = snapshotGcodes.SnapshotMoveIndex
 			moveCommand = snapshotGcodes.GcodeCommands[snapshotMoveIndex]
-			if(cmd == moveCommand):
+			if(cmd == moveCommand and not moveCommandSent):
 				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent, looking for snapshot position.")
 				# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
 				self.SnapshotState['RequestingSnapshotPosition'] = True
+				self.SnapshotState['MoveCommandSent'] = True
 
 	def SendPositionRequestGcode(self, isReturn):
 		# Send commands to move to the snapshot position
