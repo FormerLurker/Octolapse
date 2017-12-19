@@ -139,7 +139,7 @@ class Timelapse(object):
 
 					if(self.CommandIndex < self.SnapshotGcodes.EndIndex()):
 						self.CommandIndex += 1
-					elif(self.CommandIndex >= self.SnapshotGcodes.EndIndex() and self.State == TimelapseState.SendingReturnGcode):
+					elif(self.CommandIndex > self.SnapshotGcodes.EndIndex() and self.State == TimelapseState.SendingReturnGcode):
 						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Return Gcode Command Found, ending the snapshot.")
 						self.EndSnapshot()
 						
@@ -314,7 +314,7 @@ class Timelapse(object):
 		if(self.PositionRequestAttempts > maxRetryAttempts):
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot.".format(maxRetryAttempts))
 			# we're giving up and no longer requesting a snapshot position.
-			self.Satte = TimelapseState.SendingReturnGcode
+			self.State = TimelapseState.SendingReturnGcode
 			self.SendSnapshotReturnCommands()
 			return 
 
