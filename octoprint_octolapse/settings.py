@@ -320,7 +320,54 @@ class Snapshot(object):
 		self.script_path = ""
 		
 		if(snapshot is not None):
-			self.Update(snapshot)
+			if(isinstance(snapshot,Snapshot)):
+				self.name = snapshot.name
+				self.guid = snapshot.guid
+				self.gcode_trigger_enabled = snapshot.gcode_trigger_enabled
+				self.gcode_trigger_require_zhop = snapshot.gcode_trigger_require_zhop
+				self.gcode_trigger_on_extruding = snapshot.gcode_trigger_on_extruding
+				self.gcode_trigger_on_extruding_start = snapshot.gcode_trigger_on_extruding_start
+				self.gcode_trigger_on_primed = snapshot.gcode_trigger_on_primed
+				self.gcode_trigger_on_retracting = snapshot.gcode_trigger_on_retracting
+				self.gcode_trigger_on_retracted = snapshot.gcode_trigger_on_retracted
+				self.gcode_trigger_on_detracting = snapshot.gcode_trigger_on_detracting
+				self.timer_trigger_enabled = snapshot.timer_trigger_enabled
+				self.timer_trigger_require_zhop = snapshot.timer_trigger_require_zhop
+				self.timer_trigger_seconds = snapshot.timer_trigger_seconds
+				self.timer_trigger_on_extruding = snapshot.timer_trigger_on_extruding
+				self.timer_trigger_on_extruding_start = snapshot.timer_trigger_on_extruding_start
+				self.timer_trigger_on_primed = snapshot.timer_trigger_on_primed
+				self.timer_trigger_on_retracting = snapshot.timer_trigger_on_retracting
+				self.timer_trigger_on_retracted = snapshot.timer_trigger_on_retracted
+				self.timer_trigger_on_detracting = snapshot.timer_trigger_on_detracting
+				self.layer_trigger_enabled = snapshot.layer_trigger_enabled
+				self.layer_trigger_height = snapshot.layer_trigger_height
+				self.layer_trigger_require_zhop = snapshot.layer_trigger_require_zhop
+				self.layer_trigger_on_extruding = snapshot.layer_trigger_on_extruding
+				self.layer_trigger_on_extruding_start = snapshot.layer_trigger_on_extruding_start
+				self.layer_trigger_on_primed = snapshot.layer_trigger_on_primed
+				self.layer_trigger_on_retracting = snapshot.layer_trigger_on_retracting
+				self.layer_trigger_on_retracted = snapshot.layer_trigger_on_retracted
+				self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
+				self.position_request_retry_attemps = snapshot.position_request_retry_attemps
+				self.position_request_retry_delay_ms = snapshot.position_request_retry_delay_ms
+				self.archive = snapshot.archive
+				self.delay = snapshot.delay
+				self.output_format = snapshot.output_format
+				self.output_filename = snapshot.output_filename
+				self.output_directory = snapshot.output_directory
+				self.retract_before_move = snapshot.retract_before_move
+				self.cleanup_before_print = snapshot.cleanup_before_print
+				self.cleanup_after_print = snapshot.cleanup_after_print
+				self.cleanup_after_cancel = snapshot.cleanup_after_cancel
+				self.cleanup_after_fail = snapshot.cleanup_after_fail
+				self.cleanup_before_close = snapshot.cleanup_before_close
+				self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
+				self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
+				self.custom_script_enabled = snapshot.custom_script_enabled
+				self.script_path = snapshot.script_path
+			else:
+				self.Update(snapshot)
 	def Update(self, changes):
 		#Initialize all values according to the provided changes, use defaults if
 		#the values are null or incorrectly formatted
@@ -488,7 +535,26 @@ class Rendering(object):
 		self.rotate_90 = False
 		self.watermark = False
 		if(not rendering is None):
-			self.Update(rendering)
+			if(isinstance(rendering,Rendering)):
+				self.guid = rendering.guid
+				self.name = rendering.name
+				self.enabled = rendering.enabled
+				self.fps_calculation_type = rendering.fps_calculation_type
+				self.run_length_seconds = rendering.run_length_seconds
+				self.fps = rendering.fps
+				self.max_fps = rendering.max_fps
+				self.min_fps = rendering.min_fps
+				self.output_format = rendering.output_format
+				self.output_filename = rendering.output_filename
+				self.output_directory = rendering.output_directory
+				self.sync_with_timelapse = rendering.sync_with_timelapse
+				self.bitrate = rendering.bitrate
+				self.flip_h = rendering.flip_h
+				self.flip_v = rendering.flip_v
+				self.rotate_90 = rendering.rotate_90
+				self.watermark = rendering.watermark
+			else:
+				self.Update(rendering)
 	def Update(self, changes):
 		if("guid" in changes.keys()):
 			self.guid = utility.getstring(changes["guid"],self.guid)

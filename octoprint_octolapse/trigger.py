@@ -2,36 +2,13 @@
 from .position import *
 from .gcode import *
 from .settings import *
+
 import utility
 import time
 
 
-def IsTriggering(triggers,position,cmd,debug):
 
-	# check the command to see if it's a debug assrt
 
-	# Loop through all of the active currentTriggers
-	for currentTrigger in triggers:
-		# determine what type the current trigger is and update appropriately
-		if(isinstance(currentTrigger,GcodeTrigger)):
-			currentTrigger.Update(position,cmd)
-		elif(isinstance(currentTrigger,TimerTrigger)):
-			currentTrigger.Update(position)
-		elif(isinstance(currentTrigger,LayerTrigger)):
-			currentTrigger.Update(position)
-		# see if the current trigger is triggering, indicting that a snapshot should be taken
-		if(currentTrigger.IsTriggered):
-			# Make sure there are no position errors (unknown position, out of bounds, etc)
-			if(not position.HasPositionError):
-				#Triggering!
-				return currentTrigger
-			else:
-				debug.LogError("A position error prevented a trigger!")
-	return None
-def IsSnapshotCommand(command, snapshotCommand):
-		commandName = GetGcodeFromString(command)
-		snapshotCommandName = GetGcodeFromString(snapshotCommand)
-		return commandName == snapshotCommandName
 class GcodeTrigger(object):
 	"""Used to monitor gcode for a specified command."""
 	def __init__(self, octolapseSettings ):
@@ -68,7 +45,7 @@ class GcodeTrigger(object):
 			self.IsTriggered = False
 			return
 
-		if (IsSnapshotCommand(commandName,self.Printer.snapshot_command)):
+		if (self.IsSnapshotCommand(commandName)):
 			self.IsWaiting = True
 		if(self.IsWaiting == True):
 			if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
@@ -80,7 +57,10 @@ class GcodeTrigger(object):
 					self.Settings.CurrentDebugProfile().LogTriggering("GcodeTrigger - Waiting for extruder to trigger.")
 			else:
 				self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting for extruder to trigger.")
-
+	def IsSnapshotCommand(self, command):
+		commandName = GetGcodeFromString(command)
+		snapshotCommandName = GetGcodeFromString(self.Printer.snapshot_command)
+		return commandName == snapshotCommandName
 class LayerTrigger(object):
 	
 	def __init__( self,octolapseSettings):
