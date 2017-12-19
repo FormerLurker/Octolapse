@@ -136,9 +136,10 @@ class Timelapse(object):
 						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Snapshot command queued.")
 
 					# increment the current command index
-					self.CommandIndex += 1
-					# TODO:  do we need to check the state here?
-					if(self.CommandIndex >= self.SnapshotGcodes.EndIndex()):
+
+					if(self.CommandIndex < self.SnapshotGcodes.EndIndex()):
+						self.CommandIndex += 1
+					elif(self.CommandIndex >= self.SnapshotGcodes.EndIndex() and self.State == TimelapseState.SendingReturnGcode):
 						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Return Gcode Command Found, ending the snapshot.")
 						self.EndSnapshot()
 						
