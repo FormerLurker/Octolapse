@@ -1,3 +1,4 @@
+
 # coding=utf-8
 import logging
 import os
@@ -7,11 +8,8 @@ import fnmatch
 import datetime
 import sys
 import shutil
-import utility
+import octoprint_octolapse.utility as utility
 import sarge
-
-
-
 
 class Render(object):
 

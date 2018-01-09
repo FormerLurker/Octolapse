@@ -7,23 +7,21 @@ import time
 import os
 import sys
 import json
-import threading
+#import threading
 from pprint import pformat
 import flask
 import requests
-from .settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
-from .timelapse import Timelapse
-from .gcode import *
-
-from .position import *
-from octoprint.events import Events
 import itertools
-from .utility import *
-from .render import Render
 import shutil
-from .camera import CameraControl
 import copy
+# Octoprint Imports
+from octoprint.events import eventManager, Events # used to send messages to the web client for notifying it of new timelapses
 
+# Octolapse imports
+from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
+from octoprint_octolapse.timelapse import Timelapse
+from octoprint_octolapse.camera import CameraControl
+from octoprint_octolapse.utility import *
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
 						octoprint.plugin.TemplatePlugin,
@@ -33,7 +31,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	TIMEOUT_DELAY = 1000
 	def __init__(self):
 		self.Settings = None
-		
 		self.Timelapse = None
 		
 		
@@ -46,7 +43,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SaveSettings()
 		return json.dumps({'enabled':self.Settings.is_octolapse_enabled}), 200, {'ContentType':'application/json'} 
 	
-	# addUpdateProfile Request
 	@octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
 	def addUpdateProfile(self):
 		requestValues = flask.request.get_json()
@@ -56,6 +52,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# save the updated settings to a file.
 		self.SaveSettings()
 		return json.dumps(updatedProfile.ToDict()), 200, {'ContentType':'application/json'} ;
+
 	@octoprint.plugin.BlueprintPlugin.route("/removeProfile", methods=["POST"])
 	def removeProfile(self):
 		requestValues = flask.request.get_json();
@@ -116,6 +113,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return self.Settings.ToDict();
 		except TypeError,e:
 			self._logger.exception("Could not load octolapse settings.  Details: {0}".format(e))
+
 	def CopyOctoprintDefaultSettings(self, applyToCurrentProfiles = False):
 		# move some octoprint defaults if they exist for the webcam
 		# specifically the address, the bitrate and the ffmpeg directory.
@@ -159,7 +157,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			json.dump(settings, outfile)
 		self.Settings.CurrentDebugProfile().LogSettingsSave("Settings saved: {0}".format(settings))
 		return None
-
 	#def on_settings_initialized(self):
 	
 	def CurrentPrinterProfile(self):
@@ -181,11 +178,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def on_after_startup(self):
 		self.LoadSettings()
-		# create our timelapse object
-		self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"))
 		self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 	
-
 	# Event Mixin Handler
 	def on_event(self, event, payload):
 		# If we're not enabled, get outta here!
@@ -227,7 +221,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			cameraControl.ApplySettings()
 		
 		self.StartTimelapse()
-		
 
 	def StartTimelapse(self):
 		webcam = self._settings.settings.get(["webcam"])
@@ -241,8 +234,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not os.path.isfile(ffmpegPath)):
 			# todo:  throw some kind of exception
 			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
-
-		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath )
+		# create our timelapse object
+		self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"),onMovieRendering = self.OnMovieRendering, onMovieDone = self.OnMovieDone, onMovieFailed = self.OnMovieFailed)
+		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,self._settings.settings.get(["feature"])["g90InfluencesExtruder"])
 			
 	def OnCameraSettingsSuccess(self, *args, **kwargs):
 		numSettings = args[0]
@@ -268,20 +262,33 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
 		self.OnPrintEnd()
 	def OnPrintEnd(self):
-		# render the timelapse if it's enabled
-		self.Timelapse.RenderTimelapse()
-		# in every case reset the timelapse settings.  we want all of the settings to be reset and the current timelapse ended.  The rendering will take place in the background.
-		self.Timelapse.Reset();
+		# tell the timelapse that the print ended.
+		self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
-		
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(self.Timelapse is not None):
+		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 			return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(self.Timelapse is not None):
+		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 			self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
+
+	def OnMovieRendering(self, *args, **kwargs):
+		"""Called when a timelapse has started being rendered.  Calls any callbacks onMovieRendering callback set in the constructor."""
+		payload = args[0]
+		# Octoprint Event Manager Code
+		eventManager().fire(Events.MOVIE_RENDERING, payload)
+	def OnMovieDone(self, *args, **kwargs):
+		"""Called after a timelapse has been rendered.  Calls any callbacks onMovieRendered callback set in the constructor."""
+		payload = args[0]
+		# Octoprint Event Manager Code
+		eventManager().fire(Events.MOVIE_DONE, payload)
+	def OnMovieFailed(self, *args, **kwargs):
+		"""Called after a timelapse rendering attempt has failed.  Calls any callbacks onMovieFailed callback set in the constructor."""
+		payload = args[0]
+		# Octoprint Event Manager Code
+		eventManager().fire(Events.MOVIE_FAILED, payload)
 
 	##~~ AssetPlugin mixin
 	def get_assets(self):

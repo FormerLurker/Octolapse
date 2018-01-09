@@ -1,12 +1,9 @@
 # coding=utf-8
 from octoprint.plugin import PluginSettings
-
 import time
 from datetime import datetime
-import utility
-from .gcode import Commands, Command
+import octoprint_octolapse.utility as utility
 from pprint import pprint
-from .trigger import GcodeTrigger, TimerTrigger, LayerTrigger
 import logging
 import os
 import sys
@@ -16,16 +13,14 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 class Printer(object):
 	
 	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
-			  ,retract_speed=4800,movement_speed=7200,z_hop=0.5,z_min=0.2,snapshot_command="snap", is_e_relative=True ):
+			  ,retract_speed=4800,movement_speed=7200,z_hop=0.5,snapshot_command="snap"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
 		self.retract_length = retract_length
 		self.retract_speed = retract_speed
 		self.movement_speed = movement_speed
 		self.z_hop = z_hop
-		self.z_min = z_min
 		self.snapshot_command = snapshot_command
-		self.is_e_relative = is_e_relative
 		self.printer_position_confirmation_tolerance = 0.005
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
@@ -35,9 +30,7 @@ class Printer(object):
 				self.retract_speed = printer.retract_speed
 				self.movement_speed = printer.movement_speed
 				self.z_hop = printer.z_hop
-				self.z_min = printer.z_min
 				self.snapshot_command = printer.snapshot_command
-				self.is_e_relative = printer.is_e_relative
 				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
 			else:
 				self.Update(printer)
@@ -54,12 +47,8 @@ class Printer(object):
 			self.movement_speed = utility.getint(changes["movement_speed"],self.movement_speed)
 		if("snapshot_command" in changes.keys()):
 			self.snapshot_command = utility.getstring(changes["snapshot_command"],self.snapshot_command)
-		if("is_e_relative" in changes.keys()):
-			self.is_e_relative = utility.getbool(changes["is_e_relative"],self.is_e_relative)
 		if("z_hop" in changes.keys()):
 			self.z_hop = utility.getfloat(changes["z_hop"],self.z_hop)
-		if("z_min" in changes.keys()):
-			self.z_min = utility.getfloat(changes["z_min"],self.z_min)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
 			
@@ -71,9 +60,7 @@ class Printer(object):
 			'retract_length'	: self.retract_length,
 			'retract_speed'		: self.retract_speed,
 			'movement_speed'	: self.movement_speed,
-			'is_e_relative'		: self.is_e_relative,
 			'z_hop'				: self.z_hop,
-			'z_min'				: self.z_min,
 			'snapshot_command'	: self.snapshot_command,
 			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance
 		}
@@ -99,23 +86,23 @@ class Stabilization(object):
 		self.x_movement_speed = 0
 		self.x_type = "fixed_coordinate"
 		self.x_fixed_coordinate = 0.0
-		self.x_fixed_path = ""
+		self.x_fixed_path = "0"
 		self.x_fixed_path_loop = True
 		self.x_fixed_path_invert_loop = True
 		self.x_relative = 100.0
 		self.x_relative_print = 100.0
-		self.x_relative_path = ""
+		self.x_relative_path = "100.0"
 		self.x_relative_path_loop = True
 		self.x_relative_path_invert_loop = True
 		self.y_movement_speed_mms = 0
 		self.y_type = 'fixed_coordinate'
 		self.y_fixed_coordinate = 0.0
-		self.y_fixed_path = ""
+		self.y_fixed_path = "0"
 		self.y_fixed_path_loop = True
 		self.y_fixed_path_invert_loop = True
 		self.y_relative = 100.0
 		self.y_relative_print = 100.0
-		self.y_relative_path = ""
+		self.y_relative_path = "100"
 		self.y_relative_path_loop = True
 		self.y_relative_path_invert_loop = True
 		self.z_movement_speed_mms = 0
@@ -242,7 +229,7 @@ class Stabilization(object):
 		elif(self.y_type == 'relative_path'):
 			yStabilizationPath.Path = self.ParseCSVPath(self.y_relative_path)
 			yStabilizationPath.CoordinateSystem = 'bed_relative'
-			yStabilizationPath.Loop = self.y_fixed_path_loop
+			yStabilizationPath.Loop = self.y_relative_path_loop
 			yStabilizationPath.InvertLoop = self.y_relative_path_invert_loop
 		
 		return dict(
@@ -261,7 +248,15 @@ class Stabilization(object):
 		return path
 		
 class Snapshot(object):
-
+	# globals
+	# Extruder Trigger Options
+	ExtruderTriggerIgnoreValue = ""
+	ExtruderTriggerRequiredValue = "required"
+	ExtruderTriggerForbiddenValue = "forbidden"
+	ExtruderTriggerOptions = [
+		dict(value='',name='Ignore',visible=True)
+		,dict(value='required',name='Required',visible=True)
+		,dict(value='forbidden',name='Forbidden',visible=True)]
 	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
@@ -269,32 +264,44 @@ class Snapshot(object):
 		#Gcode Trigger
 		self.gcode_trigger_enabled = True
 		self.gcode_trigger_require_zhop = True
-		self.gcode_trigger_on_extruding = True
-		self.gcode_trigger_on_extruding_start = True
-		self.gcode_trigger_on_primed = True
-		self.gcode_trigger_on_retracting = True
-		self.gcode_trigger_on_retracted = True
-		self.gcode_trigger_on_detracting = True
+		self.gcode_trigger_on_extruding_start = None
+		self.gcode_trigger_on_extruding = None
+		self.gcode_trigger_on_primed = None
+		self.gcode_trigger_on_retracting_start = None
+		self.gcode_trigger_on_retracting = None
+		self.gcode_trigger_on_partially_retracted = None
+		self.gcode_trigger_on_retracted = None
+		self.gcode_trigger_on_detracting_start = None
+		self.gcode_trigger_on_detracting = None
+		self.gcode_trigger_on_detracted = None
 		#Timer Trigger
 		self.timer_trigger_enabled = False
 		self.timer_trigger_seconds = 60
 		self.timer_trigger_require_zhop = True
-		self.timer_trigger_on_extruding = True
-		self.timer_trigger_on_extruding_start = False
-		self.timer_trigger_on_primed = True
-		self.timer_trigger_on_retracting = False
-		self.timer_trigger_on_retracted = True
-		self.timer_trigger_on_detracting = True
+		self.timer_trigger_on_extruding_start = None
+		self.timer_trigger_on_extruding = None
+		self.timer_trigger_on_primed = None
+		self.timer_trigger_on_retracting_start = None
+		self.timer_trigger_on_retracting = None
+		self.timer_trigger_on_partially_retracted = None
+		self.timer_trigger_on_retracted = None
+		self.timer_trigger_on_detracting_start = None
+		self.timer_trigger_on_detracting = None
+		self.timer_trigger_on_detracted = None
 		#Layer Trigger
 		self.layer_trigger_enabled = True
 		self.layer_trigger_height = 0.0
 		self.layer_trigger_require_zhop = True
-		self.layer_trigger_on_extruding = False
-		self.layer_trigger_on_extruding_start = False
-		self.layer_trigger_on_primed = True
-		self.layer_trigger_on_retracting = False
-		self.layer_trigger_on_retracted = True
-		self.layer_trigger_on_detracting = True
+		self.layer_trigger_on_extruding = None
+		self.layer_trigger_on_extruding_start = None
+		self.layer_trigger_on_primed = None
+		self.layer_trigger_on_retracting_start = None
+		self.layer_trigger_on_retracting = None
+		self.layer_trigger_on_partially_retracted = None
+		self.layer_trigger_on_retracted = None
+		self.layer_trigger_on_detracting_start = None
+		self.layer_trigger_on_detracting = None
+		self.layer_trigger_on_detracted = None
 		# other settings
 		self.position_request_retry_attemps = 10 # ***
 		self.position_request_retry_delay_ms = 200# ***
@@ -325,30 +332,41 @@ class Snapshot(object):
 				self.guid = snapshot.guid
 				self.gcode_trigger_enabled = snapshot.gcode_trigger_enabled
 				self.gcode_trigger_require_zhop = snapshot.gcode_trigger_require_zhop
-				self.gcode_trigger_on_extruding = snapshot.gcode_trigger_on_extruding
 				self.gcode_trigger_on_extruding_start = snapshot.gcode_trigger_on_extruding_start
+				self.gcode_trigger_on_extruding = snapshot.gcode_trigger_on_extruding
 				self.gcode_trigger_on_primed = snapshot.gcode_trigger_on_primed
+				self.gcode_trigger_on_retracting_start = snapshot.gcode_trigger_on_retracting_start
 				self.gcode_trigger_on_retracting = snapshot.gcode_trigger_on_retracting
+				self.gcode_trigger_on_partially_retracted = snapshot.gcode_trigger_on_partially_retracted 
 				self.gcode_trigger_on_retracted = snapshot.gcode_trigger_on_retracted
+				self.gcode_trigger_on_detracting_start = snapshot.gcode_trigger_on_detracting_start
 				self.gcode_trigger_on_detracting = snapshot.gcode_trigger_on_detracting
+				self.gcode_trigger_on_detracted = snapshot.gcode_trigger_on_detracted
 				self.timer_trigger_enabled = snapshot.timer_trigger_enabled
 				self.timer_trigger_require_zhop = snapshot.timer_trigger_require_zhop
 				self.timer_trigger_seconds = snapshot.timer_trigger_seconds
-				self.timer_trigger_on_extruding = snapshot.timer_trigger_on_extruding
 				self.timer_trigger_on_extruding_start = snapshot.timer_trigger_on_extruding_start
+				self.timer_trigger_on_extruding = snapshot.timer_trigger_on_extruding
 				self.timer_trigger_on_primed = snapshot.timer_trigger_on_primed
+				self.timer_trigger_on_retracting_start = snapshot.timer_trigger_on_retracting_start
 				self.timer_trigger_on_retracting = snapshot.timer_trigger_on_retracting
 				self.timer_trigger_on_retracted = snapshot.timer_trigger_on_retracted
+				self.timer_trigger_on_detracting_start = snapshot.timer_trigger_on_detracting_start
 				self.timer_trigger_on_detracting = snapshot.timer_trigger_on_detracting
+				self.timer_trigger_on_detracted = snapshot.timer_trigger_on_detracted
 				self.layer_trigger_enabled = snapshot.layer_trigger_enabled
 				self.layer_trigger_height = snapshot.layer_trigger_height
 				self.layer_trigger_require_zhop = snapshot.layer_trigger_require_zhop
-				self.layer_trigger_on_extruding = snapshot.layer_trigger_on_extruding
 				self.layer_trigger_on_extruding_start = snapshot.layer_trigger_on_extruding_start
+				self.layer_trigger_on_extruding = snapshot.layer_trigger_on_extruding
 				self.layer_trigger_on_primed = snapshot.layer_trigger_on_primed
+				self.layer_trigger_on_retracting_start = snapshot.layer_trigger_on_retracting_start
 				self.layer_trigger_on_retracting = snapshot.layer_trigger_on_retracting
+				self.layer_trigger_on_partially_retracted = snapshot.layer_trigger_on_partially_retracted
 				self.layer_trigger_on_retracted = snapshot.layer_trigger_on_retracted
+				self.layer_trigger_on_detracting_start = snapshot.layer_trigger_on_detracting_start
 				self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
+				self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
 				self.position_request_retry_attemps = snapshot.position_request_retry_attemps
 				self.position_request_retry_delay_ms = snapshot.position_request_retry_delay_ms
 				self.archive = snapshot.archive
@@ -379,54 +397,78 @@ class Snapshot(object):
 			self.gcode_trigger_enabled = utility.getbool(changes["gcode_trigger_enabled"],self.gcode_trigger_enabled)
 		if("gcode_trigger_require_zhop" in changes.keys()):
 			self.gcode_trigger_require_zhop = utility.getbool(changes["gcode_trigger_require_zhop"],self.gcode_trigger_require_zhop)
-		if("gcode_trigger_on_extruding" in changes.keys()):
-			self.gcode_trigger_on_extruding = utility.getbool(changes["gcode_trigger_on_extruding"],self.gcode_trigger_on_extruding)
 		if("gcode_trigger_on_extruding_start" in changes.keys()):
-			self.gcode_trigger_on_extruding_start = utility.getbool(changes["gcode_trigger_on_extruding_start"],self.gcode_trigger_on_extruding_start)
+			self.gcode_trigger_on_extruding_start = self.GetExtruderTriggerValue(changes["gcode_trigger_on_extruding_start"])
+		if("gcode_trigger_on_extruding" in changes.keys()):
+			self.gcode_trigger_on_extruding = self.GetExtruderTriggerValue(changes["gcode_trigger_on_extruding"])
 		if("gcode_trigger_on_primed" in changes.keys()):
-			self.gcode_trigger_on_primed = utility.getbool(changes["gcode_trigger_on_primed"],self.gcode_trigger_on_primed)
+			self.gcode_trigger_on_primed = self.GetExtruderTriggerValue(changes["gcode_trigger_on_primed"])
+		if("gcode_trigger_on_retracting_start" in changes.keys()):
+			self.gcode_trigger_on_retracting_start = self.GetExtruderTriggerValue(changes["gcode_trigger_on_retracting_start"])
 		if("gcode_trigger_on_retracting" in changes.keys()):
-			self.gcode_trigger_on_retracting = utility.getbool(changes["gcode_trigger_on_retracting"],self.gcode_trigger_on_retracting)
+			self.gcode_trigger_on_retracting = self.GetExtruderTriggerValue(changes["gcode_trigger_on_retracting"])
+		if("gcode_trigger_on_partially_retracted" in changes.keys()):
+			self.gcode_trigger_on_partially_retracted = self.GetExtruderTriggerValue(changes["gcode_trigger_on_partially_retracted"])
 		if("gcode_trigger_on_retracted" in changes.keys()):
-			self.gcode_trigger_on_retracted = utility.getbool(changes["gcode_trigger_on_retracted"],self.gcode_trigger_on_retracted)
+			self.gcode_trigger_on_retracted = self.GetExtruderTriggerValue(changes["gcode_trigger_on_retracted"])
+		if("gcode_trigger_on_detracting_start" in changes.keys()):
+			self.gcode_trigger_on_detracting_start = self.GetExtruderTriggerValue(changes["gcode_trigger_on_detracting_start"])
 		if("gcode_trigger_on_detracting" in changes.keys()):
-			self.gcode_trigger_on_detracting = utility.getbool(changes["gcode_trigger_on_detracting"],self.gcode_trigger_on_detracting)
+			self.gcode_trigger_on_detracting = self.GetExtruderTriggerValue(changes["gcode_trigger_on_detracting"])
+		if("gcode_trigger_on_detracted" in changes.keys()):
+			self.gcode_trigger_on_detracted = self.GetExtruderTriggerValue(changes["gcode_trigger_on_detracted"])
 		if("timer_trigger_enabled" in changes.keys()):
 			self.timer_trigger_enabled = utility.getbool(changes["timer_trigger_enabled"],self.timer_trigger_enabled)
 		if("timer_trigger_require_zhop" in changes.keys()):
 			self.timer_trigger_require_zhop = utility.getbool(changes["timer_trigger_require_zhop"],self.timer_trigger_require_zhop)
 		if("timer_trigger_seconds" in changes.keys()):
 			self.timer_trigger_seconds = utility.getint(changes["timer_trigger_seconds"],self.timer_trigger_seconds)
-		if("timer_trigger_on_extruding" in changes.keys()):
-			self.timer_trigger_on_extruding = utility.getbool(changes["timer_trigger_on_extruding"],self.timer_trigger_on_extruding)
 		if("timer_trigger_on_extruding_start" in changes.keys()):
-			self.timer_trigger_on_extruding_start = utility.getbool(changes["timer_trigger_on_extruding_start"],self.timer_trigger_on_extruding_start)
+			self.timer_trigger_on_extruding_start = self.GetExtruderTriggerValue(changes["timer_trigger_on_extruding_start"])
+		if("timer_trigger_on_extruding" in changes.keys()):
+			self.timer_trigger_on_extruding = self.GetExtruderTriggerValue(changes["timer_trigger_on_extruding"])
 		if("timer_trigger_on_primed" in changes.keys()):
-			self.timer_trigger_on_primed = utility.getbool(changes["timer_trigger_on_primed"],self.timer_trigger_on_primed)
+			self.timer_trigger_on_primed = self.GetExtruderTriggerValue(changes["timer_trigger_on_primed"])
+		if("timer_trigger_on_retracting_start" in changes.keys()):
+			self.timer_trigger_on_retracting_start = self.GetExtruderTriggerValue(changes["timer_trigger_on_retracting_start"])
 		if("timer_trigger_on_retracting" in changes.keys()):
-			self.timer_trigger_on_retracting = utility.getbool(changes["timer_trigger_on_retracting"],self.timer_trigger_on_retracting)
+			self.timer_trigger_on_retracting = self.GetExtruderTriggerValue(changes["timer_trigger_on_retracting"])
+		if("timer_trigger_on_partially_retracted" in changes.keys()):
+			self.timer_trigger_on_partially_retracted = self.GetExtruderTriggerValue(changes["timer_trigger_on_partially_retracted"])
 		if("timer_trigger_on_retracted" in changes.keys()):
-			self.timer_trigger_on_retracted = utility.getbool(changes["timer_trigger_on_retracted"],self.timer_trigger_on_retracted)
+			self.timer_trigger_on_retracted = self.GetExtruderTriggerValue(changes["timer_trigger_on_retracted"])
+		if("timer_trigger_on_detracting_start" in changes.keys()):
+			self.timer_trigger_on_detracting_start = self.GetExtruderTriggerValue(changes["timer_trigger_on_detracting_start"])
 		if("timer_trigger_on_detracting" in changes.keys()):
-			self.timer_trigger_on_detracting = utility.getbool(changes["timer_trigger_on_detracting"],self.timer_trigger_on_detracting)
+			self.timer_trigger_on_detracting = self.GetExtruderTriggerValue(changes["timer_trigger_on_detracting"])
+		if("timer_trigger_on_detracted" in changes.keys()):
+			self.timer_trigger_on_detracted = self.GetExtruderTriggerValue(changes["timer_trigger_on_detracted"])
 		if("layer_trigger_enabled" in changes.keys()):
 			self.layer_trigger_enabled = utility.getbool(changes["layer_trigger_enabled"],self.layer_trigger_enabled)
 		if("layer_trigger_height" in changes.keys()):
 			self.layer_trigger_height = utility.getfloat(changes["layer_trigger_height"],self.layer_trigger_height)
 		if("layer_trigger_require_zhop" in changes.keys()):
 			self.layer_trigger_require_zhop = utility.getbool(changes["layer_trigger_require_zhop"],self.layer_trigger_require_zhop)
-		if("layer_trigger_on_extruding" in changes.keys()):
-			self.layer_trigger_on_extruding = utility.getbool(changes["layer_trigger_on_extruding"],self.layer_trigger_on_extruding)
 		if("layer_trigger_on_extruding_start" in changes.keys()):
-			self.layer_trigger_on_extruding_start = utility.getbool(changes["layer_trigger_on_extruding_start"],self.layer_trigger_on_extruding_start)
+			self.layer_trigger_on_extruding_start = self.GetExtruderTriggerValue(changes["layer_trigger_on_extruding_start"])
+		if("layer_trigger_on_extruding" in changes.keys()):
+			self.layer_trigger_on_extruding = self.GetExtruderTriggerValue(changes["layer_trigger_on_extruding"])
 		if("layer_trigger_on_primed" in changes.keys()):
-			self.layer_trigger_on_primed = utility.getbool(changes["layer_trigger_on_primed"],self.layer_trigger_on_primed)
+			self.layer_trigger_on_primed = self.GetExtruderTriggerValue(changes["layer_trigger_on_primed"])
+		if("layer_trigger_on_retracting_start" in changes.keys()):
+			self.layer_trigger_on_retracting_start = self.GetExtruderTriggerValue(changes["layer_trigger_on_retracting_start"])
 		if("layer_trigger_on_retracting" in changes.keys()):
-			self.layer_trigger_on_retracting = utility.getbool(changes["layer_trigger_on_retracting"],self.layer_trigger_on_retracting)
+			self.layer_trigger_on_retracting = self.GetExtruderTriggerValue(changes["layer_trigger_on_retracting"])
+		if("layer_trigger_on_partially_retracted" in changes.keys()):
+			self.layer_trigger_on_partially_retracted = self.GetExtruderTriggerValue(changes["layer_trigger_on_partially_retracted"])
 		if("layer_trigger_on_retracted" in changes.keys()):
-			self.layer_trigger_on_retracted = utility.getbool(changes["layer_trigger_on_retracted"],self.layer_trigger_on_retracted)
+			self.layer_trigger_on_retracted = self.GetExtruderTriggerValue(changes["layer_trigger_on_retracted"])
+		if("layer_trigger_on_detracting_start" in changes.keys()):
+			self.layer_trigger_on_detracting_start = self.GetExtruderTriggerValue(changes["layer_trigger_on_detracting_start"])
 		if("layer_trigger_on_detracting" in changes.keys()):
-			self.layer_trigger_on_detracting = utility.getbool(changes["layer_trigger_on_detracting"],self.layer_trigger_on_detracting)
+			self.layer_trigger_on_detracting = self.GetExtruderTriggerValue(changes["layer_trigger_on_detracting"])
+		if("layer_trigger_on_detracted" in changes.keys()):
+			self.layer_trigger_on_detracted = self.GetExtruderTriggerValue(changes["layer_trigger_on_detracted"])
 
 		# other settings
 		if("position_request_retry_attemps" in changes.keys()):
@@ -464,53 +506,90 @@ class Snapshot(object):
 		if("script_path" in changes.keys()):
 			self.script_path = utility.getstring(changes["script_path"],self.script_path)
 
+	def GetExtruderTriggerValueString(self, value):
+		if(value is None):
+			return ""
+		elif(value):
+			return self.ExtruderTriggerRequiredValue
+		elif(not value):
+			return self.ExtruderTriggerForbiddenValue
+
+	def GetExtruderTriggerValue(self, value):
+		if(isinstance(value,basestring)):
+			if(value is None):
+				return None
+			elif(value.lower() == self.ExtruderTriggerRequiredValue):
+				return True
+			elif(value.lower() == self.ExtruderTriggerForbiddenValue):
+				return False
+			else:
+			   return None
+		else:
+			return bool(value)
+
 	def ToDict(self):
 		return {
-			'name'								: self.name,
-			'guid'								: self.guid,
-			'gcode_trigger_enabled'				: self.gcode_trigger_enabled,
-			'gcode_trigger_require_zhop'		: self.gcode_trigger_require_zhop,
-			'gcode_trigger_on_extruding'		: self.gcode_trigger_on_extruding,
-			'gcode_trigger_on_extruding_start'	: self.gcode_trigger_on_extruding_start,
-			'gcode_trigger_on_primed'			: self.gcode_trigger_on_primed,
-			'gcode_trigger_on_retracting'		: self.gcode_trigger_on_retracting,
-			'gcode_trigger_on_retracted'		: self.gcode_trigger_on_retracted,
-			'gcode_trigger_on_detracting'		: self.gcode_trigger_on_detracting,
-			'timer_trigger_enabled'				: self.timer_trigger_enabled,
-			'timer_trigger_require_zhop'		: self.timer_trigger_require_zhop,
-			'timer_trigger_seconds'				: self.timer_trigger_seconds,
-			'timer_trigger_on_extruding'		: self.timer_trigger_on_extruding,
-			'timer_trigger_on_extruding_start'	: self.timer_trigger_on_extruding_start,
-			'timer_trigger_on_primed'			: self.timer_trigger_on_primed,
-			'timer_trigger_on_retracting'		: self.timer_trigger_on_retracting,
-			'timer_trigger_on_retracted'		: self.timer_trigger_on_retracted,
-			'timer_trigger_on_detracting'		: self.timer_trigger_on_detracting,
-			'layer_trigger_enabled'				: self.layer_trigger_enabled,
-			'layer_trigger_height'				: self.layer_trigger_height,
-			'layer_trigger_require_zhop'		: self.layer_trigger_require_zhop,
-			'layer_trigger_on_extruding'		: self.layer_trigger_on_extruding,
-			'layer_trigger_on_extruding_start'	: self.layer_trigger_on_extruding_start,
-			'layer_trigger_on_primed'			: self.layer_trigger_on_primed,
-			'layer_trigger_on_retracting'		: self.layer_trigger_on_retracting,
-			'layer_trigger_on_retracted'		: self.layer_trigger_on_retracted,
-			'layer_trigger_on_detracting'		: self.layer_trigger_on_detracting,
-			'position_request_retry_attemps'	: self.position_request_retry_attemps,
-			'position_request_retry_delay_ms'	: self.position_request_retry_delay_ms,
-			'archive'							: self.archive,
-			'delay'								: self.delay,
-			'output_format'						: self.output_format,
-			'output_filename'					: self.output_filename,
-			'output_directory'					: self.output_directory,
-			'retract_before_move'				: self.retract_before_move,
-			'cleanup_before_print'				: self.cleanup_before_print,
-			'cleanup_after_print'				: self.cleanup_after_print,
-			'cleanup_after_cancel'				: self.cleanup_after_cancel,
-			'cleanup_after_fail'				: self.cleanup_after_fail,
-			'cleanup_before_close'				: self.cleanup_before_close,
-			'cleanup_after_render_complete'		: self.cleanup_after_render_complete,
-			'cleanup_after_render_fail'			: self.cleanup_after_render_fail,
-			'custom_script_enabled'				: self.custom_script_enabled,
-			'script_path'						: self.script_path
+			'name'									: self.name,
+			'guid'									: self.guid,
+			# Gcode Trigger
+			'gcode_trigger_enabled'					: self.gcode_trigger_enabled,
+			'gcode_trigger_require_zhop'			: self.gcode_trigger_require_zhop,
+			'gcode_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_extruding_start),
+			'gcode_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_extruding),
+			'gcode_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.gcode_trigger_on_primed),
+			'gcode_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracting_start),
+			'gcode_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracting),
+			'gcode_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.gcode_trigger_on_partially_retracted),
+			'gcode_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracted),
+			'gcode_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting_start),
+			'gcode_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting),
+			'gcode_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracted),
+			# Timer Trigger
+			'timer_trigger_enabled'					: self.timer_trigger_enabled,
+			'timer_trigger_require_zhop'			: self.timer_trigger_require_zhop,
+			'timer_trigger_seconds'					: self.timer_trigger_seconds,
+			'timer_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_extruding_start),
+			'timer_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_extruding),
+			'timer_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.timer_trigger_on_primed),
+			'timer_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracting_start),
+			'timer_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracting),
+			'timer_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.timer_trigger_on_partially_retracted),
+			'timer_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracted),
+			'timer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting_start),
+			'timer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting),
+			'timer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracted),
+			# Layer Trigger
+			'layer_trigger_enabled'					: self.layer_trigger_enabled,
+			'layer_trigger_height'					: self.layer_trigger_height,
+			'layer_trigger_require_zhop'			: self.layer_trigger_require_zhop,
+			'layer_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_extruding_start),
+			'layer_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_extruding),
+			'layer_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.layer_trigger_on_primed),
+			'layer_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracting_start),
+			'layer_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracting),
+			'layer_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.layer_trigger_on_partially_retracted),
+			'layer_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracted),
+			'layer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting_start),
+			'layer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting),
+			'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
+			# Other Settings
+			'position_request_retry_attemps'		: self.position_request_retry_attemps,
+			'position_request_retry_delay_ms'		: self.position_request_retry_delay_ms,
+			'archive'								: self.archive,
+			'delay'									: self.delay,
+			'output_format'							: self.output_format,
+			'output_filename'						: self.output_filename,
+			'output_directory'						: self.output_directory,
+			'retract_before_move'					: self.retract_before_move,
+			'cleanup_before_print'					: self.cleanup_before_print,
+			'cleanup_after_print'					: self.cleanup_after_print,
+			'cleanup_after_cancel'					: self.cleanup_after_cancel,
+			'cleanup_after_fail'					: self.cleanup_after_fail,
+			'cleanup_before_close'					: self.cleanup_before_close,
+			'cleanup_after_render_complete'			: self.cleanup_after_render_complete,
+			'cleanup_after_render_fail'				: self.cleanup_after_render_fail,
+			'custom_script_enabled'					: self.custom_script_enabled,
+			'script_path'							: self.script_path
 		}
 	
 class Rendering(object):
@@ -837,10 +916,9 @@ class DebugProfile(object):
 			#DebugProfile.Logger.addHandler(logHandler)
 			DebugProfile.Logger.setLevel(logging.DEBUG)
 		
-		self.Commands = Commands()
 		self.log_to_console = True
 		self.enabled = False
-		
+		self.is_test_mode = False
 		self.position_change = False
 		self.position_command_received = False
 		self.extruder_change = False
@@ -882,6 +960,8 @@ class DebugProfile(object):
 			self.name = utility.getstring(changes["name"],self.name)
 		if("enabled" in changes.keys()):
 			self.enabled = utility.getbool(changes["enabled"],self.enabled)
+		if("is_test_mode" in changes.keys()):
+			self.is_test_mode = utility.getbool(changes["is_test_mode"],self.enabled)
 		if("log_to_console" in changes.keys()):
 			self.log_to_console = utility.getbool(changes["log_to_console"],self.log_to_console)
 		if("position_change" in changes.keys()):
@@ -950,6 +1030,7 @@ class DebugProfile(object):
 				'name'						: self.name,
 				'guid'						: self.guid,
 				'enabled'					: self.enabled,
+				'is_test_mode'				: self.is_test_mode,
 				'log_to_console'			: self.log_to_console,
 				'position_change'			: self.position_change,
 				'position_command_received'	: self.position_command_received,
@@ -1034,14 +1115,17 @@ class DebugProfile(object):
 	def LogTriggerTriggeringState(self, message):
 		if(self.trigger_triggering_state):
 			self.LogInfo(message)
+	def LogTriggerHeightChange(self, message):
+		if(self.trigger_height_change):
+				self.LogInfo(message)
 	def LogPositionZminReached(self, message):
 		if(self.trigger_layer_zmin_reached):
 			self.LogInfo(message)
 	def LogPositionLayerChange(self,message):
-		if(self.trigger_layer_change):
+		if(self.position_change):
 			self.LogInfo(message)
 	def LogPositionHeightChange(self,message):
-		if(self.trigger_height_change):
+		if(self.position_change):
 			self.LogInfo(message)
 	def LogPositionZHop(self,message):
 		if(self.trigger_zhop):
@@ -1103,55 +1187,19 @@ class DebugProfile(object):
 	def LogSentGcode(self,message):
 		if(self.gcode_sent_all):
 			self.LogInfo(message)
-	def ApplyCommands(self, cmd, timelapseSettings, snapshotState):
-
-		# see if the command is our debug command
-		command = Command()
-		command = self.Commands.GetCommand(cmd)
-		if(command is not None):
-			if(command.Command == Commands.Debug_Assert.Command):
-				# make sure our assert conditions are true or throw an exception
-				if(timelapseSettings is not None):
-					command.Parse(cmd)
-					snapshot = command.Parameters["Snapshot"]
-					gcodeTrigger = command.Parameters["GcodeTrigger"]
-					gcodeTriggerWait = command.Parameters["GcodeTriggerWait"]
-					timerTrigger = command.Parameters["TimerTrigger"]
-					timerTriggerWait = command.Parameters["TimerTriggerWait"]
-					layerTrigger = command.Parameters["LayerTrigger"]
-					layerTriggerWait = command.Parameters["LayerTriggerWait"]
-					triggers = timelapseSettings['Triggers']
-					if(snapshot is not None and snapshotState is not None):
-						isSnapshot = snapshotState['IsPausedByOctolapse']
-						assert isSnapshot == snapshot
-					for trigger in triggers:
-						if(isinstance(trigger,GcodeTrigger)):
-							if(gcodeTrigger is not None):
-								assert trigger.IsTriggered == gcodeTrigger
-							if(gcodeTriggerWait is not None):
-								assert trigger.IsWaiting == gcodeTriggerWait
-						if(isinstance(trigger,TimerTrigger)):
-							if(timerTrigger is not None):
-								assert trigger.IsTriggered == timerTrigger
-							if(timerTriggerWait is not None):
-								assert trigger.IsWaiting == timerTriggerWait
-						if(isinstance(trigger,LayerTrigger)):
-							if(layerTrigger is not None):
-								assert trigger.IsTriggered == layerTrigger
-							if(layerTriggerWait is not None):
-								assert trigger.IsWaiting == layerTriggerWait
-
+	
 class OctolapseSettings(object):
 	Version = 1.0
-	DefaultPrinter = Printer(name="Default Printer", guid="88a173b1-0071-4d93-84fa-6662af279e5e");
-	DefaultStabilization = Stabilization(name="Default Stabilization", guid="2a0d92b3-6dc3-4d28-9564-8ecacec92412");
-	DefaultSnapshot = Snapshot(name="Default Snapshot", guid="fae0ca93-8c06-450e-a734-eb29426769ca");
-	DefaultRendering = Rendering(name="Default Rendering", guid="4257a753-bb4b-4c9f-9f2d-4032b4b2dc9a");
-	DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
+	
 	DefaultDebugProfile = None;
 	Logger = None;
 	# constants
 	def __init__(self, logFilePath,  settings=None):
+		self.DefaultPrinter = Printer(name="Default Printer", guid="88a173b1-0071-4d93-84fa-6662af279e5e");
+		self.DefaultStabilization = Stabilization(name="Default Stabilization", guid="2a0d92b3-6dc3-4d28-9564-8ecacec92412");
+		self.DefaultSnapshot = Snapshot(name="Default Snapshot", guid="fae0ca93-8c06-450e-a734-eb29426769ca");
+		self.DefaultRendering = Rendering(name="Default Rendering", guid="4257a753-bb4b-4c9f-9f2d-4032b4b2dc9a");
+		self.DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.LogFilePath = logFilePath
 		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.version = "0.1.0"
@@ -1312,6 +1360,7 @@ class OctolapseSettings(object):
 					,dict(value='gif',name='GIF',visible=True)
 					,dict(value='png',name='PNG',visible=True)
 			],
+			'snapshot_extruder_trigger_options' : Snapshot.ExtruderTriggerOptions,
 			'rendering_fps_calculation_options' : [
 					dict(value='static',name='Static FPS')
 					,dict(value='duration',name='Fixed Run Length')

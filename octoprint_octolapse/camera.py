@@ -4,7 +4,6 @@ import threading
 import logging
 import uuid
 from requests.auth import HTTPBasicAuth
-
 import sys
 
 def FormatRequestTemplate(cameraAddress, template,value):

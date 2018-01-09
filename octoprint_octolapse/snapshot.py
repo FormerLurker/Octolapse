@@ -1,19 +1,22 @@
+
 # coding=utf-8
 import os
 import sys
 import time
-import utility
+
 import requests
 import threading
 from requests.auth import HTTPBasicAuth
 from io import open as iopen
 from urlparse import urlsplit
 from math import trunc
-from .settings import *
+from octoprint_octolapse.settings import *
 import traceback
 import shutil
-import camera
+
 import uuid
+import octoprint_octolapse.utility as utility
+import octoprint_octolapse.camera as camera
 
 def StartSnapshotJob(job):
 	job.Process();
@@ -30,11 +33,8 @@ class CaptureSnapshot(object):
 		self.DataDirectory = dataDirectory
 			
 	def Snap(self,printerFileName,snapshotNumber,onComplete=None,onSuccess=None, onFail=None):
-		
-		
 		info = SnapshotInfo(self.Snapshot.output_filename, printerFileName, self.PrintStartTime,  self.Snapshot.output_format)
 		# set the file name.  It will be a guid + the file extension
-
 		snapshotGuid = str(uuid.uuid4())
 		info.FileName = "{0}.{1}".format(snapshotGuid, self.Snapshot.output_format)
 		info.DirectoryName = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printerFileName, self.PrintStartTime, self.Snapshot.output_format)
@@ -54,11 +54,11 @@ class SnapshotJob(object):
 	snapshot_job_lock = threading.RLock()
 	
 	def __init__(self,settings, snapshotInfo, url,  snapshotGuid, timeoutSeconds=5, onComplete = None, onSuccess = None, onFail = None):
-		camera = settings.CurrentCamera()
-		self.Address = camera.address
-		self.Username = camera.username
-		self.Password = camera.password
-		self.IgnoreSslError = camera.ignore_ssl_error
+		cameraSettings = settings.CurrentCamera()
+		self.Address = cameraSettings.address
+		self.Username = cameraSettings.username
+		self.Password = cameraSettings.password
+		self.IgnoreSslError = cameraSettings.ignore_ssl_error
 		self.Settings = settings;
 		self.SnapshotInfo = snapshotInfo;
 		self.Url = url

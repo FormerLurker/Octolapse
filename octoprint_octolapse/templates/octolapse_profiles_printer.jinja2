@@ -45,24 +45,9 @@
     </div>
   </div>
   <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input name="is_e_relative" class="form-input" type="checkbox" data-bind="checked: is_e_relative" />Extruder is always relative
-        <div class="error_label_container text-error" ></div>
-      </label>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Minimum Z-Height Before position tracking begins</label>
-    <div class="controls">
-      <input name="z_min" type="number" class="form-input span2" data-bind="value: z_min" step="0.05" min="0.0" max="9999990.0" required="true" />
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
     <label class="control-label">Printer position confirmation tolerance - Used when comparing received vs expected positions from the M114 command.</label>
     <div class="controls">
-      <input name="z_min" type="number" class="form-input span2" data-bind="value: printer_position_confirmation_tolerance" required="true" />
+      <input name="printer_position_confirmation_tolerance" type="number" class="form-input span2" data-bind="value: printer_position_confirmation_tolerance" required="true" />
       <div class="error_label_container text-error" ></div>
     </div>
   </div>

@@ -123,7 +123,7 @@ $(function () {
                     'current_profile_guid': self.settings.current_snapshot_profile_guid()
                     , 'profiles': ko.toJS(self.settings.snapshots)
                     , 'default_profile': ko.toJS(self.settings.default_snapshot_profile)
-                    , 'profileOptions': { 'snapshot_format_options': self.settings.snapshot_format_options }
+                    , 'profileOptions': { 'snapshot_format_options': self.settings.snapshot_format_options, 'snapshot_extruder_trigger_options': self.settings.snapshot_extruder_trigger_options  }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'
