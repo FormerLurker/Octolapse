@@ -50,7 +50,8 @@ class GcodeTrigger(object):
 		"""If the provided command matches the trigger command, sets IsTriggered to true, else false"""
 		self.IsTriggered = False
 		# Don't update the trigger if we don't have a homed axis
-		if(not position.HasHomedAxis()):
+		# Make sure to use the previous value so the homing operation can complete
+		if(not position.HasHomedAxisPrevious()):
 			self.IsTriggered = False
 			return
 
@@ -127,7 +128,8 @@ class LayerTrigger(object):
 		self.IsTriggered = False
 		self.IsHeightChange = False
 		# Don't update the trigger if we don't have a homed axis
-		if(not position.HasHomedAxis()):
+		# Make sure to use the previous value so the homing operation can complete
+		if(not position.HasHomedAxisPrevious()):
 			return
 
 		# calculate height increment changed
@@ -230,7 +232,8 @@ class TimerTrigger(object):
 
 		self.IsTriggered = False
 		# Don't update the trigger if we don't have a homed axis
-		if(not position.HasHomedAxis()):
+		# Make sure to use the previous value so the homing operation can complete
+		if(not position.HasHomedAxisPrevious()):
 			self.IsTriggered = False
 			return
 

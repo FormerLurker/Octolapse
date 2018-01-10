@@ -13,7 +13,14 @@ import sarge
 
 class Render(object):
 
-	def __init__(self, settings, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount,  onStart=None, onFail = None, onSuccess=None, onAlways = None, onAfterSyncFail = None,onAfterSycnSuccess = None ):
+	def __init__(self, settings, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount
+			  ,onRenderStart=None
+			  ,onRenderFail = None
+			  ,onRenderSuccess=None
+			  ,onRenderComplete=None
+			  ,onAfterSyncFail = None
+			  ,onAfterSycnSuccess = None
+			  ,onComplete = None ):
 		self.Settings = settings
 		self.DataDirectory = dataDirectory
 		self.OctoprintTimelapseFolder = octoprintTimelapseFolder
@@ -21,12 +28,13 @@ class Render(object):
 		self.Snapshot = self.Settings.CurrentSnapshot()
 		self.Rendering = self.Settings.CurrentRendering();
 		self.ThreadCount = threadCount
-		self.OnStart = onStart
-		self.OnFail = onFail
-		self.OnSuccess = onSuccess
-		self.OnAlways = onAlways
+		self.OnRenderStart = onRenderStart
+		self.OnRenderFail = onRenderFail
+		self.OnRenderSuccess = onRenderSuccess
+		self.OnRenderComplete = onRenderComplete
 		self.OnAfterSyncFail = onAfterSyncFail
 		self.OnAfterSycnSuccess = onAfterSycnSuccess
+		self.OnComplete = onComplete
 		self.TimelapseRenderJobs = []
 
 	def Process(self, printName, printStartTime, printEndTime):
@@ -84,12 +92,13 @@ class Render(object):
 						   , self.Rendering.watermark
 						   , fps 
 						   , threads= self.ThreadCount
-						   , on_start= self.OnStart
-						   , on_success = self.OnSuccess
-						   , on_fail = self.OnFail
-						   , on_always = self.OnAlways
+						   , on_render_start= self.OnRenderStart
+						   , on_render_fail = self.OnRenderFail
+						   , on_render_success = self.OnRenderSuccess
+						   , on_render_complete = self.OnRenderComplete
 						   , on_after_sync_fail = self.OnAfterSyncFail
 						   , on_after_sync_success = self.OnAfterSycnSuccess
+						   , on_complete = self.OnComplete
 						   , cleanAfterSuccess = self.Snapshot.cleanup_after_render_complete
 						   , cleanAfterFail = self.Snapshot.cleanup_after_render_complete
 						   , syncWithTimelapse = self.Rendering.sync_with_timelapse)
@@ -106,7 +115,7 @@ class TimelapseRenderJob(object):
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 	def __init__(self, debug, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, octoprintTimelapseFolder,  ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps
-			  , threads,on_start=None, on_success=None, on_fail=None, on_always=None, on_after_sync_success = None, on_after_sync_fail = None
+			  , threads,on_render_start=None, on_render_fail=None, on_render_success=None, on_render_complete=None, on_after_sync_success = None, on_after_sync_fail = None, on_complete = None
 			  , cleanAfterSuccess = False
 			  , cleanAfterFail = False
 			  , syncWithTimelapse = False):
@@ -127,20 +136,21 @@ class TimelapseRenderJob(object):
 		self._flip_v = flipV
 		self._rotate_90 = rotate90
 		self._watermark = watermark
-		self._on_start = on_start
-		self._on_success = on_success
-		self._on_fail = on_fail
-		self._on_always = on_always
+		self._on_render_start = on_render_start
+		self._on_render_fail = on_render_fail
+		self._on_render_success = on_render_success
+		self._on_render_complete = on_render_complete
 		self._on_after_sync_success = on_after_sync_success
 		self._on_after_sync_fail = on_after_sync_fail
+		self._on_complete = on_complete
 		self._thread = None
 		self._logger = logging.getLogger(__name__)
 		self.cleanAfterSuccess = cleanAfterSuccess 
 		self.cleanAfterFail = cleanAfterFail 
 		self.syncWithTimelapse = syncWithTimelapse
+
 	def process(self):
 		"""Processes the job."""
-
 		self._thread = threading.Thread(target=self._render,
 		                                name="TimelapseRenderJob_{name}".format(name = self._printFileName))
 		self._thread.daemon = True
@@ -148,8 +158,6 @@ class TimelapseRenderJob(object):
 
 	def _render(self):
 		"""Rendering runnable."""
-
-		
 		if self._ffmpeg is None:
 			self._debug.LogWarning("Cannot create movie, path to ffmpeg is unset")
 			return
@@ -159,9 +167,6 @@ class TimelapseRenderJob(object):
 
 		input = os.path.join(self._capture_dir,
 		                     self._capture_file_template)
-
-		
-
 		output = os.path.join(self._output_dir,
 		                      self._output_file_name)
 
@@ -199,49 +204,46 @@ class TimelapseRenderJob(object):
 		success = False
 		with self.render_job_lock:
 			try:
-				self._notify_callback("start", output, baseOutputFileName)
+				self._notify_callback("render_start", output, baseOutputFileName)
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
 				if p.returncode == 0:
-					self._notify_callback("success", output,baseOutputFileName)
+					self._notify_callback("render_success", output,baseOutputFileName)
 					success = True
 				else:
 					returncode = p.returncode
 					stdout_text = p.stdout.text
 					stderr_text = p.stderr.text
 					self._debug.LogWarning("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
-					self._notify_callback("fail", output, baseOutputFileName, returncode,stderr_text)
+					self._notify_callback("render_fail", output, baseOutputFileName, returncode,stderr_text)
 			except:
 				self._debug.LogError("Could not render movie due to unknown error")
 				# clean after fail
-				self._notify_callback("fail", output, baseOutputFileName,0,'unknown')
+				self._notify_callback("render_fail", output, baseOutputFileName,0,'unknown')
 			finally:
-				self._notify_callback("always")
-
-		cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
-		if(cleanSnapshots):
-			self._CleanSnapshots()
+				self._notify_callback("render_complete", output, baseOutputFileName,0,'unknown')
+			cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
+			if(cleanSnapshots):
+				self._CleanSnapshots()
 
 		
-		if(self.syncWithTimelapse):
-			
-			finalFileaName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName)
-			# Move the timelapse to the Octoprint timelapse folder.
-			try:
-				# get the timelapse folder for the Octoprint timelapse plugin
-				self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileaName))
-				shutil.move(output,finalFileaName)
+			if(self.syncWithTimelapse):
+				finalFileaName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName)
+				# Move the timelapse to the Octoprint timelapse folder.
+				try:
+					# get the timelapse folder for the Octoprint timelapse plugin
+					self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileaName))
+					shutil.move(output,finalFileaName)
+					self._notify_callback("after_sync_success", finalFileaName, baseOutputFileName)
+				except:
+					type = sys.exc_info()[0]
+					value = sys.exc_info()[1]
+					message = "Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileaName,type,value)
+					self._debug.LogError(message)
+					self._notify_callback("after_sync_fail", finalFileaName, baseOutputFileName, message)
 				
-				self._notify_callback("after_sync_success", finalFileaName, baseOutputFileName)
-
-			except:
-				type = sys.exc_info()[0]
-				value = sys.exc_info()[1]
-				self._debug.LogError("Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileaName,type,value))
-				self._notify_callback("after_sync_fail", finalFileaName, baseOutputFileName)
-				
-
+			self._notify_callback("complete")
 
 	def _CleanSnapshots(self):
 		
@@ -286,8 +288,7 @@ class TimelapseRenderJob(object):
 
 		logger = logging.getLogger(__name__)
 		ffmpeg = ffmpeg.strip()
-		
-    
+
 		if (sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"'))):
 			ffmpeg = "\"{0}\"".format(ffmpeg)
 		command = [

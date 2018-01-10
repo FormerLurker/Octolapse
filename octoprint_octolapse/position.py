@@ -11,60 +11,35 @@ class Position(object):
 		self.Settings = octolapseSettings
 		self.Printer = self.Settings.CurrentPrinter()
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
+
+		self.Reset()
 		
-		self.X = None
-		self.XOffset = 0
-		self.XPrevious = None
-		self.XHomed = False
-		self.Y = None
-		self.YOffset = 0
-		self.YPrevious = None
-		self.YHomed = False
-		self.Z = None
-		self.ZOffset = 0
-		self.ZPrevious = None
-		self.ZHomed = False
-		self.E = 0
-		self.EOffset = 0
-		self.EPrevious = 0
-		self.IsRelative = False
 		self.Extruder = Extruder(octolapseSettings)
 		self.G90InfluencesExtruder = g90InfluencesExtruder
-		self.IsExtruderRelative = True
-	
-		#StateTracking Vars
-		self.Height = None
-		self.HeightPrevious = None
-		self.ZDelta = None
-		self.ZDeltaPrevious = None
-		self.Layer = 0
-
-		# State Flags
-		self.IsLayerChange = False
-		self.IsZHop = False
 
 		if(self.Printer.z_hop is None):
 			self.Printer.z_hop = 0
 		
 		self.Commands = Commands()
-		self.HasPositionError = False
-		self.PositionError = None
 	
 	def Reset(self):
 
 		self.X = None
 		self.XOffset = 0
 		self.XPrevious = None
+		self.XHomedPrevious = False
 		self.XHomed = False
 
 		self.Y = None
 		self.YOffset = 0
 		self.YPrevious = None
+		self.YHomedPrevious = False
 		self.YHomed = False
 
 		self.Z = None
 		self.ZOffset = 0
 		self.ZPrevious = None
+		self.ZHomedPrevious = False
 		self.ZHomed = False
 		
 		self.E = 0
@@ -96,8 +71,11 @@ class Position(object):
 		# Movement detected, set the previous values
 		# disect the gcode and use it to update our position
 		self.XPrevious = self.X
+		self.XHomedPrevious = self.XHomed
 		self.YPrevious = self.Y
+		self.YHomedPrevious = self.YHomed
 		self.ZPrevious = self.Z
+		self.ZHomedPrevious = self.ZHomed
 		self.EPrevious = self.E
 		
 		# save any previous values that will be needed later
@@ -374,6 +352,10 @@ class Position(object):
 		return (self.XHomed
 				and self.YHomed
 			    and self.ZHomed)
+	def HasHomedAxisPrevious(self):
+		return (self.XHomedPrevious
+				and self.YHomedPrevious
+			    and self.ZHomedPrevious)
 
 	def XRelative(self):
 		if(self.X is None):

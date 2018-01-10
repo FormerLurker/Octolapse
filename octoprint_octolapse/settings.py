@@ -168,7 +168,7 @@ class Stabilization(object):
 			'guid'							: self.guid,
 			'x_movement_speed'				: self.x_movement_speed,
 			'x_type'						: self.x_type,
-			'x_coordinate'					: self.x_fixed_coordinate,
+			'x_fixed_coordinate'			: self.x_fixed_coordinate,
 			'x_fixed_path'					: self.x_fixed_path,
 			'x_fixed_path_loop'				: self.x_fixed_path_loop,
 			'x_fixed_path_invert_loop'		: self.x_fixed_path_invert_loop,

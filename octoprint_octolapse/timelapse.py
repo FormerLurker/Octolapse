@@ -177,10 +177,10 @@ class Timelapse(object):
 					self.SavedCommand = None # this will suppress the command since it won't be added to our snapshot commands list
 				else:
 					self.SavedCommand = cmd; # this will cause the command to be added to the end of our snapshot commands
-
-				# pausing the print after setting these two flags to true will a position request, which will trigger a snapshot
+				# pause the printer to start the snapshot
+				self.State = TimelapseState.RequestingReturnPosition
 				self.OctoprintPrinter.pause_print()
-				self.SendPositionRequestGcode(True)
+				#self.SendPositionRequestGcode(True) # We're going to use the location provided automatically when we pause octoprint
 				return (None,)
 
 		if(isPrinterSnapshotCommand ):
@@ -260,11 +260,11 @@ class Timelapse(object):
 
 	def SendPositionRequestGcode(self, isReturn):
 		# Send commands to move to the snapshot position
-		if(isReturn):
-			self.State = TimelapseState.RequestingReturnPosition
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M114).")
-			self.OctoprintPrinter.commands(["M114"]);
-		else:
+		#if(isReturn):
+		#	self.State = TimelapseState.RequestingReturnPosition
+		#	self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot return position (M114).")
+		#	self.OctoprintPrinter.commands(["M114"]);
+		#else:
 			self.State = TimelapseState.RequestingSnapshotPosition
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot position (M400, M114).")
 			self.OctoprintPrinter.commands(["M400","M114"]);
@@ -275,7 +275,8 @@ class Timelapse(object):
 		# octoprint sends a position requests when we pause, which can mess our $H1t up, so ignore it
 		if(payload["reason"] == "pause"): # lucky for us there is a reason attached.  I'd LOVE to be able to attach a reason (or any note) to a command and have it returned!
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Ignored position that was originally requested by Octoprint.")
-			return False, "Declined - Octoprint Pause Position Request"
+			isReturn = True
+			#return False, "Declined - Octoprint Pause Position Request"
 		if(self.State == TimelapseState.RequestingReturnPosition):
 			# if we are getting the return position, set our snapshot state flag and set isReturn = true
 			isReturn = True
@@ -343,7 +344,6 @@ class Timelapse(object):
 				return False, "Incorrect Snapshot Position, Retrying"
 
 	def ResendSnapshotPositionRequest(self):
-
 		# get the number of times to retry, and how long to delay before requesting the new position
 		maxRetryAttempts = self.Snapshot.position_request_retry_attemps
 		requestDelaySeconds = self.Snapshot.position_request_retry_delay_ms / 1000.0
@@ -431,9 +431,10 @@ class Timelapse(object):
 
 	# RENDERING Functions and Events
 	def EndTimelapse(self):
-		self.PrintEndTime = time.time()
-		self.RenderTimelapse()
-		self.Reset();
+		if(self.State != TimelapseState.Idle):
+			self.PrintEndTime = time.time()
+			self.RenderTimelapse()
+			self.Reset();
 
 	def RenderTimelapse(self):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
@@ -444,25 +445,23 @@ class Timelapse(object):
 		return False
 
 	def CreateRenderTimelapseJob(self):
-		timelapseRenderJob = Render(self.Settings,self.DataFolder,self.DefaultTimelapseDirectory,  self.FfMpegPath,1,onStart = self.OnRenderStart,onFail=self.OnRenderFail, onSuccess = self.OnRenderSuccess, onAlways = self.OnRenderingComplete, onAfterSyncFail = self.OnSynchronizeRenderingFail, onAfterSycnSuccess = self.OnSynchronizeRenderingComplete)
+		timelapseRenderJob = Render(self.Settings,self.DataFolder,self.DefaultTimelapseDirectory,  self.FfMpegPath,1
+							  ,onRenderStart = self.OnRenderStart
+							  ,onRenderFail=self.OnRenderFail
+							  ,onRenderSuccess = self.OnRenderSuccess
+							  ,onRenderComplete = self.OnRenderComplete
+							  ,onAfterSyncFail = self.OnSynchronizeRenderingFail
+							  ,onAfterSycnSuccess = self.OnSynchronizeRenderingComplete
+							  ,onComplete = self.OnRenderTimelapseJobComplete)
 		timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.PrintStartTime, self.PrintEndTime)
 
 	def OnRenderStart(self, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering the timelapse.")
+		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering/synchronizing the timelapse.")
 		finalFilename = args[0]
 		baseFileName = args[1]
 		#Notify Octoprint
 		payload = dict(gcode="unknown",movie=finalFilename,movie_basename=baseFileName,movie_prefix="from Octolapse")
 		self.OnMovieRendering(payload)
-		
-	def OnRenderSuccess(self, *args, **kwargs):
-		finalFilename = args[0]
-		baseFileName = args[1]
-		#TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
-		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
-
-	def OnRenderingComplete(self, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering, ending timelapse.")
 
 	def OnRenderFail(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogRenderFail("The timelapse rendering failed.")
@@ -478,7 +477,16 @@ class Timelapse(object):
 				returncode=returnCode,
 				reason = reason)
 		self.OnMovieFailed(payload)
+		
+	def OnRenderSuccess(self, *args, **kwargs):
+		finalFilename = args[0]
+		baseFileName = args[1]
+		#TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
 
+	def OnRenderComplete(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering, ending timelapse.")
+	
 	# Synchronize renderings with the default plugin
 	def OnSynchronizeRenderingComplete(self, *args, **kwargs):
 		finalFilename = args[0]
@@ -501,6 +509,9 @@ class Timelapse(object):
 				returncode=0,
 				reason="See the octolapse log for details.")
 		self.OnMovieFailed(payload)
+
+	def OnRenderTimelapseJobComplete(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed the rendering/sync job.")
 
 	def OnMovieRendering(self,payload):
 		"""Called when a timelapse has started being rendered.  Calls any callbacks onMovieRendering callback set in the constructor."""
