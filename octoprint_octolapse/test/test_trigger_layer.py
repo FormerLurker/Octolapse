@@ -316,12 +316,20 @@ class Test_LayerTrigger(unittest.TestCase):
 		position.Extruder.Reset()
 		position.Extruder.IsPrimed = False
 		trigger.IsWaiting = True
-		# Try on extruding start
+		# Try on extruding start right after home, should fail
 		trigger.ExtruderTriggers = ExtruderTriggers(True,None,None,None,None,None,None,None,None,None)
+		position.Extruder.IsExtrudingStart = True
+		trigger.Update(position)
+		self.assertTrue(trigger.IsTriggered == False)
+		self.assertTrue(trigger.IsWaiting == True)
+
+		# Try again, should trigger because the previous state was homed
+		position.Update("m114");
 		position.Extruder.IsExtrudingStart = True
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == True)
 		self.assertTrue(trigger.IsWaiting == False)
+
 
 		#Reset the extruder
 		position.Extruder.Reset()
@@ -424,8 +432,9 @@ class Test_LayerTrigger(unittest.TestCase):
 	def test_LayerTrigger_ExtruderTriggerWait(self):
 		"""Test wait on extruder"""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-		# home the axis
+		# home the axis and send another command to make sure the previous instruction was homed
 		position.Update("G28")
+		position.Update("PreviousHomed")
 		trigger = LayerTrigger(self.Settings)
 		trigger.RequireZHop = False # no zhop required
 		trigger.HeightIncrement = 0 # Trigger on every layer change
@@ -442,6 +451,7 @@ class Test_LayerTrigger(unittest.TestCase):
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == False)
 		self.assertTrue(trigger.IsWaiting == True)
+
 		# update again with no change
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == False)
@@ -469,16 +479,17 @@ class Test_LayerTrigger(unittest.TestCase):
 		self.assertTrue(trigger.IsTriggered == False)
 		self.assertTrue(trigger.IsWaiting == False)
 
-		# Home all axis and try again, wait on zhop
+		# Home all axis and try again, will not trigger or wait, previous axis not homed
 		position.Update("g28")
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == False)
 		self.assertTrue(trigger.IsWaiting == False)
+
+		# Waiting on ZHop
 		position.Update("g0 x0 y0 z.2 e1")
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == False)
 		self.assertTrue(trigger.IsWaiting == True)
-
 		# try zhop
 		position.Update("g0 x0 y0 z.7 ")
 		trigger.Update(position)

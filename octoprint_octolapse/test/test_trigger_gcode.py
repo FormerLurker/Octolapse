@@ -41,8 +41,14 @@ class Test_GcodeTrigger(unittest.TestCase):
 		self.assertTrue(trigger.IsTriggered == False)
 		self.assertTrue(trigger.IsWaiting == False)
 
-		# home the axis and resend the snap command
+		# home the axis and resend the snap command - will be false because the PREVEIOUS state must be homed
 		position.Update("g28")
+		trigger.Update(position,"snap")
+		self.assertTrue(trigger.IsTriggered == False)
+		self.assertTrue(trigger.IsWaiting == False)
+
+		# try again, should now work
+		position.Update("Snap")
 		trigger.Update(position,"snap")
 		self.assertTrue(trigger.IsTriggered == True)
 		self.assertTrue(trigger.IsWaiting == False)

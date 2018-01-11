@@ -50,7 +50,6 @@ class Timelapse(object):
 		self.CaptureSnapshot = CaptureSnapshot(self.Settings,  self.DataFolder, printStartTime=self.PrintStartTime)
 		self.Position = Position(self.Settings,octoprintPrinterProfile, g90InfluencesExtruder)
 		self.State = TimelapseState.WaitingForTrigger
-		self.SnapshotGcodeErrorMaxAttempts = 10
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
 		# create the triggers
 		# If the gcode trigger is enabled, add it
@@ -71,12 +70,9 @@ class Timelapse(object):
 		self.CommandIndex = -1
 		self.SnapshotCount = 0
 		self.PrintStartTime = None
-		self.PrintEndTime = None
 		self.SnapshotGcodes = None
 		self.SavedCommand = None
 		self.PositionRequestAttempts = 0
-		self.SnapshotGcodeError = False
-		self.SnapshotGcodeErrorAttempts = 0
 		self.IsTestMode = False
 
 	def ResetSnapshot(self):
@@ -84,9 +80,7 @@ class Timelapse(object):
 		self.CommandIndex = -1
 		self.SnapshotGcodes = None
 		self.SavedCommand = None
-		self.SnapshotGcodeError = False
 		self.PositionRequestAttempts = 0
-		self.SnapshotGcodeErrorAttempts = 0
 
 	def PrintPaused(self):
 		if(self.State == TimelapseState.Idle):
@@ -118,16 +112,7 @@ class Timelapse(object):
 			cmd = cmd.upper().strip()
 
 		self.Position.Update(cmd)
-		# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.
-
-		# if there was a gcode error
-		if(self.SnapshotGcodeError):
-			if(cmd not in (command.upper().strip() for command in self.SnapshotGcodes.GcodeCommands)):
-				return (None,)
-			else:
-				return self.ReturnGcodeCommandToOctoprint(cmd)				
-
-		# if we have sent an m114 command
+		# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
 		if(self.State > TimelapseState.WaitingForTrigger ):
 			# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
 			if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
@@ -159,9 +144,7 @@ class Timelapse(object):
 						
 				else:
 					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The current command index {0} does not equal the snapshot index {1}, or the queuing command {2} does not equal the the snapshot command {3}. Ignoring.".format(self.CommandIndex,self.SnapshotGcodes.SnapshotIndex, cmd, currentSnapshotCommand))
-					# set the snapshot gcode error state to True
-					#self.SnapshotGcodeError = True
-					#self.CommandIndex += 1
+
 				
 
 			return self.ReturnGcodeCommandToOctoprint(cmd)
@@ -196,23 +179,6 @@ class Timelapse(object):
 
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		
-		# Handle error state as well as possible
-		if(self.SnapshotGcodeError):
-			if(self.State > TimelapseState.RequestingReturnPosition):
-				if(cmd in (command.upper().strip() for command in self.SnapshotGcodes.GcodeCommands)):
-					if(self.CommandIndex >= self.SnapshotGcodes.EndIndex()):
-						self.EndSnapshot()
-						return None
-					self.Settings.CurrentDebugProfile().LogWarning("Attempting to gracefully end the snapshot after an error.  The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
-					self.CommandIndex += 1
-				else:
-					self.SnapshotGcodeErrorAttempts += 1
-
-				if(self.SnapshotGcodeErrorAttempts > self.SnapshotGcodeErrorMaxAttempts):
-					self.EndSnapshot()
-			else:
-				self.EndSnapshot()
-
 		# If we are waiting for the positon 
 		if(self.State == TimelapseState.SendingMoveCommand):
 			# make sure this command is in our snapshot gcode list, else ignore
@@ -222,7 +188,6 @@ class Timelapse(object):
 				moveCommand = self.SnapshotGcodes.GcodeCommands[snapshotMoveIndex]
 				if(cmd == moveCommand.upper().strip()):
 					self.CommandIndex = snapshotMoveIndex + 1
-					self.State = TimelapseState.MoveCommandSent
 					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
 					self.SendPositionRequestGcode(False)
 					# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
@@ -272,11 +237,6 @@ class Timelapse(object):
 
 	def PositionReceived(self, payload):
 		isReturn = None
-		# octoprint sends a position requests when we pause, which can mess our $H1t up, so ignore it
-		if(payload["reason"] == "pause"): # lucky for us there is a reason attached.  I'd LOVE to be able to attach a reason (or any note) to a command and have it returned!
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Ignored position that was originally requested by Octoprint.")
-			isReturn = True
-			#return False, "Declined - Octoprint Pause Position Request"
 		if(self.State == TimelapseState.RequestingReturnPosition):
 			# if we are getting the return position, set our snapshot state flag and set isReturn = true
 			isReturn = True
@@ -432,7 +392,6 @@ class Timelapse(object):
 	# RENDERING Functions and Events
 	def EndTimelapse(self):
 		if(self.State != TimelapseState.Idle):
-			self.PrintEndTime = time.time()
 			self.RenderTimelapse()
 			self.Reset();
 
@@ -440,20 +399,21 @@ class Timelapse(object):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
 		if(self.Rendering.enabled):
 			self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
-			self.CreateRenderTimelapseJob()
+			timelapseRenderJob = Render(self.Settings
+								  ,self.DataFolder
+								  ,self.DefaultTimelapseDirectory
+								  ,self.FfMpegPath
+								  ,1
+								  ,onRenderStart = self.OnRenderStart
+								  ,onRenderFail=self.OnRenderFail
+								  ,onRenderSuccess = self.OnRenderSuccess
+								  ,onRenderComplete = self.OnRenderComplete
+								  ,onAfterSyncFail = self.OnSynchronizeRenderingFail
+								  ,onAfterSycnSuccess = self.OnSynchronizeRenderingComplete
+								  ,onComplete = self.OnRenderTimelapseJobComplete)
+			timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.PrintStartTime, time.time())
 			return True
 		return False
-
-	def CreateRenderTimelapseJob(self):
-		timelapseRenderJob = Render(self.Settings,self.DataFolder,self.DefaultTimelapseDirectory,  self.FfMpegPath,1
-							  ,onRenderStart = self.OnRenderStart
-							  ,onRenderFail=self.OnRenderFail
-							  ,onRenderSuccess = self.OnRenderSuccess
-							  ,onRenderComplete = self.OnRenderComplete
-							  ,onAfterSyncFail = self.OnSynchronizeRenderingFail
-							  ,onAfterSycnSuccess = self.OnSynchronizeRenderingComplete
-							  ,onComplete = self.OnRenderTimelapseJobComplete)
-		timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.PrintStartTime, self.PrintEndTime)
 
 	def OnRenderStart(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering/synchronizing the timelapse.")
@@ -534,10 +494,9 @@ class TimelapseState(object):
 	RequestingReturnPosition = 4
 	SendingSnapshotGcode = 5
 	SendingMoveCommand = 6
-	MoveCommandSent = 7
-	RequestingSnapshotPosition = 8
-	TakingSnapshot = 9
-	SendingReturnGcode = 10
+	RequestingSnapshotPosition = 7
+	TakingSnapshot = 8
+	SendingReturnGcode = 9
 	
 	
 
