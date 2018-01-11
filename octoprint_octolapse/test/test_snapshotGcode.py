@@ -255,7 +255,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[2] == "G90")
 		self.assertTrue(snapshotGcode.SnapshotCommands()[3] == "G1 X10.000 Y20.000 F7200")
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==3)
 		self.assertTrue(snapshotGcode.SnapshotIndex==3)
 		self.assertTrue(snapshotGcode.EndIndex()==8)
 		# verify the return coordinates
@@ -311,7 +310,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[3] == "G90")
 		self.assertTrue(snapshotGcode.SnapshotCommands()[4] == "G1 X125.000 Y100.000 F7200")
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==4)
 		self.assertTrue(snapshotGcode.SnapshotIndex==4)
 		self.assertTrue(snapshotGcode.EndIndex()==10)
 		# verify the return coordinates
@@ -353,7 +351,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[3] == "G90")
 		self.assertTrue(snapshotGcode.SnapshotCommands()[4] == "G1 X250.000 Y200.000 F7200")
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==4)
 		self.assertTrue(snapshotGcode.SnapshotIndex==4)
 		self.assertTrue(snapshotGcode.EndIndex()==10)
 		# verify the return coordinates
@@ -398,7 +395,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[2] == "G1 X50.000 Y50.000 F7200")
 
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==2)
 		self.assertTrue(snapshotGcode.SnapshotIndex==2)
 		self.assertTrue(snapshotGcode.EndIndex()==6)
 		# verify the return coordinates
@@ -430,7 +426,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[1] == "G90")
 		self.assertTrue(snapshotGcode.SnapshotCommands()[2] == "G1 X100.000 Y100.000 F7200")
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==2)
 		self.assertTrue(snapshotGcode.SnapshotIndex==2)
 		self.assertTrue(snapshotGcode.EndIndex()==6)
 		# verify the return coordinates
@@ -471,7 +466,6 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.SnapshotCommands()[0] == "G90")
 		self.assertTrue(snapshotGcode.SnapshotCommands()[1] == "G1 X125.000 Y200.000 F7200")
 		# verify the indexes of the generated gcode
-		self.assertTrue(snapshotGcode.SnapshotMoveIndex==1)
 		self.assertTrue(snapshotGcode.SnapshotIndex==1)
 		self.assertTrue(snapshotGcode.EndIndex()==4)
 		# verify the return coordinates

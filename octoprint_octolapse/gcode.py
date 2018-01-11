@@ -18,14 +18,11 @@ class SnapshotGcode(object):
 		self.Z = None
 		self.ReturnZ = None
 		self.SnapshotIndex = -1
-		self.SnapshotMoveIndex = -1
 
 	def EndIndex(self):
 		return len(self.GcodeCommands)-1
 	def SetSnapshotIndex(self):
 		self.SnapshotIndex = self.EndIndex()
-	def SetSnapshotMoveIndex(self):
-		self.SnapshotMoveIndex = self.EndIndex()
 
 	def SnapshotCommands(self):
 		if(len(self.GcodeCommands)>0):
@@ -162,7 +159,7 @@ class SnapshotGcodeGenerator(object):
 		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
 		# if we can ZHop, do
 		if(canZHop):
-			if(not currentIsRelative):
+			if(not currentIsRelative): # must be in relative mode
 				newSnapshotGcode.GcodeCommands.append(self.GetSetRelativePositionGcode())
 				currentIsRelative = True
 			newSnapshotGcode.GcodeCommands.append(self.GetRelativeZLiftGcode())
@@ -173,11 +170,11 @@ class SnapshotGcodeGenerator(object):
 			return None
 
 		#Move back to the snapshot position - make sure we're in absolute mode for this
-		if(currentIsRelative):
+		if(currentIsRelative): # must be in absolute mode
 			newSnapshotGcode.GcodeCommands.append(self.GetSetAbsolutePositionGcode())
 			currentIsRelative = False
 		newSnapshotGcode.GcodeCommands.append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
-		newSnapshotGcode.SetSnapshotMoveIndex()
+		
 		# Dwell with time 0 so that we wait until the move is finished before retrieving the position
 		#newSnapshotGcode.GcodeCommands.append(self.GetWaitForCurrentMovesToFinishGcode());
 		
@@ -231,7 +228,7 @@ class SnapshotGcodeGenerator(object):
 		if(savedCommand is not None):
 			newSnapshotGcode.GcodeCommands.append(savedCommand)
 
-		self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Command Index:{0}, Gcode:".format(newSnapshotGcode.SnapshotIndex))
+		self.Settings.CurrentDebugProfile().LogSnapshotGcode("SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex, newSnapshotGcode.EndIndex()))
 		for str in newSnapshotGcode.GcodeCommands:
 			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
 			

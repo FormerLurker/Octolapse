@@ -156,11 +156,12 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Already using absolute x,y,z coordinates.")
 
 				# for some firmwares we need to switch the extruder to absolute coordinates as well
-				if (self.G90InfluencesExtruder and (self.IsExtruderRelative is None or self.IsExtruderRelative)):
-					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Switching to absolute extruder coordinates")
-					self.IsExtruderRelative = False
-				else:
-					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Already using absolute extruder coordinates")
+				if (self.G90InfluencesExtruder):
+					if(self.IsExtruderRelative):
+						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Switching to absolute extruder coordinates")
+						self.IsExtruderRelative = False
+					else:
+						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G90 - Already using absolute extruder coordinates")
 			elif(command.Command == "G91"):
 				# change x,y,z to relative
 				if(not self.IsRelative):
@@ -170,11 +171,12 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Already using relative x,y,z coordinates")
 
 				# for some firmwares we need to switch the extruder to absolute coordinates as well
-				if (self.G90InfluencesExtruder and (self.IsExtruderRelative is None or not self.IsExtruderRelative)):
-					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Switching to relative extruder coordinates")
-					self.IsExtruderRelative = True
-				else:
-					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Already using relative extruder coordinates")
+				if (self.G90InfluencesExtruder):
+					if(not self.IsExtruderRelative):
+						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Switching to relative extruder coordinates")
+						self.IsExtruderRelative = True
+					else:
+						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Already using relative extruder coordinates")
 			elif(command.Command == "M83"):
 				if(self.IsExtruderRelative is None or not self.IsExtruderRelative):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M83 - Switching Extruder to Relative Coordinates")

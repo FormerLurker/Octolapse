@@ -126,7 +126,7 @@ class Timelapse(object):
 				# Check to see if the current command is the next one on our queue.
 				currentSnapshotCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].upper().strip()
 				if(cmd == currentSnapshotCommand):
-					if(self.CommandIndex == self.SnapshotGcodes.SnapshotMoveIndex):
+					if(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
 						self.State = TimelapseState.SendingMoveCommand
 					elif(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
 						# we will be requesting the position in the next command, set the proper state.
@@ -183,11 +183,11 @@ class Timelapse(object):
 		if(self.State == TimelapseState.SendingMoveCommand):
 			# make sure this command is in our snapshot gcode list, else ignore
 			if(cmd in (command.upper().strip() for command in self.SnapshotGcodes.GcodeCommands)):
-				# Get the move command index and command
-				snapshotMoveIndex = self.SnapshotGcodes.SnapshotMoveIndex
-				moveCommand = self.SnapshotGcodes.GcodeCommands[snapshotMoveIndex]
-				if(cmd == moveCommand.upper().strip()):
-					self.CommandIndex = snapshotMoveIndex + 1
+				# Get the snapshot command index and command
+				snapshotIndex = self.SnapshotGcodes.SnapshotIndex
+				snapshotCommand = self.SnapshotGcodes.GcodeCommands[snapshotIndex]
+				if(cmd == snapshotCommand.upper().strip()):
+					self.CommandIndex = snapshotIndex + 1
 					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
 					self.SendPositionRequestGcode(False)
 					# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.

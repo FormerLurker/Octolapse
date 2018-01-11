@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\octoprint_octolapse"
+    "\\octoprint_octolapse",
+    "\\octoprint_octolapse\\test"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\timelapse.py",
+  "SelectedNode": "\\.editorconfig",
   "PreviewInSolutionExplorer": false
 }

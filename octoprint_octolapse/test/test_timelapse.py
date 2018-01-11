@@ -390,7 +390,6 @@ class Test_Timelapse(unittest.TestCase):
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		self.Timelapse_GcodeTrigger.CommandIndex = 0
@@ -417,7 +416,6 @@ class Test_Timelapse(unittest.TestCase):
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1	","	TestCommand2	","	m114     ","	TestCommand4	","	TestCommand4	"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		self.Timelapse_GcodeTrigger.CommandIndex = 0
@@ -433,7 +431,7 @@ class Test_Timelapse(unittest.TestCase):
 		returnVal = self.Timelapse_GcodeTrigger.GcodeQueuing(None, None, snapshotGcodes.GcodeCommands[self.Timelapse_GcodeTrigger.CommandIndex],None,None)
 		self.assertTrue(returnVal  == (None))
 		self.assertTrue(self.Timelapse_GcodeTrigger.CommandIndex  == 2)
-		self.assertTrue(self.Timelapse_GcodeTrigger.State  == TimelapseState.SendingMoveCommand)
+		self.assertTrue(self.Timelapse_GcodeTrigger.State  == TimelapseState.SendingSnapshotGcode)
 		# simulate move command sent and taking snapshot
 		self.Timelapse_GcodeTrigger.State  = TimelapseState.TakingSnapshot
 
@@ -441,7 +439,7 @@ class Test_Timelapse(unittest.TestCase):
 		returnVal = self.Timelapse_GcodeTrigger.GcodeQueuing(None, None, snapshotGcodes.GcodeCommands[self.Timelapse_GcodeTrigger.CommandIndex],None,None)
 		self.assertTrue(returnVal  == (None))
 		self.assertTrue(self.Timelapse_GcodeTrigger.CommandIndex  == 3)
-		self.assertTrue(self.Timelapse_GcodeTrigger.State  == TimelapseState.RequestingSnapshotPosition)
+		self.assertTrue(self.Timelapse_GcodeTrigger.State  == TimelapseState.SendingMoveCommand)
 
 		#simulate sending return gcode
 		self.Timelapse_GcodeTrigger.State = TimelapseState.SendingReturnGcode
@@ -603,7 +601,6 @@ class Test_Timelapse(unittest.TestCase):
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		self.Timelapse_GcodeTrigger.CommandIndex = 0
@@ -628,7 +625,6 @@ class Test_Timelapse(unittest.TestCase):
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		self.Timelapse_GcodeTrigger.CommandIndex = 0
@@ -668,7 +664,6 @@ class Test_Timelapse(unittest.TestCase):
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		# set the snapshot state to SendingMoveCommand
@@ -715,7 +710,6 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(None)
 		self.Timelapse_GcodeTrigger.Gcode = gcodeTest
@@ -748,7 +742,6 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(snapshotGcodes)
 		self.Timelapse_GcodeTrigger.Gcode = gcodeTest
@@ -786,7 +779,6 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(snapshotGcodes)
 		self.Timelapse_GcodeTrigger.Gcode = gcodeTest
@@ -1033,7 +1025,6 @@ class Test_Timelapse(unittest.TestCase):
 		"""Test the SendSnapshotReturnCommands function routine."""
 		snapshotGcodes =SnapshotGcode()
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
-		snapshotGcodes.SnapshotMoveIndex = 1
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
 		gcodeTest = GcodeTest(None)
