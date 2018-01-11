@@ -1159,7 +1159,47 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.OnMovieFailedCallback = ReturnTrue
 		self.assertTrue(self.Timelapse_GcodeTrigger.OnMovieFailed("Doesn't Matter") is None)
 
+	def test_ReturnGcodeCommandToOctoprint(self):
+		"""Test the ReturnGcodeCommandToOctoprint function, which strips off commands that move the extruder, or set temps when test mode is enabled."""
+		# Should return the original command unless we are in idle state.
+		# if we are not in idle state, strip off any extruder movements or temp adjustments/waits
+		# set test mode
+		self.Timelapse_GcodeTrigger.IsTestMode = True
+		# test in idle
+		# set the state to waiting for trigger
+		self.Timelapse_GcodeTrigger.State = TimelapseState.Idle
+		# Send a command, should return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is None)
+		
+		self.Timelapse_GcodeTrigger.State = TimelapseState.WaitingForTrigger
+		# Test a command while in WaitingForTrigger state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+		
+		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
+		# Test a command while in RequestingReturnPosition state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
 
+		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingSnapshotPosition
+		# Test a command while in RequestingSnapshotPosition state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+
+		self.Timelapse_GcodeTrigger.State = TimelapseState.SendingMoveCommand
+		# Test a command while in SendingMoveCommand state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+
+		self.Timelapse_GcodeTrigger.State = TimelapseState.SendingReturnGcode
+		# Test a command while in SendingReturnGcode state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+
+		self.Timelapse_GcodeTrigger.State = TimelapseState.SendingSnapshotGcode
+		# Test a command while in SendingSnapshotGcode state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+
+		self.Timelapse_GcodeTrigger.State = TimelapseState.TakingSnapshot
+		# Test a command while in TakingSnapshot state, should NOT return None
+		self.assertTrue(self.Timelapse_GcodeTrigger.ReturnGcodeCommandToOctoprint("g0 x100.0 y100.0 z100.0 f7200;no extrusion" ) is not None)
+
+		
 if __name__ == '__main__':
 	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Timelapse)
 	nittest.TextTestRunner(verbosity=3).run(suite)

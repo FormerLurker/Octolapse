@@ -101,7 +101,7 @@ class Timelapse(object):
 			return False
 		return True
 	def ReturnGcodeCommandToOctoprint(self, cmd):
-		if(self.IsTestMode and self.State == TimelapseState.WaitingForTrigger):
+		if(self.IsTestMode and self.State >= TimelapseState.WaitingForTrigger):
 			return self.Commands.AlterCommandForTestMode(cmd)
 		return None
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
@@ -124,7 +124,7 @@ class Timelapse(object):
 					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
 					return (None ,) # suppress the command
 				# Check to see if the current command is the next one on our queue.
-				currentSnapshotCommand =self.SnapshotGcodes.GcodeCommands[self.CommandIndex].upper().strip()
+				currentSnapshotCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].upper().strip()
 				if(cmd == currentSnapshotCommand):
 					if(self.CommandIndex == self.SnapshotGcodes.SnapshotMoveIndex):
 						self.State = TimelapseState.SendingMoveCommand
