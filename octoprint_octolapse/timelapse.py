@@ -14,7 +14,7 @@ from octoprint_octolapse.command import *
 from octoprint_octolapse.position import Position
 
 class Timelapse(object):
-	
+	__timelapseLock = threading.RLock()
 	def __init__(self,octolapseSettings, dataFolder, timelapseFolder, onMovieRendering = None,onMovieDone = None, onMovieFailed = None ):
 		# config variables - These don't change even after a reset
 		self.Settings = octolapseSettings
@@ -107,33 +107,34 @@ class Timelapse(object):
 		return None
 
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		# update the position tracker so that we know where all of the axis are.
-		# We will need this later when generating snapshot gcode so that we can return to the previous
-		# position
-		if (cmd is not None):
-			cmd = cmd.upper().strip()
+		with self.__timelapseLock:
+			# update the position tracker so that we know where all of the axis are.
+			# We will need this later when generating snapshot gcode so that we can return to the previous
+			# position
+			if (cmd is not None):
+				cmd = cmd.upper().strip()
 
-		self.Position.Update(cmd)
-		isSnapshotGcodeCommand = self.IsSnapshotCommand(cmd)
-		if(self.State == TimelapseState.WaitingForTrigger):
-			self.GcodeQueuing_WaitingForTrigger(cmd,isSnapshotGcodeCommand)
-		elif(self.State > TimelapseState.WaitingForTrigger):
-			# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
-			# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
-			if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
-				return (None,) # suppress the command
-			#	# we need to suppress any M114 commands that we haven't sent
-			if(self.State > TimelapseState.RequestingReturnPosition and self.State < TimelapseState.RequestingSnapshotPosition):
-				if(cmd not in (command.upper().strip() for command in self.SnapshotGcodes.SnapshotCommands())):
-					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
-					return (None ,) # suppress the command
-				self.GcodeQueuing_SnapshotGcodeQueuing(cmd)
+			self.Position.Update(cmd)
+			isSnapshotGcodeCommand = self.IsSnapshotCommand(cmd)
+			if(self.State == TimelapseState.WaitingForTrigger):
+				self.GcodeQueuing_WaitingForTrigger(cmd,isSnapshotGcodeCommand)
+			elif(self.State > TimelapseState.WaitingForTrigger):
+				# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
+				# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
+				if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
+					return (None,) # suppress the command
+				#	# we need to suppress any M114 commands that we haven't sent
+				if(self.State > TimelapseState.RequestingReturnPosition and self.State < TimelapseState.RequestingSnapshotPosition):
+					if(cmd not in (command.upper().strip() for command in self.SnapshotGcodes.SnapshotCommands())):
+						self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
+						return (None ,) # suppress the command
+					self.GcodeQueuing_SnapshotGcodeQueuing(cmd)
 				
-		if(isSnapshotGcodeCommand ):
-			# in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
-			return (None,)
+			if(isSnapshotGcodeCommand ):
+				# in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
+				return (None,)
 
-		return self.ReturnGcodeCommandToOctoprint(cmd)
+			return self.ReturnGcodeCommandToOctoprint(cmd)
 
 	def GcodeQueuing_WaitingForTrigger(self,cmd,isSnapshotGcodeCommand):
 		currentTrigger = self.IsTriggering(cmd)
@@ -151,84 +152,89 @@ class Timelapse(object):
 			return (None,)
 	
 	def GcodeQueuing_SnapshotGcodeQueuing(self,cmd):
-		
-		# Check to see if the current command is the next one on our queue.
-		currentSnapshotCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].upper().strip()
-		if(cmd == currentSnapshotCommand):
-			if(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
-				self.State = TimelapseState.SendingMoveCommand
-			elif(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
-				# we will be requesting the position in the next command, set the proper state.
-				self.State = TimelapseState.RequestingSnapshotPosition
-				# report having found the snapshot command index
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Snapshot command queued.")
+		with self.__timelapseLock:
+			# Check to see if the current command is the next one on our queue.
+			currentSnapshotCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].upper().strip()
+			if(cmd == currentSnapshotCommand):
+				if(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
+					self.State = TimelapseState.SendingMoveCommand
+				elif(self.CommandIndex == self.SnapshotGcodes.SnapshotIndex):
+					# we will be requesting the position in the next command, set the proper state.
+					self.State = TimelapseState.RequestingSnapshotPosition
+					# report having found the snapshot command index
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Snapshot command queued.")
 
-			# increment the current command index
-			if(self.CommandIndex < self.SnapshotGcodes.EndIndex()):
-				self.CommandIndex += 1
+				# increment the current command index
+				if(self.CommandIndex < self.SnapshotGcodes.EndIndex()):
+					self.CommandIndex += 1
 						
-		else:
-			self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The current command index {0} does not equal the snapshot index {1}, or the queuing command {2} does not equal the the snapshot command {3}. Ignoring.".format(self.CommandIndex,self.SnapshotGcodes.SnapshotIndex, cmd, currentSnapshotCommand))
+			else:
+				self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The current command index {0} does not equal the snapshot index {1}, or the queuing command {2} does not equal the the snapshot command {3}. Ignoring.".format(self.CommandIndex,self.SnapshotGcodes.SnapshotIndex, cmd, currentSnapshotCommand))
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if (cmd is not None):
-			cmd = cmd.upper().strip()
+		with self.__timelapseLock:
+			if (cmd is not None):
+				cmd = cmd.upper().strip()
 
-		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
+			self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		
-		# If we are waiting for the positon 
-		if(self.State == TimelapseState.SendingMoveCommand):
-			self.GcodeSent_MoveCommand(cmd)
-		# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
-		# If we're sending return gcodes, make sure we're finished before starting the print else we may have some gcodes mix in with these..
-		# I don't feel like this should be able to happen, but I have seen it happen and can reproduce it.
-		elif(self.State == TimelapseState.SendingReturnGcode):
-			self.GcodeSent_ReturnCommand(cmd)
+			# If we are waiting for the positon 
+			if(self.State == TimelapseState.SendingMoveCommand):
+				self.GcodeSent_MoveCommand(cmd)
+			# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
+			# If we're sending return gcodes, make sure we're finished before starting the print else we may have some gcodes mix in with these..
+			# I don't feel like this should be able to happen, but I have seen it happen and can reproduce it.
+			elif(self.State == TimelapseState.SendingReturnGcode):
+				self.GcodeSent_ReturnCommand(cmd)
 
-		return None
+			return None
 	
 	def GcodeSent_MoveCommand(self, cmd):
-		# Get the snapshot command index and command
-		if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
-			snapshotCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex])
+		with self.__timelapseLock:
+			# Get the snapshot command index and command
+			if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				snapshotCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex])
 
-		elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
-			snapshotCommand = self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex]
-		else:
-			return
-		snapshotCommand = snapshotCommand.strip().upper()
+			elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				snapshotCommand = self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex]
+			else:
+				return
+			snapshotCommand = snapshotCommand.strip().upper()
 				
-		if(cmd == snapshotCommand):
-			self.CommandIndex = self.SnapshotGcodes.SnapshotIndex + 1
-			self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
-			self.SendSnapshotPositionRequestGcode()
+			if(cmd == snapshotCommand):
+				self.CommandIndex = self.SnapshotGcodes.SnapshotIndex + 1
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
+				self.SendDelayedSnapshotPositionRequest(0.01, self.SendSnapshotPositionRequestGcode)
+			
 
 	def GcodeSent_ReturnCommand(self, cmd):
-		# get the current command, making sure to take account of test mode, since the snapshot gcodes may have been altered
-		currentReturnCommand = None
-		if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
-			currentReturnCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.CommandIndex]).strip().upper()
+		with self.__timelapseLock:
+			# get the current command, making sure to take account of test mode, since the snapshot gcodes may have been altered
+			currentReturnCommand = None
+			if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				currentReturnCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.CommandIndex]).strip().upper()
 
-		elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
-			currentReturnCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].strip().upper()
-		else:
-			return
-		currentReturnCommand = currentReturnCommand.strip().upper()
-		# see if the	
-		if(cmd == currentReturnCommand):
-			if(self.CommandIndex >= self.SnapshotGcodes.EndIndex()):
-				self.State = TimelapseState.ReturnGcodeSent
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final snapshot command, waiting for response from printer")
-				
+			elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				currentReturnCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].strip().upper()
 			else:
-				self.CommandIndex = self.CommandIndex + 1
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
-		else:
-			self.Settings.CurrentDebugProfile().LogWarning("The return command {0} did not match the command sent to the printer: {1}".format(currentReturnCommand, cmd ))
+				return
+			currentReturnCommand = currentReturnCommand.strip().upper()
+			# see if the	
+			if(cmd == currentReturnCommand):
+				if(self.CommandIndex >= self.SnapshotGcodes.EndIndex()):
+					self.State = TimelapseState.ReturnGcodeSent
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final snapshot command, waiting for response from printer")
+				
+				else:
+					self.CommandIndex = self.CommandIndex + 1
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
+			else:
+				self.Settings.CurrentDebugProfile().LogWarning("The return command {0} did not match the command sent to the printer: {1}".format(currentReturnCommand, cmd ))
 
 	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
-		if(self.State == TimelapseState.ReturnGcodeSent):
-			self.EndSnapshot()
+		with self.__timelapseLock:
+			if(self.State == TimelapseState.ReturnGcodeSent):
+				self.EndSnapshot()
 
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
@@ -261,31 +267,39 @@ class Timelapse(object):
 		return None
 
 	def SendSnapshotPositionRequestGcode(self):
-		self.State = TimelapseState.RequestingSnapshotPosition
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot position (M400, M114).")
-		self.OctoprintPrinter.commands(["M400","M114"]);
+		with self.__timelapseLock:
+			self.State = TimelapseState.RequestingSnapshotPosition
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Gcode sending for snapshot position (M400, M114).")
+			self.OctoprintPrinter.commands(["M400","M114"]);
 		
 
 	def PositionReceived(self, payload):
-		isReturn = None
-		if(self.State == TimelapseState.RequestingReturnPosition):
-			# if we are getting the return position, set our snapshot state flag and set isReturn = true
-			isReturn = True
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
-		elif(self.State == TimelapseState.RequestingSnapshotPosition):
-			# if we are getting the snapshot position, set our snapshot state flag and set isReturn = false
-			isReturn = False
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot position received by Octolapse.")
-		else:
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Position received by Octolapse while paused, but was declined.")
-			return False, "Declined - Incorrect State"
+		with self.__timelapseLock:
+			isReturn = None
+			if(self.State == TimelapseState.RequestingReturnPosition):
+				# if we are getting the return position, set our snapshot state flag and set isReturn = true
+				isReturn = True
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
+			elif(self.State == TimelapseState.RequestingSnapshotPosition):
+				# if we are getting the snapshot position, set our snapshot state flag and set isReturn = false
+				isReturn = False
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot position received by Octolapse.")
+			else:
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("Position received by Octolapse while paused, but was declined.")
+				return False, "Declined - Incorrect State"
 
-		x=payload["x"]
-		y=payload["y"]
-		z=payload["z"]
-		e=payload["e"]
+			x=payload["x"]
+			y=payload["y"]
+			z=payload["z"]
+			e=payload["e"]
 				
-		if(isReturn):
+			if(isReturn):
+				self.PositionReceived_Return(x,y,z,e)
+			else:
+				self.PositionReceived_Snapshot(x,y,z,e)
+
+	def PositionReceived_Return(self, x,y,z,e):
+		with self.__timelapseLock:
 			#todo:  Do we need to re-request the position like we do for the return?  Maybe...
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
 			# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
@@ -317,7 +331,9 @@ class Timelapse(object):
 			# send our commands to the printer
 			self.OctoprintPrinter.commands(self.SnapshotGcodes.SnapshotCommands());
 			return True, "Snapshot Commands Sent"
-		else:
+
+	def PositionReceived_Snapshot(self, x,y,z,e):
+		with self.__timelapseLock:
 			# snapshot position information received
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.SnapshotGcodes.X,self.SnapshotGcodes.Y, self.Position.Z))
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
@@ -336,47 +352,50 @@ class Timelapse(object):
 				return False, "Incorrect Snapshot Position, Retrying"
 
 	def ResendSnapshotPositionRequest(self):
-		# get the number of times to retry, and how long to delay before requesting the new position
-		maxRetryAttempts = self.Snapshot.position_request_retry_attemps
-		requestDelaySeconds = self.Snapshot.position_request_retry_delay_ms / 1000.0
-		self.PositionRequestAttempts += 1
-		# todo:  make the retry attempts a setting, as well as the request delay
+		with self.__timelapseLock:
+			# get the number of times to retry, and how long to delay before requesting the new position
+			maxRetryAttempts = self.Snapshot.position_request_retry_attemps
+			requestDelaySeconds = self.Snapshot.position_request_retry_delay_ms / 1000.0
+			self.PositionRequestAttempts += 1
+			# todo:  make the retry attempts a setting, as well as the request delay
 		
-		if(self.PositionRequestAttempts > maxRetryAttempts):
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot.".format(maxRetryAttempts))
-			# we're giving up and no longer requesting a snapshot position.
-			self.State = TimelapseState.SendingReturnGcode
-			self.SendSnapshotReturnCommands()
-			return False
-		self.SendDelayedSnapshotPositionRequest(requestDelaySeconds, self.SendSnapshotPositionRequestGcode)
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Re-requesting our present location with a delay of {0} seconds. Try number {1} of {2}".format(requestDelaySeconds,  self.PositionRequestAttempts, maxRetryAttempts))
+			if(self.PositionRequestAttempts > maxRetryAttempts):
+				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The maximum number of position discovery attempts ({0}) has been reached for this snapshot.  Aborting this snapshot.".format(maxRetryAttempts))
+				# we're giving up and no longer requesting a snapshot position.
+				self.State = TimelapseState.SendingReturnGcode
+				self.SendSnapshotReturnCommands()
+				return False
+			self.SendDelayedSnapshotPositionRequest(requestDelaySeconds, self.SendSnapshotPositionRequestGcode)
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Re-requesting our present location with a delay of {0} seconds. Try number {1} of {2}".format(requestDelaySeconds,  self.PositionRequestAttempts, maxRetryAttempts))
 
-		return True
+			return True
 
 	def SendDelayedSnapshotPositionRequest(self, requestDelaySeconds, positionRequestGcode):
-		t = threading.Timer( requestDelaySeconds,positionRequestGcode , [False])
+		t = threading.Timer( requestDelaySeconds,positionRequestGcode )
 		t.start()
 
 	def EndSnapshot(self):
-		# Cleans up the variables and resumes the print once the snapshot is finished, and the extruder is in the proper position 
-		# reset the snapshot variables
-		self.ResetSnapshot();
-		# if the print is paused, resume!
-		if(self.OctoprintPrinter.is_paused()):
-			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
-			self.OctoprintPrinter.resume_print()
+		with self.__timelapseLock:
+			# Cleans up the variables and resumes the print once the snapshot is finished, and the extruder is in the proper position 
+			# reset the snapshot variables
+			self.ResetSnapshot();
+			# if the print is paused, resume!
+			if(self.OctoprintPrinter.is_paused()):
+				self.Settings.CurrentDebugProfile().LogSnapshotDownload("Resuming Print.")
+				self.OctoprintPrinter.resume_print()
 		
 	def TakeSnapshot(self):
-		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
-		try:
+		with self.__timelapseLock:
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
+			try:
 			
-			self.CaptureSnapshot.Snap(utility.CurrentlyPrintingFileName(self.OctoprintPrinter),self.SnapshotCount,onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess, onFail = self.OnSnapshotFail)
-		except:
-			a = sys.exc_info() # Info about unknown error that caused exception.                                              
-			errorMessage = "    {0}".format(a)
-			b = [ str(p) for p in a ]
-			errorMessage += "\n    {0}".format(b)
-			self.Settings.CurrentDebugProfile().LogError('Unknown error detected:{0}'.format(errorMessage))
+				self.CaptureSnapshot.Snap(utility.CurrentlyPrintingFileName(self.OctoprintPrinter),self.SnapshotCount,onComplete = self.OnSnapshotComplete, onSuccess = self.OnSnapshotSuccess, onFail = self.OnSnapshotFail)
+			except:
+				a = sys.exc_info() # Info about unknown error that caused exception.                                              
+				errorMessage = "    {0}".format(a)
+				b = [ str(p) for p in a ]
+				errorMessage += "\n    {0}".format(b)
+				self.Settings.CurrentDebugProfile().LogError('Unknown error detected:{0}'.format(errorMessage))
 		
 	def OnSnapshotSuccess(self, *args, **kwargs):
 		# Increment the number of snapshots received
@@ -416,15 +435,17 @@ class Timelapse(object):
 		self.SendSnapshotReturnCommands()
 		
 	def SendSnapshotReturnCommands(self):
-		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Sending Snapshot Return Commands.")
-		self.State = TimelapseState.SendingReturnGcode
-		self.OctoprintPrinter.commands(self.SnapshotGcodes.ReturnCommands());
+		with self.__timelapseLock:
+			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Sending Snapshot Return Commands.")
+			self.State = TimelapseState.SendingReturnGcode
+			self.OctoprintPrinter.commands(self.SnapshotGcodes.ReturnCommands());
 
 	# RENDERING Functions and Events
 	def EndTimelapse(self):
-		if(self.State != TimelapseState.Idle):
-			self.RenderTimelapse()
-			self.Reset();
+		with self.__timelapseLock:
+			if(self.State != TimelapseState.Idle):
+				self.RenderTimelapse()
+				self.Reset();
 
 	def RenderTimelapse(self):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason

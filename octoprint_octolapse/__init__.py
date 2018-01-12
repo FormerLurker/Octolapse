@@ -30,7 +30,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.EventHandlerPlugin,
 						octoprint.plugin.BlueprintPlugin):
 	TIMEOUT_DELAY = 1000
-	OctolapseRlock = threading.RLock()
+
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
@@ -272,14 +272,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		with self.OctolapseRlock:
-			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+			return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		with self.OctolapseRlock:
-			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-				self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
+		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+			self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
 
 	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
 		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
