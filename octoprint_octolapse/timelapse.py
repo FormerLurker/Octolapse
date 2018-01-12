@@ -100,10 +100,12 @@ class Timelapse(object):
 		):
 			return False
 		return True
+
 	def ReturnGcodeCommandToOctoprint(self, cmd):
 		if(self.IsTestMode and self.State >= TimelapseState.WaitingForTrigger):
 			return self.Commands.AlterCommandForTestMode(cmd)
 		return None
+
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
@@ -119,7 +121,8 @@ class Timelapse(object):
 				return (None,) # suppress the command
 			#	# we need to suppress any M114 commands that we haven't sent
 			if(self.State > TimelapseState.RequestingReturnPosition
-				and self.State != TimelapseState.RequestingSnapshotPosition):
+				and self.State != TimelapseState.RequestingSnapshotPosition
+				and not self.State == TimelapseState.SendingReturnGcode):
 				if(cmd not in (command.upper().strip() for command in self.SnapshotGcodes.GcodeCommands)):
 					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The received command {0} is not in our snapshot commands, suppressing.".format(cmd));
 					return (None ,) # suppress the command
@@ -138,9 +141,6 @@ class Timelapse(object):
 
 					if(self.CommandIndex < self.SnapshotGcodes.EndIndex()):
 						self.CommandIndex += 1
-					elif(self.CommandIndex == self.SnapshotGcodes.EndIndex() and self.State == TimelapseState.SendingReturnGcode):
-						self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("End Snapshot Return Gcode Command Found, ending the snapshot.")
-						self.EndSnapshot()
 						
 				else:
 					self.Settings.CurrentDebugProfile().LogWarning("Snapshot Queue Monitor - The current command index {0} does not equal the snapshot index {1}, or the queuing command {2} does not equal the the snapshot command {3}. Ignoring.".format(self.CommandIndex,self.SnapshotGcodes.SnapshotIndex, cmd, currentSnapshotCommand))
@@ -181,16 +181,44 @@ class Timelapse(object):
 		
 		# If we are waiting for the positon 
 		if(self.State == TimelapseState.SendingMoveCommand):
-			# make sure this command is in our snapshot gcode list, else ignore
-			if(cmd in (command.upper().strip() for command in self.SnapshotGcodes.GcodeCommands)):
-				# Get the snapshot command index and command
-				snapshotIndex = self.SnapshotGcodes.SnapshotIndex
-				snapshotCommand = self.SnapshotGcodes.GcodeCommands[snapshotIndex]
-				if(cmd == snapshotCommand.upper().strip()):
-					self.CommandIndex = snapshotIndex + 1
-					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
-					self.SendPositionRequestGcode(False)
+			# Get the snapshot command index and command
+			
+			if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				snapshotCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex])
+
+			elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				snapshotCommand = self.SnapshotGcodes.GcodeCommands[self.SnapshotGcodes.SnapshotIndex]
+			else:
+				return
+			snapshotCommand = snapshotCommand.strip().upper()
+				
+			if(cmd == snapshotCommand):
+				self.CommandIndex = self.SnapshotGcodes.SnapshotIndex + 1
+				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Move command sent.  Requesting snapshot position")
+				self.SendPositionRequestGcode(False)
 					# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
+		# If we're sending return gcodes, make sure we're finished before starting the print else we may have some gcodes mix in with these..
+		# I don't feel like this should be able to happen, but I have seen it happen and can reproduce it.
+		elif(self.State == TimelapseState.SendingReturnGcode):
+			# get the current command, making sure to take account of test mode, since the snapshot gcodes may have been altered
+			currentReturnCommand = None
+			if(self.IsTestMode and (cmd in Commands.GetTestModeCommandString(command).upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				currentReturnCommand = self.Commands.GetTestModeCommandString(self.SnapshotGcodes.GcodeCommands[self.CommandIndex]).strip().upper()
+
+			elif(not self.IsTestMode and (cmd in command.upper().strip() for command in self.SnapshotGcodes.ReturnCommands())):
+				currentReturnCommand = self.SnapshotGcodes.GcodeCommands[self.CommandIndex].strip().upper()
+			else:
+				return
+			currentReturnCommand = currentReturnCommand.strip().upper()
+			# see if the	
+			if(cmd == currentReturnCommand):
+				if(self.CommandIndex >= self.SnapshotGcodes.EndIndex()):
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final snapshot command.")
+					self.EndSnapshot()
+				else:
+					self.CommandIndex = self.CommandIndex + 1
+					self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
+					
 		return None
 
 	def IsSnapshotCommand(self, command):
@@ -278,7 +306,7 @@ class Timelapse(object):
 			# make sure we acutally received gcode
 			if(self.SnapshotGcodes is None):
 				self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
-				self.ResetSnapshot();
+				self.EndSnapshot();
 				return False, "Error - No Snapshot Gcode";
 
 			self.State = TimelapseState.SendingSnapshotGcode
@@ -491,12 +519,12 @@ class Timelapse(object):
 class TimelapseState(object):
 	Idle = 1
 	WaitingForTrigger = 2
-	RequestingReturnPosition = 4
-	SendingSnapshotGcode = 5
-	SendingMoveCommand = 6
-	RequestingSnapshotPosition = 7
-	TakingSnapshot = 8
-	SendingReturnGcode = 9
+	RequestingReturnPosition = 3
+	SendingSnapshotGcode = 4
+	SendingMoveCommand = 5
+	RequestingSnapshotPosition = 6
+	TakingSnapshot = 7
+	SendingReturnGcode = 8
 	
 	
 

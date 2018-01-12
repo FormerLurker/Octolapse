@@ -357,6 +357,17 @@ class Commands(object):
 		else:
 			return None
 
+	def GetTestModeCommandString(self, cmd):
+		gcodeCommand = self.GetCommand(cmd)
+		if(gcodeCommand is None):
+			return cmd
+		elif(gcodeCommand.Command in [self.G0.Command, self.G1.Command]):
+			gcodeCommand.Parameters["E"].Value = None
+			return gcodeCommand.ToString(reform=True)
+		elif(gcodeCommand.Command in [self.M104.Command,self.M140.Command,self.M141.Command,self.M109.Command,self.M190.Command,self.M191.Command,self.M116.Command]):
+			return ""
+		else:
+			return cmd
 
 	def GetCommand(self, code):
 		gcodeCommand = GetGcodeFromString(code)
