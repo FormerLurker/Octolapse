@@ -388,16 +388,17 @@ class Position(object):
 		else:
 			return self.E-self.EPrevious
 
-	def IsAtPreviousPosition(self, x,y,z, applyOffset = True):
+	def IsAtPreviousPosition(self, x,y,z=None, applyOffset = True):
 		printerTolerance = self.Printer.printer_position_confirmation_tolerance
 		if(applyOffset):
 			x = x + self.XOffset
 			y = y + self.YOffset
-			z = z + self.ZOffset
+			if(z is not None):
+				z = z + self.ZOffset
 
 		if( (self.XPrevious is None or utility.isclose(self.XPrevious, x,abs_tol=printerTolerance))
 			and (self.YPrevious is None or utility.isclose(self.YPrevious, y,abs_tol=printerTolerance))
-			and (self.ZPrevious is None or utility.isclose(self.ZPrevious, z,abs_tol=printerTolerance))
+			and (z is None or self.ZPrevious is None or utility.isclose(self.ZPrevious, z,abs_tol=printerTolerance))
 			):
 			return True
 		return False
@@ -408,7 +409,7 @@ class Position(object):
 			y = y + self.YOffset
 			if(z is not None):
 				z = z + self.ZOffset
-
+				 
 		if( (self.X is None or utility.isclose(self.X, x,abs_tol=printerTolerance))
 			and (self.Y is None or utility.isclose(self.Y, y,abs_tol=printerTolerance))
 			and (self.Z is None or z is None or utility.isclose(self.Z, z,abs_tol=printerTolerance))

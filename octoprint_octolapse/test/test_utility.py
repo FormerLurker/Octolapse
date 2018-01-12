@@ -188,7 +188,11 @@ class Test_Utility(unittest.TestCase):
 		# move in bounds - Middle
 		self.assertTrue(utility.IsInBounds(-100, -100,-75.0000, customBox))
 
+	def test_isclose(self):
+		self.assertTrue(utility.isclose(113.33847,113.34,0.005))
+		self.assertTrue(utility.isclose(119.9145519,119.91,0.005))
+		 
 if __name__ == '__main__':
 	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Utility)
-	nittest.TextTestRunner(verbosity=3).run(suite)
+	unittest.TextTestRunner(verbosity=3).run(suite)
 

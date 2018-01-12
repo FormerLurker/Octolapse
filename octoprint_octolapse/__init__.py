@@ -183,29 +183,29 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	# Event Mixin Handler
 	def on_event(self, event, payload):
-		# If we're not enabled, get outta here!
-		if(self.Settings is None or not self.Settings.is_octolapse_enabled):
-			if(self.Timelapse is not None):
-				# Make sure we end octolapse if the settings change during the print.
-				self.Timelapse.EndTimelapse()
-			return
-		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
-		if (event == Events.PRINT_PAUSED):
-			self.OnPrintPause() # regular pause
-		elif (event == Events.PRINT_RESUMED):
-			self.OnPrintResumed()
-		elif (event == Events.PRINT_STARTED):
-			self.OnPrintStart()
-		elif (event == Events.PRINT_FAILED):
-			self.OnPrintFailed()
-		elif (event == Events.PRINT_CANCELLED):
-			self.OnPrintCancelled()
-		elif (event == Events.PRINT_DONE):
-			self.OnPrintCompleted()
-		elif (event == Events.SETTINGS_UPDATED):
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
-		elif(event == Events.POSITION_UPDATE):
-			with self.RLock:
+		with self.RLock:
+			# If we're not enabled, get outta here!
+			if(self.Settings is None or not self.Settings.is_octolapse_enabled):
+				if(self.Timelapse is not None):
+					# Make sure we end octolapse if the settings change during the print.
+					self.Timelapse.EndTimelapse()
+				return
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
+			if (event == Events.PRINT_PAUSED):
+				self.OnPrintPause() # regular pause
+			elif (event == Events.PRINT_RESUMED):
+				self.OnPrintResumed()
+			elif (event == Events.PRINT_STARTED):
+				self.OnPrintStart()
+			elif (event == Events.PRINT_FAILED):
+				self.OnPrintFailed()
+			elif (event == Events.PRINT_CANCELLED):
+				self.OnPrintCancelled()
+			elif (event == Events.PRINT_DONE):
+				self.OnPrintCompleted()
+			elif (event == Events.SETTINGS_UPDATED):
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
+			elif(event == Events.POSITION_UPDATE):
 				self.Timelapse.PositionReceived(payload)
 				
 	def OnPrintResumed(self):

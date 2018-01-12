@@ -794,7 +794,17 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.IsZHop)
 
 	# todo:  IsAtCurrent/PreviousPosition tests
-	
+	def test_IsAtCurrentPosition(self):
+		#Received: x:119.91,y:113.34,z:2.1,e:0.0, Expected: x:119.9145519,y:113.33847,z:2.1
+		#G1 X119.915 Y113.338 F7200
+		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
+		position.Printer.printer_position_confirmation_tolerance = .0051
+		position.Update("g28")
+		position.Update("G1 X119.915 Y113.338 Z2.1 F7200")
+		self.assertTrue(position.IsAtCurrentPosition(119.91,113.34,2.1))
+		position.Update("g0 x120 y121 z2.1")
+		self.assertTrue(position.IsAtPreviousPosition(119.91,113.34,2.1))
+
 if __name__ == '__main__':
 	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Position)
 	unittest.TextTestRunner(verbosity=3).run(suite)

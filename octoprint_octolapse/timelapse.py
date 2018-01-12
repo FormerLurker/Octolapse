@@ -290,7 +290,7 @@ class Timelapse(object):
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
 			# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
 			# Because of this we need to compare the position we received to the previous position, not the current one.
-			if( not self.Position.IsAtPreviousPosition(x,y,z) ):
+			if( not self.Position.IsAtPreviousPosition(x,y,None) ):
 				self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.XPrevious,self.Position.YPrevious,self.Position.ZPrevious))
 				self.Position.UpdatePosition(x=x,y=y,z=z,force=True)
 				 
@@ -323,8 +323,9 @@ class Timelapse(object):
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
 			# see if the CURRENT position is the same as the position we received from the printer
 			# AND that it is equal to the snapshot position
-			if(self.Position.IsAtCurrentPosition(x,y,None)
-				and self.Position.IsAtCurrentPosition(self.SnapshotGcodes.X,self.SnapshotGcodes.Y,applyOffset = False)): # our snapshot gcode will NOT be offset
+			if(self.Position.IsAtCurrentPosition(x,y,None)):
+				if(not self.Position.IsAtCurrentPosition(self.SnapshotGcodes.X,self.SnapshotGcodes.Y,None, applyOffset = False)): # our snapshot gcode will NOT be offset
+					self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position matched the expected position (x:{0} y:{1}), but the SnapshotGcode object coordinates don't match the expected position.".format(x,y))
 				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
 				self.State = TimelapseState.TakingSnapshot
 				self.TakeSnapshot()
