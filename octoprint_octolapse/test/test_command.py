@@ -11,7 +11,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G0 Command, parameters and comment"""
 
 		# gcode to test
-		gcode = "g0 x100 y200.0 z3.0001 e1.1 f7200; Here is a comment" # test a lowercase g0 command with all parameters and a comment
+		gcode = "g0 x100 y200.0 z3.0001 e1.1 f7200.000; Here is a comment" # test a lowercase g0 command with all parameters and a comment
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)

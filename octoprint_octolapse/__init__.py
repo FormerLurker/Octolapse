@@ -14,6 +14,7 @@ import requests
 import itertools
 import shutil
 import copy
+import threading
 # Octoprint Imports
 from octoprint.events import eventManager, Events # used to send messages to the web client for notifying it of new timelapses
 
@@ -32,7 +33,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
-		
+		self.RLock = threading.RLock()
 		
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
@@ -270,13 +271,24 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-			return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+		with self.RLock:
+			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+
+		return None
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-			self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
+		with self.RLock:
+			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+				self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
 
+	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
+		with self.RLock:
+			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+				self.Timelapse.GcodeReceived(comm_instance, line, *args, **kwargs)
+		return line
+
+	
 	def OnMovieRendering(self, *args, **kwargs):
 		"""Called when a timelapse has started being rendered.  Calls any callbacks onMovieRendering callback set in the constructor."""
 		payload = args[0]
@@ -347,5 +359,6 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
 		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent
+		,"octoprint.comm.protocol.gcode.received": __plugin_implementation__.GcodeReceived
 	}
 
