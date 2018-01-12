@@ -179,7 +179,6 @@ class Timelapse(object):
 		# If we are waiting for the positon 
 		if(self.State == TimelapseState.SendingMoveCommand):
 			self.GcodeSent_MoveCommand(cmd)
-
 		# make sure that we set the RequestingSnapshotPosition flag so that the position request we detected will be captured the PositionUpdated event.
 		# If we're sending return gcodes, make sure we're finished before starting the print else we may have some gcodes mix in with these..
 		# I don't feel like this should be able to happen, but I have seen it happen and can reproduce it.
@@ -230,6 +229,7 @@ class Timelapse(object):
 	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
 		if(self.State == TimelapseState.ReturnGcodeSent):
 			self.EndSnapshot()
+
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
 		snapshotCommandName = GetGcodeFromString(self.Printer.snapshot_command)

@@ -30,10 +30,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.EventHandlerPlugin,
 						octoprint.plugin.BlueprintPlugin):
 	TIMEOUT_DELAY = 1000
+	OctolapseRlock = threading.RLock()
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
-		self.RLock = threading.RLock()
+		
 		
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
@@ -183,30 +184,29 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	# Event Mixin Handler
 	def on_event(self, event, payload):
-		with self.RLock:
-			# If we're not enabled, get outta here!
-			if(self.Settings is None or not self.Settings.is_octolapse_enabled):
-				if(self.Timelapse is not None):
-					# Make sure we end octolapse if the settings change during the print.
-					self.Timelapse.EndTimelapse()
-				return
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
-			if (event == Events.PRINT_PAUSED):
-				self.OnPrintPause() # regular pause
-			elif (event == Events.PRINT_RESUMED):
-				self.OnPrintResumed()
-			elif (event == Events.PRINT_STARTED):
-				self.OnPrintStart()
-			elif (event == Events.PRINT_FAILED):
-				self.OnPrintFailed()
-			elif (event == Events.PRINT_CANCELLED):
-				self.OnPrintCancelled()
-			elif (event == Events.PRINT_DONE):
-				self.OnPrintCompleted()
-			elif (event == Events.SETTINGS_UPDATED):
-				self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
-			elif(event == Events.POSITION_UPDATE):
-				self.Timelapse.PositionReceived(payload)
+		# If we're not enabled, get outta here!
+		if(self.Settings is None or not self.Settings.is_octolapse_enabled):
+			if(self.Timelapse is not None):
+				# Make sure we end octolapse if the settings change during the print.
+				self.Timelapse.EndTimelapse()
+			return
+		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
+		if (event == Events.PRINT_PAUSED):
+			self.OnPrintPause() # regular pause
+		elif (event == Events.PRINT_RESUMED):
+			self.OnPrintResumed()
+		elif (event == Events.PRINT_STARTED):
+			self.OnPrintStart()
+		elif (event == Events.PRINT_FAILED):
+			self.OnPrintFailed()
+		elif (event == Events.PRINT_CANCELLED):
+			self.OnPrintCancelled()
+		elif (event == Events.PRINT_DONE):
+			self.OnPrintCompleted()
+		elif (event == Events.SETTINGS_UPDATED):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
+		elif(event == Events.POSITION_UPDATE):
+			self.Timelapse.PositionReceived(payload)
 				
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
@@ -272,19 +272,18 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		with self.RLock:
+		with self.OctolapseRlock:
 			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		with self.RLock:
+		with self.OctolapseRlock:
 			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 				self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
 
 	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
-		with self.RLock:
-			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-				self.Timelapse.GcodeReceived(comm_instance, line, *args, **kwargs)
+		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+			self.Timelapse.GcodeReceived(comm_instance, line, *args, **kwargs)
 		return line
 
 	
