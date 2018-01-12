@@ -205,7 +205,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		elif (event == Events.SETTINGS_UPDATED):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
 		elif(event == Events.POSITION_UPDATE):
-			self.Timelapse.PositionReceived(payload)
+			with self.RLock:
+				self.Timelapse.PositionReceived(payload)
 				
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
@@ -274,8 +275,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		with self.RLock:
 			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
-
-		return None
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		with self.RLock:
