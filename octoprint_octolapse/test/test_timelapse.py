@@ -388,7 +388,7 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
@@ -414,7 +414,7 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1	","	TestCommand2	","	m114     ","	TestCommand4	","	TestCommand4	"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
@@ -577,14 +577,14 @@ class Test_Timelapse(unittest.TestCase):
 		self.assertTrue(returnVal is None)
 		self.assertTrue(self.Timelapse_GcodeTrigger.CommandIndex == 10)
 
-		# Test RequestingSnapshotPosition State
-		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingSnapshotPosition		
+		# Test ResumingPrint State
+		self.Timelapse_GcodeTrigger.State = TimelapseState.ResumingPrint		
 		returnVal = self.Timelapse_GcodeTrigger.GcodeSent(None, None, snapshotCommand,None,None)
 		self.assertTrue(returnVal is None)
 		self.assertTrue(self.Timelapse_GcodeTrigger.CommandIndex == 10)
 
-		# Test SendingReturnGcode State
-		self.Timelapse_GcodeTrigger.State = TimelapseState.SendingReturnGcode		
+		# Test Completing State
+		self.Timelapse_GcodeTrigger.State = TimelapseState.Completing		
 		returnVal = self.Timelapse_GcodeTrigger.GcodeSent(None, None, snapshotCommand,None,None)
 		self.assertTrue(returnVal is None)
 		self.assertTrue(self.Timelapse_GcodeTrigger.CommandIndex == 10)
@@ -599,7 +599,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
@@ -623,7 +623,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
@@ -662,7 +662,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		# Test suppressing gcodes that aren't in the Snapshot Gcode commands
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
@@ -708,7 +708,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(None)
@@ -740,7 +740,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(snapshotGcodes)
@@ -777,7 +777,7 @@ class Test_Timelapse(unittest.TestCase):
 		# start the timelapse
 		self.Timelapse_GcodeTrigger.StartTimelapse(self.OctoprintTestPrinter,self.OctoprintPrinterProfile, self.FfMpegPath, False)
 		self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingReturnPosition
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		gcodeTest = GcodeTest(snapshotGcodes)
@@ -833,7 +833,7 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.Position.X = 0 
 		self.Timelapse_GcodeTrigger.Position.Y = 0 
 		self.Timelapse_GcodeTrigger.Position.Z = 0
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.X = 0
 		snapshotGcodes.Y = 0
 		snapshotGcodes.Z = 0
@@ -868,7 +868,7 @@ class Test_Timelapse(unittest.TestCase):
 			"e": 0,
 			"reason": reason
 		}
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.X = 0
 		snapshotGcodes.Y = 0
 		snapshotGcodes.Z = 0
@@ -936,7 +936,7 @@ class Test_Timelapse(unittest.TestCase):
 		self.Timelapse_GcodeTrigger.Position.Y = 1 
 		self.Timelapse_GcodeTrigger.Position.Z = 1
 
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.ReturnX = 0
 		snapshotGcodes.ReturnY = 0
 		snapshotGcodes.ReturnZ = 0
@@ -1023,7 +1023,7 @@ class Test_Timelapse(unittest.TestCase):
 		
 	def test_SendSnapshotReturnCommands(self):
 		"""Test the SendSnapshotReturnCommands function routine."""
-		snapshotGcodes =SnapshotGcode()
+		snapshotGcodes =SnapshotGcode(False)
 		snapshotGcodes.GcodeCommands.extend(["TestCommand1","TestCommand2","m105","TestCommand4","TestCommand4"])
 		snapshotGcodes.SnapshotIndex = 2
 		self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes

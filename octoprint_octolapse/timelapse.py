@@ -162,6 +162,7 @@ class Timelapse(object):
 			self.State = TimelapseState.RequestingReturnPosition
 			self.OctoprintPrinter.pause_print()
 			return (None,)
+
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		if(self.State == TimelapseState.Completing):

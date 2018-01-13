@@ -251,11 +251,11 @@ class Snapshot(object):
 	# globals
 	# Extruder Trigger Options
 	ExtruderTriggerIgnoreValue = ""
-	ExtruderTriggerRequiredValue = "required"
+	ExtruderTriggerRequiredValue = "trigger_on"
 	ExtruderTriggerForbiddenValue = "forbidden"
 	ExtruderTriggerOptions = [
 		dict(value='',name='Ignore',visible=True)
-		,dict(value='required',name='Required',visible=True)
+		,dict(value='trigger_on',name='Trigger',visible=True)
 		,dict(value='forbidden',name='Forbidden',visible=True)]
 	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
 		self.guid = guid if guid else str(uuid.uuid4())

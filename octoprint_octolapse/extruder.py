@@ -127,19 +127,27 @@ class Extruder(object):
 				, self.IsDetracted))
 
 
-	
+	def ExtruderStateTriggered(self, option, state):
+		if(option is None):
+			return None
+		if(option and state):
+			return True
+		if(not option and state):
+			return False
+		return None
+
 	def IsTriggered(self, options):
 		"""Matches the supplied extruder trigger options to the current extruder state.  Returns true if triggering, false if not."""
-		extrudingStartTriggered		= not((options.OnExtrudingStart ^ self.IsExtrudingStart)) if options.OnExtrudingStart is not None else None
-		extrudingTriggered			= not((options.OnExtruding ^ self.IsExtruding)) if options.OnExtruding is not None else None
-		primedTriggered				= not((options.OnPrimed ^ self.IsPrimed)) if options.OnPrimed is not None else None
-		retractingStartTriggered	= not((options.OnRetractingStart ^ self.IsRetractingStart)) if options.OnRetractingStart is not None else None
-		retractingTriggered			= not((options.OnRetracting ^ self.IsRetracting)) if options.OnRetracting is not None else None
-		partiallyRetractedTriggered	= not((options.OnPartiallyRetracted ^ self.IsPartiallyRetracted)) if options.OnPartiallyRetracted is not None else None
-		retractedTriggered			= not((options.OnRetracted ^ self.IsRetracted)) if options.OnRetracted is not None else None
-		detractingStartTriggered	= not((options.OnDetractingStart ^ self.IsDetractingStart)) if options.OnDetractingStart is not None else None
-		detractingTriggered			= not((options.OnDetracting ^ self.IsDetracting)) if options.OnDetracting is not None else None
-		detractedTriggered			= not((options.OnDetracted ^ self.IsDetracted)) if options.OnDetracted is not None else None
+		extrudingStartTriggered		= self.ExtruderStateTriggered(options.OnExtrudingStart ,self.IsExtrudingStart)
+		extrudingTriggered			= self.ExtruderStateTriggered(options.OnExtruding, self.IsExtruding)
+		primedTriggered				= self.ExtruderStateTriggered(options.OnPrimed, self.IsPrimed)
+		retractingStartTriggered	= self.ExtruderStateTriggered(options.OnRetractingStart, self.IsRetractingStart)
+		retractingTriggered			= self.ExtruderStateTriggered(options.OnRetracting, self.IsRetracting)
+		partiallyRetractedTriggered	= self.ExtruderStateTriggered(options.OnPartiallyRetracted, self.IsPartiallyRetracted)
+		retractedTriggered			= self.ExtruderStateTriggered(options.OnRetracted, self.IsRetracted)
+		detractingStartTriggered	= self.ExtruderStateTriggered(options.OnDetractingStart, self.IsDetractingStart)
+		detractingTriggered			= self.ExtruderStateTriggered(options.OnDetracting, self.IsDetracting)
+		detractedTriggered			= self.ExtruderStateTriggered(options.OnDetracted, self.IsDetracted)
 
 		isTriggered = False
 		isTriggeringPrevented = (
@@ -155,7 +163,8 @@ class Extruder(object):
 			or (detractedTriggered is not None and not detractedTriggered))
 
 		if(not isTriggeringPrevented
-			and (
+			and
+			(
 				(extrudingStartTriggered is not None and extrudingStartTriggered)
 				or (extrudingTriggered is not None and extrudingTriggered)
 				or(primedTriggered is not None and primedTriggered)
@@ -166,19 +175,7 @@ class Extruder(object):
 				or(detractingStartTriggered is not None and detractingStartTriggered)
 				or(detractingTriggered is not None and detractingTriggered)
 				or(detractedTriggered is not None and detractedTriggered)
-				or(
-					extrudingStartTriggered is None
-					or extrudingTriggered is None
-					or primedTriggered is None
-					or retractingStartTriggered is None
-					or retractingTriggered is None
-					or partiallyRetractedTriggered is None
-					or retractedTriggered is None
-					or detractingStartTriggered is None
-					or detractingTriggered is None
-					or detractedTriggered is None
-				)
-			)):
+				or(options.AreAllTriggersIgnored()))):
 			isTriggered = True
 
 		if(isTriggered):
@@ -214,3 +211,18 @@ class ExtruderTriggers(object):
 		self.OnDetractingStart = OnDetractingStart
 		self.OnDetracting = OnDetracting
 		self.OnDetracted = OnDetracted
+
+	def AreAllTriggersIgnored(self):
+		if(self.OnExtrudingStart is None
+		and self.OnExtruding is None
+		and self.OnPrimed is None
+		and self.OnRetractingStart is None
+		and self.OnRetracting is None
+		and self.OnPartiallyRetracted is None
+		and self.OnRetracted is None
+		and self.OnDetractingStart is None
+		and self.OnDetracting is None
+		and self.OnDetracted  is None):
+			return True
+		return False
+
