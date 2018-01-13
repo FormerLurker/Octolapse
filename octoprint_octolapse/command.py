@@ -306,13 +306,11 @@ class Commands(object):
 		,displayTemplate="M109 - Extruder Bed Temperature and Wait{Comment}"
 		,parameters = [CommandParameter("S","(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$",order=1),
 						CommandParameter("R","(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$",order=2)])
-
 	M190 = Command(name="Set Bed Temperature and Wait"
 		,command="M190"
 		,displayTemplate="M190 - Set Bed Temperature and Wait{Comment}"
 		,parameters = [CommandParameter("S","(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$",order=1),
 						CommandParameter("R","(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$",order=2)])
-
 	M191 = Command(name="Set Chamber Temperature and Wait"
 		,command="M191"
 		,displayTemplate="M191 - Set Bed Temperature and Wait{Comment}"
@@ -344,8 +342,9 @@ class Commands(object):
 
     }
 
-	
 	def AlterCommandForTestMode(self, cmd):
+		if(cmd is None):
+			return None
 		gcodeCommand = self.GetCommand(cmd)
 		if(gcodeCommand is None):
 			return None

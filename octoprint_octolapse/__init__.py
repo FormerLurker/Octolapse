@@ -279,12 +279,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 			self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
 
-	def GcodeReceived(self,comm_instance, line, *args, **kwargs):
-		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-			self.Timelapse.GcodeReceived(comm_instance, line, *args, **kwargs)
-		return line
-
-	
 	def OnMovieRendering(self, *args, **kwargs):
 		"""Called when a timelapse has started being rendered.  Calls any callbacks onMovieRendering callback set in the constructor."""
 		payload = args[0]
@@ -355,6 +349,5 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.GcodeQueuing,
 		"octoprint.comm.protocol.gcode.sent": __plugin_implementation__.GcodeSent
-		,"octoprint.comm.protocol.gcode.received": __plugin_implementation__.GcodeReceived
 	}
 
