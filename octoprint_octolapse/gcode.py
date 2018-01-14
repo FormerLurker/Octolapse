@@ -162,6 +162,7 @@ class SnapshotGcodeGenerator(object):
 		currentIsRelative = previousIsRelative
 		previousExtruderRelative = isExtruderRelative
 		currentExtruderRelative = previousExtruderRelative
+
 		# retract if necessary
 		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
 			if(not currentExtruderRelative):
@@ -190,8 +191,12 @@ class SnapshotGcodeGenerator(object):
 			newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
 			currentIsRelative = False
 
-		## speed change
-		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y, self.Printer.movement_speed))
+		## speed change - Set to movement speed IF we have specified one
+		if(self.Printer.movement_speed > 0):
+			newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.movement_speed));
+
+		# Move to Snapshot Position
+		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		
 		# Wait for current moves to finish before requesting the position
 		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode());
@@ -213,7 +218,11 @@ class SnapshotGcodeGenerator(object):
 		#	currentIsRelative = False
 			
 		if(x is not None and y is not None):
-			newSnapshotGcode.Append(self.GetMoveGcode(x,y,f))
+			newSnapshotGcode.Append(self.GetMoveGcode(x,y))
+
+		## speed change - Return to the original feedrate IF we have specified a custom speed
+		if(self.Printer.movement_speed > 0):
+			newSnapshotGcode.Append(self.GetFeedrateSetGcode(f));
 
 		# set back to original speed
 		
@@ -269,16 +278,16 @@ class SnapshotGcodeGenerator(object):
 	
 	def GetDelayGcode(self, delay):
 		return "G4 P{0:d}".format(delay)
-	def GetMoveGcode(self,x,y,f):
-		return "G1 X{0:.3f} Y{1:.3f}{2}".format(x,y,self.GetF(f))
+	def GetMoveGcode(self,x,y):
+		return "G1 X{0:.3f} Y{1:.3f}".format(x,y)
 	def GetRelativeZLiftGcode(self):
-		return "G1 Z{0:.3f}{1}".format(self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
+		return "G1 Z{0:.3f}".format(self.Printer.z_hop)
 	def GetRelativeZLowerGcode(self):
-		return "G1 Z{0:.3f}{1}".format(-1.0*self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
+		return "G1 Z{0:.3f}".format(-1.0*self.Printer.z_hop)
 	def GetRetractGcode(self):
-		return "G1 E{0:.3f}{1}".format(-1*self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
+		return "G1 E{0:.3f}".format(-1*self.Printer.retract_length)
 	def GetDetractGcode(self):
-		return "G1 E{0:.3f}{1}".format( self.Printer.retract_length,self.GetF(self.Printer.retract_speed))
+		return "G1 E{0:.3f}".format( self.Printer.retract_length)
 	def GetResetLineNumberGcode(self,lineNumber):
 		return "M110 N{0:d}".format(lineNumber)
 	def GetWaitForCurrentMovesToFinishGcode(self):
@@ -286,8 +295,6 @@ class SnapshotGcodeGenerator(object):
 	def GetPositionGcode(self):
 		return "M114";
 
-	def GetF(self, speed):
-		if(speed<1):
-			return ""
-		return " F{0}".format(int(speed))
 
+	def GetFeedrateSetGcode(self,f):
+		return "G1 F{0}".format(int(f))
