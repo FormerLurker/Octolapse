@@ -138,8 +138,15 @@ class Timelapse(object):
 					self.SavedCommand = cmd; # this will cause the command to be added to the end of our snapshot commands
 				# pause the printer to start the snapshot
 				self.State = TimelapseState.RequestingReturnPosition
-				self.OctoprintPrinter.pause_print()
-				return None,
+				# get the start timelapse gcide
+				startTimelapseGcode = self.Gcode.CreateSnapshotStartGcode(self.Position.Z,self.Position.IsRelative, self.Position.IsExtruderRelative, self.Position.Extruder)
+				if(len(startTimelapseGcode.GcodeCommands)>0):
+					for command in startTimelapseGcode.GcodeCommands:
+						self.Position.Update(command)
+					self.OctoprintPrinter.pause_print()
+					return startTimelapseGcode.GcodeCommands
+				else:
+					return None,
 		elif(self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.ResumingPrint):
 			# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
 			# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
@@ -261,8 +268,8 @@ class Timelapse(object):
 		printerTolerance = self.Printer.printer_position_confirmation_tolerance
 		# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
 		# Because of this we need to compare the position we received to the previous position, not the current one.
-		if( not self.Position.IsAtPreviousPosition(x,y,None) ):
-			self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.XPrevious,self.Position.YPrevious,self.Position.ZPrevious))
+		if( not self.Position.IsAtCurrentPosition(x,y,None) ):
+			self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X,self.Position.Y,self.Position.Z))
 			self.Position.UpdatePosition(x=x,y=y,z=z,force=True)
 				 
 		# return position information received
@@ -276,7 +283,7 @@ class Timelapse(object):
 		isRelative = self.Position.IsRelative
 		isExtruderRelative = self.Position.IsExtruderRelative
 		extruder = self.Position.Extruder
-		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z,self.Position.F,isRelative, isExtruderRelative, extruder,savedCommand=self.SavedCommand)
+		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z,self.Position.F, savedCommand=self.SavedCommand)
 		# make sure we acutally received gcode
 		if(self.SnapshotGcodes is None):
 			self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")

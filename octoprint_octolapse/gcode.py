@@ -59,7 +59,14 @@ class SnapshotGcodeGenerator(object):
 		self.Printer = Printer(self.Settings.CurrentPrinter())
 		self.OctoprintPrinterProfile = octoprint_printer_profile
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
-
+		
+	def Reset(self):
+		self.RetractedBySnapshotStartGcode = None
+		self.ZhopBySnapshotStartGcode = None
+		self.IsRelativeOriginal = None
+		self.IsRelativeCurrent = None
+		self.IsExtruderRelativeOriginal = None
+		self.IsExtruderRelativeCurrent = None
 	def GetSnapshotPosition(self,xPos,yPos):
 		xPath = self.StabilizationPaths["X"]
 		xPath.CurrentPosition = xPos
@@ -143,8 +150,38 @@ class SnapshotGcodeGenerator(object):
 			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["height"])
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
+	def CreateSnapshotStartGcode(self,z,isRelative, isExtruderRelative, extruder):
+		self.Reset()
 
-	def CreateSnapshotGcode(self, x,y,z,f, isRelative, isExtruderRelative, extruder, savedCommand = None):
+		self.RetractedBySnapshotStartGcode = False
+		self.ZhopBySnapshotStartGcode = False
+		self.IsRelativeOriginal = isRelative
+		self.IsRelativeCurrent = isRelative
+		self.IsExtruderRelativeOriginal = isExtruderRelative
+		self.IsExtruderRelativeCurrent = isExtruderRelative
+
+		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
+		# retract if necessary
+		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
+			if(not self.IsExtruderRelativeCurrent):
+				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
+				self.IsExtruderRelativeCurrent = True
+			newSnapshotGcode.Append(self.GetRetractGcode())
+			self.RetractedBySnapshotStartGcode = True
+		
+		# Can we hop or is the print too tall?
+		
+		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
+		# if we can ZHop, do
+		if(canZHop):
+			if(not self.IsRelativeCurrent): # must be in relative mode
+				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
+				self.IsRelativeCurrent = True
+			newSnapshotGcode.Append(self.GetRelativeZLiftGcode())
+			self.ZhopBySnapshotStartGcode = True
+
+		return newSnapshotGcode
+	def CreateSnapshotGcode(self, x,y,z,f, savedCommand = None):
 		if(x is None or y is None or z is None):
 			return None
 		commandIndex = 0
@@ -155,41 +192,15 @@ class SnapshotGcodeGenerator(object):
 		snapshotPosition = self.GetSnapshotPosition(x,y)
 		newSnapshotGcode.X = snapshotPosition["X"]
 		newSnapshotGcode.Y = snapshotPosition["Y"]
-		hasRetracted = False
-		#todo:  make sure the relative values are from the previous command!  It's possible that we've triggered when switching
-		#from relative to absolute!
-		previousIsRelative = isRelative
-		currentIsRelative = previousIsRelative
-		previousExtruderRelative = isExtruderRelative
-		currentExtruderRelative = previousExtruderRelative
-
-		# retract if necessary
-		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
-			if(not currentExtruderRelative):
-				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
-				currentExtruderRelative = True
-			newSnapshotGcode.Append(self.GetRetractGcode())
-			hasRetracted = True
-		
-		# Can we hop or is the print too tall?
-		
-		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
-		# if we can ZHop, do
-		if(canZHop):
-			if(not currentIsRelative): # must be in relative mode
-				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
-				currentIsRelative = True
-			newSnapshotGcode.Append(self.GetRelativeZLiftGcode())
-			
 
 		if (newSnapshotGcode.X is None or newSnapshotGcode.Y is None):
 			# either x or y is out of bounds.
 			return None
 
 		#Move back to the snapshot position - make sure we're in absolute mode for this
-		if(currentIsRelative): # must be in absolute mode
+		if(self.IsRelativeCurrent): # must be in absolute mode
 			newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
-			currentIsRelative = False
+			self.IsRelativeCurrent = False
 
 		## speed change - Set to movement speed IF we have specified one
 		if(self.Printer.movement_speed > 0):
@@ -213,9 +224,9 @@ class SnapshotGcodeGenerator(object):
 		newSnapshotGcode.ReturnZ = z
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-		#if(currentIsRelative):
+		#if(self.IsRelativeCurrent):
 		#	newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
-		#	currentIsRelative = False
+		#	self.IsRelativeCurrent = False
 			
 		if(x is not None and y is not None):
 			newSnapshotGcode.Append(self.GetMoveGcode(x,y))
@@ -226,29 +237,29 @@ class SnapshotGcodeGenerator(object):
 
 		# set back to original speed
 		
-		# If we can hop we have already done so, so now time to lower the Z axis:
-		if(canZHop):
-			if(not currentIsRelative):
+		# If we zhopped in the beginning, lower z
+		if(self.RetractedBySnapshotStartGcode):
+			if(not self.IsRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
-				currentIsRelative = True
+				self.IsRelativeCurrent = True
 			newSnapshotGcode.Append(self.GetRelativeZLowerGcode())
 		# detract
-		if(hasRetracted):
-			if(not currentExtruderRelative):
+		if(self.RetractedBySnapshotStartGcode):
+			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
-				currentExtruderRelative = True
+				self.IsExtruderRelativeCurrent = True
 			newSnapshotGcode.Append(self.GetDetractGcode())
 
 		# reset the coordinate systems for the extruder and axis
-		if(previousIsRelative != currentIsRelative):
-			if(currentIsRelative):
+		if(self.IsRelativeOriginal != self.IsRelativeCurrent):
+			if(self.IsRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
 			else:
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
-			currentIsRelative = previousIsRelative
+			self.IsRelativeCurrent = self.IsRelativeOriginal
 
-		if(previousExtruderRelative != currentExtruderRelative):
-			if(previousExtruderRelative):
+		if(self.IsExtruderRelativeOriginal != self.IsExtruderRelativeCurrent):
+			if(self.IsExtruderRelativeOriginal):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 			else:
 				newSnapshotGcode.Append(self.GetSetExtruderAbslutePositionGcode())
@@ -264,7 +275,7 @@ class SnapshotGcodeGenerator(object):
 			
 		self.Settings.CurrentDebugProfile().LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
-
+		self.Reset()
 		return newSnapshotGcode
 
 	def GetSetExtruderRelativePositionGcode(self):
