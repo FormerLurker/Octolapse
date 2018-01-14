@@ -275,7 +275,7 @@ class Timelapse(object):
 		isRelative = self.Position.IsRelative
 		isExtruderRelative = self.Position.IsExtruderRelative
 		extruder = self.Position.Extruder
-		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z,isRelative, isExtruderRelative, extruder,savedCommand=self.SavedCommand)
+		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z,self.Position.F,isRelative, isExtruderRelative, extruder,savedCommand=self.SavedCommand)
 		# make sure we acutally received gcode
 		if(self.SnapshotGcodes is None):
 			self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")

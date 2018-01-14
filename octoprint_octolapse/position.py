@@ -24,8 +24,8 @@ class Position(object):
 	
 	def Reset(self):
 
-		self.Feedrate = None
-		self.FeedratePrevious = None
+		self.F = None
+		self.FPrevious = None
 		self.X = None
 		self.XOffset = 0
 		self.XPrevious = None
@@ -76,7 +76,7 @@ class Position(object):
 		self.XHomedPrevious = self.XHomed
 		self.YHomedPrevious = self.YHomed
 		self.ZHomedPrevious = self.ZHomed
-		self.FeedratePrevious = self.Feedrate
+		self.FPrevious = self.F
 		
 		# save any previous values that will be needed later
 		self.HeightPrevious = self.Height
