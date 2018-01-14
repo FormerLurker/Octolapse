@@ -127,12 +127,24 @@ class Timelapse(object):
 		isSnapshotGcodeCommand = self.IsSnapshotCommand(cmd)
 
 		if(self.State == TimelapseState.WaitingForTrigger):
-			self.GcodeQueuing_WaitingForTrigger(cmd,isSnapshotGcodeCommand)
+			if(self.GcodeQueuing_IsTriggering(cmd,isSnapshotGcodeCommand)):
+				# we don't want to execute the current command.  We have saved it for later.
+				# but we don't want to send the snapshot command to the printer, or any of the SupporessedSavedCommands (gcode.py)
+				if(isSnapshotGcodeCommand or cmd in self.Commands.SuppressedSavedCommands):
+					self.SavedCommand = None # this will suppress the command since it won't be added to our snapshot commands list
+				else:
+					if(self.IsTestMode):
+						cmd = self.Commands.GetTestModeCommandString(cmd)
+					self.SavedCommand = cmd; # this will cause the command to be added to the end of our snapshot commands
+				# pause the printer to start the snapshot
+				self.State = TimelapseState.RequestingReturnPosition
+				self.OctoprintPrinter.pause_print()
+				return None,
 		elif(self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.ResumingPrint):
 			# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
 			# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
 			if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
-				return (None,) # suppress the command
+				return None, # suppress the command
 		elif(self.State == TimelapseState.ResumingPrint):
 			# Expand the current command to include the return commands
 			snapshotCommands = self.SnapshotGcodes.ReturnCommands()
@@ -152,30 +164,19 @@ class Timelapse(object):
 		
 		if(isSnapshotGcodeCommand ):
 			# in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
-			return (None,)
+			return None,
 
 		return self.ReturnGcodeCommandToOctoprint(cmd)
 
-	def GcodeQueuing_WaitingForTrigger(self,cmd,isSnapshotGcodeCommand):
+	def GcodeQueuing_IsTriggering(self,cmd,isSnapshotGcodeCommand):
 		currentTrigger = self.IsTriggering(cmd)
 		if(currentTrigger is not None):#We're triggering
 			self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")
-			self.State = TimelapseState.RequestingReturnPosition
-			# we don't want to execute the current command.  We have saved it for later.
-			# but we don't want to send the snapshot command to the printer, or any of the SupporessedSavedCommands (gcode.py)
-			if(isSnapshotGcodeCommand or cmd in self.Commands.SuppressedSavedCommands):
-				self.SavedCommand = None # this will suppress the command since it won't be added to our snapshot commands list
-			else:
-				if(self.IsTestMode):
-					cmd = self.Commands.GetTestModeCommandString(cmd)
-				self.SavedCommand = cmd; # this will cause the command to be added to the end of our snapshot commands
-			# pause the printer to start the snapshot
-			self.State = TimelapseState.RequestingReturnPosition
-			self.OctoprintPrinter.pause_print()
-			return (None,)
+			
+			return True
 		elif (self.IsTriggerWaiting(cmd)):
 			self.Settings.CurrentDebugProfile().LogTriggerWaitState("Trigger is Waiting On Extruder.")
-
+		return False
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		#if(self.State == TimelapseState.Completing):
