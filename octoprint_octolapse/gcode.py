@@ -12,6 +12,7 @@ class SnapshotGcode(object):
 	CommandsDictionary = Commands()
 	def __init__(self, isTestMode):
 		self.GcodeCommands = []
+		self.__OriginalGcodeCommands = []
 		self.X = None
 		self.ReturnX = None
 		self.Y = None
@@ -21,6 +22,8 @@ class SnapshotGcode(object):
 		self.SnapshotIndex = -1
 		self.IsTestMode = isTestMode
 	def Append(self,command):
+		self.__OriginalGcodeCommands.append(command)
+
 		if (self.IsTestMode):
 			command = self.CommandsDictionary.GetTestModeCommandString(command)
 		command = command.upper().strip()
@@ -30,6 +33,11 @@ class SnapshotGcode(object):
 		return len(self.GcodeCommands)-1
 	def SetSnapshotIndex(self):
 		self.SnapshotIndex = self.EndIndex()
+
+	def GetOriginalReturnCommands(self):
+		if(len(self.__OriginalGcodeCommands)> self.SnapshotIndex+1):
+			return self.__OriginalGcodeCommands[self.SnapshotIndex+1:]
+		return []
 
 	def SnapshotCommands(self):
 		if(len(self.GcodeCommands)>0):

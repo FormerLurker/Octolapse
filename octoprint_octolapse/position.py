@@ -70,25 +70,24 @@ class Position(object):
 		
 		# Movement detected, set the previous values
 		# disect the gcode and use it to update our position
-		self.XPrevious = self.X
+		
 		self.XHomedPrevious = self.XHomed
-		self.YPrevious = self.Y
 		self.YHomedPrevious = self.YHomed
-		self.ZPrevious = self.Z
 		self.ZHomedPrevious = self.ZHomed
-		self.EPrevious = self.E
+		
 		
 		# save any previous values that will be needed later
 		self.HeightPrevious = self.Height
 		self.ZDeltaPrevious = self.ZDelta
 
-			
-
 		# apply the command to the position tracker
 		if(command is not None):
 			if(command.Command in ["G0","G1"]):
 				#Movement
-				
+				self.XPrevious = self.X
+				self.YPrevious = self.Y
+				self.ZPrevious = self.Z
+				self.EPrevious = self.E
 				if(command.Parse()):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received {0}".format(command.Name))
 					x = command.Parameters["X"].Value
@@ -116,6 +115,49 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionChange(message)
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the gcode command: {0}".format(gcode))
+				#########################################################
+				# Update the extruder monitor if there was movement
+				self.Extruder.Update(self.ERelative())
+
+				# If we've not reached z min, leave!
+				if(not self.HasHomedAxis()):
+					self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - Axis not homed.")
+				else:
+					# calculate Height
+					if ((self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart) and (self.Height is None or self.Z > self.Height)):
+						self.Height = self.Z
+						self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
+
+					# calculate ZDelta
+					if(self.Height is not None):
+						if(self.HeightPrevious is not None):
+							self.ZDelta = self.Height - self.HeightPrevious
+						else:
+							self.ZDelta = self.Height
+
+					# calculate layer change
+					if(self.ZDelta is not None and (self.ZDelta > 0 or self.Layer == 0)):
+						self.IsLayerChange = True
+						self.Layer += 1
+						self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
+					else:
+						self.IsLayerChange = False
+
+					# Is this a ZHOp?
+					#self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
+					#	self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
+					#))
+					if(self.Height is not None and self.HasHomedAxis()):
+						# calculate lift, taking into account floating point rounding
+						lift = self.Z - self.Height
+						printerTolerance = self.Printer.printer_position_confirmation_tolerance
+						if(utility.isclose(lift,self.Printer.z_hop,printerTolerance)):
+							lift = self.Printer.z_hop
+
+						self.IsZHop = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart)
+					if(self.IsZHop):
+						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
+				#########################################################
 			elif(command.Command == "G28"):
 				# test homing of only X,Y or Z
 				
@@ -187,24 +229,19 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
 					self.IsExtruderRelative = False
 			elif(command.Command == "G92"):
-				
-				
 				if(command.Parse()):
 					previousRelativeValue = self.IsRelative
 					previousExtruderRelativeValue = self.IsExtruderRelative
-					
 					x = command.Parameters["X"].Value
 					y = command.Parameters["Y"].Value
 					z = command.Parameters["Z"].Value
 					e = command.Parameters["E"].Value
-
 					resetAll = False
 					if(x is None and y is None and z is None and e is None):
 						self.XOffset = self.X
 						self.YOffset = self.Y
 						self.ZOffset = self.Z
 						self.EOffset = self.E
-
 					# set the offsets if they are provided
 					if(x is not None and self.X is not None and self.XHomed):
 						self.XOffset = self.X - utility.getfloat(x,0)
@@ -214,12 +251,7 @@ class Position(object):
 						self.ZOffset = self.Z - utility.getfloat(z,0)
 					if(e is not None and self.E is not None):
 						self.EOffset = self.E - utility.getfloat(e,0)
-					
-
-
-
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G92 - Set Position.  Command:{0}, XOffset:{1}, YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(gcode, self.XOffset,self.YOffset,self.ZOffset, self.EOffset))
-					
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
 			if(self.X != self.XPrevious
@@ -230,125 +262,91 @@ class Position(object):
 				self.HasPositionChanged = True;
 				
 
-		# Update the extruder monitor if there was movement
-		self.Extruder.Update(self.ERelative())
-
-		# If we've not reached z min, leave!
-		if(not self.HasHomedAxis()):
-			self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - Axis not homed.")
-		else:
-			# calculate Height
-			if ((self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart) and (self.Height is None or self.Z > self.Height)):
-				self.Height = self.Z
-				self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
-
-			# calculate ZDelta
-			if(self.Height is not None):
-				if(self.HeightPrevious is not None):
-					self.ZDelta = self.Height - self.HeightPrevious
-				else:
-					self.ZDelta = self.Height
-
-			# calculate layer change
-			if(self.ZDelta is not None and (self.ZDelta > 0 or self.Layer == 0)):
-				self.IsLayerChange = True
-				self.Layer += 1
-				self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
-			else:
-				self.IsLayerChange = False
-
-			# Is this a ZHOp?
-			#self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
-			#	self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
-			#))
-			if(self.Height is not None and self.HasHomedAxis()):
-				# calculate lift, taking into account floating point rounding
-				lift = self.Z - self.Height
-				printerTolerance = self.Printer.printer_position_confirmation_tolerance
-				if(utility.isclose(lift,self.Printer.z_hop,printerTolerance)):
-					lift = self.Printer.z_hop
-
-				self.IsZHop = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart)
-			if(self.IsZHop):
-				self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
+		
 
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,force=False):
-
+		
 		if(force):
 			# Force the coordinates in as long as they are provided.
 			#
 			if(x is not None):
+				
 				x = x+self.XOffset
 				self.X = x 
 				if(self.XPrevious is None):
 					self.XPrevious = x
 			if(y is not None):
+				
 				y = y+self.YOffset
 				self.Y = y
 				if(self.YPrevious is None):
 					self.YPrevious = y
 			if(z is not None):
+				
 				z = z + self.ZOffset
 				self.Z = z
 				if(self.ZPrevious is None):
 					self.ZPrevious = z
 			if(e is not None):
+				
 				e = e + self.EOffset
 				self.E = e
 				if(self.EPrevious is None):
 					self.EPrevious = e
-			return
-
-		# Update the previous positions if values were supplied
-		if(x is not None and self.XHomed):
-			x = float(x)
-			if(self.IsRelative):
-				if(self.X is None):
-					self.X = 0
-					self.XPrevious = 0
-
-				self.X += x
-			else:
-				self.X = x + self.XOffset
-
-		if(y is not None and self.YHomed):
-			y = float(y)
-			if(self.IsRelative):
-				if(self.Y is None):
-					self.Y = 0
-					self.YPrevious = 0
-				self.Y += y
-			else:
-				self.Y = y + self.YOffset
-
-		if(z is not None and self.ZHomed):
-			z = float(z)
-				
-			if(self.IsRelative):
-				if(self.Z is None):
-					self.Z = 0
-					self.ZPrevious = 0
-				self.Z += z
-			else:
-				self.Z = z + self.ZOffset
-		
-		if(e is not None):
-			e = float(e)
-			if(self.IsExtruderRelative):
-				if(self.E is None):
-					self.E = 0
-					self.EPrevious = 0
-				self.E += e
-			else:
-				self.E = e + self.EOffset
-
-		if(not utility.IsInBounds(self.X, self.Y, self.Z, self.OctoprintPrinterProfile)):
-			self.HasPositionError = True
-			self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(self.GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
-			self.Settings.CurrentDebugProfile().LogError(self.PositionError)
 		else:
-			self.HasPositionError = False
-			self.PositionError = None
+			
+
+			# Update the previous positions if values were supplied
+			if(x is not None and self.XHomed):
+				x = float(x)
+				if(self.IsRelative):
+					if(self.X is None):
+						self.X = 0
+						self.XPrevious = 0
+
+					self.X += x
+				else:
+					self.X = x + self.XOffset
+
+			if(y is not None and self.YHomed):
+				y = float(y)
+				if(self.IsRelative):
+					if(self.Y is None):
+						self.Y = 0
+						self.YPrevious = 0
+					self.Y += y
+				else:
+					self.Y = y + self.YOffset
+
+			if(z is not None and self.ZHomed):
+				z = float(z)
+				if(self.IsRelative):
+					if(self.Z is None):
+						self.Z = 0
+						self.ZPrevious = 0
+					self.Z += z
+				else:
+					self.Z = z + self.ZOffset
+		
+			if(e is not None):
+				e = float(e)
+				if(self.IsExtruderRelative):
+					if(self.E is None):
+						self.E = 0
+						self.EPrevious = 0
+					self.E += e
+				else:
+					self.E = e + self.EOffset
+
+			if(not utility.IsInBounds(self.X, self.Y, self.Z, self.OctoprintPrinterProfile)):
+				self.HasPositionError = True
+				self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(self.GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
+				self.Settings.CurrentDebugProfile().LogError(self.PositionError)
+			else:
+				self.HasPositionError = False
+				self.PositionError = None
+		
+
 
 	def HasHomedAxis(self):
 		return (self.XHomed

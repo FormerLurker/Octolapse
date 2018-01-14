@@ -127,6 +127,147 @@ class Test_LayerTrigger(unittest.TestCase):
 		trigger.Update(position)
 		self.assertTrue(trigger.IsTriggered == True)
 		self.assertTrue(trigger.IsWaiting == False)
+	def test_LayerTrigger_LayerChange_DefaultExtruderTriggers(self):
+		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
+		currentSnapshot = self.Settings.CurrentSnapshot()
+		trigger = LayerTrigger(self.Settings)
+		trigger.ExtruderTriggers = ExtruderTriggers(False, True, True, False, None, None, True, True, None, False) 
+		trigger.RequireZHop = False # no zhop required
+		trigger.HeightIncrement = 0 # Trigger on any height change
+		#create some gcode
+		gcode = []
+		# get the startup gcode
+		gcode.extend(self.GetPrintStartGcode())
+		# start layer 1
+		gcode.append(('G1 Z0.250 F7200.000',False,""))
+		# start priming extruder
+		gcode.append(('G1 X50.0 E80.0  F1000.0',False,"ExtrudingStart")) # forbidden
+		gcode.append(('G1 X160.0 E20.0  F1000.0',True,"Extruding"))
+		gcode.append(('G1 Z0.200 F7200.000',False,"Extruding"))
+		gcode.append(('G1 X220.0 E13 F1000.0',False,"Extruding"))
+		gcode.append(('G1 X240.0 E0 F1000.0',False,"Extruding"))
+		# Object print is starting
+		gcode.append(('G1 E-4.00000 F3000.00000',False,"On Retracting, OnRetractingStart"))
+		gcode.append(('G1 Z0.700 F7200.000',False,"FullyRetracted, Zhop"))
+		gcode.append(('G1 X117.061 Y98.921 F7200.000',False,"FullyRetracted, Zhop"))
+		gcode.append(('G1 Z0.200 F7200.000',False,"FullyRetracted"))
+		gcode.append(('G1 E4.00000 F3000.00000',False,"DetractingStart, Detracted"))
+		gcode.append(('M204 S1000',False,"Primed"))
+		gcode.append(('G1 F1800',False,"Primed"))
+		# start extruding
+		gcode.append(('G1 X117.508 Y98.104 E0.02922',False,"ExtrudingStart")) # forbidden
+		gcode.append(('G1 X117.947 Y97.636 E0.02011',False,"Extruding"))
+		gcode.append(('G1 X118.472 Y97.267 E0.02011',False,"Extruding"))
+		gcode.append(('G1 X119.061 Y97.013 E0.02011',False,"Extruding"))
+		gcode.append(('G1 X119.690 Y96.884 E0.02011',False,"Extruding"))
+		gcode.append(('G1 X130.004 Y96.869 E0.32341',False,"Extruding"))
+		gcode.append(('G1 X131.079 Y97.061 E0.03423',False,"Extruding"))
+		#Retraction
+		gcode.append(('G1 E-2.40000 F3000.00000',False,"RetractingStart, Retracting, PartiallyRetracted"))
+		gcode.append(('G1 F5760',False,"Retracting, PartiallyRetracted"))
+		gcode.append(('G1 X119.824 Y97.629 E-0.50464',False,"Retracting, PartiallyRetracted"))
+		gcode.append(('G1 F5760',False,"Retracting, PartiallyRetracted"))
+		gcode.append(('G1 X121.876 Y97.628 E-1.01536',False,"Retracting, PartiallyRetracted"))
+		gcode.append(('G1 E-0.08000 F3000.00000',False,"Retracting, Fully Retracted"))
+		# Retracted, Zhop
+		gcode.append(('G1 Z0.700 F7200.000',False,"FullyRetracted, Zhop"))
+		# Moved while lifted
+		gcode.append(('G1 X120.587 Y100.587 F7200.000',False,"FullyRetracted, Zhop"))
+		gcode.append(('G1 Z0.200 F7200.000',False,"FullyRetracted"))
+		# Zhop complete
+		gcode.append(('G1 E4.00000 F3000.00000',False,"DetractingStart, Detracted"))
+		#Retraction Complete
+		gcode.append(('G1 F1800',False,"Primed"))# primed
+		gcode.append(('G1 X129.413 Y100.587 E0.27673',False,"ExtrudingStart"))
+		gcode.append(('G1 X129.413 Y109.413 E0.27673',False,"Extruding"))
+		gcode.append(('G1 X120.587 Y109.413 E0.27673',False,"Extruding"))
+		gcode.append(('G1 X120.587 Y100.647 E0.27485',False,"Extruding"))
+		gcode.append(('G1 X120.210 Y100.210 F7200.000',False,"Extruding"))
+
+		# layer 2
+		# after layer change
+		# retract
+		gcode.append(('G1 E-4.00000 F3000.00000',False,"RetractingStart"))
+		# zhop
+		gcode.append(('G1 Z0.900 F7200.000',False,"FullyRetracted, Zhop"))
+		# move while lifted
+		gcode.append(('G1 X133.089 Y99.490 F7200.000',False,"FullyRetracted, Zhop"))
+		# end zhop
+		gcode.append(('G1 Z0.400 F7200.000',False,"FullyRetracted"))
+		# detract
+		gcode.append(('G1 E4.00000 F3000.00000',False,"DetractingStart"))
+		gcode.append(('G1 F3000',False,"Detracted, Primed"))
+		# start etruding
+		gcode.append(('G1 X133.128 Y110.149 E0.33418',False,"ExtrudingStart"))
+		gcode.append(('G1 X132.942 Y111.071 E0.02950',True,"Extruding"))
+		gcode.append(('G1 X132.492 Y111.896 E0.02950',False,"Extruding"))
+		gcode.append(('G1 X132.020 Y112.393 E0.02148',False,"Extruding"))
+		gcode.append(('G1 X131.447 Y112.777 E0.02161',False,"Extruding"))
+
+		# layer 3
+		gcode.append(('G1 Z2.600 F7200.000',False,"Primed"))
+		gcode.append(('G1 X120.632 Y100.632 F7200.000',False,"Primed"))
+		gcode.append(('M204 S800',False,"Primed"))
+		gcode.append(('G1 F1200',False,"Primed"))
+		gcode.append(('G1 X129.368 Y100.632 E0.29570',False,"ExtrudingStart"))
+		gcode.append(('G1 X129.368 Y109.368 E0.29570',True,"Extruding"))
+		gcode.append(('G1 X120.632 Y109.368 E0.29570',False,"Extruding"))
+		gcode.append(('G1 X120.632 Y100.692 E0.29367',False,"Extruding"))
+		gcode.append(('M204 S1000',False,"Primed"))
+		gcode.append(('G1 X120.225 Y100.225 F7200.000',False,"Extruding"))
+		gcode.append(('M204 S800',False,"Primed"))
+		gcode.append(('G1 F1200',False,"Extruding"))
+		gcode.append(('G1 X129.775 Y100.225 E0.32326',False,"Extruding"))
+
+		# layer 4
+		gcode.append(('G1 Z2.800 F7200.000',False,"Primed"))
+		gcode.append(('G1 X120.632 Y109.368 F7200.000',False,"Primed"))
+		gcode.append(('M204 S800',False,"Primed"))
+		gcode.append(('G1 F1200',False,"Primed"))
+		gcode.append(('G1 X120.632 Y100.632 E0.29570',False,"ExtrudingStart"))
+		gcode.append(('G1 X129.368 Y100.632 E0.29570',True,"Extruding"))
+		gcode.append(('G1 X129.368 Y109.368 E0.29570',False,"Extruding"))
+		gcode.append(('G1 X120.692 Y109.368 E0.29367',False,"Extruding"))
+		gcode.append(('M204 S1000',False,"Primed"))
+		gcode.append(('G1 X120.225 Y109.775 F7200.000',False,""))
+		gcode.append(('M204 S800',False,"Primed"))
+		gcode.append(('G1 F1200',False,"Primed"))
+		gcode.append(('G1 X120.225 Y100.225 E0.32326',False,"ExtrudingStart"))
+		gcode.append(('G1 X129.775 Y100.225 E0.32326',False,"Extruding"))
+		gcode.append(('G1 X129.775 Y109.775 E0.32326',False,"Extruding"))
+		gcode.append(('G1 X120.285 Y109.775 E0.32123',False,"Extruding"))
+
+		# loop through all of the Gcode and test triggering
+		for command in gcode:
+			gcodeCommand = command[0]
+			shouldTrigger = command[1]
+			comment = command[2]
+			position.Update(gcodeCommand)
+			trigger.Update(position)
+			self.assertTrue(trigger.IsTriggered == shouldTrigger,"Should have triggered on {0} command.  Command comment:".format(gcodeCommand,comment))
+
+	def GetPrintStartGcode(self):
+		# create gcode list
+		gcode = []
+		# Print Start Code
+		gcode.append(('T0',False,"select tool 0"))
+		gcode.append(('M104 S255',False,"set extruder temp"))
+		gcode.append(('M140 S100',False,"set bed temp"))
+		gcode.append(('M190 S100',False,"wait for bed temp"))
+		gcode.append(('M109 S255',False,"wait for extruder temp"))
+		gcode.append(('G21',False,"set units to millimeters"))
+		gcode.append(('G90',False,"use absolute coordinates"))
+		gcode.append(('M83',False,"use relative distances for extrusion"))
+		gcode.append(('G28 W',False,""))
+		gcode.append(('G80',False,""))
+		gcode.append(('G92 E0.0',False,""))
+		gcode.append(('M203 E100',False,""))
+		gcode.append(('M92 E140',False,""))
+		gcode.append(('G92 E0.0',False,""))
+		gcode.append(('M900 K200',False,""))
+
+		return gcode
+
 	def test_LayerTrigger_HeightChange(self):
 		"""Test the layer trigger height change """
 

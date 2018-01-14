@@ -43,7 +43,6 @@ class Extruder(object):
 		if(e is None or abs(e)< utility.FLOAT_MATH_EQUALITY_RANGE):
 			e = 0.0
 		
-
 		self.__E =e
 		# Record the previous values
 		self.__ExtrusionLengthTotalPrevious = self.ExtrusionLengthTotal

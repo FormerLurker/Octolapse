@@ -114,12 +114,16 @@ class Timelapse(object):
 		return None
 
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogSentGcode("Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
 		# position
 		cmd = cmd.upper().strip()
 
-		self.Position.Update(cmd)
+		if(self.State != TimelapseState.ResumingPrint):
+			# we will be sending this command later, so do NOT update the position yet.
+			# The command will be added to the end of the return commands
+			self.Position.Update(cmd)
 		isSnapshotGcodeCommand = self.IsSnapshotCommand(cmd)
 
 		if(self.State == TimelapseState.WaitingForTrigger):
@@ -132,12 +136,18 @@ class Timelapse(object):
 		elif(self.State == TimelapseState.ResumingPrint):
 			# Expand the current command to include the return commands
 			snapshotCommands = self.SnapshotGcodes.ReturnCommands()
+			# update the position with all of the snapshot commands.  These will NOT be returned to the
+			for command in self.SnapshotGcodes.GetOriginalReturnCommands():
+				self.Position.Update(command)
+			# update the position with the unaltered queued command that we will be expanding.
+			self.Position.Update(cmd)
 			if(self.IsTestMode):
 				cmd = self.Commands.GetTestModeCommandString(cmd)
 			if(cmd != ""):
 				snapshotCommands.append(cmd)
-			self.CommandIndex = 0
-			self.State = TimelapseState.Completing
+			#self.CommandIndex = 0
+			self.ResetSnapshot()
+			# update the position with all of the snapshot commands.  These will NOT be returned to the 
 			return snapshotCommands
 		
 		if(isSnapshotGcodeCommand ):
@@ -149,6 +159,7 @@ class Timelapse(object):
 	def GcodeQueuing_WaitingForTrigger(self,cmd,isSnapshotGcodeCommand):
 		currentTrigger = self.IsTriggering(cmd)
 		if(currentTrigger is not None):#We're triggering
+			self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")
 			self.State = TimelapseState.RequestingReturnPosition
 			# we don't want to execute the current command.  We have saved it for later.
 			# but we don't want to send the snapshot command to the printer, or any of the SupporessedSavedCommands (gcode.py)
@@ -162,20 +173,22 @@ class Timelapse(object):
 			self.State = TimelapseState.RequestingReturnPosition
 			self.OctoprintPrinter.pause_print()
 			return (None,)
+		elif (self.IsTriggerWaiting(cmd)):
+			self.Settings.CurrentDebugProfile().LogTriggerWaitState("Trigger is Waiting On Extruder.")
 
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
-		if(self.State == TimelapseState.Completing):
-			# keep track of the return commands, make sure they are all sent before we
-			# reset the snapshot.
-			returnCommands = self.SnapshotGcodes.ReturnCommands()
-			if(cmd == returnCommands[self.CommandIndex]):
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
-				self.CommandIndex += 1
-			if(self.CommandIndex >= len(returnCommands)):
-				# we are finished!  reset the snapshot
-				self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final return command, resetting snapshot.")
-				self.ResetSnapshot()
+		#if(self.State == TimelapseState.Completing):
+		#	# keep track of the return commands, make sure they are all sent before we
+		#	# reset the snapshot.
+		#	returnCommands = self.SnapshotGcodes.ReturnCommands()
+		#	if(cmd == returnCommands[self.CommandIndex]):
+		#		self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
+		#		self.CommandIndex += 1
+		#	if(self.CommandIndex >= len(returnCommands)):
+		#		# we are finished!  reset the snapshot
+		#		self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final return command, resetting snapshot.")
+		#		self.ResetSnapshot()
 	
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
@@ -206,6 +219,16 @@ class Timelapse(object):
 				else:
 					self.Settings.CurrentDebugProfile().LogError("A position error prevented a trigger!")
 		return None
+	def IsTriggerWaiting(self,cmd):
+		# make sure we're in a state that could want to check for triggers
+		if(not self.State == TimelapseState.WaitingForTrigger):
+			return None
+		isWaiting = False;
+		# Loop through all of the active currentTriggers
+		for currentTrigger in self.Triggers:
+			if(currentTrigger.IsWaiting):
+				return True
+		return False
 
 	def PositionReceived(self, payload):
 		
