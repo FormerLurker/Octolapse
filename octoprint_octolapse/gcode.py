@@ -144,7 +144,7 @@ class SnapshotGcodeGenerator(object):
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
 
-	def CreateSnapshotGcode(self, x,y,z, isRelative, isExtruderRelative, extruder, savedCommand = None):
+	def CreateSnapshotGcode(self, x,y,z,f, isRelative, isExtruderRelative, extruder, savedCommand = None):
 		if(x is None or y is None or z is None):
 			return None
 		commandIndex = 0
@@ -189,7 +189,9 @@ class SnapshotGcodeGenerator(object):
 		if(currentIsRelative): # must be in absolute mode
 			newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
 			currentIsRelative = False
-		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
+
+		## speed change
+		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y, self.Printer.movement_speed))
 		
 		# Wait for current moves to finish before requesting the position
 		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode());
@@ -206,12 +208,15 @@ class SnapshotGcodeGenerator(object):
 		newSnapshotGcode.ReturnZ = z
 
 		#Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-		if(currentIsRelative):
-			newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
-			currentIsRelative = False
+		#if(currentIsRelative):
+		#	newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
+		#	currentIsRelative = False
 			
 		if(x is not None and y is not None):
-			newSnapshotGcode.Append(self.GetMoveGcode(x,y))
+			newSnapshotGcode.Append(self.GetMoveGcode(x,y,f))
+
+		# set back to original speed
+		
 		# If we can hop we have already done so, so now time to lower the Z axis:
 		if(canZHop):
 			if(not currentIsRelative):
@@ -264,8 +269,8 @@ class SnapshotGcodeGenerator(object):
 	
 	def GetDelayGcode(self, delay):
 		return "G4 P{0:d}".format(delay)
-	def GetMoveGcode(self,x,y):
-		return "G1 X{0:.3f} Y{1:.3f}{2}".format(x,y,self.GetF(self.Printer.movement_speed))
+	def GetMoveGcode(self,x,y,f):
+		return "G1 X{0:.3f} Y{1:.3f}{2}".format(x,y,self.GetF(f))
 	def GetRelativeZLiftGcode(self):
 		return "G1 Z{0:.3f}{1}".format(self.Printer.z_hop, self.GetF(self.Printer.movement_speed))
 	def GetRelativeZLowerGcode(self):

@@ -24,6 +24,8 @@ class Position(object):
 	
 	def Reset(self):
 
+		self.Feedrate = None
+		self.FeedratePrevious = None
 		self.X = None
 		self.XOffset = 0
 		self.XPrevious = None
@@ -74,7 +76,7 @@ class Position(object):
 		self.XHomedPrevious = self.XHomed
 		self.YHomedPrevious = self.YHomed
 		self.ZHomedPrevious = self.ZHomed
-		
+		self.FeedratePrevious = self.Feedrate
 		
 		# save any previous values that will be needed later
 		self.HeightPrevious = self.Height
@@ -94,20 +96,21 @@ class Position(object):
 					y = command.Parameters["Y"].Value
 					z = command.Parameters["Z"].Value
 					e = command.Parameters["E"].Value
+					f = command.Parameters["F"].Value
 
-					if(x is not None or y is not None or z is not None):
+					if(x is not None or y is not None or z is not None or f is not None):
 						
 						if(self.HasPositionError and not self.IsRelative):
 							self.HasPositionError = False
 							self.PositionError = ""
-						self.UpdatePosition(x,y,z,e=None)
+						self.UpdatePosition(x,y,z,e=None,f=f)
 						
 					if(e is not None):
 						if(self.IsExtruderRelative is not None):
 							if(self.HasPositionError and not self.IsExtruderRelative):
 								self.HasPositionError = False
 								self.PositionError = ""
-							self.UpdatePosition(x=None,y=None,z=None,e=e)
+							self.UpdatePosition(x=None,y=None,z=None,e=e, f=None)
 						else:
 							self.Settings.CurrentDebugProfile().LogError("Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative).")
 					message = "Position Change - {0} - {1} Move From(X:{2:s},Y:{3:s},Z:{4:s},E:{5:s}) - To(X:{6},Y:{7},Z:{8},E:{9})"
@@ -264,31 +267,32 @@ class Position(object):
 
 		
 
-	def UpdatePosition(self,x=None,y=None,z=None,e=None,force=False):
-		
+	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
+		if(f is not None):
+			self.F = float(f)
 		if(force):
 			# Force the coordinates in as long as they are provided.
 			#
 			if(x is not None):
-				
+				x = float(x)
 				x = x+self.XOffset
 				self.X = x 
 				if(self.XPrevious is None):
 					self.XPrevious = x
 			if(y is not None):
-				
+				y = float(y)
 				y = y+self.YOffset
 				self.Y = y
 				if(self.YPrevious is None):
 					self.YPrevious = y
 			if(z is not None):
-				
+				z = float(z)
 				z = z + self.ZOffset
 				self.Z = z
 				if(self.ZPrevious is None):
 					self.ZPrevious = z
 			if(e is not None):
-				
+				e = float(e)
 				e = e + self.EOffset
 				self.E = e
 				if(self.EPrevious is None):
