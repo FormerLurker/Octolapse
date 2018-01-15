@@ -54,6 +54,7 @@ class Position(object):
 		self.IsExtruderRelative = True
 		
 		# State Tracking Vars
+		self.LastExtrusionHeight = None
 		self.Height = None
 		self.HeightPrevious = None
 		self.ZDelta = None
@@ -61,26 +62,32 @@ class Position(object):
 		self.Layer = 0
 		# State Flags
 		self.IsLayerChange = False
+		self.IsZHopStart = False
 		self.IsZHop = False
+		self.IsZHopCompleting = False
 
 	def Update(self,gcode):
 		command = self.Commands.GetCommand(gcode)
-		# reset state variables
-		self.IsLayerChange = False
-		self.IsZHop = False
-		self.HasPositionChanged = False
 		
 		# Movement detected, set the previous values
 		# disect the gcode and use it to update our position
-		
+		# save any previous values that will be needed later
 		self.XHomedPrevious = self.XHomed
 		self.YHomedPrevious = self.YHomed
 		self.ZHomedPrevious = self.ZHomed
 		self.FPrevious = self.F
-		
-		# save any previous values that will be needed later
+		if(self.IsZHopStart):
+			self.IsZHop = True
+		elif(self.IsZHopCompleting):
+			self.IsZHop = False
+			self.IsZHopCompleting = False
 		self.HeightPrevious = self.Height
 		self.ZDeltaPrevious = self.ZDelta
+
+		# reset state variables
+		self.IsLayerChange = False
+		self.HasPositionChanged = False
+		self.IsZHopStart = False
 
 		# apply the command to the position tracker
 		if(command is not None):
@@ -126,9 +133,12 @@ class Position(object):
 				if(not self.HasHomedAxis()):
 					self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - Axis not homed.")
 				else:
-					# calculate Height
-					if ((self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart) and (self.Height is None or self.Z > self.Height)):
-						self.Height = self.Z
+					# calculate LastExtrusionHeight and Height
+					if (self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart):
+						if(self.Height is None or self.Z > self.Height):
+							self.Height = self.Z
+						self.LastExtrusionHeight = self.Z
+
 						self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
 
 					# calculate ZDelta
@@ -146,20 +156,28 @@ class Position(object):
 					else:
 						self.IsLayerChange = False
 
-					# Is this a ZHOp?
-					#self.Settings.CurrentDebugProfile().LogInfo("Zhop:{0}, ZRelative:{1}, Extruder-IsExtruding:{2}, Extruder-IsRetracted:{3}, Extruder-IsRetracting:{4}".format(
-					#	self.Printer.z_hop, self.ZRelative(), self.Extruder.IsExtruding, self.Extruder.IsRetracted, self.Extruder.IsRetracting
-					#))
-					if(self.Height is not None and self.HasHomedAxis()):
+					# Calculate ZHop based on last extrusion height
+					if(self.LastExtrusionHeight is not None):
 						# calculate lift, taking into account floating point rounding
-						lift = self.Z - self.Height
+						lift = self.Z - self.LastExtrusionHeight
 						printerTolerance = self.Printer.printer_position_confirmation_tolerance
 						if(utility.isclose(lift,self.Printer.z_hop,printerTolerance)):
 							lift = self.Printer.z_hop
+						isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart)
 
-						self.IsZHop = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart)
+						if(isLifted):
+							if(not self.IsZHop):
+								self.IsZHopStart = True
+						else:
+							if(self.IsZHop):
+								self.IsZHopCompleting = True
+
+					if(self.IsZHopStart):
+						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - ZhopStart:{0}".format(self.Printer.z_hop))
 					if(self.IsZHop):
 						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
+					if(self.IsZHopCompleting):
+						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - IsZHopCompleting:{0}".format(self.Printer.z_hop))
 				#########################################################
 			elif(command.Command == "G28"):
 				# test homing of only X,Y or Z

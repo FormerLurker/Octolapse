@@ -13,14 +13,16 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 class Printer(object):
 	
 	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
-			  ,retract_speed=4000,detract_speed=3000, movement_speed=7200,z_hop=0.5,snapshot_command="snap"):
+			  ,retract_speed=4000,detract_speed=3000, movement_speed=7200,z_hop=0.5, z_hop_speed=7200, snapshot_command="snap"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
 		self.retract_length = retract_length
 		self.retract_speed = retract_speed
 		self.detract_speed = detract_speed
 		self.movement_speed = movement_speed
-		self.z_hop = z_hop
+		self.z_hop = z_hop 
+		self.z_hop_speed = z_hop_speed
+		self.retract_speed = retract_speed
 		self.snapshot_command = snapshot_command
 		self.printer_position_confirmation_tolerance = 0.005
 		if(printer is not None):
@@ -29,8 +31,10 @@ class Printer(object):
 				self.name = printer.name
 				self.retract_length = printer.retract_length
 				self.retract_speed = printer.retract_speed
+				self.detract_speed = printer.detract_speed
 				self.movement_speed = printer.movement_speed
 				self.z_hop = printer.z_hop
+				self.z_hop_speed = printer.z_hop_speed
 				self.snapshot_command = printer.snapshot_command
 				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
 			else:
@@ -52,6 +56,8 @@ class Printer(object):
 			self.snapshot_command = utility.getstring(changes["snapshot_command"],self.snapshot_command)
 		if("z_hop" in changes.keys()):
 			self.z_hop = utility.getfloat(changes["z_hop"],self.z_hop)
+		if("z_hop_speed" in changes.keys()):
+			self.z_hop_speed = utility.getint(changes["z_hop_speed"],self.z_hop_speed)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
 			
@@ -65,6 +71,7 @@ class Printer(object):
 			'detract_speed'		: self.detract_speed,
 			'movement_speed'	: self.movement_speed,
 			'z_hop'				: self.z_hop,
+			'z_hop_speed'		: self.z_hop_speed,
 			'snapshot_command'	: self.snapshot_command,
 			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance
 		}

@@ -257,7 +257,7 @@ class Timelapse(object):
 		printerTolerance = self.Printer.printer_position_confirmation_tolerance
 		# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
 		# Because of this we need to compare the position we received to the previous position, not the current one.
-		if( not self.Position.IsAtCurrentPosition(x,y,None) ):
+		if( not self.Position.IsAtPreviousPosition(x,y,None) ):
 			self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X,self.Position.Y,self.Position.Z))
 			self.Position.UpdatePosition(x=x,y=y,z=z,force=True)
 				 

@@ -46,6 +46,13 @@
 
   </div>
   <div class="control-group">
+    <label class="control-label">Z-Hop Speed - (0 for current extruder axis speed)</label>
+    <div class="controls">
+      <input name="z_hop_speed" type="number" class="form-input span2" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
     <label class="control-label">Snapshot Command</label>
     <div class="controls">
       <input name="snapshot_command" type="text" class="form-input span2" data-bind="value: snapshot_command" required="true" />

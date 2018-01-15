@@ -11,6 +11,7 @@ $(function() {
             detract_speed: "Please enter a detraction speed",
             movement_speed: "Please enter a movement speed",
             z_hop: "Please enter a height for z-hop",
+            z_hop_speed: "Please enter a zhop speed",
             snapshot_command: "Please enter a custom command that will trigger snapshots"
         }
     };
@@ -24,6 +25,7 @@ $(function() {
         self.detract_speed = ko.observable(values.detract_speed);
         self.movement_speed = ko.observable(values.movement_speed);
         self.z_hop = ko.observable(values.z_hop);
+        self.z_hop_speed = ko.observable(values.z_hop_speed);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
     }

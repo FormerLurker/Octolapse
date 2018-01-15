@@ -4,6 +4,6 @@
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\test"
   ],
-  "SelectedNode": "\\.editorconfig",
+  "SelectedNode": "\\octoprint_octolapse\\timelapse.py",
   "PreviewInSolutionExplorer": false
 }

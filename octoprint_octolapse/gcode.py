@@ -83,7 +83,6 @@ class SnapshotGcodeGenerator(object):
 			coords["Y"] = None
 
 		return coords
-
 	def GetSnapshotCoordinate(self, path):
 		if(path.Type == 'disabled'):
 			return path.CurrentPosition
@@ -124,7 +123,6 @@ class SnapshotGcodeGenerator(object):
 			if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
 				raise ValueError('Cannot calculate relative coordinates within a circular bed (yet...), sorry')
 			return 	self.GetBedRelativeCoordinate(path.Axis,coord)
-
 	def GetBedRelativeCoordinate(self,axis,coord):
 		relCoord = None
 		if(axis == "X"):
@@ -152,6 +150,12 @@ class SnapshotGcodeGenerator(object):
 			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["height"])
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
+
+	def AppendFeedrateGcode(self, snapshotGcode, desiredSpeed):
+		if(desiredSpeed > 0 and self.FCurrent != desiredSpeed):
+			snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed));
+			self.FCurrent = self.Printer.desiredSpeed
+			
 	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder):
 		self.Reset()
 		self.FOriginal = f
@@ -169,14 +173,9 @@ class SnapshotGcodeGenerator(object):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
-			if(self.Printer.retract_speed>0 and self.Printer.retract_speed != self.FCurrent):
-				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.retract_speed));
-				self.FCurrent = self.Printer.retract_speed
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
 			newSnapshotGcode.Append(self.GetRetractGcode())
 			self.RetractedBySnapshotStartGcode = True
-			if(self.FCurrent != self.FOriginal):
-				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
-				self.FCurrent = self.FOriginal
 		# Can we hop or is the print too tall?
 		
 		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
@@ -185,6 +184,7 @@ class SnapshotGcodeGenerator(object):
 			if(not self.IsRelativeCurrent): # must be in relative mode
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
 				self.IsRelativeCurrent = True
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
 			newSnapshotGcode.Append(self.GetRelativeZLiftGcode())
 			self.ZhopBySnapshotStartGcode = True
 
@@ -211,15 +211,14 @@ class SnapshotGcodeGenerator(object):
 			self.IsRelativeCurrent = False
 
 		## speed change - Set to movement speed IF we have specified one
-		if(self.Printer.movement_speed>0 and self.Printer.movement_speed != self.FCurrent):
-			newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.movement_speed));
-			self.FCurrent = self.Printer.retract_speed
-
+		
+		self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.movement_speed)
+		
 		# Move to Snapshot Position
 		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
 		
 		# Wait for current moves to finish before requesting the position
-		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode());
+		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode())
 		
 		# Get the final position after moving.  When we get a response from the, we'll know that the snapshot is ready to be taken
 		newSnapshotGcode.Append(self.GetPositionGcode())
@@ -239,31 +238,25 @@ class SnapshotGcodeGenerator(object):
 			
 		if(x is not None and y is not None):
 			newSnapshotGcode.Append(self.GetMoveGcode(x,y))
-
-		## speed change - Return to the original feedrate IF we have specified a custom speed
-		if(self.FCurrent != self.FOriginal):
-			newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
-			self.FCurrent = self.FOriginal
-		
+	
 		
 		# If we zhopped in the beginning, lower z
 		if(self.ZhopBySnapshotStartGcode):
 			if(not self.IsRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
 				self.IsRelativeCurrent = True
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
 			newSnapshotGcode.Append(self.GetRelativeZLowerGcode())
+			
+			
 		# detract
 		if(self.RetractedBySnapshotStartGcode):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
 				self.IsExtruderRelativeCurrent = True
-			if(self.Printer.retract_speed>0 and self.Printer.detract_speed != self.FCurrent):
-				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.detract_speed));
-				self.FCurrent = self.Printer.retract_speed
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
 			newSnapshotGcode.Append(self.GetDetractGcode())
-			if(self.FCurrent != self.FOriginal):
-				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
-				self.FCurrent = self.FOriginal
+
 		# reset the coordinate systems for the extruder and axis
 		if(self.IsRelativeOriginal != self.IsRelativeCurrent):
 			if(self.IsRelativeCurrent):
@@ -277,6 +270,9 @@ class SnapshotGcodeGenerator(object):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 			else:
 				newSnapshotGcode.Append(self.GetSetExtruderAbslutePositionGcode())
+
+		# Make sure we return to the original feedrate
+		self.AppendFeedrateGcode(newSnapshotGcode, self.FOriginal)
 		# What the hell was this for?!
 		#newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
 		# add the saved command, if there is one

@@ -9,10 +9,14 @@ class Extruder(object):
 		self.Reset()
 		
 	def Reset(self):
+		self.ExtrusionLength = 0.0
+		self.__ExtrusionLengthPrevious = 0.0
 		self.ExtrusionLengthTotal = 0.0
 		self.__ExtrusionLengthTotalPrevious = 0.0
 		self.RetractionLength = 0.0
 		self.__RetractionLengthPrevious = 0.0
+		self.DetractionLength = 0.0
+		self.__DetractionLengthPrevious = 0.0
 		self.ExtrusionLength = 0.0
 		self.IsExtrudingStart = False
 		self.__IsExtrudingStartPrevious = False
@@ -45,8 +49,10 @@ class Extruder(object):
 		
 		self.__E =e
 		# Record the previous values
+		self.__ExtrusionLengthPrevious = self.ExtrusionLength
 		self.__ExtrusionLengthTotalPrevious = self.ExtrusionLengthTotal
-		self.__RetractionLengthPrevious = self.RetractionLength 
+		self.__RetractionLengthPrevious = self.RetractionLength
+		self.__DetractionLengthPrevious = self.DetractionLength
 		self.__IsExtrudingStartPrevious = self.IsExtrudingStart
 		self.__IsExtrudingPrevious = self.IsExtruding
 		self.__IsPrimedPrevious = self.IsPrimed
@@ -65,8 +71,19 @@ class Extruder(object):
 		self.RetractionLength -= self.__E
 		
 		if(self.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE):
+			# we can use the negative retraction length to calculate our extrusion length!
+			self.ExtrusionLength = abs(self.RetractionLength)
+			# set the retraction length to 0 since we are etruding
 			self.RetractionLength = 0
-		
+		else:
+			self.ExtrusionLength = 0
+
+		# calculate detraction length
+		if(self.__RetractionLengthPrevious > self.RetractionLength):
+			self.DetractionLength = self.__RetractionLengthPrevious - self.RetractionLength
+		else:
+			self.DetractionLength = 0
+
 		self.UpdateState()
 		
 	# If any values are edited manually (ExtrusionLengthTotal,ExtrusionLength, RetractionLength, __ExtrusionLengthTotalPrevious,__RetractionLengthPrevious,__IsExtrudingPrevious,
@@ -74,16 +91,17 @@ class Extruder(object):
 	def UpdateState(self):
 		# Todo:  Properly deal with floating compare
 		self.HasChanged = False
-		self.IsExtrudingStart = True if self.__E > self.__RetractionLengthPrevious and not self.__IsExtrudingPrevious else False
-		self.IsExtruding = True if self.__E > self.__RetractionLengthPrevious else False
-		self.IsPrimed = True if self.RetractionLength == 0 and self.__E - self.__RetractionLengthPrevious == 0 else False
+		# If we were not previously extruding, but are now
+		self.IsExtrudingStart = True if self.ExtrusionLength > 0 and self.__ExtrusionLengthPrevious == 0 else False
+		self.IsExtruding = True if (self.__ExtrusionLengthPrevious > 0) and self.ExtrusionLength > 0 else False
+		self.IsPrimed = True if self.__RetractionLengthPrevious == 0 and self.ExtrusionLength == 0 and self.RetractionLength == 0else False
 		self.IsRetractingStart = True if self.__RetractionLengthPrevious == 0 and self.RetractionLength > 0 else False
-		self.IsRetracting = True if self.RetractionLength > 0 and self.__E < 0 else False
-		self.IsPartiallyRetracted = True if self.RetractionLength > 0 and self.RetractionLength < self.PrinterRetractionLength else False
-		self.IsRetracted = True if self.RetractionLength >= self.PrinterRetractionLength else False
-		self.IsDetractingStart = True if self.__RetractionLengthPrevious > self.RetractionLength and not self.__IsDetractingPrevious else False
-		self.IsDetracting = True if self.__RetractionLengthPrevious > self.RetractionLength else False
-		self.IsDetracted = True if self.RetractionLength == 0 and self.__RetractionLengthPrevious > 0 else False
+		self.IsRetracting = True if (self.__RetractionLengthPrevious > 0 and self.RetractionLength > self.__RetractionLengthPrevious) else False
+		self.IsPartiallyRetracted = True if self.__RetractionLengthPrevious>0 and self.__RetractionLengthPrevious < self.PrinterRetractionLength else False
+		self.IsRetracted = True if self.__RetractionLengthPrevious >= self.PrinterRetractionLength else False
+		self.IsDetractingStart = True if self.DetractionLength > 0 and self.__DetractionLengthPrevious == 0 else False
+		self.IsDetracting = True if self.__DetractionLengthPrevious > 0 and self.DetractionLength > 0 else False
+		self.IsDetracted = True if self.__RetractionLengthPrevious == 0 and self.__DetractionLengthPrevious > 0 and self.__ExtrusionLengthPrevious == 0 else False
 
 		if(
 			self.__RetractionLengthPrevious != self.RetractionLength 
