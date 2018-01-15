@@ -154,7 +154,7 @@ class SnapshotGcodeGenerator(object):
 	def AppendFeedrateGcode(self, snapshotGcode, desiredSpeed):
 		if(desiredSpeed > 0 and self.FCurrent != desiredSpeed):
 			snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed));
-			self.FCurrent = self.Printer.desiredSpeed
+			self.FCurrent = desiredSpeed
 			
 	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder):
 		self.Reset()
