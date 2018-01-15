@@ -186,7 +186,6 @@ class Timelapse(object):
 		return False
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
-		self.ResetSnapshot()
 	
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
