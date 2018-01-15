@@ -67,6 +67,8 @@ class SnapshotGcodeGenerator(object):
 		self.IsRelativeCurrent = None
 		self.IsExtruderRelativeOriginal = None
 		self.IsExtruderRelativeCurrent = None
+		self.FOriginal = None
+		self.FCurrent = None
 	def GetSnapshotPosition(self,xPos,yPos):
 		xPath = self.StabilizationPaths["X"]
 		xPath.CurrentPosition = xPos
@@ -150,9 +152,10 @@ class SnapshotGcodeGenerator(object):
 			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["height"])
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
-	def CreateSnapshotStartGcode(self,z,isRelative, isExtruderRelative, extruder):
+	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder):
 		self.Reset()
-
+		self.FOriginal = f
+		self.FCurrent = f
 		self.RetractedBySnapshotStartGcode = False
 		self.ZhopBySnapshotStartGcode = False
 		self.IsRelativeOriginal = isRelative
@@ -166,9 +169,14 @@ class SnapshotGcodeGenerator(object):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
+			if(self.Printer.retract_speed>0 and self.Printer.retract_speed != self.FCurrent):
+				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.retract_speed));
+				self.FCurrent = self.Printer.retract_speed
 			newSnapshotGcode.Append(self.GetRetractGcode())
 			self.RetractedBySnapshotStartGcode = True
-		
+			if(self.FCurrent != self.FOriginal):
+				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
+				self.FCurrent = self.FOriginal
 		# Can we hop or is the print too tall?
 		
 		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
@@ -181,7 +189,7 @@ class SnapshotGcodeGenerator(object):
 			self.ZhopBySnapshotStartGcode = True
 
 		return newSnapshotGcode
-	def CreateSnapshotGcode(self, x,y,z,f, savedCommand = None):
+	def CreateSnapshotGcode(self, x,y,z, savedCommand = None):
 		if(x is None or y is None or z is None):
 			return None
 		commandIndex = 0
@@ -203,8 +211,9 @@ class SnapshotGcodeGenerator(object):
 			self.IsRelativeCurrent = False
 
 		## speed change - Set to movement speed IF we have specified one
-		if(self.Printer.movement_speed > 0):
+		if(self.Printer.movement_speed>0 and self.Printer.movement_speed != self.FCurrent):
 			newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.movement_speed));
+			self.FCurrent = self.Printer.retract_speed
 
 		# Move to Snapshot Position
 		newSnapshotGcode.Append(self.GetMoveGcode(newSnapshotGcode.X,newSnapshotGcode.Y))
@@ -232,13 +241,13 @@ class SnapshotGcodeGenerator(object):
 			newSnapshotGcode.Append(self.GetMoveGcode(x,y))
 
 		## speed change - Return to the original feedrate IF we have specified a custom speed
-		if(self.Printer.movement_speed > 0):
-			newSnapshotGcode.Append(self.GetFeedrateSetGcode(f));
-
-		# set back to original speed
+		if(self.FCurrent != self.FOriginal):
+			newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
+			self.FCurrent = self.FOriginal
+		
 		
 		# If we zhopped in the beginning, lower z
-		if(self.RetractedBySnapshotStartGcode):
+		if(self.ZhopBySnapshotStartGcode):
 			if(not self.IsRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
 				self.IsRelativeCurrent = True
@@ -248,8 +257,13 @@ class SnapshotGcodeGenerator(object):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
 				self.IsExtruderRelativeCurrent = True
+			if(self.Printer.retract_speed>0 and self.Printer.detract_speed != self.FCurrent):
+				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.Printer.detract_speed));
+				self.FCurrent = self.Printer.retract_speed
 			newSnapshotGcode.Append(self.GetDetractGcode())
-
+			if(self.FCurrent != self.FOriginal):
+				newSnapshotGcode.Append(self.GetFeedrateSetGcode(self.FOriginal));
+				self.FCurrent = self.FOriginal
 		# reset the coordinate systems for the extruder and axis
 		if(self.IsRelativeOriginal != self.IsRelativeCurrent):
 			if(self.IsRelativeCurrent):

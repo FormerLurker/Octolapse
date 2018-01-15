@@ -139,7 +139,7 @@ class Timelapse(object):
 				# pause the printer to start the snapshot
 				self.State = TimelapseState.RequestingReturnPosition
 				# get the start timelapse gcide
-				startTimelapseGcode = self.Gcode.CreateSnapshotStartGcode(self.Position.Z,self.Position.IsRelative, self.Position.IsExtruderRelative, self.Position.Extruder)
+				startTimelapseGcode = self.Gcode.CreateSnapshotStartGcode(self.Position.Z, self.Position.F, self.Position.IsRelative, self.Position.IsExtruderRelative, self.Position.Extruder)
 				if(len(startTimelapseGcode.GcodeCommands)>0):
 					for command in startTimelapseGcode.GcodeCommands:
 						self.Position.Update(command)
@@ -186,17 +186,7 @@ class Timelapse(object):
 		return False
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSentGcode("Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
-		#if(self.State == TimelapseState.Completing):
-		#	# keep track of the return commands, make sure they are all sent before we
-		#	# reset the snapshot.
-		#	returnCommands = self.SnapshotGcodes.ReturnCommands()
-		#	if(cmd == returnCommands[self.CommandIndex]):
-		#		self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received return command at index:{0}".format(self.CommandIndex))
-		#		self.CommandIndex += 1
-		#	if(self.CommandIndex >= len(returnCommands)):
-		#		# we are finished!  reset the snapshot
-		#		self.Settings.CurrentDebugProfile().LogSnapshotGcodeEndcommand("Received the final return command, resetting snapshot.")
-		#		self.ResetSnapshot()
+		self.ResetSnapshot()
 	
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
@@ -283,7 +273,7 @@ class Timelapse(object):
 		isRelative = self.Position.IsRelative
 		isExtruderRelative = self.Position.IsExtruderRelative
 		extruder = self.Position.Extruder
-		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z,self.Position.F, savedCommand=self.SavedCommand)
+		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z, savedCommand=self.SavedCommand)
 		# make sure we acutally received gcode
 		if(self.SnapshotGcodes is None):
 			self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")

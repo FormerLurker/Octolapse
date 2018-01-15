@@ -23,6 +23,14 @@
     </div>
   </div>
   <div class="control-group">
+    <label class="control-label">Detraction Speed - (0 for current extruder axis speed)</label>
+
+    <div class="controls">
+      <input name="detract_speed" type="number" class="form-input span2" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
     <label class="control-label">Movement Speed - (0 for current movement speed)</label>
     <div class="controls">
       <input name="movement_speed" type="number" class="form-input span2" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />

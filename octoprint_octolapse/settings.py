@@ -13,11 +13,12 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 class Printer(object):
 	
 	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
-			  ,retract_speed=4800,movement_speed=7200,z_hop=0.5,snapshot_command="snap"):
+			  ,retract_speed=4000,detract_speed=3000, movement_speed=7200,z_hop=0.5,snapshot_command="snap"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
 		self.retract_length = retract_length
 		self.retract_speed = retract_speed
+		self.detract_speed = detract_speed
 		self.movement_speed = movement_speed
 		self.z_hop = z_hop
 		self.snapshot_command = snapshot_command
@@ -43,6 +44,8 @@ class Printer(object):
 			self.retract_length = utility.getfloat(changes["retract_length"],self.retract_length)
 		if("retract_speed" in changes.keys()):
 			self.retract_speed = utility.getint(changes["retract_speed"],self.retract_speed)
+		if("detract_speed" in changes.keys()):
+			self.detract_speed = utility.getint(changes["detract_speed"],self.detract_speed)
 		if("movement_speed" in changes.keys()):
 			self.movement_speed = utility.getint(changes["movement_speed"],self.movement_speed)
 		if("snapshot_command" in changes.keys()):
@@ -59,6 +62,7 @@ class Printer(object):
 			'guid'				: self.guid,
 			'retract_length'	: self.retract_length,
 			'retract_speed'		: self.retract_speed,
+			'detract_speed'		: self.detract_speed,
 			'movement_speed'	: self.movement_speed,
 			'z_hop'				: self.z_hop,
 			'snapshot_command'	: self.snapshot_command,
