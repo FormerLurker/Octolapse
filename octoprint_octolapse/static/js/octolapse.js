@@ -151,10 +151,10 @@ $(function () {
             */
             var stabilizationSettings =
                 {
-                    'current_profile_guid': self.settings.current_stabilization_profile_guid
+                    'current_profile_guid': settings.current_stabilization_profile_guid
                     , 'profiles': settings.stabilizations
                     , 'default_profile': settings.default_stabilization_profile
-                    , 'profileOptions': { 'stabilization_type_options': self.settings.stabilization_type_options }
+                    , 'profileOptions': { 'stabilization_type_options': settings.stabilization_type_options }
                     , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
                     , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
                     , 'bindingElementId': 'octolapse_stabilization_tab'
@@ -170,10 +170,10 @@ $(function () {
             */
             var snapshotSettings =
                 {
-                    'current_profile_guid': self.settings.current_snapshot_profile_guid
+                    'current_profile_guid': settings.current_snapshot_profile_guid
                     , 'profiles': settings.snapshots
                     , 'default_profile': settings.default_snapshot_profile
-                    , 'profileOptions': { 'snapshot_format_options': settings.snapshot_format_options, 'snapshot_extruder_trigger_options': self.settings.snapshot_extruder_trigger_options }
+                    , 'profileOptions': { 'snapshot_format_options': settings.snapshot_format_options, 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'
