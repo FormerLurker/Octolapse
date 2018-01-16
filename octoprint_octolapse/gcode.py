@@ -254,7 +254,7 @@ class SnapshotGcodeGenerator(object):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
 				self.IsExtruderRelativeCurrent = True
-			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.detract_speed)
 			newSnapshotGcode.Append(self.GetDetractGcode())
 
 		# reset the coordinate systems for the extruder and axis
