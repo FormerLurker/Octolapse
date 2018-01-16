@@ -39,6 +39,7 @@ class Timelapse(object):
 		
 	def StartTimelapse(self,octoprintPrinter, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder):
 		self.Reset()
+		
 		self.OctoprintPrinter = octoprintPrinter
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
 		self.FfMpegPath = ffmpegPath
@@ -50,6 +51,7 @@ class Timelapse(object):
 		self.CaptureSnapshot = CaptureSnapshot(self.Settings,  self.DataFolder, printStartTime=self.PrintStartTime)
 		self.Position = Position(self.Settings,octoprintPrinterProfile, g90InfluencesExtruder)
 		self.State = TimelapseState.WaitingForTrigger
+
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
 		# create the triggers
 		# If the gcode trigger is enabled, add it

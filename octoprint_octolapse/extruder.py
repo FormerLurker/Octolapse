@@ -22,8 +22,8 @@ class Extruder(object):
 		self.__IsExtrudingStartPrevious = False
 		self.IsExtruding = False
 		self.__IsExtrudingPrevious = False
-		self.IsPrimed = True
-		self.__IsPrimedPrevious = True
+		self.IsPrimed = False
+		self.__IsPrimedPrevious = False
 		self.IsRetractingStart = False
 		self.__IsRetractingStartPrevious = False
 		self.IsRetracting = False

@@ -249,12 +249,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused by Octolapse.")
 			
 	def OnPrintStart(self):
-		
+		self.StartTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started.")
 		if(self.Settings.CurrentCamera().apply_settings_before_print):
 			self.ApplyCameraSettings(self.Settings.CurrentCamera())
 		
-		self.StartTimelapse()
+		
 
 	def StartTimelapse(self):
 		webcam = self._settings.settings.get(["webcam"])

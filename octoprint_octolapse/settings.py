@@ -373,6 +373,7 @@ class Snapshot(object):
 				self.output_directory = snapshot.output_directory
 				self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
 				self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
+				self.retract_before_move = snapshot.retract_before_move
 			else:
 				self.Update(snapshot)
 	def Update(self, changes):
