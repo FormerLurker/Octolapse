@@ -5,6 +5,6 @@
     "\\octoprint_octolapse\\templates",
     "\\octoprint_octolapse\\test"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\templates\\octolapse_settings.jinja2",
+  "SelectedNode": "\\octoprint_octolapse\\settings.py",
   "PreviewInSolutionExplorer": false
 }

@@ -82,31 +82,37 @@ $(function () {
             self.toggleOctolapseEnabled(Octolapse.Settings.is_octolapse_enabled)
             // Printers
             Octolapse.Printers.profiles([])
+            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid)
             settings.printers.forEach(function (item, index) {
                 Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
             });
             // Stabilizations
             Octolapse.Stabilizations.profiles([])
+            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid)
             settings.stabilizations.forEach(function (item, index) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
             });
             // Snapshots
             Octolapse.Snapshots.profiles([])
+            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid)
             settings.snapshots.forEach(function (item, index) {
                 Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
             });
             // Renderings
             Octolapse.Renderings.profiles([])
+            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid)
             settings.renderings.forEach(function (item, index) {
                 Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
             });
             // Cameras
             Octolapse.Cameras.profiles([])
+            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid)
             settings.cameras.forEach(function (item, index) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
             });
             // Debugs
             Octolapse.DebugProfiles.profiles([])
+            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid)
             settings.debug_profiles.forEach(function (item, index) {
                 Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
             });

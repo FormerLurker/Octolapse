@@ -62,7 +62,7 @@ class CameraControl(object):
 			CameraSettingJob(self.Camera, request, self.TimeoutSeconds, onSuccess = self.OnSuccess, onFail = self.OnFail, onComplete = self.OnComplete).ProcessAsync()
 
 class CameraSettingJob(object):
-	camera_job_lock = threading.RLock()
+	#camera_job_lock = threading.RLock()
 
 	def __init__(self, camera, cameraSettingRequest, timeout, onSuccess = None, onFail = None, onComplete = None):
 		camera = camera
@@ -81,39 +81,39 @@ class CameraSettingJob(object):
 		self._thread.daemon = True
 		self._thread.start()
 	def _process(self):
-		with self.camera_job_lock:
+		#with self.camera_job_lock:
 			
-			errorMessages = []
-			success = None
+		errorMessages = []
+		success = None
 			
-			template = self.Request['template']
-			value = self.Request['value']
-			settingName = self.Request['name']
-			url = FormatRequestTemplate(self.Address, template,value)
-			try:
-				if(len(self.Username)>0):
-					r=requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
-				else:
-					r=requests.get(url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
-
-				if r.status_code != requests.codes.ok:
-					success = False
-					errorMessages.append("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(settingName, value))
-			except:
-				type = sys.exc_info()[0]
-				value = sys.exc_info()[1]
-				success = False
-				errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
-
-			if(success != False):
-				success = True
-			
-			if(success):
-				self._notify_callback("success", value, settingName, template)
+		template = self.Request['template']
+		value = self.Request['value']
+		settingName = self.Request['name']
+		url = FormatRequestTemplate(self.Address, template,value)
+		try:
+			if(len(self.Username)>0):
+				r=requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 			else:
-				self._notify_callback("fail", value, settingName, template, errorMessages)
+				r=requests.get(url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 
-			self._notify_callback("complete")
+			if r.status_code != requests.codes.ok:
+				success = False
+				errorMessages.append("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(settingName, value))
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			success = False
+			errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
+
+		if(success != False):
+			success = True
+			
+		if(success):
+			self._notify_callback("success", value, settingName, template)
+		else:
+			self._notify_callback("fail", value, settingName, template, errorMessages)
+
+		self._notify_callback("complete")
 	def _notify_callback(self, callback, *args, **kwargs):
 		"""Notifies registered callbacks of type `callback`."""
 		name = "_on_{}".format(callback)

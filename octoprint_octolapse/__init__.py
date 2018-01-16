@@ -284,8 +284,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		template = args[2]
 		errorMessage = args[3]
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Unable to apply {0} to the {1} settings!  Template:{2}, Details:{3}".format(settingValue,settingName,template,errorMessage))
-		for message in errorMessages:
-			self.Settings.CurrentDebugProfile().LogCameraSettingsApply(message)
 		
 	def OnCameraSettingsCompelted(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
