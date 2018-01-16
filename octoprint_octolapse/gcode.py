@@ -152,7 +152,7 @@ class SnapshotGcodeGenerator(object):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
 
 	def AppendFeedrateGcode(self, snapshotGcode, desiredSpeed):
-		if(desiredSpeed > 0 and self.FCurrent != desiredSpeed):
+		if(desiredSpeed > 0):
 			snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed));
 			self.FCurrent = desiredSpeed
 			
@@ -169,7 +169,7 @@ class SnapshotGcodeGenerator(object):
 
 		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
 		# retract if necessary
-		if(self.Snapshot.retract_before_move and not extruder.IsRetracted):
+		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted)):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
@@ -177,8 +177,9 @@ class SnapshotGcodeGenerator(object):
 			newSnapshotGcode.Append(self.GetRetractGcode())
 			self.RetractedBySnapshotStartGcode = True
 		# Can we hop or is the print too tall?
-		
-		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile )
+
+		# todo: detect zhop and only zhop if we are not currently hopping.
+		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile)
 		# if we can ZHop, do
 		if(canZHop):
 			if(not self.IsRelativeCurrent): # must be in relative mode

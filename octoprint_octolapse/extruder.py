@@ -98,7 +98,7 @@ class Extruder(object):
 		self.IsRetractingStart = True if self.__RetractionLengthPrevious == 0 and self.RetractionLength > 0 else False
 		self.IsRetracting = True if (self.__RetractionLengthPrevious > 0 and self.RetractionLength > self.__RetractionLengthPrevious) else False
 		self.IsPartiallyRetracted = True if self.__RetractionLengthPrevious>0 and self.__RetractionLengthPrevious < self.PrinterRetractionLength else False
-		self.IsRetracted = True if self.__RetractionLengthPrevious >= self.PrinterRetractionLength else False
+		self.IsRetracted = True if self.__RetractionLengthPrevious > 0 and self.__RetractionLengthPrevious >= self.PrinterRetractionLength else False
 		self.IsDetractingStart = True if self.DetractionLength > 0 and self.__DetractionLengthPrevious == 0 else False
 		self.IsDetracting = True if self.__DetractionLengthPrevious > 0 and self.DetractionLength > 0 else False
 		self.IsDetracted = True if self.__RetractionLengthPrevious == 0 and self.__DetractionLengthPrevious > 0 and self.__ExtrusionLengthPrevious == 0 else False

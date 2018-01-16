@@ -190,7 +190,7 @@ class Command(object):
 	def ToString(self, reform = False):
 		# if we have gcode, just return it (duh...)
 		if(not reform and self.CommandParts.Gcode is not None):
-			return
+			return self.CommandParts.Gcode
 
 		# if we do not have gcode, construct from the command and parameters
 		commandString = self.Command
@@ -246,7 +246,6 @@ class Commands(object):
 					CommandParameter("F","(?i)^f(?P<f>-?[0-9]{0,15}.?[0-9]{1,15})$",order=5)])
 	G1 = Command(name="Linear Move"
 	,command="G1"
-	,regex="(?i)^[gG1]{1,3}(?:\s+x(?P<x>-?[0-9.]{1,15})|\s+y(?P<y>-?[0-9.]{1,15})|\s+z(?P<z>-?[0-9.]{1,15})|\s+e(?P<e>-?[0-9.]{1,15})|\s+f?(?P<f>-?[0-9.]{1,15}))*$"
 	,displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{Comment}"
 	,parameters = [CommandParameter("X","(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$",order=1),
 					CommandParameter("Y","(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$",order=2),

@@ -281,9 +281,6 @@ class Position(object):
 				or self.ERelative() != 0
 			):
 				self.HasPositionChanged = True;
-				
-
-		
 
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
