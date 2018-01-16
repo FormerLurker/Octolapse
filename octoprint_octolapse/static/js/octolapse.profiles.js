@@ -58,23 +58,25 @@ $(function() {
             });
         }
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
-        self.removeProfile = function(guid) {
-            var data = { 'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
-            $.ajax({
-                url: "/plugin/octolapse/" + self.removeProfilePath,
-                type: "POST",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: function() {
-                    self.profiles.remove(self.getProfileByGuid(guid));
-                    // close modal dialog.
+        self.removeProfile = function (guid) {
+            if (confirm("Are you sure you want to permanently erase the profile:'" + settings.profileTypeName + "'?")) {
+                var data = { 'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
+                $.ajax({
+                    url: "/plugin/octolapse/" + self.removeProfilePath,
+                    type: "POST",
+                    data: JSON.stringify(data),
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function () {
+                        self.profiles.remove(self.getProfileByGuid(guid));
+                        // close modal dialog.
 
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to remove the " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
-                }
-            });
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Unable to remove the " + settings.profileTypeName + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    }
+                });
+            }
         }
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
@@ -199,7 +201,26 @@ $(function() {
         // This must be the very last line!  Well, at least it probably should be
         ko.applyBindings(self, document.getElementById(self.bindingElementId));
     };
-    
+    Octolapse.restoreDefaultSettings = function (onSuccess) {
+        if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            $.ajax({
+                url: "/plugin/octolapse/restoreDefaults",
+                type: "POST",
+                contentType: "application/json",
+                success: function (newSettings) {
+                    //load settings from the provided data
+                    alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }
+
+
+    }
 });
 
 

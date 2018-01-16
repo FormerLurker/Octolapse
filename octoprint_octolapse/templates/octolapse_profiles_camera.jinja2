@@ -38,18 +38,24 @@
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">If required="true", enter a username to be sent with the camera snapshot request</label>
+      <label class="control-label">Enter a username to be sent with the camera snapshot request</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: username"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">If required="true", enter a password to be sent with the camera snapshot request</label>
+      <label class="control-label">If required, enter a password to be sent with the camera snapshot request.</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: password"/>
+       <!-- The text and password here are to prevent FF from auto filling my login credentials because it ignores autocomplete="off"-->
+       <input type="text" style="display:none"/>
+       <input type="password" style="display:none"/>
+        <input name="camera_profile_password" type="password" autocomplete="off" class="input-block-level" data-bind="value: password"/>
         <div class="error_label_container text-error" ></div>
       </div>
+      <span class="help-inline">
+        <span class="label label-important">Attention</span>Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
+      </span>
     </div>
     <div class="control-group">
       <label class="control-label">Auto-Apply Camera Settings Before Print</label>

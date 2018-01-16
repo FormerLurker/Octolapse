@@ -314,10 +314,6 @@ class Snapshot(object):
 		self.layer_trigger_on_detracting = None
 		self.layer_trigger_on_detracted = False
 		# other settings
-		self.position_request_retry_attemps = 10 # ***
-		self.position_request_retry_delay_ms = 200# ***
-
-		self.archive = True
 		self.delay = 1000
 		self.retract_before_move = False
 		self.output_format = "jpg"
@@ -327,15 +323,8 @@ class Snapshot(object):
 		self.output_directory = "{DATADIRECTORY}/snapshots/"
 		if (sys.platform == "win32"):
 			self.output_directory = "{DATADIRECTORY}\\snapshots\\"
-		self.cleanup_before_print = True
-		self.cleanup_after_print = False
-		self.cleanup_after_cancel = True
-		self.cleanup_after_fail = True
-		self.cleanup_before_close = False
 		self.cleanup_after_render_complete = True
 		self.cleanup_after_render_fail = False
-		self.custom_script_enabled = False
-		self.script_path = ""
 		
 		if(snapshot is not None):
 			if(isinstance(snapshot,Snapshot)):
@@ -378,23 +367,12 @@ class Snapshot(object):
 				self.layer_trigger_on_detracting_start = snapshot.layer_trigger_on_detracting_start
 				self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
 				self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
-				self.position_request_retry_attemps = snapshot.position_request_retry_attemps
-				self.position_request_retry_delay_ms = snapshot.position_request_retry_delay_ms
-				self.archive = snapshot.archive
 				self.delay = snapshot.delay
 				self.output_format = snapshot.output_format
 				self.output_filename = snapshot.output_filename
 				self.output_directory = snapshot.output_directory
-				self.retract_before_move = snapshot.retract_before_move
-				self.cleanup_before_print = snapshot.cleanup_before_print
-				self.cleanup_after_print = snapshot.cleanup_after_print
-				self.cleanup_after_cancel = snapshot.cleanup_after_cancel
-				self.cleanup_after_fail = snapshot.cleanup_after_fail
-				self.cleanup_before_close = snapshot.cleanup_before_close
 				self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
 				self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
-				self.custom_script_enabled = snapshot.custom_script_enabled
-				self.script_path = snapshot.script_path
 			else:
 				self.Update(snapshot)
 	def Update(self, changes):
@@ -482,12 +460,6 @@ class Snapshot(object):
 			self.layer_trigger_on_detracted = self.GetExtruderTriggerValue(changes["layer_trigger_on_detracted"])
 
 		# other settings
-		if("position_request_retry_attemps" in changes.keys()):
-			self.position_request_retry_attemps = utility.getfloat(changes["position_request_retry_attemps"],self.position_request_retry_attemps)
-		if("position_request_retry_delay_ms" in changes.keys()):
-			self.position_request_retry_delay_ms = utility.getfloat(changes["position_request_retry_delay_ms"],self.position_request_retry_delay_ms)
-		if("archive" in changes.keys()):
-			self.archive = utility.getbool(changes["archive"],self.archive)
 		if("delay" in changes.keys()):
 			self.delay = utility.getint(changes["delay"],self.delay)
 		if("retract_before_move" in changes.keys()):
@@ -498,24 +470,11 @@ class Snapshot(object):
 			self.output_filename = utility.getstring(changes["output_filename"],self.output_filename)
 		if("output_directory" in changes.keys()):
 			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
-		if("cleanup_before_print" in changes.keys()):
-			self.cleanup_before_print = utility.getbool(changes["cleanup_before_print"],self.cleanup_before_print)
-		if("cleanup_after_print" in changes.keys()):
-			self.cleanup_after_print = utility.getbool(changes["cleanup_after_print"],self.cleanup_after_print)
-		if("cleanup_after_cancel" in changes.keys()):
-			self.cleanup_after_cancel = utility.getbool(changes["cleanup_after_cancel"],self.cleanup_after_cancel)
-		if("cleanup_after_fail" in changes.keys()):
-			self.cleanup_after_fail = utility.getbool(changes["cleanup_after_fail"],self.cleanup_after_fail)
-		if("cleanup_before_close" in changes.keys()):
-			self.cleanup_before_close = utility.getbool(changes["cleanup_before_close"],self.cleanup_before_close)
 		if("cleanup_after_render_complete" in changes.keys()):
 			self.cleanup_after_render_complete = utility.getbool(changes["cleanup_after_render_complete"],self.cleanup_after_render_complete)
 		if("cleanup_after_render_fail" in changes.keys()):
 			self.cleanup_after_render_fail = utility.getbool(changes["cleanup_after_render_fail"],self.cleanup_after_render_fail)
-		if("custom_script_enabled" in changes.keys()):
-			self.custom_script_enabled = utility.getbool(changes["custom_script_enabled"],self.custom_script_enabled)
-		if("script_path" in changes.keys()):
-			self.script_path = utility.getstring(changes["script_path"],self.script_path)
+
 
 	def GetExtruderTriggerValueString(self, value):
 		if(value is None):
@@ -584,23 +543,13 @@ class Snapshot(object):
 			'layer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting),
 			'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
 			# Other Settings
-			'position_request_retry_attemps'		: self.position_request_retry_attemps,
-			'position_request_retry_delay_ms'		: self.position_request_retry_delay_ms,
-			'archive'								: self.archive,
 			'delay'									: self.delay,
 			'output_format'							: self.output_format,
 			'output_filename'						: self.output_filename,
 			'output_directory'						: self.output_directory,
 			'retract_before_move'					: self.retract_before_move,
-			'cleanup_before_print'					: self.cleanup_before_print,
-			'cleanup_after_print'					: self.cleanup_after_print,
-			'cleanup_after_cancel'					: self.cleanup_after_cancel,
-			'cleanup_after_fail'					: self.cleanup_after_fail,
-			'cleanup_before_close'					: self.cleanup_before_close,
 			'cleanup_after_render_complete'			: self.cleanup_after_render_complete,
 			'cleanup_after_render_fail'				: self.cleanup_after_render_fail,
-			'custom_script_enabled'					: self.custom_script_enabled,
-			'script_path'							: self.script_path
 		}
 	
 class Rendering(object):
@@ -769,8 +718,14 @@ class Camera(object):
 			self.ignore_ssl_error = utility.getbool(changes["ignore_ssl_error"],self.ignore_ssl_error)
 		if("username" in changes.keys()):
 			self.username = utility.getstring(changes["username"],self.username)
-		if("password" in changes.keys()):
-			self.password = utility.getstring(changes["password"],self.password)
+		# special case, clear password, if not set password
+		if(("clear_password") in changes.keys() and utility.getbool(changes["clear_password"],False) ):
+			self.password = ""
+		elif("password" in changes.keys()):
+			newPassword = utility.getstring(changes["password"],self.password)
+			if(len(newPassword)>0):
+				self.password = newPassword
+				
 		if("brightness" in changes.keys()):
 			self.brightness = utility.getint(changes["brightness"],self.brightness)
 		if("contrast" in changes.keys()):
@@ -1347,7 +1302,7 @@ class OctolapseSettings(object):
 					debugProfile["guid"] = str(uuid.uuid4())
 				self.debug_profiles[debugProfile["guid"]] = DebugProfile(self.LogFilePath, debugProfile = debugProfile)
 
-	def ToDict(self):
+	def ToDict(self, hidePasswords = False):
 		defaults = OctolapseSettings(self.LogFilePath)
 		
 		settingsDict = {
@@ -1503,7 +1458,7 @@ class OctolapseSettings(object):
 			self.current_debug_profile_guid = guid;
 		else:
 			raise ValueError('An unknown profile type ' + str(profileType) + ' was received.')
-		
+
 def HasKey(object,key):
 	if(isinstance(object,dict)):
 		return key in object

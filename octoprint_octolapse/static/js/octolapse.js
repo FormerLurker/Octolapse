@@ -39,7 +39,24 @@ $(function () {
     };
     // Apply the toggle click event to every element within our settings that has the .toggle class
 
+    Octolapse.restoreDefaultSettings = function () {
+        if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            $.ajax({
+                url: "/plugin/octolapse/restoreDefaults",
+                type: "POST",
+                contentType: "application/json",
+                success: function (newSettings) {
+                    //load settings from the provided data
+                    alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
 
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }
+    };
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
@@ -255,10 +272,7 @@ $(function () {
             }
 
         };
-
-        
-    
-        
+                
         /*
             Modal Dialog Functions
         */
@@ -413,6 +427,8 @@ $(function () {
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();
         };
+
+       
     }
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([

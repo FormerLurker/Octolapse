@@ -9,7 +9,8 @@ $(function() {
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);
         self.ignore_ssl_error = ko.observable(values.ignore_ssl_error);
         self.username = ko.observable(values.username);
-        self.password = ko.observable(values.password);
+        self.clear_password = ko.observable(values.clear_password);
+        self.password = ko.observable("");
         self.brightness = ko.observable(values.brightness);
         self.brightness_request_template = ko.observable(values.brightness_request_template);
         self.contrast = ko.observable(values.contrast);

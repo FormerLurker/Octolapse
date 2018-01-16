@@ -74,20 +74,30 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.SaveSettings()
 		return json.dumps({'success':True, 'guid':requestValues["guid"]}), 200, {'ContentType':'application/json'} 
 
+	@octoprint.plugin.BlueprintPlugin.route("/restoreDefaults", methods=["POST"])
+	def loadAllDefaults(self):
+		self.LoadSettings(forceDefaults = True)
+		return json.dumps(self.Settings.ToDict()), 200, {'ContentType':'application/json'} ;
+		
+
+	def DefaultSettingsFilePath(self):
+		return "{0}{1}data{1}settings_default.json".format(self._basefolder,os.sep)
 	def SettingsFilePath(self):
 		return "{0}{1}settings.json".format(self.get_plugin_data_folder(),os.sep)
 
 	def LogFilePath(self):
 		return self._settings.get_plugin_logfile_path();
-	def LoadSettings(self):
+	def LoadSettings(self,forceDefaults = False):
 		try:
 			# if the settings file does not exist, create one from the default settings
 			
 			createNewSettings = False
 
-			if(not os.path.isfile(self.SettingsFilePath())):
-				# create new settings from defaults
-				self.Settings = OctolapseSettings(self.LogFilePath())
+			if(not os.path.isfile(self.SettingsFilePath()) or forceDefaults):
+				# create new settings from default setting file
+				with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:
+					data = json.load(defaultSettingsJson);
+				self.Settings = OctolapseSettings(self.LogFilePath(), data);
 				self.Settings.CurrentDebugProfile().LogSettingsLoad("Creating new settings file from defaults.")			
 				createNewSettings = True
 			else:

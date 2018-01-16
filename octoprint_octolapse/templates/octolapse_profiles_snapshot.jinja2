@@ -475,23 +475,6 @@
       </div>
     </div>
     <div class="control-group">
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: custom_script_enabled" />Custom Script Enabled
-          <span class="help-inline">
-            <span class="label label-important">Attention</span>Warning, this is an advanced setting.  Without proper configuration using custom scripts can be dangerous.
-          </span>
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: custom_script_enabled">
-      <label class="control-label">A custom script that will capture a snapshot (full path)</label>
-      <div class="controls">
-        <input type="text" class="input-block-level ignore_hidden_errors" data-bind="value: script_path"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
       <label class="control-label" >Output File Format</label>
       <div class="controls">
         <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_format_options,
@@ -526,21 +509,6 @@
     <div class="control-group">
       <label class="control-label">Delete Snapshots Files:</label>
       <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_before_print" title="Before Print Starts"/>Before Print Starts
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_after_print" title="After Print Completes"/>After Print Completes
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_after_cancel" title="After Print Canceled"/>After Print Canceled
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_after_fail" title="After Print Failed"/>After Print Failed
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_before_close" title="Before Printer Connection is Closed"/>Before Printer Connection is Closed
-        </label>
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: cleanup_after_render_complete" title="After Timelapse Is Rendered"/>After Timelapse Is Rendered
         </label>

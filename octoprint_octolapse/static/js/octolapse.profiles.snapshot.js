@@ -46,23 +46,14 @@ $(function () {
         self.layer_trigger_on_detracting =          ko.observable(values.layer_trigger_on_detracting);
         self.layer_trigger_on_detracted =           ko.observable(values.layer_trigger_on_detracted);
 
-        self.position_request_retry_attemps = ko.observable(values.position_request_retry_attemps);
-        self.position_request_retry_delay_ms = ko.observable(values.position_request_retry_delay_ms);
-        self.archive = ko.observable(values.archive);
         self.delay = ko.observable(values.delay);
         self.retract_before_move = ko.observable(values.retract_before_move);
         self.output_format = ko.observable(values.output_format);
         self.output_filename = ko.observable(values.output_filename);
         self.output_directory = ko.observable(values.output_directory);
-        self.cleanup_before_print = ko.observable(values.cleanup_before_print);
-        self.cleanup_after_print = ko.observable(values.cleanup_after_print);
-        self.cleanup_after_cancel = ko.observable(values.cleanup_after_cancel);
-        self.cleanup_after_fail = ko.observable(values.cleanup_after_fail);
-        self.cleanup_before_close = ko.observable(values.cleanup_before_close);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
-        self.custom_script_enabled = ko.observable(values.custom_script_enabled);
-        self.script_path = ko.observable(values.script_path);
+        
     }
     Octolapse.SnapshotProfileValidationRules = {
         rules: {

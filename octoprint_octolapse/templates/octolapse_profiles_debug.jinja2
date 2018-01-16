@@ -9,18 +9,19 @@
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
+        <input type="checkbox" data-bind="checked: is_test_mode" title="Enable Test Mode"/>Test Mode - Strip all extrusion and temperature commands from the gcode.  Allows you to test snapshot settings without wasting plastic or waiting for the printer to heat up!
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
         <input type="checkbox" data-bind="checked: enabled" title="Enable or disable all logging"/>Enabled Logging
       </label>
     </div>
   </div>
   <div data-bind="visible: enabled">
-    <div class="control-group">
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: is_test_mode" title="Enable Test Mode"/>Strip all extrusion and temperature commands from the gcode.  Allows you to test snapshot settings without wasting plastic or waiting for the printer to heat up!
-        </label>
-      </div>
-    </div>
+    
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
