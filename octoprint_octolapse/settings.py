@@ -718,14 +718,9 @@ class Camera(object):
 			self.ignore_ssl_error = utility.getbool(changes["ignore_ssl_error"],self.ignore_ssl_error)
 		if("username" in changes.keys()):
 			self.username = utility.getstring(changes["username"],self.username)
-		# special case, clear password, if not set password
-		if(("clear_password") in changes.keys() and utility.getbool(changes["clear_password"],False) ):
-			self.password = ""
-		elif("password" in changes.keys()):
-			newPassword = utility.getstring(changes["password"],self.password)
-			if(len(newPassword)>0):
-				self.password = newPassword
-				
+		if("password" in changes.keys()):
+			self.password = utility.getstring(changes["password"],self.password)
+			
 		if("brightness" in changes.keys()):
 			self.brightness = utility.getint(changes["brightness"],self.brightness)
 		if("contrast" in changes.keys()):
@@ -1302,7 +1297,7 @@ class OctolapseSettings(object):
 					debugProfile["guid"] = str(uuid.uuid4())
 				self.debug_profiles[debugProfile["guid"]] = DebugProfile(self.LogFilePath, debugProfile = debugProfile)
 
-	def ToDict(self, hidePasswords = False):
+	def ToDict(self, ):
 		defaults = OctolapseSettings(self.LogFilePath)
 		
 		settingsDict = {

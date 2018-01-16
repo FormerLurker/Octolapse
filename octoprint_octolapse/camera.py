@@ -9,19 +9,35 @@ import sys
 def FormatRequestTemplate(cameraAddress, template,value):
 		return template.format(camera_address=cameraAddress,value=value )
 
+def TestCamera(cameraProfile, timeoutSeconds=2):
+		url = FormatRequestTemplate(cameraProfile.address, cameraProfile.snapshot_request_template,"")
+		try:
+			if(len(cameraProfile.username)>0):
+				r=requests.get(url, auth=HTTPBasicAuth(cameraProfile.username, cameraProfile.password),verify = not cameraProfile.ignore_ssl_error,timeout=float(timeoutSeconds))
+			else:
+				r=requests.get(url,verify = not cameraProfile.ignore_ssl_error,timeout=float(timeoutSeconds))
+
+			if r.status_code == requests.codes.ok:
+				return True,""
+			else:
+				failReason = "Camera Test Failed - An invalid status code was returned from the camera:{0}".format(r.status_code)
+		except:
+			type = sys.exc_info()[0]
+			value = sys.exc_info()[1]
+			failReason = "Camera Test Failed - An exception of type:{0} was raised during the test!  Error:{1}".format(type, value)
+
+		return False, failReason
 
 class CameraControl(object):
-	def __init__(self,octolapseSettings,onSuccess = None, onFail = None, onComplete = None):
-		self.Settings = octolapseSettings
-		self.Camera = self.Settings.CurrentCamera()
-		self.TimeoutSeconds = 5
+	def __init__(self,camera,onSuccess = None, onFail = None, onComplete = None, timeoutSeconds = 2.0):
+		self.Camera = camera
+		self.TimeoutSeconds = timeoutSeconds
 		self.OnSuccess = onSuccess
 		self.OnFail = onFail
 		self.OnComplete = onComplete
 	def ApplySettings(self):
 		cameraSettingRequests = []
 		cameraSettingRequests.append({'template':self.Camera.brightness_request_template , 'value':self.Camera.brightness, 'name':'brightness'})
-	
 		cameraSettingRequests.append({'template':self.Camera.contrast_request_template, 'value':self.Camera.contrast, 'name':'contrast'})
 		cameraSettingRequests.append({'template':self.Camera.saturation_request_template, 'value':self.Camera.saturation, 'name':'saturation' })
 		cameraSettingRequests.append({'template':self.Camera.white_balance_auto_request_template, 'value':self.Camera.white_balance_auto, 'name':'auto white balance' })
@@ -42,17 +58,15 @@ class CameraControl(object):
 		cameraSettingRequests.append({'template':self.Camera.led1_frequency_request_template, 'value':self.Camera.led1_frequency, 'name':'led 1 frequency' })
 		cameraSettingRequests.append({'template':self.Camera.jpeg_quality_request_template, 'value':self.Camera.jpeg_quality, 'name':'jpeg quality'})
 		#TODO:  Move the static timeout value to settings
-		CameraSettingJob(self.Settings, cameraSettingRequests, 5, onSuccess = self.OnSuccess, onFail = self.OnFail, onComplete = self.OnComplete).ProcessAsync()
+		for request in cameraSettingRequests:
+			CameraSettingJob(self.Camera, request, self.TimeoutSeconds, onSuccess = self.OnSuccess, onFail = self.OnFail, onComplete = self.OnComplete).ProcessAsync()
 
 class CameraSettingJob(object):
 	camera_job_lock = threading.RLock()
 
-	def __init__(self, Settings, cameraSettingRequests, timeout = 5, onSuccess = None, onFail = None, onComplete = None):
-
-		
-		camera = Settings.CurrentCamera()
-		self.Settings = Settings
-		self.CameraSettingRequests = cameraSettingRequests
+	def __init__(self, camera, cameraSettingRequest, timeout, onSuccess = None, onFail = None, onComplete = None):
+		camera = camera
+		self.Request = cameraSettingRequest
 		self.Address = camera.address
 		self.Username = camera.username
 		self.Password = camera.password
@@ -63,8 +77,7 @@ class CameraSettingJob(object):
 		self._on_complete = onComplete
 		
 	def ProcessAsync(self):
-		self._thread = threading.Thread(target=self._process,
-		                                name="CameraSettingChangeJob_{name}".format(name = str(uuid.uuid4())))
+		self._thread = threading.Thread(target=self._process,name="CameraSettingChangeJob_{name}".format(name = str(uuid.uuid4())))
 		self._thread.daemon = True
 		self._thread.start()
 	def _process(self):
@@ -72,33 +85,33 @@ class CameraSettingJob(object):
 			
 			errorMessages = []
 			success = None
-			for request in self.CameraSettingRequests:
-				template = request['template']
-				value = request['value']
-				settingName = request['name']
-				url = FormatRequestTemplate(self.Address, template,value)
-				try:
-					if(len(self.Username)>0):
-						r=requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
-					else:
-						r=requests.get(url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
+			
+			template = self.Request['template']
+			value = self.Request['value']
+			settingName = self.Request['name']
+			url = FormatRequestTemplate(self.Address, template,value)
+			try:
+				if(len(self.Username)>0):
+					r=requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
+				else:
+					r=requests.get(url,verify = not self.IgnoreSslError,timeout=float(self.TimeoutSeconds))
 
-					if r.status_code != requests.codes.ok:
-						success = False
-						errorMessages.append("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(settingName, value))
-				except:
-					type = sys.exc_info()[0]
-					value = sys.exc_info()[1]
+				if r.status_code != requests.codes.ok:
 					success = False
-					errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
+					errorMessages.append("Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(settingName, value))
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				success = False
+				errorMessages.append("Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
 
 			if(success != False):
 				success = True
 			
 			if(success):
-				self._notify_callback("success", len(self.CameraSettingRequests))
+				self._notify_callback("success", value, settingName, template)
 			else:
-				self._notify_callback("fail", len(self.CameraSettingRequests), errorMessages)
+				self._notify_callback("fail", value, settingName, template, errorMessages)
 
 			self._notify_callback("complete")
 	def _notify_callback(self, callback, *args, **kwargs):

@@ -21,6 +21,8 @@ import octoprint_octolapse.camera as camera
 def StartSnapshotJob(job):
 	job.Process();
 
+
+
 class CaptureSnapshot(object):
 
 	def __init__(self, settings,dataDirectory, printStartTime, printEndTime=None):
@@ -31,7 +33,7 @@ class CaptureSnapshot(object):
 		self.PrintStartTime = printStartTime
 		self.PrintEndTime = printEndTime
 		self.DataDirectory = dataDirectory
-			
+	
 	def Snap(self,printerFileName,snapshotNumber,onComplete=None,onSuccess=None, onFail=None):
 		info = SnapshotInfo(self.Snapshot.output_filename, printerFileName, self.PrintStartTime,  self.Snapshot.output_format)
 		# set the file name.  It will be a guid + the file extension

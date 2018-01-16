@@ -21,7 +21,7 @@ from octoprint.events import eventManager, Events # used to send messages to the
 # Octolapse imports
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
 from octoprint_octolapse.timelapse import Timelapse
-from octoprint_octolapse.camera import CameraControl
+import octoprint_octolapse.camera as camera
 from octoprint_octolapse.utility import *
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
@@ -78,7 +78,28 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def loadAllDefaults(self):
 		self.LoadSettings(forceDefaults = True)
 		return json.dumps(self.Settings.ToDict()), 200, {'ContentType':'application/json'} ;
+	@octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
+	def applyCameraSettingsRequest(self):
+		requestValues = flask.request.get_json()
+		profile = requestValues["profile"]
+		cameraProfile = Camera(profile)
+		self.ApplyCameraSettings(cameraProfile)
 		
+		return json.dumps({'success':True}, 200, {'ContentType':'application/json'} )
+
+	@octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
+	def testCamera(self):
+		requestValues = flask.request.get_json()
+		profile = requestValues["profile"]
+		cameraProfile = Camera(profile)
+		results = camera.TestCamera(cameraProfile)
+		if(results[0]):
+			return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+		else:
+			return json.dumps({'success':False,'error':results[1]}), 200, {'ContentType':'application/json'}
+	def ApplyCameraSettings(self, cameraProfile):
+		cameraControl = camera.CameraControl(cameraProfile, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
+		cameraControl.ApplySettings()
 
 	def DefaultSettingsFilePath(self):
 		return "{0}{1}data{1}settings_default.json".format(self._basefolder,os.sep)
@@ -231,8 +252,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started.")
 		if(self.Settings.CurrentCamera().apply_settings_before_print):
-			cameraControl = CameraControl(self.Settings, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
-			cameraControl.ApplySettings()
+			self.ApplyCameraSettings(self.Settings.CurrentCamera())
 		
 		self.StartTimelapse()
 
@@ -253,13 +273,17 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,self._settings.settings.get(["feature"])["g90InfluencesExtruder"])
 			
 	def OnCameraSettingsSuccess(self, *args, **kwargs):
-		numSettings = args[0]
-		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Successfully applied all {0} camera settings.".format(numSettings))
+		settingValue = args[0]
+		settingName = args[1]
+		template = args[2]
+		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Successfully applied {0} to the {1} setting.  Template:{2}".format(settingValue,settingName,template ))
 
 	def OnCameraSettingsFail(self, *args, **kwargs):
-		numSettings = args[0]
-		errorMessages = args[1]
-		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - {0} of {1} settings failed.  Details:".format(len(errorMessages), numSettings))
+		settingValue = args[0]
+		settingName = args[1]
+		template = args[2]
+		errorMessage = args[3]
+		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Unable to apply {0} to the {1} settings!  Template:{2}, Details:{3}".format(settingValue,settingName,template,errorMessage))
 		for message in errorMessages:
 			self.Settings.CurrentDebugProfile().LogCameraSettingsApply(message)
 		

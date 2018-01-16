@@ -9,8 +9,7 @@ $(function() {
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);
         self.ignore_ssl_error = ko.observable(values.ignore_ssl_error);
         self.username = ko.observable(values.username);
-        self.clear_password = ko.observable(values.clear_password);
-        self.password = ko.observable("");
+        self.password = ko.observable(values.password);
         self.brightness = ko.observable(values.brightness);
         self.brightness_request_template = ko.observable(values.brightness_request_template);
         self.contrast = ko.observable(values.contrast);
@@ -51,6 +50,48 @@ $(function() {
         self.led1_frequency_request_template = ko.observable(values.led1_frequency_request_template);
         self.jpeg_quality = ko.observable(values.jpeg_quality);
         self.jpeg_quality_request_template = ko.observable(values.jpeg_quality_request_template);
+
+        self.applySettingsToCamera = function () {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            var data = { 'profile': ko.toJS(self)}
+            $.ajax({
+                url: "/plugin/octolapse/applyCameraSettings",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function () {
+                    alert("The settings are being applied.  It may take a few seconds for the settings to be visible within the stream.  Be sure to save the profile if you intend to keep any unsaved changes.")
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to update the camera settings!  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }
+
+        self.testCamera = function () {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            var data = { 'profile': ko.toJS(self) }
+            $.ajax({
+                url: "/plugin/octolapse/testCamera",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success)
+                        alert("A request for a snapshot came back OK.  The camera seems to be working!")
+                    else {
+                        alert(results.error);
+                    }
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("The camera test failed :(  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }
     }
     Octolapse.CameraProfileValidationRules = {
         rules: {
@@ -60,6 +101,8 @@ $(function() {
             name: "Please enter a name for your profile",
         }
     };
+
+    
 });
 
 

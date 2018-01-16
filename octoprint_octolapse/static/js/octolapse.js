@@ -39,24 +39,7 @@ $(function () {
     };
     // Apply the toggle click event to every element within our settings that has the .toggle class
 
-    Octolapse.restoreDefaultSettings = function () {
-        if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
-            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            $.ajax({
-                url: "/plugin/octolapse/restoreDefaults",
-                type: "POST",
-                contentType: "application/json",
-                success: function (newSettings) {
-                    //load settings from the provided data
-                    alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
-
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
-                }
-            });
-        }
-    };
+    
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
@@ -71,15 +54,18 @@ $(function () {
     $.validator.addMethod('csvRelative', function (value) {
         return /^(\s*\d{0,2}(\.\d+)?|100(\.0+)?)(\s*,\s*\d{0,2}(\.\d+)?|100(\.0+)?)*\s*$/.test(value);
     }, 'Please enter a list of decimals between 0.0 and 100.0 separated by commas.');
-
-    
+    // Add a custom validator for integers
     $.validator.addMethod('integer', function (value) {
         return /^-?\d+$/.test(value);
     }, 'Please enter an integer value.');
+    // Add a custom validator for positive
     $.validator.addMethod('integerPositive', function (value) {
         return /^\d+$/.test(value);
     }, 'Please enter a positive integer value.');
-    Octolapse.SettingsViewModel = function(parameters) {
+
+
+    // Settings View Model
+    Octolapse.SettingsViewModel = function (parameters) {
         // Create a reference to this object
         var self = this;
         // Add this object to our Octolapse namespace
@@ -91,21 +77,58 @@ $(function () {
         // Create other observables
         Octolapse.Settings.is_octolapse_enabled = ko.observable();
 
+        self.updateSettings = function (settings) {
+            Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
+            self.toggleOctolapseEnabled(Octolapse.Settings.is_octolapse_enabled)
+            // Printers
+            Octolapse.Printers.profiles([])
+            settings.printers.forEach(function (item, index) {
+                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
+            });
+            // Stabilizations
+            Octolapse.Stabilizations.profiles([])
+            settings.stabilizations.forEach(function (item, index) {
+                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
+            });
+            // Snapshots
+            Octolapse.Snapshots.profiles([])
+            settings.snapshots.forEach(function (item, index) {
+                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
+            });
+            // Renderings
+            Octolapse.Renderings.profiles([])
+            settings.renderings.forEach(function (item, index) {
+                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
+            });
+            // Cameras
+            Octolapse.Cameras.profiles([])
+            settings.cameras.forEach(function (item, index) {
+                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
+            });
+            // Debugs
+            Octolapse.DebugProfiles.profiles([])
+            settings.debug_profiles.forEach(function (item, index) {
+                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
+            });
+            
+        }
         // Called before octoprint binds the viewmodel to the plugin
         self.onBeforeBinding = function() {
             // Assign values to each observable
             self.settings = self.global_settings.settings.plugins.octolapse;
-            Octolapse.Settings.is_octolapse_enabled(self.settings.is_octolapse_enabled());
-            
-
+            settings = ko.toJS(self.settings);
+            /*
+                Create our global settings
+            */
+            Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
             /*
                 Create our printers view model
             */
             var printerSettings =
                 {
-                    'current_profile_guid': self.settings.current_printer_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.printers)
-                    , 'default_profile': ko.toJS(self.settings.default_printer_profile)
+                    'current_profile_guid': settings.current_printer_profile_guid
+                    , 'profiles': settings.printers
+                    , 'default_profile': settings.default_printer_profile
                     , 'profileOptions': null
                     , 'profileViewModelCreateFunction': Octolapse.PrinterProfileViewModel
                     , 'profileValidationRules': Octolapse.PrinterProfileValidationRules
@@ -117,12 +140,14 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Printers = new Octolapse.ProfilesViewModel(printerSettings);
-
+            /*
+                Create our stabilizations view model
+            */
             var stabilizationSettings =
                 {
-                    'current_profile_guid': self.settings.current_stabilization_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.stabilizations)
-                    , 'default_profile': ko.toJS(self.settings.default_stabilization_profile)
+                    'current_profile_guid': self.settings.current_stabilization_profile_guid
+                    , 'profiles': settings.stabilizations
+                    , 'default_profile': settings.default_stabilization_profile
                     , 'profileOptions': { 'stabilization_type_options': self.settings.stabilization_type_options }
                     , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
                     , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
@@ -133,14 +158,16 @@ $(function () {
                     , 'removeProfilePath': 'removeProfile'
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
-            
             Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
+            /*
+                Create our snapshots view model
+            */
             var snapshotSettings =
                 {
-                    'current_profile_guid': self.settings.current_snapshot_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.snapshots)
-                    , 'default_profile': ko.toJS(self.settings.default_snapshot_profile)
-                    , 'profileOptions': { 'snapshot_format_options': self.settings.snapshot_format_options, 'snapshot_extruder_trigger_options': self.settings.snapshot_extruder_trigger_options  }
+                    'current_profile_guid': self.settings.current_snapshot_profile_guid
+                    , 'profiles': settings.snapshots
+                    , 'default_profile': settings.default_snapshot_profile
+                    , 'profileOptions': { 'snapshot_format_options': settings.snapshot_format_options, 'snapshot_extruder_trigger_options': self.settings.snapshot_extruder_trigger_options }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'
@@ -151,17 +178,19 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Snapshots = new Octolapse.ProfilesViewModel(snapshotSettings);
-
+            /*
+                Create our rendering view model
+            */
             var renderingSettings =
                 {
-                    
-			
-                    'current_profile_guid': self.settings.current_rendering_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.renderings)
-                    , 'default_profile': ko.toJS(self.settings.default_rendering_profile)
+
+
+                    'current_profile_guid': settings.current_rendering_profile_guid
+                    , 'profiles': settings.renderings
+                    , 'default_profile': settings.default_rendering_profile
                     , 'profileOptions': {
-                        'rendering_fps_calculation_options': self.settings.rendering_fps_calculation_options
-                        , 'rendering_output_format_options': self.settings.rendering_output_format_options
+                        'rendering_fps_calculation_options': settings.rendering_fps_calculation_options
+                        , 'rendering_output_format_options': settings.rendering_output_format_options
                     }
                     , 'profileViewModelCreateFunction': Octolapse.RenderingProfileViewModel
                     , 'profileValidationRules': Octolapse.RenderingProfileValidationRules
@@ -173,15 +202,18 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Renderings = new Octolapse.ProfilesViewModel(renderingSettings);
+            /*
+                Create our camera view model
+            */
             var cameraSettings =
                 {
-                    'current_profile_guid': self.settings.current_camera_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.cameras)
-                    , 'default_profile': ko.toJS(self.settings.default_camera_profile)
+                    'current_profile_guid': settings.current_camera_profile_guid
+                    , 'profiles': settings.cameras
+                    , 'default_profile': settings.default_camera_profile
                     , 'profileOptions': {
-                        'camera_powerline_frequency_options': self.settings.camera_powerline_frequency_options
-                        , 'camera_exposure_type_options': self.settings.camera_exposure_type_options
-                        , 'camera_led_1_mode_options': self.settings.camera_led_1_mode_options
+                        'camera_powerline_frequency_options': settings.camera_powerline_frequency_options
+                        , 'camera_exposure_type_options': settings.camera_exposure_type_options
+                        , 'camera_led_1_mode_options': settings.camera_led_1_mode_options
                     }
                     , 'profileViewModelCreateFunction': Octolapse.CameraProfileViewModel
                     , 'profileValidationRules': Octolapse.CameraProfileValidationRules
@@ -193,13 +225,15 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Cameras = new Octolapse.ProfilesViewModel(cameraSettings);
-            
+            /*
+                Create our debug view model
+            */
             var debugSettings =
                 {
-                    'current_profile_guid': self.settings.current_debug_profile_guid()
-                    , 'profiles': ko.toJS(self.settings.debug_profiles)
-                    , 'default_profile': ko.toJS(self.settings.default_debug_profile)
-                    , 'profileOptions': { 'debug_profile_options': self.settings.debug_profile_options }
+                    'current_profile_guid': settings.current_debug_profile_guid
+                    , 'profiles': settings.debug_profiles
+                    , 'default_profile': settings.default_debug_profile
+                    , 'profileOptions': { 'debug_profile_options': settings.debug_profile_options }
                     , 'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel
                     , 'profileValidationRules': Octolapse.DebugProfileValidationRules
                     , 'bindingElementId': 'octolapse_debug_tab'
@@ -210,9 +244,32 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
-
             
         }
+      /*
+            reload the default settings
+        */
+        self.restoreDefaultSettings = function ()
+        {
+            if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
+                // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+                $.ajax({
+                    url: "/plugin/octolapse/restoreDefaults",
+                    type: "POST",
+                    contentType: "application/json",
+                    success: function (newSettings) {
+                        //load settings from the provided data
+                        self.updateSettings(JSON.parse(newSettings));
+                        
+                        alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    }
+                });
+            }
+        };
+        
         /*
             Show and hide the settings tabs based on the enabled parameter
         */

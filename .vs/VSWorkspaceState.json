@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\octoprint_octolapse",
+    "\\octoprint_octolapse\\templates",
     "\\octoprint_octolapse\\test"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\timelapse.py",
+  "SelectedNode": "\\octoprint_octolapse\\templates\\octolapse_settings.jinja2",
   "PreviewInSolutionExplorer": false
 }

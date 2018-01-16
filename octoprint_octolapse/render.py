@@ -250,7 +250,6 @@ class TimelapseRenderJob(object):
 		# get snapshot directory
 		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(self._capture_dir))
 
-		
 		path = os.path.dirname(self._capture_dir)
 		if(os.path.isdir(path)):
 			try:

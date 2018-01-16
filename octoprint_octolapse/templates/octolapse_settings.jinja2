@@ -1,25 +1,39 @@
 <script type="text/javascript">
-  var Octolapse = {};
+  //var Octolapse = {};
   // Add some default values to our Octolapse namespace
-  Octolapse.apiKey = "";
-  Octolapse.Settings = null;
-  Octolapse.Printers = null;
-  Octolapse.errorClass = "error";
+  //Octolapse.apiKey = "";
+  //Octolapse.Settings = null;
+  //Octolapse.Printers = null;
+  //Octolapse.errorClass = "error";
 </script>
 <div >
   <div class="text-center">
     <h3>Octolapse Settings</h3>
   </div>
-  
-  <div id="octolapse_plugin_settings"  class="control-group">
-    
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled,click:$root.toggleOctolapseEnabled(is_octolapse_enabled) " />Enable Octolapse
-      </label>
+
+  <div id="octolapse_plugin_settings"  >
+    <div class="row">
+      <div class="span1"></div>
+      <div class="span6">
+        <div class="control-group">
+          <div class="controls">
+            <label class="checkbox">
+              <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled,click:$root.toggleOctolapseEnabled(is_octolapse_enabled) " />Enable Octolapse
+            </label>
+          </div>      
+        </div>
+      </div>
+      <div class="span4">
+        <div class="control-group">
+          <div class="controls">
+            <button class="span12 btn btn-default" data-bind="click: function() {$root.restoreDefaultSettings();}">Restore All Default Settings</button>
+          </div>
+        </div>
+      </div>
+      <div class="span1"></div>
     </div>
     <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
-  
+
   </div>
   <div id="octolapse_settings">
     <ul class="nav nav-pills">
@@ -30,12 +44,24 @@
         </a>
         <ul class="dropdown-menu"></ul>
       </li>
-      <li class="active"><a href="#octolapse_printer_tab" data-toggle="tab">Printer</a></li>
-      <li><a href="#octolapse_stabilization_tab" data-toggle="tab">Stabilization</a></li>
-      <li><a href="#octolapse_snapshot_tab" data-toggle="tab">Snapshot</a></li>
-      <li><a href="#octolapse_rendering_tab" data-toggle="tab">Rendering</a></li>
-      <li><a href="#octolapse_camera_tab" data-toggle="tab">Camera</a></li>
-      <li><a href="#octolapse_debug_tab" data-toggle="tab">Debug</a></li>
+      <li class="active">
+        <a href="#octolapse_printer_tab" data-toggle="tab">Printer</a>
+      </li>
+      <li>
+        <a href="#octolapse_stabilization_tab" data-toggle="tab">Stabilization</a>
+      </li>
+      <li>
+        <a href="#octolapse_snapshot_tab" data-toggle="tab">Snapshot</a>
+      </li>
+      <li>
+        <a href="#octolapse_rendering_tab" data-toggle="tab">Rendering</a>
+      </li>
+      <li>
+        <a href="#octolapse_camera_tab" data-toggle="tab">Camera</a>
+      </li>
+      <li>
+        <a href="#octolapse_debug_tab" data-toggle="tab">Debug</a>
+      </li>
     </ul>
     <div class="tab-content">
       <div id="octolapse_printer_tab" class="panel panel-default tab-pane active">
@@ -57,14 +83,14 @@
         <div data-bind="template: 'profiles-template'" ></div>
       </div>
     </div>
-    
+
   </div>
 
   <span class="help-inline">
     <span class="label label-important">USE AT YOUR OWN RISK</span> Using this could (and probably will) break your printer.  It's experimental and free, so don't blame me!
   </span>
-  
-  
+
+
 </div>
 
 <script type="text/html" id="empty-template">

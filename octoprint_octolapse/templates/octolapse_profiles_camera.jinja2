@@ -23,6 +23,12 @@
     </div>
   </div>
   <div class="control-group">
+    <label class="control-label">Test Camera Snapshot</label>
+    <div class="controls">
+      <button class="btn btn-default" data-bind="click: function() {$data.testCamera();}">Test</button>
+    </div>
+  </div>
+  <div class="control-group">
     <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
       <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
     </a>
@@ -63,6 +69,12 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
         </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Apply Camera Settings</label>
+      <div class="controls">
+        <button class="btn btn-default" data-bind="click: function() {$data.applySettingsToCamera();}">Apply Now</button>
       </div>
     </div>
     <div class="control-group">
