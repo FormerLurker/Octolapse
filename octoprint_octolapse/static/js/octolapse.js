@@ -55,15 +55,68 @@ $(function () {
         return /^(\s*\d{0,2}(\.\d+)?|100(\.0+)?)(\s*,\s*\d{0,2}(\.\d+)?|100(\.0+)?)*\s*$/.test(value);
     }, 'Please enter a list of decimals between 0.0 and 100.0 separated by commas.');
     // Add a custom validator for integers
-    $.validator.addMethod('integer', function (value) {
-        return /^-?\d+$/.test(value);
-    }, 'Please enter an integer value.');
+    $.validator.addMethod('integer',
+        function (value) {
+            return /^-?\d+$/.test(value);
+        }, 'Please enter an integer value.');
     // Add a custom validator for positive
-    $.validator.addMethod('integerPositive', function (value) {
-        return /^\d+$/.test(value);
-    }, 'Please enter a positive integer value.');
+    $.validator.addMethod('integerPositive',
+        function (value) {
+            return /^\d+$/.test(value);
+        }, 'Please enter a positive integer value.');
+    $.validator.addMethod('ffmpegBitRate',
+        function (value) {
+            return /^\d+[KkMm]$/.test(value);
+        }, 'Enter a bitrate, K for kBit/s and M for MBit/s.  Example: 1000K');
+    $.validator.addMethod('lessThanOrEqual',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var j = parseFloat($(param).val());
+            return (i <= j) ? true : false;
+        });
+    $.validator.addMethod('greaterThanOrEqual',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var j = parseFloat($(param).val());
+            return (i >= j) ? true : false;
+        });
 
+    $.validator.addMethod('octolapseSnapshotTemplate',
+        function (value, element) {
+            
+            
+            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
+            return jQuery.validator.methods.url.call(this, testUrl, element);
+        });
 
+    $.validator.addMethod('octolapseCameraRequestTemplate',
+        function (value, element) {
+            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}","1");
+            return jQuery.validator.methods.url.call(this, testUrl, element);
+        });
+    
+    jQuery.extend(jQuery.validator.messages, {
+        name: "Please enter a name.",
+        required: "This field is required.",
+        remote: "Please fix this field.",
+        email: "Please enter a valid email address.",
+        url: "Please enter a valid URL.",
+        date: "Please enter a valid date.",
+        dateISO: "Please enter a valid date (ISO).",
+        number: "Please enter a valid number.",
+        digits: "Please enter only digits.",
+        creditcard: "Please enter a valid credit card number.",
+        equalTo: "Please enter the same value again.",
+        accept: "Please enter a value with a valid extension.",
+        maxlength: jQuery.validator.format("Please enter no more than {0} characters."),
+        minlength: jQuery.validator.format("Please enter at least {0} characters."),
+        rangelength: jQuery.validator.format("Please enter a value between {0} and {1} characters long."),
+        range: jQuery.validator.format("Please enter a value between {0} and {1}."),
+        max: jQuery.validator.format("Please enter a value less than or equal to {0}."),
+        min: jQuery.validator.format("Please enter a value greater than or equal to {0}."),
+        octolapseCameraRequestTemplate: "The value is not a url.  You may use {camera_address} or {value} tokens.",
+        octolapseSnapshotTemplate: "The value is not a url.  You may use {camera_address} to refer to the web camera address."
+    });
     // Settings View Model
     Octolapse.SettingsViewModel = function (parameters) {
         // Create a reference to this object

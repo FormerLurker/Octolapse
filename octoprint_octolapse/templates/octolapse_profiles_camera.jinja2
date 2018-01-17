@@ -3,14 +3,14 @@
   <div class="control-group">
     <label class="control-label">Camera Profile Name</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: name"/>
+      <input name="name" type="text" class="input-block-level" data-bind="value: name" required="true"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
   <div class="control-group">
     <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: address"/>
+      <input name="address" type="url" class="input-block-level" data-bind="value: address" required="true"/>
       <div class="error_label_container text-error" ></div>
     </div>
     
@@ -18,7 +18,7 @@
   <div class="control-group">
     <label class="control-label">Snapshot Request Template</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: snapshot_request_template"/>
+      <input name="snapshot_request_template" type="text" class="input-block-level" data-bind="value: snapshot_request_template" required="true"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -46,7 +46,7 @@
     <div class="control-group">
       <label class="control-label">Enter a username to be sent with the camera snapshot request</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: username"/>
+        <input name="username" type="text" class="input-block-level" data-bind="value: username"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -80,21 +80,21 @@
     <div class="control-group">
       <label class="control-label">Brightness (0-255)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: brightness"/>
+        <input name="brightness" type="number" class="input-block-level" data-bind="value: brightness" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Contrast (0-255)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: contrast"/>
+        <input name="contrast" type="number" class="input-block-level" data-bind="value: contrast"  min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Saturation (0-255)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: saturation"/>
+        <input name="saturation" type="number" class="input-block-level" data-bind="value: saturation" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -102,7 +102,7 @@
       <label class="control-label">Auto White Balance</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
+          <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
           <div class="error_label_container text-error" ></div>
         </label>
       </div>
@@ -110,7 +110,7 @@
     <div class="control-group">
       <label class="control-label">Gain</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: gain"/>
+        <input name="gain" type="number" class="input-block-level" data-bind="value: gain" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -130,14 +130,14 @@
     <div class="control-group">
       <label class="control-label">White Balance Temeprature (in Kelvin)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: white_balance_temperature"/>
+        <input name="white_balance_temperature" type="number" class="input-block-level" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Sharpness (0-255)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: sharpness"/>
+        <input name="sharpness" type="number" class="input-block-level" data-bind="value: sharpness" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -164,7 +164,7 @@
     <div class="control-group">
       <label class="control-label">Exposure</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: exposure"/>
+        <input name="exposure" type="number" class="input-block-level" data-bind="value: exposure" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -179,14 +179,14 @@
     <div class="control-group">
       <label class="control-label">Pan</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: pan"/>
+        <input name="pan" type="number" class="input-block-level" data-bind="value: pan" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Tilt</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: tilt"/>
+        <input name="tilt" type="number" class="input-block-level" data-bind="value: tilt" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -201,14 +201,14 @@
     <div class="control-group">
       <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: focus"/>
+        <input name="focus" type="number" class="input-block-level" data-bind="value: focus" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Zoom</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: zoom"/>
+        <input name="zoom" type="number" class="input-block-level" data-bind="value: zoom" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -225,14 +225,14 @@
     <div class="control-group">
       <label class="control-label">Led 1 Frequency</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: led1_frequency"/>
+        <input name="led1_frequency" type="number" class="input-block-level" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Jpeg Quality</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: jpeg_quality"/>
+        <input name="jpeg_quality" type="number" class="input-block-level" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -240,7 +240,7 @@
     <div class="control-group">
       <label class="control-label">Brightness Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
+        <input name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -248,7 +248,7 @@
     <div class="control-group">
       <label class="control-label">Contrast Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
+        <input name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -256,7 +256,7 @@
     <div class="control-group">
       <label class="control-label">Saturation Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
+        <input name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -264,7 +264,7 @@
     <div class="control-group">
       <label class="control-label">White Balance Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
+        <input name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -272,7 +272,7 @@
     <div class="control-group">
       <label class="control-label">Gain Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: gain_request_template"/>
+        <input name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -280,7 +280,7 @@
     <div class="control-group">
       <label class="control-label">Powerline Frequency Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
+        <input name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -288,7 +288,7 @@
     <div class="control-group">
       <label class="control-label">White Balance Temperature Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
+        <input name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -296,7 +296,7 @@
     <div class="control-group">
       <label class="control-label">Sharpness Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
+        <input name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -304,7 +304,7 @@
     <div class="control-group">
       <label class="control-label">Backlight Compensation Enabled Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
+        <input name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -312,7 +312,7 @@
     <div class="control-group">
       <label class="control-label">Exposure Type Request Templatey</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
+        <input name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -320,7 +320,7 @@
     <div class="control-group">
       <label class="control-label">Exposure Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
+        <input name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -328,7 +328,7 @@
     <div class="control-group">
       <label class="control-label">Auto Priority Enabled Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
+        <input name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -336,7 +336,7 @@
     <div class="control-group">
       <label class="control-label">Pan Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: pan_request_template"/>
+        <input name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -344,21 +344,21 @@
     <div class="control-group">
       <label class="control-label">Tilt Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
+        <input name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Autofocus Enabled Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
+        <input name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Focus Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: focus_request_template"/>
+        <input name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -366,7 +366,7 @@
     <div class="control-group">
       <label class="control-label">Zoom Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
+        <input name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -374,7 +374,7 @@
     <div class="control-group">
       <label class="control-label">Led1 Mode Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
+        <input name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -382,7 +382,7 @@
     <div class="control-group">
       <label class="control-label">Led1 Frequency Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
+        <input name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -390,7 +390,7 @@
     <div class="control-group">
       <label class="control-label">Jpeg Quality Request Template</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
+        <input name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>

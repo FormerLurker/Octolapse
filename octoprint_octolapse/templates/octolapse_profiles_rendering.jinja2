@@ -4,7 +4,7 @@
   <div class="control-group">
     <label class="control-label">Rendering Profile Name</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: name"/>
+      <input type="text" class="input-block-level" data-bind="value: name" required="true"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -20,7 +20,7 @@
     <div class="control-group">
       <label class="control-label" >Bitrate</label>
       <div class="controls">
-        <input name="bitrate" type="text" class="input-block-level" data-bind="value: bitrate"/>
+        <input name="bitrate" type="text" class="input-block-level" data-bind="value: bitrate" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -38,14 +38,14 @@
     <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
       <label class="control-label" >Static FPS</label>
       <div class="controls">
-        <input name="fps" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: fps"/>
+        <input name="fps" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: fps" min="1" required="true"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
       <label class="control-label" >Fixed Run Length in Seconds</label>
       <div class="controls">
-        <input name="run_length_seconds" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: run_length_seconds"/>
+        <input name="run_length_seconds" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: run_length_seconds" min="0.5" step="0.5"/>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
@@ -99,14 +99,14 @@
       <div class="control-group">
         <label class="control-label" >Maximum FPS - calculated FPS can be no greater than this value.</label>
         <div class="controls">
-          <input name="max_fps" type="text" class="input-block-level" data-bind="value: max_fps"/>
+          <input id="octolapse_rendering_max_fps" name="max_fps" type="number" class="input-block-level" data-bind="value: max_fps" min="0.5" step="0.5" required="true"/>
           <div class="error_label_container text-error" ></div>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" >Minimum FPS - calculated FPS can be no less than this value.</label>
         <div class="controls">
-          <input name="min_fps" type="text" class="input-block-level" data-bind="value: min_fps"/>
+          <input id="octolapse_rendering_min_fps" name="min_fps" type="number" class="input-block-level" data-bind="value: min_fps" min="0.5" step="0.5" required="true"/>
           <div class="error_label_container text-error" ></div>
         </div>
       </div>
@@ -124,7 +124,7 @@
       <div class="control-group">
         <label class="control-label">Output File Name</label>
         <div class="controls">
-          <input name="output_filename" type="text" class="input-block-level" data-bind="value: output_filename"/>
+          <input name="output_filename" type="text" class="input-block-level" data-bind="value: output_filename" required="true"/>
           <div class="error_label_container text-error" ></div>
         </div>
         <span class="help-inline">
@@ -134,7 +134,7 @@
       <div class="control-group">
         <label class="control-label">Output File Directory</label>
         <div class="controls">
-          <input name="output_directory" type="text" class="input-block-level" data-bind="value: output_directory"/>
+          <input name="output_directory" type="text" class="input-block-level" data-bind="value: output_directory" required="true"/>
           <div class="error_label_container text-error" ></div>
         </div>
         <span class="help-inline">

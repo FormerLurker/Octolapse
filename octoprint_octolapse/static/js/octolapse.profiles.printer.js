@@ -2,18 +2,12 @@
 $(function() {
     Octolapse.PrinterProfileValidationRules = {
         rules: {
-            name: "required"
+           
         },
         messages: {
-            name: "Please enter a name for your profile",
-            retract_length: "Please enter a retraction length",
-            retract_speed: "Please enter a retraction speed",
-            detract_speed: "Please enter a detraction speed",
-            movement_speed: "Please enter a movement speed",
-            z_hop: "Please enter a height for z-hop",
-            z_hop_speed: "Please enter a zhop speed",
-            snapshot_command: "Please enter a custom command that will trigger snapshots"
+            name: "Please enter a name for your profile"
         }
+        
     };
 
     Octolapse.PrinterProfileViewModel = function(values) {

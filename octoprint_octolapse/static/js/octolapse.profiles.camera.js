@@ -95,7 +95,27 @@ $(function() {
     }
     Octolapse.CameraProfileValidationRules = {
         rules: {
-            name: "required"
+            snapshot_request_template: { octolapseSnapshotTemplate: true },
+            brightness_request_template: { octolapseCameraRequestTemplate: true },
+            contrast_request_template: { octolapseCameraRequestTemplate: true },
+            saturation_request_template: { octolapseCameraRequestTemplate: true },
+            white_balance_auto_request_template: { octolapseCameraRequestTemplate: true },
+            gain_request_template: { octolapseCameraRequestTemplate: true },
+            powerline_frequency_request_template: { octolapseCameraRequestTemplate: true },
+            white_balance_temperature_request_template: { octolapseCameraRequestTemplate: true },
+            sharpness_request_template: { octolapseCameraRequestTemplate: true },
+            backlight_compensation_enabled_request_template: { octolapseCameraRequestTemplate: true },
+            exposure_type_request_template: { octolapseCameraRequestTemplate: true },
+            exposure_request_template: { octolapseCameraRequestTemplate: true },
+            exposure_auto_priority_enabled_request_template: { octolapseCameraRequestTemplate: true },
+            pan_request_template: { octolapseCameraRequestTemplate: true },
+            tilt_request_template: { octolapseCameraRequestTemplate: true },
+            autofocus_enabled_request_template: { octolapseCameraRequestTemplate: true },
+            focus_request_template: { octolapseCameraRequestTemplate: true },
+            zoom_request_template: { octolapseCameraRequestTemplate: true },
+            led1_mode_request_template: { octolapseCameraRequestTemplate: true },
+            led1_frequency_request_template: { octolapseCameraRequestTemplate: true },
+            jpeg_quality_request_template: { octolapseCameraRequestTemplate: true }
         },
         messages: {
             name: "Please enter a name for your profile",
