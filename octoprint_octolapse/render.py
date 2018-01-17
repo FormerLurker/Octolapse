@@ -40,12 +40,12 @@ class Render(object):
 	def Process(self, printName, printStartTime, printEndTime):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
 		# Get the capture file and directory info
-		snapshotDirectory = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printName,printStartTime, self.Snapshot.output_format)
-		snapshotFileNameTemplate  = utility.GetSnapshotFilenameFromTemplate(self.Snapshot.output_filename, printName, printStartTime, self.Snapshot.output_format, "%05d")
+		snapshotDirectory = utility.GetSnapshotDirectory(self.DataDirectory, printName,printStartTime)
+		snapshotFileNameTemplate  = utility.GetSnapshotFilename(printName, printStartTime, "%05d")
 		# get the output file and directory info
-		outputDirectory = utility.GetDirectoryFromTemplate(self.Rendering.output_directory,self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)
+		outputDirectory = utility.GetRenderingDirectory(self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)
 
-		outputFilename = utility.GetRenderingFilenameFromTemplate(self.Rendering.output_filename, printName, printStartTime, self.Rendering.output_format,printEndTime)
+		outputFilename = utility.GetRenderingBaseFilename(printName, printStartTime,printEndTime)
 		
 		
 		# get the number of frames
@@ -57,7 +57,7 @@ class Render(object):
 			imageIndex = 1
 			while(foundFile):
 				foundFile = False
-				imagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageIndex
+				imagePath = "{0}{1}{2}".format(snapshotDirectory,os.sep, snapshotFileNameTemplate) % imageIndex
 				
 				if(os.path.isfile(imagePath)):
 					foundFile = True
@@ -171,6 +171,8 @@ class TimelapseRenderJob(object):
 		                      self._output_file_name)
 
 		baseOutputFileName = utility.GetFilenameFromFullPath(output)
+		# add the file extension
+		output = output + "." + self._outputFormat
 		try:
 			#path = os.path.dirname(self._output_dir)
 			self._logger.warn("Creating the directory at {0}".format(self._output_dir))
@@ -203,8 +205,9 @@ class TimelapseRenderJob(object):
 		                                                 hflip=self._flip_h, vflip=self._flip_v, rotate=self._rotate_90, watermark=watermark )
 		success = False
 		with self.render_job_lock:
+			synchronize = self.syncWithTimelapse and self._outputFormat == "mp4"
 			try:
-				self._notify_callback("render_start", output, baseOutputFileName)
+				self._notify_callback("render_start", output, baseOutputFileName,synchronize)
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
@@ -227,30 +230,30 @@ class TimelapseRenderJob(object):
 			if(cleanSnapshots):
 				self._CleanSnapshots()
 
-		
-			if(self.syncWithTimelapse):
-				finalFileaName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName)
+			finalFileName = baseOutputFileName
+			if(synchronize):
+				finalFileName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName + "." + self._outputFormat)
 				# Move the timelapse to the Octoprint timelapse folder.
 				try:
 					# get the timelapse folder for the Octoprint timelapse plugin
-					self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileaName))
-					shutil.move(output,finalFileaName)
-					self._notify_callback("after_sync_success", finalFileaName, baseOutputFileName)
+					self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileName))
+					shutil.move(output,finalFileName)
+					self._notify_callback("after_sync_success", finalFileName, baseOutputFileName)
 				except:
 					type = sys.exc_info()[0]
 					value = sys.exc_info()[1]
-					message = "Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileaName,type,value)
+					message = "Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileName,type,value)
 					self._debug.LogError(message)
-					self._notify_callback("after_sync_fail", finalFileaName, baseOutputFileName, message)
-				
-			self._notify_callback("complete")
+					self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
+
+			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize)
 
 	def _CleanSnapshots(self):
 		
 		# get snapshot directory
 		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(self._capture_dir))
 
-		path = os.path.dirname(self._capture_dir)
+		path = os.path.dirname(self._capture_dir + os.sep)
 		if(os.path.isdir(path)):
 			try:
 				shutil.rmtree(path)

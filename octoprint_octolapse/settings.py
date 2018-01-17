@@ -316,13 +316,8 @@ class Snapshot(object):
 		# other settings
 		self.delay = 1000
 		self.retract_before_move = False
-		self.output_format = "jpg"
-		self.output_filename = "{FILENAME}_{PRINTSTARTTIME}/{FILENAME}"
-		if (sys.platform == "win32"):
-			self.output_filename = "{FILENAME}_{PRINTSTARTTIME}\\{FILENAME}"
-		self.output_directory = "{DATADIRECTORY}/snapshots/"
-		if (sys.platform == "win32"):
-			self.output_directory = "{DATADIRECTORY}\\snapshots\\"
+		
+		
 		self.cleanup_after_render_complete = True
 		self.cleanup_after_render_fail = False
 		
@@ -368,9 +363,6 @@ class Snapshot(object):
 				self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
 				self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
 				self.delay = snapshot.delay
-				self.output_format = snapshot.output_format
-				self.output_filename = snapshot.output_filename
-				self.output_directory = snapshot.output_directory
 				self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
 				self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
 				self.retract_before_move = snapshot.retract_before_move
@@ -465,12 +457,6 @@ class Snapshot(object):
 			self.delay = utility.getint(changes["delay"],self.delay)
 		if("retract_before_move" in changes.keys()):
 			self.retract_before_move = utility.getbool(changes["retract_before_move"],self.retract_before_move)
-		if("output_format" in changes.keys()):
-			self.output_format = utility.getstring(changes["output_format"],self.output_format)
-		if("output_filename" in changes.keys()):
-			self.output_filename = utility.getstring(changes["output_filename"],self.output_filename)
-		if("output_directory" in changes.keys()):
-			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
 		if("cleanup_after_render_complete" in changes.keys()):
 			self.cleanup_after_render_complete = utility.getbool(changes["cleanup_after_render_complete"],self.cleanup_after_render_complete)
 		if("cleanup_after_render_fail" in changes.keys()):
@@ -545,9 +531,6 @@ class Snapshot(object):
 			'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
 			# Other Settings
 			'delay'									: self.delay,
-			'output_format'							: self.output_format,
-			'output_filename'						: self.output_filename,
-			'output_directory'						: self.output_directory,
 			'retract_before_move'					: self.retract_before_move,
 			'cleanup_after_render_complete'			: self.cleanup_after_render_complete,
 			'cleanup_after_render_fail'				: self.cleanup_after_render_fail,
@@ -564,10 +547,7 @@ class Rendering(object):
 		self.max_fps = 120.0
 		self.min_fps = 1.0
 		self.output_format = 'mp4'
-		self.output_filename = "{FILENAME}_{DATETIMESTAMP}.{OUTPUTFILEEXTENSION}"
-		self.output_directory = "{DATADIRECTORY}/timelapses/"
-		if (sys.platform == "win32"):
-			self.output_directory = "{DATADIRECTORY}\\timelapses\\"
+		
 		self.sync_with_timelapse = False
 		self.bitrate = "2000K"
 		self.flip_h = False
@@ -585,8 +565,6 @@ class Rendering(object):
 				self.max_fps = rendering.max_fps
 				self.min_fps = rendering.min_fps
 				self.output_format = rendering.output_format
-				self.output_filename = rendering.output_filename
-				self.output_directory = rendering.output_directory
 				self.sync_with_timelapse = rendering.sync_with_timelapse
 				self.bitrate = rendering.bitrate
 				self.flip_h = rendering.flip_h
@@ -614,10 +592,7 @@ class Rendering(object):
 			self.min_fps = utility.getfloat(changes["min_fps"],self.min_fps)
 		if("output_format" in changes.keys()):
 			self.output_format = utility.getstring(changes["output_format"],self.output_format)
-		if("output_filename" in changes.keys()):
-			self.output_filename = utility.getstring(changes["output_filename"],self.output_format)
-		if("output_directory" in changes.keys()):
-			self.output_directory = utility.getstring(changes["output_directory"],self.output_directory)
+		
 		if("sync_with_timelapse" in changes.keys()):
 			self.sync_with_timelapse = utility.getbool(changes["sync_with_timelapse"],self.sync_with_timelapse)
 		if("bitrate" in changes.keys()):
@@ -642,8 +617,6 @@ class Rendering(object):
 				'max_fps'							: self.max_fps,
 				'min_fps'							: self.min_fps,
 				'output_format'						: self.output_format,
-				'output_filename'					: self.output_filename,
-				'output_directory'					: self.output_directory,
 				'sync_with_timelapse'				: self.sync_with_timelapse,
 				'bitrate'							: self.bitrate,
 				'flip_h'							: self.flip_h,
@@ -1304,6 +1277,7 @@ class OctolapseSettings(object):
 		settingsDict = {
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
+			"platform" : sys.platform,
 			'stabilization_type_options' :
 			[
 				dict(value='disabled',name='Disabled')
@@ -1313,24 +1287,14 @@ class OctolapseSettings(object):
 				,dict(value='relative_path',name='List of Relative Coordinates')
 			
 			],
-			
-			'snapshot_format_options' : [
-					dict(value='autodetect',name='Auto Detect',visible=True)
-					,dict(value='jpg',name='jpg',visible=True)
-					,dict(value='jpeg',name='jpeg',visible=False)
-					,dict(value='bmp',name='BMP',visible=True)
-					,dict(value='gif',name='GIF',visible=True)
-					,dict(value='png',name='PNG',visible=True)
-			],
+		
 			'snapshot_extruder_trigger_options' : Snapshot.ExtruderTriggerOptions,
 			'rendering_fps_calculation_options' : [
 					dict(value='static',name='Static FPS')
 					,dict(value='duration',name='Fixed Run Length')
 			],
 			'rendering_output_format_options' : [
-					dict(value='avi',name='AVI')
-					,dict(value='flv',name='FLV')
-					,dict(value='gif',name='GIF')
+					dict(value='vob',name='VOB')
 					,dict(value='mp4',name='MP4')
 					,dict(value='mpeg',name='MPEG')
 			],

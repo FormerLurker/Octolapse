@@ -35,11 +35,11 @@ class CaptureSnapshot(object):
 		self.DataDirectory = dataDirectory
 	
 	def Snap(self,printerFileName,snapshotNumber,onComplete=None,onSuccess=None, onFail=None):
-		info = SnapshotInfo(self.Snapshot.output_filename, printerFileName, self.PrintStartTime,  self.Snapshot.output_format)
+		info = SnapshotInfo(printerFileName, self.PrintStartTime)
 		# set the file name.  It will be a guid + the file extension
 		snapshotGuid = str(uuid.uuid4())
-		info.FileName = "{0}.{1}".format(snapshotGuid, self.Snapshot.output_format)
-		info.DirectoryName = utility.GetDirectoryFromTemplate(self.Snapshot.output_directory,self.DataDirectory, printerFileName, self.PrintStartTime, self.Snapshot.output_format)
+		info.FileName = "{0}.{1}".format(snapshotGuid,"jpg")
+		info.DirectoryName = utility.GetSnapshotDirectory(self.DataDirectory, printerFileName, self.PrintStartTime)
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
 		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
@@ -78,7 +78,7 @@ class SnapshotJob(object):
 		with self.snapshot_job_lock:
 			success = False
 			failReason = "unknown"
-			dir = "{0:s}{1:s}".format(self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
+			dir = "{0:s}{1}{2:s}".format(self.SnapshotInfo.DirectoryName,os.sep, self.SnapshotInfo.FileName)
 			r=None
 			try:
 				if(len(self.Username)>0):
@@ -131,16 +131,13 @@ class SnapshotJob(object):
 		if method is not None and callable(method):
 			method(*args, **kwargs)
 class SnapshotInfo(object):
-	def __init__(self, outputFileName, printerFileName, printStartTime, outputExtension):
-		self._outputFileName = outputFileName
+	def __init__(self, printerFileName, printStartTime):
 		self._printerFileName = printerFileName
 		self._printStartTime = printStartTime
-		self._outputExtension = outputExtension
 		self.FileName = ""
 		self.DirectoryName = ""
+		
 	def GetTempFullPath(self):
 		return "{0}{1}{2}".format(self.DirectoryName, os.sep, self.FileName)
 	def GetFullPath(self, snapshotNumber):
-		return  "{0}{1}".format(self.DirectoryName, utility.GetSnapshotFilenameFromTemplate(self._outputFileName, self._printerFileName, self._printStartTime, self._outputExtension,snapshotNumber))
-						  
-
+		return  "{0}{1}".format(self.DirectoryName, utility.GetSnapshotFilename(self._printerFileName, self._printStartTime, snapshotNumber))

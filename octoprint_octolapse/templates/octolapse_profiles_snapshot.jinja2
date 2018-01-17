@@ -3,7 +3,7 @@
   <div class="control-group">
     <label class="control-label">Snapshot Profile Name</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: name"/>
+      <input type="text" class="input-block-level" data-bind="value: name" required="true"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -163,7 +163,7 @@
       <div class="control-group" data-bind="visible: timer_trigger_enabled">
         <label class="control-label">Seconds to Trigger</label>
         <div class="controls">
-          <input type="number" class="input-block-level ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" />
+          <input name="timer_trigger_seconds" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
           <div class="error_label_container text-error" ></div>
           <small>
             <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
@@ -298,7 +298,7 @@
         <div class="control-group">
           <label class="control-label">Trigger Height (0 for trigger at layer change)</label>
           <div class="controls">
-            <input type="number" class="input-block-level ignore_hidden_errors" data-bind="value: layer_trigger_height" min="0.0" step="0.01"/>
+            <input name="layer_trigger_height" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true"/>
             <div class="error_label_container text-error" ></div>
           </div>
         </div>
@@ -438,7 +438,7 @@
   <div class="control-group">
     <label class="control-label">Delay in Milliseconds before taking a snapshot (1000 = 1 second)</label>
     <div class="controls">
-      <input type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" />
+      <input name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -460,38 +460,7 @@
         </label>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" >Output File Format</label>
-      <div class="controls">
-        <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_format_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   optionsCaption: 'Select One...',
-                                   value: output_format"></select>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Output File Name</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: output_filename"/>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
-      </div>
 
-    </div>
-    <div class="control-group">
-      <label class="control-label">Output File Directory</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: output_directory"/>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
-      </div>
-    </div>
     <div class="control-group">
       <label class="control-label">Delete Snapshots Files:</label>
       <div class="controls">

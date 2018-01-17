@@ -14,6 +14,9 @@
       <label class="checkbox">
         <input name="sync_with_timelapse" type="checkbox" data-bind="checked: enabled" title="Enable or disable timelapse generation"/>Enabled
       </label>
+      <span class="help-inline">
+        <span class="label label-important">Attention</span>This option currently will only work if you are rendering .mp4 video.  The default timelapse module does not support any other format currently.  Perhaps a feature request is in order?
+      </span>
     </div>
   </div>
   <div class="collapsible" data-bind="visible: enabled">
@@ -120,26 +123,6 @@
                                  value: output_format"></select>
           <div class="error_label_container text-error" ></div>
         </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Output File Name</label>
-        <div class="controls">
-          <input name="output_filename" type="text" class="input-block-level" data-bind="value: output_filename" required="true"/>
-          <div class="error_label_container text-error" ></div>
-        </div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Output File Directory</label>
-        <div class="controls">
-          <input name="output_directory" type="text" class="input-block-level" data-bind="value: output_directory" required="true"/>
-          <div class="error_label_container text-error" ></div>
-        </div>
-        <span class="help-inline">
-          <span class="label label-important">Attention</span> You can use the following tokens(include the brackets):  [FileName] [DateYYYYMMDD] [TimeHHMMSS] [Extension]
-        </span>
       </div>
     </div>
   </div>

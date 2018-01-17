@@ -387,8 +387,12 @@ class Timelapse(object):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering/synchronizing the timelapse.")
 		finalFilename = args[0]
 		baseFileName = args[1]
+		willSync = args[2]
 		#Notify Octoprint
-		payload = dict(gcode="unknown",movie=finalFilename,movie_basename=baseFileName,movie_prefix="from Octolapse")
+		if(willSync):
+			payload = dict(gcode="unknown",movie=finalFilename,movie_basename=baseFileName,movie_prefix="from Octolapse")
+		else:
+			payload = dict(gcode="unknown",movie=finalFilename,movie_basename=baseFileName,movie_prefix="from Octolapse.  This timelapse will NOT be synchronized with the default timelapse module.  Please see the Octolapse advanced rendering settings for details.")
 		self.OnMovieRendering(payload)
 
 	def OnRenderFail(self, *args, **kwargs):
@@ -413,18 +417,12 @@ class Timelapse(object):
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
 
 	def OnRenderComplete(self, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering, ending timelapse.")
-	
+		finalFileName = args[0]
+		synchronize = args[1]
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering the timelapse.")
 	# Synchronize renderings with the default plugin
 	def OnSynchronizeRenderingComplete(self, *args, **kwargs):
-		finalFilename = args[0]
-		baseFileName = args[1]
-		# Notify the user of success and refresh the default timelapse control
-		payload = dict(gcode="unknown",
-				movie=finalFilename,
-				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse")
-		self.OnMovieDone(payload)
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Synchronization with octoprint completed successfully.")
 
 	def OnSynchronizeRenderingFail(self, *args, **kwargs):
 		finalFilename = args[0]
@@ -433,13 +431,24 @@ class Timelapse(object):
 		payload = dict(gcode="unknown",
 				movie=finalFilename,
 				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse",
+				movie_prefix="from Octolapse.  Synchronization between octolapse and octoprint failed.  Your timelapse is likely within the octolapse data folder.  A file browser will be added in a future version (hopefully).",
 				returncode=0,
 				reason="See the octolapse log for details.")
 		self.OnMovieFailed(payload)
 
 	def OnRenderTimelapseJobComplete(self, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed the rendering/sync job.")
+		finalFileName = args[0]
+		baseFileName = args[1]
+		synchronize = args[2]
+		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering, ending timelapse.")
+		moviePrefix = "from Octolapse"
+		if(not synchronize):
+			moviePrefix = "from Octolapse.  Your timelapse was NOT synchronized (see advanced rendering settings for details), but can be found in octolapse's data directory.  A file browser will be added in a future release (hopefully)"
+		payload = dict(gcode="unknown",
+				movie=finalFileName,
+				movie_basename=baseFileName ,
+				movie_prefix=moviePrefix)
+		self.OnMovieDone(payload)
 
 	def OnMovieRendering(self,payload):
 		"""Called when a timelapse has started being rendered.  Calls any callbacks onMovieRendering callback set in the constructor."""

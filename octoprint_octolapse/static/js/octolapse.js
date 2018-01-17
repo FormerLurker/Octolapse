@@ -95,19 +95,13 @@ $(function () {
             return jQuery.validator.methods.url.call(this, testUrl, element);
         });
     
+    
     jQuery.extend(jQuery.validator.messages, {
         name: "Please enter a name.",
         required: "This field is required.",
-        remote: "Please fix this field.",
-        email: "Please enter a valid email address.",
         url: "Please enter a valid URL.",
-        date: "Please enter a valid date.",
-        dateISO: "Please enter a valid date (ISO).",
         number: "Please enter a valid number.",
-        digits: "Please enter only digits.",
-        creditcard: "Please enter a valid credit card number.",
         equalTo: "Please enter the same value again.",
-        accept: "Please enter a value with a valid extension.",
         maxlength: jQuery.validator.format("Please enter no more than {0} characters."),
         minlength: jQuery.validator.format("Please enter at least {0} characters."),
         rangelength: jQuery.validator.format("Please enter a value between {0} and {1} characters long."),
@@ -129,7 +123,8 @@ $(function () {
         Octolapse.Settings.global_settings = parameters[0];
         // Create other observables
         Octolapse.Settings.is_octolapse_enabled = ko.observable();
-
+        Octolapse.Settings.platform = ko.observable();
+        
         self.updateSettings = function (settings) {
             Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.toggleOctolapseEnabled(Octolapse.Settings.is_octolapse_enabled)
@@ -180,6 +175,7 @@ $(function () {
                 Create our global settings
             */
             Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
+            Octolapse.Settings.platform(settings.platform);
             /*
                 Create our printers view model
             */
@@ -226,7 +222,7 @@ $(function () {
                     'current_profile_guid': settings.current_snapshot_profile_guid
                     , 'profiles': settings.snapshots
                     , 'default_profile': settings.default_snapshot_profile
-                    , 'profileOptions': { 'snapshot_format_options': settings.snapshot_format_options, 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options }
+                    , 'profileOptions': { 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'

@@ -48,21 +48,16 @@ $(function () {
 
         self.delay = ko.observable(values.delay);
         self.retract_before_move = ko.observable(values.retract_before_move);
-        self.output_format = ko.observable(values.output_format);
-        self.output_filename = ko.observable(values.output_filename);
-        self.output_directory = ko.observable(values.output_directory);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
         
     }
     Octolapse.SnapshotProfileValidationRules = {
         rules: {
-            name: "required",
-            script_path: "required"
         },
         messages: {
             name: "Please enter a name for your profile",
-            script_path: "Please enter a path to your custom script"
+            
         }
     };
 });

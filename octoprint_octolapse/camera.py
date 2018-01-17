@@ -17,8 +17,14 @@ def TestCamera(cameraProfile, timeoutSeconds=2):
 			else:
 				r=requests.get(url,verify = not cameraProfile.ignore_ssl_error,timeout=float(timeoutSeconds))
 
-			if r.status_code == requests.codes.ok:
-				return True,""
+			if (r.status_code == requests.codes.ok):
+				headers = r.getheaders()
+				if(r.content-length<0):
+					failReason = "Camera Test failed - The returned image contained no data"
+				elif(r.content-type.lower() != "image/jpeg"):
+					return True,""
+				
+
 			else:
 				failReason = "Camera Test Failed - An invalid status code was returned from the camera:{0}".format(r.status_code)
 		except:

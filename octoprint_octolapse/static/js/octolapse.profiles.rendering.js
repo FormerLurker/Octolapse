@@ -11,8 +11,6 @@ $(function() {
         self.max_fps = ko.observable(values.max_fps);
         self.min_fps = ko.observable(values.min_fps);
         self.output_format = ko.observable(values.output_format);
-        self.output_filename = ko.observable(values.output_filename);
-        self.output_directory = ko.observable(values.output_directory);
         self.sync_with_timelapse = ko.observable(values.sync_with_timelapse);
         self.bitrate = ko.observable(values.bitrate);
         self.flip_h = ko.observable(values.flip_h);

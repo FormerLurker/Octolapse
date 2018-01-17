@@ -15,6 +15,7 @@ import itertools
 import shutil
 import copy
 import threading
+import octoprint_octolapse.utility as utility
 # Octoprint Imports
 from octoprint.events import eventManager, Events # used to send messages to the web client for notifying it of new timelapses
 
@@ -97,6 +98,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 		else:
 			return json.dumps({'success':False,'error':results[1]}), 200, {'ContentType':'application/json'}
+
+	
 	def ApplyCameraSettings(self, cameraProfile):
 		cameraControl = camera.CameraControl(cameraProfile, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
 		cameraControl.ApplySettings()
@@ -289,18 +292,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
 
 	def OnPrintFailed(self):
-		self.Timelapse.EndTimelapse()
+		if(self.Timelapse is not None):
+			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
 
 	def OnPrintCancelled(self):
-		self.Timelapse.EndTimelapse()
+		if(self.Timelapse is not None):
+			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
 	def OnPrintCompleted(self):
-		self.Timelapse.EndTimelapse()
+		if(self.Timelapse is not None):
+			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
 	def OnPrintEnd(self):
 		# tell the timelapse that the print ended.
-		self.Timelapse.EndTimelapse()
+		if(self.Timelapse is not None):
+			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):

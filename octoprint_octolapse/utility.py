@@ -3,7 +3,9 @@ import ntpath
 import math
 import time
 import os
-
+import sys
+import errno
+import tempfile
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 def getfloat(value,default,key=None):
@@ -57,31 +59,59 @@ def GetExtensionFromFileName(fileName):
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.00000):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def GetRenderingFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, printEndTime = None):
+def GetSnapshotDirectoryTemplate():
+	output_directory = "{DATADIRECTORY}/snapshots/"
+	if (sys.platform == "win32"):
+		output_directory = "{DATADIRECTORY}\\snapshots\\"
+	return output_directory
+def GetSnapshotFilenameTemplate():
+	output_filename = "{FILENAME}_{PRINTSTARTTIME}/{FILENAME}"
+	if (sys.platform == "win32"):
+		output_filename = "{FILENAME}_{PRINTSTARTTIME}\\{FILENAME}"
+	return output_filename
 
+def GetRenderingDirectoryTemplate():
+	output_directory = "{DATADIRECTORY}/timelapses/"
+	if (sys.platform == "win32"):
+		output_directory = "{DATADIRECTORY}\\timelapses\\"
+	return output_directory
+
+def GetRenderingBaseFilenameTemplate():
+	return "{FILENAME}_{DATETIMESTAMP}"
+
+def GetRenderingBaseFilename(printName, printStartTime, printEndTime = None):
+	fileTemplate = GetRenderingBaseFilenameTemplate()
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
 	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
 	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
-	fileTemplate = fileTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
 	if(printEndTime is not None):
 		fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
 	
-	return "{0}.{1}".format(fileTemplate, outputExtension)
+	return fileTemplate
 
-def GetSnapshotFilenameFromTemplate(fileTemplate, printName, printStartTime, outputExtension, snapshotNumber):
-
+def GetSnapshotFilename(printName, printStartTime, snapshotNumber):
+	fileTemplate = GetSnapshotFilenameTemplate()
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
 	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
 	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
-	fileTemplate = fileTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
 	# if the snapshot number is an int, make sure the front is padded with enough 0s for FFMPEG
 	if(isinstance(snapshotNumber,int)):
 		snapshotNumber = "{0:05d}".format(snapshotNumber)
-	return "{0}{1}.{2}".format(fileTemplate,snapshotNumber , outputExtension)
+	return "{0}{1}.{2}".format(fileTemplate,snapshotNumber , "jpg")
 
-def GetDirectoryFromTemplate(directoryTemplate, dataDirectory, printName, printStartTime, outputExtension, printEndTime = None):
+def GetSnapshotDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
+	directoryTemplate = GetSnapshotDirectoryTemplate()
+	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
+	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
+	if(printEndTime is not None):
+		directoryTemplate = directoryTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
+	directoryTemplate = directoryTemplate.replace("{DATADIRECTORY}",dataDirectory)
+		
+	return directoryTemplate
+def GetRenderingDirectory(dataDirectory, printName, printStartTime, outputExtension, printEndTime = None):
+	directoryTemplate = GetRenderingDirectoryTemplate()
 	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
 	directoryTemplate = directoryTemplate.replace("{OUTPUTFILEEXTENSION}",getstring(outputExtension,""))
 	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
