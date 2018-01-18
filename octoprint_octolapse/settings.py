@@ -537,7 +537,7 @@ class Rendering(object):
 		self.output_format = 'mp4'
 		
 		self.sync_with_timelapse = True
-		self.bitrate = "7000K"
+		self.bitrate = "5000K"
 		self.flip_h = False
 		self.flip_v = False
 		self.rotate_90 = False
@@ -765,7 +765,6 @@ class Camera(object):
 			self.jpeg_quality_request_template = utility.getstring(changes["jpeg_quality_request_template"],self.jpeg_quality_request_template)
 		if("zoom_request_template" in changes.keys()):
 			self.zoom_request_template = utility.getstring(changes["zoom_request_template"],self.zoom_request_template)
-
 	def ToDict(self):
 		return {
 				'name'												: self.name,

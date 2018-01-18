@@ -172,17 +172,19 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.DefaultCamera.address = cameraAddress
 				self.Settings.DefaultCamera.snapshot_request_template = snapshotRequestTemplate
 				if(applyToCurrentProfiles):
-					self.Settings.CurrentCamera().address = cameraAddress;
-					self.Settings.CurrentCamera().snapshot_request_template = snapshotRequestTemplate
+					for profile in self.Settings.cameras.values():
+						profile.address = cameraAddress;
+						profile.snapshot_request_template = snapshotRequestTemplate
 			except TypeError, e:
 				self.Settings.CurrentDebugProfile().LogError("Unable to parse the snapshot address from Octoprint's settings, using system default. Details: {0}".format(e))
 
 		# Attempt to set the bitrate
 		if("bitrate" in webcamSettings):
 			bitrate = webcamSettings["bitrate"]
-			self.Settings.DefaultCamera.bitrate = bitrate
+			self.Settings.DefaultRendering.bitrate = bitrate
 			if(applyToCurrentProfiles):
-				self.Settings.CurrentCamera().bitrate = bitrate
+				for profile in self.Settings.renderings.values():
+					profile.bitrate = bitrate
 
 	def SaveSettings(self):
 		# Save setting from file

@@ -18,10 +18,11 @@ def TestCamera(cameraProfile, timeoutSeconds=2):
 				r=requests.get(url,verify = not cameraProfile.ignore_ssl_error,timeout=float(timeoutSeconds))
 
 			if (r.status_code == requests.codes.ok):
-				headers = r.getheaders()
-				if(r.content-length<0):
-					failReason = "Camera Test failed - The returned image contained no data"
-				elif(r.content-type.lower() != "image/jpeg"):
+				if('content-length' in r.headers and r.headers["content-length"]==0):
+					failReason = "Camera Test failed - The request contained no data"
+				elif("image/jpeg" not in r.headers["content-type"].lower()):
+					failReason = "Camera test failed - The returned data was not an image"
+				else:
 					return True,""
 				
 
