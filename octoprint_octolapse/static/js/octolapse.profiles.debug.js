@@ -16,7 +16,6 @@ $(function() {
         self.trigger_wait_state = ko.observable(values.trigger_wait_state);
         self.trigger_triggering = ko.observable(values.trigger_triggering);
         self.trigger_triggering_state = ko.observable(values.trigger_triggering_state);
-        self.trigger_layer_zmin_reached = ko.observable(values.trigger_layer_zmin_reached);
         self.trigger_layer_change = ko.observable(values.trigger_layer_change);
         self.trigger_height_change = ko.observable(values.trigger_height_change);
         self.trigger_zhop = ko.observable(values.trigger_zhop);

@@ -159,10 +159,10 @@ class TimelapseRenderJob(object):
 	def _render(self):
 		"""Rendering runnable."""
 		if self._ffmpeg is None:
-			self._debug.LogWarning("Cannot create movie, path to ffmpeg is unset")
+			self._debug.LogRenderFail("Cannot create movie, path to ffmpeg is unset")
 			return
 		if self._bitrate is None:
-			self._debug.LogWarning("Cannot create movie, desired bitrate is unset")
+			self._debug.LogRenderFail("Cannot create movie, desired bitrate is unset")
 			return
 
 		input = os.path.join(self._capture_dir,
@@ -181,14 +181,14 @@ class TimelapseRenderJob(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self._debug.LogError("Render - An exception was thrown when trying to save a create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
+			self._debug.LogRenderFail("Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
 			return	
 
 		for i in range(4):
 			if os.path.exists(input % i):
 				break
 		else:
-			self._debug.LogWarning("Cannot create a movie, no frames captured")
+			self._debug.LogRenderFail("Cannot create a movie, no frames captured")
 			self._notify_callback("fail", output, baseOutputFileName,0,'no_frames')
 			return
 
@@ -218,10 +218,10 @@ class TimelapseRenderJob(object):
 					returncode = p.returncode
 					stdout_text = p.stdout.text
 					stderr_text = p.stderr.text
-					self._debug.LogWarning("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
+					self._debug.LogRenderFail("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
 					self._notify_callback("render_fail", output, baseOutputFileName, returncode,stderr_text)
 			except:
-				self._debug.LogError("Could not render movie due to unknown error")
+				self._debug.LogRenderFail("Could not render movie due to unknown error")
 				# clean after fail
 				self._notify_callback("render_fail", output, baseOutputFileName,0,'unknown')
 			finally:
@@ -243,7 +243,7 @@ class TimelapseRenderJob(object):
 					type = sys.exc_info()[0]
 					value = sys.exc_info()[1]
 					message = "Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileName,type,value)
-					self._debug.LogError(message)
+					self._debug.LogRenderSync(message)
 					self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
 
 			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize)
@@ -261,9 +261,9 @@ class TimelapseRenderJob(object):
 			except:
 				type = sys.exc_info()[0]
 				value = sys.exc_info()[1]
-				self._debug.LogWarning("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
+				self._debug.LogSnapshotClean("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
 		else:
-			self._debug.LogWarning("Snapshot - No need to clean snapshots: they have already been removed.")	
+			self._debug.LogSnapshotClean("Snapshot - No need to clean snapshots: they have already been removed.")	
 
 	@classmethod
 	def _create_ffmpeg_command_string(cls, ffmpeg, fps, bitrate, threads, input, output, outputFormat = 'vob',hflip=False, vflip=False,

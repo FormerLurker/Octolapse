@@ -131,7 +131,7 @@ class Position(object):
 
 				# If we've not reached z min, leave!
 				if(not self.HasHomedAxis()):
-					self.Settings.CurrentDebugProfile().LogPositionZminReached("Position - Axis not homed.")
+					self.Settings.CurrentDebugProfile().LogPositionChange("Position - Axis not homed, cannot alter position.")
 				else:
 					# calculate LastExtrusionHeight and Height
 					if (self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart):

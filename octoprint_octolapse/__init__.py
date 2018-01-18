@@ -166,10 +166,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			try:
 				o = urlparse(snapshotUrl)
 				cameraAddress = o.scheme + "://" + o.netloc + o.path
-				self.Settings.CurrentDebugProfile().LogInfo("Setting octolapse camera address to {0}.".format(cameraAddress))
+				self.Settings.CurrentDebugProfile().LogSettingsLoad("Setting octolapse camera address to {0}.".format(cameraAddress))
 				snapshotAction = urlparse(snapshotUrl).query
 				snapshotRequestTemplate = "{camera_address}?" + snapshotAction;
-				self.Settings.CurrentDebugProfile().LogInfo("Setting octolapse camera snapshot template to {0}.".format(snapshotRequestTemplate))
+				self.Settings.CurrentDebugProfile().LogSettingsLoad("Setting octolapse camera snapshot template to {0}.".format(snapshotRequestTemplate))
 				self.Settings.DefaultCamera.address = cameraAddress
 				self.Settings.DefaultCamera.snapshot_request_template = snapshotRequestTemplate
 				if(applyToCurrentProfiles):
@@ -311,7 +311,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# tell the timelapse that the print ended.
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
-		self.Settings.CurrentDebugProfile().LogInfo("Print Ended.");
+		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):

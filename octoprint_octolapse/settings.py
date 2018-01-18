@@ -850,7 +850,6 @@ class DebugProfile(object):
 		self.trigger_wait_state = False
 		self.trigger_triggering = False
 		self.trigger_triggering_state = False
-		self.trigger_layer_zmin_reached = False
 		self.trigger_layer_change = False
 		self.trigger_height_change = False
 		self.trigger_zhop = False
@@ -903,8 +902,6 @@ class DebugProfile(object):
 			self.trigger_triggering = utility.getbool(changes["trigger_triggering"],self.trigger_triggering)
 		if("trigger_triggering_state" in changes.keys()):
 			self.trigger_triggering_state = utility.getbool(changes["trigger_triggering_state"],self.trigger_triggering_state)
-		if("trigger_layer_zmin_reached" in changes.keys()):
-			self.trigger_layer_zmin_reached = utility.getbool(changes["trigger_layer_zmin_reached"],self.trigger_layer_zmin_reached)
 		if("trigger_layer_change" in changes.keys()):
 			self.trigger_layer_change = utility.getbool(changes["trigger_layer_change"],self.trigger_layer_change)
 		if("trigger_height_change" in changes.keys()):
@@ -963,7 +960,6 @@ class DebugProfile(object):
 				'trigger_wait_state'		: self.trigger_wait_state,
 				'trigger_triggering'		: self.trigger_triggering,
 				'trigger_triggering_state'	: self.trigger_triggering_state,
-				'trigger_layer_zmin_reached': self.trigger_layer_zmin_reached,
 				'trigger_layer_change'		: self.trigger_layer_change,
 				'trigger_height_change'		: self.trigger_height_change,
 				'trigger_time_remaining'	: self.trigger_time_remaining,
@@ -1040,9 +1036,6 @@ class DebugProfile(object):
 			self.LogInfo(message)
 	def LogTriggerHeightChange(self, message):
 		if(self.trigger_height_change):
-				self.LogInfo(message)
-	def LogPositionZminReached(self, message):
-		if(self.trigger_layer_zmin_reached):
 			self.LogInfo(message)
 	def LogPositionLayerChange(self,message):
 		if(self.position_change):

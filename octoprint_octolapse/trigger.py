@@ -113,7 +113,7 @@ class LayerTrigger(object):
 			
 
 	def Reset(self):
-		"""Resets all state tracking variables and flags.  Does not change the settings (ZMin, HeightIncrement)"""
+		"""Resets all state tracking variables and flags.  Does not change the settings (HeightIncrement)"""
 		
 		self.CurrentIncrement = 0
 		self.IsWaiting = False

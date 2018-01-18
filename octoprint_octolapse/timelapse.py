@@ -216,7 +216,7 @@ class Timelapse(object):
 					#Triggering!
 					return currentTrigger
 				else:
-					self.Settings.CurrentDebugProfile().LogError("A position error prevented a trigger!")
+					self.Settings.CurrentDebugProfile().LogTriggering("A position error prevented a snapshot trigger!")
 		return None
 	def IsTriggerWaiting(self,cmd):
 		# make sure we're in a state that could want to check for triggers
@@ -260,11 +260,11 @@ class Timelapse(object):
 		# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
 		# Because of this we need to compare the position we received to the previous position, not the current one.
 		if( not self.Position.IsAtPreviousPosition(x,y,None) ):
-			self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X,self.Position.Y,self.Position.Z))
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X,self.Position.Y,self.Position.Z))
 			self.Position.UpdatePosition(x=x,y=y,z=z,force=True)
-				 
-		# return position information received
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
+		else:
+			# return position information received
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
 
 		# make sure the SnapshotCommandIndex = 0
 		# Todo: ensure this is unnecessary
@@ -277,7 +277,7 @@ class Timelapse(object):
 		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z, savedCommand=self.SavedCommand)
 		# make sure we acutally received gcode
 		if(self.SnapshotGcodes is None):
-			self.Settings.CurrentDebugProfile().LogError("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
+			self.Settings.CurrentDebugProfile().LogSnapshotGcode("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
 			self.EndSnapshot();
 			return False, "Error - No Snapshot Gcode";
 
@@ -317,7 +317,7 @@ class Timelapse(object):
 			errorMessage = "    {0}".format(a)
 			b = [ str(p) for p in a ]
 			errorMessage += "\n    {0}".format(b)
-			self.Settings.CurrentDebugProfile().LogError('Unknown error detected:{0}'.format(errorMessage))
+			self.Settings.CurrentDebugProfile().LogSnapshotSave('Unknown error detected:{0}'.format(errorMessage))
 		
 	def OnSnapshotSuccess(self, *args, **kwargs):
 		# Increment the number of snapshots received
@@ -335,7 +335,7 @@ class Timelapse(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogWarning("An exception was thrown when trying to create a directory for the downloaded snapshot: {0}  , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
+			self.Settings.CurrentDebugProfile().LogSnapshotSave("An exception was thrown when trying to create a directory for the downloaded snapshot: {0}  , ExceptionType:{1}, Exception Value:{2}".format(os.path.dirname(dir),type,value))
 			return
 
 		# rename the current file
@@ -345,11 +345,11 @@ class Timelapse(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self.Settings.CurrentDebugProfile().LogError("Could rename the snapshot {0} to {1}!   Error Type:{2}, Details:{3}".format(snapshotInfo.GetTempFullPath(), newSnapshotName,type,value))
+			self.Settings.CurrentDebugProfile().LogSnapshotSave("Could rename the snapshot {0} to {1}!   Error Type:{2}, Details:{3}".format(snapshotInfo.GetTempFullPath(), newSnapshotName,type,value))
 
 	def OnSnapshotFail(self, *args, **kwargs):
 		reason = args[0]
-		self.Settings.CurrentDebugProfile().LogWarning("Failed to download the snapshot.  Reason:{0}".format(reason))
+		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Failed to download the snapshot.  Reason:{0}".format(reason))
 		
 	def OnSnapshotComplete(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogSnapshotDownload("Snapshot Completed.")
@@ -366,7 +366,7 @@ class Timelapse(object):
 	def RenderTimelapse(self):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
 		if(self.Rendering.enabled):
-			self.Settings.CurrentDebugProfile().LogInfo("Started Rendering Timelapse");
+			self.Settings.CurrentDebugProfile().LogRenderStart("Started Rendering Timelapse");
 			timelapseRenderJob = Render(self.Settings
 								  ,self.DataFolder
 								  ,self.DefaultTimelapseDirectory
