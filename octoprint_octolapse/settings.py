@@ -12,8 +12,8 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 class Printer(object):
 	
-	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=4.0
-			  ,retract_speed=4000,detract_speed=3000, movement_speed=7200,z_hop=0.5, z_hop_speed=7200, snapshot_command="snap"):
+	def __init__(self,printer=None,name="New Printer",guid=None,retract_length=2.0
+			  ,retract_speed=4000,detract_speed=3000, movement_speed=6000,z_hop=0.5, z_hop_speed=6000, snapshot_command="snap"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
 		self.retract_length = retract_length
@@ -94,29 +94,27 @@ class Stabilization(object):
 	def __init__(self,stabilization=None, guid = None, name = "Default Stabilization"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
-		self.x_movement_speed = 0
-		self.x_type = "fixed_coordinate"
+		self.x_type = "relative"
 		self.x_fixed_coordinate = 0.0
 		self.x_fixed_path = "0"
 		self.x_fixed_path_loop = True
 		self.x_fixed_path_invert_loop = True
-		self.x_relative = 100.0
-		self.x_relative_print = 100.0
-		self.x_relative_path = "100.0"
+		self.x_relative = 50.0
+		self.x_relative_print = 50.0
+		self.x_relative_path = "50.0"
 		self.x_relative_path_loop = True
 		self.x_relative_path_invert_loop = True
-		self.y_movement_speed_mms = 0
-		self.y_type = 'fixed_coordinate'
+		self.y_type = 'relative'
 		self.y_fixed_coordinate = 0.0
 		self.y_fixed_path = "0"
 		self.y_fixed_path_loop = True
 		self.y_fixed_path_invert_loop = True
-		self.y_relative = 100.0
-		self.y_relative_print = 100.0
-		self.y_relative_path = "100"
+		self.y_relative = 50.0
+		self.y_relative_print = 50.0
+		self.y_relative_path = "50"
 		self.y_relative_path_loop = True
 		self.y_relative_path_invert_loop = True
-		self.z_movement_speed_mms = 0
+		
 		
 		if(stabilization is not None):
 			self.Update(stabilization)
@@ -126,8 +124,6 @@ class Stabilization(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
-		if("x_movement_speed" in changes.keys()):
-			self.x_movement_speed = utility.getint(changes["x_movement_speed"],self.x_movement_speed)
 		if("x_type" in changes.keys()):
 			self.x_type = utility.getstring(changes["x_type"],self.x_type)
 		if("x_fixed_coordinate" in changes.keys()):
@@ -148,8 +144,6 @@ class Stabilization(object):
 			self.x_relative_path_loop = utility.getbool(changes["x_relative_path_loop"],self.x_relative_path_loop)
 		if("x_relative_path_invert_loop" in changes.keys()):
 			self.x_relative_path_invert_loop = utility.getbool(changes["x_relative_path_invert_loop"],self.x_relative_path_invert_loop)
-		if("y_movement_speed_mms" in changes.keys()):
-			self.y_movement_speed_mms = utility.getint(changes["y_movement_speed_mms"],self.y_movement_speed_mms)
 		if("y_type" in changes.keys()):
 			self.y_type = utility.getstring(changes["y_type"],self.y_type)
 		if("y_fixed_coordinate" in changes.keys()):
@@ -170,14 +164,11 @@ class Stabilization(object):
 			self.y_relative_path_loop = utility.getbool(changes["y_relative_path_loop"],self.y_relative_path_loop)
 		if("y_relative_path_invert_loop" in changes.keys()):
 			self.y_relative_path_invert_loop = utility.getbool(changes["y_relative_path_invert_loop"],self.y_relative_path_invert_loop)
-		if("z_movement_speed_mms" in changes.keys()):
-			self.z_movement_speed_mms = utility.getint(changes["z_movement_speed_mms"],self.z_movement_speed_mms)
-	
+		
 	def ToDict(self):
 		return {
 			'name'							: self.name,
 			'guid'							: self.guid,
-			'x_movement_speed'				: self.x_movement_speed,
 			'x_type'						: self.x_type,
 			'x_fixed_coordinate'			: self.x_fixed_coordinate,
 			'x_fixed_path'					: self.x_fixed_path,
@@ -188,7 +179,6 @@ class Stabilization(object):
 			'x_relative_path'				: self.x_relative_path,
 			'x_relative_path_loop'			: self.x_relative_path_loop,
 			'x_relative_path_invert_loop'	: self.x_relative_path_invert_loop,
-			'y_movement_speed_mms'			: self.y_movement_speed_mms,
 			'y_type'						: self.y_type,
 			'y_fixed_coordinate'			: self.y_fixed_coordinate,
 			'y_fixed_path'					: self.y_fixed_path,
@@ -198,8 +188,7 @@ class Stabilization(object):
 			'y_relative_print'				: self.y_relative_print,
 			'y_relative_path'				: self.y_relative_path,
 			'y_relative_path_loop'			: self.y_relative_path_loop,
-			'y_relative_path_invert_loop'	: self.y_relative_path_invert_loop,
-			'z_movement_speed_mms'			: self.z_movement_speed_mms
+			'y_relative_path_invert_loop'	: self.y_relative_path_invert_loop
 		}
 
 	def GetStabilizationPaths(self):
@@ -265,58 +254,57 @@ class Snapshot(object):
 	ExtruderTriggerRequiredValue = "trigger_on"
 	ExtruderTriggerForbiddenValue = "forbidden"
 	ExtruderTriggerOptions = [
-		dict(value='',name='Ignore',visible=True)
-		,dict(value='trigger_on',name='Trigger',visible=True)
-		,dict(value='forbidden',name='Forbidden',visible=True)]
+		dict(value=ExtruderTriggerIgnoreValue,name='Ignore',visible=True)
+		,dict(value=ExtruderTriggerRequiredValue,name='Trigger',visible=True)
+		,dict(value=ExtruderTriggerForbiddenValue,name='Forbidden',visible=True)]
 	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
 		#Initialize defaults
 		#Gcode Trigger
-		self.gcode_trigger_enabled = True
+		self.gcode_trigger_enabled = False
 		self.gcode_trigger_require_zhop = False
-		self.gcode_trigger_on_extruding_start = False
-		self.gcode_trigger_on_extruding = True
-		self.gcode_trigger_on_primed = True
-		self.gcode_trigger_on_retracting_start = False
+		self.gcode_trigger_on_extruding_start = None
+		self.gcode_trigger_on_extruding = None
+		self.gcode_trigger_on_primed = None
+		self.gcode_trigger_on_retracting_start = None
 		self.gcode_trigger_on_retracting = None
 		self.gcode_trigger_on_partially_retracted = None
-		self.gcode_trigger_on_retracted = True
-		self.gcode_trigger_on_detracting_start = True
+		self.gcode_trigger_on_retracted = None
+		self.gcode_trigger_on_detracting_start = None
 		self.gcode_trigger_on_detracting = None
-		self.gcode_trigger_on_detracted = False
+		self.gcode_trigger_on_detracted = None
 		#Timer Trigger
 		self.timer_trigger_enabled = False
-		self.timer_trigger_seconds = 60
+		self.timer_trigger_seconds = 30
 		self.timer_trigger_require_zhop = False
-		self.timer_trigger_on_extruding_start = False
-		self.timer_trigger_on_extruding = True
+		self.timer_trigger_on_extruding_start = True
+		self.timer_trigger_on_extruding = False
 		self.timer_trigger_on_primed = True
 		self.timer_trigger_on_retracting_start = False
-		self.timer_trigger_on_retracting = None
-		self.timer_trigger_on_partially_retracted = None
+		self.timer_trigger_on_retracting = False
+		self.timer_trigger_on_partially_retracted = False
 		self.timer_trigger_on_retracted = True
 		self.timer_trigger_on_detracting_start = True
-		self.timer_trigger_on_detracting = None
+		self.timer_trigger_on_detracting = False
 		self.timer_trigger_on_detracted = False
 		#Layer Trigger
 		self.layer_trigger_enabled = True
 		self.layer_trigger_height = 0.0
-		self.layer_trigger_require_zhop = True
-		self.layer_trigger_on_extruding_start = False
-		self.layer_trigger_on_extruding = True
+		self.layer_trigger_require_zhop = False
+		self.layer_trigger_on_extruding_start = True
+		self.layer_trigger_on_extruding = None
 		self.layer_trigger_on_primed = True
 		self.layer_trigger_on_retracting_start = False
-		self.layer_trigger_on_retracting = None
-		self.layer_trigger_on_partially_retracted = None
+		self.layer_trigger_on_retracting = False
+		self.layer_trigger_on_partially_retracted = False
 		self.layer_trigger_on_retracted = True
 		self.layer_trigger_on_detracting_start = True
-		self.layer_trigger_on_detracting = None
+		self.layer_trigger_on_detracting = False
 		self.layer_trigger_on_detracted = False
 		# other settings
-		self.delay = 1000
-		self.retract_before_move = False
-		
+		self.delay = 125
+		self.retract_before_move = True
 		
 		self.cleanup_after_render_complete = True
 		self.cleanup_after_render_fail = False
@@ -465,7 +453,7 @@ class Snapshot(object):
 
 	def GetExtruderTriggerValueString(self, value):
 		if(value is None):
-			return ""
+			return self.ExtruderTriggerIgnoreValue
 		elif(value):
 			return self.ExtruderTriggerRequiredValue
 		elif(not value):
@@ -542,14 +530,14 @@ class Rendering(object):
 		self.name = name
 		self.enabled = True
 		self.fps_calculation_type = 'duration'
-		self.run_length_seconds = 10
+		self.run_length_seconds = 5
 		self.fps = 30
 		self.max_fps = 120.0
-		self.min_fps = 1.0
+		self.min_fps = 2.0
 		self.output_format = 'mp4'
 		
-		self.sync_with_timelapse = False
-		self.bitrate = "2000K"
+		self.sync_with_timelapse = True
+		self.bitrate = "7000K"
 		self.flip_h = False
 		self.flip_v = False
 		self.rotate_90 = False
@@ -630,7 +618,7 @@ class Camera(object):
 	def __init__(self,camera=None, guid = None, name = "Default Camera"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
-		self.apply_settings_before_print = True
+		self.apply_settings_before_print = False
 		self.address = "http://127.0.0.1/webcam/"
 		self.snapshot_request_template = "{camera_address}?action=snapshot"
 		self.ignore_ssl_error = False
@@ -644,7 +632,7 @@ class Camera(object):
 		self.saturation_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963778&group=1&value={value}"
 		self.white_balance_auto = True
 		self.white_balance_auto_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963788&group=1&value={value}"
-		self.gain = 0
+		self.gain = 100
 		self.gain_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963795&group=1&value={value}"
 		self.powerline_frequency = 60
 		self.powerline_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963800&group=1&value={value}"
@@ -666,7 +654,7 @@ class Camera(object):
 		self.tilt_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094857&group=1&value={value}"
 		self.autofocus_enabled = True
 		self.autofocus_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094860&group=1&value={value}"
-		self.focus = 35
+		self.focus = 28
 		self.focus_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094858&group=1&value={value}"
 		self.zoom = 100
 		self.zoom_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094861&group=1&value={value}"
@@ -674,7 +662,7 @@ class Camera(object):
 		self.led1_mode_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062213&group=1&value={value}"
 		self.led1_frequency = 0
 		self.led1_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062214&group=1&value={value}"
-		self.jpeg_quality = 80
+		self.jpeg_quality = 90
 		self.jpeg_quality_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}"
 
 		if(not camera is None):
@@ -851,7 +839,7 @@ class DebugProfile(object):
 			#DebugProfile.Logger.addHandler(logHandler)
 			DebugProfile.Logger.setLevel(logging.DEBUG)
 		
-		self.log_to_console = True
+		self.log_to_console = False
 		self.enabled = False
 		self.is_test_mode = False
 		self.position_change = False
@@ -1124,7 +1112,7 @@ class DebugProfile(object):
 			self.LogInfo(message)
 	
 class OctolapseSettings(object):
-	Version = 1.0
+
 	
 	DefaultDebugProfile = None;
 	Logger = None;
@@ -1137,7 +1125,7 @@ class OctolapseSettings(object):
 		self.DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.LogFilePath = logFilePath
 		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
-		self.version = "0.1.0"
+		self.version = "0.0.1.0"
 		
 		self.is_octolapse_enabled = True
 		

@@ -316,7 +316,7 @@ $(function () {
                         //load settings from the provided data
                         self.updateSettings(JSON.parse(newSettings));
                         
-                        alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
+                        alert("The default settings have been restored.");
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
