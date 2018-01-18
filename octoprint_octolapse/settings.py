@@ -828,14 +828,15 @@ class DebugProfile(object):
 
 		# Configure the logger if it has not been created
 		if(DebugProfile.Logger is None):
-			DebugProfile.Logger = logging.getLogger("Octolapse Plugin")
-			
-			# Remove existing handlers
-			#DebugProfile.Logger.handlers = []
-			# Create the handler
-			#logHandler = logging.FileHandler(self.logFilePath)
-			#logHandler.setFormatter(logging.Formatter(DebugProfile.FormatString))
-			#DebugProfile.Logger.addHandler(logHandler)
+			DebugProfile.Logger = logging.getLogger("octoprint.plugins.octolapse")
+
+			from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
+			octoprint_logging_handler = CleaningTimedRotatingFileHandler(self.logFilePath, when="D", backupCount=3)
+			octoprint_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+			octoprint_logging_handler.setLevel(logging.DEBUG)
+			DebugProfile.Logger.addHandler(octoprint_logging_handler)
+			DebugProfile.Logger.propagate = False
+			# we are controlling our logging via settings, so set to debug so that nothing is filtered
 			DebugProfile.Logger.setLevel(logging.DEBUG)
 		
 		self.log_to_console = False

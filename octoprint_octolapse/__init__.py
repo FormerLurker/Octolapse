@@ -121,6 +121,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				# create new settings from default setting file
 				with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:
 					data = json.load(defaultSettingsJson);
+				# if a settings file does not exist, create one ??
 				self.Settings = OctolapseSettings(self.LogFilePath(), data);
 				self.Settings.CurrentDebugProfile().LogSettingsLoad("Creating new settings file from defaults.")			
 				createNewSettings = True
