@@ -38,7 +38,11 @@ Can only be installed manually or via the bundled [Plugin Manager](https://githu
 
 ### Steps after installation
 1.  Make sure to select the appropriate printer profile (only Prusa Mk2S and MK2S with multi material have been tested).  The retraction length is of particular importance here.  Check your slicer settings to get the appropriate values for your prints.  Note that all axis speeds are in Millimeters per minute, while many slicers use MM/Sec.  To convert, just multiply MM/m by 60.
-2.  Make sure your webcam is working by editing the default camera profile and clicking the 'Test Camera Snapshot' button.  If 
+2.  Make sure your webcam is working by editing the default camera profile and clicking the 'Test Camera Snapshot' button.
+3.  Run a short print in 'Test Mode' to make sure things are working without printing anything.  See 'Test Mode' below.
+
+### Test Mode
+1.  Navigate to the Debug tab and select 'Test Mode'.  Note:  You shouldn't have to use any of the profiles marked 'Diagnostic' unless you suspect a bug.  The 'Diagnostic' profiles have logging enabled.  You can download the log file within the 'Logs' screen under the 'Octoprint' settings section.   The log file is named plugin_octolapse.log.  If you delete this file you will need to reboot octoprint before a new one is created!
 
 ## Usage
 
@@ -69,6 +73,9 @@ Here you can configure and fine tune your camera.  Octolapse allows you to contr
 This is mostly for troubleshooting, but there are some useful presets here.  If you would like to test out a timelapse without actually printing anything, use the 'Test Mode' settings.  This prevents the extruder from moving and suppresses any temperature setting commands so that you can quickly and easily make sure your stabilizations are working according to plan.  MAKE SURE YOUR EXTRUDER IS UNLOADED AND DON'T LEAVE YOUR PRINTER UNATTENDED!  This program is in alpha and hasn't been tested with all printers/slicers/custom gcode, so bad things could happen.
 
 If you are having any issues please select one of the existing diagnostic profiles to turn on octoprint logging.  You can find the log in the main settings page on the left hand side under (Logs).  The log file for Octoprint is named plugin_octolapse.log.  The log file is useful to help me track down issues, so make sure you download a copy after any problems.
+
+## Known issues
+If you use the 'Restore All Default Settings' button, make sure you reboot octoprint.  I'm working on this bug.
 
 ## Notes about Octolapse
 I got the idea for octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my gcode files.  To accomplish this I used the excellent and simple [Gcode System Commands](https://github.com/kantlivelong/OctoPrint-GCodeSystemCommands) plugin.  The timelapse worked great, but it required a lot of effort, which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, but decided to give plugin development a go.  I've never done one before (or programmed python, or knockout, or anything open source either), but figured I could contribute something good to the community.  This is my gift to all of the makers out there who have contributed your time and effort to the community!
