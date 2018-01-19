@@ -103,17 +103,17 @@ If you are using an Original Prusa printer, there is a [known issue](https://git
 
 Note from [foosel](https://github.com/foosel): There does exist a workaround in OctoPrint for this (since it's happened in the past with other firmware variants), users can tell OctoPrint to "simulate" an ok after resends by enabling Settings > Serial communication > Advanced options > Simulate an additional ok for resend requests, but that has to be done manually.
 
-Unfortunately this workaround may cause some print quality issues during the resend since I had some seemingly random overextursion in a test print after implementing the workaround.  I've not verified that it's due to the workaround, but I will try to do this soon.  I expect this bug to be fixed in the next firmware release.
+Unfortunately this workaround may cause some print quality issues during the resend, since I had some seemingly random overextursion in a test print after implementing the workaround.  I've not verified that it's due to the workaround, but I will try to do this soon.  I expect this bug to be fixed in the next firmware release.
 
 ### Non-Cartesian printers
 These are not currently supported.  I hope to include support for these at some point, but I don't own one to test on currently.
 
 ### Floating Point Math
-I've noticed some areas where floating point math may cause problems, but have not resolved all of them.  They could prevent proper extruder monitoring in some cases, and I'm working to fix this.
+I've noticed some areas where floating point math may cause problems, but have not resolved all of them.  They could prevent proper extruder monitoring/zhop detection in some cases, and I'm working to fix this.
 
 ### Logging
 It's possible that some of the logging options aren't doing exactly what they say.  I did some refactoring that didn't quite work as expected and will have to review the logging code.
 
 ## History of Octolapse
-I got the idea for octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my gcode files.  To accomplish this I used the excellent and simple [Gcode System Commands](https://github.com/kantlivelong/OctoPrint-GCodeSystemCommands) plugin.  The timelapse worked great, but it required a lot of effort, which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, but decided to give plugin development a go.  I've never done one before (or programmed python, or knockout, or anything open source either), but figured I could contribute something good to the community.  This is my gift to all of the makers out there who have contributed your time and effort to the community!
+I got the idea for octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my gcode files.  To accomplish this I used the excellent and simple [Gcode System Commands](https://github.com/kantlivelong/OctoPrint-GCodeSystemCommands) plugin.  The timelapse worked great, but it required a lot of effort, which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, but decided to give plugin development a go.  I've never done one before (or programmed python, or knockout, or anything open source either), but figured I could contribute something good to the community.  This is my gift to all of the makers out there who have contributed your time and effort!
 
