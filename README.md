@@ -44,7 +44,7 @@ Can only be installed manually or via the bundled [Plugin Manager](https://githu
 ### Test Mode
 Test mode must be activated BEFORE starting a print.  Changing this setting mid-print won't alter any current prints.
 
-1.  Navigate to the Debug tab and select 'Test Mode'.  Note:  You shouldn't have to use any of the profiles marked 'Diagnostic' unless you suspect a bug.  The 'Diagnostic' profiles have logging enabled.  You can download the log file within the 'Logs' screen under the 'Octoprint' settings section.   The log file is named plugin_octolapse.log.  If you delete this file you will need to reboot octoprint before a new one is created!
+1.  Navigate to the Debug tab and select 'Test Mode'.  Note:  You shouldn't have to use any of the profiles marked 'Diagnostic' unless you suspect a bug.
 2.  UNLOAD YOUR FILAMENT!  Even though I attempt to strip all extruder commands, there's a chance that I missed some cases.  Please let me know if you see any 'cold extrusion prevented' errors in the terminal window.  If you do, please let me know and send me your gcode!
 3.  Select your gcode file and click print.
 
@@ -61,7 +61,7 @@ You can add/edit/delete/copy profiles on any of the tabs.  You can set the curre
 
 Octolapse comes with several useful presets that should accommodate typical use.
 
-Notes:  Most setting changes will only affect the next print.  Active prints are only affected by the logging settings inside the debug profile, and by the 'Apply Settings' button in the Camera Profile Add/Edit screen.  All other changes will take place during your next print, though while we're still in Alpha mode I don't suggest you do any massive settings changes during a print (leave that to me)!
+Important Notes:  Most setting changes will only affect the next print.  Active prints are only affected by the logging settings inside the debug profile, and by the 'Apply Settings' button in the Camera Profile Add/Edit screen.  All other changes will take place during your next print, though while we're still in Alpha mode I don't suggest you do any massive settings changes during a print!
 
 #### Printer
 Here you can configure retraction length, speed, the printer snapshot command, as well as other settings.  The retraction length setting is especially important, since it's used to detect retraction and zhop.  Also of note is the Printer position confirmation tolerance.  Positions can be off by 0.0051MM on my MK2S due to mechanical constraints.  It can be difficult to tell what this setting should be, but if you have problems I would not go too much over 0.011 MM here.
@@ -78,12 +78,32 @@ These profiles determine how your series of snapshots will be turned into a time
 Here you can configure and fine tune your camera.  Octolapse allows you to control the camera settings (if supported by your camera and streamer) before each print, giving you complete control of how your snapshots look.
 
 #### Debug
-This is mostly for troubleshooting, but there are some useful presets here.  If you would like to test out a timelapse without actually printing anything, use the 'Test Mode' settings.  This prevents the extruder from moving and suppresses any temperature setting commands so that you can quickly and easily make sure your stabilizations are working according to plan.  MAKE SURE YOUR EXTRUDER IS UNLOADED AND DON'T LEAVE YOUR PRINTER UNATTENDED!  This program is in alpha and hasn't been tested with all printers/slicers/custom gcode, so bad things could happen.
 
+#####Test Mode
+If you would like to test out a timelapse without actually printing anything, use the 'Test Mode' settings.  Test mode will only work if you select the option before starting a print.  This prevents the extruder from moving and suppresses any temperature setting commands so that you can quickly and easily make sure your stabilizations are working according to plan.
+
+Even though I attempt to strip all extruder and temperature commands, there's a chance that I missed some cases. Please let me know if you see any 'cold extrusion prevented' errors in the terminal window or if either your bed, extruder or enclosure heats up during a test print. If you do, please let me know and send me your gcode!
+
+For safety's sake, even when using test mode DO NOT LEAVE YOUR PRINTER UNATTENDED!  This program is in alpha and hasn't been tested with all printers/slicers/custom gcode, so bad things could happen.
+
+#####Logging Settings
 If you are having any issues please select one of the existing diagnostic profiles to turn on octoprint logging.  You can find the log in the main settings page on the left hand side under (Logs).  The log file for Octoprint is named plugin_octolapse.log.  The log file is useful to help me track down issues, so make sure you download a copy after any problems.
 
+You can change the logging settings or default debug profile at any time, and the logging settings will take effect immediately.  The only setting in debug that will NOT take effect until the next print is 'Test Mode'.
+
+Please note that the log file can grow quickly and might affect performance, so only use it when necessary.
 ## Known issues
+
+### Restore All Default Settings
 If you use the 'Restore All Default Settings' button, make sure you reboot octoprint.  I'm working on this bug.
+
+### Original Prusa Firmware 3.0.12
+
+If you are using an Original Prusa printer, there is a [known issue](https://github.com/prusa3d/Prusa-Firmware/issues/331) in the firmware 3.0.12 (linear advance update).  Here is the relevent workaround:
+
+Note from [foosel](https://github.com/foosel): There does exist a workaround in OctoPrint for this (since it's happened in the past with other firmware variants), users can tell OctoPrint to "simulate" an ok after resends by enabling Settings > Serial communication > Advanced options > Simulate an additional ok for resend requests, but that has to be done manually.
+
+Unfortunately this workaround may cause some print quality issues during the resend since I had some seemingly random overextursion in a test print after implementing the workaround.  I've not verified that it's due to the workaround, but I will try to do this soon.  I expect this bug to be fixed in the next firmware release.
 
 ## Notes about Octolapse
 I got the idea for octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my gcode files.  To accomplish this I used the excellent and simple [Gcode System Commands](https://github.com/kantlivelong/OctoPrint-GCodeSystemCommands) plugin.  The timelapse worked great, but it required a lot of effort, which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, but decided to give plugin development a go.  I've never done one before (or programmed python, or knockout, or anything open source either), but figured I could contribute something good to the community.  This is my gift to all of the makers out there who have contributed your time and effort to the community!
