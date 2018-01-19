@@ -42,7 +42,13 @@ Can only be installed manually or via the bundled [Plugin Manager](https://githu
 3.  Run a short print in 'Test Mode' to make sure things are working without printing anything.  See 'Test Mode' below.
 
 ### Test Mode
+Test mode must be activated BEFORE starting a print.  Changing this setting mid-print won't alter any current prints.
+
 1.  Navigate to the Debug tab and select 'Test Mode'.  Note:  You shouldn't have to use any of the profiles marked 'Diagnostic' unless you suspect a bug.  The 'Diagnostic' profiles have logging enabled.  You can download the log file within the 'Logs' screen under the 'Octoprint' settings section.   The log file is named plugin_octolapse.log.  If you delete this file you will need to reboot octoprint before a new one is created!
+2.  UNLOAD YOUR FILAMENT!  Even though I attempt to strip all extruder commands, there's a chance that I missed some cases.  Please let me know if you see any 'cold extrusion prevented' errors in the terminal window.  If you do, please let me know and send me your gcode!
+3.  Select your gcode file and click print.
+
+Notes:  Pay attention to your printer temps during the test print.  Everything should remain cool!  If not, please let me know, send me the gcode, and I'll try to remedy the situation.
 
 ## Usage
 
@@ -54,6 +60,8 @@ To edit Octolapse settings, sign into Octoprint and click on the settings (wrenc
 You can add/edit/delete/copy profiles on any of the tabs.  You can set the current profile by clicking the Star icon.  The current profile will be in bold with a star icon in front of it.
 
 Octolapse comes with several useful presets that should accommodate typical use.
+
+Notes:  Most setting changes will only affect the next print.  Active prints are only affected by the logging settings inside the debug profile, and by the 'Apply Settings' button in the Camera Profile Add/Edit screen.  All other changes will take place during your next print, though while we're still in Alpha mode I don't suggest you do any massive settings changes during a print (leave that to me)!
 
 #### Printer
 Here you can configure retraction length, speed, the printer snapshot command, as well as other settings.  The retraction length setting is especially important, since it's used to detect retraction and zhop.  Also of note is the Printer position confirmation tolerance.  Positions can be off by 0.0051MM on my MK2S due to mechanical constraints.  It can be difficult to tell what this setting should be, but if you have problems I would not go too much over 0.011 MM here.
