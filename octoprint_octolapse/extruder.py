@@ -6,6 +6,7 @@ class Extruder(object):
 	def __init__(self,octolapseSettings):
 		self.Settings = octolapseSettings
 		self.PrinterRetractionLength = self.Settings.CurrentPrinter().retract_length
+		
 		self.Reset()
 		
 	def Reset(self):
@@ -83,7 +84,9 @@ class Extruder(object):
 			self.DetractionLength = self.__RetractionLengthPrevious - self.RetractionLength
 		else:
 			self.DetractionLength = 0
+		# round our lengths to the nearest .05mm to avoid some floating point math errors
 
+		
 		self.UpdateState()
 		
 	# If any values are edited manually (ExtrusionLengthTotal,ExtrusionLength, RetractionLength, __ExtrusionLengthTotalPrevious,__RetractionLengthPrevious,__IsExtrudingPrevious,
@@ -92,16 +95,18 @@ class Extruder(object):
 		# Todo:  Properly deal with floating compare
 		self.HasChanged = False
 		# If we were not previously extruding, but are now
-		self.IsExtrudingStart = True if self.ExtrusionLength > 0 and self.__ExtrusionLengthPrevious == 0 else False
-		self.IsExtruding = True if (self.__ExtrusionLengthPrevious > 0) and self.ExtrusionLength > 0 else False
-		self.IsPrimed = True if self.__RetractionLengthPrevious == 0 and self.ExtrusionLength == 0 and self.RetractionLength == 0else False
-		self.IsRetractingStart = True if self.__RetractionLengthPrevious == 0 and self.RetractionLength > 0 else False
-		self.IsRetracting = True if (self.__RetractionLengthPrevious > 0 and self.RetractionLength > self.__RetractionLengthPrevious) else False
-		self.IsPartiallyRetracted = True if self.__RetractionLengthPrevious>0 and self.__RetractionLengthPrevious < self.PrinterRetractionLength else False
-		self.IsRetracted = True if self.__RetractionLengthPrevious > 0 and self.__RetractionLengthPrevious >= self.PrinterRetractionLength else False
-		self.IsDetractingStart = True if self.DetractionLength > 0 and self.__DetractionLengthPrevious == 0 else False
-		self.IsDetracting = True if self.__DetractionLengthPrevious > 0 and self.DetractionLength > 0 else False
-		self.IsDetracted = True if self.__RetractionLengthPrevious == 0 and self.__DetractionLengthPrevious > 0 and self.__ExtrusionLengthPrevious == 0 else False
+		utility.round_to(self.ExtrusionLength,0.0001)
+
+		self.IsExtrudingStart = True if utility.round_to(self.ExtrusionLength,0.0001) > 0 and utility.round_to(self.__ExtrusionLengthPrevious,0.0001) == 0 else False
+		self.IsExtruding = True if (utility.round_to(self.__ExtrusionLengthPrevious,0.0001) > 0) and utility.round_to(self.ExtrusionLength,0.0001) > 0 else False
+		self.IsPrimed = True if utility.round_to(self.__RetractionLengthPrevious,0.0001) == 0 and utility.round_to(self.ExtrusionLength,0.0001) == 0 and utility.round_to(self.RetractionLength,0.0001) == 0else False
+		self.IsRetractingStart = True if utility.round_to(self.__RetractionLengthPrevious,0.0001) == 0 and utility.round_to(self.RetractionLength,0.0001) > 0 else False
+		self.IsRetracting = True if (utility.round_to(self.__RetractionLengthPrevious,0.0001) > 0 and utility.round_to(self.RetractionLength,0.0001) > utility.round_to(self.__RetractionLengthPrevious,0.0001)) else False
+		self.IsPartiallyRetracted = True if utility.round_to(self.__RetractionLengthPrevious,0.0001)>0 and utility.round_to(self.__RetractionLengthPrevious,0.0001) < utility.round_to(self.PrinterRetractionLength,0.0001) else False
+		self.IsRetracted = True if utility.round_to(self.__RetractionLengthPrevious,0.0001) > 0 and utility.round_to(self.__RetractionLengthPrevious,0.0001) >= utility.round_to(self.PrinterRetractionLength,0.0001) else False
+		self.IsDetractingStart = True if utility.round_to(self.DetractionLength,0.0001) > 0 and utility.round_to(self.__DetractionLengthPrevious,0.0001) == 0 else False
+		self.IsDetracting = True if utility.round_to(self.__DetractionLengthPrevious,0.0001) > 0 and utility.round_to(self.DetractionLength,0.0001) > 0 else False
+		self.IsDetracted = True if utility.round_to(self.__RetractionLengthPrevious,0.0001) == 0 and utility.round_to(self.__DetractionLengthPrevious,0.0001) > 0 and utility.round_to(self.__ExtrusionLengthPrevious,0.0001) == 0 else False
 
 		if(
 			self.__RetractionLengthPrevious != self.RetractionLength 

@@ -96,7 +96,6 @@ class Timelapse(object):
 	def IsTimelapseActive(self):
 		if(
 			self.State == TimelapseState.Idle
-			or not self.Settings.is_octolapse_enabled
 			or len(self.Triggers)<1
 		):
 			return False
@@ -368,6 +367,8 @@ class Timelapse(object):
 		if(self.Rendering.enabled):
 			self.Settings.CurrentDebugProfile().LogRenderStart("Started Rendering Timelapse");
 			timelapseRenderJob = Render(self.Settings
+									,self.Snapshot
+									,self.Rendering
 								  ,self.DataFolder
 								  ,self.DefaultTimelapseDirectory
 								  ,self.FfMpegPath

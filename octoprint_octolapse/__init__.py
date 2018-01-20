@@ -221,19 +221,25 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	# Event Mixin Handler
 	def on_event(self, event, payload):
-		# If we're not enabled, get outta here!
-		if(self.Settings is None or not self.Settings.is_octolapse_enabled):
-			if(self.Timelapse is not None):
-				# Make sure we end octolapse if the settings change during the print.
-				self.Timelapse.EndTimelapse()
+		# if we have not created a settings object, exit
+		if(self.Settings is None):
 			return
+		if (event == Events.PRINT_STARTED):
+			self.OnPrintStart()
+
+		if(self.Timelapse is None):
+			return
+
+
+		# 	if(self.Timelapse is not None):
+		# 		# Make sure we end octolapse if the settings change during the print.
+		# 		self.Timelapse.EndTimelapse()
+		# 	return
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
 		if (event == Events.PRINT_PAUSED):
 			self.OnPrintPause() # regular pause
 		elif (event == Events.PRINT_RESUMED):
 			self.OnPrintResumed()
-		elif (event == Events.PRINT_STARTED):
-			self.OnPrintStart()
 		elif (event == Events.PRINT_FAILED):
 			self.OnPrintFailed()
 		elif (event == Events.PRINT_CANCELLED):
@@ -255,11 +261,16 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused by Octolapse.")
 			
 	def OnPrintStart(self):
-		self.StartTimelapse()
-		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started.")
-		if(self.Settings.CurrentCamera().apply_settings_before_print):
-			self.ApplyCameraSettings(self.Settings.CurrentCamera())
 		
+		if(self.Settings is not None and self.Settings.is_octolapse_enabled):
+			result = self.StartTimelapse()
+			if(not result["success"]):
+				self.Settings.CurrentDebugProfile().LogError("Unable to start the timelapse. Error:{0}".format(result["error"]))
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started - Timelapse Started.")
+			if(self.Settings.CurrentCamera().apply_settings_before_print):
+				self.ApplyCameraSettings(self.Settings.CurrentCamera())
+		else:
+			self.Settings.CurrentDebugProfile().LogInfo("Octolapse is disabled.")
 		
 
 	def StartTimelapse(self):
@@ -277,6 +288,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# create our timelapse object
 		self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"),onMovieRendering = self.OnMovieRendering, onMovieDone = self.OnMovieDone, onMovieFailed = self.OnMovieFailed)
 		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,self._settings.settings.get(["feature"])["g90InfluencesExtruder"])
+		return {'success':True}
 			
 	def OnCameraSettingsSuccess(self, *args, **kwargs):
 		settingValue = args[0]

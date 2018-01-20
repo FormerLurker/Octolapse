@@ -11,7 +11,7 @@ class Position(object):
 		self.Settings = octolapseSettings
 		self.Printer = self.Settings.CurrentPrinter()
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
-
+		self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
 		self.Reset()
 		
 		self.Extruder = Extruder(octolapseSettings)
@@ -135,11 +135,11 @@ class Position(object):
 				else:
 					# calculate LastExtrusionHeight and Height
 					if (self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart):
-						if(self.Height is None or self.Z > self.Height):
-							self.Height = self.Z
 						self.LastExtrusionHeight = self.Z
-
-						self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
+						if(self.Height is None or utility.round_to(self.Z, self.PrinterTolerance) > utility.round_to(self.Height, self.PrinterTolerance)):
+							self.Height = self.Z
+							self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(self.Height))
+						
 
 					# calculate ZDelta
 					if(self.Height is not None):
@@ -149,7 +149,7 @@ class Position(object):
 							self.ZDelta = self.Height
 
 					# calculate layer change
-					if(self.ZDelta is not None and (self.ZDelta > 0 or self.Layer == 0)):
+					if(self.ZDelta is not None and (utility.round_to(self.ZDelta, self.PrinterTolerance) > 0 or self.Layer == 0)):
 						self.IsLayerChange = True
 						self.Layer += 1
 						self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
@@ -159,9 +159,8 @@ class Position(object):
 					# Calculate ZHop based on last extrusion height
 					if(self.LastExtrusionHeight is not None):
 						# calculate lift, taking into account floating point rounding
-						lift = self.Z - self.LastExtrusionHeight
-						printerTolerance = self.Printer.printer_position_confirmation_tolerance
-						if(utility.isclose(lift,self.Printer.z_hop,printerTolerance)):
+						lift = utility.round_to(self.Z - self.LastExtrusionHeight, self.PrinterTolerance)
+						if(lift >= self.Printer.z_hop):
 							lift = self.Printer.z_hop
 						isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding or self.Extruder.IsExtrudingStart)
 
@@ -275,10 +274,10 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G92 - Set Position.  Command:{0}, XOffset:{1}, YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(gcode, self.XOffset,self.YOffset,self.ZOffset, self.EOffset))
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
-			if(self.X != self.XPrevious
-				or self.Y != self.YPrevious
-				or self.Z != self.ZPrevious
-				or self.ERelative() != 0
+			if(utility.round_to(self.X, self.PrinterTolerance) != utility.round_to(self.XPrevious, self.PrinterTolerance)
+				or utility.round_to(self.Y, self.PrinterTolerance) != utility.round_to(self.YPrevious, self.PrinterTolerance)
+				or utility.round_to(self.Z, self.PrinterTolerance) != utility.round_to(self.ZPrevious, self.PrinterTolerance)
+				or utility.round_to(self.ERelative(), self.PrinterTolerance)  != 0
 			):
 				self.HasPositionChanged = True;
 
@@ -406,30 +405,30 @@ class Position(object):
 			return self.E-self.EPrevious
 
 	def IsAtPreviousPosition(self, x,y,z=None, applyOffset = True):
-		printerTolerance = self.Printer.printer_position_confirmation_tolerance
+		self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
 		if(applyOffset):
 			x = x + self.XOffset
 			y = y + self.YOffset
 			if(z is not None):
 				z = z + self.ZOffset
 
-		if( (self.XPrevious is None or utility.isclose(self.XPrevious, x,abs_tol=printerTolerance))
-			and (self.YPrevious is None or utility.isclose(self.YPrevious, y,abs_tol=printerTolerance))
-			and (z is None or self.ZPrevious is None or utility.isclose(self.ZPrevious, z,abs_tol=printerTolerance))
+		if( (self.XPrevious is None or utility.isclose(self.XPrevious, x,abs_tol=self.PrinterTolerance))
+			and (self.YPrevious is None or utility.isclose(self.YPrevious, y,abs_tol=self.PrinterTolerance))
+			and (z is None or self.ZPrevious is None or utility.isclose(self.ZPrevious, z,abs_tol=self.PrinterTolerance))
 			):
 			return True
 		return False
 	def IsAtCurrentPosition(self, x,y,z=None, applyOffset = True):
-		printerTolerance = self.Printer.printer_position_confirmation_tolerance
+		self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
 		if(applyOffset):
 			x = x + self.XOffset
 			y = y + self.YOffset
 			if(z is not None):
 				z = z + self.ZOffset
 				 
-		if( (self.X is None or utility.isclose(self.X, x,abs_tol=printerTolerance))
-			and (self.Y is None or utility.isclose(self.Y, y,abs_tol=printerTolerance))
-			and (self.Z is None or z is None or utility.isclose(self.Z, z,abs_tol=printerTolerance))
+		if( (self.X is None or utility.isclose(self.X, x,abs_tol=self.PrinterTolerance))
+			and (self.Y is None or utility.isclose(self.Y, y,abs_tol=self.PrinterTolerance))
+			and (self.Z is None or z is None or utility.isclose(self.Z, z,abs_tol=self.PrinterTolerance))
 			):
 			return True
 		return False

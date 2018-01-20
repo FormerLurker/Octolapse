@@ -13,7 +13,7 @@ import sarge
 
 class Render(object):
 
-	def __init__(self, settings, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount
+	def __init__(self, settings, snapshot, rendering, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount
 			  ,onRenderStart=None
 			  ,onRenderFail = None
 			  ,onRenderSuccess=None
@@ -25,8 +25,8 @@ class Render(object):
 		self.DataDirectory = dataDirectory
 		self.OctoprintTimelapseFolder = octoprintTimelapseFolder
 		self.FfmpegPath = ffmpegPath
-		self.Snapshot = self.Settings.CurrentSnapshot()
-		self.Rendering = self.Settings.CurrentRendering();
+		self.Snapshot = snapshot
+		self.Rendering = rendering
 		self.ThreadCount = threadCount
 		self.OnRenderStart = onRenderStart
 		self.OnRenderFail = onRenderFail

@@ -58,6 +58,9 @@ def GetExtensionFromFileName(fileName):
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.00000):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+def round_to(n, precision):
+    correction = 0.5 if n >= 0 else -0.5
+    return int( n/precision+correction ) * precision
 
 def GetSnapshotDirectoryTemplate():
 	output_directory = "{DATADIRECTORY}/snapshots/"
