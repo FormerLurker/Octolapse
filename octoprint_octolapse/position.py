@@ -274,12 +274,16 @@ class Position(object):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G92 - Set Position.  Command:{0}, XOffset:{1}, YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(gcode, self.XOffset,self.YOffset,self.ZOffset, self.EOffset))
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
-			if(utility.round_to(self.X, self.PrinterTolerance) != utility.round_to(self.XPrevious, self.PrinterTolerance)
-				or utility.round_to(self.Y, self.PrinterTolerance) != utility.round_to(self.YPrevious, self.PrinterTolerance)
-				or utility.round_to(self.Z, self.PrinterTolerance) != utility.round_to(self.ZPrevious, self.PrinterTolerance)
-				or utility.round_to(self.ERelative(), self.PrinterTolerance)  != 0
+			if(self.HasHomedAxisPrevious()):
+				if(self.HasHomedAxis()
+				or(
+					utility.round_to(self.X, self.PrinterTolerance) != utility.round_to(self.XPrevious, self.PrinterTolerance)
+					or utility.round_to(self.Y, self.PrinterTolerance) != utility.round_to(self.YPrevious, self.PrinterTolerance)
+					or utility.round_to(self.Z, self.PrinterTolerance) != utility.round_to(self.ZPrevious, self.PrinterTolerance)
+					or utility.round_to(self.ERelative(), self.PrinterTolerance)  != 0
+				)
 			):
-				self.HasPositionChanged = True;
+					self.HasPositionChanged = True;
 
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
