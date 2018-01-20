@@ -293,10 +293,10 @@ class Timelapse(object):
 		# see if the CURRENT position is the same as the position we received from the printer
 		# AND that it is equal to the snapshot position
 		if(not self.Position.IsAtCurrentPosition(x,y,None)):
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is incorrect.")
+			self.Settings.CurrentDebugProfile().LogSnapshotPosition("The snapshot position is incorrect.")
 
 		if(not self.Position.IsAtCurrentPosition(self.SnapshotGcodes.X,self.SnapshotGcodes.Y,None, applyOffset = False)): # our snapshot gcode will NOT be offset
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position matched the expected position (x:{0} y:{1}), but the SnapshotGcode object coordinates don't match the expected position.".format(x,y))
+			self.Settings.CurrentDebugProfile().LogSnapshotPosition("The snapshot position matched the expected position (x:{0} y:{1}), but the SnapshotGcode object coordinates don't match the expected position.".format(x,y))
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
 		self.State = TimelapseState.TakingSnapshot
 		self.TakeSnapshot()
