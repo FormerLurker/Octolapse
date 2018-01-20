@@ -280,6 +280,12 @@ class SnapshotGcodeGenerator(object):
 		if(savedCommand is not None):
 			newSnapshotGcode.Append(savedCommand)
 
+		# Wait for current moves to finish before requesting the save command position
+		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode())
+		
+		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
+		newSnapshotGcode.Append(self.GetPositionGcode())
+
 		self.Settings.CurrentDebugProfile().LogSnapshotGcode("SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex, newSnapshotGcode.EndIndex()))
 		for str in newSnapshotGcode.GcodeCommands:
 			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))

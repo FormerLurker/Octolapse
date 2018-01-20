@@ -859,6 +859,7 @@ class DebugProfile(object):
 		self.snapshot_gcode_endcommand = False
 		self.snapshot_position = False
 		self.snapshot_position_return = False
+		self.snapshot_position_resume_print = False
 		self.snapshot_save = False
 		self.snapshot_download = False
 		self.render_start = False
@@ -920,6 +921,8 @@ class DebugProfile(object):
 			self.snapshot_position = utility.getbool(changes["snapshot_position"],self.snapshot_position)
 		if("snapshot_position_return" in changes.keys()):
 			self.snapshot_position_return = utility.getbool(changes["snapshot_position_return"],self.snapshot_position_return)
+		if("snapshot_position_resume_print" in changes.keys()):
+			self.snapshot_position_resume_print = utility.getbool(changes["snapshot_position_resume_print"],self.snapshot_position_resume_print)
 		if("snapshot_save" in changes.keys()):
 			self.snapshot_save = utility.getbool(changes["snapshot_save"],self.snapshot_save)
 		if("snapshot_download" in changes.keys()):
@@ -969,6 +972,7 @@ class DebugProfile(object):
 				'snapshot_gcode_endcommand' : self.snapshot_gcode_endcommand,
 				'snapshot_position'			: self.snapshot_position,
 				'snapshot_position_return'	: self.snapshot_position_return,
+				'snapshot_position_resume_print'	: self.snapshot_position_resume_print,
 				'snapshot_save'				: self.snapshot_save,
 				'snapshot_download'			: self.snapshot_download,
 				'render_start'				: self.render_start,
@@ -981,6 +985,7 @@ class DebugProfile(object):
 				'print_state_changed'		: self.print_state_changed,
 				'camera_settings_apply'		: self.camera_settings_apply,
 				'gcode_sent_all'				: self.gcode_sent_all
+				
 			}
 
 	def LogToConsole(self,levelName , message):
@@ -1066,6 +1071,9 @@ class DebugProfile(object):
 			self.LogInfo(message)
 	def LogSnapshotPositionReturn(self,message):
 		if(self.snapshot_position_return):
+			self.LogInfo(message)
+	def LogSnapshotPositionResumePrint(self,message):
+		if(self.snapshot_position_resume_print):
 			self.LogInfo(message)
 	def LogSnapshotSave(self,message):
 		if(self.snapshot_save):

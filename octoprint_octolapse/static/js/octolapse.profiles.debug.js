@@ -25,6 +25,7 @@ $(function() {
         self.snapshot_gcode_endcommand = ko.observable(values.snapshot_gcode_endcommand);
         self.snapshot_position = ko.observable(values.snapshot_position);
         self.snapshot_position_return = ko.observable(values.snapshot_position_return);
+        self.snapshot_position_resume_print = ko.observable(values.snapshot_position_resume_print);
         self.snapshot_save = ko.observable(values.snapshot_save);
         self.snapshot_download = ko.observable(values.snapshot_download);
         self.render_start = ko.observable(values.render_start);
