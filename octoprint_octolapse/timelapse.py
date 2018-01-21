@@ -343,7 +343,7 @@ class Timelapse(object):
 			self.Position.Update(command)
 		# set the state so that the final received position will trigger a resume.
 		self.State = TimelapseState.SendingReturnGcode
-		self.OctoprintPrinter.commands(self.SnapshotGcodes.SnapshotCommands())
+		self.OctoprintPrinter.commands(snapshotCommands)
 		
 
 	# RENDERING Functions and Events
