@@ -237,7 +237,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			if(origin == "local"):
 				self.OnPrintStart()
 			else:
+				self.SendErrorEvent("Unable to start octolapse when printing from SD the card.")
 				self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
+				
 		elif (event == Events.PRINT_PAUSED):
 			self.OnPrintPause() # regular pause
 		elif (event == Events.HOME):
@@ -252,7 +254,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.OnPrintCompleted()
 		elif(event == Events.POSITION_UPDATE):
 			self.Timelapse.PositionReceived(payload)
-				
+	def SendErrorEvent(self,message):
+		payload = {"error":message}
+		# Octoprint Event Manager Code
+		eventManager().fire(Events.ERROR, payload)
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
 
@@ -358,7 +363,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		payload = args[0]
 		# Octoprint Event Manager Code
 		eventManager().fire(Events.MOVIE_FAILED, payload)
-
 	##~~ AssetPlugin mixin
 	def get_assets(self):
 		self._logger.info("Octolapse is loading assets.")
