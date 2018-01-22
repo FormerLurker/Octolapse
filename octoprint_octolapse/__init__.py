@@ -36,7 +36,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
-		self.TimelapseStarted = False
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
 	def setEnabled(self):
@@ -270,11 +269,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return 
 
 		if(origin != "local"):
-			self.SendErrorEvent("Unable to start octolapse when printing from SD the card.")
+			self._plugin_manager.send_plugin_message(self._identifier, dict(type="popup", msg="Unable to start octolapse when printing from SD the card."))
+			#self.SendErrorEvent("Unable to start octolapse when printing from SD the card.")
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
 			return
 
-		self.TimelapseStarted = True
+		
 		result = self.StartTimelapse()
 		if(not result["success"]):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Unable to start the timelapse. Error:{0}".format(result["error"]))
@@ -317,23 +317,19 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
 
 	def OnPrintFailed(self):
-		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
 
 	def OnPrintCancelled(self):
-		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
 	def OnPrintCompleted(self):
-		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
 	def OnPrintEnd(self):
-		self.TimelapseStarted = False
 		# tell the timelapse that the print ended.
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()

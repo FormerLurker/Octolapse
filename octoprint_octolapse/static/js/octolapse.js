@@ -38,8 +38,24 @@ $(function () {
         });
     };
     // Apply the toggle click event to every element within our settings that has the .toggle class
-
     
+    Octolapse.defaultPopup = null
+    Octolapse.displayPopup = function (options) {
+        if (Octolapse.defaultPopup !== null) {
+            self.defaultPopup.remove();
+        }
+        _.extend(options, {
+            callbacks: {
+                before_close: function (notice) {
+                    if (self.defaultPopup == notice) {
+                        self.defaultPopup = null;
+                    }
+                }
+            }
+        });
+
+        self.octolapsePopup = new PNotify(options);
+    };
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
@@ -124,7 +140,19 @@ $(function () {
         // Create other observables
         Octolapse.Settings.is_octolapse_enabled = ko.observable();
         Octolapse.Settings.platform = ko.observable();
-        
+        self.onDataUpdaterPluginMessage = function (plugin, data) {
+            console.log('Plugin Message Received: ' + plugin);
+            if (plugin != "octolapse") {
+                console.log('Ignoring '+plugin);
+                return;
+            }
+            console.log("Data type: " + data.type);
+            if (data.type == "popup") {
+                console.log(data.msg);
+                Octolapse.displayPopup(data.msg);
+                
+            }
+        }
         self.updateSettings = function (settings) {
             Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.toggleOctolapseEnabled(Octolapse.Settings.is_octolapse_enabled)
