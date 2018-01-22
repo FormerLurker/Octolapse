@@ -62,11 +62,11 @@ class Extruder(object):
 
 		state = None
 		previousState = None
-		numStates = len(self.StateHistory)>0
+		numStates = len(self.StateHistory)
 		if(numStates>0):
-			state = ExtruderState(self.StateHistory[0])
+			state = ExtruderState(state = self.StateHistory[0])
 			if(numStates > 1):
-				previousState = self.StateHistory[0]
+				previousState = ExtruderState(state = self.StateHistory[1])
 
 		if(state is None):
 			state = ExtruderState()
@@ -78,7 +78,7 @@ class Extruder(object):
 		
 		state.ExtrusionLengthTotal += e
 		state.RetractionLength -= e
-
+		state.RetractionLength = utility.round_to(state.RetractionLength,0.0001) 
 		if(state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE):
 			# we can use the negative retraction length to calculate our extrusion length!
 			state.ExtrusionLength = abs(state.RetractionLength)
@@ -87,9 +87,10 @@ class Extruder(object):
 		else:
 			state.ExtrusionLength = 0
 
+		
 		# calculate detraction length
 		if(previousState.RetractionLength > state.RetractionLength):
-			state.DetractionLength = previousState.RetractionLength - state.RetractionLength
+			state.DetractionLength = utility.round_to(previousState.RetractionLength - state.RetractionLength,0.0001) 
 		else:
 			state.DetractionLength = 0
 		# round our lengths to the nearest .05mm to avoid some floating point math errors
@@ -109,16 +110,16 @@ class Extruder(object):
 		# If we were not previously extruding, but are now
 		#utility.round_to(pos.ExtrusionLength,0.0001) 
 
-		pos.IsExtrudingStart = True if utility.round_to(pos.ExtrusionLength,0.0001) > 0 and utility.round_to(previousPos.ExtrusionLength,0.0001) == 0 else False
-		pos.IsExtruding = True if (utility.round_to(previousPos.ExtrusionLength,0.0001) > 0) and utility.round_to(pos.ExtrusionLength,0.0001) > 0 else False
-		pos.IsPrimed = True if utility.round_to(previousPos.RetractionLength,0.0001) == 0 and utility.round_to(pos.ExtrusionLength,0.0001) == 0 and utility.round_to(pos.RetractionLength,0.0001) == 0else False
-		pos.IsRetractingStart = True if utility.round_to(previousPos.RetractionLength,0.0001) == 0 and utility.round_to(pos.RetractionLength,0.0001) > 0 else False
-		pos.IsRetracting = True if (utility.round_to(previousPos.RetractionLength,0.0001) > 0 and utility.round_to(pos.RetractionLength,0.0001) > utility.round_to(previousPos.RetractionLength,0.0001)) else False
-		pos.IsPartiallyRetracted = True if utility.round_to(previousPos.RetractionLength,0.0001)>0 and utility.round_to(previousPos.RetractionLength,0.0001) < utility.round_to(self.PrinterRetractionLength,0.0001) else False
-		pos.IsRetracted = True if utility.round_to(previousPos.RetractionLength,0.0001) > 0 and utility.round_to(previousPos.RetractionLength,0.0001) >= utility.round_to(self.PrinterRetractionLength,0.0001) else False
-		pos.IsDetractingStart = True if utility.round_to(pos.DetractionLength,0.0001) > 0 and utility.round_to(previousPos.DetractionLength,0.0001) == 0 else False
-		pos.IsDetracting = True if utility.round_to(previousPos.DetractionLength,0.0001) > 0 and utility.round_to(pos.DetractionLength,0.0001) > 0 else False
-		pos.IsDetracted = True if utility.round_to(previousPos.RetractionLength,0.0001) == 0 and utility.round_to(previousPos.DetractionLength,0.0001) > 0 and utility.round_to(previousPos.ExtrusionLength,0.0001) == 0 else False
+		pos.IsExtrudingStart = True if			 pos.ExtrusionLength > 0 and			previousPos.ExtrusionLength == 0 else False
+		pos.IsExtruding = True if				 previousPos.ExtrusionLength > 0 and	pos.ExtrusionLength > 0 else False
+		pos.IsPrimed = True if					 previousPos.RetractionLength == 0 and	pos.ExtrusionLength == 0 and pos.RetractionLength == 0 else False
+		pos.IsRetractingStart = True if			 previousPos.RetractionLength == 0 and	pos.RetractionLength > 0 else False
+		pos.IsRetracting = True if				 previousPos.RetractionLength > 0 and	pos.RetractionLength > previousPos.RetractionLength else False
+		pos.IsPartiallyRetracted = True if		 previousPos.RetractionLength>0 and		previousPos.RetractionLength < self.PrinterRetractionLength else False
+		pos.IsRetracted = True if				 previousPos.RetractionLength > 0 and	previousPos.RetractionLength >= self.PrinterRetractionLength else False
+		pos.IsDetractingStart = True if			 pos.DetractionLength > 0 and			previousPos.DetractionLength == 0 else False
+		pos.IsDetracting = True if				 previousPos.DetractionLength > 0 and	pos.DetractionLength > 0 else False
+		pos.IsDetracted = True if				 previousPos.RetractionLength == 0 and	previousPos.DetractionLength > 0 and previousPos.ExtrusionLength == 0 else False
 
 		if(
 			previousPos.RetractionLength != pos.RetractionLength 
