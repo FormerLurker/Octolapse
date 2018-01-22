@@ -6,7 +6,7 @@ from octoprint_octolapse.extruder import Extruder
 class Test_Position(unittest.TestCase):
 	def setUp(self):
 		self.Commands = Commands()
-		self.Settings = OctolapseSettings("c:\\test\\")
+		self.Settings = OctolapseSettings("c:\\temp\\octolapse.log")
 		self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
 
 	def tearDown(self):
@@ -168,7 +168,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.IsRelative == False)
 		self.assertTrue(position.IsExtruderRelative)
 		self.assertTrue(position.Height is None)
-		self.assertTrue(position.HeightPrevious is None)
+		self.assertTrue(position.HeightPrevious == 0)
 		self.assertTrue(position.ZDelta is None)
 		self.assertTrue(position.ZDeltaPrevious is None)
 		self.assertTrue(position.Layer == 0)
@@ -186,16 +186,16 @@ class Test_Position(unittest.TestCase):
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 
 		position.Update("G28");
-		self.assertTrue(position.X == 0)
+		self.assertTrue(position.X == None)
 		self.assertTrue(position.XHomed)
-		self.assertTrue(position.Y == 0)
+		self.assertTrue(position.Y == None)
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(position.Z == 0)
-		self.assertTrue(position.HasHomedAxis())
+		self.assertTrue(position.Z == None)
+		self.assertTrue(not position.HasHomedAxis())
 		position.Reset()
 		position.Update("G28 X");
-		self.assertTrue(position.X == 0)
+		self.assertTrue(position.X == None)
 		self.assertTrue(position.XHomed)
 		self.assertTrue(position.Y is None)
 		self.assertTrue(not position.YHomed)
@@ -207,7 +207,7 @@ class Test_Position(unittest.TestCase):
 		position.Update("G28 Y");
 		self.assertTrue(position.X is None)
 		self.assertTrue(not position.XHomed)
-		self.assertTrue(position.Y == 0)
+		self.assertTrue(position.Y is None)
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(not position.ZHomed)
@@ -219,22 +219,43 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(not position.XHomed)
 		self.assertTrue(position.Y is None)
 		self.assertTrue(not position.YHomed)
-		self.assertTrue(position.Z == 0)
+		self.assertTrue(position.Z is None)
 		self.assertTrue(position.ZHomed)
 		self.assertTrue(not position.HasHomedAxis())
 
 		position.Reset()
 		position.Update("G28 Z X Y");
+		self.assertTrue(position.X is None)
+		self.assertTrue(position.XHomed)
+		self.assertTrue(position.Y is None)
+		self.assertTrue(position.YHomed)
+		self.assertTrue(position.Z is None)
+		self.assertTrue(position.ZHomed)
+		self.assertTrue(not position.HasHomedAxis())
+
+		position.Reset()
+		position.Update("G28 W");
+		self.assertTrue(position.X is None)
+		self.assertTrue(position.XHomed)
+		self.assertTrue(position.Y is None)
+		self.assertTrue(position.YHomed)
+		self.assertTrue(position.Z is None)
+		self.assertTrue(position.ZHomed)
+		self.assertTrue(not position.HasHomedAxis())
+
+		position.Reset()
+		position.Update("g28")
+		position.Update("g1 x0 y0 z0")
+		# here we have seen the upded coordinates, but we do not know the position
 		self.assertTrue(position.X == 0)
 		self.assertTrue(position.XHomed)
 		self.assertTrue(position.Y == 0)
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z == 0)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(position.HasHomedAxis())
-
-		position.Reset()
-		position.Update("G28 W");
+		self.assertTrue(not position.HasHomedAxis())
+		# give it another position, now we have homed axis with a known position
+		position.Update("g1 x0 y0 z0")
 		self.assertTrue(position.X == 0)
 		self.assertTrue(position.XHomed)
 		self.assertTrue(position.Y == 0)
@@ -520,7 +541,7 @@ class Test_Position(unittest.TestCase):
 		position.Update("G91")
 		position.Update("G1 x100 y200 z150")
 		position.Update("G92 x10 y20 z30")
-		self.assertTrue(position.X == 100)
+		self.assertTrue(position.X is None)
 		self.assertTrue(position.XOffset == 90)
 		self.assertTrue(position.Y == 200)
 		self.assertTrue(position.YOffset == 180)
@@ -560,7 +581,7 @@ class Test_Position(unittest.TestCase):
 
 		# test initial state
 		self.assertTrue(position.Height is None)
-		self.assertTrue(position.HeightPrevious is None)
+		self.assertTrue(position.HeightPrevious == 0)
 		self.assertTrue(position.Layer == 0)
 		self.assertTrue(not position.IsLayerChange)
 
@@ -595,57 +616,57 @@ class Test_Position(unittest.TestCase):
 		# extrude, height change!
 		position.Update("G1 x0 y0 z0 e1")
 		self.assertTrue(position.Height == 0)
-		self.assertTrue(position.HeightPrevious is None)
+		self.assertTrue(position.HeightPrevious == 0)
 		self.assertTrue(position.Layer == 1)
 		self.assertTrue(position.IsLayerChange)
 
-		#extrude higher, update layer.
+		#extrude higher, update layer., this will get rounded to 0.2
 		position.Update("G1 x0 y0 z0.1999 e1")
-		self.assertTrue(position.Height == 0.1999)
+		self.assertTrue(position.Height == 0.2)
 		self.assertTrue(position.HeightPrevious == 0)
 		self.assertTrue(position.Layer == 2)
 		self.assertTrue(position.IsLayerChange)
 
-		# extrude just slightly higher
+		# extrude just slightly higher, but with rounding on the same layer
 		position.Update("G1 x0 y0 z0.20000 e1")
 		self.assertTrue(position.Height == .2)
-		self.assertTrue(position.HeightPrevious == 0.1999)
-		self.assertTrue(position.Layer == 3)
-		self.assertTrue(position.IsLayerChange)
+		self.assertTrue(position.HeightPrevious == 0.2)
+		self.assertTrue(position.Layer == 2)
+		self.assertTrue(not position.IsLayerChange)
 
 		# extrude again on same layer - Height Previous should now be updated, and IsLayerChange should be false
 		position.Update("G1 x0 y0 z0.20000 e1")
 		self.assertTrue(position.Height == .2)
 		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer == 3)
+		self.assertTrue(position.Layer == 2)
 		self.assertTrue(not position.IsLayerChange)
 
 		# extrude again on same layer - No changes
 		position.Update("G1 x0 y0 z0.20000 e1")
 		self.assertTrue(position.Height == .2)
 		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer == 3)
+		self.assertTrue(position.Layer == 2)
 		self.assertTrue(not position.IsLayerChange)
 
 		# extrude below the current layer - No changes
 		position.Update("G1 x0 y0 z0.00000 e1")
 		self.assertTrue(position.Height == .2)
 		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer == 3)
+		self.assertTrue(position.Layer == 2)
 		self.assertTrue(not position.IsLayerChange)
 
 		# extrude up higher and change the height/layer.  Should never happen, but it's an interesting test case
 		position.Update("G1 x0 y0 z0.60000 e1")
 		self.assertTrue(position.Height == .6)
 		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer == 4)
+		self.assertTrue(position.Layer == 3)
 		self.assertTrue(position.IsLayerChange)
 
 		# extrude up again 
 		position.Update("G1 x0 y0 z0.65000 e1")
 		self.assertTrue(position.Height == .65)
 		self.assertTrue(position.HeightPrevious == .6)
-		self.assertTrue(position.Layer == 5)
+		self.assertTrue(position.Layer == 4)
 		self.assertTrue(position.IsLayerChange)
 
 
@@ -653,35 +674,35 @@ class Test_Position(unittest.TestCase):
 		position.Update("G1 x0 y0 z0.60000 e1")
 		self.assertTrue(position.Height == .65)
 		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer == 5)
+		self.assertTrue(position.Layer == 4)
 		self.assertTrue(not position.IsLayerChange)
 
 		# extrude on previous layer again
 		position.Update("G1 x0 y0 z0.60000 e1")
 		self.assertTrue(position.Height == .65)
 		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer == 5)
+		self.assertTrue(position.Layer == 4)
 		self.assertTrue(not position.IsLayerChange)
 
 		# move up but do not extrude
 		position.Update("G1 x0 y0 z0.70000")
 		self.assertTrue(position.Height == .65)
 		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer == 5)
+		self.assertTrue(position.Layer == 4)
 		self.assertTrue(not position.IsLayerChange)
 
 		# move up but do not extrude a second time
 		position.Update("G1 x0 y0 z0.80000")
 		self.assertTrue(position.Height == .65)
 		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer == 5)
+		self.assertTrue(position.Layer == 4)
 		self.assertTrue(not position.IsLayerChange)
 
 		# extrude at a different height
 		position.Update("G1 x0 y0 z0.85000 e.001")
 		self.assertTrue(position.Height == .85)
 		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer == 6)
+		self.assertTrue(position.Layer == 5)
 		self.assertTrue(position.IsLayerChange)
 	#M82 and M83 - Test extruder movement
 	def test_ExtruderMovement(self):
@@ -748,50 +769,77 @@ class Test_Position(unittest.TestCase):
 		# Home axis, check again
 		position.Update("G28")
 		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
+		self.assertTrue(not position.IsZHopStart)
+		# Position reports as NotHomed (misnomer, need to replace), needs to get coordinates
+		position.Update("G1 x0 y0 z0")
 
 		# Move up without extrude, this is not a zhop since we haven't extruded anything!
 		position.Update("g0 z0.5")
+		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
-
+		self.assertTrue(not position.IsZHopCompleting)
 		# move back down to 0 and extrude
 		position.Update("g0 z0 e1")
+		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
-
-		# Move up without extrude, this should trigger now!
+		self.assertTrue(not position.IsZHopCompleting)
+		# Move up without extrude, this should trigger zhop start
 		position.Update("g0 z0.5")
-		self.assertTrue(position.IsZHop)
-
+		self.assertTrue(position.IsZHopStart)
+		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
 		# move below zhop threshold
 		position.Update("g0 z0.3")
-		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopStart)
+		self.assertTrue(position.IsZHop)
+		self.assertTrue(position.IsZHopCompleting)
 
 		# move right up to zhop without going over, we are within the rounding error
 		position.Update("g0 z0.4999")
-		self.assertTrue(position.IsZHop)
+		self.assertTrue( position.IsZHopStart)
+		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
 
 		# Extrude on z5
 		position.Update("g0 z0.5 e1")
-		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopStart)
+		self.assertTrue(position.IsZHop)
+		self.assertTrue(position.IsZHopCompleting)
 
 		# partial z lift, , we are within the rounding error
 		position.Update("g0 z0.9999")
-		self.assertTrue(position.IsZHop)
-
+		self.assertTrue(position.IsZHopStart)
+		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
 		# zhop to 1
 		position.Update("g0 z1")
+		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-
+		self.assertTrue(not position.IsZHopCompleting)
 		# test with extrusion start at 1.5
 		position.Update("g0 z1.5 e1")
-		self.assertTrue(not position.IsZHop)
-
+		self.assertTrue(not position.IsZHopStart)
+		self.assertTrue(position.IsZHop)
+		self.assertTrue(position.IsZHopCompleting)
 		# test with extrusion at 2
 		position.Update("g0 z2 e1")
+		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
 
 		#zhop
 		position.Update("g0 z2.5 e0")
+		self.assertTrue(position.IsZHopStart)
+		self.assertTrue(not position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
+		# do not move extruder
+		position.Update("no-command")
+		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
+		self.assertTrue(not position.IsZHopCompleting)
+
+
 
 	# todo:  IsAtCurrent/PreviousPosition tests
 	def test_IsAtCurrentPosition(self):

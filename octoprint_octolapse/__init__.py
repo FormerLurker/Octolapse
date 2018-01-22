@@ -21,8 +21,9 @@ from octoprint.events import eventManager, Events # used to send messages to the
 
 # Octolapse imports
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
-from octoprint_octolapse.timelapse import Timelapse
+from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 import octoprint_octolapse.camera as camera
+from octoprint_octolapse.command import Commands
 from octoprint_octolapse.utility import *
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
@@ -35,8 +36,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
-		
-		
+
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
 	def setEnabled(self):
@@ -217,27 +217,27 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def on_after_startup(self):
 		self.LoadSettings()
+		# create our initial timelapse object
+		# create our timelapse object
+		self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"),onMovieRendering = self.OnMovieRendering, onMovieDone = self.OnMovieDone, onMovieFailed = self.OnMovieFailed)
 		self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 	
 	# Event Mixin Handler
+	
 	def on_event(self, event, payload):
-		# if we have not created a settings object, exit
-		if(self.Settings is None):
+		# If we haven't loaded our settings yet, return.
+		if (self.Settings is None):
 			return
-		if (event == Events.PRINT_STARTED):
-			self.OnPrintStart()
-
-		if(self.Timelapse is None):
-			return
-
-
-		# 	if(self.Timelapse is not None):
-		# 		# Make sure we end octolapse if the settings change during the print.
-		# 		self.Timelapse.EndTimelapse()
-		# 	return
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
-		if (event == Events.PRINT_PAUSED):
+		# for printing events use Printer State Change, because it gets sent before Print_Started
+		if(event == Events.PRINTER_STATE_CHANGED):
+			eventId = self._printer.get_state_id()
+			if (eventId == "PRINTING"):
+				self.OnPrintStart()
+		elif (event == Events.PRINT_PAUSED):
 			self.OnPrintPause() # regular pause
+		elif (event == Events.HOME):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("homing to payload:{0}.".format(event))
 		elif (event == Events.PRINT_RESUMED):
 			self.OnPrintResumed()
 		elif (event == Events.PRINT_FAILED):
@@ -246,8 +246,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.OnPrintCancelled()
 		elif (event == Events.PRINT_DONE):
 			self.OnPrintCompleted()
-		elif (event == Events.SETTINGS_UPDATED):
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Detected settings save, reloading and cleaning settings.")
 		elif(event == Events.POSITION_UPDATE):
 			self.Timelapse.PositionReceived(payload)
 				
@@ -257,12 +255,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnPrintPause(self):
 		self.Timelapse.PrintPaused()
 
-	def OnPrintPausedByOctolapse(self):
-		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused by Octolapse.")
-			
 	def OnPrintStart(self):
 		
-		if(self.Settings is not None and self.Settings.is_octolapse_enabled):
+		if(self.Settings.is_octolapse_enabled and self.Timelapse.State == TimelapseState.Idle):
 			result = self.StartTimelapse()
 			if(not result["success"]):
 				self.Settings.CurrentDebugProfile().LogError("Unable to start the timelapse. Error:{0}".format(result["error"]))
@@ -285,8 +280,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		if(not os.path.isfile(ffmpegPath)):
 			# todo:  throw some kind of exception
 			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
-		# create our timelapse object
-		self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse"),onMovieRendering = self.OnMovieRendering, onMovieDone = self.OnMovieDone, onMovieFailed = self.OnMovieFailed)
 		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,self._settings.settings.get(["feature"])["g90InfluencesExtruder"])
 		return {'success':True}
 			
@@ -326,9 +319,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Ended.");
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+		# only handle commands sent while printing
 		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-			return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
-
+				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+			
+		
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 			self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)

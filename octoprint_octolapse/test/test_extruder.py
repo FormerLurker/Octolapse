@@ -7,7 +7,7 @@ from octoprint_octolapse.extruder import Extruder, ExtruderTriggers
 class Test_Extruder(unittest.TestCase):
 	def setUp(self):
 		
-		self.Settings = OctolapseSettings("c:\\test\\")
+		self.Settings = OctolapseSettings("c:\\temp\\octolapse.log")
 		self.Extruder = Extruder(self.Settings)
 
 	def tearDown(self):
@@ -32,7 +32,7 @@ class Test_Extruder(unittest.TestCase):
 		self.assertTrue(self.Extruder.ExtrusionLength == 0.0)
 		self.assertTrue(self.Extruder.IsExtrudingStart == False)
 		self.assertTrue(self.Extruder.IsExtruding == False)
-		self.assertTrue(self.Extruder.IsPrimed == True)
+		self.assertTrue(self.Extruder.IsPrimed == False)
 		self.assertTrue(self.Extruder.IsRetractingStart == False)
 		self.assertTrue(self.Extruder.IsRetracting == False)
 		self.assertTrue(self.Extruder.IsPartiallyRetracted == False)
@@ -49,7 +49,7 @@ class Test_Extruder(unittest.TestCase):
 		self.Extruder.ExtrusionLength = -1
 		self.Extruder.IsExtrudingStart = True
 		self.Extruder.IsExtruding = True
-		self.Extruder.IsPrimed = False
+		self.Extruder.IsPrimed = True
 		self.Extruder.IsRetractingStart = True
 		self.Extruder.IsRetracting = True
 		self.Extruder.IsPartiallyRetracted = True
@@ -66,7 +66,7 @@ class Test_Extruder(unittest.TestCase):
 		self.assertTrue(self.Extruder.ExtrusionLength == 0.0)
 		self.assertTrue(self.Extruder.IsExtrudingStart == False)
 		self.assertTrue(self.Extruder.IsExtruding == False)
-		self.assertTrue(self.Extruder.IsPrimed == True)
+		self.assertTrue(self.Extruder.IsPrimed == False)
 		self.assertTrue(self.Extruder.IsRetractingStart == False)
 		self.assertTrue(self.Extruder.IsRetracting == False)
 		self.assertTrue(self.Extruder.IsPartiallyRetracted == False)
@@ -80,9 +80,14 @@ class Test_Extruder(unittest.TestCase):
 		"""Test the HasChanged flag"""
 		# test the initial state
 		self.assertTrue(self.Extruder.HasChanged == False)
+		# test updating with no movement - Change to primed
+		self.Extruder.Update(0)
+		self.assertTrue(self.Extruder.HasChanged == True)
+
 		# test updating with no movement
 		self.Extruder.Update(0)
 		self.assertTrue(self.Extruder.HasChanged == False)
+
 		#test updating with movement
 		self.Extruder.Update(1)
 		self.assertTrue(self.Extruder.HasChanged == True)
@@ -119,7 +124,7 @@ class Test_Extruder(unittest.TestCase):
 		# test the initial state
 		self.assertTrue(self.Extruder.IsExtrudingStart == False)
 		self.assertTrue(self.Extruder.IsExtruding == False)
-		self.assertTrue(self.Extruder.IsPrimed == True)
+		self.assertTrue(self.Extruder.IsPrimed == False)
 		self.assertTrue(self.Extruder.IsRetractingStart == False)
 		self.assertTrue(self.Extruder.IsRetracting == False)
 		self.assertTrue(self.Extruder.IsPartiallyRetracted == False)

@@ -153,44 +153,42 @@ def IsInBounds(x, y, z, printerProfile):
 def IsXInBounds(x, printerProfile):
 	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
 	isInBounds = True
-	if(printerProfile["volume"]["custom_box"] != False):
-		customBox = printerProfile["volume"]["custom_box"]
-		if(x is None or (x < customBox["x_min"] or x > customBox["x_max"])):
-			x = None
-			isInBounds = False
-	else:
-		volume = printerProfile["volume"]
-		if(x is None or (x < 0 or x > volume["width"])):
-			x = None
-			isInBounds = False
+	if (x is not None):
+		if(printerProfile["volume"]["custom_box"] != False):
+			customBox = printerProfile["volume"]["custom_box"]
+			if(x < customBox["x_min"] or x > customBox["x_max"]):
+				isInBounds = False
+		else:
+			volume = printerProfile["volume"]
+			if(x < 0 or x > volume["width"]):
+				isInBounds = False
+
 	return isInBounds
 
 def IsYInBounds(y, printerProfile):
 	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
 	isInBounds = True
-	if(printerProfile["volume"]["custom_box"] != False):
-		customBox = printerProfile["volume"]["custom_box"]
-		if(y is None or (y < customBox["y_min"] or y > customBox["y_max"])):
-			y = None
-			isInBounds = False
-	else:
-		volume = printerProfile["volume"]
-		if(y is None or(y < 0 or y > volume["depth"])):
-			y = None
-			isInBounds = False
+	if (y is not None):
+		if(printerProfile["volume"]["custom_box"] != False):
+			customBox = printerProfile["volume"]["custom_box"]
+			if(y < customBox["y_min"] or y > customBox["y_max"]):
+				isInBounds = False
+		else:
+			volume = printerProfile["volume"]
+			if(y < 0 or y > volume["depth"]):
+				isInBounds = False
 	return isInBounds
 
 def IsZInBounds(z, printerProfile):
 	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
 	isInBounds = True
-	if(printerProfile["volume"]["custom_box"] != False):
-		customBox = printerProfile["volume"]["custom_box"]
-		if(z is None or (z < customBox["z_min"] or z > customBox["z_max"])):
-			z = None
-			isInBounds = False
-	else:
-		volume = printerProfile["volume"]
-		if(z is None or (z < 0 or z > volume["height"])):
-			z = None
-			isInBounds = False
+	if(z is not None):
+		if(printerProfile["volume"]["custom_box"] != False):
+			customBox = printerProfile["volume"]["custom_box"]
+			if(z < customBox["z_min"] or z > customBox["z_max"]):
+				isInBounds = False
+		else:
+			volume = printerProfile["volume"]
+			if(z < 0 or z > volume["height"]):
+				isInBounds = False
 	return isInBounds

@@ -5,7 +5,7 @@ from octoprint_octolapse.extruder import Extruder
 
 class Test_SnapshotGcode(unittest.TestCase):
 	def setUp(self):
-		self.Settings = OctolapseSettings("c:\\test\\")
+		self.Settings = OctolapseSettings("c:\\temp\\octolapse.log")
 		self.Extruder = Extruder(self.Settings)
 	def tearDown(self):
 		del self.Settings

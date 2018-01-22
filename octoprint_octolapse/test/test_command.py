@@ -22,7 +22,7 @@ class Test_Command(unittest.TestCase):
 		self.assertTrue(cmd.Parameters["Y"].Value == "200.0")
 		self.assertTrue(cmd.Parameters["Z"].Value == "3.0001")
 		self.assertTrue(cmd.Parameters["E"].Value == "1.1")
-		self.assertTrue(cmd.Parameters["F"].Value == "7200")
+		self.assertTrue(cmd.Parameters["F"].Value == "7200.000")
 		self.assertTrue(cmd.CommandParts.Comment == " Here is a comment")
 
 	def test_G0_ParsePartialParameters(self):
