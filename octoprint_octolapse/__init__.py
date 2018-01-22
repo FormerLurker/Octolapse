@@ -36,7 +36,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def __init__(self):
 		self.Settings = None
 		self.Timelapse = None
-
+		self.TimelapseStarted = False
 	#Blueprint Plugin Mixin Requests	
 	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
 	def setEnabled(self):
@@ -230,10 +230,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
 		# for printing events use Printer State Change, because it gets sent before Print_Started
-		if(event == Events.PRINTER_STATE_CHANGED):
-			eventId = self._printer.get_state_id()
-			if (eventId == "PRINTING"):
+		if(event == Events.PRINT_STARTED):
+			#eventId = self._printer.get_state_id()
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change:{0}.".format(event))
+			origin=payload["origin"]
+			if(origin == "local"):
 				self.OnPrintStart()
+			else:
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
 		elif (event == Events.PRINT_PAUSED):
 			self.OnPrintPause() # regular pause
 		elif (event == Events.HOME):
@@ -256,16 +260,23 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Timelapse.PrintPaused()
 
 	def OnPrintStart(self):
+		if(not self.Settings.is_octolapse_enabled):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse is disabled.")
+			return
+
+		if(self.Timelapse.State != TimelapseState.Idle):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse is not idling.  CurrentState:{0}".format(self.Timelapse.State))
+			return False
 		
-		if(self.Settings.is_octolapse_enabled and self.Timelapse.State == TimelapseState.Idle):
-			result = self.StartTimelapse()
-			if(not result["success"]):
-				self.Settings.CurrentDebugProfile().LogError("Unable to start the timelapse. Error:{0}".format(result["error"]))
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started - Timelapse Started.")
-			if(self.Settings.CurrentCamera().apply_settings_before_print):
-				self.ApplyCameraSettings(self.Settings.CurrentCamera())
-		else:
-			self.Settings.CurrentDebugProfile().LogInfo("Octolapse is disabled.")
+		self.TimelapseStarted = True
+		result = self.StartTimelapse()
+		if(not result["success"]):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Unable to start the timelapse. Error:{0}".format(result["error"]))
+			return
+
+		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started - Timelapse Started.")
+		if(self.Settings.CurrentCamera().apply_settings_before_print):
+			self.ApplyCameraSettings(self.Settings.CurrentCamera())
 		
 
 	def StartTimelapse(self):
@@ -300,19 +311,23 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.CurrentDebugProfile().LogCameraSettingsApply("Camera Settings - Completed")
 
 	def OnPrintFailed(self):
+		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
 
 	def OnPrintCancelled(self):
+		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
 	def OnPrintCompleted(self):
+		self.TimelapseStarted = False
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
 	def OnPrintEnd(self):
+		self.TimelapseStarted = False
 		# tell the timelapse that the print ended.
 		if(self.Timelapse is not None):
 			self.Timelapse.EndTimelapse()

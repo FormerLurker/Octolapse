@@ -6,7 +6,7 @@
 
 Octolapse is made for making stabilized timelapses of your prints.  No more jerky movies, and no custom gcode/bash scripts required!  Every effort has been made to maintain print quality when using Octolapse, and it's extremely configurable.
 
-Octolapse monitors the gcode sent to your printer and takes snapshots either at height increments/layer changes, after a period of time has elapsed, when certain gcodes are detected, or a combination of the three.  Octolapse monitors the position of each axis and attempts to determine the extruder state in order to detect the optimal time to take a snapshot.
+Octolapse monitors the gcode sent to your printer from Octoprint while printing locally (does not currently work when printing from the SD card), and takes snapshots either at height increments/layer changes, after a period of time has elapsed, when certain gcodes are detected, or a combination of the three.  Octolapse monitors the position of each axis and attempts to determine the extruder state in order to detect the optimal time to take a snapshot.
 
 Once it's time to take a snapshot, Octolapse optionally ensures that the extruder is retracted, and then makes a zhop, if possible, in order to reduce stringing and oozing.  It then pauses the print and sends commands to move the extruder and bed to the proper positions. It then takes a snapshot and returns to the previous position and continues printing.
 
@@ -39,7 +39,8 @@ Currently Ocotlapse is not listed in the [plugin repository](https://plugins.oct
 ### Steps after installation
 1.  Make sure to select or add the appropriate printer profile. (Only Prusa Mk2S and MK2S with multi material are listed and have been tested.)  The retraction length is of particular importance here.  Check your slicer settings to get the appropriate values for your prints.  Note that all axis speeds are in Millimeters per minute, while many slicers use MM/Sec.  To convert, just multiply MM/m by 60.
 2.  Make sure your webcam is working by editing the default camera profile and clicking the 'Test Camera Snapshot' button.
-3.  Run a short print in 'Test Mode' to make sure things are working without printing anything.  See 'Test Mode' below.
+3.  Octolapse will ONLY work when printing locally (not from the 3d printer's SD card).  This is beause Octolapse needs to examine the gcodes before they are sent to the printer in order to work.  Maybe there is some way around this limitation, but I haven't yet been able to think of one.
+4.  Run a short print in 'Test Mode' to make sure things are working without printing anything.  See 'Test Mode' below.
 
 ### Test Mode
 Test mode must be activated BEFORE starting a print.  Changing this setting mid-print won't alter any current prints.
@@ -52,7 +53,7 @@ Notes:  Pay attention to your printer temps during the test print.  Everything s
 
 ## Usage
 
-Once Octolapse is enabled (see settings below), start your print as usual and Octolapse will do its magic.  You'll notice that the printer pauses itself occasionally. This is normal and occurs when Octolapse takes a snapshot.  There is sometimes a slight delay when pausing the print, but I'm currently working on that!
+Once Octolapse is enabled (see settings below), start your print locally (NOT from the printer's SD card, which is not currently supported) as usual and Octolapse will do its magic.  You'll notice that the printer pauses itself occasionally. This is normal and occurs when Octolapse takes a snapshot.  There is sometimes a slight delay when pausing the print, but I'm currently working on that!
 
 Once the print is completed or cancelled, Octolapse will inform you that your timelapse is rendering via the web client.  If synchronization is enabled, your timelapse will be available within the default timelapse plugin, otherwize your timelapse will be in the Octolapse data foler.
 

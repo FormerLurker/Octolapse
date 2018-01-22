@@ -281,10 +281,10 @@ class Timelapse(object):
 		self.TakeSnapshot()
 
 	def PositionReceived_ResumePrint(self, x,y,z,e):
-		self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("Save Command Position Received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 		if(not self.Position.IsAtCurrentPosition(x,y,None)):
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("The save command position is incorrect.")
-
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("Save Command Position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
+		else:
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("Save Command Position is correct.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 		self.ResetSnapshot()
 		self.OctoprintPrinter.resume_print()
 
