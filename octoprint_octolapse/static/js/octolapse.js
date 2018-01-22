@@ -140,6 +140,20 @@ $(function () {
         // Create other observables
         Octolapse.Settings.is_octolapse_enabled = ko.observable();
         Octolapse.Settings.platform = ko.observable();
+
+        /*self.downloadSetting = function () {
+            $.ajax({
+                url: "/plugin/octolapse/downloadSettings",
+                type: "POST",
+                dataType: "plain/text",
+                success: function (newSettings) {
+                    
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to downlaod the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }*/
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             console.log('Plugin Message Received: ' + plugin);
             if (plugin != "octolapse") {
