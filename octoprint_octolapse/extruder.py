@@ -41,6 +41,11 @@ class Extruder(object):
 		if(len(self.StateHistory)>0):
 			return self.StateHistory[0].IsExtrudingStart
 		return False
+
+	def IsRetracted(self):
+		if(len(self.StateHistory)>0):
+			return self.StateHistory[0].IsRetracted
+		return False
 	def UndoUpdate(self):
 		if(len(self.StateHistory)>0):
 			del self.StateHistory[0]

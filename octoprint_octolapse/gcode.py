@@ -169,7 +169,7 @@ class SnapshotGcodeGenerator(object):
 
 		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
 		# retract if necessary
-		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted)):
+		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted())):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
