@@ -7,6 +7,6 @@
     "\\octoprint_octolapse\\static",
     "\\octoprint_octolapse\\static\\js"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\__init__.py",
+  "SelectedNode": "\\octoprint_octolapse\\timelapse.py",
   "PreviewInSolutionExplorer": false
 }

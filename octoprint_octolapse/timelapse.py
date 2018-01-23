@@ -234,6 +234,7 @@ class Timelapse(object):
 
 
 	def PositionReceived_Return(self, x,y,z,e):
+		
 		#todo:  Do we need to re-request the position like we do for the return?  Maybe...
 		printerTolerance = self.Printer.printer_position_confirmation_tolerance
 		# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
@@ -244,7 +245,6 @@ class Timelapse(object):
 		else:
 			# return position information received
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot return position received - x:{0},y:{1},z:{2},e:{3}".format(x,y,z,e))
-
 		# make sure the SnapshotCommandIndex = 0
 		# Todo: ensure this is unnecessary
 		self.CommandIndex=0
@@ -263,7 +263,6 @@ class Timelapse(object):
 		self.State = TimelapseState.SendingSnapshotGcode
 		# send our commands to the printer
 		self.OctoprintPrinter.commands(self.SnapshotGcodes.SnapshotCommands())
-
 
 	def PositionReceived_Snapshot(self, x,y,z,e):
 		# snapshot position information received

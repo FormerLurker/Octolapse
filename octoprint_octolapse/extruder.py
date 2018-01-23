@@ -42,7 +42,11 @@ class Extruder(object):
 		if(len(self.StateHistory)>0):
 			return self.StateHistory[0].IsExtrudingStart
 		return False
-
+	
+	def IsRetractingStart(self):
+		if(len(self.StateHistory)>0):
+			return self.StateHistory[0].IsRetractingStart
+		return False
 	def IsRetracted(self):
 		if(len(self.StateHistory)>0):
 			return self.StateHistory[0].IsRetracted
@@ -65,8 +69,7 @@ class Extruder(object):
 		numStates = len(self.StateHistory)
 		if(numStates>0):
 			state = ExtruderState(state = self.StateHistory[0])
-			if(numStates > 1):
-				previousState = ExtruderState(state = self.StateHistory[1])
+			previousState = ExtruderState(state = self.StateHistory[0])
 
 		if(state is None):
 			state = ExtruderState()

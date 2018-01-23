@@ -169,7 +169,8 @@ class SnapshotGcodeGenerator(object):
 
 		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
 		# retract if necessary
-		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted())):
+		# Note that if IsRetractedStart is true, that means the printer is now retracted.  IsRetracted will be false because we've undone the previous position update.
+		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart())):
 			if(not self.IsExtruderRelativeCurrent):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
@@ -189,6 +190,11 @@ class SnapshotGcodeGenerator(object):
 			newSnapshotGcode.Append(self.GetRelativeZLiftGcode())
 			self.ZhopBySnapshotStartGcode = True
 
+		# Wait for current moves to finish before requesting the startgcodeposition
+		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode())
+		
+		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
+		newSnapshotGcode.Append(self.GetPositionGcode())
 		return newSnapshotGcode
 	def CreateSnapshotGcode(self, x,y,z, savedCommand = None):
 		if(x is None or y is None or z is None):
