@@ -9,61 +9,95 @@
   <div class="control-group">
     <label class="control-label">Retraction Length</label>
     <div class="controls">
-      <input name="retract_length" type="number" class="form-input span2" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+      <div class="input-append form-inline">
+        <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+        <span class="add-on">mm</span>
+      </div>
       <div class="error_label_container text-error" ></div>
     </div>
 
   </div>
+  
   <div class="control-group">
-    <label class="control-label">Retraction Speed - (0 for current extruder axis speed)</label>
+    <label class="control-label">Retraction Speed</label>
 
     <div class="controls">
-      <input name="retract_speed" type="number" class="form-input span2" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="input-append form-inline">
+        <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
+        <span class="add-on">mm</span>
+        <span class="add-on">min</span>
+      </div>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Detraction Speed - (0 for current extruder axis speed)</label>
+    <label class="control-label">Detraction Speed</label>
 
     <div class="controls">
-      <input name="detract_speed" type="number" class="form-input span2" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="input-append form-inline">
+        <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+        <span class="add-on">mm</span>
+        <span class="add-on">min</span>
+      </div>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Movement Speed - (0 for current movement speed)</label>
+    <label class="control-label">Movement Speed</label>
     <div class="controls">
-      <input name="movement_speed" type="number" class="form-input span2" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="input-append form-inline">
+        <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
+        <span class="add-on">mm</span>
+        <span class="add-on">min</span>
+      </div>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
     </div>
   </div>
-  <div class="control-group">
-    <label class="control-label">Z-Hop</label>
-    <div class="controls">
-      <input name="z_hop" type="number" class="form-input span2" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
-      <div class="error_label_container text-error" ></div>
-    </div>
+  
+  
 
+  <div class="control-group">
+    <label class="control-label">Z-Hop Height</label>
+    <div class="controls">
+      <div class="input-append form-inline">
+        <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
+        <span class="add-on">mm</span>
+      </div>
+      <div class="error_label_container text-error" ></div>
+    </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Z-Hop Speed - (0 for current extruder axis speed)</label>
+    <label class="control-label">Z-Hop Speed</label>
     <div class="controls">
-      <input name="z_hop_speed" type="number" class="form-input span2" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+      <div class="input-append form-inline">
+        <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+        <span class="add-on">mm</span>
+        <span class="add-on">min</span>
+      </div>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Printer position tolerance</label>
+    <div class="controls">
+      <div class="input-append form-inline">
+        <input name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" />
+        <span class="add-on">mm</span>
+      </div>
+      <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
     </div>
   </div>
   <div class="control-group">
     <label class="control-label">Snapshot Command</label>
     <div class="controls">
-      <input name="snapshot_command" type="text" class="form-input span2" data-bind="value: snapshot_command" required="true" />
+      <input name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
       <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Printer position confirmation tolerance - Used when comparing received vs expected positions from the M114 command.</label>
-    <div class="controls">
-      <input name="printer_position_confirmation_tolerance" type="number" class="form-input span2" data-bind="value: printer_position_confirmation_tolerance" required="true" />
-      <div class="error_label_container text-error" ></div>
+      
     </div>
   </div>
   

@@ -8,26 +8,213 @@
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Camera Http Address (full address including http:// or https://)</label>
+    <label class="control-label">Camera Address</label>
     <div class="controls">
       <input name="address"  class="input-block-level" data-bind="value: address" required="true"/>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">The full address to the camera, including http:// or https://</span>
     </div>
     
   </div>
   <div class="control-group">
-    <label class="control-label">Snapshot Request Template</label>
+    <label class="control-label">Snapshot Address</label>
     <div class="controls">
       <input name="snapshot_request_template" type="text" class="input-block-level" data-bind="value: snapshot_request_template" required="true"/>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Either a full address, or can use the token <i>{camera_address}</i>, which will be replaced with the Camera Address above.</span>
     </div>
   </div>
   <div class="control-group">
     <label class="control-label">Test Camera Snapshot</label>
     <div class="controls">
       <button class="btn btn-default" data-bind="click: function() {$data.testCamera();}">Test</button>
+      
     </div>
   </div>
+  <div class="control-group">
+    <label class="control-label">Auto-Apply Camera Settings Before Print</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
+      </label>
+      <span class="help-inline">
+        Check to apply all camera settings at the start of a print when Octolapse is enabled.
+      </span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Apply Camera Settings</label>
+    <div class="controls">
+      <button class="btn btn-default" data-bind="click: function() {$data.applySettingsToCamera();}">Apply Now</button>
+      <span class="help-inline">
+        Click to apply all settings to your camera right now so you can see the results without starting a print.
+      </span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Brightness (0-255)</label>
+    <div class="controls">
+      <input name="brightness" type="number" class="input-block-level" data-bind="value: brightness" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Contrast (0-255)</label>
+    <div class="controls">
+      <input name="contrast" type="number" class="input-block-level" data-bind="value: contrast"  min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Saturation (0-255)</label>
+    <div class="controls">
+      <input name="saturation" type="number" class="input-block-level" data-bind="value: saturation" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Auto White Balance</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
+        <div class="error_label_container text-error" ></div>
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Gain (0-255)</label>
+    <div class="controls">
+      <input name="gain" type="number" class="input-block-level" data-bind="value: gain" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Powerline Frequency</label>
+    <div class="controls">
+
+
+      <select data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: powerline_frequency"></select>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">White Balance Temeprature (2000-6500)</label>
+    <div class="controls">
+      <div class="input-append">
+        <input name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
+        <span class="add-on">K</span>
+      </div>
+
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Sharpness (0-255)</label>
+    <div class="controls">
+      <input name="sharpness" type="number" class="input-block-level" data-bind="value: sharpness" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Backlight Compensation</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Exposure Type</label>
+    <div class="controls">
+      <select data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: exposure_type"></select>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Exposure (3-2047)</label>
+    <div class="controls">
+      <input name="exposure" type="number" class="input-block-level" data-bind="value: exposure" min="3" max="2047" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Exposure Auto Priority</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Pan (0-255)</label>
+    <div class="controls">
+      <input name="pan" type="number" class="input-block-level" data-bind="value: pan" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Tilt (0-255)</label>
+    <div class="controls">
+      <input name="tilt" type="number" class="input-block-level" data-bind="value: tilt" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Autofocus Enabled</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus."/>Enabled
+      </label>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Absolute Focus (0-255)</label>
+    <div class="controls">
+      <input name="focus" type="number" class="input-block-level" data-bind="value: focus" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+    <span class="help-inline">This setting will not work with autofocus enabled.</span>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Zoom (0-255)</label>
+    <div class="controls">
+      <input name="zoom" type="number" class="input-block-level" data-bind="value: zoom" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Led 1 Mode</label>
+    <div class="controls">
+      <select data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: led1_mode"></select>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Led 1 Frequency</label>
+    <div class="controls">
+      <input name="led1_frequency" type="number" class="input-block-level" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">Jpeg Quality (1-100)</label>
+    <div class="controls">
+      <input name="jpeg_quality" type="number" class="input-block-level" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+
   <div class="control-group">
     <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
       <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
@@ -58,185 +245,13 @@
        <input type="password" style="display:none"/>
         <input name="camera_profile_password" type="password" autocomplete="off" class="input-block-level" data-bind="value: password"/>
         <div class="error_label_container text-error" ></div>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
+        </span>
       </div>
-      <span class="help-inline">
-        <span class="label label-important">Attention</span>Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
-      </span>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Auto-Apply Camera Settings Before Print</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-Apply Camera Settings Before Print."/>Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Apply Camera Settings</label>
-      <div class="controls">
-        <button class="btn btn-default" data-bind="click: function() {$data.applySettingsToCamera();}">Apply Now</button>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Brightness (0-255)</label>
-      <div class="controls">
-        <input name="brightness" type="number" class="input-block-level" data-bind="value: brightness" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Contrast (0-255)</label>
-      <div class="controls">
-        <input name="contrast" type="number" class="input-block-level" data-bind="value: contrast"  min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Saturation (0-255)</label>
-      <div class="controls">
-        <input name="saturation" type="number" class="input-block-level" data-bind="value: saturation" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Auto White Balance</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance."/>Enabled
-          <div class="error_label_container text-error" ></div>
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Gain</label>
-      <div class="controls">
-        <input name="gain" type="number" class="input-block-level" data-bind="value: gain" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Powerline Frequency</label>
-      <div class="controls">
-        
-        
-        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: powerline_frequency"></select>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">White Balance Temeprature (in Kelvin)</label>
-      <div class="controls">
-        <input name="white_balance_temperature" type="number" class="input-block-level" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Sharpness (0-255)</label>
-      <div class="controls">
-        <input name="sharpness" type="number" class="input-block-level" data-bind="value: sharpness" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Backlight Compensation</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation."/>Enabled
-        </label>
-      </div>
+     
     </div>
     
-    <div class="control-group">
-      <label class="control-label">Exposure Type</label>
-      <div class="controls">       
-        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: exposure_type"></select>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Exposure</label>
-      <div class="controls">
-        <input name="exposure" type="number" class="input-block-level" data-bind="value: exposure" min="3" max="2047" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Exposure Auto Priority</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Pan</label>
-      <div class="controls">
-        <input name="pan" type="number" class="input-block-level" data-bind="value: pan" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Tilt</label>
-      <div class="controls">
-        <input name="tilt" type="number" class="input-block-level" data-bind="value: tilt" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Autofocus Enabled</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus."/>Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Absolute Focus (will not work with autofocus enabled)</label>
-      <div class="controls">
-        <input name="focus" type="number" class="input-block-level" data-bind="value: focus" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Zoom</label>
-      <div class="controls">
-        <input name="zoom" type="number" class="input-block-level" data-bind="value: zoom" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Led 1 Mode</label>
-      <div class="controls">
-        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: led1_mode"></select>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Led 1 Frequency</label>
-      <div class="controls">
-        <input name="led1_frequency" type="number" class="input-block-level" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Jpeg Quality</label>
-      <div class="controls">
-        <input name="jpeg_quality" type="number" class="input-block-level" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-
     <div class="control-group">
       <label class="control-label">Brightness Request Template</label>
       <div class="controls">

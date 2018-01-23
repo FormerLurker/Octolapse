@@ -8,7 +8,7 @@
     </div>
   </div>
   <div>
-    <label class="control-label">Snapshot On Gcode</label>
+    <label class="control-label">Gcode Trigger</label>
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -163,7 +163,7 @@
       <div class="control-group" data-bind="visible: timer_trigger_enabled">
         <label class="control-label">Seconds to Trigger</label>
         <div class="controls">
-          <input name="timer_trigger_seconds" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
+          <input name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
           <div class="error_label_container text-error" ></div>
           <small>
             <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
@@ -296,11 +296,16 @@
       </div>
       <div class="control-group" data-bind="visible: layer_trigger_enabled">
         <div class="control-group">
-          <label class="control-label">Trigger Height (0 for trigger at layer change)</label>
+          <label class="control-label">Trigger Height</label>
           <div class="controls">
-            <input name="layer_trigger_height" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true"/>
+            <div class="input-append">
+              <input name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors" data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true"/>
+              <span class="add-on">mm</span>
+            </div>
             <div class="error_label_container text-error" ></div>
+            <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
           </div>
+          
         </div>
         <div class="control-group">
           <div class="controls">
@@ -436,11 +441,16 @@
 
   
   <div class="control-group">
-    <label class="control-label">Delay in Milliseconds before taking a snapshot (1000 = 1 second)</label>
+    <label class="control-label">Snapshot Delay</label>
     <div class="controls">
-      <input name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
+      <div class="input-append">
+        <input name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
+        <span class="add-on">MS</span>
+      </div>
       <div class="error_label_container text-error" ></div>
+      <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur.  1000MS = 1 Second</span>  
     </div>
+    
   </div>
   <div class="control-group">
     <small>

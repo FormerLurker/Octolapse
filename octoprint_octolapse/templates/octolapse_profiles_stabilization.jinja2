@@ -25,36 +25,55 @@
     <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
-        <input name ="x_fixed_coordinate" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
+        <div class="input-append">
+          <input name ="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
+          <span class="add-on">mm</span>
+        </div>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
-        <input name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
+        <div class="input-append input-block-level">
+          <input name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
+          <span class="add-on">mm</span>
+          <span class="add-on">csv</span>
+        </div>
         <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
+      </div>
+      <div class="controls">
         <label class="checkbox">
           <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Loop
         </label>
         <label class="checkbox">
           <input name="x_fixed_path_invet loop" type="checkbox" data-bind="checked: x_fixed_path_invert_loop" />Invert Loop
         </label>
-        
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'relative'">
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
-        <input name="x_relative" type="text" class="input-block-leve form-input ignore_hidden_errors " data-bind="value: x_relative"/>
+        <div class="input-append">
+          <input name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative"/>
+          <span class="add-on">%</span>
+        </div>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
       <label class="control-label">Relative Path</label> 
       <div class="controls">
-        <input name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
+        <div class="input-append input-block-level">
+          <input name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
+          <span class="add-on">%</span>
+          <span class="add-on">csv</span>
+        </div>
         <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
+      </div>
+      <div class="controls">
         <label class="checkbox">
           <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Loop
         </label>
@@ -80,15 +99,25 @@
     <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
-        <input name="y_fixed_coordinate" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
+        <div class="input-append">
+          <input name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
+          <span class="add-on">mm</span>
+        </div>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
-        <input name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
+        <div class="input-append input-block-level">
+          <input name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
+          <span class="add-on">mm</span>
+          <span class="add-on">csv</span>
+        </div>
         <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
+      </div>
+      <div class="controls">
         <label class="checkbox">
           <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Loop
         </label>
@@ -100,22 +129,31 @@
     <div class="control-group" data-bind="visible: y_type() === 'relative'">
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
-        <input name="y_relative" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative"/>
+        <div class="input-append">
+          <input name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative"/>
+          <span class="add-on">%</span>
+        </div>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
       <label class="control-label">Relative Path</label>
       <div class="controls">
-        <input name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
+        <div class="input-append input-block-level">
+          <input name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
+          <span class="add-on">%</span>
+          <span class="add-on">csv</span>
+        </div>
         <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
+      </div>
+      <div class="controls">
         <label class="checkbox">
           <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Loop
         </label>
         <label class="checkbox">
           <input name="y_relative_path_invert_loop" type="checkbox" data-bind="checked: y_relative_path_invert_loop" />Invert Loop
         </label>
-        
       </div>
     </div>
   </div>
