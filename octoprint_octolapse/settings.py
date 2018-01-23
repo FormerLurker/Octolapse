@@ -872,6 +872,7 @@ class DebugProfile(object):
 		self.print_state_changed = False
 		self.camera_settings_apply = False
 		self.gcode_sent_all = False
+		self.gcode_queuing_all = False
 		
 		if(debugProfile is not None):
 			self.Update(debugProfile)
@@ -947,7 +948,9 @@ class DebugProfile(object):
 			self.camera_settings_apply = utility.getbool(changes["camera_settings_apply"],self.camera_settings_apply)
 		if("gcode_sent_all" in changes.keys()):
 			self.gcode_sent_all = utility.getbool(changes["gcode_sent_all"],self.gcode_sent_all)
-
+		if("gcode_queuing_all" in changes.keys()):
+			self.gcode_queuing_all = utility.getbool(changes["gcode_queuing_all"],self.gcode_queuing_all)
+			
 	def ToDict(self):
 		return {
 				'name'						: self.name,
@@ -984,8 +987,8 @@ class DebugProfile(object):
 				'settings_load'				: self.settings_load,
 				'print_state_changed'		: self.print_state_changed,
 				'camera_settings_apply'		: self.camera_settings_apply,
-				'gcode_sent_all'				: self.gcode_sent_all
-				
+				'gcode_sent_all'			: self.gcode_sent_all,
+				'gcode_queuing_all'			: self.gcode_queuing_all
 			}
 
 	def LogToConsole(self,levelName , message):
@@ -1110,6 +1113,9 @@ class DebugProfile(object):
 			self.LogInfo(message)
 	def LogSentGcode(self,message):
 		if(self.gcode_sent_all):
+			self.LogInfo(message)
+	def LogQueuingGcode(self,message):
+		if(self.gcode_queuing_all):
 			self.LogInfo(message)
 	
 class OctolapseSettings(object):

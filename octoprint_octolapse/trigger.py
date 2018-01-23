@@ -51,7 +51,7 @@ class GcodeTrigger(object):
 		self.IsTriggered = False
 		# Don't update the trigger if we don't have a homed axis
 		# Make sure to use the previous value so the homing operation can complete
-		if(not position.HasHomedAxis()):
+		if(not position.HasHomedAxis(1)):
 			self.IsTriggered = False
 			return
 
@@ -59,7 +59,7 @@ class GcodeTrigger(object):
 			self.IsWaiting = True
 		if(self.IsWaiting == True):
 			if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
-				if(self.RequireZHop and not position.IsZHop()):
+				if(self.RequireZHop and not position.IsZHop(1)):
 					self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
 				else:
 					self.IsTriggered = True
@@ -129,13 +129,13 @@ class LayerTrigger(object):
 		self.IsHeightChange = False
 		# Don't update the trigger if we don't have a homed axis
 		# Make sure to use the previous value so the homing operation can complete
-		if(not position.HasHomedAxis()):
+		if(not position.HasHomedAxis(1)):
 			return
 
 		# calculate height increment changed
 		
-		if(self.HeightIncrement is not None and self.HeightIncrement> 0 and position.IsLayerChange
-			and self.CurrentIncrement * self.HeightIncrement <= position.Height):
+		if(self.HeightIncrement is not None and self.HeightIncrement> 0 and position.IsLayerChange(1)
+			and self.CurrentIncrement * self.HeightIncrement <= position.Height(1)):
 			self.CurrentIncrement += 1
 			self.IsHeightChange  = True
 			self.Settings.CurrentDebugProfile().LogTriggerHeightChange("Layer Trigger - Height Increment:{0}".format(self.HeightIncrement))
@@ -146,7 +146,7 @@ class LayerTrigger(object):
 				self.__HeightChangeWait = True
 				
 		else:
-			if(position.IsLayerChange):
+			if(position.IsLayerChange(1)):
 				self.__LayerChangeWait = True
 
 		
@@ -161,7 +161,7 @@ class LayerTrigger(object):
 				elif (self.__LayerChangeWait):
 					self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering, waiting on extruder.")
 			else:
-				if(self.RequireZHop and not position.IsZHop()):
+				if(self.RequireZHop and not position.IsZHop(1)):
 					self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Triggering - Waiting on ZHop.")
 					return
 				if(self.__HeightChangeWait):
@@ -233,7 +233,7 @@ class TimerTrigger(object):
 		self.IsTriggered = False
 		# Don't update the trigger if we don't have a homed axis
 		# Make sure to use the previous value so the homing operation can complete
-		if(not position.HasHomedAxis()):
+		if(not position.HasHomedAxis(1)):
 			self.IsTriggered = False
 			return
 
@@ -258,7 +258,7 @@ class TimerTrigger(object):
 			self.IsWaiting = True
 			# see if the exturder is in the right position
 			if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
-				if(self.RequireZHop and not position.IsZHop()):
+				if(self.RequireZHop and not position.IsZHop(1)):
 					self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
 					
 				else:

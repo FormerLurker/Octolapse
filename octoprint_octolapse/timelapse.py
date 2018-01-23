@@ -115,7 +115,7 @@ class Timelapse(object):
 		return None
 	
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
-		self.Settings.CurrentDebugProfile().LogSentGcode("Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
+		self.Settings.CurrentDebugProfile().LogQueuingGcode("Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 		# update the position tracker so that we know where all of the axis are.
 		# We will need this later when generating snapshot gcode so that we can return to the previous
 		# position
@@ -197,7 +197,7 @@ class Timelapse(object):
 			# see if the current trigger is triggering, indicting that a snapshot should be taken
 			if(currentTrigger.IsTriggered):
 				# Make sure there are no position errors (unknown position, out of bounds, etc)
-				if(not self.Position.HasPositionError):
+				if(not self.Position.HasPositionError()):
 					#Triggering!
 					return currentTrigger
 				else:

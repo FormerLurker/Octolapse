@@ -55,7 +55,15 @@ class Pos(object):
 		self.IsZHopStart = False if pos is None else pos.IsZHopStart
 		self.IsZHop = False if pos is None else pos.IsZHop
 		self.IsZHopCompleting = False if pos is None else pos.IsZHopCompleting
+		
+
+		self.HasPositionError = False if pos is None else pos.HasPositionError
+		self.PositionError = None if pos is None else pos.PositionError
+		self.HasPositionChanged = False if pos is None else pos.HasPositionChanged
+		self.IsLayerChange = False if pos is None else pos.IsLayerChange
+		self.Layer = 0 if pos is None else pos.Layer
 		self.Height = 0 if pos is None else pos.Height
+
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
 			self.F = float(f)
@@ -149,12 +157,7 @@ class Position(object):
 	def Reset(self):
 
 		self.Positions = []
-		self.HasPositionError = False
-		self.PositionError = None
-		self.IsLayerChange = False
-		self.HasPositionChanged = False
-		self.Layer = 0
-		self.Height = 0
+		
 		self.SavedPosition = None
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
@@ -178,50 +181,63 @@ class Position(object):
 				else:
 					return pos.Height - previousPos.Height
 		return 0
-	def X(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].X
+	def HasPositionError(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].HasPositionError
 		return None
-	def DistanceToZLift(self):
-		currentLift = utility.round_to(self.Z() - self.Height,0.0001)
-
-		if(currentLift < self.Printer.z_hop and currentLift > 0):
-			return self.Printer.z_hop - currentLift
-		else:
+	def X(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].X
+		return None
+	def DistanceToZLift(self, index=0):
+		if(len(self.Positions)>index):
+			pos = self.Positions[index]
+			currentLift = utility.round_to(pos.Z - pos.Height,0.0001)
+			if(currentLift < self.Printer.z_hop and currentLift > 0):
+				return self.Printer.z_hop - currentLift
 			return 0
-	def Y(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].Y
+		return None
+	def Y(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].Y
 		return None
 
-	def Z(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].Z
+	def Z(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].Z
 		return None
 
-	def E(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].E
+	def E(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].E
 		return None
 
-	def F(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].F
+	def F(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].F
 		return None
 
-	def IsZHop(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].IsZHop
+	def IsZHop(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].IsZHop
+		return None
+	def IsLayerChange(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].IsLayerChange
+		return None
+	def Height(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].Height
 		return None
 
-	def IsRelative(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].IsRelative
+	def IsRelative(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].IsRelative
 		return None
 
-	def IsExtruderRelative(self):
-		if(len(self.Positions)>0):
-			return self.Positions[0].IsExtruderRelative
+	def IsExtruderRelative(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].IsExtruderRelative
 		return None
 	
 	def UndoUpdate(self):
@@ -229,10 +245,6 @@ class Position(object):
 			del self.Positions[0]
 		self.Extruder.UndoUpdate()
 	def Update(self,gcode):
-		# reset state variables
-		self.IsLayerChange = False
-		self.HasPositionChanged = False
-
 		command = self.Commands.GetCommand(gcode)
 		# a new position
 
@@ -241,6 +253,9 @@ class Position(object):
 		numPositions = len(self.Positions)
 		if(numPositions>0):
 			pos = Pos(self.OctoprintPrinterProfile,self.Positions[0])
+			# reset state variables
+			pos.IsLayerChange = False
+			pos.HasPositionChanged = False
 			if(numPositions>1):
 				previousPos = Pos(self.OctoprintPrinterProfile,self.Positions[1])
 		if(pos is None):
@@ -275,16 +290,16 @@ class Position(object):
 
 					if(x is not None or y is not None or z is not None or f is not None):
 						
-						if(self.HasPositionError and not pos.IsRelative):
-							self.HasPositionError = False
-							self.PositionError = ""
+						if(pos.HasPositionError and not pos.IsRelative):
+							pos.HasPositionError = False
+							pos.PositionError = ""
 						pos.UpdatePosition(x,y,z,e=None,f=f)
 						
 					if(e is not None):
 						if(pos.IsExtruderRelative is not None):
-							if(self.HasPositionError and not pos.IsExtruderRelative):
-								self.HasPositionError = False
-								self.PositionError = ""
+							if(pos.HasPositionError and not pos.IsExtruderRelative):
+								pos.HasPositionError = False
+								pos.PositionError = ""
 							pos.UpdatePosition(x=None,y=None,z=None,e=e, f=None)
 						else:
 							self.Settings.CurrentDebugProfile().LogError("Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative).")
@@ -322,8 +337,8 @@ class Position(object):
 						pos.ZHomed = True
 
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G28 - Homing to {0}".format(GetFormattedCoordinates(x,y,z,pos.E)))
-					self.HasPositionError = False
-					self.PositionError = None
+					pos.HasPositionError = False
+					pos.PositionError = None
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
 			elif(command.Command == "G90"):
@@ -367,8 +382,8 @@ class Position(object):
 					pos.IsExtruderRelative = False
 			elif(command.Command == "G92"):
 				if(command.Parse()):
-					previousRelativeValue = self.IsRelative
-					previousExtruderRelativeValue = self.IsExtruderRelative
+					previousRelativeValue = pos.IsRelative
+					previousExtruderRelativeValue = pos.IsExtruderRelative
 					x = command.Parameters["X"].Value
 					y = command.Parameters["Y"].Value
 					z = command.Parameters["Z"].Value
@@ -403,23 +418,22 @@ class Position(object):
 					or utility.round_to(pos.Z, self.PrinterTolerance) != utility.round_to(previousPos.Z, self.PrinterTolerance))
 
 				if(hasExtruderChanged or hasXYZChanged):
-					self.HasPositionChanged = True;
+					pos.HasPositionChanged = True;
 						
 					# calculate LastExtrusionHeight and Height
 					if (self.Extruder.IsExtruding()):
 						pos.LastExtrusionHeight = pos.Z
-						if(pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > self.Height):
-							self.Height = utility.round_to(pos.Z, self.PrinterTolerance)
-							pos.Height = self.Height
+						if(pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > previousPos.Height):
+							pos.Height = utility.round_to(pos.Z, self.PrinterTolerance)
 							self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(pos.Height))
 					
 					# calculate layer change
-					if(utility.round_to(self.ZDelta(pos), self.PrinterTolerance) > 0 or self.Layer == 0):
-						self.IsLayerChange = True
-						self.Layer += 1
-						self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(self.Layer))
+					if(utility.round_to(self.ZDelta(pos), self.PrinterTolerance) > 0 or pos.Layer == 0):
+						pos.IsLayerChange = True
+						pos.Layer += 1
+						self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(pos.Layer))
 					else:
-						self.IsLayerChange = False
+						pos.IsLayerChange = False
 
 					# Calculate ZHop based on last extrusion height
 					if(pos.LastExtrusionHeight is not None):
@@ -448,21 +462,18 @@ class Position(object):
 		while (len(self.Positions)> 5):
 			del self.Positions[5]
 	
-	def HasHomedAxis(self):
-		if(len(self.Positions)<2):
-			return False
-		pos = self.Positions[0]
-		previousPos = self.Positions[1]
+	def HasHomedAxis(self, index=0):
+		if(len(self.Positions)<=index):
+			return None
+		
+		pos = self.Positions[index]
 
 		return (pos.XHomed
 				and pos.YHomed
 			    and pos.ZHomed
 				and pos.X is not None
 				and pos.Y is not None
-				and pos.Z is not None
-				and previousPos.X is not None
-				and previousPos.Y is not None
-				and previousPos.Z is not None)
+				and pos.Z is not None)
 	
 	def XRelative(self):
 		if(len(self.Positions)<2):

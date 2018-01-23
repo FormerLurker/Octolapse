@@ -200,6 +200,12 @@ class SnapshotGcodeGenerator(object):
 		
 		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
 		newSnapshotGcode.Append(self.GetPositionGcode())
+		# Log the commands
+		self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Start Gcode")
+		for str in newSnapshotGcode.GcodeCommands:
+			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
+
+
 		return newSnapshotGcode
 	def CreateSnapshotGcode(self, x,y,z, savedCommand = None):
 		if(x is None or y is None or z is None):
@@ -298,7 +304,7 @@ class SnapshotGcodeGenerator(object):
 		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
 		newSnapshotGcode.Append(self.GetPositionGcode())
 
-		self.Settings.CurrentDebugProfile().LogSnapshotGcode("SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex, newSnapshotGcode.EndIndex()))
+		self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex, newSnapshotGcode.EndIndex()))
 		for str in newSnapshotGcode.GcodeCommands:
 			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
 			

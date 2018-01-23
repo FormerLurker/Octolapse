@@ -229,12 +229,19 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_sent_all" title="Log all gcode sent to printer"/>Log All Gcode
+          <input type="checkbox" data-bind="checked: gcode_queuing_all" title="Log all gcode that is about to queue"/>Log Gcode Queuing
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_sent_all" title="Log all gcode sent to printer"/>Log Gcode Sent
         </label>
       </div>
     </div>
     
-    
+
   </div>
 </script>
 
