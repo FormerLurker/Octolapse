@@ -51,7 +51,13 @@ class Extruder(object):
 		if(len(self.StateHistory)>0):
 			return self.StateHistory[0].IsRetracted
 		return False
-
+	def LengthToRetract(self):
+		if(len(self.StateHistory)>0):
+			retractLength =  utility.round_to(self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,0.0001)
+			if(retractLength <= 0):
+				retractLength = 0
+			return retractLength
+		return self.PrinterRetractionLength
 	def UndoUpdate(self):
 		if(len(self.StateHistory)>0):
 			del self.StateHistory[0]
@@ -114,7 +120,7 @@ class Extruder(object):
 		#utility.round_to(pos.ExtrusionLength,0.0001) 
 
 		pos.IsExtrudingStart = True if			 pos.ExtrusionLength > 0 and			previousPos.ExtrusionLength == 0 else False
-		pos.IsExtruding = True if				 previousPos.ExtrusionLength > 0 and	pos.ExtrusionLength > 0 else False
+		pos.IsExtruding = True if				 pos.ExtrusionLength > 0 else False
 		pos.IsPrimed = True if					 previousPos.RetractionLength == 0 and	pos.ExtrusionLength == 0 and pos.RetractionLength == 0 else False
 		pos.IsRetractingStart = True if			 previousPos.RetractionLength == 0 and	pos.RetractionLength > 0 else False
 		pos.IsRetracting = True if				 previousPos.RetractionLength > 0 and	pos.RetractionLength > previousPos.RetractionLength else False

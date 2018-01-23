@@ -182,7 +182,13 @@ class Position(object):
 		if(len(self.Positions)>0):
 			return self.Positions[0].X
 		return None
+	def DistanceToZLift(self):
+		currentLift = utility.round_to(self.Z() - self.Height,0.0001)
 
+		if(currentLift < self.Printer.z_hop and currentLift > 0):
+			return self.Printer.z_hop - currentLift
+		else:
+			return 0
 	def Y(self):
 		if(len(self.Positions)>0):
 			return self.Positions[0].Y
@@ -400,7 +406,7 @@ class Position(object):
 					self.HasPositionChanged = True;
 						
 					# calculate LastExtrusionHeight and Height
-					if (self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart()):
+					if (self.Extruder.IsExtruding()):
 						pos.LastExtrusionHeight = pos.Z
 						if(pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > self.Height):
 							self.Height = utility.round_to(pos.Z, self.PrinterTolerance)

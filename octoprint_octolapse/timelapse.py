@@ -140,7 +140,7 @@ class Timelapse(object):
 				# pause the printer to start the snapshot
 				self.State = TimelapseState.RequestingReturnPosition
 				# get the start timelapse gcide
-				startTimelapseGcode = self.Gcode.CreateSnapshotStartGcode(self.Position.Z(), self.Position.F(), self.Position.IsRelative(), self.Position.IsExtruderRelative(), self.Position.Extruder)
+				startTimelapseGcode = self.Gcode.CreateSnapshotStartGcode(self.Position.Z(), self.Position.F(), self.Position.IsRelative(), self.Position.IsExtruderRelative(), self.Position.Extruder, self.Position.DistanceToZLift())
 				if(len(startTimelapseGcode.GcodeCommands)>0):
 					for command in startTimelapseGcode.GcodeCommands:
 						self.Position.Update(command)

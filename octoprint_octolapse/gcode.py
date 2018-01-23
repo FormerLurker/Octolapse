@@ -156,15 +156,17 @@ class SnapshotGcodeGenerator(object):
 			snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed));
 			self.FCurrent = desiredSpeed
 			
-	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder):
+	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder, zLift):
 		self.Reset()
 		self.FOriginal = f
 		self.FCurrent = f
 		self.RetractedBySnapshotStartGcode = False
+		self.RetractedLength = 0
 		self.ZhopBySnapshotStartGcode = False
+		self.ZLift = zLift
 		self.IsRelativeOriginal = isRelative
 		self.IsRelativeCurrent = isRelative
-		self.IsExtruderRelativeOriginal = isExtruderRelative
+		self.IsExtruderRelativeOriginal = isExtruderRelative 
 		self.IsExtruderRelativeCurrent = isExtruderRelative
 
 		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
@@ -175,19 +177,22 @@ class SnapshotGcodeGenerator(object):
 				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
 				self.IsExtruderRelativeCurrent = True
 			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
-			newSnapshotGcode.Append(self.GetRetractGcode())
-			self.RetractedBySnapshotStartGcode = True
+			retractedLength = extruder.LengthToRetract()
+			if(retractedLength>0):
+				newSnapshotGcode.Append(self.GetRetractGcode(retractedLength))
+				self.RetractedLength = retractedLength
+				self.RetractedBySnapshotStartGcode = True
 		# Can we hop or is the print too tall?
 
 		# todo: detect zhop and only zhop if we are not currently hopping.
 		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile)
 		# if we can ZHop, do
-		if(canZHop):
+		if(canZHop and self.ZLift >0):
 			if(not self.IsRelativeCurrent): # must be in relative mode
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
 				self.IsRelativeCurrent = True
 			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
-			newSnapshotGcode.Append(self.GetRelativeZLiftGcode())
+			newSnapshotGcode.Append(self.GetRelativeZLiftGcode(self.ZLift))
 			self.ZhopBySnapshotStartGcode = True
 
 		# Wait for current moves to finish before requesting the startgcodeposition
@@ -253,7 +258,7 @@ class SnapshotGcodeGenerator(object):
 				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
 				self.IsRelativeCurrent = True
 			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
-			newSnapshotGcode.Append(self.GetRelativeZLowerGcode())
+			newSnapshotGcode.Append(self.GetRelativeZLowerGcode(self.ZLift))
 			
 			
 		# detract
@@ -262,7 +267,8 @@ class SnapshotGcodeGenerator(object):
 				newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
 				self.IsExtruderRelativeCurrent = True
 			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.detract_speed)
-			newSnapshotGcode.Append(self.GetDetractGcode())
+			if(self.RetractedLength>0):
+				newSnapshotGcode.Append(self.GetDetractGcode(self.RetractedLength))
 
 		# reset the coordinate systems for the extruder and axis
 		if(self.IsRelativeOriginal != self.IsRelativeCurrent):
@@ -314,14 +320,14 @@ class SnapshotGcodeGenerator(object):
 		return "G4 P{0:d}".format(delay)
 	def GetMoveGcode(self,x,y):
 		return "G1 X{0:.3f} Y{1:.3f}".format(x,y)
-	def GetRelativeZLiftGcode(self):
-		return "G1 Z{0:.3f}".format(self.Printer.z_hop)
-	def GetRelativeZLowerGcode(self):
-		return "G1 Z{0:.3f}".format(-1.0*self.Printer.z_hop)
-	def GetRetractGcode(self):
-		return "G1 E{0:.3f}".format(-1*self.Printer.retract_length)
-	def GetDetractGcode(self):
-		return "G1 E{0:.3f}".format( self.Printer.retract_length)
+	def GetRelativeZLiftGcode(self, distance):
+		return "G1 Z{0:.3f}".format(distance)
+	def GetRelativeZLowerGcode(self,distance):
+		return "G1 Z{0:.3f}".format(-1.0*distance)
+	def GetRetractGcode(self, distance):
+		return "G1 E{0:.3f}".format(-1*distance)
+	def GetDetractGcode(self, distance):
+		return "G1 E{0:.3f}".format( distance)
 	def GetResetLineNumberGcode(self,lineNumber):
 		return "M110 N{0:d}".format(lineNumber)
 	def GetWaitForCurrentMovesToFinishGcode(self):
