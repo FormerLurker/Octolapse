@@ -14,6 +14,7 @@ import sarge
 class Render(object):
 
 	def __init__(self, settings, snapshot, rendering, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount
+			  ,timeAdded = 0
 			  ,onRenderStart=None
 			  ,onRenderFail = None
 			  ,onRenderSuccess=None
@@ -35,6 +36,7 @@ class Render(object):
 		self.OnAfterSyncFail = onAfterSyncFail
 		self.OnAfterSycnSuccess = onAfterSycnSuccess
 		self.OnComplete = onComplete
+		self.TimeAdded = timeAdded
 		self.TimelapseRenderJobs = []
 
 	def Process(self, printName, printStartTime, printEndTime):
@@ -90,8 +92,9 @@ class Render(object):
 						   , self.Rendering.flip_v
 						   , self.Rendering.rotate_90
 						   , self.Rendering.watermark
-						   , fps 
-						   , threads= self.ThreadCount
+						   , fps
+						   , self.ThreadCount
+						   , timeAdded = self.TimeAdded
 						   , on_render_start= self.OnRenderStart
 						   , on_render_fail = self.OnRenderFail
 						   , on_render_success = self.OnRenderSuccess
@@ -115,7 +118,7 @@ class TimelapseRenderJob(object):
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 	def __init__(self, debug, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, octoprintTimelapseFolder,  ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps
-			  , threads,on_render_start=None, on_render_fail=None, on_render_success=None, on_render_complete=None, on_after_sync_success = None, on_after_sync_fail = None, on_complete = None
+			  ,threads ,timeAdded = 0, on_render_start=None, on_render_fail=None, on_render_success=None, on_render_complete=None, on_after_sync_success = None, on_after_sync_fail = None, on_complete = None
 			  , cleanAfterSuccess = False
 			  , cleanAfterFail = False
 			  , syncWithTimelapse = False):
@@ -128,7 +131,8 @@ class TimelapseRenderJob(object):
 		self._outputFormat = outputFormat
 		self._octoprintTimelapseFolder = octoprintTimelapseFolder
 		self._fps = fps
-		
+
+		self._timeAdded = timeAdded
 		self._threads = threads
 		self._ffmpeg = ffmpegPath
 		self._bitrate = bitrate
@@ -207,7 +211,7 @@ class TimelapseRenderJob(object):
 		with self.render_job_lock:
 			synchronize = self.syncWithTimelapse and self._outputFormat == "mp4"
 			try:
-				self._notify_callback("render_start", output, baseOutputFileName,synchronize)
+				self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._timeAdded)
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())

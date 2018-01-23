@@ -207,12 +207,59 @@ class SnapshotGcodeGenerator(object):
 
 
 		return newSnapshotGcode
-	def CreateSnapshotGcode(self, x,y,z, savedCommand = None):
+	def CreateSnapshotGcode(self, x,y,z, f, isRelative, isExtruderRelative, extruder, zLift, savedCommand = None):
 		if(x is None or y is None or z is None):
 			return None
-		commandIndex = 0
+
+		self.Reset()
+		self.FOriginal = f
+		self.FCurrent = f
+		self.RetractedBySnapshotStartGcode = False
+		self.RetractedLength = 0
+		self.ZhopBySnapshotStartGcode = False
+		self.ZLift = zLift
+		self.IsRelativeOriginal = isRelative
+		self.IsRelativeCurrent = isRelative
+		self.IsExtruderRelativeOriginal = isExtruderRelative 
+		self.IsExtruderRelativeCurrent = isExtruderRelative
 
 		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
+		# retract if necessary
+		# Note that if IsRetractedStart is true, that means the printer is now retracted.  IsRetracted will be false because we've undone the previous position update.
+		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart())):
+			if(not self.IsExtruderRelativeCurrent):
+				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
+				self.IsExtruderRelativeCurrent = True
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
+			retractedLength = extruder.LengthToRetract()
+			if(retractedLength>0):
+				newSnapshotGcode.Append(self.GetRetractGcode(retractedLength))
+				self.RetractedLength = retractedLength
+				self.RetractedBySnapshotStartGcode = True
+		# Can we hop or is the print too tall?
+
+		# todo: detect zhop and only zhop if we are not currently hopping.
+		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile)
+		# if we can ZHop, do
+		if(canZHop and self.ZLift >0):
+			if(not self.IsRelativeCurrent): # must be in relative mode
+				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
+				self.IsRelativeCurrent = True
+			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
+			newSnapshotGcode.Append(self.GetRelativeZLiftGcode(self.ZLift))
+			self.ZhopBySnapshotStartGcode = True
+
+		# Wait for current moves to finish before requesting the startgcodeposition
+		#newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode())
+		
+		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
+		#newSnapshotGcode.Append(self.GetPositionGcode())
+		# Log the commands
+		#self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Start Gcode")
+		#for str in newSnapshotGcode.GcodeCommands:
+		#	self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
+
+		### End start gcode
 		# Create code to move from the current extruder position to the snapshot position
 		# get the X and Y coordinates of the snapshot
 		snapshotPosition = self.GetSnapshotPosition(x,y)

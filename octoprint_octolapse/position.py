@@ -131,7 +131,6 @@ class Pos(object):
 			if(not utility.IsInBounds(self.X, self.Y, self.Z, self.OctoprintPrinterProfile)):
 				self.HasPositionError = True
 				self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
-				self.Settings.CurrentDebugProfile().LogError(self.PositionError)
 			else:
 				self.HasPositionError = False
 				self.PositionError = None	
@@ -193,7 +192,7 @@ class Position(object):
 		if(len(self.Positions)>index):
 			pos = self.Positions[index]
 			currentLift = utility.round_to(pos.Z - pos.Height,0.0001)
-			if(currentLift < self.Printer.z_hop and currentLift > 0):
+			if(currentLift < self.Printer.z_hop):
 				return self.Printer.z_hop - currentLift
 			return 0
 		return None
