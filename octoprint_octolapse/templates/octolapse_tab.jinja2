@@ -1,0 +1,45 @@
+<div class="text-center">
+  <h3>Octolapse </h3>
+</div>
+<div id="octolapse_tab" class="row-fluid">
+  <div class="span6">
+    <div data-bind="visible:snapshot_error" class="text-danger">
+      Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>
+    </div>
+    <dl class="dl-vertical">
+      <dt>Status</dt>
+      <dd>
+        <span class="fa-stack fa-lg" data-bind="attr: { title: Octolapse.Settings.is_octolapse_enabled() || is_timelapse_active() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
+          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Settings.is_octolapse_enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
+          <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.Settings.is_octolapse_enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.Settings.is_octolapse_enabled() ) },style: { color: (Octolapse.Settings.is_octolapse_enabled()  || is_timelapse_active()) ? 'limegreen' : '' }"></i>
+        </span>
+        <span class="fa-stack fa-lg" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
+          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+          <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'limegreen' : '' }"></i>
+        </span>
+        <span class="fa-stack fa-lg" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
+          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
+          <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'limegreen' : '' }"></i>
+        </span>
+        <span class="fa-stack fa-lg"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : 'Rendering is idle.'}">
+          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() ? '' : 'lightgray' }"></i>
+          <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: is_rendering() ? 'limegreen' : '' }"></i>
+        </span>
+      </dd>
+      
+      <dt>Snapshot Count</dt>
+      <dd>
+        <span data-bind="text: snapshot_count"></span>
+      </dd>
+      <dt>Total Snapshot Time</dt>
+      <dd>
+        <span data-bind="text: $data.snapshotTime()"></span>
+      </dd>
+    </dl>
+  </div>
+  <div class="span6" >
+    <div class="pull-right" data-bind="visible: is_timelapse_active()">
+      <button class="btn btn-default" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
+    </div>
+  </div>
+</div>

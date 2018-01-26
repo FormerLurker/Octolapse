@@ -124,6 +124,13 @@ def GetRenderingDirectory(dataDirectory, printName, printStartTime, outputExtens
 		
 	return directoryTemplate
 
+def SecondsToHHMMSS(seconds):
+    hours = seconds // (60*60)
+    seconds %= (60*60)
+    minutes = seconds // 60
+    seconds %= 60
+    return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
 class SafeDict(dict):
     def __init__(self, **entries):
         self.__dict__.update(entries)

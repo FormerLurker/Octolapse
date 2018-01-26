@@ -39,22 +39,21 @@ $(function () {
     };
     // Apply the toggle click event to every element within our settings that has the .toggle class
     
-    Octolapse.defaultPopup = null
     Octolapse.displayPopup = function (options) {
-        if (Octolapse.defaultPopup !== null) {
-            self.defaultPopup.remove();
-        }
-        _.extend(options, {
-            callbacks: {
-                before_close: function (notice) {
-                    if (self.defaultPopup == notice) {
-                        self.defaultPopup = null;
-                    }
-                }
-            }
-        });
+      //  if (Octolapse.defaultPopup !== null) {
+        //    self.defaultPopup.remove();
+        //}
+        //_.extend(options, {
+        //    callbacks: {
+        //        before_close: function (notice) {
+        //            if (self.defaultPopup == notice) {
+        //                self.defaultPopup = null;
+        //            }
+        //        }
+         //   }
+       // });
 
-        self.octolapsePopup = new PNotify(options);
+        octolapsePopup = new PNotify(options);
     };
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
@@ -96,21 +95,16 @@ $(function () {
             var j = parseFloat($(param).val());
             return (i >= j) ? true : false;
         });
-
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {
-            
-            
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
             return jQuery.validator.methods.url.call(this, testUrl, element);
         });
-
     $.validator.addMethod('octolapseCameraRequestTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}","1");
             return jQuery.validator.methods.url.call(this, testUrl, element);
         });
-    
     
     jQuery.extend(jQuery.validator.messages, {
         name: "Please enter a name.",
@@ -140,36 +134,45 @@ $(function () {
         // Create other observables
         Octolapse.Settings.is_octolapse_enabled = ko.observable();
         Octolapse.Settings.platform = ko.observable();
-
-        /*self.downloadSetting = function () {
-            $.ajax({
-                url: "/plugin/octolapse/downloadSettings",
-                type: "POST",
-                dataType: "plain/text",
-                success: function (newSettings) {
-                    
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to downlaod the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
-                }
-            });
-        }*/
+        // Receive messages from the server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            console.log('Plugin Message Received: ' + plugin);
             if (plugin != "octolapse") {
-                console.log('Ignoring '+plugin);
                 return;
             }
-            console.log("Data type: " + data.type);
-            if (data.type == "popup") {
-                console.log(data.msg);
-                Octolapse.displayPopup(data.msg);
-                
+            switch (data.type) {
+
+                case "popup":
+                    console.log('octolapse - popup');
+                    Octolapse.displayPopup(data.msg);
+                    break;
+                case "render-start":
+                    console.log('octolapse - render-start');
+                    Octolapse.displayPopup(data.msg);
+                    break;
+                case "render-failed":
+                    console.log('octolapse - render-failed');
+                    Octolapse.displayPopup(data.msg);
+                    break;
+                case "synchronize-failed":
+                    console.log('octolapse - synchronize-failed');
+                    Octolapse.displayPopup(data.msg);
+                    break;
+                case "render-end":
+                    console.log('octolapse - render-end');
+
+                    // Make sure we aren't synchronized, else there's no reason to display a popup
+                    if (!data.is_synchronized && data.success)
+                        Octolapse.displayPopup(data.msg);
+                    break;
+                default:
+                    console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
+                    break;
             }
-        }
+        };
+        // Update octolapse settings from the server (probably from a 'restore default settings' click)
         self.updateSettings = function (settings) {
             Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
-            self.toggleOctolapseEnabled(Octolapse.Settings.is_octolapse_enabled)
+            
             // Printers
             Octolapse.Printers.profiles([])
             Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid)
@@ -218,6 +221,14 @@ $(function () {
             */
             Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
             Octolapse.Settings.platform(settings.platform);
+
+            
+            // We will bind this tab manually to keep our pattern going.
+            //Octolapse.Tab.Bind();
+
+            /**
+             * Profiles - These are bound by octolapse.profiles.js
+             */
             /*
                 Create our printers view model
             */
@@ -370,14 +381,10 @@ $(function () {
         /*
             Show and hide the settings tabs based on the enabled parameter
         */
-        self.toggleOctolapseEnabled = function(enabled) {
-            isEnabled = enabled();
-            if (isEnabled == null) {
-                return;
-            }
+        self.toggleOctolapseEnabled = function() {
             $settings = $('#octolapse_settings');
             $settings.hide();
-            data = JSON.stringify({ "enabled": isEnabled });
+            data = JSON.stringify({ "enabled": self.is_octolapse_enabled() });
             $.ajax({
                 url: "/plugin/octolapse/setEnabled",
                 type: "POST",
@@ -393,8 +400,11 @@ $(function () {
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     alert("Unable to enable/disable octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    self.is_octolapse_enabled( !self.is_octolapse_enabled())
                 }
             });
+            // Continue processing events
+            //return true;
 
         }
         /*

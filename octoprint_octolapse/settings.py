@@ -1133,7 +1133,7 @@ class OctolapseSettings(object):
 		self.LogFilePath = logFilePath
 		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.version = "0.0.1.0"
-		
+		self.show_navbar_icon = True
 		self.is_octolapse_enabled = True
 		
 
@@ -1204,6 +1204,7 @@ class OctolapseSettings(object):
 			
 
 		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
+		if (HasKey(changes,"show_navbar_icon")) : self.show_navbar_icon = bool(GetValue(changes,"show_navbar_icon",self.show_navbar_icon))
 		if (HasKey(changes,"current_printer_profile_guid")) : self.current_printer_profile_guid = str(GetValue(changes,"current_printer_profile_guid",self.current_printer_profile_guid))
 		if (HasKey(changes,"current_stabilization_profile_guid"))  : self.current_stabilization_profile_guid = str(GetValue(changes,"current_stabilization_profile_guid",self.current_stabilization_profile_guid))
 		if (HasKey(changes,"current_snapshot_profile_guid")) : self.current_snapshot_profile_guid = str(GetValue(changes,"current_snapshot_profile_guid",self.current_snapshot_profile_guid))
@@ -1272,6 +1273,7 @@ class OctolapseSettings(object):
 		settingsDict = {
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
+			"show_navbar_icon" : utility.getbool(self.show_navbar_icon,defaults.show_navbar_icon),
 			"platform" : sys.platform,
 			'stabilization_type_options' :
 			[

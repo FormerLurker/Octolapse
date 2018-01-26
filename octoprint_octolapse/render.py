@@ -29,6 +29,7 @@ class Render(object):
 		self.Snapshot = snapshot
 		self.Rendering = rendering
 		self.ThreadCount = threadCount
+		self.TimeAdded = timeAdded
 		self.OnRenderStart = onRenderStart
 		self.OnRenderFail = onRenderFail
 		self.OnRenderSuccess = onRenderSuccess
@@ -36,7 +37,7 @@ class Render(object):
 		self.OnAfterSyncFail = onAfterSyncFail
 		self.OnAfterSycnSuccess = onAfterSycnSuccess
 		self.OnComplete = onComplete
-		self.TimeAdded = timeAdded
+		
 		self.TimelapseRenderJobs = []
 
 	def Process(self, printName, printStartTime, printEndTime):
@@ -54,21 +55,26 @@ class Render(object):
 		foundFile = True
 		imageIndex = 0
 
-		fps = self.Rendering.fps
-		if(self.Rendering.fps_calculation_type == 'duration'):
-			imageIndex = 1
-			while(foundFile):
-				foundFile = False
-				imagePath = "{0}{1}{2}".format(snapshotDirectory,os.sep, snapshotFileNameTemplate) % imageIndex
+		# Count images
+		imageIndex = 1
+		while(foundFile):
+			foundFile = False
+			imagePath = "{0}{1}{2}".format(snapshotDirectory,os.sep, snapshotFileNameTemplate) % imageIndex
 				
-				if(os.path.isfile(imagePath)):
-					foundFile = True
-					imageIndex += 1
-					self.Settings.CurrentDebugProfile().LogRenderStart("Found image:{0}".format(imagePath))
-				else:
-					self.Settings.CurrentDebugProfile().LogRenderStart("Could not find image:{0}, search complete.".format(imagePath))
-			imageCount = imageIndex - 1
-			self.Settings.CurrentDebugProfile().LogRenderStart("Found {0} images.".format(imageCount))
+			if(os.path.isfile(imagePath)):
+				foundFile = True
+				imageIndex += 1
+				self.Settings.CurrentDebugProfile().LogRenderStart("Found image:{0}".format(imagePath))
+			else:
+				self.Settings.CurrentDebugProfile().LogRenderStart("Could not find image:{0}, search complete.".format(imagePath))
+		imageCount = imageIndex - 1
+		self.Settings.CurrentDebugProfile().LogRenderStart("Found {0} images.".format(imageCount))
+
+
+		fps = self.Rendering.fps
+
+		if(self.Rendering.fps_calculation_type == 'duration'):
+			
 			fps = float(imageCount)/float(self.Rendering.run_length_seconds)
 			if(fps > self.Rendering.max_fps):
 				fps = self.Rendering.max_fps
@@ -94,6 +100,7 @@ class Render(object):
 						   , self.Rendering.watermark
 						   , fps
 						   , self.ThreadCount
+						   , imageCount = imageCount
 						   , timeAdded = self.TimeAdded
 						   , on_render_start= self.OnRenderStart
 						   , on_render_fail = self.OnRenderFail
@@ -118,7 +125,7 @@ class TimelapseRenderJob(object):
 	render_job_lock = threading.RLock()
 #, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 	def __init__(self, debug, printFileName, capture_dir, capture_template, output_dir, output_name, outputFormat, octoprintTimelapseFolder,  ffmpegPath, bitrate, flipH, flipV, rotate90, watermark,fps
-			  ,threads ,timeAdded = 0, on_render_start=None, on_render_fail=None, on_render_success=None, on_render_complete=None, on_after_sync_success = None, on_after_sync_fail = None, on_complete = None
+			  ,threads ,imageCount = 0, timeAdded = 0, on_render_start=None, on_render_fail=None, on_render_success=None, on_render_complete=None, on_after_sync_success = None, on_after_sync_fail = None, on_complete = None
 			  , cleanAfterSuccess = False
 			  , cleanAfterFail = False
 			  , syncWithTimelapse = False):
@@ -131,7 +138,7 @@ class TimelapseRenderJob(object):
 		self._outputFormat = outputFormat
 		self._octoprintTimelapseFolder = octoprintTimelapseFolder
 		self._fps = fps
-
+		self._imageCount = imageCount
 		self._timeAdded = timeAdded
 		self._threads = threads
 		self._ffmpeg = ffmpegPath
@@ -160,21 +167,34 @@ class TimelapseRenderJob(object):
 		self._thread.daemon = True
 		self._thread.start()
 
+	def _renderFail(self, output, baseOutputFileName, message):
+		self._notify_callback("render_fail", output, baseOutputFileName,0,message)
+		self._debug.LogRenderFail(message);
+
 	def _render(self):
 		"""Rendering runnable."""
-		if self._ffmpeg is None:
-			self._debug.LogRenderFail("Cannot create movie, path to ffmpeg is unset")
-			return
-		if self._bitrate is None:
-			self._debug.LogRenderFail("Cannot create movie, desired bitrate is unset")
-			return
-
+		
+		success = False
+		# create variables we will need for callbacks and processing
 		input = os.path.join(self._capture_dir,
 		                     self._capture_file_template)
 		output = os.path.join(self._output_dir,
 		                      self._output_file_name)
 
 		baseOutputFileName = utility.GetFilenameFromFullPath(output)
+
+		synchronize = self.syncWithTimelapse and self._outputFormat == "mp4"
+		# notify any listeners that we are rendering.
+
+		self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
+
+		if self._ffmpeg is None:
+			self._renderFail(output, baseOutputFileName, "Cannot create movie, path to ffmpeg is unset")
+			return
+		if self._bitrate is None:
+			self._renderFail(output, baseOutputFileName, "Cannot create movie, desired bitrate is unset")
+			return
+
 		# add the file extension
 		output = output + "." + self._outputFormat
 		try:
@@ -185,15 +205,14 @@ class TimelapseRenderJob(object):
 		except:
 			type = sys.exc_info()[0]
 			value = sys.exc_info()[1]
-			self._debug.LogRenderFail("Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
+			self._renderFail(output, baseOutputFileName, "Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
 			return	
 
 		for i in range(4):
 			if os.path.exists(input % i):
 				break
 		else:
-			self._debug.LogRenderFail("Cannot create a movie, no frames captured")
-			self._notify_callback("fail", output, baseOutputFileName,0,'no_frames')
+			self._renderFail(output, baseOutputFileName, 'Cannot create a movie, no frames captured.')
 			return
 
 		watermark = None
@@ -207,11 +226,11 @@ class TimelapseRenderJob(object):
 		# prepare ffmpeg command
 		command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._bitrate, self._threads, input, output, self._outputFormat,
 		                                                 hflip=self._flip_h, vflip=self._flip_v, rotate=self._rotate_90, watermark=watermark )
-		success = False
+		
 		with self.render_job_lock:
-			synchronize = self.syncWithTimelapse and self._outputFormat == "mp4"
+			
 			try:
-				self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._timeAdded)
+				
 				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
 					
 				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
@@ -222,12 +241,9 @@ class TimelapseRenderJob(object):
 					returncode = p.returncode
 					stdout_text = p.stdout.text
 					stderr_text = p.stderr.text
-					self._debug.LogRenderFail("Could not render movie, got return code %r: %s" % (returncode, stderr_text))
-					self._notify_callback("render_fail", output, baseOutputFileName, returncode,stderr_text)
+					self._renderFail(output, baseOutputFileName, "Could not render movie, got return code %r: %s" % (returncode, stderr_text))
 			except:
-				self._debug.LogRenderFail("Could not render movie due to unknown error")
-				# clean after fail
-				self._notify_callback("render_fail", output, baseOutputFileName,0,'unknown')
+				self._renderFail(output, baseOutputFileName, "Could not render movie due to unknown error")
 			finally:
 				self._notify_callback("render_complete", output, baseOutputFileName,0,'unknown')
 			cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
@@ -250,7 +266,7 @@ class TimelapseRenderJob(object):
 					self._debug.LogRenderSync(message)
 					self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
 
-			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize)
+			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize, success)
 
 	def _CleanSnapshots(self):
 		

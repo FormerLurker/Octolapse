@@ -1,16 +1,7 @@
-<script type="text/javascript">
-  //var Octolapse = {};
-  // Add some default values to our Octolapse namespace
-  //Octolapse.apiKey = "";
-  //Octolapse.Settings = null;
-  //Octolapse.Printers = null;
-  //Octolapse.errorClass = "error";
-</script>
-<div >
+<div>
   <div class="text-center">
     <h3>Octolapse Settings</h3>
   </div>
-
   <div id="octolapse_plugin_settings"  >
     <input type="hidden" id="platform" data-bind="value:platform"/>
     <div class="row">
@@ -19,7 +10,7 @@
         <div class="control-group">
           <div class="controls">
             <label class="checkbox">
-              <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled,click:$root.toggleOctolapseEnabled(is_octolapse_enabled) " />Enable Octolapse
+              <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled,click:$root.toggleOctolapseEnabled(); " />Enable Octolapse
             </label>
           </div>
         </div>
