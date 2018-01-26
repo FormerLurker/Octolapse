@@ -479,7 +479,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		timeAddedMessage = "Octolapse has started rending your timelapse."
 		willSyncMessage = ""
 		if (payload["WillSync"]):
+			willSyncMessage = "  This timelapse will synchronized with the default timelapse module, and will be available in the 'Timelapse' tab after rendering is complete.    Please see the Octolapse advanced rendering settings for details."
+		else:
 			willSyncMessage = "  This timelapse will NOT be synchronized with the default timelapse module.  Please see the Octolapse advanced rendering settings for details."
+
 		message = "{0}{1}".format(timeAddedMessage,willSyncMessage)
 		# send a message to the client
 		self.SendRenderStartMessage(message, payload["SnapshotCount"], payload["SnapshotTimeSeconds"])

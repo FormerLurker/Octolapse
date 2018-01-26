@@ -161,8 +161,18 @@ $(function () {
                     console.log('octolapse - render-end');
 
                     // Make sure we aren't synchronized, else there's no reason to display a popup
-                    if (!data.is_synchronized && data.success)
-                        Octolapse.displayPopup(data.msg);
+                    if (!data.is_synchronized && data.success) {
+                        var options = {
+                            title: 'Octolapse Rendering Complete',
+                            text: data.msg,
+                            type: 'success',
+                            hide: false,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                            Octolapse.displayPopup(options);
+                        }
                     break;
                 default:
                     console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
