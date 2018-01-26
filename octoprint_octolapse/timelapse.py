@@ -507,9 +507,8 @@ class Timelapse(object):
 		payload = dict(gcode="unknown",
 				movie=finalFilename,
 				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse.  Synchronization between octolapse and octoprint failed.  Your timelapse is likely within the octolapse data folder.  A file browser will be added in a future version (hopefully).",
-				returncode=0,
-				reason="See the octolapse log for details.")
+				reason="Error copying the rendering to the Octoprint timelapse folder.  If logging is enabled you can search for 'Synchronization Error' to find the error.  Your timelapse is likely within the octolapse data folder.")
+
 		if(self.OnRenderingSynchronizeFailCallback is not None):
 			self.OnRenderingSynchronizeFailCallback(payload)
 	def OnSynchronizeRenderingComplete(self, *args, **kwargs):
@@ -534,8 +533,7 @@ class Timelapse(object):
 		moviePrefix = "from Octolapse"
 		if(not synchronize):
 			moviePrefix = "from Octolapse.  Your timelapse was NOT synchronized (see advanced rendering settings for details), but can be found in octolapse's data directory.  A file browser will be added in a future release (hopefully)"
-		payload = dict(gcode="unknown",
-				movie=finalFileName,
+		payload = dict(movie=finalFileName,
 				movie_basename=baseFileName ,
 				movie_prefix=moviePrefix,
 				success=success)

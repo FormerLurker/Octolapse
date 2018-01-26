@@ -492,13 +492,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		"""Called after a timelapse rendering attempt has failed.  Calls any callbacks onMovieFailed callback set in the constructor."""
 		payload = args[0]
 		# Octoprint Event Manager Code
-		self.SendPluginMessage("render-failed", "Octolapse has failed to render a timelapse.")
-
+		self.SendPluginMessage("render-failed", "Octolapse has failed to render a timelapse.  Reason:{0}".format(payload["reason"]))
 	def OnRenderSynchronizeFail(self, *args, **kwargs):
 		"""Called when a synchronization attempt with the default app fails."""
 		payload = args[0]
 		# Octoprint Event Manager Code
-		self.SendPluginMessage("synchronize-failed", "Octolapse has failed to syncronize the default timelapse plugin.")
+		self.SendPluginMessage("synchronize-failed", "Octolapse has failed to syncronize the default timelapse plugin.  Reason:{0}".format(payload["reason"]))
 
 	def OnRenderSynchronizeComplete(self, *args, **kwargs):
 		"""Called when a synchronization attempt goes well!  Notifies Octoprint of the new timelapse!"""

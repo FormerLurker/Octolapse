@@ -48,6 +48,7 @@ $(function () {
                 case "timelapse-complete":
                     console.log('Octolapse.state.js - timelapse-complete');
                     self.is_timelapse_active(false);
+                    self.is_taking_snapshot(false);
                     break;
                 case "snapshot-start":
                     console.log('Octolapse.state.js - snapshot-start');
@@ -68,6 +69,7 @@ $(function () {
                     self.snapshot_count(data.snapshot_count)
                     self.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
                     self.is_rendering(true);
+                    
                     break;
             
                 case "render-complete":
@@ -80,13 +82,31 @@ $(function () {
                 case "timelapse-stopping":
                     console.log('Octolapse.state.js - timelapse-stoping');
                     self.is_timelapse_active(false);
-                    Octolapse.displayPopup(data.msg);
+                    var options = {
+                        title: 'Octolapse Timelapse Stopping',
+                        text: data.msg,
+                        type: 'notice',
+                        hide: true,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopped":
                     console.log('Octolapse.state.js - timelapse-stopped');
                     self.is_timelapse_active(false);
                     self.is_taking_snapshot(false);
-                    Octolapse.displayPopup(data.msg);
+                    var options = {
+                        title: 'Octolapse Timelapse Stopped',
+                        text: data.msg,
+                        type: 'notice',
+                        hide: true,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
                 default:
                     console.log('Octolapse.state.js - passing on message from server.  DataType:' + data.type);

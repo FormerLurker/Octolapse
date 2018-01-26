@@ -143,19 +143,55 @@ $(function () {
 
                 case "popup":
                     console.log('octolapse - popup');
+                    var options = {
+                        title: 'Octolapse Notice',
+                        text: data.msg,
+                        type: 'notice',
+                        hide: true,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
                     Octolapse.displayPopup(data.msg);
                     break;
                 case "render-start":
                     console.log('octolapse - render-start');
-                    Octolapse.displayPopup(data.msg);
+                    var options = {
+                        title: 'Octolapse Rendering Started',
+                        text: data.msg,
+                        type: 'notice',
+                        hide: true,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
                 case "render-failed":
                     console.log('octolapse - render-failed');
-                    Octolapse.displayPopup(data.msg);
+                    var options = {
+                        title: 'Octolapse Rendering Failed',
+                        text: data.msg,
+                        type: 'error',
+                        hide: false,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
                 case "synchronize-failed":
                     console.log('octolapse - synchronize-failed');
-                    Octolapse.displayPopup(data.msg);
+                    var options = {
+                        title: 'Octolapse Synchronization Failed',
+                        text: data.msg,
+                        type: 'error',
+                        hide: false,
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
                 case "render-end":
                     console.log('octolapse - render-end');
