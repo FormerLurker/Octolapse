@@ -519,7 +519,7 @@ class Timelapse(object):
 		payload = dict(gcode="unknown",
 				movie=finalFilename,
 				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse.  Synchronization between octolapse and octoprint failed.  Your timelapse is likely within the octolapse data folder.  A file browser will be added in a future version (hopefully).",
+				movie_prefix="from Octolapse.  Your timelapse has been synchronized and is now available within the default timelapse plugin tab.",
 				returncode=0,
 				reason="See the octolapse log for details.")
 		if(self.OnRenderingSynchronizeCompleteCallback is not None):

@@ -85,7 +85,7 @@ $(function () {
                 case "timelapse-stopped":
                     console.log('Octolapse.state.js - timelapse-stopped');
                     self.is_timelapse_active(false);
-                    self.is_taking_snapshot(flase);
+                    self.is_taking_snapshot(false);
                     Octolapse.displayPopup(data.msg);
                     break;
                 default:
