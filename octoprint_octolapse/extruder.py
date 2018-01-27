@@ -76,10 +76,8 @@ class Extruder(object):
 		if(numStates>0):
 			state = ExtruderState(state = self.StateHistory[0])
 			previousState = ExtruderState(state = self.StateHistory[0])
-
-		if(state is None):
+		else:
 			state = ExtruderState()
-		if(previousState is None):
 			previousState = ExtruderState()
 
 		state.E =e
@@ -182,14 +180,10 @@ class Extruder(object):
 
 	def IsTriggered(self, options):
 
-		if(options.UsePreviousState):
-			if(len(self.StateHistory)<2):
-				return False
-			state = self.StateHistory[1]
-		else:
-			if(len(self.StateHistory)<1):
-				return False
-			state = self.StateHistory[0]
+		
+		if(len(self.StateHistory)<1):
+			return False
+		state = self.StateHistory[0]
 		
 		"""Matches the supplied extruder trigger options to the current extruder state.  Returns true if triggering, false if not."""
 		extrudingStartTriggered		= self._ExtruderStateTriggered(options.OnExtrudingStart ,state.IsExtrudingStart)
@@ -253,7 +247,7 @@ class Extruder(object):
 		return isTriggered
 
 class ExtruderTriggers(object):
-	def __init__(self, OnExtrudingStart, onExtruding, OnPrimed, OnRetractingStart, OnRetracting, OnPartiallyRetracted, OnRetracted, OnDetractingStart, OnDetracting, OnDetracted, usePreviousState=True):
+	def __init__(self, OnExtrudingStart, onExtruding, OnPrimed, OnRetractingStart, OnRetracting, OnPartiallyRetracted, OnRetracted, OnDetractingStart, OnDetracting, OnDetracted):
 		"""To trigger on an extruder state, set to True.  To prevent triggering on an extruder state, set to False.  To ignore the extruder state, set to None"""
 		self.OnExtrudingStart = OnExtrudingStart
 		self.OnExtruding = onExtruding
@@ -265,8 +259,7 @@ class ExtruderTriggers(object):
 		self.OnDetractingStart = OnDetractingStart
 		self.OnDetracting = OnDetracting
 		self.OnDetracted = OnDetracted
-		#Options
-		self.UsePreviousState = usePreviousState
+
 	def AreAllTriggersIgnored(self):
 		if(self.OnExtrudingStart is None
 		and self.OnExtruding is None

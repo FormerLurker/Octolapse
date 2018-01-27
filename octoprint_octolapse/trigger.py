@@ -259,7 +259,7 @@ class TimerTrigger(object):
 			# see if the exturder is in the right position
 			if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
 				if(self.RequireZHop and not position.IsZHop(1)):
-					self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
+					self.Settings.CurrentDebugProfile().LogTriggerWaitState("TimerTrigger - Waiting on ZHop.")
 					
 				else:
 					# triggered!  Update the counter

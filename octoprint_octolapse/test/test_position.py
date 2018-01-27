@@ -769,76 +769,51 @@ class Test_Position(unittest.TestCase):
 		# Home axis, check again
 		position.Update("G28")
 		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
-		self.assertTrue(not position.IsZHopStart)
 		# Position reports as NotHomed (misnomer, need to replace), needs to get coordinates
 		position.Update("G1 x0 y0 z0")
 
 		# Move up without extrude, this is not a zhop since we haven't extruded anything!
 		position.Update("g0 z0.5")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
 		# move back down to 0 and extrude
 		position.Update("g0 z0 e1")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
 		# Move up without extrude, this should trigger zhop start
 		position.Update("g0 z0.5")
-		self.assertTrue(position.IsZHopStart)
-		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
+		self.assertTrue(position.IsZHop)
 		# move below zhop threshold
 		position.Update("g0 z0.3")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-		self.assertTrue(position.IsZHopCompleting)
-
+		
 		# move right up to zhop without going over, we are within the rounding error
 		position.Update("g0 z0.4999")
-		self.assertTrue( position.IsZHopStart)
-		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
-
+		self.assertTrue(position.IsZHop)
+		
 		# Extrude on z5
 		position.Update("g0 z0.5 e1")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-		self.assertTrue(position.IsZHopCompleting)
-
+		
 		# partial z lift, , we are within the rounding error
 		position.Update("g0 z0.9999")
-		self.assertTrue(position.IsZHopStart)
-		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
+		self.assertTrue(position.IsZHop)
 		# zhop to 1
 		position.Update("g0 z1")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
 		# test with extrusion start at 1.5
 		position.Update("g0 z1.5 e1")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-		self.assertTrue(position.IsZHopCompleting)
 		# test with extrusion at 2
 		position.Update("g0 z2 e1")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
-
+		
 		#zhop
 		position.Update("g0 z2.5 e0")
-		self.assertTrue(position.IsZHopStart)
-		self.assertTrue(not position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
+		self.assertTrue(position.IsZHop)
+		
 		# do not move extruder
 		position.Update("no-command")
-		self.assertTrue(not position.IsZHopStart)
 		self.assertTrue(position.IsZHop)
-		self.assertTrue(not position.IsZHopCompleting)
-
+		
 
 
 	# todo:  IsAtCurrent/PreviousPosition tests

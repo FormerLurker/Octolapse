@@ -52,9 +52,7 @@ class Pos(object):
 		# State Flags
 
 		self.IsLayerChange = False if pos is None else pos.IsLayerChange
-		self.IsZHopStart = False if pos is None else pos.IsZHopStart
 		self.IsZHop = False if pos is None else pos.IsZHop
-		self.IsZHopCompleting = False if pos is None else pos.IsZHopCompleting
 		
 
 		self.HasPositionError = False if pos is None else pos.HasPositionError
@@ -266,14 +264,9 @@ class Position(object):
 		# disect the gcode and use it to update our position
 
 		
-		if(pos.IsZHopStart):
-			pos.IsZHop = True
-			
-		elif(pos.IsZHopCompleting):
-			pos.IsZHop = False
-			pos.IsZHopCompleting = False
+		
 
-		pos.IsZHopStart = False
+		pos.IsZHop = False
 
 		# apply the command to the position tracker
 		if(command is not None):
@@ -443,19 +436,11 @@ class Position(object):
 						isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (not self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart())
 
 						if(isLifted):
-							if(not pos.IsZHop):
-								pos.IsZHopStart = True
-						else:
-							if(pos.IsZHop):
-								pos.IsZHopCompleting = True
+							pos.IsZHop = True
 
-					if(pos.IsZHopStart):
-						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - ZhopStart:{0}".format(self.Printer.z_hop))
 					if(pos.IsZHop):
 						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
-					if(pos.IsZHopCompleting):
-						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - IsZHopCompleting:{0}".format(self.Printer.z_hop))
-
+					
 		# Add the current position, remove positions if we have more than 5 from the end
 		self.Positions.insert(0,pos)
 		while (len(self.Positions)> 5):
