@@ -126,6 +126,7 @@ class Timelapse(object):
 	def IsTimelapseActive(self):
 		if(
 			self.State == TimelapseState.Idle
+			or self.State == TimelapseState.WaitingToRender
 			or len(self.Triggers)<1
 		):
 			return False

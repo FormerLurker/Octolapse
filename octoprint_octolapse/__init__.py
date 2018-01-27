@@ -317,6 +317,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		secondsAddedByOctolapse = 0
 		isTakingSnapshot = False
 		isRendering = False
+		timelapseState = TimelapseState.Idle
 
 		if(self.Timelapse is not None and self.Timelapse.State != TimelapseState.Idle):
 			snapshotCount = self.Timelapse.SnapshotCount
@@ -324,6 +325,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			isTimelapseActive = True
 			isRendering = self.Timelapse.IsRendering
 			isTakingSnapshot = self.Timelapse.State == TimelapseState.TakingSnapshot
+			timelapseState = self.Timelapse.State
 		return {
 			'snapshot_count': snapshotCount,
 			'seconds_added_by_octolapse' : secondsAddedByOctolapse,
@@ -331,7 +333,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'is_taking_snapshot' : isTakingSnapshot,
 			'is_rendering' : isRendering,
 			'is_octolapse_enabled' : self.Settings.is_octolapse_enabled if self.Settings is not None else False,
-			'show_navbar_icon' : self.Settings.show_navbar_icon if self.Settings is not None else False
+			'show_navbar_icon' : self.Settings.show_navbar_icon if self.Settings is not None else False,
+			'state' : timelapseState
 		}
 
 	def get_template_configs(self):
