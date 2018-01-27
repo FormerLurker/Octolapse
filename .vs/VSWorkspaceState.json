@@ -7,6 +7,6 @@
     "\\octoprint_octolapse\\static",
     "\\octoprint_octolapse\\static\\js"
   ],
-  "SelectedNode": "\\.editorconfig",
+  "SelectedNode": "\\octoprint_octolapse\\static\\js\\octolapse.status.js",
   "PreviewInSolutionExplorer": false
 }

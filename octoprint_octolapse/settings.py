@@ -1000,7 +1000,7 @@ class DebugProfile(object):
 	def LogInfo(self,message):
 		if(self.enabled):
 			try:
-				DebugProfile.Logger.info(message)
+				self.Logger.info(message)
 				self.LogToConsole('info', message)
 			except:
 				self.LogToConsole('error', "Error logging info: message:{0}".format(message),force=True)
@@ -1008,7 +1008,7 @@ class DebugProfile(object):
 	def LogWarning(self,message):
 		if(self.enabled):
 			try:
-				DebugProfile.Logger.warning(message)
+				self.Logger.warning(message)
 				self.LogToConsole('warn', message)
 			except:
 				self.LogToConsole('error', "Error logging warining: message:{0}".format(message),force=True)
@@ -1016,7 +1016,7 @@ class DebugProfile(object):
 	def LogError(self,message):
 		
 		try:
-			DebugProfile.Logger.error(message)
+			self.Logger.error(message)
 			self.LogToConsole('error', message)
 		except:
 			self.LogToConsole('error', "Error logging exception: message:{0}".format(message),force=True)
