@@ -303,7 +303,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		try:
 			octoprint.plugin.SettingsPlugin.on_settings_load(self)
 			settingsDict = self.Settings.ToDict()
-		except exceptions,e:
+		except Exception, e:
 			message = "Un unexptected exception occurred while calling on_settings_load.  Details:{0}".format(e)
 			if(self.Settings is not None):
 				self.Settings.CurrentDebugProfile().LogError(message)
@@ -330,8 +330,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'is_timelapse_active' : isTimelapseActive,
 			'is_taking_snapshot' : isTakingSnapshot,
 			'is_rendering' : isRendering,
-			'is_octolapse_enabled' : self.Settings.is_octolapse_enabled,
-			'show_navbar_icon' : self.Settings.show_navbar_icon
+			'is_octolapse_enabled' : self.Settings.is_octolapse_enabled if self.Settings is not None else False,
+			'show_navbar_icon' : self.Settings.show_navbar_icon if self.Settings is not None else False
 		}
 
 	def get_template_configs(self):

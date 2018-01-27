@@ -133,7 +133,7 @@ $(function () {
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
         self.loginState = parameters[1];
-        self.isOctoprintAdmin = false;
+        
 
         
 
@@ -146,7 +146,7 @@ $(function () {
             switch (data.type) {
                 case "settings-changed":
                     
-                    if (self.isOctoprintAdmin && Octolapse.client_id != data.client_id) {
+                    if (Octolapse.is_admin() && Octolapse.client_id != data.client_id) {
                         console.log('octolapse - settings-changed, reloading');
                         self.loadSettings();
                         var options = {
@@ -179,8 +179,6 @@ $(function () {
             */
             self.settings = self.global_settings.settings.plugins.octolapse;
             settings = ko.toJS(self.settings); // just get the values
-            self.isOctoprintAdmin = self.loginState.isAdmin();
-
             
             /**
              * Profiles - These are bound by octolapse.profiles.js

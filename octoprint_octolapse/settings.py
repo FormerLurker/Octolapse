@@ -537,7 +537,7 @@ class Rendering(object):
 		self.output_format = 'mp4'
 		
 		self.sync_with_timelapse = True
-		self.bitrate = "5000K"
+		self.bitrate = "8000K"
 		self.flip_h = False
 		self.flip_v = False
 		self.rotate_90 = False
@@ -584,7 +584,7 @@ class Rendering(object):
 		if("sync_with_timelapse" in changes.keys()):
 			self.sync_with_timelapse = utility.getbool(changes["sync_with_timelapse"],self.sync_with_timelapse)
 		if("bitrate" in changes.keys()):
-			self.bitrate = utility.getstring(changes["bitrate"],self.bitrate)
+			self.bitrate = utility.getbitrate(changes["bitrate"],self.bitrate)
 		if("flip_h" in changes.keys()):
 			self.flip_h = utility.getbool(changes["flip_h"],self.flip_h)
 		if("flip_v" in changes.keys()):

@@ -76,12 +76,18 @@ $(function () {
             }
             // Todo, handle this with
             switch (data.type) {
+                case "settings-changed":
+                    if (Octolapse.client_id != data.client_id) {
+                        console.log('octolapse.status.js - settings-changed - loading status');
+                        self.loadStatus();
+                    }
+                    break;
                 case "status-changed":
                     console.log('octolapse.status.js - status-changed');
                     self.update(data);
                     break;
                 case "popup":
-                    console.log('.status.js - popup');
+                    console.log('octolapse.status.js - popup');
                     var options = {
                         title: 'Octolapse Notice',
                         text: data.msg,
@@ -94,7 +100,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-start":
-                    console.log('Octolapse.state.js - timelapse-start');
+                    console.log('octolapse.status.js - timelapse-start');
                     self.is_timelapse_active(true);
                     self.is_taking_snapshot(false);
                     self.is_rendering(false);
@@ -104,18 +110,18 @@ $(function () {
                     self.snapshot_error_message("");
                     break;
                 case "timelapse-complete":
-                    console.log('Octolapse.state.js - timelapse-complete');
+                    console.log('octolapse.status.js - timelapse-complete');
                     self.is_timelapse_active(false);
                     self.is_taking_snapshot(false);
                     break;
                 case "snapshot-start":
-                    console.log('Octolapse.state.js - snapshot-start');
+                    console.log('octolapse.status.js - snapshot-start');
                     self.is_taking_snapshot(true);
                     self.snapshot_error(false);
                     self.snapshot_error_message("");
                     break;
                 case "snapshot-complete":
-                    console.log('Octolapse.state.js - snapshot-complete');
+                    console.log('octolapse.status.js - snapshot-complete');
                     self.snapshot_count(data.snapshot_count)
                     self.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
                     self.snapshot_error(!data.success);
@@ -123,7 +129,7 @@ $(function () {
                     self.is_taking_snapshot(false);
                     break;
                 case "render-start":
-                    console.log('Octolapse.state.js - render-start');
+                    console.log('octolapse.status.js - render-start');
                     self.snapshot_count(data.snapshot_count)
                     self.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
                     self.is_rendering(true);
@@ -139,7 +145,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "render-failed":
-                    console.log('octolapse - render-failed');
+                    console.log('octolapse.status.js - render-failed');
                     var options = {
                         title: 'Octolapse Rendering Failed',
                         text: data.msg,
@@ -152,10 +158,10 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "render-complete":
-                    console.log('Octolapse.state.js - render-complete');
+                    console.log('octolapse.status.js - render-complete');
                     break;
                 case "render-end":
-                    console.log('Octolapse.state.js - render-end');
+                    console.log('octolapse.status.js - render-end');
                     self.is_rendering(false);
                     // Make sure we aren't synchronized, else there's no reason to display a popup
                     if (!data.is_synchronized && data.success) {
@@ -185,7 +191,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopping":
-                    console.log('Octolapse.state.js - timelapse-stoping');
+                    console.log('octolapse.status.js - timelapse-stoping');
                     self.is_timelapse_active(false);
                     var options = {
                         title: 'Octolapse Timelapse Stopping',
@@ -199,7 +205,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopped":
-                    console.log('Octolapse.state.js - timelapse-stopped');
+                    console.log('octolapse.status.js - timelapse-stopped');
                     self.is_timelapse_active(false);
                     self.is_taking_snapshot(false);
                     var options = {
@@ -214,7 +220,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 default:
-                    console.log('Octolapse.state.js - passing on message from server.  DataType:' + data.type);
+                    console.log('octolapse.status.js - passing on message from server.  DataType:' + data.type);
                     break;
             }
         };

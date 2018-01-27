@@ -3,6 +3,7 @@ import ntpath
 import math
 import time
 import os
+import re
 import sys
 import errno
 import tempfile
@@ -36,6 +37,20 @@ def getstring(value,default):
 	if value is not None and len(value) > 0:
 		return value
 	return default
+
+def getbitrate(value,default):
+	if(value is None):
+		return default
+	# add a global for the regex so we can use a pre-complied version
+	if ('octoprint_ffmpeg_bitrate_regex' not in globals() or octoprint_ffmpeg_bitrate_regex is None) :
+		octoprint_ffmpeg_bitrate_regex = re.compile("^\d+[KkMm]$",re.IGNORECASE)
+	# get any matches
+	matches = octoprint_ffmpeg_bitrate_regex.match(value)
+	if(matches is None):
+		return default
+	return value
+
+	
 
 def getobject(value,default,key=None):
 	if value is None:

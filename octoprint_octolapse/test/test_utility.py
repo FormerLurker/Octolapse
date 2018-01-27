@@ -19,6 +19,17 @@ class Test_Utility(unittest.TestCase):
 			}
 		}
 
+	def test_setbitrate(self):
+		"""test the setbitrate function"""
+		self.assertTrue(utility.getbitrate("800k",None) is not None)
+		self.assertTrue(utility.getbitrate("800K",None) is not None)
+		self.assertTrue(utility.getbitrate("8M",None) is not None)
+		self.assertTrue(utility.getbitrate("8m",None) is not None)
+		self.assertTrue(utility.getbitrate(" 800k",None) is None)
+		self.assertTrue(utility.getbitrate("800k ",None) is None)
+		self.assertTrue(utility.getbitrate(" 800k ",None) is None)
+		self.assertTrue(utility.getbitrate("800",None) is None)
+		self.assertTrue(utility.getbitrate("",None) is None)
 	def test_IsInBounds(self):
 		"""Test the IsInBounds function to make sure the program will not attempt to operate after being told to move out of bounds."""
 
