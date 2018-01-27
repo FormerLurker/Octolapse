@@ -1350,6 +1350,11 @@ class OctolapseSettings(object):
 
 		return settingsDict
 
+	def GetMainSettingsDict(self):
+		return {
+			'is_octolapse_enabled':self.is_octolapse_enabled
+			,'show_navbar_icon':self.show_navbar_icon
+			}
 	#Add/Update/Remove/set current profile
 	def addUpdateProfile(self, profileType, profile):
 		# check the guid.  If it is null or empty, assign a new value.

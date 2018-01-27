@@ -7,10 +7,10 @@ import time
 import os
 import sys
 import json
-#import threading
 from pprint import pformat
 import flask
-
+from octoprint.server.util.flask import restricted_access, check_lastmodified, check_etag
+from octoprint.server import admin_permission
 import requests
 import itertools
 import shutil
@@ -39,54 +39,117 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Timelapse = None
 		self.IsRenderingSynchronized = False
 	#Blueprint Plugin Mixin Requests
+	@octoprint.plugin.BlueprintPlugin.route("/downloadTimelapse/<filename>", methods=["GET"])
+	@restricted_access
+	@admin_permission.require(403)
+	def downloadTimelapse(self, filename):
+		return self.GetDownloadFileResponse(self.TimelapseFolderPath()+filename, filename)
+	
+	@octoprint.plugin.BlueprintPlugin.route("/downloadSettings", methods=["GET"])
+	@restricted_access
+	@admin_permission.require(403)
+	def downloadSettings(self):
+		return self.GetDownloadFileResponse(self.SettingsFilePath(), "Settings.json")
+
 	@octoprint.plugin.BlueprintPlugin.route("/stopTimelapse", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def stopTimelapse(self):
 
 		self.Timelapse.StopSnapshots()
 		return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
-	@octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
-	def setEnabled(self):
+	@octoprint.plugin.BlueprintPlugin.route("/saveMainSettings", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
+	def saveMainSettings(self):
 		requestValues = flask.request.get_json();
-		self.Settings.is_octolapse_enabled = requestValues["enabled"];
+		clientId = requestValues["client_id"];
+		self.Settings.is_octolapse_enabled = requestValues["is_octolapse_enabled"];
+		self.Settings.show_navbar_icon = requestValues["show_navbar_icon"];
+
 		# save the updated settings to a file.
 		self.SaveSettings()
-		return json.dumps({'enabled':self.Settings.is_octolapse_enabled}), 200, {'ContentType':'application/json'} 
+		self.SendStatusChangedMessage(clientId);
+		data = {'success':True}
+		data.update(self.Settings.GetMainSettingsDict())
+		return json.dumps(data), 200, {'ContentType':'application/json'} 
+		
+	@octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
 
+	def loadMainSettings(self):
+		data = {'success':True}
+		data.update(self.Settings.GetMainSettingsDict())
+		return json.dumps(data), 200, {'ContentType':'application/json'} 
+	@octoprint.plugin.BlueprintPlugin.route("/loadStatus", methods=["POST"])
+	def loadStatus(self):
+		data = {'success':True}
+		data.update(self.GetStatusDict())
+		return json.dumps(data), 200, {'ContentType':'application/json'} 
 	@octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def addUpdateProfile(self):
 		requestValues = flask.request.get_json()
 		profileType = requestValues["profileType"];
 		profile = requestValues["profile"]
+		client_id = requestValues["client_id"]
 		updatedProfile = self.Settings.addUpdateProfile(profileType, profile)
 		# save the updated settings to a file.
 		self.SaveSettings()
+		self.SendSettingsChangedMessage(client_id)
 		return json.dumps(updatedProfile.ToDict()), 200, {'ContentType':'application/json'} ;
 
 	@octoprint.plugin.BlueprintPlugin.route("/removeProfile", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def removeProfile(self):
 		requestValues = flask.request.get_json();
 		profileType = requestValues["profileType"];
 		guid = requestValues["guid"]
+		client_id = requestValues["client_id"]
 		self.Settings.removeProfile(profileType, guid)
 		# save the updated settings to a file.
 		self.SaveSettings()
+		self.SendSettingsChangedMessage(client_id)
 		return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
 	@octoprint.plugin.BlueprintPlugin.route("/setCurrentProfile", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def setCurrentProfile(self):
 		requestValues = flask.request.get_json();
 		profileType = requestValues["profileType"];
 		guid = requestValues["guid"]
+		client_id = requestValues["client_id"]
 		self.Settings.setCurrentProfile(profileType, guid)
 		self.SaveSettings()
+		self.SendSettingsChangedMessage(client_id)
 		return json.dumps({'success':True, 'guid':requestValues["guid"]}), 200, {'ContentType':'application/json'} 
 
 	@octoprint.plugin.BlueprintPlugin.route("/restoreDefaults", methods=["POST"])
-	def loadAllDefaults(self):
+	@restricted_access
+	@admin_permission.require(403)
+	def restoreDefaults(self):
+		requestValues = flask.request.get_json();
+		client_id = requestValues["client_id"]
 		self.LoadSettings(forceDefaults = True)
-		return json.dumps(self.Settings.ToDict()), 200, {'ContentType':'application/json'} ;
+		data = {'success':True}
+		data.update(self.Settings.ToDict())
+		self.SendSettingsChangedMessage(client_id)
+		return json.dumps(data), 200, {'ContentType':'application/json'} ;
+
+	@octoprint.plugin.BlueprintPlugin.route("/loadSettings", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
+	def loadSettings(self):
+		data = {'success':True}
+		data.update(self.Settings.ToDict())
+		return json.dumps(data), 200, {'ContentType':'application/json'} ;
+	
 	@octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def applyCameraSettingsRequest(self):
 		requestValues = flask.request.get_json()
 		profile = requestValues["profile"]
@@ -96,6 +159,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		return json.dumps({'success':True}, 200, {'ContentType':'application/json'} )
 
 	@octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def testCamera(self):
 		requestValues = flask.request.get_json()
 		profile = requestValues["profile"]
@@ -106,10 +171,28 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		else:
 			return json.dumps({'success':False,'error':results[1]}), 200, {'ContentType':'application/json'}
 
-	
+	# blueprint helpers
+	def GetDownloadFileResponse(self, filePath, downloadFileName):
+		if(os.path.isfile(filePath)):
+			
+			def single_chunk_generator(downloadFile):
+				while True:
+					chunk = downloadFile.read(1024)
+					if(not chunk):
+						break
+					yield chunk
+
+			downloadFile = open(filePath, 'rb')
+			response = flask.Response(flask.stream_with_context(single_chunk_generator(downloadFile)))
+			response.headers.set('Content-Disposition', 'attachment', filename=downloadFileName)
+			response.headers.set('Content-Type', 'application/octet-stream')
+			return response
+		return json.dumps({'success':False}), 404, {'ContentType':'application/json'}
 	def ApplyCameraSettings(self, cameraProfile):
 		cameraControl = camera.CameraControl(cameraProfile, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
 		cameraControl.ApplySettings()
+	def TimelapseFolderPath(self):
+		return utility.GetRenderingDirectoryFromDataDirectory(self.get_plugin_data_folder())
 
 	def DefaultSettingsFilePath(self):
 		return "{0}{1}data{1}settings_default.json".format(self._basefolder,os.sep)
@@ -226,12 +309,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogError(message)
 			else:
 				self._logger.error(message)
-		# get the current state to populate the octolapse tab
-		currentState = self.GetCurrentStateDict()
-		# merge the current state with the settings.
-		settingsDict.update(currentState)
+		
 		return settingsDict
-	def GetCurrentStateDict(self):
+	def GetStatusDict(self):
 		isTimelapseActive = False
 		snapshotCount = 0
 		secondsAddedByOctolapse = 0
@@ -249,7 +329,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			'seconds_added_by_octolapse' : secondsAddedByOctolapse,
 			'is_timelapse_active' : isTimelapseActive,
 			'is_taking_snapshot' : isTakingSnapshot,
-			'is_rendering' : isRendering
+			'is_rendering' : isRendering,
+			'is_octolapse_enabled' : self.Settings.is_octolapse_enabled,
+			'show_navbar_icon' : self.Settings.show_navbar_icon
 		}
 
 	def get_template_configs(self):
@@ -262,7 +344,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			# create our initial timelapse object
 			# create our timelapse object
 
-			self.Timelapse = Timelapse(self.Settings, self.get_plugin_data_folder(),self._settings.getBaseFolder("timelapse")
+			self.Timelapse = Timelapse(self.Settings
+							  , self.get_plugin_data_folder()
+							  , self._settings.getBaseFolder("timelapse")
 							  ,onRenderStart = self.OnRenderStart
 							  , onRenderComplete = None # I don't think we need this
 							  , onRenderFail = self.OnRenderFail
@@ -375,6 +459,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def SendPopupMessage(self, msg):
 		self.SendPluginMessage("popup", msg)
+
+	def SendSettingsChangedMessage(self,client_id):
+		data = {
+			"type":"settings-changed"
+			,"client_id" : client_id
+			}
+		data.update(self.Settings.ToDict())
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+		
+	def SendStatusChangedMessage(self, client_id):
+		data = {
+			"type" : "status-changed",
+			"client_id" : client_id
+			}
+		data.update(self.GetStatusDict())
+		self._plugin_manager.send_plugin_message(self._identifier, data)
 
 	def SendPluginMessage(self, type, msg):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type=type, msg=msg))
@@ -520,7 +620,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		return dict(
 			js = [
 				"js/jquery.validate.min.js"
-				,"js/octolapse.js"
+				,"js/octolapse.settings.js"
+				,"js/octolapse.settings.main.js"
 				,"js/octolapse.profiles.js"
 				,"js/octolapse.profiles.printer.js"
 				,"js/octolapse.profiles.stabilization.js"

@@ -2,6 +2,7 @@
 $(function () {
 
     Octolapse = this;
+    
     // Finds the first index of an array with the matching predicate
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
         for (var i = 0, j = array.length; i < j; i++) {
@@ -11,6 +12,18 @@ $(function () {
         }
         return -1;
     }
+    // Creates a pseudo-guid
+    Octolapse.guid = function () {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    }
+    // Create a guid to uniquely identify this client.
+    Octolapse.client_id = Octolapse.guid()
     // Retruns an observable sorted by name(), case insensitive
     Octolapse.nameSort = function (observable) {
         return observable().sort(
@@ -40,18 +53,6 @@ $(function () {
     // Apply the toggle click event to every element within our settings that has the .toggle class
     
     Octolapse.displayPopup = function (options) {
-      //  if (Octolapse.defaultPopup !== null) {
-        //    self.defaultPopup.remove();
-        //}
-        //_.extend(options, {
-        //    callbacks: {
-        //        before_close: function (notice) {
-        //            if (self.defaultPopup == notice) {
-        //                self.defaultPopup = null;
-        //            }
-        //        }
-         //   }
-       // });
 
         octolapsePopup = new PNotify(options);
     };
@@ -131,147 +132,56 @@ $(function () {
         Octolapse.Settings.AddEditProfile = ko.observable({ "templateName": "empty-template", "profileObservable": ko.observable() });
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
-        // Create other observables
-        Octolapse.Settings.is_octolapse_enabled = ko.observable();
-        Octolapse.Settings.platform = ko.observable();
+        self.loginState = parameters[1];
+        self.isOctoprintAdmin = false;
+
+        
+
+        
         // Receive messages from the server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin != "octolapse") {
                 return;
             }
             switch (data.type) {
-
-                case "popup":
-                    console.log('octolapse - popup');
-                    var options = {
-                        title: 'Octolapse Notice',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(data.msg);
-                    break;
-                case "render-start":
-                    console.log('octolapse - render-start');
-                    var options = {
-                        title: 'Octolapse Rendering Started',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "render-failed":
-                    console.log('octolapse - render-failed');
-                    var options = {
-                        title: 'Octolapse Rendering Failed',
-                        text: data.msg,
-                        type: 'error',
-                        hide: false,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "synchronize-failed":
-                    console.log('octolapse - synchronize-failed');
-                    var options = {
-                        title: 'Octolapse Synchronization Failed',
-                        text: data.msg,
-                        type: 'error',
-                        hide: false,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "render-end":
-                    console.log('octolapse - render-end');
-
-                    // Make sure we aren't synchronized, else there's no reason to display a popup
-                    if (!data.is_synchronized && data.success) {
+                case "settings-changed":
+                    
+                    if (self.isOctoprintAdmin && Octolapse.client_id != data.client_id) {
+                        console.log('octolapse - settings-changed, reloading');
+                        self.loadSettings();
                         var options = {
-                            title: 'Octolapse Rendering Complete',
-                            text: data.msg,
-                            type: 'success',
-                            hide: false,
+                            title: 'Octolapse',
+                            text: "A profile change was detected from another client.",
+                            type: 'notice',
+                            hide: true,
                             desktop: {
                                 desktop: true
                             }
                         };
-                            Octolapse.displayPopup(options);
-                        }
+                        Octolapse.displayPopup(options);
+                    }
+                    else {
+                        console.log('octolapse - settings-changed, ignoring - came from self or not signed in.');
+                    }
                     break;
+                
                 default:
                     console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
                     break;
             }
         };
-        // Update octolapse settings from the server (probably from a 'restore default settings' click)
-        self.updateSettings = function (settings) {
-            Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
-            
-            // Printers
-            Octolapse.Printers.profiles([])
-            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid)
-            settings.printers.forEach(function (item, index) {
-                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
-            });
-            // Stabilizations
-            Octolapse.Stabilizations.profiles([])
-            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid)
-            settings.stabilizations.forEach(function (item, index) {
-                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
-            });
-            // Snapshots
-            Octolapse.Snapshots.profiles([])
-            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid)
-            settings.snapshots.forEach(function (item, index) {
-                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
-            });
-            // Renderings
-            Octolapse.Renderings.profiles([])
-            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid)
-            settings.renderings.forEach(function (item, index) {
-                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
-            });
-            // Cameras
-            Octolapse.Cameras.profiles([])
-            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid)
-            settings.cameras.forEach(function (item, index) {
-                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
-            });
-            // Debugs
-            Octolapse.DebugProfiles.profiles([])
-            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid)
-            settings.debug_profiles.forEach(function (item, index) {
-                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
-            });
-            
-        }
+        
         // Called before octoprint binds the viewmodel to the plugin
         self.onBeforeBinding = function() {
-            // Assign values to each observable
-            self.settings = self.global_settings.settings.plugins.octolapse;
-            settings = ko.toJS(self.settings);
+            
             /*
                 Create our global settings
             */
-            Octolapse.Settings.is_octolapse_enabled(settings.is_octolapse_enabled);
-            Octolapse.Settings.platform(settings.platform);
+            self.settings = self.global_settings.settings.plugins.octolapse;
+            settings = ko.toJS(self.settings); // just get the values
+            self.isOctoprintAdmin = self.loginState.isAdmin();
 
             
-            // We will bind this tab manually to keep our pattern going.
-            //Octolapse.Tab.Bind();
-
             /**
              * Profiles - These are bound by octolapse.profiles.js
              */
@@ -400,21 +310,65 @@ $(function () {
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
             
         }
-      /*
+
+        // Update all octolapse settings
+        self.updateSettings = function (settings) {
+            // SettingsMain
+            Octolapse.SettingsMain.update(settings)
+            // Printers
+            Octolapse.Printers.profiles([])
+            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid)
+            settings.printers.forEach(function (item, index) {
+                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
+            });
+            // Stabilizations
+            Octolapse.Stabilizations.profiles([])
+            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid)
+            settings.stabilizations.forEach(function (item, index) {
+                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
+            });
+            // Snapshots
+            Octolapse.Snapshots.profiles([])
+            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid)
+            settings.snapshots.forEach(function (item, index) {
+                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
+            });
+            // Renderings
+            Octolapse.Renderings.profiles([])
+            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid)
+            settings.renderings.forEach(function (item, index) {
+                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
+            });
+            // Cameras
+            Octolapse.Cameras.profiles([])
+            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid)
+            settings.cameras.forEach(function (item, index) {
+                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
+            });
+            // Debugs
+            Octolapse.DebugProfiles.profiles([])
+            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid)
+            settings.debug_profiles.forEach(function (item, index) {
+                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
+            });
+
+        }
+
+        /*
             reload the default settings
         */
-        self.restoreDefaultSettings = function ()
-        {
+        self.restoreDefaultSettings = function () {
             if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+                var data = { "client_id": Octolapse.client_id}
                 $.ajax({
                     url: "/plugin/octolapse/restoreDefaults",
                     type: "POST",
+                    data: JSON.stringify(data),
                     contentType: "application/json",
+                    dataType: "json",
                     success: function (newSettings) {
-                        //load settings from the provided data
-                        self.updateSettings(JSON.parse(newSettings));
-                        
+                        self.updateSettings(newSettings);
                         alert("The default settings have been restored.");
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -423,36 +377,27 @@ $(function () {
                 });
             }
         };
-        
         /*
-            Show and hide the settings tabs based on the enabled parameter
+            load all settings default settings
         */
-        self.toggleOctolapseEnabled = function() {
-            $settings = $('#octolapse_settings');
-            $settings.hide();
-            data = JSON.stringify({ "enabled": self.is_octolapse_enabled() });
+        self.loadSettings = function () {
+            
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
-                url: "/plugin/octolapse/setEnabled",
+                url: "/plugin/octolapse/loadSettings",
                 type: "POST",
-                data: data,
                 contentType: "application/json",
                 dataType: "json",
-                success: function(data) {
-                    $settings = $('#octolapse_settings');
-                    if (data.enabled)
-                        $settings.show();
-                    else
-                        $settings.hide();
+                success: function (newSettings) {
+                    self.updateSettings(newSettings);
+                    console.log("Settings have been loaded.");
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to enable/disable octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
-                    self.is_octolapse_enabled( !self.is_octolapse_enabled())
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-            // Continue processing events
-            //return true;
-
-        }
+            
+        };
         /*
             Profile Add/Update routine for showAddEditDialog
         */
@@ -623,9 +568,7 @@ $(function () {
                             }
 
                         });
-
-
-
+                        
                         // The form is invalid, add a shake animation to inform the user
                         $(dialog.$addEditDialog).addClass('shake');
                         // set a timeout so the dialog stops shaking
@@ -643,13 +586,11 @@ $(function () {
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel
-        , ["settingsViewModel"]
+        , ["settingsViewModel", "loginStateViewModel"]
         , ["#octolapse_plugin_settings"]
     ]);
 
-    $("#octolapse_settings .toggle").click(function () {
-        Octolapse.ToggleElement(this);
-    });
+    
 });
 
 

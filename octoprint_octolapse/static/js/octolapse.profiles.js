@@ -21,19 +21,21 @@ $(function() {
         /*
             Octoprint Viewmodel Events
         */
+
+
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             isNewProfile = profile().guid() == "";
-            var data = { 'profile': ko.toJS(profile), 'profileType': self.profileTypeName }
+            var data = { "client_id": Octolapse.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName }
             $.ajax({
                 url: "/plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
                 data: JSON.stringify(data),
-                
                 contentType: "application/json",
                 dataType: "json",
-                success: function(newProfile) {
+                success: function (newProfile) {
+
                     newProfile = new self.profileViewModelCreate(newProfile); // Create our profile viewmodel
                     if (isNewProfile)
                         self.profiles.push(newProfile); // Since it's new, just add it.
@@ -60,7 +62,7 @@ $(function() {
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
             if (confirm("Are you sure you want to permanently erase the profile:'" + settings.profileTypeName + "'?")) {
-                var data = { 'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
+                var data = { "client_id": Octolapse.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
                 $.ajax({
                     url: "/plugin/octolapse/" + self.removeProfilePath,
                     type: "POST",
@@ -80,7 +82,7 @@ $(function() {
         }
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
-            var data = { 'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
+            var data = { "client_id" : Octolapse.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
             $.ajax({
                 url: "/plugin/octolapse/" + self.setCurrentProfilePath,
                 type: "POST",

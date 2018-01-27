@@ -2,31 +2,7 @@
   <div class="text-center">
     <h3>Octolapse Settings</h3>
   </div>
-  <div id="octolapse_plugin_settings"  >
-    <input type="hidden" id="platform" data-bind="value:platform"/>
-    <div class="row">
-      <div class="span1"></div>
-      <div class="span6">
-        <div class="control-group">
-          <div class="controls">
-            <label class="checkbox">
-              <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled,click:$root.toggleOctolapseEnabled(); " />Enable Octolapse
-            </label>
-          </div>
-        </div>
-      </div>
-      <div class="span4">
-        <div class="control-group">
-          <div class="controls">
-            <button class="span12 btn btn-default" data-bind="click: function() {$root.restoreDefaultSettings();}">Restore All Default Settings</button>
-          </div>
-        </div>
-      </div>
-      <div class="span1"></div>
-    </div>
-    <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
-
-  </div>
+  
   <div id="octolapse_settings">
     <div class="row">
       <div class="span12">
@@ -39,44 +15,51 @@
             <ul class="dropdown-menu"></ul>
           </li>
           <li class="active">
-            <a href="#octolapse_printer_tab" data-toggle="tab">Printer</a>
+            <a href="#octolapse_main_tab" data-toggle="tab">Main</a>
           </li>
           <li>
-            <a href="#octolapse_stabilization_tab" data-toggle="tab">Stabilization</a>
+            <a href="#octolapse_printer_tab" data-toggle="tab" class="hide-disabled">Printer</a>
           </li>
           <li>
-            <a href="#octolapse_snapshot_tab" data-toggle="tab">Snapshot</a>
+            <a href="#octolapse_stabilization_tab" data-toggle="tab" class="hide-disabled">Stabilization</a>
           </li>
           <li>
-            <a href="#octolapse_rendering_tab" data-toggle="tab">Rendering</a>
+            <a href="#octolapse_snapshot_tab" data-toggle="tab" class="hide-disabled">Snapshot</a>
           </li>
           <li>
-            <a href="#octolapse_camera_tab" data-toggle="tab">Camera</a>
+            <a href="#octolapse_rendering_tab" data-toggle="tab" class="hide-disabled">Rendering</a>
           </li>
           <li>
-            <a href="#octolapse_debug_tab" data-toggle="tab">Debug</a>
+            <a href="#octolapse_camera_tab" data-toggle="tab" class="hide-disabled">Camera</a>
+          </li>
+          <li>
+            <a href="#octolapse_debug_tab" data-toggle="tab" class="hide-disabled">Debug</a>
           </li>
           <li>
             <a href="#octolapse_about_tab" data-toggle="tab">About</a>
           </li>
         </ul>
         <div class="tab-content">
-          <div id="octolapse_printer_tab" class="panel panel-default tab-pane active">
+          
+          <div id="octolapse_main_tab" class="panel panel-default tab-pane active">
+            <div data-bind="template: 'octolapse-settings-main'" ></div>
+          </div>
+          <div id="octolapse_printer_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
-          <div id="octolapse_stabilization_tab" class="panel panel-default tab-pane">
+          <div id="octolapse_stabilization_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
-          <div id="octolapse_snapshot_tab" class="panel panel-default tab-pane">
+          <div id="octolapse_snapshot_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
-          <div id="octolapse_rendering_tab" class="panel panel-default tab-pane">
+          <div id="octolapse_rendering_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
-          <div id="octolapse_camera_tab" class="panel panel-default tab-pane">
+          <div id="octolapse_camera_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
-          <div id="octolapse_debug_tab" class="panel panel-default tab-pane">
+          <div id="octolapse_debug_tab" class="panel panel-default tab-pane hide-disabled">
             <div data-bind="template: 'profiles-template'" ></div>
           </div>
           <div id="octolapse_about_tab" class="panel panel-default tab-pane">
@@ -94,16 +77,43 @@
         </div>
       </div>
     </div>
+    <div id="octolapse_plugin_settings"  >
+      <input type="hidden" id="platform" data-bind="value:platform"/>
+      <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
+      <div class="row-fluid">
+        <a class="btn btn-default span6" data-bind="attr: {href: '{{ url_for('plugin.octolapse.downloadSettings', apikey='') }}' + UI_API_KEY}" download="">
+          <i class="fa fa-download"></i> Download Settings
+        </a>
+        <a href="#" class="span6 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
+          <i class="fa fa-refresh"></i>
+          Restore All Default Settings
+        </a>
+      </div>
+<!--
+      <div class="control-group">
+        <div class="controls">
 
-    <span class="help-inline">
-      <span class="label label-important">USE AT YOUR OWN RISK</span> Octolapse is still in development and may contain errors that could affect your prints.  Please be safe and don't leave your printer unattended!
-    </span>
+          <a class="btn" data-bind="attr: {href: '{{ url_for('plugin.octolapse.downloadTimelapse', filename='file.mp4', apikey='')  }}' + UI_API_KEY}" download="">
+            <i class="fa fa-download"></i> {{ _("Export") }}
+          </a>
+
+        </div>
+      </div> -->
+    </div>
+    
+    <div>
+      <span class="help-inline">
+        <span class="label label-important">USE AT YOUR OWN RISK</span> Octolapse is still in development and may contain errors that could affect your prints.  Please be safe and don't leave your printer unattended!
+      </span>
+    </div>
+
 
 
   </div>
 </div>
 <script type="text/html" id="empty-template">
 </script>
+{% include "octolapse_settings_main.jinja2" %}
 {% include "octolapse_profiles.jinja2" %}
 {% include "octolapse_profiles_printer.jinja2" %}
 {% include "octolapse_profiles_stabilization.jinja2" %}

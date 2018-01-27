@@ -72,8 +72,8 @@ class Timelapse(object):
 		self.CaptureSnapshot = CaptureSnapshot(self.Settings,  self.DataFolder, printStartTime=self.PrintStartTime)
 		self.Position = Position(self.Settings,octoprintPrinterProfile, g90InfluencesExtruder)
 		self.State = TimelapseState.WaitingForTrigger
-		# Rendering state
-		self.IsRendering = False # we are not currently rendering
+
+
 
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
 		# create the triggers
@@ -431,6 +431,8 @@ class Timelapse(object):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
 		if(self.Rendering.enabled):
 			self.Settings.CurrentDebugProfile().LogRenderStart("Started Rendering Timelapse");
+			# we are rendering, set the state before starting the rendering job.
+			self.IsRendering = True
 			timelapseRenderJob = Render(self.Settings
 									,self.Snapshot
 									,self.Rendering
@@ -447,7 +449,7 @@ class Timelapse(object):
 								  ,onAfterSycnSuccess = self.OnSynchronizeRenderingComplete
 								  ,onComplete = self.OnRenderEnd)
 			timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.PrintStartTime, time.time())
-			self.IsRendering = True
+			
 			return True
 		return False
 

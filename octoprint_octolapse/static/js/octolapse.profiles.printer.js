@@ -22,5 +22,7 @@ $(function() {
         self.z_hop_speed = ko.observable(values.z_hop_speed);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
+
+
     }
 });

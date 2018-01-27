@@ -72,7 +72,8 @@ def GetSnapshotFilenameTemplate():
 	if (sys.platform == "win32"):
 		output_filename = "{FILENAME}_{PRINTSTARTTIME}\\{FILENAME}"
 	return output_filename
-
+def GetRenderingDirectoryFromDataDirectory(dataDirectory):
+	return GetRenderingDirectoryTemplate().replace("{DATADIRECTORY}",dataDirectory)
 def GetRenderingDirectoryTemplate():
 	output_directory = "{DATADIRECTORY}/timelapses/"
 	if (sys.platform == "win32"):

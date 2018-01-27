@@ -9,9 +9,9 @@
     <dl class="dl-vertical">
       <dt>Status</dt>
       <dd>
-        <span class="fa-stack fa-lg" data-bind="attr: { title: Octolapse.Settings.is_octolapse_enabled() || is_timelapse_active() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
-          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Settings.is_octolapse_enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
-          <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.Settings.is_octolapse_enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.Settings.is_octolapse_enabled() ) },style: { color: (Octolapse.Settings.is_octolapse_enabled()  || is_timelapse_active()) ? 'limegreen' : '' }"></i>
+        <span class="fa-stack fa-lg" data-bind="attr: { title: !Octolapse.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
+          <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
+          <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.enabled() ) },style: { color: (Octolapse.enabled()  || is_timelapse_active()) ? 'limegreen' : '' }"></i>
         </span>
         <span class="fa-stack fa-lg" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
           <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
@@ -38,7 +38,7 @@
     </dl>
   </div>
   <div class="span6" >
-    <div class="pull-right" data-bind="visible: is_timelapse_active()">
+    <div class="pull-right" data-bind="visible: (is_timelapse_active() && Octolapse.is_admin())">
       <button class="btn btn-default" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
     </div>
   </div>
