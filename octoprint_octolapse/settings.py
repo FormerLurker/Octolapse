@@ -991,8 +991,8 @@ class DebugProfile(object):
 				'gcode_queuing_all'			: self.gcode_queuing_all
 			}
 
-	def LogToConsole(self,levelName , message):
-		if(self.log_to_console):
+	def LogToConsole(self,levelName , message, force = False):
+		if(self.log_to_console or force):
 			try:
 				print(DebugProfile.ConsoleFormatString.format(asctime = str(datetime.now()) ,levelname= levelName ,message=message))
 			except:
@@ -1003,6 +1003,7 @@ class DebugProfile(object):
 				DebugProfile.Logger.info(message)
 				self.LogToConsole('info', message)
 			except:
+				self.LogToConsole('error', "Error logging info: message:{0}".format(message),force=True)
 				return
 	def LogWarning(self,message):
 		if(self.enabled):
@@ -1010,14 +1011,16 @@ class DebugProfile(object):
 				DebugProfile.Logger.warning(message)
 				self.LogToConsole('warn', message)
 			except:
+				self.LogToConsole('error', "Error logging warining: message:{0}".format(message),force=True)
 				return
 	def LogError(self,message):
-		if(self.enabled):
-			try:
-				DebugProfile.Logger.error(message)
-				self.LogToConsole('error', message)
-			except:
-				return
+		
+		try:
+			DebugProfile.Logger.error(message)
+			self.LogToConsole('error', message)
+		except:
+			self.LogToConsole('error', "Error logging exception: message:{0}".format(message),force=True)
+			return
 	def LogPositionChange(self,message):
 		if(self.position_change ):
 			self.LogInfo(message)

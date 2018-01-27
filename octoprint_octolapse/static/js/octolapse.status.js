@@ -61,7 +61,7 @@ $(function () {
                 dataType: "json",
                 success: function (newSettings) {
                     self.update(newSettings);
-                    console.log("Settings have been loaded.");
+                    console.log("octolapse.status.js - Status have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert("Octolapse - Unable to load the current status.  Status: " + textStatus + ".  Error: " + errorThrown);

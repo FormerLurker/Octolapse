@@ -172,7 +172,7 @@ $(function () {
         };
         
         // Called before octoprint binds the viewmodel to the plugin
-        self.onBeforeBinding = function() {
+        self.onAfterBinding = function() {
             
             /*
                 Create our global settings

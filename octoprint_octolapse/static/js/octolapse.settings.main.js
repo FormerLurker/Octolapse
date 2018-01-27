@@ -19,6 +19,10 @@ $(function () {
 
         
         self.onBeforeBinding = function () {
+            
+        };
+        // Get the dialog element
+        self.onAfterBinding = function () {
             settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
             self.show_navbar_icon(settings.show_navbar_icon())
@@ -27,9 +31,6 @@ $(function () {
             // Bind the global values associated with these settings
             Octolapse.enabled(settings.is_octolapse_enabled())
             Octolapse.navbar_enabled(settings.show_navbar_icon());
-        };
-        // Get the dialog element
-        self.onAfterBinding = function () {
             self.$addEditDialog = $("#octolapse_edit_settings_main_dialog");
         }
         /*
