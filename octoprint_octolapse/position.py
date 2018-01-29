@@ -461,13 +461,14 @@ class Position(object):
 							pos.Height = utility.round_to(pos.Z, self.PrinterTolerance)
 							self.Settings.CurrentDebugProfile().LogPositionHeightChange("Position - Reached New Height:{0}.".format(pos.Height))
 					
-					# calculate layer change
-					if(utility.round_to(self.ZDelta(pos), self.PrinterTolerance) > 0 or pos.Layer == 0):
-						pos.IsLayerChange = True
-						pos.Layer += 1
-						self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(pos.Layer))
-					else:
-						pos.IsLayerChange = False
+						# calculate layer change
+						if(utility.round_to(self.ZDelta(pos), self.PrinterTolerance) > 0
+							or pos.Layer == 0):
+							pos.IsLayerChange = True
+							pos.Layer += 1
+							self.Settings.CurrentDebugProfile().LogPositionLayerChange("Position - Layer:{0}.".format(pos.Layer))
+						else:
+							pos.IsLayerChange = False
 
 					# Calculate ZHop based on last extrusion height
 					if(pos.LastExtrusionHeight is not None):

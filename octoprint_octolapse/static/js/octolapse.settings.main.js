@@ -35,10 +35,8 @@ $(function () {
             self.platform(settings.platform());
 
             // Bind the global values associated with these settings
-            Octolapse.enabled(settings.is_octolapse_enabled())
-            Octolapse.navbar_enabled(settings.show_navbar_icon());
-            Octolapse.show_position_state_changes(settings.show_position_state_changes());
-            Octolapse.show_extruder_state_changes(settings.show_extruder_state_changes());
+            Octolapse.Globals.update(settings)
+            
 
             self.$addEditDialog = $("#octolapse_edit_settings_main_dialog");
         }
@@ -91,12 +89,8 @@ $(function () {
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
 
             // Update globals
-            Octolapse.enabled(settings.is_octolapse_enabled)
-            Octolapse.navbar_enabled(settings.show_navbar_icon);
-            Octolapse.show_position_state_changes(settings.show_position_state_changes);
-            Octolapse.show_extruder_state_changes(settings.show_extruder_state_changes);
-
-
+            Octolapse.Globals.update(settings);
+            
             // Set the tab-button/tab visibility
             self.setSettingsVisibility(settings.is_octolapse_enabled);
         }
@@ -104,10 +98,6 @@ $(function () {
         
         self.showEditMainSettingsPopup = function () {
             console.log("showing main settings")
-            // Set the options to the current settings
-            //self.is_octolapse_enabled(Octolapse.enabled())
-            //self.show_navbar_icon(Octolapse.navbar_enabled())
-            // Open the add/edit profile dialog
             self.$addEditDialog.modal();
         }
         // cancel button click handler
@@ -122,7 +112,7 @@ $(function () {
                 , "show_navbar_icon": self.show_navbar_icon()
                 , "show_position_state_changes": self.show_position_state_changes()
                 , "show_extruder_state_changes": self.show_extruder_state_changes()
-                , "client_id" : Octolapse.client_id
+                , "client_id" : Octolapse.Globals.client_id
             };
             console.log("Saving main settings.")
             $.ajax({

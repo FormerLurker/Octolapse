@@ -259,11 +259,8 @@ class TimelapseRenderJob(object):
 					self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileName))
 					shutil.move(output,finalFileName)
 					self._notify_callback("after_sync_success", finalFileName, baseOutputFileName)
-				except:
-					type = sys.exc_info()[0]
-					value = sys.exc_info()[1]
-					message = "Render - Synchronization Error - Could move the timelapse at {0} to the octoprint timelaspse directory.  Details: Error Type:{1}, Details:{2}".format(finalFileName,type,value)
-					self._debug.LogError(message)
+				except Exception, e:
+					self.Settings.CurrentDebugProfile().LogException(e)
 					self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
 
 			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize, success)

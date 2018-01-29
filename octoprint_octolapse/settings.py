@@ -5,6 +5,7 @@ from datetime import datetime
 import octoprint_octolapse.utility as utility
 from pprint import pprint
 import logging
+import traceback
 import os
 import sys
 import uuid
@@ -1013,6 +1014,21 @@ class DebugProfile(object):
 			except:
 				self.LogToConsole('error', "Error logging warining: message:{0}".format(message),force=True)
 				return
+	def _exceptionToString(self, e):
+		traceBack = sys.exc_info()[2]
+		if traceBack is None:
+			return str(e)
+		tb_lines = traceback.format_exception(e.__class__, e, traceBack)
+		return ''.join(tb_lines)
+
+	def LogException(self,exception):
+		message = self._exceptionToString(exception)
+		try:
+			self.Logger.error(message)
+			self.LogToConsole('error', message)
+		except:
+			self.LogToConsole('error', "Error logging exception:{0}".format(msg),force=True)
+			return
 	def LogError(self,message):
 		
 		try:

@@ -1,5 +1,5 @@
 
-  <a id="octolapse_navbar" href="#" data-bind="click: navbarClicked, visible:Octolapse.navbar_enabled">
+  <a id="octolapse_navbar" href="#" data-bind="click: navbarClicked, visible:Octolapse.Globals.navbar_enabled">
     <span class="fa-lg" style="display:none;" data-bind="visible: Octolapse.Status.is_timelapse_active, attr: { title: Octolapse.Status.is_taking_snapshot() ? 'Taking a Snapshot' : Octolapse.Status.is_rendering() ? 'Rendering' : 'Waiting to Take Snapshot'}">
       OCT<i class="fa fa-inverse" data-bind="css:{'icon-camera': (Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_rendering()), 'icon-film': Octolapse.Status.is_rendering(), 'fa-inverse' : (!Octolapse.Status.is_taking_snapshot() && !Octolapse.Status.is_rendering()) }"></i>LAPSE
     </span>

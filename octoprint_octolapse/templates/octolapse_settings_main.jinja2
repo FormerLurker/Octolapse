@@ -5,30 +5,30 @@
   </div>
   <div class="panel-body">
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
         
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.enabled()  ), 'fa-close': (!Octolapse.enabled() ) },style: { color: (Octolapse.enabled()  ) ? 'limegreen' : '' }"></i>
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></i>
       </span>
-      <span data-bind="text: Octolapse.enabled() ? 'Octolapse is Enabled' : 'Octolapse is Disabled'"></span>
+      <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is Enabled' : 'Octolapse is Disabled'"></span>
     </div>
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.navbar_enabled()  ), 'fa-close': (!Octolapse.navbar_enabled() ) },style: { color: (Octolapse.navbar_enabled()  ) ? 'limegreen' : '' }"></i>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></i>
       </span>
-      <span data-bind="text: Octolapse.navbar_enabled() ? 'Navbar Control is Enabled' : 'Navbar Control is Disabled'"></span>
+      <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar Control is Enabled' : 'Navbar Control is Disabled'"></span>
     </div>
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.show_extruder_state_changes() ) },style: { color: (Octolapse.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></i>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></i>
       </span>
-      <span data-bind="text: Octolapse.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
+      <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
     </div>
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
 
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.show_position_state_changes()  ), 'fa-close': (!Octolapse.show_position_state_changes() ) },style: { color: (Octolapse.show_position_state_changes()  ) ? 'limegreen' : '' }"></i>
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></i>
       </span>
-      <span data-bind="text: Octolapse.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
+      <span data-bind="text: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
     </div>
     
   </div>

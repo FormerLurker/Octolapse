@@ -6,6 +6,7 @@ import uuid
 import time
 import os
 import sys
+import traceback
 import json
 from pprint import pformat
 import flask
@@ -72,7 +73,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# save the updated settings to a file.
 		self.SaveSettings()
 		mainSettings = self.Settings.GetMainSettingsDict()
-		self.SendMainSettingsChanged(mainSettings, clientId);
+		self.SendMainSettingsChangedMessage(mainSettings, clientId);
 		data = {'success':True}
 		data.update(mainSettings)
 		return json.dumps(data), 200, {'ContentType':'application/json'} 
@@ -267,7 +268,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						profile.address = cameraAddress;
 						profile.snapshot_request_template = snapshotRequestTemplate
 			except TypeError, e:
-				self.Settings.CurrentDebugProfile().LogError("Unable to parse the snapshot address from Octoprint's settings, using system default. Details: {0}".format(e))
+				self.Settings.CurrentDebugProfile().LogException(e)
 
 			bitrate = self._settings.settings.get(["webcam","bitrate"])
 			self.Settings.DefaultRendering.bitrate = bitrate
@@ -275,11 +276,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				for profile in self.Settings.renderings.values():
 					profile.bitrate = bitrate
 		except Exception, e:
-			message = "Un unexptected exception occurred while calling CopyOctoprintDefaultSettings.  Details:{0}".format(e)
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)
+				self._logger.exception(e)
 	def SaveSettings(self):
 		# Save setting from file
 		settings = self.Settings.ToDict();
@@ -306,11 +306,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			octoprint.plugin.SettingsPlugin.on_settings_load(self)
 			settingsDict = self.Settings.ToDict()
 		except Exception, e:
-			message = "Un unexptected exception occurred while calling on_settings_load.  Details:{0}".format(e)
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)
+				self._logger.exception(e)
 		
 		return settingsDict
 	def GetStatusDict(self):
@@ -370,11 +369,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , onStateChanged = self.OnPositionExtruderStateChanged)
 			self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 		except Exception, e:
-			message = "Un unexptected exception occurred while calling on_after_startup.  Details:{0}".format(e)
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)
+				self._logger.exception(e)
 				
 	# Event Mixin Handler
 	
@@ -407,16 +405,15 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.OnPrintCompleted()
 			elif(event == Events.POSITION_UPDATE):
 				self.Timelapse.PositionReceived(payload)
-		except Exception, e:
-			message = "Un unexptected exception occurred while calling on_event.  Details:{0}".format(e)
+		except Exception as e:
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)
+				self._logger.exception(e)
 	
 	def OnPrintResumed(self):
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
-
+		self.Timelapse.PrintResumed()
 	def OnPrintPause(self):
 		self.Timelapse.PrintPaused()
 
@@ -449,10 +446,13 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		try:
 			ffmpegPath = self._settings.settings.get(["webcam","ffmpeg"])
 			if(self.Settings.CurrentRendering().enabled and ffmpegPath == ""):
-				# todo:  throw some kind of exception
+				self.Settings.CurrentDebugProfile().LogError("A timelapse was started, but there is no ffmpeg path set!")
 				return {'success':False, 'error':"No ffmpeg path is set.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG."}
-		except Exception,e:
-			self.Settings.CurrentDebugProfile().LogError("An unexpected exception occurred while trying to aquire the ffmpeg path.  Details:{0}".format(e))
+		except Exception, e:
+			if(self.Settings is not None):
+				self.Settings.CurrentDebugProfile().LogException(e)
+			else:
+				self._logger.exception(e)
 			return {'success':False, 'error':"An exception occurred while trying to acquire the ffmpeg path from Octoprint.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG."}
 		if(not os.path.isfile(ffmpegPath)):
 			# todo:  throw some kind of exception
@@ -461,8 +461,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		try:
 			g90InfluencesExtruder = self._settings.settings.get(["feature","g90InfluencesExtruder"])
 			
-		except Exception,e:
-			self.Settings.CurrentDebugProfile().LogError("An unexpected exception occurred while acquiring the g90InfluencesExtruder setting from Octoprint.  Setting this value to the default (False).  Details:{0}".format(e))
+		except Exception, e:
+			if(self.Settings is not None):
+				self.Settings.CurrentDebugProfile().LogException(e)
+			else:
+				self._logger.exception(e)
 		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,g90InfluencesExtruder)
 		self.OnTimelapseStart()
 		return {'success':True}
@@ -470,7 +473,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def SendPopupMessage(self, msg):
 		self.SendPluginMessage("popup", msg)
 
-	def SendMainSettingsChanged(self,mainSettings, clientId):
+	def SendMainSettingsChangedMessage(self,mainSettings, clientId):
 		data = {
 			"type":"main-settings-changed"
 			}
@@ -579,22 +582,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
 
 		except Exception, e:
-			message = "Un unexptected exception occurred while calling Timelapse.GcodeQueuing.  Details:{0}".format(e)
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)	
-		
+				self._logger.exception(e)
+
 	def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		try:
 			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
 				self.Timelapse.GcodeSent(comm_instance,phase,cmd,cmd_type, gcode, args, kwargs)
 		except Exception, e:
-			message = "Un unexptected exception occurred while calling Timelapse.GcodeSent.  Details:{0}".format(e)
 			if(self.Settings is not None):
-				self.Settings.CurrentDebugProfile().LogError(message)
+				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
-				self._logger.error(message)
+				self._logger.exception(e)
 
 	def OnPositionExtruderStateChanged(self, *args, **kwargs):
 		stateChangeDict = args[0]
@@ -651,6 +652,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		return dict(
 			js = [
 				"js/jquery.validate.min.js"
+				,"js/octolapse.js"
 				,"js/octolapse.settings.js"
 				,"js/octolapse.settings.main.js"
 				,"js/octolapse.profiles.js"

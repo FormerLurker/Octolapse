@@ -1,145 +1,7 @@
 
 $(function () {
 
-    Octolapse = this;
     
-    // Finds the first index of an array with the matching predicate
-    Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
-        for (var i = 0, j = array.length; i < j; i++) {
-            if (predicate.call(predicateOwner, array[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
-    // Creates a pseudo-guid
-    Octolapse.guid = function () {
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-            s4() + '-' + s4() + s4() + s4();
-    }
-    // Create a guid to uniquely identify this client.
-    Octolapse.client_id = Octolapse.guid()
-    // Retruns an observable sorted by name(), case insensitive
-    Octolapse.nameSort = function (observable) {
-        return observable().sort(
-            function (left, right) {
-                leftName = left.name().toLowerCase();
-                rightName = right.name().toLowerCase();
-                return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
-            });
-    };
-    // Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
-    // It will apply the on or off class to the result of each selector, which should return exactly one result.
-    Octolapse.toggle = function (caller, args) {
-        var elements = args.elements;
-        elements.forEach(function (item, index) {
-            element = $(item.selector);
-            onClass = item.onClass;
-            offClass = item.offClass;
-            if (element.hasClass(onClass)) {
-                element.removeClass(onClass);
-                element.addClass(offClass);
-            } else {
-                element.removeClass(offClass);
-                element.addClass(onClass);
-            }
-        });
-    };
-    // Apply the toggle click event to every element within our settings that has the .toggle class
-    
-    Octolapse.displayPopup = function (options) {
-
-        octolapsePopup = new PNotify(options);
-    };
-    Octolapse.ToggleElement = function (element) {
-        var args = $(this).attr("data-toggle");
-        Octolapse.toggle(this, JSON.parse(args));
-    };
-
-    // Global Values
-    Octolapse.show_position_state_changes = ko.observable(false)
-    Octolapse.show_extruder_state_changes = ko.observable(false)
-    Octolapse.is_admin = ko.observable(false)
-    Octolapse.enabled = ko.observable(false);
-    Octolapse.navbar_enabled = ko.observable(false);
-    // Add custom validator for csv floats
-    $.validator.addMethod('csvFloat', function (value) {
-        return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
-    }, 'Please enter a list of decimals separated by commas.');
-    // Add a custom validator for csv floats between 0 and 100
-    $.validator.addMethod('csvRelative', function (value) {
-        return /^(\s*\d{0,2}(\.\d+)?|100(\.0+)?)(\s*,\s*\d{0,2}(\.\d+)?|100(\.0+)?)*\s*$/.test(value);
-    }, 'Please enter a list of decimals between 0.0 and 100.0 separated by commas.');
-    // Add a custom validator for integers
-    $.validator.addMethod('integer',
-        function (value) {
-            return /^-?\d+$/.test(value);
-        }, 'Please enter an integer value.');
-    // Add a custom validator for positive
-    $.validator.addMethod('integerPositive',
-        function (value) {
-            return /^\d+$/.test(value);
-        }, 'Please enter a positive integer value.');
-    $.validator.addMethod('ffmpegBitRate',
-        function (value) {
-            return /^\d+[KkMm]$/.test(value);
-        }, 'Enter a bitrate, K for kBit/s and M for MBit/s.  Example: 1000K');
-    $.validator.addMethod('lessThanOrEqual',
-        function (value, element, param) {
-            var i = parseFloat(value);
-            var j = parseFloat($(param).val());
-            return (i <= j) ? true : false;
-        });
-    $.validator.addMethod('greaterThanOrEqual',
-        function (value, element, param) {
-            var i = parseFloat(value);
-            var j = parseFloat($(param).val());
-            return (i >= j) ? true : false;
-        });
-    $.validator.addMethod('octolapseSnapshotTemplate',
-        function (value, element) {
-            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
-            return jQuery.validator.methods.url.call(this, testUrl, element);
-        });
-    $.validator.addMethod('octolapseCameraRequestTemplate',
-        function (value, element) {
-            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}","1");
-            return jQuery.validator.methods.url.call(this, testUrl, element);
-        });
-    
-    jQuery.extend(jQuery.validator.messages, {
-        name: "Please enter a name.",
-        required: "This field is required.",
-        url: "Please enter a valid URL.",
-        number: "Please enter a valid number.",
-        equalTo: "Please enter the same value again.",
-        maxlength: jQuery.validator.format("Please enter no more than {0} characters."),
-        minlength: jQuery.validator.format("Please enter at least {0} characters."),
-        rangelength: jQuery.validator.format("Please enter a value between {0} and {1} characters long."),
-        range: jQuery.validator.format("Please enter a value between {0} and {1}."),
-        max: jQuery.validator.format("Please enter a value less than or equal to {0}."),
-        min: jQuery.validator.format("Please enter a value greater than or equal to {0}."),
-        octolapseCameraRequestTemplate: "The value is not a url.  You may use {camera_address} or {value} tokens.",
-        octolapseSnapshotTemplate: "The value is not a url.  You may use {camera_address} to refer to the web camera address."
-    });
-
-    // Knockout numeric binding
-    ko.extenders.numeric = function (target, precision) {
-        var result = ko.dependentObservable({
-            read: function () {
-                return target().toFixed(precision);
-            },
-            write: target
-        });
-
-        result.raw = target;
-        return result;
-    };
     // Settings View Model
     Octolapse.SettingsViewModel = function (parameters) {
         // Create a reference to this object
@@ -152,42 +14,7 @@ $(function () {
         Octolapse.Settings.global_settings = parameters[0];
         self.loginState = parameters[1];
         
-
         
-
-        
-        // Receive messages from the server
-        self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if (plugin != "octolapse") {
-                return;
-            }
-            switch (data.type) {
-                case "settings-changed":
-                    
-                    if (Octolapse.is_admin() && Octolapse.client_id != data.client_id) {
-                        console.log('octolapse - settings-changed, reloading');
-                        self.loadSettings();
-                        var options = {
-                            title: 'Octolapse',
-                            text: "A profile change was detected from another client.",
-                            type: 'notice',
-                            hide: true,
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        Octolapse.displayPopup(options);
-                    }
-                    else {
-                        console.log('octolapse - settings-changed, ignoring - came from self or not signed in.');
-                    }
-                    break;
-                
-                default:
-                    console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
-                    break;
-            }
-        };
         
         // Called before octoprint binds the viewmodel to the plugin
         self.onAfterBinding = function() {
@@ -376,7 +203,7 @@ $(function () {
         self.restoreDefaultSettings = function () {
             if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-                var data = { "client_id": Octolapse.client_id}
+                var data = { "client_id": Octolapse.Globals.client_id}
                 $.ajax({
                     url: "/plugin/octolapse/restoreDefaults",
                     type: "POST",
