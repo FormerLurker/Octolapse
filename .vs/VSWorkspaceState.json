@@ -4,8 +4,8 @@
     "\\docs",
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\data",
-    "\\octoprint_octolapse\\static\\js"
+    "\\octoprint_octolapse\\test"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\timelapse.py",
+  "SelectedNode": "\\octoprint_octolapse\\extruder.py",
   "PreviewInSolutionExplorer": false
 }

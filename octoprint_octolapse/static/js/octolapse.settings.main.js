@@ -13,6 +13,10 @@ $(function () {
         // Settings values
         self.is_octolapse_enabled = ko.observable();
         self.show_navbar_icon = ko.observable();
+        self.show_position_state_changes = ko.observable();
+        self.show_extruder_state_changes = ko.observable();
+
+        
 
         // Informational Values
         self.platform = ko.observable();
@@ -26,11 +30,16 @@ $(function () {
             settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
             self.show_navbar_icon(settings.show_navbar_icon())
+            self.show_position_state_changes(settings.show_position_state_changes())
+            self.show_extruder_state_changes(settings.show_extruder_state_changes())
             self.platform(settings.platform());
 
             // Bind the global values associated with these settings
             Octolapse.enabled(settings.is_octolapse_enabled())
             Octolapse.navbar_enabled(settings.show_navbar_icon());
+            Octolapse.show_position_state_changes(settings.show_position_state_changes());
+            Octolapse.show_extruder_state_changes(settings.show_extruder_state_changes());
+
             self.$addEditDialog = $("#octolapse_edit_settings_main_dialog");
         }
         /*
@@ -77,7 +86,17 @@ $(function () {
         }
         self.update = function(settings) {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
-            self.show_navbar_icon(settings.show_navbar_icon)
+            self.show_navbar_icon(settings.show_navbar_icon);
+            self.show_position_state_changes(settings.show_position_state_changes);
+            self.show_extruder_state_changes(settings.show_extruder_state_changes);
+
+            // Update globals
+            Octolapse.enabled(settings.is_octolapse_enabled)
+            Octolapse.navbar_enabled(settings.show_navbar_icon);
+            Octolapse.show_position_state_changes(settings.show_position_state_changes);
+            Octolapse.show_extruder_state_changes(settings.show_extruder_state_changes);
+
+
             // Set the tab-button/tab visibility
             self.setSettingsVisibility(settings.is_octolapse_enabled);
         }
@@ -101,6 +120,8 @@ $(function () {
             var data = {
                 "is_octolapse_enabled": self.is_octolapse_enabled()
                 , "show_navbar_icon": self.show_navbar_icon()
+                , "show_position_state_changes": self.show_position_state_changes()
+                , "show_extruder_state_changes": self.show_extruder_state_changes()
                 , "client_id" : Octolapse.client_id
             };
             console.log("Saving main settings.")
@@ -123,6 +144,9 @@ $(function () {
             // Set the options to the current settings
             self.is_octolapse_enabled(true)
             self.show_navbar_icon(true)
+            self.show_position_state_changes(true)
+            self.show_extruder_state_changes(true)
+            
         };
         
         

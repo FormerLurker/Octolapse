@@ -28,6 +28,8 @@ def GetFormattedCoordinates(x,y,z,e):
 class Pos(object):
 	def __init__(self, octoprintPrinterProfile, pos=None):
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
+		#GCode
+		self.GCode = None if pos is None else pos.GCode
 		#F
 		self.F = None if pos is None else pos.F
 		#X
@@ -48,21 +50,65 @@ class Pos(object):
 		self.IsRelative = False if pos is None else pos.IsRelative
 		self.IsExtruderRelative = True if pos is None else pos.IsExtruderRelative
 		self.LastExtrusionHeight = 0 if pos is None else pos.LastExtrusionHeight
-		
-		# State Flags
-
-		self.IsLayerChange = False if pos is None else pos.IsLayerChange
-		self.IsZHop = False if pos is None else pos.IsZHop
-		
-
-		self.HasPositionError = False if pos is None else pos.HasPositionError
-		self.PositionError = None if pos is None else pos.PositionError
-		self.HasPositionChanged = False if pos is None else pos.HasPositionChanged
-		self.IsLayerChange = False if pos is None else pos.IsLayerChange
+		#Layer and Height Tracking
 		self.Layer = 0 if pos is None else pos.Layer
 		self.Height = 0 if pos is None else pos.Height
 
-	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
+		# State Flags
+		self.IsLayerChange = False if pos is None else pos.IsLayerChange
+		self.IsZHop = False if pos is None else pos.IsZHop
+		self.HasPositionChanged = False if pos is None else pos.HasPositionChanged
+		self.HasStateChanged = False if pos is None else pos.HasStateChanged
+		#Error Flags
+		self.HasPositionError = False if pos is None else pos.HasPositionError
+		self.PositionError = None if pos is None else pos.PositionError
+		
+	def ResetState(self):
+		self.IsLayerChange = False
+		self.IsZHop = False
+		self.HasPositionChanged = False 
+		self.HasStateChanged = False
+	def IsStateEqual(self, pos):
+		if(self.IsLayerChange != pos.IsLayerChange
+			or self.IsZHop != pos.IsZHop):
+			return False
+		return True
+	
+	def IsPositionEqual(self, pos, tolerance):
+		if(utility.round_to(pos.X, tolerance) != utility.round_to(self.X, tolerance)
+					or utility.round_to(pos.Y, tolerance) != utility.round_to(self.Y, tolerance)
+					or utility.round_to(pos.Z, tolerance) != utility.round_to(self.Z, tolerance)):
+			return False
+		return True
+	def ToDict(self):
+		return {
+			"GCode":self.GCode,
+			"F":self.F,
+			"X":self.X,
+			"XOffset": self.XOffset,
+			"XHomed":self.XHomed,
+			"Y":self.Y,
+			"YOffset":self.YOffset,
+			"YHomed":self.YHomed,
+			"Z":self.Z,
+			"ZOffset":self.ZOffset,
+			"ZHomed":self.ZHomed,
+			"E":self.E,
+			"EOffset":self.EOffset,
+			"IsRelative":self.IsRelative,
+			"IsExtruderRelative":self.IsExtruderRelative,
+			"LastExtrusionHeight":self.LastExtrusionHeight,
+			"IsLayerChange":self.IsLayerChange,
+			"IsZHop":self.IsZHop,
+			"HasPositionError":self.HasPositionError,
+			"PositionError":self.PositionError,
+			"HasPositionChanged":self.HasPositionChanged,
+			"HasStateChanged":self.HasStateChanged,
+			"IsLayerChange":self.IsLayerChange,
+			"Layer":self.Layer,
+			"Height":self.Height
+		}
+	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
 			self.F = float(f)
 		if(force):
@@ -156,18 +202,23 @@ class Position(object):
 		self.Positions = []
 		
 		self.SavedPosition = None
+
+	
 	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return
 		pos = self.Positions[0]
 		pos.UpdatePosition(x,y,z,e,f,force)
-
 	def SavePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return
 		self.SavedPosition = Pos(self.Positions[0])
-		
-
+	def ToDict(self):
+		positionDict = None
+		if(len(self.Positions)>0):
+			previousPos = self.Positions[0]
+			return previousPos.ToDict()
+		return None
 	def ZDelta(self,pos):
 		if(len(self.Positions)>0):
 			previousPos = self.Positions[0]
@@ -178,6 +229,14 @@ class Position(object):
 				else:
 					return pos.Height - previousPos.Height
 		return 0
+	def HasStateChanged(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].HasStateChanged
+		return None
+	def HasPositionChanged(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].HasPositionChanged
+		return None
 	def HasPositionError(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].HasPositionError
@@ -198,22 +257,18 @@ class Position(object):
 		if(len(self.Positions)>index):
 			return self.Positions[index].Y
 		return None
-
 	def Z(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].Z
 		return None
-
 	def E(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].E
 		return None
-
 	def F(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].F
 		return None
-
 	def IsZHop(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].IsZHop
@@ -226,17 +281,14 @@ class Position(object):
 		if(len(self.Positions)>index):
 			return self.Positions[index].Height
 		return None
-
 	def IsRelative(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].IsRelative
 		return None
-
 	def IsExtruderRelative(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].IsExtruderRelative
 		return None
-	
 	def UndoUpdate(self):
 		if(len(self.Positions)>0):
 			del self.Positions[0]
@@ -250,9 +302,6 @@ class Position(object):
 		numPositions = len(self.Positions)
 		if(numPositions>0):
 			pos = Pos(self.OctoprintPrinterProfile,self.Positions[0])
-			# reset state variables
-			pos.IsLayerChange = False
-			pos.HasPositionChanged = False
 			if(numPositions>1):
 				previousPos = Pos(self.OctoprintPrinterProfile,self.Positions[1])
 		if(pos is None):
@@ -260,13 +309,10 @@ class Position(object):
 		if(previousPos is None):
 			previousPos = Pos(  self.OctoprintPrinterProfile)
 
-		# Movement detected, set the previous values
-		# disect the gcode and use it to update our position
-
-		
-		
-
-		pos.IsZHop = False
+		# reset the current position state (copied from the previous position, or a new position)
+		pos.ResetState()
+		# set the pos gcode command
+		pos.GCode = gcode
 
 		# apply the command to the position tracker
 		if(command is not None):
@@ -305,14 +351,8 @@ class Position(object):
 					
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the gcode command: {0}".format(gcode))
-				
-
-				# If we've not yet homed the axis
-				
-				#########################################################
 			elif(command.Command == "G28"):
-				# test homing of only X,Y or Z
-				
+				# Home
 				if(command.Parse()):
 					x = command.Parameters["X"].Value
 					y = command.Parameters["Y"].Value
@@ -364,15 +404,17 @@ class Position(object):
 					else:
 						self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G91 - Already using relative extruder coordinates")
 			elif(command.Command == "M83"):
+				# Extruder - Set Relative
 				if(pos.IsExtruderRelative is None or not pos.IsExtruderRelative):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M83 - Switching Extruder to Relative Coordinates")
 					pos.IsExtruderRelative = True
 			elif(command.Command == "M82"):
-				
+				# Extruder - Set Absolute
 				if(pos.IsExtruderRelative is None or pos.IsExtruderRelative):
 					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received M82 - Switching Extruder to Absolute Coordinates")
 					pos.IsExtruderRelative = False
 			elif(command.Command == "G92"):
+				# Set Position (offset)
 				if(command.Parse()):
 					previousRelativeValue = pos.IsRelative
 					previousExtruderRelativeValue = pos.IsExtruderRelative
@@ -399,15 +441,15 @@ class Position(object):
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the Gcode:{0}".format(gcode))
 
-			#########################################################
-			# Update the extruder monitor if there was movement
+			########################################
+			# Update the extruder monitor.
 			self.Extruder.Update(self.ERelative(pos))
-
+			########################################
+			# If we have a homed axis, detect changes.
+			########################################
 			if(self.HasHomedAxis()):
-				hasExtruderChanged = (utility.round_to(self.ERelative(pos), self.PrinterTolerance)  != 0)
-				hasXYZChanged = (utility.round_to(pos.X, self.PrinterTolerance) != utility.round_to(previousPos.X, self.PrinterTolerance)
-					or utility.round_to(pos.Y, self.PrinterTolerance) != utility.round_to(previousPos.Y, self.PrinterTolerance)
-					or utility.round_to(pos.Z, self.PrinterTolerance) != utility.round_to(previousPos.Z, self.PrinterTolerance))
+				hasExtruderChanged = self.Extruder.HasChanged()
+				hasXYZChanged = pos.IsPositionEqual(previousPos,self.PrinterTolerance)
 
 				if(hasExtruderChanged or hasXYZChanged):
 					pos.HasPositionChanged = True;
@@ -441,6 +483,11 @@ class Position(object):
 					if(pos.IsZHop):
 						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
 					
+		# see if the position state has changed
+		if(not pos.IsStateEqual(previousPos)):
+			pos.HasStateChanged = True
+		
+
 		# Add the current position, remove positions if we have more than 5 from the end
 		self.Positions.insert(0,pos)
 		while (len(self.Positions)> 5):

@@ -25,7 +25,8 @@ class Timelapse(object):
 			  , onRenderSynchronizeComplete = None
 			  , onRenderEnd = None
 			  , onTimelapseStopping = None
-			  , onTimelapseStopped = None):
+			  , onTimelapseStopped = None
+			  , onStateChanged = None):
 		# config variables - These don't change even after a reset
 		self.Settings = octolapseSettings
 		self.DataFolder = dataFolder
@@ -40,6 +41,7 @@ class Timelapse(object):
 		self.OnSnapshotCompleteCallback = onSnapshotEnd
 		self.TimelapseStoppingCallback = onTimelapseStopping
 		self.TimelapseStoppedCallback = onTimelapseStopped
+		self.OnStateChangedCallback = onStateChanged
 		self.Responses = Responses() # Used to decode responses from the 3d printer
 		self.Commands = Commands() # used to parse and generate gcode
 		
@@ -152,6 +154,21 @@ class Timelapse(object):
 		# position
 		cmd = cmd.upper().strip()
 		self.Position.Update(cmd)
+		# if there has been a position or extruder state change, inform any listener
+		if(self.OnStateChangedCallback is not None):
+			changeDict = {
+				"Extruder": None,
+				"Position": None 
+				}
+			if(self.Position.HasStateChanged()):
+				changeDict["Position"] = self.Position.ToDict();
+			if(self.Position.Extruder.HasChanged()):
+				changeDict["Extruder"] = self.Position.Extruder.ToDict();
+
+			if(changeDict["Extruder"] is not None or changeDict["Position"] is not None):
+				self.OnStateChangedCallback(changeDict)
+			
+
 		isSnapshotGcodeCommand = self.IsSnapshotCommand(cmd)
 
 		if(self.State == TimelapseState.WaitingForTrigger):
@@ -281,7 +298,6 @@ class Timelapse(object):
 		# create the GCode for the timelapse and store it
 		isRelative = self.Position.IsRelative()
 		isExtruderRelative = self.Position.IsExtruderRelative()
-		extruder = self.Position.Extruder
 
 		self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z, self.Position.F(), self.Position.IsRelative(), self.Position.IsExtruderRelative(), self.Position.Extruder, self.Position.DistanceToZLift(), savedCommand=self.SavedCommand)
 		# make sure we acutally received gcode
@@ -426,8 +442,6 @@ class Timelapse(object):
 			self.RenderTimelapse()
 			self.Reset();
 			
-		
-
 	def RenderTimelapse(self):
 		# make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
 		if(self.Rendering.enabled):

@@ -1138,8 +1138,8 @@ class OctolapseSettings(object):
 		self.version = "0.0.1.0"
 		self.show_navbar_icon = True
 		self.is_octolapse_enabled = True
-		
-
+		self.show_extruder_state_changes = False
+		self.show_position_state_changes = False
 		printer = self.DefaultPrinter
 		self.current_printer_profile_guid = printer.guid
 		self.printers = {printer.guid : printer}
@@ -1208,6 +1208,9 @@ class OctolapseSettings(object):
 
 		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
 		if (HasKey(changes,"show_navbar_icon")) : self.show_navbar_icon = bool(GetValue(changes,"show_navbar_icon",self.show_navbar_icon))
+		if (HasKey(changes,"show_extruder_state_changes")) : self.show_extruder_state_changes = bool(GetValue(changes,"show_extruder_state_changes",self.show_extruder_state_changes))
+		if (HasKey(changes,"show_position_state_changes")) : self.show_position_state_changes = bool(GetValue(changes,"show_position_state_changes",self.show_position_state_changes))
+
 		if (HasKey(changes,"current_printer_profile_guid")) : self.current_printer_profile_guid = str(GetValue(changes,"current_printer_profile_guid",self.current_printer_profile_guid))
 		if (HasKey(changes,"current_stabilization_profile_guid"))  : self.current_stabilization_profile_guid = str(GetValue(changes,"current_stabilization_profile_guid",self.current_stabilization_profile_guid))
 		if (HasKey(changes,"current_snapshot_profile_guid")) : self.current_snapshot_profile_guid = str(GetValue(changes,"current_snapshot_profile_guid",self.current_snapshot_profile_guid))
@@ -1277,6 +1280,8 @@ class OctolapseSettings(object):
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			"show_navbar_icon" : utility.getbool(self.show_navbar_icon,defaults.show_navbar_icon),
+			"show_extruder_state_changes" : utility.getbool(self.show_extruder_state_changes,defaults.show_extruder_state_changes),
+			"show_position_state_changes" : utility.getbool(self.show_position_state_changes,defaults.show_position_state_changes),
 			"platform" : sys.platform,
 			'stabilization_type_options' :
 			[
@@ -1357,6 +1362,8 @@ class OctolapseSettings(object):
 		return {
 			'is_octolapse_enabled':self.is_octolapse_enabled
 			,'show_navbar_icon':self.show_navbar_icon
+			,'show_position_state_changes':self.show_position_state_changes
+			,'show_extruder_state_changes':self.show_extruder_state_changes
 			}
 	#Add/Update/Remove/set current profile
 	def addUpdateProfile(self, profileType, profile):

@@ -61,7 +61,12 @@ $(function () {
         Octolapse.toggle(this, JSON.parse(args));
     };
 
-
+    // Global Values
+    Octolapse.show_position_state_changes = ko.observable(false)
+    Octolapse.show_extruder_state_changes = ko.observable(false)
+    Octolapse.is_admin = ko.observable(false)
+    Octolapse.enabled = ko.observable(false);
+    Octolapse.navbar_enabled = ko.observable(false);
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
@@ -122,6 +127,19 @@ $(function () {
         octolapseCameraRequestTemplate: "The value is not a url.  You may use {camera_address} or {value} tokens.",
         octolapseSnapshotTemplate: "The value is not a url.  You may use {camera_address} to refer to the web camera address."
     });
+
+    // Knockout numeric binding
+    ko.extenders.numeric = function (target, precision) {
+        var result = ko.dependentObservable({
+            read: function () {
+                return target().toFixed(precision);
+            },
+            write: target
+        });
+
+        result.raw = target;
+        return result;
+    };
     // Settings View Model
     Octolapse.SettingsViewModel = function (parameters) {
         // Create a reference to this object

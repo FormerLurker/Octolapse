@@ -1,6 +1,98 @@
 /// Create our printers view model
 $(function () {
-    
+    Octolapse.extruderStateViewModel = function () {
+        self = this;
+        // State variables
+        self.ExtrusionLengthTotal = ko.observable(0).extend({ numeric: 2 });
+        self.ExtrusionLength = ko.observable(0).extend({ numeric: 2 });
+        self.RetractionLength = ko.observable(0).extend({ numeric: 2 });
+        self.DetractionLength = ko.observable(0).extend({ numeric: 2 });
+        self.IsExtrudingStart = ko.observable(false);
+        self.IsExtruding = ko.observable(false);
+        self.IsPrimed = ko.observable(false);
+        self.IsRetractingStart = ko.observable(false);
+        self.IsRetracting = ko.observable(false);
+        self.IsRetracted = ko.observable(false);
+        self.IsPartiallyRetracted = ko.observable(false);
+        self.IsDetractingStart = ko.observable(false);
+        self.IsDetracting = ko.observable(false);
+        self.IsDetracted = ko.observable(false);
+        self.HasChanged = ko.observable(false);
+
+        self.update = function (state) {
+            this.ExtrusionLengthTotal(state.ExtrusionLengthTotal);
+            this.ExtrusionLength(state.ExtrusionLength);
+            this.RetractionLength(state.RetractionLength);
+            this.DetractionLength(state.DetractionLength);
+            this.IsExtrudingStart(state.IsExtrudingStart);
+            this.IsExtruding(state.IsExtruding);
+            this.IsPrimed(state.IsPrimed);
+            this.IsRetractingStart(state.IsRetractingStart);
+            this.IsRetracting(state.IsRetracting);
+            this.IsRetracted(state.IsRetracted);
+            this.IsPartiallyRetracted(state.IsPartiallyRetracted);
+            this.IsDetractingStart(state.IsDetractingStart);
+            this.IsDetracting(state.IsDetracting);
+            this.IsDetracted(state.IsDetracted);
+            this.HasChanged(state.HasChanged);
+        }
+    }
+    Octolapse.positionStateViewModel = function () {
+        self = this;
+        self.GCode = ko.observable("");
+        self.F = ko.observable(0).extend({ numeric: 2 });
+        self.X = ko.observable(0).extend({ numeric: 2 });
+        self.XOffset = ko.observable(0).extend({ numeric: 2 });
+        self.XHomed = ko.observable(false);
+        self.Y = ko.observable(0).extend({ numeric: 2 });
+        self.YOffset = ko.observable(0).extend({ numeric: 2 });
+        self.YHomed = ko.observable(false);
+        self.Z = ko.observable(0).extend({ numeric: 2 });
+        self.ZOffset = ko.observable(0);
+        self.ZHomed = ko.observable(false);
+        self.E = ko.observable(0).extend({ numeric: 2 });
+        self.EOffset = ko.observable(0).extend({ numeric: 2 });
+        self.IsRelative = ko.observable(false);
+        self.IsExtruderRelative = ko.observable(false);
+        self.LastExtrusionHeight = ko.observable(0).extend({ numeric: 2 });
+        self.IsLayerChange = ko.observable(false);
+        self.IsZHop = ko.observable(false);
+        self.HasPositionError = ko.observable(false);
+        self.PositionError = ko.observable(false);
+        self.HasPositionChanged = ko.observable(false);
+        self.HasStateChanged = ko.observable(false);
+        self.IsLayerChange = ko.observable(false);
+        self.Layer = ko.observable(0).extend({ numeric: 2 });
+        self.Height = ko.observable(0).extend({ numeric: 2 });
+
+        self.update = function (state) {
+            this.GCode(state.GCode);
+            this.F(state.F);
+            this.X(state.X);
+            this.XOffset(state.XOffset);
+            this.XHomed(state.XHomed);
+            this.Y(state.Y);
+            this.YOffset(state.YOffset);
+            this.YHomed(state.YHomed);
+            this.Z(state.Z);
+            this.ZOffset(state.ZOffset);
+            this.ZHomed(state.ZHomed);
+            this.E(state.E);
+            this.EOffset(state.EOffset);
+            this.IsRelative(state.IsRelative);
+            this.IsExtruderRelative(state.IsExtruderRelative);
+            this.LastExtrusionHeight(state.LastExtrusionHeight);
+            this.IsLayerChange(state.IsLayerChange);
+            this.IsZHop(state.IsZHop);
+            this.HasPositionError(state.HasPositionError);
+            this.PositionError(state.PositionError);
+            this.HasPositionChanged(state.HasPositionChanged);
+            this.HasStateChanged(state.HasStateChanged);
+            this.IsLayerChange(state.IsLayerChange);
+            this.Layer(state.Layer);
+            this.Height(state.Height);
+        };
+    }
     Octolapse.StatusViewModel = function (parameters) {
         // Create a reference to this object
         var self = this
@@ -16,12 +108,12 @@ $(function () {
         self.snapshot_count = ko.observable(0);        
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
-        Octolapse.is_admin = ko.observable(false)
 
-        // Create observables for global UI binding, meaning we are accessing these
-        // variables from different parts of the UI
-        Octolapse.enabled = ko.observable();
-        Octolapse.navbar_enabled = ko.observable();
+        self.ExtruderState = new Octolapse.extruderStateViewModel();
+        self.PositionState = new Octolapse.positionStateViewModel();
+        
+
+        
 
         self.onBeforeBinding = function () {
             Octolapse.is_admin(self.loginState.isAdmin());
@@ -40,16 +132,29 @@ $(function () {
             console.log("octolapse.status.js - User Logged Out")
             Octolapse.is_admin(false);
         }
-        
+        self.updateExtruderState  = function (state) {
+            // State variables
+            self.ExtruderState.update(state)
+        }
+        self.updatePositionState = function (state) {
+            // State variables
+            self.PositionState.update(state)
+        }
         self.update = function (settings) {
             self.is_timelapse_active(settings.is_timelapse_active);
             self.snapshot_count(settings.snapshot_count);
             self.is_taking_snapshot(settings.is_taking_snapshot);
             self.is_rendering(settings.is_rendering);
             self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
+            
             // variables from different parts of the UI
             Octolapse.enabled(settings.is_octolapse_enabled);
             Octolapse.navbar_enabled(settings.show_navbar_icon);
+            Octolapse.navbar_enabled(settings.show_navbar_icon);
+            Octolapse.show_position_state_changes(settings.show_position_state_changes);
+            Octolapse.show_extruder_state_changes(settings.show_extruder_state_changes);
+
+
         }
         self.loadStatus = function () {
 
@@ -76,15 +181,37 @@ $(function () {
             }
             // Todo, handle this with
             switch (data.type) {
+                case "main-settings-changed":
+                    if (Octolapse.client_id != data.client_id) {
+                        console.log('octolapse.status.js - main-settings-changed');
+                        // Bind the global values associated with these settings
+                        Octolapse.enabled(data.is_octolapse_enabled)
+                        Octolapse.navbar_enabled(data.show_navbar_icon);
+                        Octolapse.show_position_state_changes(data.show_position_state_changes);
+                        Octolapse.show_extruder_state_changes(data.show_extruder_state_changes);
+
+                    }
+                    break;
                 case "settings-changed":
                     if (Octolapse.client_id != data.client_id) {
                         console.log('octolapse.status.js - settings-changed - loading status');
                         self.loadStatus();
                     }
                     break;
-                case "status-changed":
-                    console.log('octolapse.status.js - status-changed');
-                    self.update(data);
+                case "state-changed":
+                    console.log('octolapse.status.js - extruder-state-changed');
+                    if(data.Position != null)
+                        self.updatePositionState(data.Position);
+                    if(data.Extruder != null)
+                        self.updateExtruderState(data.Extruder);
+                    break;
+                case "state-changed":
+                    console.log('octolapse.status.js - position-state-changed');
+                    self.updatePositionState(data);
+                    break;
+                case "state-changed":
+                    console.log('octolapse.status.js - state-changed');
+                    self.UpdateStateDisplay(data)
                     break;
                 case "popup":
                     console.log('octolapse.status.js - popup');

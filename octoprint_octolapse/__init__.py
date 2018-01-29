@@ -67,12 +67,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		clientId = requestValues["client_id"];
 		self.Settings.is_octolapse_enabled = requestValues["is_octolapse_enabled"];
 		self.Settings.show_navbar_icon = requestValues["show_navbar_icon"];
-
+		self.Settings.show_extruder_state_changes = requestValues["show_extruder_state_changes"];
+		self.Settings.show_position_state_changes = requestValues["show_position_state_changes"];
 		# save the updated settings to a file.
 		self.SaveSettings()
-		self.SendStatusChangedMessage(clientId);
+		mainSettings = self.Settings.GetMainSettingsDict()
+		self.SendMainSettingsChanged(mainSettings, clientId);
 		data = {'success':True}
-		data.update(self.Settings.GetMainSettingsDict())
+		data.update(mainSettings)
 		return json.dumps(data), 200, {'ContentType':'application/json'} 
 		
 	@octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
@@ -318,6 +320,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		isTakingSnapshot = False
 		isRendering = False
 		timelapseState = TimelapseState.Idle
+		positionState = None
 
 		if(self.Timelapse is not None and self.Timelapse.State != TimelapseState.Idle):
 			snapshotCount = self.Timelapse.SnapshotCount
@@ -326,14 +329,17 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			isRendering = self.Timelapse.IsRendering
 			isTakingSnapshot = self.Timelapse.State == TimelapseState.TakingSnapshot
 			timelapseState = self.Timelapse.State
+			positionState = self.Timelapse.Position.ToDict()
 		return {
 			'snapshot_count': snapshotCount,
 			'seconds_added_by_octolapse' : secondsAddedByOctolapse,
 			'is_timelapse_active' : isTimelapseActive,
 			'is_taking_snapshot' : isTakingSnapshot,
-			'is_rendering' : isRendering,
+			'is_rdendering' : isRendering,
 			'is_octolapse_enabled' : self.Settings.is_octolapse_enabled if self.Settings is not None else False,
 			'show_navbar_icon' : self.Settings.show_navbar_icon if self.Settings is not None else False,
+			'show_position_state_changes' : self.Settings.show_position_state_changes if self.Settings is not None else False,
+			'show_extruder_state_changes' : self.Settings.show_extruder_state_changes if self.Settings is not None else False,
 			'state' : timelapseState
 		}
 
@@ -360,7 +366,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , onSnapshotStart = self.OnSnapshotStart
 							  , onSnapshotEnd = self.OnSnapshotEnd
 							  , onTimelapseStopping = self.OnTimelapseStopping
-							  , onTimelapseStopped = self.OnTimelapseStopped)
+							  , onTimelapseStopped = self.OnTimelapseStopped
+							  , onStateChanged = self.OnPositionExtruderStateChanged)
 			self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 		except Exception, e:
 			message = "Un unexptected exception occurred while calling on_after_startup.  Details:{0}".format(e)
@@ -463,6 +470,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def SendPopupMessage(self, msg):
 		self.SendPluginMessage("popup", msg)
 
+	def SendMainSettingsChanged(self,mainSettings, clientId):
+		data = {
+			"type":"main-settings-changed"
+			}
+		data.update(mainSettings)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+
+	def SendStateChangedMessage(self, state):
+		
+		data = {
+			"type":"state-changed"
+			}
+		data.update(state)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+	
+
 	def SendSettingsChangedMessage(self,client_id):
 		data = {
 			"type":"settings-changed"
@@ -553,7 +576,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		try:
 			# only handle commands sent while printing
 			if(self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
-					return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+				return self.Timelapse.GcodeQueuing(comm_instance,phase,cmd,cmd_type,gcode,args,kwargs)
+
 		except Exception, e:
 			message = "Un unexptected exception occurred while calling Timelapse.GcodeQueuing.  Details:{0}".format(e)
 			if(self.Settings is not None):
@@ -571,6 +595,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogError(message)
 			else:
 				self._logger.error(message)
+
+	def OnPositionExtruderStateChanged(self, *args, **kwargs):
+		stateChangeDict = args[0]
+		self.SendStateChangedMessage(stateChangeDict)
 
 	
 	def OnRenderStart(self, *args, **kwargs):
