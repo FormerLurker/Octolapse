@@ -2,7 +2,7 @@
 
 ** This plugin is in Alpha Install at your own risk!  
 
-* The ame of the plugin is likely to change if it hasn't already
+* The name of the plugin is likely to change if it hasn't already
 
 ## Description
 
