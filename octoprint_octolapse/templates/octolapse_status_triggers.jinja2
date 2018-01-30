@@ -1,0 +1,118 @@
+<script type="text/html" id="trigger-status-template">
+  <h1 data-bind="text:Name"></h1>
+  <div class="span4">
+    <span>Generic Trigger</span>
+    <dl class="dl-vertical">
+      <dt>IsTriggered</dt>
+      <dd><input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" /></dd>
+      <dt>IsWaiting</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" /></dd>
+      <dt>IsWaitingOnZHop</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" /></dd>
+      <dt>IsWaitingOnExtruder</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" /></dd>
+    </dl>
+  </div>
+</script>
+<script type="text/html" id="gcode-trigger-status-template">
+  <div class="span4">
+    <span>GCode Trigger</span>
+    <dl class="dl-vertical">
+      <dt>IsTriggered</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
+      </dd>
+      <dt>IsWaiting</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
+      </dd>
+      <dt>IsWaitingOnZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
+      </dd>
+      <dt>IsWaitingOnExtruder</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
+      </dd>
+    </dl>
+  </div>
+</script>
+<script type="text/html" id="layer-trigger-status-template">
+  <div class="span4">
+    <span>Layer Trigger</span>
+    <dl class="dl-vertical">
+      <dt>IsTriggered</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
+      </dd>
+      <dt>IsWaiting</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
+      </dd>
+      <dt>IsWaitingOnZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
+      </dd>
+      <dt>IsWaitingOnExtruder</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
+      </dd>
+      <dt>IsHeightChangeWait</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsHeightChangeWait" />
+      </dd>
+      <dt>IsHeightChange</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsHeightChange" />
+      </dd>
+      <dt>IsLayerChange</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsLayerChangeWait" />
+      </dd>
+      <dt>IsLayerChangeWait</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsLayerChangeWait" />
+      </dd>
+      <dt>CurrentIncrement</dt>
+      <dd>
+        <span data-bind="text: CurrentIncrement" />
+      </dd>
+    </dl>
+  </div>
+</script>
+<script type="text/html" id="timer-trigger-status-template">
+  <div class="span4">
+    <span>Timer Trigger</span>
+    <dl class="dl-vertical">
+      <dt>IsTriggered</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
+      </dd>
+      <dt>IsWaiting</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
+      </dd>
+      <dt>IsWaitingOnZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
+      </dd>
+      <dt>IsWaitingOnExtruder</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
+      </dd>
+      <dt>IntervalSeconds</dt>
+      <dd>
+        <span data-bind="text:IntervalSeconds" />
+      </dd>
+      <dt>SecondsToTrigger</dt>
+      <dd>
+        <span data-bind="text:SecondsToTrigger" />
+      </dd>
+      <dt>TriggerStartTime</dt>
+      <dd>
+        <span data-bind="text:TriggerStartTime" />
+      </dd>
+      <dt>PauseTime</dt>
+      <dd>
+        <span data-bind="text:PauseTime" />
+      </dd>
+    </dl>
+  </div>
+</script>

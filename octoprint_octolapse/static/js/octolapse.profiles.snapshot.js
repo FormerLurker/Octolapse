@@ -2,7 +2,7 @@
 $(function () {
     
     Octolapse.SnapshotProfileViewModel = function(values) {
-        self = this
+        var self = this;
         self.name = ko.observable(values.name);
         self.guid = ko.observable(values.guid);
         self.gcode_trigger_enabled =                ko.observable(values.gcode_trigger_enabled);

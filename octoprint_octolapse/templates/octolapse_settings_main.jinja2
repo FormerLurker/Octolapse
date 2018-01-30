@@ -18,18 +18,33 @@
       <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar Control is Enabled' : 'Navbar Control is Disabled'"></span>
     </div>
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></i>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
-    </div>
-    <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
 
         <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></i>
       </span>
       <span data-bind="text: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
     </div>
+    <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'}">
+
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_changes() ) },style: { color: (Octolapse.Globals.show_position_changes()  ) ? 'limegreen' : '' }"></i>
+      </span>
+      <span data-bind="text: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'"></span>
+    </div>
+    <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></i>
+      </span>
+      <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
+    </div>
+
+    <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'}">
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_trigger_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_trigger_state_changes() ) },style: { color: (Octolapse.Globals.show_trigger_state_changes()  ) ? 'limegreen' : '' }"></i>
+      </span>
+      <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
+    </div>
+    
     
   </div>
   <div class="panel-footer">
@@ -68,6 +83,22 @@
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Show Position State Changes on Tab
+                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                </label>
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Show Position Changes on Tab
+                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                </label>
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="controls">
+                <label class="checkbox">
                   <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Show Extruder State Changes on Tab
                   <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
                 </label>
@@ -76,11 +107,12 @@
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Show Position State Changes on Tab
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Show Trigger State Changes on Tab
                   <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
                 </label>
               </div>
             </div>
+            
           </div>
           <div class="modal-footer" style="bottom:0;position:relative">
             <div class="row-fluid">

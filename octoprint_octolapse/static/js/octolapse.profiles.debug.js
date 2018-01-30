@@ -2,7 +2,7 @@
 /// Create our stabilizations view model
 $(function() {
     Octolapse.DebugProfileViewModel = function(values) {
-        self = this
+        var self = this
         self.name = ko.observable(values.name);
         self.guid = ko.observable(values.guid);
         self.enabled = ko.observable(values.enabled);

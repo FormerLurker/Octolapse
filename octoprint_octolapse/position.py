@@ -56,6 +56,7 @@ class Pos(object):
 
 		# State Flags
 		self.IsLayerChange = False if pos is None else pos.IsLayerChange
+		self.IsHeightChange = False if pos is None else pos.IsHeightChange
 		self.IsZHop = False if pos is None else pos.IsZHop
 		self.HasPositionChanged = False if pos is None else pos.HasPositionChanged
 		self.HasStateChanged = False if pos is None else pos.HasStateChanged
@@ -65,21 +66,69 @@ class Pos(object):
 		
 	def ResetState(self):
 		self.IsLayerChange = False
+		self.IsHeightChange = False
 		self.IsZHop = False
 		self.HasPositionChanged = False 
 		self.HasStateChanged = False
-	def IsStateEqual(self, pos):
-		if(self.IsLayerChange != pos.IsLayerChange
-			or self.IsZHop != pos.IsZHop):
-			return False
-		return True
+	def IsStateEqual(self, pos, tolerance):
+		if(
+				self.XHomed == pos.XHomed
+			and self.YHomed == pos.YHomed
+			and self.ZHomed == pos.ZHomed
+			and self.IsLayerChange == pos.IsLayerChange
+			and self.IsHeightChange == pos.IsHeightChange
+			and self.IsZHop == pos.IsZHop
+			and self.IsRelative == pos.IsRelative
+			and self.IsExtruderRelative == pos.IsExtruderRelative
+			and utility.round_to(pos.Layer, tolerance) != utility.round_to(self.Layer, tolerance)
+			and utility.round_to(pos.Height, tolerance) != utility.round_to(self.Height, tolerance)
+			and utility.round_to(pos.LastExtrusionHeight, tolerance) != utility.round_to(self.LastExtrusionHeight, tolerance)
+			and self.HasPositionError == pos.HasPositionError
+			and self.PositionError == pos.PositionError):
+			return True
+		
+		return False
 	
 	def IsPositionEqual(self, pos, tolerance):
-		if(utility.round_to(pos.X, tolerance) != utility.round_to(self.X, tolerance)
-					or utility.round_to(pos.Y, tolerance) != utility.round_to(self.Y, tolerance)
-					or utility.round_to(pos.Z, tolerance) != utility.round_to(self.Z, tolerance)):
-			return False
-		return True
+		if(	pos.X is not None
+			and utility.round_to(pos.X, tolerance) == utility.round_to(self.X, tolerance)
+			and pos.Y is not None
+			and utility.round_to(pos.Y, tolerance) == utility.round_to(self.Y, tolerance)
+			and pos.Z is not None
+			and utility.round_to(pos.Z, tolerance) == utility.round_to(self.Z, tolerance)):
+			return True
+		return False
+
+	def ToStateDict(self):
+		return {
+			"GCode":self.GCode,
+			"XHomed" : self.XHomed,
+			"YHomed" : self.YHomed,
+			"ZHomed" : self.ZHomed,
+			"IsLayerChange" : self.IsLayerChange,
+			"IsHeightChange" : self.IsHeightChange,
+			"IsZHop" : self.IsZHop,
+			"IsRelative":self.IsRelative,
+			"IsExtruderRelative":self.IsExtruderRelative,
+			"Layer":self.Layer,
+			"Height":self.Height,
+			"LastExtrusionHeight":self.LastExtrusionHeight,
+			"HasPositionError":self.HasPositionError,
+			"PositionError":self.PositionError	
+		}
+	def ToPositionDict(self):
+		return {
+			"F":self.F,
+			"X":self.X,
+			"XOffset": self.XOffset,
+			"Y":self.Y,
+			"YOffset":self.YOffset,
+			"Z":self.Z,
+			"ZOffset":self.ZOffset,
+			"E":self.E,
+			"EOffset":self.EOffset,
+			
+		}
 	def ToDict(self):
 		return {
 			"GCode":self.GCode,
@@ -218,6 +267,18 @@ class Position(object):
 		if(len(self.Positions)>0):
 			previousPos = self.Positions[0]
 			return previousPos.ToDict()
+		return None
+	def ToPositionDict(self):
+		positionDict = None
+		if(len(self.Positions)>0):
+			previousPos = self.Positions[0]
+			return previousPos.ToPositionDict()
+		return None
+	def ToStateDict(self):
+		positionDict = None
+		if(len(self.Positions)>0):
+			previousPos = self.Positions[0]
+			return previousPos.ToStateDict()
 		return None
 	def ZDelta(self,pos):
 		if(len(self.Positions)>0):
@@ -447,12 +508,13 @@ class Position(object):
 			########################################
 			# If we have a homed axis, detect changes.
 			########################################
-			if(self.HasHomedAxis()):
-				hasExtruderChanged = self.Extruder.HasChanged()
-				hasXYZChanged = pos.IsPositionEqual(previousPos,self.PrinterTolerance)
+			hasExtruderChanged = self.Extruder.HasChanged()
+			pos.HasPositionChanged = not pos.IsPositionEqual(previousPos,self.PrinterTolerance)
+			pos.HasStateChanged = not pos.IsStateEqual(previousPos,self.PrinterTolerance )
 
-				if(hasExtruderChanged or hasXYZChanged):
-					pos.HasPositionChanged = True;
+			if(self.HasHomedAxis()):
+				
+				if(hasExtruderChanged or pos.HasPositionChanged):
 						
 					# calculate LastExtrusionHeight and Height
 					if (self.Extruder.IsExtruding()):
@@ -484,11 +546,7 @@ class Position(object):
 					if(pos.IsZHop):
 						self.Settings.CurrentDebugProfile().LogPositionZHop("Position - Zhop:{0}".format(self.Printer.z_hop))
 					
-		# see if the position state has changed
-		if(not pos.IsStateEqual(previousPos)):
-			pos.HasStateChanged = True
 		
-
 		# Add the current position, remove positions if we have more than 5 from the end
 		self.Positions.insert(0,pos)
 		while (len(self.Positions)> 5):

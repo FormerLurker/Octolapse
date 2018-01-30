@@ -1,7 +1,7 @@
 /// Create our stabilizations view model
 $(function() {
     Octolapse.CameraProfileViewModel = function(values) {
-        self = this
+        var self = this
         self.name = ko.observable(values.name);
         self.guid = ko.observable(values.guid);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);

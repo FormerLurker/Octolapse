@@ -45,197 +45,227 @@
     </div>
   </div>
 
+  <div data-bind="visible: Octolapse.Status.is_timelapse_active">
+    <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes()">
+      <h4>
+        Extruder State
+      </h4>
   
-  <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes">
-    <h4>
-      Extruder State
-    </h4>
-  
-    <div class="row-fluid">
+      <div class="row-fluid">
 
-    <div class="span6">
-      <dl class="dl-vertical">
-        <dt>Extrusion Length Total</dt>
-        <dd>
-          <span data-bind="text: ExtruderState.ExtrusionLengthTotal"></span>
-        </dd>
-        <dt>Extrusion Length</dt>
-        <dd>
-          <span data-bind="text: ExtruderState.ExtrusionLength"></span>
-        </dd>
+      <div class="span6">
+        <dl class="dl-vertical">
+          <dt>Extrusion Length Total</dt>
+          <dd>
+            <span data-bind="text: ExtruderState.ExtrusionLengthTotal"></span>
+          </dd>
+          <dt>Extrusion Length</dt>
+          <dd>
+            <span data-bind="text: ExtruderState.ExtrusionLength"></span>
+          </dd>
 
-        <dt>Retraction Length</dt>
-        <dd>
-          <span data-bind="text: ExtruderState.RetractionLength"></span>
-        </dd>
-        <dt>Detraction Length</dt>
-        <dd>
-          <span data-bind="text: ExtruderState.DetractionLength"></span>
-        </dd>
-        <dt>Extrusion Length</dt>
-        <dd>
-          <span data-bind="text: ExtruderState.ExtrusionLength"></span>
-        </dd>
-      </dl>
+          <dt>Retraction Length</dt>
+          <dd>
+            <span data-bind="text: ExtruderState.RetractionLength"></span>
+          </dd>
+          <dt>Detraction Length</dt>
+          <dd>
+            <span data-bind="text: ExtruderState.DetractionLength"></span>
+          </dd>
+          <dt>Extrusion Length</dt>
+          <dd>
+            <span data-bind="text: ExtruderState.ExtrusionLength"></span>
+          </dd>
+        </dl>
+      </div>
+      <div class="span6">
+        <dl class="dl-vertical">
+          <dt>Start Extruding</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsExtrudingStart" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Extruding</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsExtruding" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Primed</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsPrimed" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Start Retracting</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsRetractingStart" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Retracting</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsRetracting" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Partially Retracted</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsPartiallyRetracted" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Retracted</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsRetracted" type="checkbox" disabled="disabled" />
+          </dd>
+
+          <dt>Start Detracting</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsDetractingStart" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Detracting</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsDetracting" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Detracted</dt>
+          <dd>
+            <input data-bind="checked:ExtruderState.IsDetracted" type="checkbox" disabled="disabled" />
+          </dd>
+        </dl>
+      </div>
+
     </div>
-    <div class="span6">
-      <dl class="dl-vertical">
-        <dt>Start Extruding</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsExtrudingStart" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Extruding</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsExtruding" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Primed</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsPrimed" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Start Retracting</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsRetractingStart" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Retracting</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsRetracting" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Partially Retracted</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsPartiallyRetracted" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Retracted</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsRetracted" type="checkbox" disabled="disabled" />
-        </dd>
-
-        <dt>Start Detracting</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsDetractingStart" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Detracting</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsDetracting" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Detracted</dt>
-        <dd>
-          <input data-bind="checked:ExtruderState.IsDetracted" type="checkbox" disabled="disabled" />
-        </dd>
-      </dl>
     </div>
+    <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
+      <h4>
+        Trigger State
+      </h4>
+      <h5>
+        Trigger Name: <span data-bind="text: TriggerState.Name"></span>
+      </h5>
+      
 
-  </div>
-  </div>
-  <div data-bind="visible: Octolapse.Globals.show_position_state_changes">
+
+      <div class="row-fluid" data-bind="foreach: TriggerState.Triggers">
+        <div data-bind="template: { name: Octolapse.Status.GetTriggerStateTemplate(Type())}"></div>
+      </div>
+    </div>
+    <div data-bind="visible: Octolapse.Globals.show_position_state_changes">
+      <div>
+        <h4>
+          Position State
+        </h4>
+      </div>
+      <div class="row-fluid">
+        <div class="span6">
+        <dl class="dl-vertical">
+          <dt>Gcode</dt>
+          <dd>
+            <span data-bind="text: PositionState.GCode"></span>
+          </dd>
+          <dt>XHomed</dt>
+          <dd>
+            <input data-bind="checked:PositionState.XHomed" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>YHomed</dt>
+          <dd>
+            <input data-bind="checked:PositionState.YHomed" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>ZHomed</dt>
+          <dd>
+            <input data-bind="checked:PositionState.ZHomed" type="checkbox" disabled="disabled" />
+          </dd>
+        </dl>
+      </div>
+    
+        <div class="span6">
+        <dl class="dl-vertical">
+          <dt>IsRelative</dt>
+          <dd>
+            <input data-bind="checked:PositionState.IsRelative" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>IsExtruderRelative</dt>
+          <dd>
+            <input data-bind="checked:PositionState.IsExtruderRelative" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>IsZHop</dt>
+          <dd>
+            <input data-bind="checked:PositionState.IsZHop" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>HasPositionError</dt>
+          <dd>
+            <input data-bind="checked:PositionState.HasPositionError" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>PositionError</dt>
+          <dd>
+            <span data-bind="text: PositionState.PositionError"></span>
+          </dd>
+          <dt>HasPositionChanged</dt>
+          <dd>
+            <input data-bind="checked:PositionState.HasPositionChanged" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>HasStateChanged</dt>
+          <dd>
+            <input data-bind="checked:PositionState.HasStateChanged" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>IsLayerChange</dt>
+          <dd>
+            <input data-bind="checked:PositionState.IsLayerChange" type="checkbox" disabled="disabled" />
+          </dd>
+          <dt>Layer</dt>
+          <dd>
+            <span data-bind="text: PositionState.Layer"></span>
+          </dd>
+          <dt>Height</dt>
+          <dd>
+            <span data-bind="text: PositionState.Height"></span>
+          </dd>
+        </dl>
+        
+        </div>
+    </div>
+    </div>
+    <div data-bind="visible: Octolapse.Globals.show_position_changes">
     <div>
       <h4>
-        Position State
+        Position
       </h4>
     </div>
     <div class="row-fluid">
-    <div class="span6">
-      <dl class="dl-vertical">
-        <dt>Gcode</dt>
-        <dd>
-          <span data-bind="text: PositionState.GCode"></span>
-        </dd>
-        <dt>F</dt>
-        <dd>
-          <span data-bind="text: PositionState.F"></span>
-        </dd>
-        <dt>X</dt>
-        <dd>
-          <span data-bind="text: PositionState.X"></span>
-        </dd>
-        <dt>XOffset</dt>
-        <dd>
-          <span data-bind="text: PositionState.XOffset"></span>
-        </dd>
-        <dt>XHomed</dt>
-        <dd>
-          <input data-bind="checked:PositionState.XHomed" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Y</dt>
-        <dd>
-          <span data-bind="text: PositionState.Y"></span>
-        </dd>
-        <dt>YOffset</dt>
-        <dd>
-          <span data-bind="text: PositionState.YOffset"></span>
-        </dd>
-        <dt>YHomed</dt>
-        <dd>
-          <input data-bind="checked:PositionState.YHomed" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Z</dt>
-        <dd>
-          <span data-bind="text: PositionState.Z"></span>
-        </dd>
-        <dt>ZOffset</dt>
-        <dd>
-          <span data-bind="text: PositionState.ZOffset"></span>
-        </dd>
-        <dt>ZHomed</dt>
-        <dd>
-          <input data-bind="checked:PositionState.ZHomed" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>E</dt>
-        <dd>
-          <span data-bind="text: PositionState.E"></span>
-        </dd>
-        <dt>EOffset</dt>
-        <dd>
-          <span data-bind="text: PositionState.EOffset"></span>
-        </dd>
-      </dl>
-      
-    </div>
-    
-      <div class="span6">
-      <dl class="dl-vertical">
-        <dt>IsRelative</dt>
-        <dd>
-          <input data-bind="checked:PositionState.IsRelative" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>IsExtruderRelative</dt>
-        <dd>
-          <input data-bind="checked:PositionState.IsExtruderRelative" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>IsZHop</dt>
-        <dd>
-          <input data-bind="checked:PositionState.IsZHop" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>HasPositionError</dt>
-        <dd>
-          <input data-bind="checked:PositionState.HasPositionError" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>PositionError</dt>
-        <dd>
-          <span data-bind="text: PositionState.PositionError"></span>
-        </dd>
-        <dt>HasPositionChanged</dt>
-        <dd>
-          <input data-bind="checked:PositionState.HasPositionChanged" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>HasStateChanged</dt>
-        <dd>
-          <input data-bind="checked:PositionState.HasStateChanged" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>IsLayerChange</dt>
-        <dd>
-          <input data-bind="checked:PositionState.IsLayerChange" type="checkbox" disabled="disabled" />
-        </dd>
-        <dt>Layer</dt>
-        <dd>
-          <span data-bind="text: PositionState.Layer"></span>
-        </dd>
-        <dt>Height</dt>
-        <dd>
-          <span data-bind="text: PositionState.Height"></span>
-        </dd>
-      </dl>
-        
+      <div class="span12 form-horizontal">
+        <dl class="dl-horizontal">
+          <dt>F</dt>
+          <dd>
+            <span data-bind="text: Position.F"></span>
+          </dd>
+          <dt>X</dt>
+          <dd>
+            <span data-bind="text: Position.X"></span>
+          </dd>
+          <dt>XOffset</dt>
+          <dd>
+            <span data-bind="text: Position.XOffset"></span>
+          </dd>
+          <dt>Y</dt>
+          <dd>
+            <span data-bind="text: Position.Y"></span>
+          </dd>
+          <dt>YOffset</dt>
+          <dd>
+            <span data-bind="text: Position.YOffset"></span>
+          </dd>
+          <dt>Z</dt>
+          <dd>
+            <span data-bind="text: Position.Z"></span>
+          </dd>
+          <dt>ZOffset</dt>
+          <dd>
+            <span data-bind="text: Position.ZOffset"></span>
+          </dd>
+          <dt>E</dt>
+          <dd>
+            <span data-bind="text: Position.E"></span>
+          </dd>
+          <dt>EOffset</dt>
+          <dd>
+            <span data-bind="text: Position.EOffset"></span>
+          </dd>
+        </dl>
+
       </div>
+     
+    </div>
   </div>
   </div>
 </div>
+{% include "octolapse_status_triggers.jinja2" %}

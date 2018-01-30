@@ -61,9 +61,15 @@ class Extruder(object):
 		self.PrinterRetractionLength = self.Settings.CurrentPrinter().retract_length
 		
 		self.Reset()
+		self.AddState(ExtruderState())
 		
 	def Reset(self):
 		self.StateHistory = []
+
+	def AddState(self,state):
+		self.StateHistory.insert(0,state)
+		while (len(self.StateHistory)> 5):
+			del self.StateHistory[5]
 
 	def ToDict(self):
 		if(len(self.StateHistory)>0):
@@ -145,9 +151,7 @@ class Extruder(object):
 		
 		self._UpdateState(state,previousState)
 		# Add the current position, remove positions if we have more than 5 from the end
-		self.StateHistory.insert(0,state)
-		while (len(self.StateHistory)> 5):
-			del self.StateHistory[5]
+		self.AddState(state)
 
 	# If any values are edited manually (ExtrusionLengthTotal,ExtrusionLength, RetractionLength, __ExtrusionLengthTotalPrevious,__RetractionLengthPrevious,__IsExtrudingPrevious,
 	# calling this will cause the state flags to recalculate

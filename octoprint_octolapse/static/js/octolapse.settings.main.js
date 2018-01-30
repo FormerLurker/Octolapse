@@ -3,7 +3,7 @@ $(function () {
 
     Octolapse.MainSettingsViewModel = function (parameters) {
         // Create a reference to this object
-        var self = this
+        var self = this;
         
         // Add this object to our Octolapse namespace
         Octolapse.SettingsMain = this;
@@ -14,8 +14,9 @@ $(function () {
         self.is_octolapse_enabled = ko.observable();
         self.show_navbar_icon = ko.observable();
         self.show_position_state_changes = ko.observable();
+        self.show_position_changes = ko.observable();
         self.show_extruder_state_changes = ko.observable();
-
+        self.show_trigger_state_changes = ko.observable();
         
 
         // Informational Values
@@ -31,11 +32,12 @@ $(function () {
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
             self.show_navbar_icon(settings.show_navbar_icon())
             self.show_position_state_changes(settings.show_position_state_changes())
+            self.show_position_changes(settings.show_position_changes())
             self.show_extruder_state_changes(settings.show_extruder_state_changes())
+            self.show_trigger_state_changes(settings.show_trigger_state_changes())
             self.platform(settings.platform());
 
-            // Bind the global values associated with these settings
-            Octolapse.Globals.update(settings)
+            
             
 
             self.$addEditDialog = $("#octolapse_edit_settings_main_dialog");
@@ -65,8 +67,8 @@ $(function () {
 
             // Set the main tab to the active tab
         };
+        /*
         self.loadSettings = function () {
-            
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
                 url: "/plugin/octolapse/loadMainSettings",
@@ -81,15 +83,14 @@ $(function () {
                     alert("Unable to load the main settings tab.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-        }
+        }*/
         self.update = function(settings) {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.show_navbar_icon(settings.show_navbar_icon);
             self.show_position_state_changes(settings.show_position_state_changes);
+            self.show_position_changes(settings.show_position_changes);
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
-
-            // Update globals
-            Octolapse.Globals.update(settings);
+            self.show_trigger_state_changes(settings.show_trigger_state_changes);
             
             // Set the tab-button/tab visibility
             self.setSettingsVisibility(settings.is_octolapse_enabled);
@@ -111,7 +112,9 @@ $(function () {
                 "is_octolapse_enabled": self.is_octolapse_enabled()
                 , "show_navbar_icon": self.show_navbar_icon()
                 , "show_position_state_changes": self.show_position_state_changes()
+                , "show_position_changes": self.show_position_changes()
                 , "show_extruder_state_changes": self.show_extruder_state_changes()
+                , "show_trigger_state_changes": self.show_trigger_state_changes()
                 , "client_id" : Octolapse.Globals.client_id
             };
             console.log("Saving main settings.")
@@ -122,7 +125,6 @@ $(function () {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (settings) {
-                    self.update(settings);
                     self.$addEditDialog.modal("hide");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -134,8 +136,10 @@ $(function () {
             // Set the options to the current settings
             self.is_octolapse_enabled(true)
             self.show_navbar_icon(true)
-            self.show_position_state_changes(true)
-            self.show_extruder_state_changes(true)
+            self.show_position_state_changes(false)
+            self.show_position_changes(false)
+            self.show_extruder_state_changes(false)
+            self.show_trigger_state_changes(false)
             
         };
         

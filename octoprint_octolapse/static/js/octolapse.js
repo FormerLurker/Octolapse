@@ -121,7 +121,10 @@ $(function () {
     ko.extenders.numeric = function (target, precision) {
         var result = ko.dependentObservable({
             read: function () {
-                return target().toFixed(precision);
+                val = target()
+                if (val == null)
+                    return "NONE"
+                return val.toFixed(precision);
             },
             write: target
         });
@@ -130,6 +133,26 @@ $(function () {
         return result;
     };
 
+    ko.extenders.time = function (target, options) {
+        var result = ko.dependentObservable({
+            read: function () {
+                val = target()
+                if (val == null)
+                    return "NONE"
+                var utcSeconds = val;
+                var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                d.setUTCSeconds(utcSeconds);
+                var time = d.getHours() + ":"
+                    + d.getMinutes() + ":"
+                    + d.getSeconds();
+                return time;
+            },
+            write: target
+        });
+
+        result.raw = target;
+        return result;
+    };
     OctolapseViewModel = function (parameters) {
         var self = this;
         Octolapse.Globals = self;
@@ -137,7 +160,10 @@ $(function () {
         self.loginState = parameters[0];
         // Global Values
         self.show_position_state_changes = ko.observable(false)
+        self.show_position_changes = ko.observable(false)
         self.show_extruder_state_changes = ko.observable(false)
+        self.show_trigger_state_changes = ko.observable(false)
+
         self.is_admin = ko.observable(false)
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
@@ -147,7 +173,25 @@ $(function () {
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
         };
-        
+        self.onAfterBinding = function () {
+            self.loadState();
+        };
+
+        self.loadState = function () {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            $.ajax({
+                url: "/plugin/octolapse/loadState",
+                type: "POST",
+                ccontentType: "application/json",
+                dataType: "json",
+                success: function (newSettings) {
+                    console.log("Main Settings have been loaded.  Waiting for message");
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to load the main settings tab.  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        };
         self.onUserLoggedIn = function (user) {
             console.log("octolapse.status.js - User Logged In.  User: " + user)
             self.is_admin(self.loginState.isAdmin());
@@ -156,7 +200,34 @@ $(function () {
             console.log("octolapse.status.js - User Logged Out")
             self.is_admin(false);
         }
+        self.updateState = function (state) {
+            if (state.Position != null) {
+                console.log('octolapse.js - state-changed - Position');
+                Octolapse.Status.updatePosition(state.Position);
+            }
+            if (state.PositionState != null) {
+                console.log('octolapse.js - state-changed - Position State');
+                Octolapse.Status.updatePositionState(state.PositionState);
+            }
+            if (state.Extruder != null) {
+                console.log('octolapse.js - state-changed - Extruder State');
+                Octolapse.Status.updateExtruderState(state.Extruder);
+            }
+            if (state.TriggerState != null) {
+                console.log('octolapse.js - state-changed - Trigger State');
+                Octolapse.Status.updateTriggerStates(state.TriggerState);
+            }
+            if (state.MainSettings != null) {
+                console.log('octolapse.js - state-changed - Trigger State');
+                Octolapse.SettingsMain.update(state.MainSettings);
+                Octolapse.Globals.update(state.MainSettings);
 
+            }
+            if (state.Status != null) {
+                console.log('octolapse.js - state-changed - Trigger State');
+                Octolapse.Status.update(state.Status);
+            }
+        };
         self.update = function (settings) {
             // enabled
             if (ko.isObservable(settings.is_octolapse_enabled))
@@ -174,11 +245,20 @@ $(function () {
             else
                 self.show_position_state_changes(settings.show_position_state_changes)
 
+            if (ko.isObservable(settings.show_position_changes))
+                self.show_position_changes(settings.show_position_changes())
+            else
+                self.show_position_changes(settings.show_position_changes)
+
             if (ko.isObservable(settings.show_extruder_state_changes))
                 self.show_extruder_state_changes(settings.show_extruder_state_changes())
             else
                 self.show_extruder_state_changes(settings.show_extruder_state_changes)
-            
+
+            if (ko.isObservable(settings.show_trigger_state_changes))
+                self.show_trigger_state_changes(settings.show_trigger_state_changes())
+            else
+                self.show_trigger_state_changes(settings.show_trigger_state_changes)
 
         };
         // Handle Plugin Messages from Server
@@ -188,7 +268,6 @@ $(function () {
             }
             switch (data.type) {
                 case "settings-changed":
-
                     // (update the main settings)
                     if (self.client_id != data.client_id) {
                         Octolapse.Status.loadStatus();
@@ -211,20 +290,13 @@ $(function () {
                         console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
                     }
                     break;
-                case "main-settings-changed":
-                    if (self.client_id != data.client_id) {
-                        console.log('octolapse.js - main-settings-changed');
-                        // Bind the global values associated with these settings
-                        self.update(data);
-                    }
+                case "state-loaded":
+                    console.log('octolapse.js - state-changed');
+                    self.updateState(data);
                     break;
-                
                 case "state-changed":
-                    console.log('octolapse.js - extruder-state-changed');
-                    if (data.Position != null)
-                        Octolapse.Status.updatePositionState(data.Position);
-                    if (data.Extruder != null)
-                        Octolapse.Status.updateExtruderState(data.Extruder);
+                    console.log('octolapse.js - state-changed');
+                    self.updateState(data);
                     break;
                 case "popup":
                     console.log('octolapse.js - popup');
@@ -241,6 +313,7 @@ $(function () {
                     break;
                 case "timelapse-start":
                     console.log('octolapse.js - timelapse-start');
+                    /*
                     Octolapse.Status.is_timelapse_active(true);
                     Octolapse.Status.is_taking_snapshot(false);
                     Octolapse.Status.is_rendering(false);
@@ -248,11 +321,14 @@ $(function () {
                     Octolapse.Status.seconds_added_by_octolapse(0)
                     Octolapse.Status.snapshot_error(false);
                     Octolapse.Status.snapshot_error_message("");
+                    */
+                    self.updateState(data);
                     break;
                 case "timelapse-complete":
                     console.log('octolapse.js - timelapse-complete');
                     Octolapse.Status.is_timelapse_active(false);
                     Octolapse.Status.is_taking_snapshot(false);
+                    Octolapse.Status.ClearAllStates();
                     break;
                 case "snapshot-start":
                     console.log('octolapse.js - snapshot-start');

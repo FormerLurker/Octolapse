@@ -11,7 +11,7 @@ $(function() {
     };
 
     Octolapse.PrinterProfileViewModel = function(values) {
-        self = this
+        var self = this
         self.name = ko.observable(values.name);
         self.guid = ko.observable(values.guid);
         self.retract_length = ko.observable(values.retract_length);
