@@ -152,6 +152,8 @@ $(function () {
         self.IsWaiting = ko.observable(state.IsWaiting);
         self.IsWaitingOnZHop = ko.observable(state.IsWaitingOnZHop);
         self.IsWaitingOnExtruder = ko.observable(state.IsWaitingOnExtruder);
+        self.RequireZHop = ko.observable(state.RequireZHop);
+        self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -159,6 +161,8 @@ $(function () {
             self.IsWaiting(state.IsWaiting);
             self.IsWaitingOnZHop(state.IsWaitingOnZHop);
             self.IsWaitingOnExtruder(state.IsWaitingOnExtruder);
+            self.RequireZHop(state.RequireZHop);
+            self.TriggeredCount(state.TriggeredCount);
         }
     }
     Octolapse.gcodeTriggerStateViewModel = function (state) {
@@ -169,6 +173,9 @@ $(function () {
         self.IsWaiting = ko.observable(state.IsWaiting);
         self.IsWaitingOnZHop = ko.observable(state.IsWaitingOnZHop);
         self.IsWaitingOnExtruder = ko.observable(state.IsWaitingOnExtruder);
+        self.SnapshotCommand = ko.observable(state.SnapshotCommand);
+        self.RequireZHop = ko.observable(state.RequireZHop);
+        self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -176,6 +183,9 @@ $(function () {
             self.IsWaiting(state.IsWaiting);
             self.IsWaitingOnZHop(state.IsWaitingOnZHop);
             self.IsWaitingOnExtruder(state.IsWaitingOnExtruder);
+            self.SnapshotCommand(state.SnapshotCommand);
+            self.RequireZHop(state.RequireZHop);
+            self.TriggeredCount(state.TriggeredCount);
         }
     }
     Octolapse.layerTriggerStateViewModel = function (state) {
@@ -186,13 +196,14 @@ $(function () {
         self.IsWaiting = ko.observable(state.IsWaiting)
         self.IsWaitingOnZHop = ko.observable(state.IsWaitingOnZHop)
         self.IsWaitingOnExtruder = ko.observable(state.IsWaitingOnExtruder)
-
         self.CurrentIncrement = ko.observable(state.CurrentIncrement)
         self.IsLayerChange = ko.observable(state.IsLayerChange)
         self.IsLayerChangeWait = ko.observable(state.IsLayerChangeWait)
         self.IsHeightChange = ko.observable(state.IsHeightChange)
         self.IsHeightChangeWait = ko.observable(state.IsHeightChangeWait)
-
+        self.HeightIncrement = ko.observable(state.HeightIncrement)
+        self.RequireZHop = ko.observable(state.RequireZHop)
+        self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -205,6 +216,9 @@ $(function () {
             self.IsLayerChangeWait(state.IsLayerChangeWait);
             self.IsHeightChange(state.IsHeightChange);
             self.IsHeightChangeWait(state.IsHeightChangeWait);
+            self.HeightIncrement(state.HeightIncrement)
+            self.RequireZHop(state.RequireZHop)
+            self.TriggeredCount(state.TriggeredCount);
         }
     }
     Octolapse.timerTriggerStateViewModel = function (state) {
@@ -215,10 +229,12 @@ $(function () {
         self.IsWaiting = ko.observable(state.IsWaiting);
         self.IsWaitingOnZHop = ko.observable(state.IsWaitingOnZHop);
         self.IsWaitingOnExtruder = ko.observable(state.IsWaitingOnExtruder);
-        self.SecondsToTrigger = ko.observable(state.SecondsToTrigger).extend({ numeric: 2 });
-        self.IntervalSeconds = ko.observable(state.IntervalSeconds).extend({ numeric: 2 });
+        self.SecondsToTrigger = ko.observable(state.SecondsToTrigger);
+        self.IntervalSeconds = ko.observable(state.IntervalSeconds);
         self.TriggerStartTime = ko.observable(state.TriggerStartTime).extend({ time: null });
         self.PauseTime = ko.observable(state.PauseTime).extend({ time: null });
+        self.RequireZHop = ko.observable(state.RequireZHop);
+        self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -226,11 +242,12 @@ $(function () {
             self.IsWaiting(state.IsWaiting);
             self.IsWaitingOnZHop(state.IsWaitingOnZHop);
             self.IsWaitingOnExtruder(state.IsWaitingOnExtruder);
-
+            self.RequireZHop(state.RequireZHop);
             self.SecondsToTrigger(state.SecondsToTrigger);
-            self.IntervalSeconds(state.IntervalSeconds);
             self.TriggerStartTime(state.TriggerStartTime);
             self.PauseTime(state.PauseTime);
+            self.IntervalSeconds(state.IntervalSeconds);
+            self.TriggeredCount(state.TriggeredCount);
         }
     }
     Octolapse.StatusViewModel = function (parameters) {

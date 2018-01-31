@@ -4,18 +4,6 @@
     <span>Generic Trigger</span>
     <dl class="dl-vertical">
       <dt>IsTriggered</dt>
-      <dd><input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" /></dd>
-      <dt>IsWaiting</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" /></dd>
-      <dt>IsWaitingOnZHop</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" /></dd>
-      <dt>IsWaitingOnExtruder</dt><dd><input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" /></dd>
-    </dl>
-  </div>
-</script>
-<script type="text/html" id="gcode-trigger-status-template">
-  <div class="span4">
-    <span>GCode Trigger</span>
-    <dl class="dl-vertical">
-      <dt>IsTriggered</dt>
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
       </dd>
@@ -31,6 +19,51 @@
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
       </dd>
+      <dt>RequireZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
+      </dd>
+      <dt>TriggeredCount</dt>
+      <dd>
+        <span data-bind="text:TriggeredCount" />
+      </dd>
+
+    </dl>
+  </div>
+</script>
+<script type="text/html" id="gcode-trigger-status-template">
+  <div class="span4">
+    <span>GCode Trigger</span>
+    <dl class="dl-vertical">
+      <dt>IsTriggered</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
+      </dd>
+      <dt>TriggeredCount</dt>
+      <dd>
+        <span data-bind="text:TriggeredCount" />
+      </dd>
+      <dt>RequireZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
+      </dd>
+      <dt>IsWaiting</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
+      </dd>
+      <dt>IsWaitingOnZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
+      </dd>
+      <dt>IsWaitingOnExtruder</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
+      </dd>
+
+      <dt>SnapshotCommand</dt>
+      <dd>
+        <span data-bind="text: SnapshotCommand" />
+      </dd>
     </dl>
   </div>
 </script>
@@ -42,12 +75,21 @@
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
       </dd>
+      <dt>TriggeredCount</dt>
+      <dd>
+        <span data-bind="text:TriggeredCount" />
+      </dd>
+
       <dt>IsWaiting</dt>
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
       </dd>
-      <dt>IsWaitingOnZHop</dt>
+      <dt>RequireZHop</dt>
       <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
+      </dd>
+      <dt>IsWaitingOnZHop</dt>
+      <dd >
         <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
       </dd>
       <dt>IsWaitingOnExtruder</dt>
@@ -70,6 +112,10 @@
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsLayerChangeWait" />
       </dd>
+      <dt>Height Increment</dt>
+      <dd>
+        <span data-bind="text: HeightIncrement" />
+      </dd>
       <dt>CurrentIncrement</dt>
       <dd>
         <span data-bind="text: CurrentIncrement" />
@@ -85,9 +131,23 @@
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
       </dd>
+      <dt>TriggeredCount</dt>
+      <dd>
+        <span data-bind="text:TriggeredCount" />
+      </dd>
+
+      <dt>SecondsToTrigger</dt>
+      <dd>
+        <span data-bind="text:SecondsToTrigger" />
+      </dd>
+
       <dt>IsWaiting</dt>
       <dd>
         <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
+      </dd>
+      <dt>RequireZHop</dt>
+      <dd>
+        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
       </dd>
       <dt>IsWaitingOnZHop</dt>
       <dd>
@@ -101,10 +161,7 @@
       <dd>
         <span data-bind="text:IntervalSeconds" />
       </dd>
-      <dt>SecondsToTrigger</dt>
-      <dd>
-        <span data-bind="text:SecondsToTrigger" />
-      </dd>
+
       <dt>TriggerStartTime</dt>
       <dd>
         <span data-bind="text:TriggerStartTime" />

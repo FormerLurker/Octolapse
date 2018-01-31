@@ -132,13 +132,15 @@ class TriggerState(object):
 		self.IsWaitingOnZHop = False if state is None else state.IsWaitingOnZHop
 		self.IsWaitingOnExtruder = False if state is None else state.IsWaitingOnExtruder
 		self.HasChanged = False if state is None else state.HasChanged
-	def ToDict(self):
+	def ToDict(self, trigger):
 		return {
 				"IsTriggered": self.IsTriggered
 				,"IsWaiting": self.IsWaiting
 				,"IsWaitingOnZHop": self.IsWaitingOnZHop
 				,"IsWaitingOnExtruder": self.IsWaitingOnExtruder
 				,"HasChanged": self.HasChanged
+				,"RequireZHop": trigger.RequireZHop
+				,"TriggeredCount" : trigger.TriggeredCount
 			}
 	def ResetState(self):
 		self.IsTriggered = False
@@ -197,14 +199,24 @@ class Trigger(object):
 		state = self.GetState(index)
 		if(state is None):
 			return None
-		stateDict = state.ToDict()
+		stateDict = state.ToDict(self)
 		stateDict.update({"Name" : self.Name(), "Type" : self.Type})
 		return stateDict
+class GcodeTriggerState(TriggerState):
+	def ToDict(self, trigger):
+		superDict = super(GcodeTriggerState,self).ToDict(trigger)
+		currentDict = {
+				"SnapshotCommand": trigger.SnapshotCommand
+			}
+		currentDict.update(superDict)
+		return currentDict
+
 class GcodeTrigger(Trigger):
 	"""Used to monitor gcode for a specified command."""
 	def __init__(self, octolapseSettings ):
 		# call parent constructor
 		super(GcodeTrigger,self).__init__(octolapseSettings)
+		self.SnapshotCommand = GetGcodeFromString(self.Printer.snapshot_command)
 		self.Type = "gcode"
 		self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
 		self.ExtruderTriggers = ExtruderTriggers(
@@ -234,7 +246,7 @@ class GcodeTrigger(Trigger):
 				,self.Snapshot.gcode_trigger_on_detracted)
 			)
 		# add an initial state
-		self.AddState(TriggerState())
+		self.AddState(GcodeTriggerState())
 	def Update(self, position,commandName):
 		"""If the provided command matches the trigger command, sets IsTriggered to true, else false"""
 		try:
@@ -243,10 +255,10 @@ class GcodeTrigger(Trigger):
 			state = self.GetState(0)
 			if(state is None):
 				# create a new object, it's our first state!
-				state = TriggerState()
+				state = GcodeTriggerState()
 			else:
 				# create a copy so we aren't working on the original
-				state = TriggerState(state)
+				state = GcodeTriggerState(state)
 			# reset any variables that must be reset each update
 			state.ResetState()
 			# Don't update the trigger if we don't have a homed axis
@@ -281,12 +293,9 @@ class GcodeTrigger(Trigger):
 			self.AddState(state)
 		except Exception as e:
 			self.Settings.CurrentDebugProfile().LogException(e)
-			
-			
 	def IsSnapshotCommand(self, command):
 		commandName = GetGcodeFromString(command)
-		snapshotCommandName = GetGcodeFromString(self.Printer.snapshot_command)
-		return commandName == snapshotCommandName
+		return commandName == self.SnapshotCommand
 
 class LayerTriggerState(TriggerState):
 	def __init__(self, state = None):
@@ -296,14 +305,14 @@ class LayerTriggerState(TriggerState):
 		self.IsLayerChangeWait = False if state is None else state.IsLayerChangeWait
 		self.IsHeightChange = False if state is None else state.IsHeightChange
 		self.IsHeightChangeWait = False if state is None else state.IsHeightChangeWait
-	def ToDict(self):
-		superDict = super(LayerTriggerState,self).ToDict()
-
+	def ToDict(self, trigger):
+		superDict = super(LayerTriggerState,self).ToDict(trigger)
 		currentDict = {
 				"CurrentIncrement": self.CurrentIncrement,
 				"IsLayerChangeWait": self.IsLayerChangeWait,
 				"IsHeightChange": self.IsHeightChange,
-				"IsHeightChangeWait": self.IsHeightChangeWait
+				"IsHeightChangeWait": self.IsHeightChangeWait,
+				"HeightIncrement": trigger.HeightIncrement
 			}
 		currentDict.update(superDict)
 		return currentDict
@@ -388,7 +397,7 @@ class LayerTrigger(Trigger):
 				state.CurrentIncrement += 1
 				state.IsHeightChange  = True
 
-				self.Settings.CurrentDebugProfile().LogTriggerHeightChange("Layer Trigger - Height Increment:{0}, Current Increment".format(self.HeightIncrement, staticmethod.CurrentIncrement))
+				self.Settings.CurrentDebugProfile().LogTriggerHeightChange("Layer Trigger - Height Increment:{0}, Current Increment".format(self.HeightIncrement, state.CurrentIncrement))
 
 			# see if we've encountered a layer or height change
 			if(self.HeightIncrement is not None and self.HeightIncrement > 0):
@@ -448,14 +457,13 @@ class TimerTriggerState(TriggerState):
 		self.SecondsToTrigger = None if state is None else state.SecondsToTrigger
 		self.TriggerStartTime = None if state is None else state.TriggerStartTime
 		self.PauseTime = None if state is None else state.PauseTime
-		self.IntervalSeconds = None if state is None else state.IntervalSeconds
-	def ToDict(self):
-		superDict = super(TimerTriggerState,self).ToDict()
+	def ToDict(self, trigger):
+		superDict = super(TimerTriggerState,self).ToDict(trigger)
 		currentDict = {
 				"SecondsToTrigger": self.SecondsToTrigger
 				,"TriggerStartTime": self.TriggerStartTime
 				,"PauseTime": self.PauseTime
-				,"IntervalSeconds": self.IntervalSeconds
+				,"IntervalSeconds": trigger.IntervalSeconds
 			}
 		currentDict.update(superDict)
 		return currentDict
@@ -464,7 +472,6 @@ class TimerTriggerState(TriggerState):
 				and self.SecondsToTrigger == state.SecondsToTrigger
 				and self.TriggerStartTime == state.TriggerStartTime
 				and self.PauseTime == state.PauseTime
-				and self.IntervalSeconds == state.IntervalSeconds
 			):
 			return True
 		return False
@@ -486,7 +493,6 @@ class TimerTrigger(Trigger):
 				,self.Snapshot.timer_trigger_on_detracted)
 		self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
 		self.RequireZHop = self.Snapshot.timer_trigger_require_zhop
-		self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
 
 		# Log output
 		self.Settings.CurrentDebugProfile().LogTriggerCreate("Creating Timer Trigger - Seconds:{0}, RequireZHop:{1}".format(self.Snapshot.timer_trigger_seconds, self.Snapshot.timer_trigger_require_zhop))
@@ -505,7 +511,6 @@ class TimerTrigger(Trigger):
 			)
 		# add initial state
 		initialState = TimerTriggerState()
-		initialState.IntervalSeconds = self.IntervalSeconds
 		self.AddState(initialState)
 	def Pause(self):
 		try:
@@ -547,7 +552,6 @@ class TimerTrigger(Trigger):
 			if(state is None):
 				# create a new object, it's our first state!
 				state = TimerTriggerState()
-				state.IntervalSeconds = self.IntervalSeconds
 			else:
 				# create a copy so we aren't working on the original
 				state = TimerTriggerState(state)
