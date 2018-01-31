@@ -132,6 +132,7 @@ class TriggerState(object):
 		self.IsWaitingOnZHop = False if state is None else state.IsWaitingOnZHop
 		self.IsWaitingOnExtruder = False if state is None else state.IsWaitingOnExtruder
 		self.HasChanged = False if state is None else state.HasChanged
+		self.IsHomed = False if state is None else state.IsHomed
 	def ToDict(self, trigger):
 		return {
 				"IsTriggered": self.IsTriggered
@@ -140,6 +141,7 @@ class TriggerState(object):
 				,"IsWaitingOnExtruder": self.IsWaitingOnExtruder
 				,"HasChanged": self.HasChanged
 				,"RequireZHop": trigger.RequireZHop
+				,"IsHomed" : self.IsHomed
 				,"TriggeredCount" : trigger.TriggeredCount
 			}
 	def ResetState(self):
@@ -152,7 +154,8 @@ class TriggerState(object):
 			and self.IsTriggered == state.IsTriggered
 			and self.IsWaiting == state.IsWaiting
 			and self.IsWaitingOnZHop == state.IsWaitingOnZHop
-			and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder):
+			and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder
+			and self.IsHomed == state.IsHomed):
 			return True
 		return False
 
@@ -265,7 +268,9 @@ class GcodeTrigger(Trigger):
 			# Make sure to use the previous value so the homing operation can complete
 			if(not position.HasHomedAxis(1)):
 				state.IsTriggered = False
+				state.IsHomed = False
 				return
+			state.IsHomed = True
 
 			if (self.IsSnapshotCommand(commandName)):
 				state.IsWaiting = True
@@ -388,7 +393,10 @@ class LayerTrigger(Trigger):
 			# Don't update the trigger if we don't have a homed axis
 			# Make sure to use the previous value so the homing operation can complete
 			if(not position.HasHomedAxis(1)):
+				state.IsTriggered = False
+				state.IsHomed = False
 				return
+			state.IsHomed = True
 
 			# calculate height increment changed
 		
@@ -563,7 +571,9 @@ class TimerTrigger(Trigger):
 			# Make sure to use the previous value so the homing operation can complete
 			if(not position.HasHomedAxis(1)):
 				state.IsTriggered = False
+				state.IsHomed = False
 				return
+			state.IsHomed = True
 
 			# record the current time to keep things consistant
 			currentTime = time.time()

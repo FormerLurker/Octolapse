@@ -127,9 +127,7 @@ class Extruder(object):
 			previousState = ExtruderState()
 		
 		state.E =e
-		# Update ExtrusionTotal,RetractionLength and ExtrusionLength
-		
-		state.ExtrusionLengthTotal += e
+		# Update RetractionLength and ExtrusionLength
 		state.RetractionLength -= e
 		state.RetractionLength = utility.round_to(state.RetractionLength,0.0001) 
 		if(state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE):
@@ -139,7 +137,8 @@ class Extruder(object):
 			state.RetractionLength = 0
 		else:
 			state.ExtrusionLength = 0
-
+		# Update extrusion length
+		state.ExtrusionLengthTotal += state.ExtrusionLength
 		
 		# calculate detraction length
 		if(previousState.RetractionLength > state.RetractionLength):
@@ -153,8 +152,7 @@ class Extruder(object):
 		# Add the current position, remove positions if we have more than 5 from the end
 		self.AddState(state)
 
-	# If any values are edited manually (ExtrusionLengthTotal,ExtrusionLength, RetractionLength, __ExtrusionLengthTotalPrevious,__RetractionLengthPrevious,__IsExtrudingPrevious,
-	# calling this will cause the state flags to recalculate
+	
 	def _UpdateState(self,state,statePrevious):
 
 		state.IsExtrudingStart		= True if state.ExtrusionLength > 0 and statePrevious.ExtrusionLength == 0 else False

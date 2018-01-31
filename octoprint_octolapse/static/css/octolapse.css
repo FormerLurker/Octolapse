@@ -39,7 +39,58 @@ a.disabled {
 #octolapse_add_edit_profile_dialog input[type=number] {
     text-align: left;
 }
+.v-middle {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    float: none !important;
+}
+.trigger{
+    color:red;
+}
+.wait {
+    color: orange;
+}
+.paused {
+    color: white;
+}
+.position-state-icon, .extruder-icon {
+    color: greenyellow;
+}
 
+.bg-paused,.bg-not-homed,bg-lightgray {
+    color: lightgray;
+}
+.extruder-state-container {
+    padding: 5px;
+    height: 40px;
+    overflow: hidden;
+}
+.trigger-icon-container {
+    margin:5px;
+    padding: 5px;
+    height: 120px;
+    overflow: hidden;
+    color: inherit;
+    background-color: #eee;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+}
+.trigger-icon-description {
+    height:40px;
+    color:gray
+}
+.triggered-count, .triggered-info, .gcode-triggered-info {
+    font-size: large;
+    font-weight: 700;
+    color: greenyellow;
+}
+.gcode-triggered-info {
+    font-size:medium;
+}
+.bg-trigger-info, .bg-trigger-count {
+        color: #656565;
+    }
 .shake {
     -webkit-animation: shakeIt 0.25s linear 4;
     -moz-animation: shakeIt 0.25s linear 4;

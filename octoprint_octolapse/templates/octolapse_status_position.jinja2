@@ -1,0 +1,30 @@
+<script type="text/html" id="position-status-template">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4>
+        Position
+      </h4>
+    </div>
+    <div class="panel-body">
+      <div class="row-fluid">
+        <span class="span3">
+          Position<br/>
+          X:<span data-bind="text: Position.X"/><br/>
+          Y:<span data-bind="text: Position.Y"/><br/>
+          Z:<span data-bind="text: Position.Z"/><br/>
+          E:<span data-bind="text: Position.E"/>
+        </span>
+        <span class="span3">
+          Offset<br/>
+          X:<span data-bind="text: Position.XOffset"/><br/>
+          Y:<span data-bind="text: Position.YOffset"/><br/>
+          Z:<span data-bind="text: Position.ZOffset"/><br/>
+          E:<span data-bind="text: Position.EOffset"/><br/>
+        </span>
+        <div class="span6">
+          Speed:<span data-bind="text: Position.F"/> mm/min
+        </div>
+      </div>
+    </div>
+  </div>
+</script>

@@ -292,7 +292,7 @@ class Timelapse(object):
 					or extruderChangeDict is not None
 					or triggerChangeList is not None
 				)):
-				if(triggerChangeList is not None):
+				if(triggerChangeList is not None and len(triggerChangeList) > 0):
 					triggerChangesDict = {
 							"Name": self.Triggers.Name,
 							"Triggers": triggerChangeList

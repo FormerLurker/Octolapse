@@ -20,7 +20,7 @@ $(function () {
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     }
-    
+
     // Retruns an observable sorted by name(), case insensitive
     Octolapse.nameSort = function (observable) {
         return observable().sort(
@@ -118,12 +118,13 @@ $(function () {
         octolapseSnapshotTemplate: "The value is not a url.  You may use {camera_address} to refer to the web camera address."
     });
     // Knockout numeric binding
+    Octolapse.NullNumericText = "none";
     ko.extenders.numeric = function (target, precision) {
         var result = ko.dependentObservable({
             read: function () {
                 val = target()
                 if (val == null)
-                    return "NONE"
+                    return Octolapse.NullNumericText
                 return val.toFixed(precision);
             },
             write: target
@@ -132,20 +133,60 @@ $(function () {
         result.raw = target;
         return result;
     };
+    Octolapse.ToTime = function (seconds) {
+        if (val == null)
+            return Octolapse.NullTimeText
+        var utcSeconds = seconds;
+        var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+        d.setUTCSeconds(utcSeconds);
+        var time = d.getHours() + ":"
+            + d.getMinutes() + ":"
+            + d.getSeconds();
+        return time;
+    }
 
+    Octolapse.ToTimer = function (seconds) {
+        if (seconds == null)
+            return "";
+        if (seconds <= 0)
+            return "0:00";
+
+        hours = Math.floor(seconds / 3600);
+        if (hours > 0) {
+            return ("" + hours).slice(-2) + " Hrs"
+        }
+        
+        seconds %= 3600;
+        minutes = Math.floor(seconds / 60);
+        seconds = seconds % 60;
+        return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);;
+        
+    }
+
+    Octolapse.ToCompactInt = function (value) {
+        var newValue = value;
+        if (value >= 1000) {
+            var suffixes = ["", "k", "m", "b", "t"];
+            var suffixNum = Math.floor(("" + value).length / 3);
+            var shortValue = '';
+            for (var precision = 2; precision >= 1; precision--) {
+                shortValue = parseFloat((suffixNum != 0 ? (value / Math.pow(1000, suffixNum)) : value).toPrecision(precision));
+                var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g, '');
+                if (dotLessShortValue.length <= 2) { break; }
+            }
+            if (shortValue % 1 != 0) shortNum = shortValue.toFixed(1);
+            newValue = shortValue + suffixes[suffixNum];
+        }
+        return newValue;
+    }
+
+
+    Octolapse.NullTimeText = "none";
     ko.extenders.time = function (target, options) {
         var result = ko.dependentObservable({
             read: function () {
                 val = target()
-                if (val == null)
-                    return "NONE"
-                var utcSeconds = val;
-                var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-                d.setUTCSeconds(utcSeconds);
-                var time = d.getHours() + ":"
-                    + d.getMinutes() + ":"
-                    + d.getSeconds();
-                return time;
+                return Octolapse.ToTime(val)
             },
             write: target
         });
@@ -158,6 +199,7 @@ $(function () {
         Octolapse.Globals = self;
 
         self.loginState = parameters[0];
+        Octolapse.PrinterStatus = parameters[1]
         // Global Values
         self.show_position_state_changes = ko.observable(false)
         self.show_position_changes = ko.observable(false)
@@ -443,9 +485,10 @@ $(function () {
     }
     OCTOPRINT_VIEWMODELS.push([
         OctolapseViewModel
-        , ["loginStateViewModel"]
+        , ["loginStateViewModel", "printerStateViewModel"]
         , ["#octolapse"]
     ]);
 
-    
+
+
 });

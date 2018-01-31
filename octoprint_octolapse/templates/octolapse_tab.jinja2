@@ -1,271 +1,89 @@
-<div class="text-center">
-  <h3>Octolapse </h3>
-</div>
 <div id="octolapse_tab">
-  <div class="row-fluid">
-    <div class="span6">
-      <div data-bind="visible:snapshot_error" class="text-danger">
-        Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>
+  <div data-bind="visible:snapshot_error" class="text-danger">
+    Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <div class="row-fluid">
+        <div class="span6">
+          <h4>
+            Octolapse
+          </h4>    
+        </div>
+        <div class="span6">
+          <div class="pull-right" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
+            <button class="btn btn-default" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
+          </div>
+        </div>
       </div>
-      <dl class="dl-vertical">
-        <dt>Status</dt>
-        <dd>
-          <span class="fa-stack fa-lg" data-bind="attr: { title: !Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
+    </div>
+    <div class="panel-body">
+      <div class="row-fluid">
+        <div class="span12 text-center">
+          <span class="fa-stack fa-2x" data-bind="attr: { title: !Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Globals.enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
             <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  || is_timelapse_active()) ? 'limegreen' : '' }"></i>
           </span>
-          <span class="fa-stack fa-lg" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
+          <span class="fa-stack fa-2x" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
             <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'limegreen' : '' }"></i>
           </span>
-          <span class="fa-stack fa-lg" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
+          <span class="fa-stack fa-2x" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
             <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'limegreen' : '' }"></i>
           </span>
-          <span class="fa-stack fa-lg"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : 'Rendering is idle.'}">
+          <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : 'Rendering is idle.'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() ? '' : 'lightgray' }"></i>
             <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: is_rendering() ? 'limegreen' : '' }"></i>
           </span>
-        </dd>
-
-        <dt>Snapshot Count</dt>
-        <dd>
-          <span data-bind="text: snapshot_count"></span>
-        </dd>
-        <dt>Total Snapshot Time</dt>
-        <dd>
-          <span data-bind="text: $data.snapshotTime()"></span>
-        </dd>
-      </dl>
+        </div>
+        
+      </div>
     </div>
-    <div class="span6" >
-      <div class="pull-right" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
-        <button class="btn btn-default" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
+    <div class="panel-footer">
+      <div class="row-fluid">
+
+        <div class="span3 text-right">
+          Snapshot Count:
+        </div>
+        <div class="span3 text-left">
+          <span data-bind="text: snapshot_count"></span>
+        </div>
+        <div class="span3 text-right">
+          Snapshot Time:
+        </div>
+        <div class="span3 text-left">
+          <span data-bind="text: $data.snapshotTime()"></span>
+        </div>
+        
       </div>
     </div>
   </div>
-
   <div data-bind="visible: Octolapse.Status.is_timelapse_active">
-    <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes()">
-      <h4>
-        Extruder State
-      </h4>
-  
-      <div class="row-fluid">
-
-      <div class="span6">
-        <dl class="dl-vertical">
-          <dt>Extrusion Length Total</dt>
-          <dd>
-            <span data-bind="text: ExtruderState.ExtrusionLengthTotal"></span>
-          </dd>
-          <dt>Extrusion Length</dt>
-          <dd>
-            <span data-bind="text: ExtruderState.ExtrusionLength"></span>
-          </dd>
-
-          <dt>Retraction Length</dt>
-          <dd>
-            <span data-bind="text: ExtruderState.RetractionLength"></span>
-          </dd>
-          <dt>Detraction Length</dt>
-          <dd>
-            <span data-bind="text: ExtruderState.DetractionLength"></span>
-          </dd>
-          <dt>Extrusion Length</dt>
-          <dd>
-            <span data-bind="text: ExtruderState.ExtrusionLength"></span>
-          </dd>
-        </dl>
-      </div>
-      <div class="span6">
-        <dl class="dl-vertical">
-          <dt>Start Extruding</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsExtrudingStart" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Extruding</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsExtruding" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Primed</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsPrimed" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Start Retracting</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsRetractingStart" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Retracting</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsRetracting" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Partially Retracted</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsPartiallyRetracted" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Retracted</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsRetracted" type="checkbox" disabled="disabled" />
-          </dd>
-
-          <dt>Start Detracting</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsDetractingStart" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Detracting</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsDetracting" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Detracted</dt>
-          <dd>
-            <input data-bind="checked:ExtruderState.IsDetracted" type="checkbox" disabled="disabled" />
-          </dd>
-        </dl>
-      </div>
-
-    </div>
+    <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
     </div>
     <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
-      <h4>
-        Trigger State
-      </h4>
-      <h5>
-        Trigger Name: <span data-bind="text: TriggerState.Name"></span>
-      </h5>
-      
-
-
-      <div class="row-fluid" data-bind="foreach: TriggerState.Triggers">
-        <div data-bind="template: { name: Octolapse.Status.GetTriggerStateTemplate(Type())}"></div>
-      </div>
-    </div>
-    <div data-bind="visible: Octolapse.Globals.show_position_state_changes">
-      <div>
-        <h4>
-          Position State
-        </h4>
-      </div>
-      <div class="row-fluid">
-        <div class="span6">
-        <dl class="dl-vertical">
-          <dt>Gcode</dt>
-          <dd>
-            <span data-bind="text: PositionState.GCode"></span>
-          </dd>
-          <dt>XHomed</dt>
-          <dd>
-            <input data-bind="checked:PositionState.XHomed" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>YHomed</dt>
-          <dd>
-            <input data-bind="checked:PositionState.YHomed" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>ZHomed</dt>
-          <dd>
-            <input data-bind="checked:PositionState.ZHomed" type="checkbox" disabled="disabled" />
-          </dd>
-        </dl>
-      </div>
-    
-        <div class="span6">
-        <dl class="dl-vertical">
-          <dt>IsRelative</dt>
-          <dd>
-            <input data-bind="checked:PositionState.IsRelative" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>IsExtruderRelative</dt>
-          <dd>
-            <input data-bind="checked:PositionState.IsExtruderRelative" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>IsZHop</dt>
-          <dd>
-            <input data-bind="checked:PositionState.IsZHop" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>HasPositionError</dt>
-          <dd>
-            <input data-bind="checked:PositionState.HasPositionError" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>PositionError</dt>
-          <dd>
-            <span data-bind="text: PositionState.PositionError"></span>
-          </dd>
-          <dt>HasPositionChanged</dt>
-          <dd>
-            <input data-bind="checked:PositionState.HasPositionChanged" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>HasStateChanged</dt>
-          <dd>
-            <input data-bind="checked:PositionState.HasStateChanged" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>IsLayerChange</dt>
-          <dd>
-            <input data-bind="checked:PositionState.IsLayerChange" type="checkbox" disabled="disabled" />
-          </dd>
-          <dt>Layer</dt>
-          <dd>
-            <span data-bind="text: PositionState.Layer"></span>
-          </dd>
-          <dt>Height</dt>
-          <dd>
-            <span data-bind="text: PositionState.Height"></span>
-          </dd>
-        </dl>
-        
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4>
+            Snapshot Profile: <span data-bind="text: TriggerState.Name"></span>
+          </h4>
         </div>
-    </div>
-    </div>
-    <div data-bind="visible: Octolapse.Globals.show_position_changes">
-    <div>
-      <h4>
-        Position
-      </h4>
-    </div>
-    <div class="row-fluid">
-      <div class="span12 form-horizontal">
-        <dl class="dl-horizontal">
-          <dt>F</dt>
-          <dd>
-            <span data-bind="text: Position.F"></span>
-          </dd>
-          <dt>X</dt>
-          <dd>
-            <span data-bind="text: Position.X"></span>
-          </dd>
-          <dt>XOffset</dt>
-          <dd>
-            <span data-bind="text: Position.XOffset"></span>
-          </dd>
-          <dt>Y</dt>
-          <dd>
-            <span data-bind="text: Position.Y"></span>
-          </dd>
-          <dt>YOffset</dt>
-          <dd>
-            <span data-bind="text: Position.YOffset"></span>
-          </dd>
-          <dt>Z</dt>
-          <dd>
-            <span data-bind="text: Position.Z"></span>
-          </dd>
-          <dt>ZOffset</dt>
-          <dd>
-            <span data-bind="text: Position.ZOffset"></span>
-          </dd>
-          <dt>E</dt>
-          <dd>
-            <span data-bind="text: Position.E"></span>
-          </dd>
-          <dt>EOffset</dt>
-          <dd>
-            <span data-bind="text: Position.EOffset"></span>
-          </dd>
-        </dl>
-
+        <div class="panel-body">
+          <div class="row-fluid" data-bind="foreach: TriggerState.Triggers">
+            <div class="span4" data-bind="template: { name: Octolapse.Status.GetTriggerStateTemplate(Type())}"></div>
+          </div>
+        </div>
       </div>
-     
     </div>
-  </div>
+    <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
+    </div>
+    <div data-bind="visible: Octolapse.Globals.show_position_state_changes, template:'position-state-status-template'">
+    </div>
+
   </div>
 </div>
 {% include "octolapse_status_triggers.jinja2" %}
+{% include "octolapse_status_extruder.jinja2" %}
+{% include "octolapse_status_position.jinja2" %}
+{% include "octolapse_status_position_state.jinja2" %}

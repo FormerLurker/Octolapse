@@ -1,175 +1,131 @@
 <script type="text/html" id="trigger-status-template">
-  <h1 data-bind="text:Name"></h1>
-  <div class="span4">
-    <span>Generic Trigger</span>
-    <dl class="dl-vertical">
-      <dt>IsTriggered</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
-      </dd>
-      <dt>IsWaiting</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
-      </dd>
-      <dt>IsWaitingOnZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
-      </dd>
-      <dt>IsWaitingOnExtruder</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
-      </dd>
-      <dt>RequireZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
-      </dd>
-      <dt>TriggeredCount</dt>
-      <dd>
-        <span data-bind="text:TriggeredCount" />
-      </dd>
 
-    </dl>
+  <div class="text-center trigger-icon-container">
+    <div class="row-fluid">
+      <span class="span12">Template Trigger</span>
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
+        <i class="fa fa-square fa-stack-2x" data-bind="css:triggerBackgroundIconClass"></i>
+        <i class="fa fa-print fa-1x fa-stack-1x" data-bind="css:triggerIconClass"></i>
+      </span>
+      <span class="span4 fa-stack fa-2x" title="Trigger Count">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-camera fa-stack-1x bg-trigger-count">
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-count" data-bind ="text:Octolapse.ToCompactInt(TriggeredCount())"></p>
+        </i>
+      </span>
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:getInfoText}">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-info-circle fa-lg fa-stack-1x bg-trigger-info">
+
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-info" data-bind ="text:getInfoIconText"></p>
+        </i>
+      </span>
+      <span class="span12" data-bind="text:triggerStateText"></span>
+    </div>
   </div>
+
 </script>
 <script type="text/html" id="gcode-trigger-status-template">
-  <div class="span4">
-    <span>GCode Trigger</span>
-    <dl class="dl-vertical">
-      <dt>IsTriggered</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
-      </dd>
-      <dt>TriggeredCount</dt>
-      <dd>
-        <span data-bind="text:TriggeredCount" />
-      </dd>
-      <dt>RequireZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
-      </dd>
-      <dt>IsWaiting</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
-      </dd>
-      <dt>IsWaitingOnZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
-      </dd>
-      <dt>IsWaitingOnExtruder</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
-      </dd>
 
-      <dt>SnapshotCommand</dt>
-      <dd>
-        <span data-bind="text: SnapshotCommand" />
-      </dd>
-    </dl>
+  <div class="text-center trigger-icon-container">
+    <span>GCode</span>
+    <div class="row-fluid">
+
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
+        <i class="fa fa-square fa-stack-2x" data-bind="css:triggerBackgroundIconClass"></i>
+        <i class="fa fa-print fa-1x fa-stack-1x" data-bind="css:triggerIconClass"></i>
+      </span>
+      <span class="span4 fa-stack fa-2x" title="Trigger Count">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-camera fa-stack-1x bg-trigger-count">
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-count" data-bind ="text:Octolapse.ToCompactInt(TriggeredCount())"></p>
+        </i>
+      </span>
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:getInfoText}">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-info-circle fa-lg fa-stack-1x bg-trigger-info">
+
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center gcode-triggered-info" data-bind ="text:SnapshotCommand"></p>
+        </i>
+      </span>
+      <span class="span12" data-bind="text:triggerStateText"></span>
+    </div>
   </div>
+
 </script>
 <script type="text/html" id="layer-trigger-status-template">
-  <div class="span4">
-    <span>Layer Trigger</span>
-    <dl class="dl-vertical">
-      <dt>IsTriggered</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
-      </dd>
-      <dt>TriggeredCount</dt>
-      <dd>
-        <span data-bind="text:TriggeredCount" />
-      </dd>
 
-      <dt>IsWaiting</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
-      </dd>
-      <dt>RequireZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
-      </dd>
-      <dt>IsWaitingOnZHop</dt>
-      <dd >
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
-      </dd>
-      <dt>IsWaitingOnExtruder</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
-      </dd>
-      <dt>IsHeightChangeWait</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsHeightChangeWait" />
-      </dd>
-      <dt>IsHeightChange</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsHeightChange" />
-      </dd>
-      <dt>IsLayerChange</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsLayerChangeWait" />
-      </dd>
-      <dt>IsLayerChangeWait</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsLayerChangeWait" />
-      </dd>
-      <dt>Height Increment</dt>
-      <dd>
-        <span data-bind="text: HeightIncrement" />
-      </dd>
-      <dt>CurrentIncrement</dt>
-      <dd>
-        <span data-bind="text: CurrentIncrement" />
-      </dd>
-    </dl>
+  <div class="text-center trigger-icon-container">
+    <span>Layer Trigger</span>
+    <div class="row-fluid">
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
+        <i class="fa fa-square fa-stack-2x" data-bind="css:triggerBackgroundIconClass"></i>
+        <i class="fa fa-clock-o fa-1x fa-stack-1x" data-bind="css:triggerIconClass"></i>
+      </span>
+      <span class="span4 fa-stack fa-2x" title="Trigger Count">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-arrows-v fa-stack-1x bg-trigger-count">
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-count" data-bind ="text:Octolapse.ToCompactInt(TriggeredCount())"></p>
+        </i>
+      </span>
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:getInfoText}">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-info-circle fa-lg fa-stack-1x bg-trigger-info">
+
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-info" data-bind="text:getInfoIconText"></p>
+        </i>
+      </span>
+      <span class="span12" data-bind="text:triggerStateText"></span>
+    </div>
   </div>
+
 </script>
 <script type="text/html" id="timer-trigger-status-template">
-  <div class="span4">
-    <span>Timer Trigger</span>
-    <dl class="dl-vertical">
-      <dt>IsTriggered</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsTriggered" />
-      </dd>
-      <dt>TriggeredCount</dt>
-      <dd>
-        <span data-bind="text:TriggeredCount" />
-      </dd>
 
-      <dt>SecondsToTrigger</dt>
-      <dd>
-        <span data-bind="text:SecondsToTrigger" />
-      </dd>
+  <div class="text-center trigger-icon-container">
+    <span>Timer</span>
+    <div class="row-fluid">
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
+        <i class="fa fa-square fa-stack-2x" data-bind="css:triggerBackgroundIconClass"></i>
+        <i class="fa fa-clock-o fa-1x fa-stack-1x" data-bind="css:triggerIconClass"></i>
+      </span>
+      <span class="span4 fa-stack fa-2x" title="Trigger Count">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-camera fa-stack-1x bg-trigger-count">
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-count" data-bind ="text:Octolapse.ToCompactInt(TriggeredCount())"></p>
+        </i>
+      </span>
+      <span class="span4 fa-stack fa-2x" data-bind="attr:{title:getInfoText}">
+        <i class="fa fa-square fa-stack-2x"></i>
+        <i class="fa fa-info-circle fa-lg fa-stack-1x bg-trigger-info">
 
-      <dt>IsWaiting</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaiting" />
-      </dd>
-      <dt>RequireZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:RequireZHop" />
-      </dd>
-      <dt>IsWaitingOnZHop</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnZHop" />
-      </dd>
-      <dt>IsWaitingOnExtruder</dt>
-      <dd>
-        <input type="checkbox" disabled="disabled" data-bind="checked:IsWaitingOnExtruder" />
-      </dd>
-      <dt>IntervalSeconds</dt>
-      <dd>
-        <span data-bind="text:IntervalSeconds" />
-      </dd>
+        </i>
+        <i class="fa fa-stack-1x">
+          <p class="text-center triggered-info" data-bind ="text:Octolapse.ToTimer(SecondsToTrigger())"></p>
+        </i>
 
-      <dt>TriggerStartTime</dt>
-      <dd>
-        <span data-bind="text:TriggerStartTime" />
-      </dd>
-      <dt>PauseTime</dt>
-      <dd>
-        <span data-bind="text:PauseTime" />
-      </dd>
-    </dl>
+
+      </span>
+      <span class="span12" data-bind="text:triggerStateText"></span>
+    </div>
   </div>
+
 </script>
+
+
+
+

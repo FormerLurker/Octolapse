@@ -398,7 +398,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogPrintStateChange("No timelapse object exists and this is not a print start event, exiting.")
 				return
 			elif (event == Events.PRINT_PAUSED):
-				self.OnPrintPause() # regular pause
+				self.OnPrintPause() 
 			elif (event == Events.HOME):
 				self.Settings.CurrentDebugProfile().LogPrintStateChange("homing to payload:{0}.".format(event))
 			elif (event == Events.PRINT_RESUMED):
