@@ -434,7 +434,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
-        
+        self.Layer = ko.observable(state.Layer);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -451,6 +451,7 @@ $(function () {
             self.RequireZHop(state.RequireZHop)
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
+            self.Layer(state.Layer);
         }
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())

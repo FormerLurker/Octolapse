@@ -338,6 +338,10 @@ class Position(object):
 		if(len(self.Positions)>index):
 			return self.Positions[index].IsLayerChange
 		return None
+	def Layer(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].Layer
+		return None
 	def Height(self, index=0):
 		if(len(self.Positions)>index):
 			return self.Positions[index].Height

@@ -310,6 +310,7 @@ class LayerTriggerState(TriggerState):
 		self.IsLayerChangeWait = False if state is None else state.IsLayerChangeWait
 		self.IsHeightChange = False if state is None else state.IsHeightChange
 		self.IsHeightChangeWait = False if state is None else state.IsHeightChangeWait
+		self.Layer = 0 if state is None else state.Layer
 	def ToDict(self, trigger):
 		superDict = super(LayerTriggerState,self).ToDict(trigger)
 		currentDict = {
@@ -317,7 +318,8 @@ class LayerTriggerState(TriggerState):
 				"IsLayerChangeWait": self.IsLayerChangeWait,
 				"IsHeightChange": self.IsHeightChange,
 				"IsHeightChangeWait": self.IsHeightChangeWait,
-				"HeightIncrement": trigger.HeightIncrement
+				"HeightIncrement": trigger.HeightIncrement,
+				"Layer" : self.Layer
 			}
 		currentDict.update(superDict)
 		return currentDict
@@ -331,7 +333,7 @@ class LayerTriggerState(TriggerState):
 				and self.IsLayerChangeWait == state.IsLayerChangeWait
 				and self.IsHeightChange == state.IsHeightChange
 				and self.IsHeightChangeWait == state.IsHeightChangeWait
-				
+				and self.Layer == state.Layer
 			):
 			return True
 		return False
@@ -415,6 +417,7 @@ class LayerTrigger(Trigger):
 				
 			else:
 				if(position.IsLayerChange(1)):
+					state.Layer = position.Layer(1)
 					state.IsLayerChangeWait = True
 					state.IsLayerChange = True
 					state.IsWaiting = True
