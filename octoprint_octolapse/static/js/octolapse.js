@@ -217,6 +217,8 @@ $(function () {
         };
         self.onAfterBinding = function () {
             self.loadState();
+            // Subscribe all fade in images
+            $("img.octolapse-fade-in").bind("load", function () { $(this).fadeIn(); });
             Octolapse.Status.updateLatestSnapshotImage();
         };
 

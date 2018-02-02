@@ -636,10 +636,10 @@ $(function () {
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
 
+
         self.updateLatestSnapshotImage = function () {
             $snapshotImage = $("#octolapse_latest_snapshot");
-            // clear the current src
-            $snapshotImage.attr("src", "");
+            $snapshotImage.fadeOut();
             // set the current src
             $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
 
