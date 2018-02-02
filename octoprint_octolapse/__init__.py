@@ -65,7 +65,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			filename = utility.GetErrorImagesDownloadPath(self._basefolder)
 
 		# not getting the latest image
-		return flask.send_file(filename, mimetype=mimeType)
+		return flask.send_file(filename, mimetype=mimeType,cache_timeout=-1)
 		
 
 	@octoprint.plugin.BlueprintPlugin.route("/downloadSettings", methods=["GET"])
