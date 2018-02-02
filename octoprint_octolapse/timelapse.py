@@ -464,9 +464,12 @@ class Timelapse(object):
 		self.Settings.CurrentDebugProfile().LogSnapshotSave("Renaming snapshot {0} to {1}".format(snapshotInfo.GetTempFullPath(),newSnapshotName))
 		# create the output directory if it does not exist
 		try:
-			path = os.path.dirname(newSnapshotName)
-			if not os.path.exists(path):
-				os.makedirs(path)
+			tempSnapshotPath = os.path.dirname(newSnapshotName)
+			latestSnapshotPath = utility.GetSnapshotDirectory(self.DataFolder)
+			if not os.path.exists(tempSnapshotPath):
+				os.makedirs(tempSnapshotPath)
+			if not os.path.exists(latestSnapshotPath):
+				os.makedirs(latestSnapshotPath)
 		except Exception as e:
 			self.Settings.CurrentDebugProfile().LogException(e)
 			return

@@ -45,7 +45,7 @@ class Render(object):
 	def Process(self, printName, printStartTime, printEndTime):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
 		# Get the capture file and directory info
-		snapshotDirectory = utility.GetSnapshotDirectory(self.DataDirectory, printName,printStartTime)
+		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory, printName,printStartTime)
 		snapshotFileNameTemplate  = utility.GetSnapshotFilename(printName, printStartTime, utility.SnapshotNumberFormat)
 		# get the output file and directory info
 		outputDirectory = utility.GetRenderingDirectory(self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)

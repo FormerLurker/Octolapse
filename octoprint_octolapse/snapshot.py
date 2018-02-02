@@ -39,7 +39,7 @@ class CaptureSnapshot(object):
 		# set the file name.  It will be a guid + the file extension
 		snapshotGuid = str(uuid.uuid4())
 		info.FileName = "{0}.{1}".format(snapshotGuid,"jpg")
-		info.DirectoryName = utility.GetSnapshotDirectory(self.DataDirectory, printerFileName, self.PrintStartTime)
+		info.DirectoryName = utility.GetSnapshotTempDirectory(self.DataDirectory, printerFileName, self.PrintStartTime)
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
 		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
@@ -56,7 +56,7 @@ class CaptureSnapshot(object):
 	def CleanSnapshots(self, printerFileName):
 		
 		# get snapshot directory
-		snapshotDirectory = utility.GetSnapshotDirectory(self.DataDirectory, printerFileName,printStartTime)
+		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory, printerFileName,printStartTime)
 		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(snapshotDirectory))
 		
 

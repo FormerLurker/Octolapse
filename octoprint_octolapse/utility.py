@@ -79,6 +79,8 @@ def round_to(n, precision):
 
 def GetTempSnapshotDirectoryTemplate():
 	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"tempsnapshots",os.sep )
+def GetSnapshotDirectory(dataDirectory):
+	return "{0}{1}{2}{3}".format(dataDirectory,os.sep,"snapshots",os.sep )
 
 def GetSnapshotFilenameTemplate():
 	return "{0}{1}{2}".format("{FILENAME}_{PRINTSTARTTIME}",os.sep,"{FILENAME}")
@@ -90,7 +92,7 @@ def GetSnapshotDownloadPath(dataDirectory, fileName):
 	return "{0}{1}{2}{3}{4}".format(dataDirectory,os.sep,"snapshots",os.sep,fileName)
 
 def GetLatestSnapshotDownloadPath(dataDirectory):
-	return GetSnapshotDownloadPath(dataDirectory, "latest_snapshot.jpeg")
+	return "{0}{1}".format(GetSnapshotDirectory(dataDirectory),"latest_snapshot.jpeg")
 
 def GetImagesDownloadPath(baseFolder, fileName):
 	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"Images",os.sep,fileName)
@@ -132,7 +134,7 @@ def FormatSnapshotNumber(number):
 	# not an int, return the original field
 	return number
 
-def GetSnapshotDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
+def GetSnapshotTempDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
 	directoryTemplate = GetTempSnapshotDirectoryTemplate()
 	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
 	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))

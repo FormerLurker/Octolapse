@@ -44,7 +44,8 @@ plugin_requires = []
 # MANIFEST.in to match to ensure that python setup.py sdist produces a source distribution that contains all your
 # files. This is sadly due to how python's setup.py works, see also http://stackoverflow.com/a/14159430/2028598
 plugin_additional_data = ['data/*.json']
-
+plugin_additional_data = ['data/images/*.png']
+plugin_additional_data = ['data/images/*.jpeg']
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
 plugin_additional_packages = [
 
