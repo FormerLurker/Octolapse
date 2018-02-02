@@ -261,6 +261,7 @@ $(function () {
             if (state.TriggerState != null) {
                 console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.Status.updateTriggerStates(state.TriggerState);
+                
             }
             if (state.MainSettings != null) {
                 console.log('octolapse.js - state-changed - Trigger State');
@@ -336,7 +337,7 @@ $(function () {
                     }
                     break;
                 case "state-loaded":
-                    console.log('octolapse.js - state-changed');
+                    console.log('octolapse.js - state-loaded');
                     self.updateState(data);
                     break;
                 case "state-changed":
@@ -371,9 +372,8 @@ $(function () {
                     break;
                 case "timelapse-complete":
                     console.log('octolapse.js - timelapse-complete');
-                    Octolapse.Status.is_timelapse_active(false);
-                    Octolapse.Status.is_taking_snapshot(false);
-                    Octolapse.Status.ClearAllStates();
+                    Octolapse.Status.onTimelapseComplete();
+                    
                     break;
                 case "snapshot-start":
                     console.log('octolapse.js - snapshot-start');
@@ -392,9 +392,8 @@ $(function () {
                     break;
                 case "render-start":
                     console.log('octolapse.js - render-start');
-                    Octolapse.Status.snapshot_count(data.snapshot_count)
-                    Octolapse.Status.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
-                    Octolapse.Status.is_rendering(true);
+                    Octolapse.Status.update(data.Status)
+                    
                     var options = {
                         title: 'Octolapse Rendering Started',
                         text: data.msg,
@@ -408,6 +407,7 @@ $(function () {
                     break;
                 case "render-failed":
                     console.log('octolapse.js - render-failed');
+                    Octolapse.Status.update(data.Status);
                     var options = {
                         title: 'Octolapse Rendering Failed',
                         text: data.msg,
@@ -438,6 +438,7 @@ $(function () {
                         };
                         Octolapse.displayPopup(options);
                     }
+                    Octolapse.Status.onRenderEnd();
                     break;
                 case "synchronize-failed":
                     console.log('octolapse.js - synchronize-failed');
@@ -468,8 +469,8 @@ $(function () {
                     break;
                 case "timelapse-stopped":
                     console.log('octolapse.js - timelapse-stopped');
-                    Octolapse.Status.is_timelapse_active(false);
-                    Octolapse.Status.is_taking_snapshot(false);
+                    Octolapse.Status.onTimelapseStop()
+                    
                     var options = {
                         title: 'Octolapse Timelapse Stopped',
                         text: data.msg,

@@ -54,7 +54,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			# get the latest snapshot image
 			mimeType = 'image/jpeg'
 			filename = utility.GetLatestSnapshotDownloadPath(self.get_plugin_data_folder())
-			self.Settings.CurrentDebugProfile().LogInfo("Searching for latest snapshot at: {0}".format(filename))
 			if(not os.path.isfile(filename)):
 				# we haven't captured any images, return the built in png.
 				mimeType = 'image/png'
@@ -346,7 +345,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			isRendering = False
 			timelapseState = TimelapseState.Idle
 			activeSnapshotTriggerName = "None"
-
+			isWaitingToRender = False
 			if(self.Timelapse is not None):
 				snapshotCount = self.Timelapse.SnapshotCount
 				secondsAddedByOctolapse = self.Timelapse.SecondsAddedByOctolapse
@@ -354,12 +353,13 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				isRendering = self.Timelapse.IsRendering
 				isTakingSnapshot = self.Timelapse.State == TimelapseState.TakingSnapshot
 				timelapseState = self.Timelapse.State
-				
+				isWaitingToRender = self.Timelapse.State == TimelapseState.WaitingToRender
 			return {  'snapshot_count': snapshotCount,
 				'seconds_added_by_octolapse' : secondsAddedByOctolapse,
 				'is_timelapse_active' : isTimelapseActive,
 				'is_taking_snapshot' : isTakingSnapshot,
 				'is_rendering' : isRendering,
+				'waiting_to_render' : isWaitingToRender,
 				'state' : timelapseState
 			}
 		except Exception, e:
@@ -527,12 +527,27 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				, error = error 
 				, snapshot_count = snapshotCount
 				, seconds_added_by_octolapse = secondsAdded))
-	def SendRenderStartMessage(self, msg, snapshotCount, secondsAdded):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-start", msg=msg, snapshot_count = snapshotCount, seconds_added_by_octolapse = secondsAdded))
+	def SendRenderStartMessage(self, msg):
+		data ={
+			"type":"render-start"
+			, "msg":msg
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+	def SendRenderFailedMessage(self, msg):
+		data ={
+			"type":"render-failed"
+			, "msg":msg
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+
 	def SendRenderEndMessage(self,success):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-end", msg="Octolapse is finished rendering a timelapse.", is_synchronized = self.IsRenderingSynchronized, success = success))
 	def OnTimelapseStart(self, *args, **kwargs):
-		stateData = args[0]
+		stateData = self.Timelapse.GetStateDict()
 		data ={
 			"type":"timelapse-start"
 			, "msg":"Octolapse is starting a timelapse."
@@ -581,7 +596,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
 	def OnPrintCancelled(self):
-		self.EndTimelapse()
+		self.EndTimelapse(cancelled = True)
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
 	def OnPrintCompleted(self):
 		self.EndTimelapse()
@@ -590,14 +605,14 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# tell the timelapse that the print ended.
 		self.EndTimelapse()
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Ended.");
-	def EndTimelapse(self):
+	def EndTimelapse(self, cancelled = False):
 		if(self.Timelapse is not None):
-			self.Timelapse.EndTimelapse()
+			self.Timelapse.EndTimelapse(cancelled = cancelled)
 			self.OnTimelapseComplete()
 	def OnTimelapseStopping(self):
 		self.SendPluginMessage("timelapse-stopping", "Waiting for a snapshot to complete before stopping the timelapse.")
 	def OnTimelapseStopped(self):
-		self.SendPluginMessage("timelapse-stopped", "Octolapse has been stopped for the remainder of the print.")
+		self.SendPluginMessage("timelapse-stopped", "Octolapse has been stopped for the remainder of the print.  Snapshots will be rendered after the print is complete.")
 	def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		try:
 			# only handle commands sent while printing
@@ -627,23 +642,23 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this later.
 		self.IsRenderingSynchronized = False
 		#Generate a notification message
-		timeAddedMessage = "Octolapse has started rending your timelapse."
+		msg = "Octolapse has started rending your timelapse."
 		willSyncMessage = ""
 		if (payload["WillSync"]):
 			willSyncMessage = "  This timelapse will synchronized with the default timelapse module, and will be available in the 'Timelapse' tab after rendering is complete.    Please see the Octolapse advanced rendering settings for details."
 		else:
 			willSyncMessage = "  This timelapse will NOT be synchronized with the default timelapse module.  Please see the Octolapse advanced rendering settings for details."
 
-		message = "{0}{1}".format(timeAddedMessage,willSyncMessage)
+		message = "{0}{1}".format(msg,willSyncMessage)
 		# send a message to the client
-		self.SendRenderStartMessage(message, payload["SnapshotCount"], payload["SnapshotTimeSeconds"])
+		self.SendRenderStartMessage(message)
 
 
 	def OnRenderFail(self, *args, **kwargs):
 		"""Called after a timelapse rendering attempt has failed.  Calls any callbacks onMovieFailed callback set in the constructor."""
 		payload = args[0]
 		# Octoprint Event Manager Code
-		self.SendPluginMessage("render-failed", "Octolapse has failed to render a timelapse.  Reason:{0}".format(payload["reason"]))
+		self.SendRenderFailedMessage("Octolapse has failed to render a timelapse.  Reason:{0}".format(payload["reason"]))
 	def OnRenderSynchronizeFail(self, *args, **kwargs):
 		"""Called when a synchronization attempt with the default app fails."""
 		payload = args[0]

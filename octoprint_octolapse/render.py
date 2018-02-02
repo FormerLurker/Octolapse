@@ -148,123 +148,124 @@ class TimelapseRenderJob(object):
 
 	def _render(self):
 		"""Rendering runnable."""
-		
-
 		success = False
 		# create variables we will need for callbacks and processing
 		input = os.path.join(self._capture_dir,
-		                     self._capture_file_template)
+								self._capture_file_template)
 		output = os.path.join(self._output_dir,
-		                      self._output_file_name)
+								self._output_file_name)
 
 		baseOutputFileName = utility.GetFilenameFromFullPath(output)
-
 		synchronize = self.syncWithTimelapse and self._rendering.output_format == "mp4"
-		#
-		self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
-		if(self._imageCount == 0):
-			self._renderFail(output, baseOutputFileName, "No images were captured.")
-			return;
-		self._fps = self._rendering.fps
-
-		if(self._rendering.fps_calculation_type == 'duration'):
-			
-			self._fps = float(self._imageCount)/float(self._rendering.run_length_seconds)
-			if(self._fps > self._rendering.max_fps):
-				self._fps = self._rendering.max_fps
-			elif(self._fps < self._rendering.min_fps):
-				self._fps = self._rendering.min_fps
-			self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self._rendering.fps_calculation_type,self._fps, self._imageCount,self._rendering.run_length_seconds,self._rendering.max_fps,self._rendering.min_fps))
-		else:
-			self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{0}".format(self._rendering.fps_calculation_type,self._fps))
-
-
-		# apply pre-post roll
-		# Apply the pre-roll and post-roll
-		
-		self._applyPrePostRoll(self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
-
-		# notify any listeners that we are rendering.
-
-		self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
-
-		if self._ffmpeg is None:
-			self._renderFail(output, baseOutputFileName, "Cannot create movie, path to ffmpeg is unset")
-			return
-		if self._rendering.bitrate is None:
-			self._renderFail(output, baseOutputFileName, "Cannot create movie, desired bitrate is unset")
-			return
-
-		# add the file extension
-		output = output + "." + self._rendering.output_format
 		try:
-			#path = os.path.dirname(self._output_dir)
-			self._logger.warn("Creating the directory at {0}".format(self._output_dir))
-			if not os.path.exists(self._output_dir):
-				os.makedirs(self._output_dir)
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			self._renderFail(output, baseOutputFileName, "Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
-			return	
-		# will it render with only one frame?
-		for i in range(1,2):
-			if os.path.exists(input % i):
-				break
-		else:
-			self._renderFail(output, baseOutputFileName, 'Cannot create a movie, no frames captured.')
-			return
-
-		watermark = None
-		if self._rendering.watermark:
-			watermark = os.path.join(os.path.dirname(__file__), "static", "img", "watermark.png")
-			if sys.platform == "win32":
-				# Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
-				# path a special treatment. Yeah, I couldn't believe it either...
-				watermark = watermark.replace("\\", "/").replace(":", "\\\\:")
-
-		# prepare ffmpeg command
-		command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._rendering.bitrate, self._threads, input, output, self._rendering.output_format,
-		                                                 hflip=self._rendering.flip_h, vflip=self._rendering.flip_v, rotate=self._rendering.rotate_90, watermark=watermark )
-		
-		with self.render_job_lock:
 			
+			#
+			self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
+			if(self._imageCount == 0):
+				self._renderFail(output, baseOutputFileName, "No images were captured.")
+				return;
+			self._fps = self._rendering.fps
+
+			if(self._rendering.fps_calculation_type == 'duration'):
+			
+				self._fps = float(self._imageCount)/float(self._rendering.run_length_seconds)
+				if(self._fps > self._rendering.max_fps):
+					self._fps = self._rendering.max_fps
+				elif(self._fps < self._rendering.min_fps):
+					self._fps = self._rendering.min_fps
+				self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self._rendering.fps_calculation_type,self._fps, self._imageCount,self._rendering.run_length_seconds,self._rendering.max_fps,self._rendering.min_fps))
+			else:
+				self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{0}".format(self._rendering.fps_calculation_type,self._fps))
+
+
+			# apply pre-post roll
+			# Apply the pre-roll and post-roll
+		
+			self._applyPrePostRoll(self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
+
+			# notify any listeners that we are rendering.
+
+			self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
+
+			if self._ffmpeg is None:
+				self._renderFail(output, baseOutputFileName, "Cannot create movie, path to ffmpeg is unset")
+				return
+			if self._rendering.bitrate is None:
+				self._renderFail(output, baseOutputFileName, "Cannot create movie, desired bitrate is unset")
+				return
+
+			# add the file extension
+			output = output + "." + self._rendering.output_format
 			try:
-				
-				#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
-					
-				p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
-				if p.returncode == 0:
-					self._notify_callback("render_success", output,baseOutputFileName)
-					success = True
-				else:
-					returncode = p.returncode
-					stdout_text = p.stdout.text
-					stderr_text = p.stderr.text
-					self._renderFail(output, baseOutputFileName, "Could not render movie, got return code %r: %s" % (returncode, stderr_text))
+				#path = os.path.dirname(self._output_dir)
+				self._logger.warn("Creating the directory at {0}".format(self._output_dir))
+				if not os.path.exists(self._output_dir):
+					os.makedirs(self._output_dir)
 			except:
-				self._renderFail(output, baseOutputFileName, "Could not render movie due to unknown error")
-			finally:
-				self._notify_callback("render_complete", output, baseOutputFileName,0,'unknown')
-			cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
-			if(cleanSnapshots):
-				self._CleanSnapshots()
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self._renderFail(output, baseOutputFileName, "Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
+				return	
+			# will it render with only one frame?
+			for i in range(1,2):
+				if os.path.exists(input % i):
+					break
+			else:
+				self._renderFail(output, baseOutputFileName, 'Cannot create a movie, no frames captured.')
+				return
 
-			finalFileName = baseOutputFileName
-			if(synchronize):
-				finalFileName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName + "." + self._rendering.output_format)
-				# Move the timelapse to the Octoprint timelapse folder.
+			watermark = None
+			if self._rendering.watermark:
+				watermark = os.path.join(os.path.dirname(__file__), "static", "img", "watermark.png")
+				if sys.platform == "win32":
+					# Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
+					# path a special treatment. Yeah, I couldn't believe it either...
+					watermark = watermark.replace("\\", "/").replace(":", "\\\\:")
+
+			# prepare ffmpeg command
+			command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._rendering.bitrate, self._threads, input, output, self._rendering.output_format,
+															 hflip=self._rendering.flip_h, vflip=self._rendering.flip_v, rotate=self._rendering.rotate_90, watermark=watermark )
+		
+			with self.render_job_lock:
+			
 				try:
-					# get the timelapse folder for the Octoprint timelapse plugin
-					self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileName))
-					shutil.move(output,finalFileName)
-					self._notify_callback("after_sync_success", finalFileName, baseOutputFileName)
-				except Exception, e:
-					self._debug.LogException(e)
-					self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
+				
+					#self._logger.warn("command_str:{0}".format(command_str)) * Useful for debugging
+					
+					p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+					if p.returncode == 0:
+						self._notify_callback("render_success", output,baseOutputFileName)
+						success = True
+					else:
+						returncode = p.returncode
+						stdout_text = p.stdout.text
+						stderr_text = p.stderr.text
+						self._renderFail(output, baseOutputFileName, "Could not render movie, got return code %r: %s" % (returncode, stderr_text))
+				except:
+					self._renderFail(output, baseOutputFileName, "Could not render movie due to unknown error")
+				finally:
+					self._notify_callback("render_complete", output, baseOutputFileName,0,'unknown')
+				cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
+				if(cleanSnapshots):
+					self._CleanSnapshots()
 
-			self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize, success)
+				finalFileName = baseOutputFileName
+				if(synchronize):
+					finalFileName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName + "." + self._rendering.output_format)
+					# Move the timelapse to the Octoprint timelapse folder.
+					try:
+						# get the timelapse folder for the Octoprint timelapse plugin
+						self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileName))
+						shutil.move(output,finalFileName)
+						self._notify_callback("after_sync_success", finalFileName, baseOutputFileName)
+					except Exception, e:
+						self._debug.LogException(e)
+						self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
 
+				self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize, success)
+		except TypeError, e:
+			self.Settings.CurrentDebugProfile().LogException(e)
+			self._renderFail(output, baseOutputFileName, 'An unexpected exception occurred.  Please check plugin_octolapse.log for details.')
 	def _countImages(self, snapshotDirectory, snapshotFileNameTemplate):
 		"""get the number of frames"""
 		self._debug.LogRenderStart("Searching for frames.")

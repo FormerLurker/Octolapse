@@ -136,7 +136,7 @@ $(function () {
         self.getDetractionIconClass = ko.pureComputed(function () {
 
             if (self.IsRetracting() && self.IsDetracting())
-                return "exclamation-circle";
+                return "fa-exclamation-circle";
             if (self.IsDetracting() && self.IsDetractingStart)
                 return "fa-level-down";
             if (self.IsDetracting())
@@ -160,13 +160,7 @@ $(function () {
                 text = "Not Detracting"
             return text;
         }, self);
-        self.getDetractionIconClass = ko.pureComputed(function () {
-            if (self.IsDetracted() && self.IsPrimed())
-                return "exclamation-circle";
-            if (self.IsDetracted())
-                return " fa-level-down";
-            return "fa-times-circle";
-        }, self);
+        
        
         self.getExtrudingStateIconClass = ko.pureComputed(function () {
 
@@ -190,7 +184,7 @@ $(function () {
                 return "Start Extruding " + self.ExtrusionLength() +"mm";
             if (self.IsExtruding())
                 return "Extruding " + self.ExtrusionLength() +"mm";
-            return "";
+            return "Not Extruding or Primed";
         }, self);
         
 
@@ -230,6 +224,7 @@ $(function () {
             self.Triggers.removeAll();
         }
         self.update = function (states) {
+            
             self.Name(states.Name)
             triggers = states.Triggers
             for (var sI = 0; sI < triggers.length; sI++)
@@ -630,12 +625,13 @@ $(function () {
         self.snapshot_count = ko.observable(0);        
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
+        self.waiting_to_render = ko.observable();
 
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
-
+        
 
         self.updateLatestSnapshotImage = function () {
             $snapshotImage = $("#octolapse_latest_snapshot");
@@ -645,9 +641,19 @@ $(function () {
 
 
         };
-        self.ClearAllStates = function () {
-            self.TriggerState.removeAll()
+        self.onTimelapseComplete = function () {
+            self.is_timelapse_active(false);
+            self.is_taking_snapshot(false);
+            self.TriggerState.removeAll();
         }
+        
+
+        self.onRenderEnd = function () {
+            self.is_rendering(false);
+            self.waiting_to_render(false);
+        }
+        
+
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
                 case "gcode":
@@ -678,17 +684,23 @@ $(function () {
         self.updateTriggerStates = function (states) {
             self.TriggerState.update(states);
         };
-        self.update = function (settings) {
-            this.is_timelapse_active(settings.is_timelapse_active);
-            this.snapshot_count(settings.snapshot_count);
-            this.is_taking_snapshot(settings.is_taking_snapshot);
-            this.is_rendering(settings.is_rendering);
-            this.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
 
-            
+        self.update = function (settings) {
+            self.is_timelapse_active(settings.is_timelapse_active);
+            self.snapshot_count(settings.snapshot_count);
+            self.is_taking_snapshot(settings.is_taking_snapshot);
+            self.is_rendering(settings.is_rendering);
+            self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
+            self.waiting_to_render(settings.waiting_to_render);
         };
         
+        self.onTimelapseStop = function () {
+            self.is_timelapse_active(false);
+            self.is_taking_snapshot(false);
+            self.waiting_to_render(true);
+        }
         
+
         self.stopTimelapse = function () {
             if (Octolapse.Globals.is_admin()) {
                 console.log("octolapse.status.js - ButtonClick: StopTimelapse");

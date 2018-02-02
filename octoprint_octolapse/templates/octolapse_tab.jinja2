@@ -28,19 +28,19 @@
         <div class="span12 text-center">
           <span class="fa-stack fa-2x" data-bind="attr: { title: !Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Globals.enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
-            <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  || is_timelapse_active()) ? 'limegreen' : '' }"></i>
+            <i class="fa fa-check fa-stack-1x fa-inverse" data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  || is_timelapse_active()), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  || is_timelapse_active()) ? 'greenyellow' : '' }"></i>
           </span>
           <span class="fa-stack fa-2x" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-            <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'limegreen' : '' }"></i>
+            <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
           </span>
           <span class="fa-stack fa-2x" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
-            <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'limegreen' : '' }"></i>
+            <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
           </span>
-          <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : 'Rendering is idle.'}">
-            <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() ? '' : 'lightgray' }"></i>
-            <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: is_rendering() ? 'limegreen' : '' }"></i>
+          <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle.')}">
+            <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
+            <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
           </span>
           <span id="octolapse_snapshot_container">
             
