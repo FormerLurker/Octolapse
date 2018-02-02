@@ -67,7 +67,22 @@
         </label>
       </div>
     </div>
-
+    <div class="control-group">
+      <label class="control-label" >Pre-Roll Seconds</label>
+      <div class="controls">
+        <input name="pre_roll_seconds" type="number" class="input-small" data-bind="value: pre_roll_seconds" min="0" max="60" required="true"/>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" >Post-Roll Seconds</label>
+      <div class="controls">
+        <input name="post_roll_seconds" type="number" class="input-small" data-bind="value: post_roll_seconds" min="0" max="60" required="true"/>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
+      </div>
+    </div>
     <div class="control-group">
       <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
         <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}

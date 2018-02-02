@@ -17,6 +17,9 @@ $(function() {
         self.flip_v = ko.observable(values.flip_v);
         self.rotate_90 = ko.observable(values.rotate_90);
         self.watermark = ko.observable(values.watermark);
+        self.post_roll_seconds = ko.observable(values.post_roll_seconds);
+        self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
+        
     }
     Octolapse.RenderingProfileValidationRules = {
         rules: {

@@ -115,10 +115,15 @@ def GetSnapshotFilename(printName, printStartTime, snapshotNumber):
 	fileTemplate = fileTemplate.replace("{FILENAME}",getstring(printName,""))
 	fileTemplate = fileTemplate.replace("{DATETIMESTAMP}","{0:d}".format(math.trunc(round(time.time(),2)*100)))
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
-	# if the snapshot number is an int, make sure the front is padded with enough 0s for FFMPEG
-	if(isinstance(snapshotNumber,int)):
-		snapshotNumber = "{0:05d}".format(snapshotNumber)
-	return "{0}{1}.{2}".format(fileTemplate,snapshotNumber , "jpg")
+	return "{0}{1}.{2}".format(fileTemplate,FormatSnapshotNumber(snapshotNumber) , "jpg")
+
+SnapshotNumberFormat = "%06d"
+def FormatSnapshotNumber(number):
+	# we may get a templated field here for the snapshot number, so check to make sure it is an int first
+	if(isinstance(number,int)):
+		return SnapshotNumberFormat % number
+	# not an int, return the original field
+	return number
 
 def GetSnapshotDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
 	directoryTemplate = GetSnapshotDirectoryTemplate()

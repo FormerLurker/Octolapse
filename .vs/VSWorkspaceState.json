@@ -2,9 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\docs",
-    "\\octoprint_octolapse\\static",
-    "\\octoprint_octolapse\\test"
+    "\\octoprint_octolapse"
   ],
-  "SelectedNode": "\\octoprint_octolapse",
+  "SelectedNode": "\\octoprint_octolapse\\render.py",
   "PreviewInSolutionExplorer": false
 }

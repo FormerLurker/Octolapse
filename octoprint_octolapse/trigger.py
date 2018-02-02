@@ -537,7 +537,7 @@ class TimerTrigger(Trigger):
 			state = self.GetState(0)
 			if(state is None):
 				return
-			if(state.PauseTime is not None):
+			if(state.PauseTime is not None and state.TriggerStartTime is not None):
 				currentTime = time.time()
 				newLastTriggerTime = currentTime - (state.PauseTime - state.TriggerStartTime)
 				self.Settings.CurrentDebugProfile().LogTimerTriggerUnpaused("Time Trigger - Unpausing.  LastTriggerTime:{0}, PauseTime:{1}, CurrentTime:{2}, NewTriggerTime:{3} ".format(state.TriggerStartTime, state.PauseTime, currentTime, newLastTriggerTime))

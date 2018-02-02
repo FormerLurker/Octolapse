@@ -536,13 +536,14 @@ class Rendering(object):
 		self.max_fps = 120.0
 		self.min_fps = 2.0
 		self.output_format = 'mp4'
-		
 		self.sync_with_timelapse = True
 		self.bitrate = "8000K"
 		self.flip_h = False
 		self.flip_v = False
 		self.rotate_90 = False
 		self.watermark = False
+		self.post_roll_seconds = 0
+		self.pre_roll_seconds = 0
 		if(not rendering is None):
 			if(isinstance(rendering,Rendering)):
 				self.guid = rendering.guid
@@ -560,6 +561,8 @@ class Rendering(object):
 				self.flip_v = rendering.flip_v
 				self.rotate_90 = rendering.rotate_90
 				self.watermark = rendering.watermark
+				self.post_roll_seconds = rendering.post_roll_seconds
+				self.pre_roll_seconds = rendering.pre_roll_seconds
 			else:
 				self.Update(rendering)
 	def Update(self, changes):
@@ -595,6 +598,12 @@ class Rendering(object):
 		if("watermark" in changes.keys()):
 			self.watermark = utility.getbool(changes["watermark"],self.watermark)
 
+		if("post_roll_seconds" in changes.keys()):
+			self.post_roll_seconds = utility.getfloat(changes["post_roll_seconds"],self.post_roll_seconds)
+		if("pre_roll_seconds" in changes.keys()):
+			self.pre_roll_seconds = utility.getfloat(changes["pre_roll_seconds"],self.pre_roll_seconds)
+
+			
 	def ToDict(self):
 		return {
 				'guid'								: self.guid,
@@ -611,7 +620,9 @@ class Rendering(object):
 				'flip_h'							: self.flip_h,
 				'flip_v'							: self.flip_v,
 				'rotate_90'							: self.rotate_90,
-				'watermark'							: self.watermark
+				'watermark'							: self.watermark,
+				'post_roll_seconds'					: self.post_roll_seconds,
+				'pre_roll_seconds'					: self.pre_roll_seconds
 			}
 
 class Camera(object):
