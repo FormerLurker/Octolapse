@@ -30,8 +30,7 @@
 
 </script>
 <script type="text/html" id="gcode-trigger-status-template">
-
-  <div class="text-center octolapse-icon-container">
+  <div class="text-center  margin-small">
     <span>GCode</span>
     <div class="row-fluid">
 
@@ -56,14 +55,13 @@
           <p class="text-center gcode-triggered-info" data-bind ="text:SnapshotCommand"></p>
         </i>
       </span>
-      <span class="span12" data-bind="text:triggerStateText"></span>
+      <span class="span12 icon-text-2" data-bind="text:triggerStateText"></span>
     </div>
   </div>
-
 </script>
 <script type="text/html" id="layer-trigger-status-template">
 
-  <div class="text-center octolapse-icon-container">
+  <div class="text-center margin-small">
     <span>Layer Trigger</span>
     <div class="row-fluid">
       <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
@@ -87,14 +85,14 @@
           <p class="text-center triggered-info" data-bind="text:getInfoIconText"></p>
         </i>
       </span>
-      <span class="span12" data-bind="text:triggerStateText"></span>
+      <span class="span12 icon-text-2" data-bind="text:triggerStateText"></span>
     </div>
   </div>
 
 </script>
 <script type="text/html" id="timer-trigger-status-template">
 
-  <div class="text-center octolapse-icon-container">
+  <div class="text-center  margin-small">
     <span>Timer</span>
     <div class="row-fluid">
       <span class="span4 fa-stack fa-2x" data-bind="attr:{title:triggerStateText}">
@@ -120,7 +118,7 @@
 
 
       </span>
-      <span class="span12" data-bind="text:triggerStateText"></span>
+      <span class="span12 icon-text-2" data-bind="text:triggerStateText"></span>
     </div>
   </div>
 

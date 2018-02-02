@@ -1,108 +1,128 @@
 <script type="text/html" id="position-state-status-template">
   <div class="panel panel-default">
     <div class="panel-heading">
-      <h4>
-        Position State
-      </h4>
+      <div class="row-fluid">
+        <span class="span6">
+          <h4>
+            Position State
+          </h4>
+        </span>
+        <span class="span3">
+          Layer: <span data-bind="text:PositionState.Layer()"/>
+        </span>
+        <span class="span3">
+          Height: <span data-bind="text:PositionState.Height()"/>
+        </span>
+      </div>
     </div>
     <div class="panel-body text-center">
       <div class="row-fluid">
-        <div class="span7">
-          <div>
+        <div class="span6 octolapse-container">
+          <div class="margin-small">
             <div class="row-fluid">
-              <div class="span3">
+              <div class="span4">
                 <div>X Homed</div>
                 <span class="fa-stack fa-2x">
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.XHomed())"></i>
                 </span>
               </div>
-              <div class="span3">
+              <div class="span4">
                 <div>Y homed</div>
                 <span class="fa-stack fa-2x">
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.YHomed())"></i>
                 </span>
               </div>
-              <div class="span3">
+              <div class="span4">
                 <div>Z Homed</div>
                 <span class="fa-stack fa-2x">
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.ZHomed())"></i>
                 </span>
               </div>
-              <div class="span3">
-                <div>ZHop</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop())"></i>
-                </span>
-              </div>
             </div>
           </div>
-          <div>
-            <div class="row-fluid">
-              <div class="span3">
+        </div>
+        <div class="span2 octolapse-container">
+          <div class="margin-small">
+            <div>ZHop</div>
+            <span class="fa-stack fa-2x">
+              <i class="fa fa-square fa-stack-2x"></i>
+              <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop())"></i>
+            </span>
+          </div>
+        </div>
+        <div class="span2">
+          &nbsp;
+        </div>
+        <div class="span2 octolapse-container">
+          <div class="margin-small ">
+            <div>Errors</div>
+            <span class="fa-stack fa-2x">
+              <i class="fa fa-square fa-stack-2x"></i>
+              <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError())"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="row-fluid">
+        <div class="span6">
+          <div class="row-fluid">
+            <div class="span4 octolapse-container">
+              <div class="margin-small">
                 <div>Extruder</div>
                 <span class="fa-stack fa-2x">
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsExtruderRelative())"></i>
                 </span>
-                <div>Relative</div>
+                <div class="icon-text-1">
+                  Relative
+                </div>
               </div>
-              <div class="span3">
+            </div>
+            <div class="span4 octolapse-container">
+              <div class="margin-small">
                 <div>XYZ</div>
                 <span class="fa-stack fa-2x">
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative())"></i>
                 </span>
-                <div>Relative</div>
+                <div class="icon-text-1">
+                  Relative
+                </div>
               </div>
-              <div class="span3">
-                <div>Errors</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError())"></i>
-                </span>
-                <div>Relative</div>
+            </div>
+            <div class="span4 octolapse-container">
+              <div class="margin-small">
+                <div>
+                  <div>Layer</div>
+                  <span class="fa-stack fa-2x">
+                    <i class="fa fa-square fa-stack-2x"></i>
+                    <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange())"></i>
+                  </span>
+                  <div class=".icon-text-1">
+                    Change
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="span5">
-          <div class="row-fluid">
-            <div class="span12">
-              <div>Layer Change</div>
-              <span class="fa-stack fa-2x">
-                <i class="fa fa-square fa-stack-2x"></i>
-                <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange())"></i>
-              </span>
 
-            </div>
-            <div class="span12">
-              <div>Layer: <span data-bind="text:PositionState.Layer()"/></div>
-              <div>Height: <span data-bind="text:PositionState.Height()"/></div>
-            </div>
-          </div>
 
-        </div>
       </div>
     </div>
     <div class="panel-footer">
-      <div class="row-fluid">
-        <span class="span6">
-          Gcode:<span data-bind="text : PositionState.GCode"></span>
-        </span>
-        <span class="span6 text-error  text-right">
-          <span data-bind="visible:PositionState.HasPositionError">
-            Error:<span data-bind="text : PositionState.PositionError"></span>
-          </span>
-        </span>
-
+      <div>
+        Gcode:<span data-bind="text : PositionState.GCode"></span>
       </div>
-
-
+      <div class="text-error  text-right">
+        <span data-bind="visible:PositionState.HasPositionError">
+          Error:<span data-bind="text : PositionState.PositionError"></span>
+        </span>
+      </div>
     </div>
-  </div>
 
+  </div>
 </script>

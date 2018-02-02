@@ -10,7 +10,7 @@ import sys
 import shutil
 import octoprint_octolapse.utility as utility
 import sarge
-
+from octoprint_octolapse.settings import Rendering
 class Render(object):
 
 	def __init__(self, settings, snapshot, rendering, dataDirectory, octoprintTimelapseFolder, ffmpegPath, threadCount
@@ -109,7 +109,7 @@ class TimelapseRenderJob(object):
 			  , cleanAfterSuccess = False
 			  , cleanAfterFail = False
 			  , syncWithTimelapse = False):
-		self._rendering = rendering
+		self._rendering = Rendering(rendering)
 		self._debug = debug;
 		self._printFileName = printFileName
 		self._capture_dir = capture_dir
@@ -267,7 +267,7 @@ class TimelapseRenderJob(object):
 
 	def _countImages(self, snapshotDirectory, snapshotFileNameTemplate):
 		"""get the number of frames"""
-
+		self._debug.LogRenderStart("Searching for frames.")
 		# we need to start with index 1.
 		imageIndex = 1
 		while(True):
@@ -276,9 +276,7 @@ class TimelapseRenderJob(object):
 				
 			if(os.path.isfile(imagePath)):
 				imageIndex += 1
-				self._debug.LogRenderStart("Found image:{0}".format(imagePath))
 			else:
-				self._debug.LogRenderStart("Could not find image:{0}, search complete.".format(imagePath))
 				break
 		imageCount = imageIndex - 1
 		self._debug.LogRenderStart("Found {0} images.".format(imageCount))

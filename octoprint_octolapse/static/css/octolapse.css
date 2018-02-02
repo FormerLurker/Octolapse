@@ -60,22 +60,39 @@ a.disabled {
 .bg-paused,.bg-not-homed,bg-lightgray {
     color: lightgray;
 }
+
+.icon-text-1, .icon-text-2 {
+    
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: inline-block;
+}
+.margin-small {
+    
+    margin:10px;
+}
+
+.icon-text-1 {
+    height: 15px;
+}
+.icon-text-2 {
+    height: 35px;
+}
 .extruder-state-container {
     padding: 5px;
     height: 40px;
     overflow: hidden;
 }
-.octolapse-icon-container {
-    margin:5px;
-    padding: 5px;
-    height: 120px;
-    overflow: hidden;
+.octolapse-container {
     color: inherit;
     background-color: #eee;
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
+    margin-bottom:10px;
 }
+
+
 .trigger-icon-description {
     height:40px;
     color:gray
