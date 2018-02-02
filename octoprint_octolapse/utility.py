@@ -93,7 +93,7 @@ def GetLatestSnapshotDownloadPath(dataDirectory):
 	return GetSnapshotDownloadPath(dataDirectory, "latest_snapshot.jpeg")
 
 def GetImagesDownloadPath(baseFolder, fileName):
-	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"images",os.sep,fileName)
+	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"Images",os.sep,fileName)
 def GetErrorImageDownloadPath(baseFolder):
 	return GetImagesDownloadPath(baseFolder, "no-image-available.png")
 def GetNoSnapshotImagesDownloadPath(baseFolder):
