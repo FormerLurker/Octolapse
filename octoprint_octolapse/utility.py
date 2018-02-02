@@ -77,23 +77,30 @@ def round_to(n, precision):
     correction = 0.5 if n >= 0 else -0.5
     return int( n/precision+correction ) * precision
 
-def GetSnapshotDirectoryTemplate():
-	output_directory = "{DATADIRECTORY}/snapshots/"
-	if (sys.platform == "win32"):
-		output_directory = "{DATADIRECTORY}\\snapshots\\"
-	return output_directory
+def GetTempSnapshotDirectoryTemplate():
+	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"tempsnapshots",os.sep )
+
 def GetSnapshotFilenameTemplate():
-	output_filename = "{FILENAME}_{PRINTSTARTTIME}/{FILENAME}"
-	if (sys.platform == "win32"):
-		output_filename = "{FILENAME}_{PRINTSTARTTIME}\\{FILENAME}"
-	return output_filename
+	return "{0}{1}{2}".format("{FILENAME}_{PRINTSTARTTIME}",os.sep,"{FILENAME}")
+
 def GetRenderingDirectoryFromDataDirectory(dataDirectory):
 	return GetRenderingDirectoryTemplate().replace("{DATADIRECTORY}",dataDirectory)
+
+def GetSnapshotDownloadPath(dataDirectory, fileName):
+	return "{0}{1}{2}{3}{4}".format(dataDirectory,os.sep,"snapshots",os.sep,fileName)
+
+def GetLatestSnapshotDownloadPath(dataDirectory):
+	return GetSnapshotDownloadPath(dataDirectory, "latest_snapshot.jpeg")
+
+def GetImagesDownloadPath(baseFolder, fileName):
+	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"images",os.sep,fileName)
+def GetErrorImageDownloadPath(baseFolder):
+	return GetImagesDownloadPath(baseFolder, "no-image-available.png")
+def GetNoSnapshotImagesDownloadPath(baseFolder):
+	return GetImagesDownloadPath(baseFolder, "no_snapshot.png")
+
 def GetRenderingDirectoryTemplate():
-	output_directory = "{DATADIRECTORY}/timelapses/"
-	if (sys.platform == "win32"):
-		output_directory = "{DATADIRECTORY}\\timelapses\\"
-	return output_directory
+	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"timelapses",os.sep )
 
 def GetRenderingBaseFilenameTemplate():
 	return "{FILENAME}_{DATETIMESTAMP}"
@@ -126,7 +133,7 @@ def FormatSnapshotNumber(number):
 	return number
 
 def GetSnapshotDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
-	directoryTemplate = GetSnapshotDirectoryTemplate()
+	directoryTemplate = GetTempSnapshotDirectoryTemplate()
 	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
 	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
 	if(printEndTime is not None):

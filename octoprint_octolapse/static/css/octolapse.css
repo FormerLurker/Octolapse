@@ -14,8 +14,17 @@ a.disabled {
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
-#octolapse_add_edit_profile_form{
-    margin:0;
+#octolapse_snapshot_container {
+    width: 300px;
+    height: 150px;
+}
+#octolapse_snapshot_container img{
+    max-width:300px;
+    max-height:150px;
+    
+}
+#octolapse_add_edit_profile_form {
+    margin: 0;
 }
 #octolapse_add_edit_profile_dialog .alert {
     margin: 5px 0px;

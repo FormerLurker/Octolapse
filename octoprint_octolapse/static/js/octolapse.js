@@ -217,6 +217,7 @@ $(function () {
         };
         self.onAfterBinding = function () {
             self.loadState();
+            Octolapse.Status.updateLatestSnapshotImage();
         };
 
         self.loadState = function () {
@@ -385,6 +386,7 @@ $(function () {
                     Octolapse.Status.snapshot_error(!data.success);
                     Octolapse.Status.snapshot_error_message(data.error);
                     Octolapse.Status.is_taking_snapshot(false);
+                    Octolapse.Status.updateLatestSnapshotImage();
                     break;
                 case "render-start":
                     console.log('octolapse.js - render-start');

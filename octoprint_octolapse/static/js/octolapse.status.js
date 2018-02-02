@@ -561,6 +561,8 @@ $(function () {
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
         }
+
+        
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -634,7 +636,15 @@ $(function () {
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
 
-        
+        self.updateLatestSnapshotImage = function () {
+            $snapshotImage = $("#octolapse_latest_snapshot");
+            // clear the current src
+            $snapshotImage.attr("src", "");
+            // set the current src
+            $snapshotImage.attr("src", getLatestSnapshotUrl());
+
+
+        };
         self.ClearAllStates = function () {
             self.TriggerState.removeAll()
         }

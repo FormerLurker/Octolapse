@@ -1,4 +1,10 @@
 <div id="octolapse_tab">
+  <script>
+    var getLatestSnapshotUrl = function()
+    {
+      return "{{ url_for('plugin.octolapse.snapshot',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
+    }
+  </script>
   <div data-bind="visible:snapshot_error" class="text-danger">
     Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>
   </div>
@@ -35,6 +41,10 @@
           <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : 'Rendering is idle.'}">
             <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() ? '' : 'lightgray' }"></i>
             <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: is_rendering() ? 'limegreen' : '' }"></i>
+          </span>
+          <span id="octolapse_snapshot_container">
+            
+            <img id="octolapse_latest_snapshot"></img>
           </span>
         </div>
         

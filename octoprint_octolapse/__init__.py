@@ -44,8 +44,29 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	@admin_permission.require(403)
 	def downloadTimelapse(self, filename):
+		"""Restricted access function to download a timelapse"""
 		return self.GetDownloadFileResponse(self.TimelapseFolderPath()+filename, filename)
-	
+
+	@octoprint.plugin.BlueprintPlugin.route("/snapshot/<filename>", methods=["GET"])
+	def snapshot(self, filename):
+		"""Public access function to get the latest snapshot image"""
+		if filename == 'latest-snapshot.jpeg':
+			# get the latest snapshot image
+			mimeType = 'image/jpeg'
+			filename = utility.GetLatestSnapshotDownloadPath(self.get_plugin_data_folder())
+			if(not os.path.isfile(filename)):
+				# we haven't captured any images, return the built in png.
+				mimeType = 'image/png'
+				filename = utility.GetNoSnapshotImagesDownloadPath(self._basefolder)
+		else:
+			# we don't recognize the snapshot type
+			mimeType = 'image/png'
+			filename = utility.GetErrorImagesDownloadPath(self._basefolder)
+
+		# not getting the latest image
+		return flask.send_file(filename, mimetype=mimeType)
+		
+
 	@octoprint.plugin.BlueprintPlugin.route("/downloadSettings", methods=["GET"])
 	@restricted_access
 	@admin_permission.require(403)
@@ -81,7 +102,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		return json.dumps(data), 200, {'ContentType':'application/json'} 
 		
 	@octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
-
 	def loadMainSettings(self):
 		data = {'success':True}
 		data.update(self.Settings.GetMainSettingsDict())
@@ -176,6 +196,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		else:
 			return json.dumps({'success':False,'error':results[1]}), 200, {'ContentType':'application/json'}
 
+	
 	# blueprint helpers
 	def GetDownloadFileResponse(self, filePath, downloadFileName):
 		if(os.path.isfile(filePath)):

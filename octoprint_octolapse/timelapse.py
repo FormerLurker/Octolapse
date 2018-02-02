@@ -471,9 +471,11 @@ class Timelapse(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 			return
 
-		# rename the current file
+		
 		try:
-
+			# this is the latest snapshot, copy it to the proper place.
+			shutil.copy(snapshotInfo.GetTempFullPath(),utility.GetLatestSnapshotDownloadPath(self.DataFolder))
+			# rename the current file
 			shutil.move(snapshotInfo.GetTempFullPath(),newSnapshotName)
 			self.SnapshotSuccess = True
 		except:
