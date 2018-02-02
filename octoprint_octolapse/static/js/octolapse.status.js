@@ -641,7 +641,7 @@ $(function () {
             // clear the current src
             $snapshotImage.attr("src", "");
             // set the current src
-            $snapshotImage.attr("src", getLatestSnapshotUrl());
+            $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
 
 
         };
