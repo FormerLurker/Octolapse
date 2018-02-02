@@ -54,7 +54,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			# get the latest snapshot image
 			mimeType = 'image/jpeg'
 			filename = utility.GetLatestSnapshotDownloadPath(self.get_plugin_data_folder())
-			self.Settings.CurrentDebugProfile().LogInfo("Searching for latest snapshot at: {0}".format(filename)
+			self.Settings.CurrentDebugProfile().LogInfo("Searching for latest snapshot at: {0}".format(filename))
 			if(not os.path.isfile(filename)):
 				# we haven't captured any images, return the built in png.
 				mimeType = 'image/png'
