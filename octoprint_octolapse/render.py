@@ -155,7 +155,7 @@ class TimelapseRenderJob(object):
 		self._thread.start()
 
 	def _pre_render(self):
-		#
+		
 		self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
 		if(self._imageCount == 0):
 			self._renderFail(self._output, self._baseOutputFileName, "No images were captured.")
@@ -294,31 +294,32 @@ class TimelapseRenderJob(object):
 
 	def _applyPrePostRoll(self, snapshotDirectory, snapshotFileNameTemplate, fps, imageCount):
 		# start with pre-roll, since it will require a bunch of renaming
-		preRollFrames = int(utility.round_to(self._rendering.pre_roll_seconds * fps,1))
+		preRollFrames = int(self._rendering.pre_roll_seconds * fps)
 		if(preRollFrames > 0):
 
 			# create a variable to hold the new path of the first image
 			firstImagePath = ""
 			# rename all of the current files.  The snapshot number should be incremented by the number of pre-roll frames
-			for imageIndex in xrange(1,imageCount + 1):
-				currentImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageIndex
-				newImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageIndex+preRollFrames)
-				if(imageIndex == 1):
+			# start with the last image and work backwards to avoid overwriting files we've already moved
+			for imageNumber in range(imageCount,0,-1):
+				currentImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageNumber
+				newImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageNumber+preRollFrames)
+				if(imageNumber == 1):
 					firstImagePath = newImagePath
-
 				shutil.move(currentImagePath,newImagePath)	
-
 			# get the path of the first image
 			# copy the first frame as many times as we need
-			for imageIndex in xrange(preRollFrames,0,-1):
-				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageIndex)
+			for imageIndex in range(preRollFrames):
+				imageNumber = imageIndex + 1
+				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageNumber)
 				shutil.copy(firstImagePath,newImagePath)	
 		# finish with post roll since it's pretty easy
-		postRollFrames =  int(utility.round_to(self._rendering.post_roll_seconds * fps,1))
+		postRollFrames =  int(self._rendering.post_roll_seconds * fps)
 		if(postRollFrames > 0):
 			lastImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageCount + preRollFrames)
-			for imageIndex in xrange(1,postRollFrames+1):
-				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageIndex + imageCount + preRollFrames)
+			for imageIndex in range(postRollFrames):
+				imageNumber = (imageIndex +1) + imageCount + preRollFrames
+				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageNumber)
 				shutil.copy(lastImagePath,newImagePath)
 
 
