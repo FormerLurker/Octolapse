@@ -134,10 +134,20 @@ class TimelapseRenderJob(object):
 		self.cleanAfterSuccess = cleanAfterSuccess 
 		self.cleanAfterFail = cleanAfterFail 
 		self.syncWithTimelapse = syncWithTimelapse
+		self._input = ""
+		self._output = ""
 
+		self._baseOutputFileName = ""
 	def process(self):
 		"""Processes the job."""
 		# do our file operations first, this seems to crash rendering if we do it inside the thread.  Of course.
+		self._input = os.path.join(self._capture_dir,
+								self._capture_file_template)
+		self._output = os.path.join(self._output_dir,
+								self._output_file_name)
+
+		self._baseOutputFileName = utility.GetFilenameFromFullPath(self._output)
+
 		self._pre_render();
 		self._thread = threading.Thread(target=self._render,
 		                                name="TimelapseRenderJob_{name}".format(name = self._printFileName))
@@ -148,7 +158,7 @@ class TimelapseRenderJob(object):
 		#
 		self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
 		if(self._imageCount == 0):
-			self._renderFail(output, baseOutputFileName, "No images were captured.")
+			self._renderFail(self._output, self._baseOutputFileName, "No images were captured.")
 			return;
 		self._fps = self._rendering.fps
 
@@ -177,29 +187,24 @@ class TimelapseRenderJob(object):
 		"""Rendering runnable."""
 		success = False
 		# create variables we will need for callbacks and processing
-		input = os.path.join(self._capture_dir,
-								self._capture_file_template)
-		output = os.path.join(self._output_dir,
-								self._output_file_name)
-
-		baseOutputFileName = utility.GetFilenameFromFullPath(output)
+		
 		synchronize = self.syncWithTimelapse and self._rendering.output_format == "mp4"
 		try:
 			
 			
 			# notify any listeners that we are rendering.
 
-			self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
+			self._notify_callback("render_start", self._output, self._baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
 
 			if self._ffmpeg is None:
-				self._renderFail(output, baseOutputFileName, "Cannot create movie, path to ffmpeg is unset")
+				self._renderFail(self._output, self._baseOutputFileName, "Cannot create movie, path to ffmpeg is unset")
 				return
 			if self._rendering.bitrate is None:
-				self._renderFail(output, baseOutputFileName, "Cannot create movie, desired bitrate is unset")
+				self._renderFail(self._output, self._baseOutputFileName, "Cannot create movie, desired bitrate is unset")
 				return
 
 			# add the file extension
-			output = output + "." + self._rendering.output_format
+			output = self._output + "." + self._rendering.output_format
 			try:
 				#path = os.path.dirname(self._output_dir)
 				self._logger.warn("Creating the directory at {0}".format(self._output_dir))
@@ -208,14 +213,14 @@ class TimelapseRenderJob(object):
 			except:
 				type = sys.exc_info()[0]
 				value = sys.exc_info()[1]
-				self._renderFail(output, baseOutputFileName, "Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
+				self._renderFail(output, self._baseOutputFileName, "Render - An exception was thrown when trying to create the rendering path at: {0} , ExceptionType:{1}, Exception Value:{2}".format(self._output_dir,type,value))
 				return	
 			# will it render with only one frame?
 			for i in range(1,2):
-				if os.path.exists(input % i):
+				if os.path.exists(self._input % i):
 					break
 			else:
-				self._renderFail(output, baseOutputFileName, 'Cannot create a movie, no frames captured.')
+				self._renderFail(output, self._baseOutputFileName, 'Cannot create a movie, no frames captured.')
 				return
 
 			watermark = None
@@ -227,7 +232,7 @@ class TimelapseRenderJob(object):
 					watermark = watermark.replace("\\", "/").replace(":", "\\\\:")
 
 			# prepare ffmpeg command
-			command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._rendering.bitrate, self._threads, input, output, self._rendering.output_format,
+			command_str = self._create_ffmpeg_command_string(self._ffmpeg, self._fps, self._rendering.bitrate, self._threads, self._input, output, self._rendering.output_format,
 															 hflip=self._rendering.flip_h, vflip=self._rendering.flip_v, rotate=self._rendering.rotate_90, watermark=watermark )
 		
 			with self.render_job_lock:
@@ -238,38 +243,38 @@ class TimelapseRenderJob(object):
 					
 					p = sarge.run(command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
 					if p.returncode == 0:
-						self._notify_callback("render_success", output,baseOutputFileName)
+						self._notify_callback("render_success", output,self._baseOutputFileName)
 						success = True
 					else:
 						returncode = p.returncode
 						stdout_text = p.stdout.text
 						stderr_text = p.stderr.text
-						self._renderFail(output, baseOutputFileName, "Could not render movie, got return code %r: %s" % (returncode, stderr_text))
+						self._renderFail(output, self._baseOutputFileName, "Could not render movie, got return code %r: %s" % (returncode, stderr_text))
 				except:
-					self._renderFail(output, baseOutputFileName, "Could not render movie due to unknown error")
+					self._renderFail(output, self._baseOutputFileName, "Could not render movie due to unknown error")
 				finally:
-					self._notify_callback("render_complete", output, baseOutputFileName,0,'unknown')
+					self._notify_callback("render_complete", output, self._baseOutputFileName,0,'unknown')
 				cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
 				if(cleanSnapshots):
 					self._CleanSnapshots()
 
-				finalFileName = baseOutputFileName
+				finalFileName = self._baseOutputFileName
 				if(synchronize):
-					finalFileName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, baseOutputFileName + "." + self._rendering.output_format)
+					finalFileName = "{0}{1}{2}".format(self._octoprintTimelapseFolder,  os.sep, self._baseOutputFileName + "." + self._rendering.output_format)
 					# Move the timelapse to the Octoprint timelapse folder.
 					try:
 						# get the timelapse folder for the Octoprint timelapse plugin
 						self._debug.LogRenderSync("Syncronizing timelapse with the built in timelapse plugin, copying {0} to {1}".format(output,finalFileName))
 						shutil.move(output,finalFileName)
-						self._notify_callback("after_sync_success", finalFileName, baseOutputFileName)
+						self._notify_callback("after_sync_success", finalFileName, self._baseOutputFileName)
 					except Exception, e:
 						self._debug.LogException(e)
-						self._notify_callback("after_sync_fail", finalFileName,baseOutputFileName)
+						self._notify_callback("after_sync_fail", finalFileName,self._baseOutputFileName)
 
-				self._notify_callback("complete", finalFileName, baseOutputFileName,synchronize, success)
+				self._notify_callback("complete", finalFileName, self._baseOutputFileName,synchronize, success)
 		except TypeError, e:
-			self.Settings.CurrentDebugProfile().LogException(e)
-			self._renderFail(output, baseOutputFileName, 'An unexpected exception occurred.  Please check plugin_octolapse.log for details.')
+			self._debug.LogException(e)
+			self._renderFail(self._output, self._baseOutputFileName, 'An unexpected exception occurred.  Please check plugin_octolapse.log for details.')
 	def _countImages(self, snapshotDirectory, snapshotFileNameTemplate):
 		"""get the number of frames"""
 		self._debug.LogRenderStart("Searching for frames.")
