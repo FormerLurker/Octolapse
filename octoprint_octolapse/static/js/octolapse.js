@@ -218,7 +218,6 @@ $(function () {
         self.onAfterBinding = function () {
             self.loadState();
             // Subscribe all fade in images
-            $("img.octolapse-fade-in").bind("load", function () { $(this).fadeIn(); });
             Octolapse.Status.updateLatestSnapshotImage();
         };
 
@@ -230,7 +229,7 @@ $(function () {
                 ccontentType: "application/json",
                 dataType: "json",
                 success: function (newSettings) {
-                    console.log("Main Settings have been loaded.  Waiting for message");
+                    //console.log("Main Settings have been loaded.  Waiting for message");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert("Unable to load the main settings tab.  Status: " + textStatus + ".  Error: " + errorThrown);
@@ -238,39 +237,39 @@ $(function () {
             });
         };
         self.onUserLoggedIn = function (user) {
-            console.log("octolapse.status.js - User Logged In.  User: " + user)
+            //console.log("octolapse.status.js - User Logged In.  User: " + user)
             self.is_admin(self.loginState.isAdmin());
         }
         self.onUserLoggedOut = function () {
-            console.log("octolapse.status.js - User Logged Out")
+            //console.log("octolapse.status.js - User Logged Out")
             self.is_admin(false);
         }
         self.updateState = function (state) {
             if (state.Position != null) {
-                console.log('octolapse.js - state-changed - Position');
+                //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
             }
             if (state.PositionState != null) {
-                console.log('octolapse.js - state-changed - Position State');
+                //console.log('octolapse.js - state-changed - Position State');
                 Octolapse.Status.updatePositionState(state.PositionState);
             }
             if (state.Extruder != null) {
-                console.log('octolapse.js - state-changed - Extruder State');
+                //console.log('octolapse.js - state-changed - Extruder State');
                 Octolapse.Status.updateExtruderState(state.Extruder);
             }
             if (state.TriggerState != null) {
-                console.log('octolapse.js - state-changed - Trigger State');
+                //console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.Status.updateTriggerStates(state.TriggerState);
                 
             }
             if (state.MainSettings != null) {
-                console.log('octolapse.js - state-changed - Trigger State');
+                //console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.SettingsMain.update(state.MainSettings);
                 Octolapse.Globals.update(state.MainSettings);
 
             }
             if (state.Status != null) {
-                console.log('octolapse.js - state-changed - Trigger State');
+                //console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.Status.update(state.Status);
             }
         };
@@ -318,7 +317,7 @@ $(function () {
                     if (self.client_id != data.client_id) {
                         Octolapse.Status.loadStatus();
                         if (self.is_admin()) {
-                            console.log('octolapse - settings-changed, reloading');
+                            //console.log('octolapse - settings-changed, reloading');
                             Octolapse.Settings.loadSettings();
                             var options = {
                                 title: 'Octolapse',
@@ -332,20 +331,20 @@ $(function () {
                             Octolapse.displayPopup(options);
                         }
                     }
-                    else {
-                        console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
-                    }
+                    //else {
+                        //console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
+                    //}
                     break;
                 case "state-loaded":
-                    console.log('octolapse.js - state-loaded');
+                    //console.log('octolapse.js - state-loaded');
                     self.updateState(data);
                     break;
                 case "state-changed":
-                    console.log('octolapse.js - state-changed');
+                    //console.log('octolapse.js - state-changed');
                     self.updateState(data);
                     break;
                 case "popup":
-                    console.log('octolapse.js - popup');
+                    //console.log('octolapse.js - popup');
                     var options = {
                         title: 'Octolapse Notice',
                         text: data.msg,
@@ -358,7 +357,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-start":
-                    console.log('octolapse.js - timelapse-start');
+                    //console.log('octolapse.js - timelapse-start');
                     /*
                     Octolapse.Status.is_timelapse_active(true);
                     Octolapse.Status.is_taking_snapshot(false);
@@ -371,18 +370,18 @@ $(function () {
                     self.updateState(data);
                     break;
                 case "timelapse-complete":
-                    console.log('octolapse.js - timelapse-complete');
+                    //console.log('octolapse.js - timelapse-complete');
                     Octolapse.Status.onTimelapseComplete();
                     
                     break;
                 case "snapshot-start":
-                    console.log('octolapse.js - snapshot-start');
+                    //console.log('octolapse.js - snapshot-start');
                     Octolapse.Status.is_taking_snapshot(true);
                     Octolapse.Status.snapshot_error(false);
                     Octolapse.Status.snapshot_error_message("");
                     break;
                 case "snapshot-complete":
-                    console.log('octolapse.js - snapshot-complete');
+                    //console.log('octolapse.js - snapshot-complete');
                     Octolapse.Status.snapshot_count(data.snapshot_count)
                     Octolapse.Status.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
                     Octolapse.Status.snapshot_error(!data.success);
@@ -391,7 +390,7 @@ $(function () {
                     Octolapse.Status.updateLatestSnapshotImage();
                     break;
                 case "render-start":
-                    console.log('octolapse.js - render-start');
+                    //console.log('octolapse.js - render-start');
                     Octolapse.Status.update(data.Status)
                     
                     var options = {
@@ -406,7 +405,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "render-failed":
-                    console.log('octolapse.js - render-failed');
+                    //console.log('octolapse.js - render-failed');
                     Octolapse.Status.update(data.Status);
                     var options = {
                         title: 'Octolapse Rendering Failed',
@@ -420,10 +419,10 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "render-complete":
-                    console.log('octolapse.js - render-complete');
+                    //console.log('octolapse.js - render-complete');
                     break;
                 case "render-end":
-                    console.log('octolapse.js - render-end');
+                    //console.log('octolapse.js - render-end');
                     Octolapse.Status.is_rendering(false);
                     // Make sure we aren't synchronized, else there's no reason to display a popup
                     if (!data.is_synchronized && data.success) {
@@ -441,7 +440,7 @@ $(function () {
                     Octolapse.Status.onRenderEnd();
                     break;
                 case "synchronize-failed":
-                    console.log('octolapse.js - synchronize-failed');
+                    //console.log('octolapse.js - synchronize-failed');
                     var options = {
                         title: 'Octolapse Synchronization Failed',
                         text: data.msg,
@@ -454,7 +453,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopping":
-                    console.log('octolapse.js - timelapse-stoping');
+                    //console.log('octolapse.js - timelapse-stoping');
                     Octolapse.Status.is_timelapse_active(false);
                     var options = {
                         title: 'Octolapse Timelapse Stopping',
@@ -468,7 +467,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopped":
-                    console.log('octolapse.js - timelapse-stopped');
+                    //console.log('octolapse.js - timelapse-stopped');
                     Octolapse.Status.onTimelapseStop()
                     
                     var options = {
@@ -483,7 +482,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
                 default:
-                    console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
+                    //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
                     break;
             }
         };

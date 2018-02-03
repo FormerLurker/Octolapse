@@ -46,10 +46,12 @@ $(function () {
             Show and hide the settings tabs based on the enabled parameter
         */
         self.setSettingsVisibility = function (isVisible) {
-            if (isVisible)
-                console.log("Showing Settings")
+            if (isVisible) {
+                //console.log("Showing Settings")
+            }
+                
             else {
-                console.log("Hiding settings")
+                //console.log("Hiding settings")
                 $('#octolapse_settings div.tab-content .hide-disabled').each(function (index, element) {
                     // Clear any active tabs
                     $(element).removeClass('active');
@@ -62,28 +64,9 @@ $(function () {
                     $(element).hide();
                 $(element).removeClass('active');
             });
-            
-            
 
-            // Set the main tab to the active tab
         };
-        /*
-        self.loadSettings = function () {
-            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            $.ajax({
-                url: "/plugin/octolapse/loadMainSettings",
-                type: "POST",
-                ccontentType: "application/json",
-                dataType: "json",
-                success: function (newSettings) {
-                    self.update(newSettings);
-                    console.log("Main Settings have been loaded.");
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to load the main settings tab.  Status: " + textStatus + ".  Error: " + errorThrown);
-                }
-            });
-        }*/
+        
         self.update = function(settings) {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.show_navbar_icon(settings.show_navbar_icon);
@@ -98,7 +81,7 @@ $(function () {
         
         
         self.showEditMainSettingsPopup = function () {
-            console.log("showing main settings")
+            //console.log("showing main settings")
             self.$addEditDialog.modal();
         }
         // cancel button click handler
@@ -117,7 +100,7 @@ $(function () {
                 , "show_trigger_state_changes": self.show_trigger_state_changes()
                 , "client_id" : Octolapse.Globals.client_id
             };
-            console.log("Saving main settings.")
+            //console.log("Saving main settings.")
             $.ajax({
                 url: "/plugin/octolapse/saveMainSettings",
                 type: "POST",

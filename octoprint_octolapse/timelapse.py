@@ -606,6 +606,8 @@ class Timelapse(object):
 		finalFileName = args[0]
 		synchronize = args[1]
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering the timelapse.")
+		if(self.OnRenderCompleteCallback is not None):
+			self.OnRenderCompleteCallback();
 	def _onSynchronizeRenderingFail(self, *args, **kwargs):
 		finalFilename = args[0]
 		baseFileName = args[1]

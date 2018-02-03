@@ -111,9 +111,7 @@ $(function () {
             this.IsDetracted(state.IsDetracted);
             this.HasChanged(state.HasChanged);
         }
-
         
-
         self.getRetractionStateIconClass = ko.pureComputed(function () {
             if (self.IsRetracting()) {
                 if (self.IsPartiallyRetracted() && !self.IsRetracted())
@@ -626,19 +624,54 @@ $(function () {
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
         self.waiting_to_render = ko.observable();
-
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
         
+        self.IsTabShowing = false;
+
+        self.onAfterBinding = function () {
+            $previousSnapshotImage = $("#octolapse_previous_snapshot");
+            $("#octolapse_latest_snapshot").bind("load", function ()
+            {
+                //console.log("Snapshot Image Loaded.");
+                $(this).fadeIn(1000, function () {
+                    //console.log("Snapshot Image has been shown, hiding previous image.");
+                    $previousSnapshotImage.attr("src","");
+                    
+                });
+            });
+        }
+
+        self.onTabChange = function (current, previous) {
+
+            if (current != null && current == "#tab_plugin_octolapse") {
+                //console.log("Octolapse Tab is showing");
+                self.IsTabShowing = true;
+                $snapshotImage = $("#octolapse_latest_snapshot");
+                currentImageSrc = $snapshotImage.attr("src");
+                if (currentImageSrc == null || currentImageSrc == "") {
+                    self.updateLatestSnapshotImage();
+                }
+            }
+            else if (previous != null && previous == "#tab_plugin_octolapse") {
+                //console.log("Octolapse Tab is not showing");
+                self.IsTabShowing = false;
+            }
+        }
 
         self.updateLatestSnapshotImage = function () {
-            $snapshotImage = $("#octolapse_latest_snapshot");
-            $snapshotImage.fadeOut();
-            // set the current src
-            $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
-
+            if (self.IsTabShowing) {
+                //console.log("Updating Snapshot Image");
+                $snapshotImage = $("#octolapse_latest_snapshot");
+                $previousSnapshotImage = $("#octolapse_previous_snapshot");
+                // copy the existing image url into the previous snapshot image src.
+                $previousSnapshotImage.attr("src", $snapshotImage.attr("src"));
+                $snapshotImage.hide();
+                // set the current src
+                $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
+            }
 
         };
         self.onTimelapseComplete = function () {
@@ -703,14 +736,14 @@ $(function () {
 
         self.stopTimelapse = function () {
             if (Octolapse.Globals.is_admin()) {
-                console.log("octolapse.status.js - ButtonClick: StopTimelapse");
+                //console.log("octolapse.status.js - ButtonClick: StopTimelapse");
                 if (confirm("Warning: You cannot restart octolapse once it is stopped until the next print.  Do you want to stop Octolapse?")) {
                     $.ajax({
                         url: "/plugin/octolapse/stopTimelapse",
                         type: "POST",
                         contentType: "application/json",
                         success: function (data) {
-                            console.log("octolapse.status.js - stopTimelapse - success" + data);
+                            //console.log("octolapse.status.js - stopTimelapse - success" + data);
                         },
                         error: function (XMLHttpRequest, textStatus, errorThrown) {
                             alert("Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);

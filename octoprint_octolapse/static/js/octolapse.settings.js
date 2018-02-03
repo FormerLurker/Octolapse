@@ -233,7 +233,7 @@ $(function () {
                 dataType: "json",
                 success: function (newSettings) {
                     self.updateSettings(newSettings);
-                    console.log("Settings have been loaded.");
+                    //console.log("Settings have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
@@ -393,19 +393,19 @@ $(function () {
                     }
                     else {
                         // Search for any hidden elements that are invalid
-                        console.log("Checking ofr hidden field error");
+                        //console.log("Checking ofr hidden field error");
                         $fieldErrors = dialog.$addEditForm.find('.error_label_container.error')
                         $fieldErrors.each(function (index, element) {
                             // Check to make sure the field is hidden.  If it's not, don't bother showing the parent container.
                             // This can happen if more than one field is invalid in a hidden form
                             $errorContainer = $(element);
                             if (!$errorContainer.is(":visible")) {
-                                console.log("Hidden error found, showing");
+                                //console.log("Hidden error found, showing");
                                 $collapsableContainer = $errorContainer.parents(".collapsible");
                                 if ($collapsableContainer.length > 0)
                                     // The containers may be nested, show each
                                     $collapsableContainer.each(function (index, container) {
-                                        console.log("Showing the collapsed container");
+                                        //console.log("Showing the collapsed container");
                                         $(container).show();
                                     });
                             }

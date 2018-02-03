@@ -17,18 +17,35 @@ a.disabled {
 }
 
 .octolapse_status {
-   
     min-height: 150px;
     display: inline-flex;
     align-items: center;
 }
-#octolapse_snapshot_container img {
+#octolapse_snapshot_container {
+    position: relative;
+}
+
+#octolapse_previous_snapshot, #octolapse_latest_snapshot {
+    vertical-align: auto;
+    position: absolute;
     display: block;
     max-width: 300px;
     max-height: 150px;
     width: auto;
     height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    left:0;
+    right:0;
 }
+
+#octolapse_previous_snapshot{
+    z-index:3
+}
+#octolapse_latest_snapshot {
+    z-index: 4
+}
+
 #octolapse_add_edit_profile_form {
     margin: 0;
 }

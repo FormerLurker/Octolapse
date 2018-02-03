@@ -383,12 +383,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , self.get_plugin_data_folder()
 							  , self._settings.getBaseFolder("timelapse")
 							  ,onRenderStart = self.OnRenderStart
-							  , onRenderComplete = None # I don't think we need this
+							  , onRenderComplete = self.OnRenderComplete
 							  , onRenderFail = self.OnRenderFail
 							  , onRenderSynchronizeFail = self.OnRenderSynchronizeFail
 							  , onRenderSynchronizeComplete = self.OnRenderSynchronizeComplete
 							  , onRenderEnd = self.OnRenderEnd
-							  
 							  , onSnapshotStart = self.OnSnapshotStart
 							  , onSnapshotEnd = self.OnSnapshotEnd
 							  , onTimelapseStopping = self.OnTimelapseStopping
@@ -546,6 +545,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def SendRenderEndMessage(self,success):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-end", msg="Octolapse is finished rendering a timelapse.", is_synchronized = self.IsRenderingSynchronized, success = success))
+
+	def SendRenderCompleteMessage(self):
+		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-complete", msg="Octolapse has completed a rendering."))
 	def OnTimelapseStart(self, *args, **kwargs):
 		stateData = self.Timelapse.GetStateDict()
 		data ={
@@ -659,6 +661,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		payload = args[0]
 		# Octoprint Event Manager Code
 		self.SendRenderFailedMessage("Octolapse has failed to render a timelapse.  Reason:{0}".format(payload["reason"]))
+
+	def OnRenderComplete(self, *args, **kwargs):
+		self.SendRenderCompleteMessage()
+
+
 	def OnRenderSynchronizeFail(self, *args, **kwargs):
 		"""Called when a synchronization attempt with the default app fails."""
 		payload = args[0]
