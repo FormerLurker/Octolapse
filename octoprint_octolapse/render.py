@@ -137,10 +137,37 @@ class TimelapseRenderJob(object):
 
 	def process(self):
 		"""Processes the job."""
+		# do our file operations first, this seems to crash rendering if we do it inside the thread.  Of course.
+		self._pre_render();
 		self._thread = threading.Thread(target=self._render,
 		                                name="TimelapseRenderJob_{name}".format(name = self._printFileName))
 		self._thread.daemon = True
 		self._thread.start()
+
+	def _pre_render(self):
+		#
+		self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
+		if(self._imageCount == 0):
+			self._renderFail(output, baseOutputFileName, "No images were captured.")
+			return;
+		self._fps = self._rendering.fps
+
+		if(self._rendering.fps_calculation_type == 'duration'):
+			
+			self._fps = float(self._imageCount)/float(self._rendering.run_length_seconds)
+			if(self._fps > self._rendering.max_fps):
+				self._fps = self._rendering.max_fps
+			elif(self._fps < self._rendering.min_fps):
+				self._fps = self._rendering.min_fps
+			self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self._rendering.fps_calculation_type,self._fps, self._imageCount,self._rendering.run_length_seconds,self._rendering.max_fps,self._rendering.min_fps))
+		else:
+			self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{0}".format(self._rendering.fps_calculation_type,self._fps))
+
+
+		# apply pre-post roll
+		# Apply the pre-roll and post-roll
+		
+		self._applyPrePostRoll(self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
 
 	def _renderFail(self, output, baseOutputFileName, message):
 		self._notify_callback("render_fail", output, baseOutputFileName,0,message)
@@ -159,30 +186,7 @@ class TimelapseRenderJob(object):
 		synchronize = self.syncWithTimelapse and self._rendering.output_format == "mp4"
 		try:
 			
-			#
-			self._imageCount = self._countImages(self._capture_dir, self._capture_file_template)
-			if(self._imageCount == 0):
-				self._renderFail(output, baseOutputFileName, "No images were captured.")
-				return;
-			self._fps = self._rendering.fps
-
-			if(self._rendering.fps_calculation_type == 'duration'):
 			
-				self._fps = float(self._imageCount)/float(self._rendering.run_length_seconds)
-				if(self._fps > self._rendering.max_fps):
-					self._fps = self._rendering.max_fps
-				elif(self._fps < self._rendering.min_fps):
-					self._fps = self._rendering.min_fps
-				self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(self._rendering.fps_calculation_type,self._fps, self._imageCount,self._rendering.run_length_seconds,self._rendering.max_fps,self._rendering.min_fps))
-			else:
-				self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{0}".format(self._rendering.fps_calculation_type,self._fps))
-
-
-			# apply pre-post roll
-			# Apply the pre-roll and post-roll
-		
-			self._applyPrePostRoll(self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
-
 			# notify any listeners that we are rendering.
 
 			self._notify_callback("render_start", output, baseOutputFileName,synchronize, self._imageCount, self._timeAdded)
