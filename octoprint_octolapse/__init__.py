@@ -1,6 +1,5 @@
 # coding=utf-8
 from __future__ import absolute_import
-
 import octoprint.plugin
 import uuid
 import time
@@ -17,16 +16,19 @@ import itertools
 import shutil
 import copy
 import threading
-import octoprint_octolapse.utility as utility
+
+
 # Octoprint Imports
 from octoprint.events import eventManager, Events # used to send messages to the web client for notifying it of new timelapses
 
 # Octolapse imports
+
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.command import Commands
-from octoprint_octolapse.utility import *
+import octoprint_octolapse.utility as utility
+
 class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 						octoprint.plugin.AssetPlugin,
 						octoprint.plugin.TemplatePlugin,
@@ -58,10 +60,18 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				# we haven't captured any images, return the built in png.
 				mimeType = 'image/png'
 				filename = utility.GetNoSnapshotImagesDownloadPath(self._basefolder)
+		elif(filename == 'latest_snapshot_thumbnail_300px.jpeg'):
+			# get the latest snapshot image
+			mimeType = 'image/jpeg'
+			filename = utility.GetLatestSnapshotThumbnailDownloadPath(self.get_plugin_data_folder())
+			if(not os.path.isfile(filename)):
+				# we haven't captured any images, return the built in png.
+				mimeType = 'image/png'
+				filename = utility.GetNoSnapshotImagesDownloadPath(self._basefolder)
 		else:
 			# we don't recognize the snapshot type
 			mimeType = 'image/png'
-			filename = utility.GetErrorImagesDownloadPath(self._basefolder)
+			filename = utility.GetErrorImageDownloadPath(self._basefolder)
 
 		# not getting the latest image
 		return flask.send_file(filename, mimetype=mimeType,cache_timeout=-1)

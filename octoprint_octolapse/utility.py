@@ -94,13 +94,17 @@ def GetSnapshotDownloadPath(dataDirectory, fileName):
 def GetLatestSnapshotDownloadPath(dataDirectory):
 	return "{0}{1}".format(GetSnapshotDirectory(dataDirectory),"latest_snapshot.jpeg")
 
+def GetLatestSnapshotThumbnailDownloadPath(dataDirectory):
+	return "{0}{1}".format(GetSnapshotDirectory(dataDirectory),"latest_snapshot_thumbnail_300px.jpeg")
+
 def GetImagesDownloadPath(baseFolder, fileName):
 	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"Images",os.sep,fileName)
 def GetErrorImageDownloadPath(baseFolder):
 	return GetImagesDownloadPath(baseFolder, "no-image-available.png")
 def GetNoSnapshotImagesDownloadPath(baseFolder):
 	return GetImagesDownloadPath(baseFolder, "no_snapshot.png")
-
+def GetErrorImageDownloadPath(baseFolder):
+	return GetImagesDownloadPath(baseFolder, "no-image-available.png")
 def GetRenderingDirectoryTemplate():
 	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"timelapses",os.sep )
 

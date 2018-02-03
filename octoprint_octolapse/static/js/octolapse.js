@@ -218,7 +218,7 @@ $(function () {
         self.onAfterBinding = function () {
             self.loadState();
             // Subscribe all fade in images
-            Octolapse.Status.updateLatestSnapshotImage();
+            Octolapse.Status.updateLatestSnapshotThumbnailImage();
         };
 
         self.loadState = function () {
@@ -387,7 +387,7 @@ $(function () {
                     Octolapse.Status.snapshot_error(!data.success);
                     Octolapse.Status.snapshot_error_message(data.error);
                     Octolapse.Status.is_taking_snapshot(false);
-                    Octolapse.Status.updateLatestSnapshotImage();
+                    Octolapse.Status.updateLatestSnapshotThumbnailImage();
                     break;
                 case "render-start":
                     //console.log('octolapse.js - render-start');

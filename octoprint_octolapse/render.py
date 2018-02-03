@@ -178,7 +178,7 @@ class TimelapseRenderJob(object):
 			# apply pre and post roll
 			self._applyPrePostRoll(self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
 			return True
-		except TypeError, e:
+		except Exception as e:
 			self._debug.LogException(e)
 		return False
 	def _calculateFps(self):
@@ -289,7 +289,7 @@ class TimelapseRenderJob(object):
 				self._debug.LogRenderStart("Creating the directory at {0}".format(self._output_dir))
 				if not os.path.exists(self._output_dir):
 					os.makedirs(self._output_dir)
-			except TypeError, e:
+			except Exception as e:
 				self._debug.LogException(e)
 				self._on_render_fail("Render - An exception was thrown when trying to create the rendering path at: {0}.  Please check the logs (plugin_octolapse.log) for details.".format(self._output_dir))
 				return
@@ -327,7 +327,7 @@ class TimelapseRenderJob(object):
 						self._debug.LogRenderFail(message)
 						self._on_render_fail(message)
 						return
-				except TypeError, e:
+				except Exception as e:
 					self._debug.LogException(e)
 					self._on_render_fail( 'Could not render movie due to unknown error".  Please check plugin_octolapse.log for details.')
 					return
@@ -353,7 +353,7 @@ class TimelapseRenderJob(object):
 						self._on_after_sync_fail()
 						return
 				
-		except TypeError, e:
+		except Exception as e:
 			self._debug.LogException(e)
 			self._on_render_fail( 'An unexpected exception occurred while rendering a timelapse.  Please check plugin_octolapse.log for details.')
 			return

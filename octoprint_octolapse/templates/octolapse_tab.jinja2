@@ -7,6 +7,12 @@
     {
     return "{{ url_for('plugin.octolapse.snapshot',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
     }
+    var getLatestSnapshotThumbnailUrl = function()
+    {
+    return "{{ url_for('plugin.octolapse.snapshot',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
+    }
+
+
   </script>
   <div data-bind="visible:snapshot_error" class="text-danger">
     Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>

@@ -5,13 +5,13 @@ import os
 import threading
 
 from octoprint_octolapse.trigger import GcodeTrigger, TimerTrigger, LayerTrigger, Triggers
-import octoprint_octolapse.utility as utility
 from octoprint_octolapse.snapshot import CaptureSnapshot,SnapshotInfo
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
 from octoprint_octolapse.render import Render
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.command import *
 from octoprint_octolapse.position import Position
+import octoprint_octolapse.utility as utility
 
 class Timelapse(object):
 	
@@ -488,8 +488,7 @@ class Timelapse(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 			return
 		try:
-			# this is the latest snapshot, copy it to the proper place.
-			shutil.copy(snapshotInfo.GetTempFullPath(),utility.GetLatestSnapshotDownloadPath(self.DataFolder))
+			
 			# rename the current file
 			shutil.move(snapshotInfo.GetTempFullPath(),newSnapshotName)
 			self.SnapshotSuccess = True

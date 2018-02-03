@@ -652,7 +652,7 @@ $(function () {
                 $snapshotImage = $("#octolapse_latest_snapshot");
                 currentImageSrc = $snapshotImage.attr("src");
                 if (currentImageSrc == null || currentImageSrc == "") {
-                    self.updateLatestSnapshotImage();
+                    self.updateLatestSnapshotThumbnailImage();
                 }
             }
             else if (previous != null && previous == "#tab_plugin_octolapse") {
@@ -660,7 +660,6 @@ $(function () {
                 self.IsTabShowing = false;
             }
         }
-
         self.updateLatestSnapshotImage = function () {
             if (self.IsTabShowing) {
                 //console.log("Updating Snapshot Image");
@@ -671,6 +670,19 @@ $(function () {
                 $snapshotImage.hide();
                 // set the current src
                 $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
+            }
+
+        };
+        self.updateLatestSnapshotThumbnailImage = function () {
+            if (self.IsTabShowing) {
+                //console.log("Updating Snapshot Image");
+                $snapshotImage = $("#octolapse_latest_snapshot");
+                $previousSnapshotImage = $("#octolapse_previous_snapshot");
+                // copy the existing image url into the previous snapshot image src.
+                $previousSnapshotImage.attr("src", $snapshotImage.attr("src"));
+                $snapshotImage.hide();
+                // set the current src
+                $snapshotImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
             }
 
         };

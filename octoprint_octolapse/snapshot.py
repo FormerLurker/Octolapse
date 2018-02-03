@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+from PIL import Image
 
 import requests
 import threading
@@ -42,7 +43,7 @@ class CaptureSnapshot(object):
 		info.DirectoryName = utility.GetSnapshotTempDirectory(self.DataDirectory, printerFileName, self.PrintStartTime)
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
-		newSnapshotJob = SnapshotJob(self.Settings, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
+		newSnapshotJob = SnapshotJob(self.Settings,self.DataDirectory, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
 
 		if(self.Snapshot.delay == 0):
 			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Starting Snapshot Download Job Immediately.")
@@ -74,8 +75,9 @@ class CaptureSnapshot(object):
 class SnapshotJob(object):
 	snapshot_job_lock = threading.RLock()
 	
-	def __init__(self,settings, snapshotInfo, url,  snapshotGuid, timeoutSeconds=5, onComplete = None, onSuccess = None, onFail = None):
+	def __init__(self,settings, dataDirectory, snapshotInfo, url,  snapshotGuid, timeoutSeconds=5, onComplete = None, onSuccess = None, onFail = None):
 		cameraSettings = settings.CurrentCamera()
+		self.DataDirectory = dataDirectory
 		self.Address = cameraSettings.address
 		self.Username = cameraSettings.username
 		self.Password = cameraSettings.password
@@ -121,20 +123,40 @@ class SnapshotJob(object):
 										file.write(chunk)
 								self.Settings.CurrentDebugProfile().LogSnapshotSave("Snapshot - Snapshot saved to disk at {0}".format(dir))
 								success = True
-						except:
-							type = sys.exc_info()[0]
-							value = sys.exc_info()[1]
-							failReason = "Snapshot Save - An exception of type:{0} was raised while saving the retrieved shapshot to disk: Error:{1} Stack Trace:{2}".format(type, value, traceback.print_stack())
-					except:
-						type = sys.exc_info()[0]
-						value = sys.exc_info()[1]
-						failReason = "Snapshot Directory Create - An exception was thrown when trying to create a directory to hold the snapshot download:Directory {0} , ExceptionType:{1}, Exception Value:{2}, Stack Trace:{3}".format(os.path.dirname(dir),type,value, traceback.print_stack())
+
+								# create a copy to be used for the full sized latest snapshot image.
+								latestSnapshotPath = utility.GetLatestSnapshotDownloadPath(self.DataDirectory)
+								shutil.copy(self.SnapshotInfo.GetTempFullPath(),latestSnapshotPath)
+								# create a thumbnail of the image
+								try:
+									# without this I get errors during load (happens in resize, where the image is actually loaded)
+									from PIL import ImageFile
+									ImageFile.LOAD_TRUNCATED_IMAGES = True
+									#######################################
+
+									basewidth = 300
+									img = Image.open(latestSnapshotPath)
+									wpercent = (basewidth/float(img.size[0]))
+									hsize = int((float(img.size[1])*float(wpercent)))
+									img = img.resize((basewidth,hsize), Image.ANTIALIAS)
+									img.save(utility.GetLatestSnapshotThumbnailDownloadPath(self.DataDirectory),"JPEG")
+								except Exception as e:
+									#If we can't create the thumbnail, just log
+									self.Settings.CurrentDebugProfile().LogException(e)
+						except Exception as e:
+							#If we can't create the thumbnail, just log
+							self.Settings.CurrentDebugProfile().LogException(e)
+							failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
+					except Exception as e:
+						#If we can't create the thumbnail, just log
+						self.Settings.CurrentDebugProfile().LogException(e)
+						failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
 				else:
 					failReason = "Snapshot Download - failed with status code:{0}".format(r.status_code)
-			except:
-				type = sys.exc_info()[0]
-				value = sys.exc_info()[1]
-				failReason = "Snapshot Download- An exception of type:{0} was raised during snapshot download:Error:{1}".format(type, value)
+			except Exception as e:
+				#If we can't create the thumbnail, just log
+				self.Settings.CurrentDebugProfile().LogException(e)
+				failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
 
 			if(success):
 				self._notify_callback("success", self.SnapshotInfo)
