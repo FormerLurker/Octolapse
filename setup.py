@@ -33,7 +33,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = []
+plugin_requires = ["Pillow"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -47,9 +47,7 @@ plugin_additional_data = ['data/*.json']
 plugin_additional_data = ['data/images/*.png']
 plugin_additional_data = ['data/images/*.jpeg']
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
-plugin_additional_packages = [
-
-	]
+plugin_additional_packages = []
 
 # Any python packages within <plugin_package>.* you do NOT want to install with your plugin
 plugin_ignored_packages = []
@@ -90,6 +88,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
 	additional_packages=plugin_additional_packages,
 	ignored_packages=plugin_ignored_packages,
 	additional_data=plugin_additional_data
+	
 )
 
 if len(additional_setup_parameters):
