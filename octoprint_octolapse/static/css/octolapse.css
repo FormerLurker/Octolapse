@@ -15,14 +15,19 @@ a.disabled {
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
-#octolapse_snapshot_container {
-    width: 300px;
-    height: 150px;
+
+.octolapse_status {
+   
+    min-height: 150px;
+    display: inline-flex;
+    align-items: center;
 }
-#octolapse_snapshot_container img{
-    max-width:300px;
-    max-height:150px;
-    
+#octolapse_snapshot_container img {
+    display: block;
+    max-width: 300px;
+    max-height: 150px;
+    width: auto;
+    height: auto;
 }
 #octolapse_add_edit_profile_form {
     margin: 0;
