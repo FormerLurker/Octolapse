@@ -10,6 +10,25 @@ a.disabled {
     cursor: default;
 }
 
+#refresh_thumbnail_button {
+    color: greenyellow;
+}
+#refresh_thumbnail_button .fa-square{
+    color: black;
+}
+#refresh_thumbnail_button:not(.disable):hover {
+    color: orange
+}
+
+
+#refresh_thumbnail_container {
+    z-index: 5;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    
+}
+
 .panel {
     margin-bottom: 20px;
     background-color: #fff;
@@ -30,9 +49,10 @@ a.disabled {
     width:100%;
     display: flex
 }
+
 .octolapse_status div {
-    flex-direction:row;
-    display:flex;
+    flex-direction: row;
+    display: flex;
     align-items: center;
 }
 

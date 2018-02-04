@@ -20,7 +20,7 @@
       <div class="row-fluid">
         <div class="span12">
           <h4 data-bind="text: getStatusText">
-            Octolapse 
+            Octolapse
           </h4>
         </div>
 
@@ -30,29 +30,29 @@
       <div class="row-fluid">
         <div class="span6 text-center">
           <div class="octolapse_status_container">
-          <div class="octolapse_status">
-            <div>
-              <span class="fa-stack fa-2x" data-bind="attr: { title: !Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
-                <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Globals.enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
-                <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: (!Octolapse.Globals.enabled()  && is_timelapse_active()) ? 'orange' : (Octolapse.Globals.enabled() ? 'greenyellow' : '') }"></i>
-              </span>
-              <span class="fa-stack fa-2x" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
-                <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-                <i class="fa fa-play-circle fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
-              </span>
-              <span class="fa-stack fa-2x" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
-                <i class="fa fa-square fa-stack-2x" data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
-                <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
-              </span>
-              <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle.')}">
-                <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
-                <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
-              </span>
+            <div class="octolapse_status">
+              <div>
+                <span class="fa-stack fa-2x" data-bind="attr: { title: !Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends.' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled')}">
+                  <i class="fa fa-square fa-stack-2x" data-bind="style: { color: (Octolapse.Globals.enabled() || is_timelapse_active()) ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-off fa-stack-1x fa-inverse" data-bind="style: { color: (!Octolapse.Globals.enabled()  && is_timelapse_active()) ? 'orange' : (Octolapse.Globals.enabled() ? 'greenyellow' : '') }"></i>
+                </span>
+                <span class="fa-stack fa-2x" data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
+                  <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+                  <i class="fa fa-play-circle fa-stack-1x fa-inverse" data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
+                </span>
+                <span class="fa-stack fa-2x" data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot.' : 'Snapshot is idle.'}">
+                  <i class="fa fa-square fa-stack-2x" data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-camera fa-stack-1x fa-inverse" data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
+                </span>
+                <span class="fa-stack fa-2x"  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse.' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle.')}">
+                  <i class="fa fa-square fa-stack-2x" data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-film fa-stack-1x fa-inverse" data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
+                </span>
+              </div>
+              <div class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
+                <button class="btn btn-default btn-small" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
+              </div>
             </div>
-            <div class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
-              <button class="btn btn-default btn-small" data-bind="click: function() {$data.stopTimelapse();}">Stop Octolapse</button>
-            </div>
-          </div>
           </div>
         </div>
         <div class="span6 text-center">
@@ -61,6 +61,14 @@
             <a id="show_latest_snapshot" href="#"  data-bind="click:showLatestSnapshotDialog" title="View a larger image">
               <img class="octolapse-fade-in" id="octolapse_latest_snapshot_thumbnail" ></img>
             </a>
+            <div id="refresh_thumbnail_container" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
+              <a id="refresh_thumbnail_button" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot(),click:refreshThumbnail" href="#">
+                <span class="fa-stack" style="position:inline;">
+                  <i class="fa fa-square fa-stack-2x" ></i>
+                  <i class="fa fa-refresh fa-stack-1x"></i>
+                </span>
+              </a>
+            </div>
           </div>
         </div>
       </div>

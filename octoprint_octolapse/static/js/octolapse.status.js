@@ -680,7 +680,7 @@ $(function () {
             });
             // configure the dialog shown event
             self.$SnapshotDialog.on("show.bs.modal", function () {
-                console.log("Showing snapshot dialog.");
+               // console.log("Showing snapshot dialog.");
                 
                 
             });
@@ -688,9 +688,9 @@ $(function () {
             $("#octolapse_latest_snapshot").bind("load", function ()
             {
                 snapshotImage = this;
-                console.log("Snapshot Image Loaded.");
+                //console.log("Snapshot Image Loaded.");
                 $(this).fadeIn(1000, function () {
-                    console.log("Snapshot Image has been shown, hiding previous image.");
+                    //console.log("Snapshot Image has been shown, hiding previous image.");
                     
                     
                 });
@@ -702,7 +702,7 @@ $(function () {
                 $(this).fadeIn(1000, function () {
                     //console.log("Snapshot Image has been shown, hiding previous image.");
                     $previousSnapshotThumbnailImage.attr("src", "");
-
+                    $("#refresh_thumbnail_button").fadeIn();
                 });
             });
         }
@@ -729,7 +729,7 @@ $(function () {
                 return;
 
             if (self.IsLatestSnapshotDialogShowing) {
-                console.log("Updating Snapshot Image");
+                //console.log("Updating Snapshot Image");
                 newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
 
                 $snapshotImage = $("#octolapse_latest_snapshot");
@@ -745,6 +745,11 @@ $(function () {
             }
 
         };
+        self.refreshThumbnail = function () {
+            //console.log("Refreshing Snapshot Thumbnail");
+            $("#refresh_thumbnail_button").hide();
+            self.updateLatestSnapshotThumbnailImage(true);
+        }
         self.updateLatestSnapshotThumbnailImage = function (force = false) {
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot())
                 return;
@@ -754,7 +759,7 @@ $(function () {
                 $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
                 // copy the existing image url into the previous snapshot image src.
                 $previousSnapshotThumbnailImage.attr("src", $snapshotThumbnailImage.attr("src"));
-                $snapshotThumbnailImage.hide();
+                $snapshotThumbnailImage.fadeOut();
                 // set the current src
                 $snapshotThumbnailImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
             }
