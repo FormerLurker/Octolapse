@@ -57,6 +57,20 @@ $(function () {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
     };
+
+    
+
+    Octolapse.DisableResumeButton = function(){
+        $("#state_wrapper #job_pause").attr("disabled", "disabled");
+        $("#state_wrapper #job_pause span:nth-of-type(1)").text("Snapshot");
+        $("#state_wrapper #job_pause span:nth-of-type(2)").text("Snapshot");
+    }
+    Octolapse.EnableResumeButton = function () {
+        $("#state_wrapper #job_pause").attr("disabled", "");
+        $("#state_wrapper #job_pause span:nth-of-type(1)").text("Pause");
+        $("#state_wrapper #job_pause span:nth-of-type(2)").text("Resume");
+    }
+
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
@@ -245,6 +259,18 @@ $(function () {
             //console.log("octolapse.status.js - User Logged Out")
             self.is_admin(false);
         }
+        self.onEventPrintResumed = function (payload) {
+            Octolapse.EnableResumeButton()
+        }
+        self.onEventPrintCancelled = function (payload) {
+            Octolapse.EnableResumeButton()
+        }
+        self.onEventPrintFailed = function (payload) {
+            Octolapse.EnableResumeButton()
+        }
+        self.onEventPrintDone = function (payload) {
+            Octolapse.EnableResumeButton()
+        }
         self.updateState = function (state) {
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
@@ -383,12 +409,14 @@ $(function () {
                     break;
                 case "snapshot-start":
                     //console.log('octolapse.js - snapshot-start');
+                    Octolapse.DisableResumeButton();
                     Octolapse.Status.is_taking_snapshot(true);
                     Octolapse.Status.snapshot_error(false);
                     Octolapse.Status.snapshot_error_message("");
                     break;
                 case "snapshot-complete":
                     //console.log('octolapse.js - snapshot-complete');
+                    
                     Octolapse.Status.snapshot_count(data.snapshot_count)
                     Octolapse.Status.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
                     Octolapse.Status.snapshot_error(!data.success);
@@ -494,6 +522,8 @@ $(function () {
                     break;
             }
         };
+
+        
     }
     OCTOPRINT_VIEWMODELS.push([
         OctolapseViewModel

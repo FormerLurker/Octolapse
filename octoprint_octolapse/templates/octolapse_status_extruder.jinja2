@@ -1,9 +1,12 @@
 <script type="text/html" id="extruder-status-template">
   <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4>
-        Extruder State
-      </h4>
+    <div class="panel-heading ol-heading">
+      <div class="row-fluid">
+        <div class="span12">
+          <h4>Extruder State</h4>
+        </div>
+      </div>
+
     </div>
     <div class="panel-body">
       <div class="row-fluid text-center">
@@ -19,7 +22,7 @@
                 <i class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getRetractionStateIconClass"></i>
               </span>
             </div>
-            <div class="icon-text-2">
+            <div class="ol-text-status-1">
               <span data-bind="text:ExtruderState.getRetractionStateText"></span>&nbsp;
             </div>
           </div>
@@ -35,7 +38,7 @@
                 <i class="fa fa-1x fa-stack-1x extruder-icon icon-fade-in" data-bind="css:ExtruderState.getDetractionIconClass"></i>
               </span>
             </div>
-            <div class="icon-text-2">
+            <div class="ol-text-status-1">
               <span data-bind="text:ExtruderState.getDetractionStateText"></span>&nbsp;
             </div>
           </div>
@@ -52,15 +55,20 @@
                 <i class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getExtrudingStateIconClass"></i>
               </span>
             </div>
-            <div class="icon-text-2">
+            <div class="ol-text-status-1">
               <span data-bind="text:ExtruderState.getExtrudingStateText"></span>  &nbsp;
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="panel-footer">
-      Filament Extruded:<span data-bind="text : ExtruderState.ExtrusionLengthTotal"></span>
+    <div class="panel-footer ol-info-footer">
+      <div class="row-fluid">
+        <div class="span12">
+          Filament Extruded:<span data-bind="text : ExtruderState.ExtrusionLengthTotal"></span>
+        </div>
+      </div>
+
     </div>
   </div>
 </script>

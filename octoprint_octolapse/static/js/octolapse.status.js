@@ -73,7 +73,20 @@ $(function () {
             this.ZOffset(state.ZOffset);
             this.E(state.E);
             this.EOffset(state.EOffset);
+            //self.plotPosition(state.X, state.Y, state.Z);
         };
+        /*
+        self.plotPosition = function(x, y,z)
+        {
+            console.log("Plotting Position")
+            var canvas = document.getElementById("octolapse_position_canvas");
+            canvas.width = 250;
+            canvas.height = 200;
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(x + 2, x - 2,4, 4);
+            
+        }*/
     }
     Octolapse.extruderStateViewModel = function () {
         var self = this;
@@ -124,12 +137,23 @@ $(function () {
         self.getRetractionStateText = ko.pureComputed(function () {
             
             if (self.IsRetracting()) {
-                if (self.IsPartiallyRetracted() && !self.IsRetracted())
-                    return "Patrially Retracted";
-                else if (self.IsRetracted() && !self.IsPartiallyRetracted())
-                    return "Retracted";
+                text = "";
+               
+
+                if (self.IsPartiallyRetracted() && !self.IsRetracted()) {
+                    if (self.IsRetractingStart())
+                        text += "Start: ";
+                    text += self.RetractionLength() + "mm";
+                    return text;
+                }
+                else if (self.IsRetracted() && !self.IsPartiallyRetracted()) {
+                        if (self.IsRetractingStart())
+                            return "Retracted Start: " + self.RetractionLength() + "mm";
+                        else
+                            return "Retracted: " + self.RetractionLength() + "mm";
+                    }
             }
-            return "Not Retracted"
+            return "None"
         }, self);
         self.getDetractionIconClass = ko.pureComputed(function () {
 
@@ -147,15 +171,15 @@ $(function () {
             if (self.IsRetracting() && self.IsDetracting())
                 text = "Error";
             else if (self.IsDetracted()) {
-                text = "Detracted"
+                text = "Detracted: " + self.DetractionLength() + "mm";
             }
             else if (self.IsDetracting()) {
                 if (self.IsDetractingStart())
-                    text += "Start ";
-                text += "Detracting " +  self.DetractionLength() + "mm";
+                    text += "Start: ";
+                text += self.DetractionLength() + "mm";
             }
             else
-                text = "Not Detracting"
+                text = "None"
             return text;
         }, self);
         
@@ -179,10 +203,10 @@ $(function () {
             if (self.IsPrimed())
                 return "Primed";
             if (self.IsExtrudingStart())
-                return "Start Extruding " + self.ExtrusionLength() +"mm";
+                return "Start: " + self.ExtrusionLength() +"mm";
             if (self.IsExtruding())
-                return "Extruding " + self.ExtrusionLength() +"mm";
-            return "Not Extruding or Primed";
+                return self.ExtrusionLength() +"mm";
+            return "None";
         }, self);
         
 
@@ -715,7 +739,7 @@ $(function () {
                     previousUrl = newSnapshotUrl;
                 // copy the existing image url into the previous snapshot image src.
                 $previousSnapshotImage.attr("src", previousUrl);
-                $snapshotImage.fadeOut();
+                $snapshotThumbnailImage.hide();
                 // set the current src
                 $snapshotImage.attr("src", newSnapshotUrl);
             }
@@ -761,8 +785,19 @@ $(function () {
                     return "trigger-status-template"
             }
         };
+        self.getStatusText = ko.pureComputed(function () {
+            if (self.is_timelapse_active())
+                return 'Octolapse - Running';
+            if (self.is_rendering())
+                return 'Octolapse - Rendering';
+            if (self.waiting_to_render())
+                return 'Octolapse - Waiting to Render';
+            if (Octolapse.Globals.enabled())
+                return 'Octolapse';
+            return 'Octolapse - Disabled';
+        }, self);
         
-        
+            
         self.updatePositionState = function (state) {
             // State variables
             self.PositionState.update(state);

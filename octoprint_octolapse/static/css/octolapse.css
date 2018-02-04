@@ -1,3 +1,6 @@
+
+
+
 #octolapse_settings .row {
     margin-left: 0px;
 }
@@ -15,14 +18,28 @@ a.disabled {
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
-
+.octolapse_status_container {
+    align-items: center;
+    flex-direction: row;
+    display: flex;
+    height:150px;
+}
 .octolapse_status {
-    min-height: 150px;
-    display: inline-flex;
+    align-items: center;
+    flex-direction: column;
+    width:100%;
+    display: flex
+}
+.octolapse_status div {
+    flex-direction:row;
+    display:flex;
     align-items: center;
 }
+
+
 #octolapse_snapshot_thumbnail_container, #octolapse_previous_snapshot_container {
     position: relative;
+    min-height: 150px;
 }
 
 #octolapse_latest_snapshot_dialog.modal {
@@ -133,23 +150,47 @@ a.disabled {
     color: lightgray;
 }
 
-.icon-text-1, .icon-text-2 {
-    
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: inline-block;
-}
+
 .margin-small {
     
     margin:10px;
 }
+.ol-text-status-title {
+    font-size: medium;
+}
+.ol-text-status-1, .ol-text-status-2 {
+    overflow-y: hidden;
+    overflow-x: hidden;
+    display: inline-block;
+}
+.ol-text-status-1 {
+    min-height: 15px;
+}
+.ol-text-status-2 {
+    min-height: 40px;
+    font-size: small;
+    
+}
+.panel-footer.ol-info-footer {
+    padding: 5px 15px 5px 15px;
+}
+.panel-heading.ol-heading {
+    min-height: unset;
+}
 
-.icon-text-1 {
-    height: 15px;
+
+.panel-heading.ol-heading .row-fluid [class*="span"], .panel-footer.ol-info-footer .row-fluid [class*="span"] {
+    min-height: unset;
+    
 }
-.icon-text-2 {
-    height: 35px;
+.ol-heading h1, .ol-heading h2, .ol-heading h3, .ol-heading h4, .ol-heading h5, .ol-heading h6 {
+    margin:0px
 }
+
+.panel-footer.ol-info-footer {
+    font-size: small;
+}
+
 .extruder-state-container {
     padding: 5px;
     height: 40px;

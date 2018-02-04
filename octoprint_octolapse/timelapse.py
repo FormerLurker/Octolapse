@@ -645,6 +645,8 @@ class Timelapse(object):
 				movie_basename=baseFileName ,
 				movie_prefix=moviePrefix,
 				success=success)
+
+		
 		if(self.OnRenderEndCallback is not None):
 			self.OnRenderEndCallback(payload)
 	def _onTimelapseStart(self):

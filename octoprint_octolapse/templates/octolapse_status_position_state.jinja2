@@ -1,6 +1,6 @@
 <script type="text/html" id="position-state-status-template">
   <div class="panel panel-default">
-    <div class="panel-heading">
+    <div class="panel-heading ol-heading">
       <div class="row-fluid">
         <span class="span6">
           <h4>
@@ -76,7 +76,7 @@
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsExtruderRelative())"></i>
                 </span>
-                <div class="icon-text-1">
+                <div class="ol-text-status-1">
                   Relative
                 </div>
               </div>
@@ -88,7 +88,7 @@
                   <i class="fa fa-square fa-stack-2x"></i>
                   <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative())"></i>
                 </span>
-                <div class="icon-text-1">
+                <div class="ol-text-status-1">
                   Relative
                 </div>
               </div>
@@ -101,7 +101,7 @@
                     <i class="fa fa-square fa-stack-2x"></i>
                     <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange())"></i>
                   </span>
-                  <div class=".icon-text-1">
+                  <div class="ol-text-status-1">
                     Change
                   </div>
                 </div>
@@ -113,15 +113,21 @@
 
       </div>
     </div>
-    <div class="panel-footer">
+    <div class="panel-footer ol-info-footer">
+      <div class="row-fluid">
+        <div class="span8">
+          Gcode:<span data-bind="text : PositionState.GCode"></span>
+        </div>
+        <div class="span4 text-right text-error">
+          <span data-bind="visible:PositionState.HasPositionError">
+            Error:<span data-bind="text : PositionState.PositionError"></span>
+          </span>
+        </div>
+      </div>
       <div>
-        Gcode:<span data-bind="text : PositionState.GCode"></span>
+
       </div>
-      <div class="text-error  text-right">
-        <span data-bind="visible:PositionState.HasPositionError">
-          Error:<span data-bind="text : PositionState.PositionError"></span>
-        </span>
-      </div>
+
     </div>
 
   </div>
