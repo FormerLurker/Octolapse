@@ -5,27 +5,97 @@
         Position
       </h4>
     </div>
+      
     <div class="panel-body">
       <div class="row-fluid">
-        <span class="span3">
-          Position<br/>
-          X:<span data-bind="text: Position.X"/><br/>
-          Y:<span data-bind="text: Position.Y"/><br/>
-          Z:<span data-bind="text: Position.Z"/><br/>
-          E:<span data-bind="text: Position.E"/>
+        <span class="span4">
+          <strong>Absolute Position</strong>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">X:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.X"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">Y:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.Y"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">Z:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.Z"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">E:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.E"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
         </span>
-        <span class="span3">
-          Offset<br/>
-          X:<span data-bind="text: Position.XOffset"/><br/>
-          Y:<span data-bind="text: Position.YOffset"/><br/>
-          Z:<span data-bind="text: Position.ZOffset"/><br/>
-          E:<span data-bind="text: Position.EOffset"/><br/>
+        <span class="span4">
+          <strong>Position Offset</strong>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">X:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.XOffset"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">Y:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.YOffset"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">Z:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.ZOffset"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
+          <div class="row-fluid ol-compact-row">
+            <div class="span2">E:</div>
+            <div class="span3 text-right">
+              <span data-bind="text: Position.EOffset"/>
+            </div>
+            <div class="span2">
+              <i>&nbsp;mm</i>
+            </div>
+          </div>
         </span>
-        <div class="span6">
-          Speed:<span data-bind="text: Position.F"/> mm/min
-        </div>
+        <span class="span4">
+          <strong>Speed</strong>
+          <br/>
+          <span data-bind="text: Position.F"/>
+          <i>mm/min</i>
+        </span>
+      </div>
+      
         <!--<div class="span12"><canvas id="octolapse_position_canvas" width="250" height="200" style="border:1px solid #d3d3d3;"></canvas>-->
-        </div>
+      
       </div>
     </div>
   </div>

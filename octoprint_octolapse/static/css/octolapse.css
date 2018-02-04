@@ -20,7 +20,14 @@ a.disabled {
     color: orange
 }
 
-
+span.octolapse-icon-text {
+    font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+    position: relative;
+    top: -3px;
+    font-size: 16px;
+    font-weight: 600;
+    color: greenyellow;
+}
 #refresh_thumbnail_container {
     z-index: 5;
     position: absolute;
@@ -138,7 +145,10 @@ a.disabled {
 #octolapse_add_edit_profile_dialog .modal-body {
     padding: 5px 15px;
 }
-
+.ol-compact-row.row-fluid [class*="span"]
+{
+    min-height:unset;
+}
 #octolapse_add_edit_profile_dialog .row-fluid [class*="span"] {
     text-align: left;
 }
@@ -226,21 +236,10 @@ a.disabled {
 }
 
 
-.trigger-icon-description {
-    height:40px;
-    color:gray
-}
-.triggered-count, .triggered-info, .gcode-triggered-info {
-    font-size: large;
-    font-weight: 700;
-    color: greenyellow;
-}
-.gcode-triggered-info {
-    font-size:medium;
-}
+
 .bg-trigger-info, .bg-trigger-count {
-        color: #656565;
-    }
+    color: #656565;
+}
 .shake {
     -webkit-animation: shakeIt 0.25s linear 4;
     -moz-animation: shakeIt 0.25s linear 4;

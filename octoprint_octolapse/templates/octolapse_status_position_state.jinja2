@@ -11,7 +11,7 @@
           Layer: <span data-bind="text:PositionState.Layer()"/>
         </span>
         <span class="span3">
-          Height: <span data-bind="text:PositionState.Height()"/>
+          Height: <span data-bind="text:PositionState.Height()"/><i>&nbsp;mm</i>
         </span>
       </div>
     </div>
@@ -116,7 +116,7 @@
     <div class="panel-footer ol-info-footer">
       <div class="row-fluid">
         <div class="span8">
-          Gcode:<span data-bind="text : PositionState.GCode"></span>
+          Gcode:<span data-bind="text : PositionState.GCode"></span>&nbsp;
         </div>
         <div class="span4 text-right text-error">
           <span data-bind="visible:PositionState.HasPositionError">
@@ -129,6 +129,5 @@
       </div>
 
     </div>
-
   </div>
 </script>
