@@ -205,7 +205,8 @@ $(function () {
         self.show_position_changes = ko.observable(false)
         self.show_extruder_state_changes = ko.observable(false)
         self.show_trigger_state_changes = ko.observable(false)
-
+        self.auto_reload_latest_snapshot = ko.observable(false)
+        
         self.is_admin = ko.observable(false)
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
@@ -217,7 +218,7 @@ $(function () {
         };
         self.onAfterBinding = function () {
             self.loadState();
-            // Subscribe all fade in images
+            Octolapse.Status.updateLatestSnapshotImage();
             Octolapse.Status.updateLatestSnapshotThumbnailImage();
         };
 
@@ -279,6 +280,12 @@ $(function () {
                 self.enabled(settings.is_octolapse_enabled())
             else
                 self.enabled(settings.is_octolapse_enabled)
+            // self.auto_reload_latest_snapshot
+            if (ko.isObservable(settings.auto_reload_latest_snapshot))
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot())
+            else
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot)
+            
             // navbar_enabled
             if (ko.isObservable(settings.show_navbar_icon))
                 self.navbar_enabled(settings.show_navbar_icon())
@@ -388,6 +395,7 @@ $(function () {
                     Octolapse.Status.snapshot_error_message(data.error);
                     Octolapse.Status.is_taking_snapshot(false);
                     Octolapse.Status.updateLatestSnapshotThumbnailImage();
+                    Octolapse.Status.updateLatestSnapshotImage();
                     break;
                 case "render-start":
                     //console.log('octolapse.js - render-start');

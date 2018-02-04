@@ -21,11 +21,26 @@ a.disabled {
     display: inline-flex;
     align-items: center;
 }
-#octolapse_snapshot_container {
+#octolapse_snapshot_thumbnail_container, #octolapse_previous_snapshot_container {
     position: relative;
 }
 
-#octolapse_previous_snapshot, #octolapse_latest_snapshot {
+#octolapse_latest_snapshot_dialog.modal {
+    width: auto;
+    max-width: 100%;
+    left: unset;
+    margin-left: auto;
+    margin-right: auto;
+    margin: 10%;
+}
+
+#octolapse_latest_snapshot_dialog .modal-body {
+    max-width: 100% !important;
+    width: auto;
+}
+
+#octolapse_previous_snapshot_thumbnail,
+#octolapse_latest_snapshot_thumbnail {
     vertical-align: auto;
     position: absolute;
     display: block;
@@ -35,14 +50,39 @@ a.disabled {
     height: auto;
     margin-left: auto;
     margin-right: auto;
-    left:0;
-    right:0;
+    left: 0;
+    right: 0;
+}
+#octolapse_previous_snapshot_thumbnail,
+#octolapse_latest_snapshot_thumbnail {
+    max-width: 300px;
+    max-height: 150px;
+}
+#octolapse_previous_snapshot,
+#octolapse_latest_snapshot {
+    width:100%;
+    height:100%;
+    max-width:100%;
+    max-height:100%;
 }
 
-#octolapse_previous_snapshot{
-    z-index:3
-}
 #octolapse_latest_snapshot {
+    position: relative;
+    z-index: 2;
+}
+#octolapse_previous_snapshot {
+    position: absolute;
+    top:0;
+    left:0;
+    z-index:1
+}
+
+#octolapse_latest_snapshot {
+
+    
+    z-index: 3
+}
+#octolapse_latest_snapshot, #octolapse_latest_snapshot_thumbnail {
     z-index: 4
 }
 

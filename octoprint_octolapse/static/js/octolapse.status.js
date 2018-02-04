@@ -624,65 +624,115 @@ $(function () {
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
         self.waiting_to_render = ko.observable();
+        
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
         
         self.IsTabShowing = false;
+        self.IsLatestSnapshotDialogShowing = false;
+        self.showLatestSnapshotDialog = function () {
+            self.IsLatestSnapshotDialogShowing = true;
+            self.updateLatestSnapshotImage(true)
+            self.$SnapshotDialog.modal();
+            
+        }
+        // cancel button click handler
+        self.cancelLatestSnapshotDialog = function () {
+            // hide the modal
+            self.IsLatestSnapshotDialogShowing = false;
+            self.$SnapshotDialog.modal("hide");
+        }
+        
+
 
         self.onAfterBinding = function () {
             $previousSnapshotImage = $("#octolapse_previous_snapshot");
+            self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
+            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
+            self.$SnapshotDialog.on("hidden.bs.modal", function () {
+                self.IsLatestSnapshotDialogShowing = false;
+            });
+            // configure the dialog shown event
+            self.$SnapshotDialog.on("show.bs.modal", function () {
+                console.log("Showing snapshot dialog.");
+                
+                
+            });
+            
             $("#octolapse_latest_snapshot").bind("load", function ()
             {
-                //console.log("Snapshot Image Loaded.");
+                snapshotImage = this;
+                console.log("Snapshot Image Loaded.");
                 $(this).fadeIn(1000, function () {
-                    //console.log("Snapshot Image has been shown, hiding previous image.");
-                    $previousSnapshotImage.attr("src","");
+                    console.log("Snapshot Image has been shown, hiding previous image.");
+                    
                     
                 });
             });
-        }
+           
+            $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
+            $("#octolapse_latest_snapshot_thumbnail").bind("load", function () {
+                //console.log("Snapshot Image Loaded.");
+                $(this).fadeIn(1000, function () {
+                    //console.log("Snapshot Image has been shown, hiding previous image.");
+                    $previousSnapshotThumbnailImage.attr("src", "");
 
+                });
+            });
+        }
+                
         self.onTabChange = function (current, previous) {
 
             if (current != null && current == "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is showing");
                 self.IsTabShowing = true;
-                $snapshotImage = $("#octolapse_latest_snapshot");
+                $snapshotImage = $("#octolapse_latest_snapshot_thumbnail");
                 currentImageSrc = $snapshotImage.attr("src");
                 if (currentImageSrc == null || currentImageSrc == "") {
-                    self.updateLatestSnapshotThumbnailImage();
+                    self.updateLatestSnapshotThumbnailImage(true);
                 }
+                self.$SnapshotDialog.modal("hide");
             }
             else if (previous != null && previous == "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is not showing");
                 self.IsTabShowing = false;
             }
         }
-        self.updateLatestSnapshotImage = function () {
-            if (self.IsTabShowing) {
-                //console.log("Updating Snapshot Image");
+        self.updateLatestSnapshotImage = function (force = false) {
+            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot())
+                return;
+
+            if (self.IsLatestSnapshotDialogShowing) {
+                console.log("Updating Snapshot Image");
+                newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
+
                 $snapshotImage = $("#octolapse_latest_snapshot");
                 $previousSnapshotImage = $("#octolapse_previous_snapshot");
+                previousUrl = $snapshotImage.attr('src')
+                if (previousUrl == null || previousUrl == "")
+                    previousUrl = newSnapshotUrl;
                 // copy the existing image url into the previous snapshot image src.
-                $previousSnapshotImage.attr("src", $snapshotImage.attr("src"));
-                $snapshotImage.hide();
+                $previousSnapshotImage.attr("src", previousUrl);
+                $snapshotImage.fadeOut();
                 // set the current src
-                $snapshotImage.attr("src", getLatestSnapshotUrl() + "&time=" + new Date().getTime());
+                $snapshotImage.attr("src", newSnapshotUrl);
             }
 
         };
-        self.updateLatestSnapshotThumbnailImage = function () {
+        self.updateLatestSnapshotThumbnailImage = function (force = false) {
+            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot())
+                return;
             if (self.IsTabShowing) {
                 //console.log("Updating Snapshot Image");
-                $snapshotImage = $("#octolapse_latest_snapshot");
-                $previousSnapshotImage = $("#octolapse_previous_snapshot");
+                $snapshotThumbnailImage = $("#octolapse_latest_snapshot_thumbnail");
+                $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
                 // copy the existing image url into the previous snapshot image src.
-                $previousSnapshotImage.attr("src", $snapshotImage.attr("src"));
-                $snapshotImage.hide();
+                $previousSnapshotThumbnailImage.attr("src", $snapshotThumbnailImage.attr("src"));
+                $snapshotThumbnailImage.hide();
                 // set the current src
-                $snapshotImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
+                $snapshotThumbnailImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
             }
 
         };

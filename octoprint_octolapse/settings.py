@@ -1165,7 +1165,7 @@ class OctolapseSettings(object):
 		self.version = "0.0.1.0"
 		self.show_navbar_icon = True
 		self.is_octolapse_enabled = True
-		
+		self.auto_reload_latest_snapshot = True
 		self.show_position_state_changes = False
 		self.show_position_changes = False
 		self.show_extruder_state_changes = False
@@ -1235,8 +1235,9 @@ class OctolapseSettings(object):
 		return self.debug_profiles[self.current_debug_profile_guid]
 	def Update(self, changes):
 			
-
+		
 		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
+		if (HasKey(changes,"auto_reload_latest_snapshot")) : self.auto_reload_latest_snapshot = bool(GetValue(changes,"auto_reload_latest_snapshot",self.auto_reload_latest_snapshot))
 		if (HasKey(changes,"show_navbar_icon")) : self.show_navbar_icon = bool(GetValue(changes,"show_navbar_icon",self.show_navbar_icon))
 		if (HasKey(changes,"show_position_state_changes")) : self.show_position_state_changes = bool(GetValue(changes,"show_position_state_changes",self.show_position_state_changes))
 		if (HasKey(changes,"show_position_changes")) : self.show_position_changes = bool(GetValue(changes,"show_position_changes",self.show_position_changes))
@@ -1310,6 +1311,7 @@ class OctolapseSettings(object):
 		settingsDict = {
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
+			"auto_reload_latest_snapshot": utility.getbool(self.auto_reload_latest_snapshot,defaults.auto_reload_latest_snapshot),
 			"show_navbar_icon" : utility.getbool(self.show_navbar_icon,defaults.show_navbar_icon),
 			"show_position_changes" : utility.getbool(self.show_position_changes,defaults.show_position_changes),
 			"show_position_state_changes" : utility.getbool(self.show_position_state_changes,defaults.show_position_state_changes),
@@ -1394,6 +1396,7 @@ class OctolapseSettings(object):
 	def GetMainSettingsDict(self):
 		return {
 			'is_octolapse_enabled':self.is_octolapse_enabled
+			,'auto_reload_latest_snapshot':self.auto_reload_latest_snapshot
 			,'show_navbar_icon':self.show_navbar_icon
 			,'show_position_state_changes':self.show_position_state_changes
 			,'show_position_changes':self.show_position_changes

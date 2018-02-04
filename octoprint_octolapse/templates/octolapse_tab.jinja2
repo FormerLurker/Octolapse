@@ -5,14 +5,12 @@
   <script>
     var getLatestSnapshotUrl = function()
     {
-    return "{{ url_for('plugin.octolapse.snapshot',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
+      return "{{ url_for('plugin.octolapse.snapshot',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
     }
     var getLatestSnapshotThumbnailUrl = function()
     {
-    return "{{ url_for('plugin.octolapse.snapshot',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
+      return "{{ url_for('plugin.octolapse.snapshot',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
     }
-
-
   </script>
   <div data-bind="visible:snapshot_error" class="text-danger">
     Snapshot Error:  <span data-bind="text:snapshot_error_message"></span>
@@ -55,9 +53,12 @@
           </div>
         </div>
         <div class="span6 text-center">
-          <div id="octolapse_snapshot_container">
-            <img id="octolapse_previous_snapshot"></img>
-            <img class="octolapse-fade-in" id="octolapse_latest_snapshot"></img>
+          <div id="octolapse_snapshot_thumbnail_container">
+            <img id="octolapse_previous_snapshot_thumbnail"></img>
+            <a id="show_latest_snapshot" href="#"  data-bind="click:showLatestSnapshotDialog" title="View a larger image">
+              <img class="octolapse-fade-in" id="octolapse_latest_snapshot_thumbnail" ></img>
+            </a>
+            
           </div>
         </div>
 
@@ -103,10 +104,12 @@
     </div>
     <div data-bind="visible: Octolapse.Globals.show_position_state_changes, template:'position-state-status-template'">
     </div>
-
   </div>
+  <div data-bind="template:'latest-snapshot-template'"> </div>
 </div>
+
 {% include "octolapse_status_triggers.jinja2" %}
 {% include "octolapse_status_extruder.jinja2" %}
 {% include "octolapse_status_position.jinja2" %}
 {% include "octolapse_status_position_state.jinja2" %}
+{% include "octolapse_tab_latest_snapshot.jinja2" %}

@@ -98,6 +98,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		requestValues = flask.request.get_json();
 		clientId = requestValues["client_id"];
 		self.Settings.is_octolapse_enabled = requestValues["is_octolapse_enabled"];
+		self.Settings.auto_reload_latest_snapshot = requestValues["auto_reload_latest_snapshot"];
 		self.Settings.show_navbar_icon = requestValues["show_navbar_icon"];
 		self.Settings.show_position_state_changes = requestValues["show_position_state_changes"];
 		self.Settings.show_position_changes = requestValues["show_position_changes"];

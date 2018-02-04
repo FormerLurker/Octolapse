@@ -6,11 +6,19 @@
   <div class="panel-body">
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
-        
+
         <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></i>
       </span>
       <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is Enabled' : 'Octolapse is Disabled'"></span>
     </div>
+    <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is enabled' : 'Auto snapshot reload is disabled'}">
+
+        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></i>
+      </span>
+      <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is Enabled' : 'Auto snapshot reload is Disabled'"></span>
+    </div>
+
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
         <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></i>
@@ -44,8 +52,8 @@
       </span>
       <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
     </div>
-    
-    
+
+
   </div>
   <div class="panel-footer">
     <div class="row-fluid">
@@ -72,6 +80,14 @@
                 </label>
               </div>
             </div>
+            <div class="control-group">
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" title="Auto-Reload latest snapshot" data-bind="checked:auto_reload_latest_snapshot" />Auto-Reload the latest snapshot within the plugin tab.
+                </label>
+              </div>
+            </div>
+
             <div class="control-group">
               <div class="controls">
                 <label class="checkbox">
@@ -112,7 +128,7 @@
                 </label>
               </div>
             </div>
-            
+
           </div>
           <div class="modal-footer" style="bottom:0;position:relative">
             <div class="row-fluid">

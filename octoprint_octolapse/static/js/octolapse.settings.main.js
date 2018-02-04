@@ -12,6 +12,7 @@ $(function () {
 
         // Settings values
         self.is_octolapse_enabled = ko.observable();
+        self.auto_reload_latest_snapshot = ko.observable();
         self.show_navbar_icon = ko.observable();
         self.show_position_state_changes = ko.observable();
         self.show_position_changes = ko.observable();
@@ -30,16 +31,15 @@ $(function () {
         self.onAfterBinding = function () {
             settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
+            self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
+            
             self.show_navbar_icon(settings.show_navbar_icon())
             self.show_position_state_changes(settings.show_position_state_changes())
             self.show_position_changes(settings.show_position_changes())
             self.show_extruder_state_changes(settings.show_extruder_state_changes())
             self.show_trigger_state_changes(settings.show_trigger_state_changes())
             self.platform(settings.platform());
-
             
-            
-
             self.$addEditDialog = $("#octolapse_edit_settings_main_dialog");
         }
         /*
@@ -69,6 +69,7 @@ $(function () {
         
         self.update = function(settings) {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
+            self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
             self.show_navbar_icon(settings.show_navbar_icon);
             self.show_position_state_changes(settings.show_position_state_changes);
             self.show_position_changes(settings.show_position_changes);
@@ -93,6 +94,7 @@ $(function () {
         self.saveMainSettings = function () {
             var data = {
                 "is_octolapse_enabled": self.is_octolapse_enabled()
+                ,"auto_reload_latest_snapshot": self.auto_reload_latest_snapshot()
                 , "show_navbar_icon": self.show_navbar_icon()
                 , "show_position_state_changes": self.show_position_state_changes()
                 , "show_position_changes": self.show_position_changes()
@@ -118,17 +120,14 @@ $(function () {
         self.resetMainSettings = function () {
             // Set the options to the current settings
             self.is_octolapse_enabled(true)
+            self.auto_reload_latest_snapshot(true)
             self.show_navbar_icon(true)
             self.show_position_state_changes(false)
             self.show_position_changes(false)
             self.show_extruder_state_changes(false)
             self.show_trigger_state_changes(false)
-            
         };
-        
-        
     }
-
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.MainSettingsViewModel
