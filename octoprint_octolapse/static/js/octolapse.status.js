@@ -350,10 +350,10 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 0)
-                    waitText += " for: " + waitList.join(", ")
-                else
-                    waitText += " to trigger";
+                if (waitList.length >1)
+                    waitText += " for " + waitList.join(" and ")
+                else if(waitList.length == 1)
+                    waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
 
@@ -434,10 +434,10 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 0)
-                    waitText += " for: " + waitList.join(", ")
-                else
-                    waitText += " to trigger";
+                if (waitList.length > 1)
+                    waitText += " for " + waitList.join(" and ")
+                else if (waitList.length == 1)
+                    waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
 
@@ -523,29 +523,26 @@ $(function () {
                 return "The trigger is paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
+                //console.log("Generating wait state text for LayerTrigger");
                 waitText = "Waiting"
                 waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 0)
-                    waitText += " for: " + waitList.join(", ")
-                else
-                    waitText += " to trigger";
+                if (waitList.length > 1)
+                    waitText += " for " + waitList.join(" and ")
+                else if (waitList.length == 1)
+                    waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
-
-            else {
-                if (self.HeightIncrement() > 0) {
+            else if (self.HeightIncrement() > 0) {
                     heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
                     return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
                 }
-                else
-                    return "Triggering on next layer change";
-            }
+            else
+                return "Triggering on next layer change";
 
-            return classes;
         }, self);
         
         self.triggerIconClass = ko.pureComputed(function () {
@@ -632,10 +629,10 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder()) 
                     waitList.push("extruder")
-                if (waitList.length > 0)
-                    waitText += " for: " + waitList.join(", ")
-                else
-                    waitText += " to trigger";
+                if (waitList.length > 1)
+                    waitText += " for " + waitList.join(" and ")
+                else if (waitList.length == 1)
+                    waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
             
@@ -775,7 +772,7 @@ $(function () {
                     previousUrl = newSnapshotUrl;
                 // copy the existing image url into the previous snapshot image src.
                 $previousSnapshotImage.attr("src", previousUrl);
-                $snapshotThumbnailImage.hide();
+                $snapshotImage.hide();
                 // set the current src
                 $snapshotImage.attr("src", newSnapshotUrl);
             }
@@ -795,25 +792,13 @@ $(function () {
                 $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
                 // copy the existing image url into the previous snapshot image src.
                 $previousSnapshotThumbnailImage.attr("src", $snapshotThumbnailImage.attr("src"));
-                $snapshotThumbnailImage.fadeOut();
+                $snapshotThumbnailImage.hide();
                 // set the current src
                 $snapshotThumbnailImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
             }
 
         };
-        self.onTimelapseComplete = function () {
-            self.is_timelapse_active(false);
-            self.is_taking_snapshot(false);
-            self.TriggerState.removeAll();
-        }
-        
-
-        self.onRenderEnd = function () {
-            self.is_rendering(false);
-            self.waiting_to_render(false);
-        }
-        
-
+               
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
                 case "gcode":

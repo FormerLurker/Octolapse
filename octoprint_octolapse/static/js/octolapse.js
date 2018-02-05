@@ -346,17 +346,139 @@ $(function () {
             }
             switch (data.type) {
                 case "settings-changed":
-                    // (update the main settings)
-                    if (self.client_id != data.client_id) {
-                        Octolapse.Status.loadStatus();
-                        if (self.is_admin()) {
-                            //console.log('octolapse - settings-changed, reloading');
-                            Octolapse.Settings.loadSettings();
+                    {
+                        // (update the main settings)
+                        if (self.client_id != data.client_id) {
+                            Octolapse.Status.loadStatus();
+                            if (self.is_admin()) {
+                                //console.log('octolapse - settings-changed, reloading');
+                                Octolapse.Settings.loadSettings();
+                                var options = {
+                                    title: 'Octolapse',
+                                    text: "A profile change was detected from another client.",
+                                    type: 'notice',
+                                    hide: true,
+                                    desktop: {
+                                        desktop: true
+                                    }
+                                };
+                                Octolapse.displayPopup(options);
+                            }
+
+
+                            //else {
+                            //console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
+                            //}
+                        }
+                    }
+                    break;
+                case "state-loaded":
+                    {
+                        //console.log('octolapse.js - state-loaded');
+                        self.updateState(data);
+                    }
+                    break;
+                case "state-changed":
+                    {
+                        //console.log('octolapse.js - state-changed');
+                        self.updateState(data);
+                    }
+                    break;
+                case "popup":
+                    {
+                        //console.log('octolapse.js - popup');
+                        var options = {
+                            title: 'Octolapse Notice',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "timelapse-start":
+                    {
+                        //console.log('octolapse.js - timelapse-start');
+                        self.updateState(data);
+                    }
+                    break;
+                case "timelapse-complete":
+                    {
+                        //console.log('octolapse.js - timelapse-complete');
+                        self.updateState(data)
+                    }
+                    break;
+                case "snapshot-start":
+                    {
+                        //console.log('octolapse.js - snapshot-start');
+                        self.updateState(data);
+                        Octolapse.DisableResumeButton();
+                        Octolapse.Status.snapshot_error(false);
+                        Octolapse.Status.snapshot_error_message("");
+                    }
+                    break;
+                case "snapshot-complete":
+                    {
+                        //console.log('octolapse.js - snapshot-complete');
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(!data.success);
+                        Octolapse.Status.snapshot_error_message(data.error);
+                        Octolapse.Status.updateLatestSnapshotThumbnailImage();
+                        Octolapse.Status.updateLatestSnapshotImage();
+                    }
+                    break;
+                case "render-start":
+                    {
+                        //console.log('octolapse.js - render-start');
+                        self.updateState(data);
+
+                        var options = {
+                            title: 'Octolapse Rendering Started',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "render-failed":
+                    {
+                        //console.log('octolapse.js - render-failed');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Rendering Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                        break;
+                    }
+                case "render-complete":
+                    {
+                        //console.log('octolapse.js - render-complete');
+                    }
+                    break;
+                case "render-end":
+                    {
+                        //console.log('octolapse.js - render-end');
+                        self.updateState(data);
+                        // Make sure we aren't synchronized, else there's no reason to display a popup
+                        if (!data.is_synchronized && data.success) {
                             var options = {
-                                title: 'Octolapse',
-                                text: "A profile change was detected from another client.",
-                                type: 'notice',
-                                hide: true,
+                                title: 'Octolapse Rendering Complete',
+                                text: data.msg,
+                                type: 'success',
+                                hide: false,
                                 desktop: {
                                     desktop: true
                                 }
@@ -364,108 +486,14 @@ $(function () {
                             Octolapse.displayPopup(options);
                         }
                     }
-                    //else {
-                        //console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
-                    //}
                     break;
-                case "state-loaded":
-                    //console.log('octolapse.js - state-loaded');
-                    self.updateState(data);
-                    break;
-                case "state-changed":
-                    //console.log('octolapse.js - state-changed');
-                    self.updateState(data);
-                    break;
-                case "popup":
-                    //console.log('octolapse.js - popup');
-                    var options = {
-                        title: 'Octolapse Notice',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "timelapse-start":
-                    //console.log('octolapse.js - timelapse-start');
-                    /*
-                    Octolapse.Status.is_timelapse_active(true);
-                    Octolapse.Status.is_taking_snapshot(false);
-                    Octolapse.Status.is_rendering(false);
-                    Octolapse.Status.snapshot_count(0);
-                    Octolapse.Status.seconds_added_by_octolapse(0)
-                    Octolapse.Status.snapshot_error(false);
-                    Octolapse.Status.snapshot_error_message("");
-                    */
-                    self.updateState(data);
-                    break;
-                case "timelapse-complete":
-                    //console.log('octolapse.js - timelapse-complete');
-                    Octolapse.Status.onTimelapseComplete();
-                    
-                    break;
-                case "snapshot-start":
-                    //console.log('octolapse.js - snapshot-start');
-                    Octolapse.DisableResumeButton();
-                    Octolapse.Status.is_taking_snapshot(true);
-                    Octolapse.Status.snapshot_error(false);
-                    Octolapse.Status.snapshot_error_message("");
-                    break;
-                case "snapshot-complete":
-                    //console.log('octolapse.js - snapshot-complete');
-                    
-                    Octolapse.Status.snapshot_count(data.snapshot_count)
-                    Octolapse.Status.seconds_added_by_octolapse(data.seconds_added_by_octolapse)
-                    Octolapse.Status.snapshot_error(!data.success);
-                    Octolapse.Status.snapshot_error_message(data.error);
-                    Octolapse.Status.is_taking_snapshot(false);
-                    Octolapse.Status.updateLatestSnapshotThumbnailImage();
-                    Octolapse.Status.updateLatestSnapshotImage();
-                    break;
-                case "render-start":
-                    //console.log('octolapse.js - render-start');
-                    Octolapse.Status.update(data.Status)
-                    
-                    var options = {
-                        title: 'Octolapse Rendering Started',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "render-failed":
-                    //console.log('octolapse.js - render-failed');
-                    Octolapse.Status.update(data.Status);
-                    var options = {
-                        title: 'Octolapse Rendering Failed',
-                        text: data.msg,
-                        type: 'error',
-                        hide: false,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
-                    break;
-                case "render-complete":
-                    //console.log('octolapse.js - render-complete');
-                    break;
-                case "render-end":
-                    //console.log('octolapse.js - render-end');
-                    Octolapse.Status.is_rendering(false);
-                    // Make sure we aren't synchronized, else there's no reason to display a popup
-                    if (!data.is_synchronized && data.success) {
+                case "synchronize-failed":
+                    {
+                        //console.log('octolapse.js - synchronize-failed');
                         var options = {
-                            title: 'Octolapse Rendering Complete',
+                            title: 'Octolapse Synchronization Failed',
                             text: data.msg,
-                            type: 'success',
+                            type: 'error',
                             hide: false,
                             desktop: {
                                 desktop: true
@@ -473,52 +501,44 @@ $(function () {
                         };
                         Octolapse.displayPopup(options);
                     }
-                    Octolapse.Status.onRenderEnd();
-                    break;
-                case "synchronize-failed":
-                    //console.log('octolapse.js - synchronize-failed');
-                    var options = {
-                        title: 'Octolapse Synchronization Failed',
-                        text: data.msg,
-                        type: 'error',
-                        hide: false,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
                     break;
                 case "timelapse-stopping":
-                    //console.log('octolapse.js - timelapse-stoping');
-                    Octolapse.Status.is_timelapse_active(false);
-                    var options = {
-                        title: 'Octolapse Timelapse Stopping',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
+                    {
+                        //console.log('octolapse.js - timelapse-stoping');
+                        Octolapse.Status.is_timelapse_active(false);
+                        var options = {
+                            title: 'Octolapse Timelapse Stopping',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
                     break;
                 case "timelapse-stopped":
-                    //console.log('octolapse.js - timelapse-stopped');
-                    Octolapse.Status.onTimelapseStop()
-                    
-                    var options = {
-                        title: 'Octolapse Timelapse Stopped',
-                        text: data.msg,
-                        type: 'notice',
-                        hide: true,
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopup(options);
+                    {
+                        //console.log('octolapse.js - timelapse-stopped');
+                        Octolapse.Status.onTimelapseStop()
+
+                        var options = {
+                            title: 'Octolapse Timelapse Stopped',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
                     break;
                 default:
-                    //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
+                    {
+                        //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
+                    }
                     break;
             }
         };

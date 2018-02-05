@@ -262,7 +262,7 @@ class Timelapse(object):
 			if(not self.State == TimelapseState.WaitingForTrigger):
 				return None
 		
-			currentTrigger = self.Triggers.GetFirstTriggering()
+			currentTrigger = self.Triggers.GetFirstTriggering(0)
 
 			if(currentTrigger is not None):#We're triggering
 				self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")
@@ -371,7 +371,7 @@ class Timelapse(object):
 			# If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
 			# Because of this we need to compare the position we received to the previous position, not the current one.
 			if( not self.Position.IsAtSavedPosition(x,y,z) ):
-				self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X(),self.Position.Y(),self.Position.Z()))
+				self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(x,y,z,self.Position.X(),self.Position.Y(),self.Position.Z()))
 				self.Position.UpdatePosition(x=x,y=y,z=z,force=True)
 			else:
 				# return position information received
@@ -406,15 +406,15 @@ class Timelapse(object):
 	def _positionReceived_Snapshot(self, x,y,z,e):
 		try:
 			# snapshot position information received
-			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.SnapshotGcodes.X,self.SnapshotGcodes.Y, self.Position.Z()))
+			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
 			# see if the CURRENT position is the same as the position we received from the printer
 			# AND that it is equal to the snapshot position
 			if(not self.Position.IsAtCurrentPosition(x,y,None)):
-				self.Settings.CurrentDebugProfile().LogSnapshotPosition("The snapshot position is incorrect.")
-
+				self.Settings.CurrentDebugProfile().LogWarning("The snapshot position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 			elif(not self.Position.IsAtCurrentPosition(self.SnapshotGcodes.X,self.SnapshotGcodes.Y,None, applyOffset = False)): # our snapshot gcode will NOT be offset
-				self.Settings.CurrentDebugProfile().LogSnapshotPosition("The snapshot position matched the expected position (x:{0} y:{1}), but the SnapshotGcode object coordinates don't match the expected position.".format(x,y))
+				self.Settings.CurrentDebugProfile().LogError("The snapshot gcode position is incorrect.  x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.SnapshotGcodes.X,self.SnapshotGcodes.Y, self.Position.Z()))
+
 			self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("The snapshot position is correct, taking snapshot.")
 			self.State = TimelapseState.TakingSnapshot
 			self._takeSnapshot()
@@ -425,7 +425,7 @@ class Timelapse(object):
 	def _positionReceived_ResumePrint(self, x,y,z,e):
 		try:
 			if(not self.Position.IsAtCurrentPosition(x,y,None)):
-				self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("Save Command Position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
+				self.Settings.CurrentDebugProfile().LogError("Save Command Position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 			else:
 				self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("Save Command Position is correct.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
 
@@ -645,8 +645,6 @@ class Timelapse(object):
 				movie_basename=baseFileName ,
 				movie_prefix=moviePrefix,
 				success=success)
-
-		
 		if(self.OnRenderEndCallback is not None):
 			self.OnRenderEndCallback(payload)
 	def _onTimelapseStart(self):

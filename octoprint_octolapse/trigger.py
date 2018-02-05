@@ -77,11 +77,13 @@ class Triggers(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 
 		return None
-	def GetFirstTriggering(self):
+	def GetFirstTriggering(self, index ):
+		if(index + 1 > len(self._triggers)):
+			return False;
 		try:
 			# Loop through all of the active currentTriggers
 			for currentTrigger in self._triggers:
-				if(currentTrigger.IsTriggered(0)):
+				if(currentTrigger.IsTriggered(index)):
 					return currentTrigger
 		except Exception, e:
 			self.Settings.CurrentDebugProfile().LogException(e)
@@ -164,6 +166,7 @@ class Trigger(object):
 		self.Settings = octolapseSettings
 		self.Printer = Printer(self.Settings.CurrentPrinter())
 		self.Snapshot = Snapshot(self.Settings.CurrentSnapshot())
+		
 		self.Type = 'Trigger'
 		self._stateHistory = []
 		self._maxStates = maxStates
@@ -175,7 +178,7 @@ class Trigger(object):
 	def AddState(self,state):
 		self._stateHistory.insert(0,state)
 		while (len(self._stateHistory)> self._maxStates):
-			del self._stateHistory[self._maxStates]
+			del self._stateHistory[self._maxStates-1]
 	
 	def Count(self):
 		return len(self._stateHistory)
@@ -269,27 +272,27 @@ class GcodeTrigger(Trigger):
 			if(not position.HasHomedAxis(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
-				return
-			state.IsHomed = True
+			else:
+				state.IsHomed = True
 
-			if (self.IsSnapshotCommand(commandName)):
-				state.IsWaiting = True
-			if(state.IsWaiting == True):
-				if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
-					if(self.RequireZHop and not position.IsZHop(1)):
-						state.IsWaitingOnZHop = True
-						self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
-					else:
-						state.IsTriggered = True
-						state.IsWaiting = False
-						state.IsWaitingOnZHop = False
-						state.IsWaitingOnExtruder = False
-						self.TriggeredCount += 1
+				if (self.IsSnapshotCommand(commandName)):
+					state.IsWaiting = True
+				if(state.IsWaiting == True):
+					if(position.Extruder.IsTriggered(1, self.ExtruderTriggers)):
+						if(self.RequireZHop and not position.IsZHop(1)):
+							state.IsWaitingOnZHop = True
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
+						else:
+							state.IsTriggered = True
+							state.IsWaiting = False
+							state.IsWaitingOnZHop = False
+							state.IsWaitingOnExtruder = False
+							self.TriggeredCount += 1
 					
-						self.Settings.CurrentDebugProfile().LogTriggering("GcodeTrigger - Waiting for extruder to trigger.")
-				else:
-					state.IsWaitingOnExtruder = True
-					self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting for extruder to trigger.")
+							self.Settings.CurrentDebugProfile().LogTriggering("GcodeTrigger - Waiting for extruder to trigger.")
+					else:
+						state.IsWaitingOnExtruder = True
+						self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting for extruder to trigger.")
 
 			# calculate changes and set the current state
 			state.HasChanged = not state.IsEqual(self.GetState(0))
@@ -397,62 +400,60 @@ class LayerTrigger(Trigger):
 			if(not position.HasHomedAxis(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
-				return
-			state.IsHomed = True
-
-			# calculate height increment changed
-		
-			if(self.HeightIncrement is not None and self.HeightIncrement> 0 and position.IsLayerChange(1)
-				and state.CurrentIncrement * self.HeightIncrement <= position.Height(1)):
-				state.CurrentIncrement += 1
-				state.IsHeightChange  = True
-
-				self.Settings.CurrentDebugProfile().LogTriggerHeightChange("Layer Trigger - Height Increment:{0}, Current Increment".format(self.HeightIncrement, state.CurrentIncrement))
-
-			# see if we've encountered a layer or height change
-			if(self.HeightIncrement is not None and self.HeightIncrement > 0):
-				if(state.IsHeightChange):
-					state.IsHeightChangeWait = True
-					state.IsWaiting = True
-				
 			else:
-				if(position.IsLayerChange(1)):
-					state.Layer = position.Layer(1)
-					state.IsLayerChangeWait = True
-					state.IsLayerChange = True
-					state.IsWaiting = True
+				state.IsHomed = True
+
+				# calculate height increment changed
+		
+				if(self.HeightIncrement is not None and self.HeightIncrement> 0 and position.IsLayerChange(1)
+					and state.CurrentIncrement * self.HeightIncrement <= position.Height(1)):
+					state.CurrentIncrement += 1
+					state.IsHeightChange  = True
+
+					self.Settings.CurrentDebugProfile().LogTriggerHeightChange("Layer Trigger - Height Increment:{0}, Current Increment".format(self.HeightIncrement, state.CurrentIncrement))
+
+				# see if we've encountered a layer or height change
+				if(self.HeightIncrement is not None and self.HeightIncrement > 0):
+					if(state.IsHeightChange):
+						state.IsHeightChangeWait = True
+						state.IsWaiting = True
+				
+				else:
+					if(position.IsLayerChange(1)):
+						state.Layer = position.Layer(1)
+						state.IsLayerChangeWait = True
+						state.IsLayerChange = True
+						state.IsWaiting = True
 
 		
-			# see if the extruder is triggering
-			isExtruderTriggering = position.Extruder.IsTriggered(self.ExtruderTriggers)
+				# see if the extruder is triggering
+				isExtruderTriggering = position.Extruder.IsTriggered(1,self.ExtruderTriggers)
 
-			if(state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting):
-				state.IsWaiting = True
-				if(not isExtruderTriggering):
-					state.IsWaitingOnExtruder = True
-					if(state.IsHeightChangeWait):
-						self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Height change triggering, waiting on extruder.")
-					elif (state.IsLayerChangeWait):
-						self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering, waiting on extruder.")
-				else:
-					if(self.RequireZHop and not position.IsZHop(1)):
-						state.IsWaitingOnZHop = True
-						self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Triggering - Waiting on ZHop.")
-						return
-					if(state.IsHeightChangeWait):
-						self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Height change triggering.")
-					elif (state.IsLayerChangeWait):
-						self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering.")
-
-				
-					self.TriggeredCount += 1
-					state.IsTriggered = True
-					state.IsLayerChangeWait = False
-					state.IsLayerChange = False
-					state.IsHeightChangeWait = False
-					state.IsWaiting = False
-					state.IsWaitingOnZHop = False
-					state.IsWaitingOnExtruder = False
+				if(state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting):
+					state.IsWaiting = True
+					if(not isExtruderTriggering):
+						state.IsWaitingOnExtruder = True
+						if(state.IsHeightChangeWait):
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Height change triggering, waiting on extruder.")
+						elif (state.IsLayerChangeWait):
+							self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering, waiting on extruder.")
+					else:
+						if(self.RequireZHop and not position.IsZHop(1)):
+							state.IsWaitingOnZHop = True
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Triggering - Waiting on ZHop.")
+						else:
+							if(state.IsHeightChangeWait):
+								self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Height change triggering.")
+							elif (state.IsLayerChangeWait):
+								self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering.")
+							self.TriggeredCount += 1
+							state.IsTriggered = True
+							state.IsLayerChangeWait = False
+							state.IsLayerChange = False
+							state.IsHeightChangeWait = False
+							state.IsWaiting = False
+							state.IsWaitingOnZHop = False
+							state.IsWaitingOnExtruder = False
 			
 			# calculate changes and set the current state
 			state.HasChanged = not state.IsEqual(self.GetState(0))
@@ -575,42 +576,42 @@ class TimerTrigger(Trigger):
 			if(not position.HasHomedAxis(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
-				return
-			state.IsHomed = True
+			else:
+				state.IsHomed = True
 
-			# record the current time to keep things consistant
-			currentTime = time.time()
+				# record the current time to keep things consistant
+				currentTime = time.time()
 
-			# if the trigger start time is null, set it now.
-			if(state.TriggerStartTime is None):
-				state.TriggerStartTime = currentTime
+				# if the trigger start time is null, set it now.
+				if(state.TriggerStartTime is None):
+					state.TriggerStartTime = currentTime
 
-			self.Settings.CurrentDebugProfile().LogTriggerTimeRemaining('TimerTrigger - {0} second interval, {1} seconds elapsed, {2} seconds to trigger'.format(self.IntervalSeconds,int(currentTime-state.TriggerStartTime), int(self.IntervalSeconds- (currentTime-state.TriggerStartTime))))
+				self.Settings.CurrentDebugProfile().LogTriggerTimeRemaining('TimerTrigger - {0} second interval, {1} seconds elapsed, {2} seconds to trigger'.format(self.IntervalSeconds,int(currentTime-state.TriggerStartTime), int(self.IntervalSeconds- (currentTime-state.TriggerStartTime))))
 
-			# how many seconds to trigger
-			secondsToTrigger = self.IntervalSeconds - (currentTime - state.TriggerStartTime)
-			state.SecondsToTrigger = utility.round_to(secondsToTrigger,1)
-			# see if enough time has elapsed since the last trigger 
-			if(state.SecondsToTrigger <= 0):
-				state.IsWaiting = True
-				# see if the exturder is in the right position
-				if(position.Extruder.IsTriggered(self.ExtruderTriggers)):
-					if(self.RequireZHop and not position.IsZHop(1)):
-						self.Settings.CurrentDebugProfile().LogTriggerWaitState("TimerTrigger - Waiting on ZHop.")
-						state.IsWaitingOnZHop = True
-					else:
-						# Is Triggering
-						self.TriggeredCount += 1
-						state.IsTriggered = True
-						state.TriggerStartTime = None
-						state.IsWaitingOnZHop = False
-						state.IsWaitingOnExtruder = False
-						# Log trigger
-						self.Settings.CurrentDebugProfile().LogTriggering('TimerTrigger - Triggering.')
+				# how many seconds to trigger
+				secondsToTrigger = self.IntervalSeconds - (currentTime - state.TriggerStartTime)
+				state.SecondsToTrigger = utility.round_to(secondsToTrigger,1)
+				# see if enough time has elapsed since the last trigger 
+				if(state.SecondsToTrigger <= 0):
+					state.IsWaiting = True
+					# see if the exturder is in the right position
+					if(position.Extruder.IsTriggered(1, self.ExtruderTriggers)):
+						if(self.RequireZHop and not position.IsZHop(1)):
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("TimerTrigger - Waiting on ZHop.")
+							state.IsWaitingOnZHop = True
+						else:
+							# Is Triggering
+							self.TriggeredCount += 1
+							state.IsTriggered = True
+							state.TriggerStartTime = None
+							state.IsWaitingOnZHop = False
+							state.IsWaitingOnExtruder = False
+							# Log trigger
+							self.Settings.CurrentDebugProfile().LogTriggering('TimerTrigger - Triggering.')
 					
-				else:
-					self.Settings.CurrentDebugProfile().LogTriggerWaitState('TimerTrigger - Triggering, waiting for extruder')
-					state.IsWaitingOnExtruder = True
+					else:
+						self.Settings.CurrentDebugProfile().LogTriggerWaitState('TimerTrigger - Triggering, waiting for extruder')
+						state.IsWaitingOnExtruder = True
 			# calculate changes and set the current state
 			state.HasChanged = not state.IsEqual(self.GetState(0))
 			# add the state to the history

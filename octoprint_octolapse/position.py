@@ -309,7 +309,7 @@ class Position(object):
 	def DistanceToZLift(self, index=0):
 		if(len(self.Positions)>index):
 			pos = self.Positions[index]
-			currentLift = utility.round_to(pos.Z - pos.Height,0.0001)
+			currentLift = utility.round_to(pos.Z - pos.Height,self.PrinterTolerance)
 			if(currentLift < self.Printer.z_hop):
 				return self.Printer.z_hop - currentLift
 			return 0

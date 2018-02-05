@@ -59,7 +59,7 @@ class Extruder(object):
 	def __init__(self,octolapseSettings):
 		self.Settings = octolapseSettings
 		self.PrinterRetractionLength = self.Settings.CurrentPrinter().retract_length
-		
+		self.PrinterTolerance = self.Settings.CurrentPrinter().printer_position_confirmation_tolerance
 		self.Reset()
 		self.AddState(ExtruderState())
 		
@@ -99,7 +99,7 @@ class Extruder(object):
 		return False
 	def LengthToRetract(self):
 		if(len(self.StateHistory)>0):
-			retractLength =  utility.round_to(self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,0.0001)
+			retractLength =  utility.round_to(self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,self.PrinterTolerance)
 			if(retractLength <= 0):
 				retractLength = 0
 			return retractLength
@@ -129,7 +129,7 @@ class Extruder(object):
 		state.E =e
 		# Update RetractionLength and ExtrusionLength
 		state.RetractionLength -= e
-		state.RetractionLength = utility.round_to(state.RetractionLength,0.0001) 
+		state.RetractionLength = utility.round_to(state.RetractionLength,self.PrinterTolerance) 
 		if(state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE):
 			# we can use the negative retraction length to calculate our extrusion length!
 			state.ExtrusionLength = abs(state.RetractionLength)
@@ -142,7 +142,7 @@ class Extruder(object):
 		
 		# calculate detraction length
 		if(previousState.RetractionLength > state.RetractionLength):
-			state.DetractionLength = utility.round_to(previousState.RetractionLength - state.RetractionLength,0.0001) 
+			state.DetractionLength = utility.round_to(previousState.RetractionLength - state.RetractionLength,self.PrinterTolerance) 
 		else:
 			state.DetractionLength = 0
 		# round our lengths to the nearest .05mm to avoid some floating point math errors
@@ -205,11 +205,11 @@ class Extruder(object):
 			return False
 		return None
 
-	def IsTriggered(self, options):
+	def IsTriggered(self, index, options):
 
-		if(len(self.StateHistory)<1):
+		if(len(self.StateHistory)< index + 1):
 			return False
-		state = self.StateHistory[0]
+		state = self.StateHistory[index]
 		
 		"""Matches the supplied extruder trigger options to the current extruder state.  Returns true if triggering, false if not."""
 		extrudingStartTriggered		= self._ExtruderStateTriggered(options.OnExtrudingStart ,state.IsExtrudingStart)

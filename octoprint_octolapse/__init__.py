@@ -528,15 +528,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	
 	def SendPluginMessage(self, type, msg):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type=type, msg=msg))
-	def SendSnapshotCompleteMessage(self, success, error, snapshotCount, secondsAdded):
-		self._plugin_manager.send_plugin_message(
-			self._identifier,
-			dict(type="snapshot-complete",
-				msg="Octolapse has taken a snapshot."
-				, success = success
-				, error = error 
-				, snapshot_count = snapshotCount
-				, seconds_added_by_octolapse = secondsAdded))
+	
 	def SendRenderStartMessage(self, msg):
 		data ={
 			"type":"render-start"
@@ -555,7 +547,16 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._plugin_manager.send_plugin_message(self._identifier, data)
 
 	def SendRenderEndMessage(self,success):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-end", msg="Octolapse is finished rendering a timelapse.", is_synchronized = self.IsRenderingSynchronized, success = success))
+		data = {
+			"type":"render-start"
+			, "msg":"Octolapse is finished rendering a timelapse."
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+			, "is_synchronized" : self.IsRenderingSynchronized
+			, 'success' : success
+		}
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+		
 
 	def SendRenderCompleteMessage(self):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-complete", msg="Octolapse has completed a rendering."))
@@ -563,7 +564,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		stateData = self.Timelapse.GetStateDict()
 		data ={
 			"type":"timelapse-start"
-			, "msg":"Octolapse is starting a timelapse."
+			, "msg":"Octolapse has started a timelapse."
 			, "Status": self.GetStatusDict()
 			, "MainSettings": self.Settings.GetMainSettingsDict()
 		}
@@ -582,16 +583,46 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._plugin_manager.send_plugin_message(self._identifier, data)
 		
 	def OnTimelapseComplete(self):
-		self.SendPluginMessage("timelapse-complete", "Octolapse is completing.")
+		stateData = self.Timelapse.GetStateDict()
+		data ={
+			"type":"timelapse-complete"
+			, "msg":"Octolapse has completed the timelapse."
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		data.update(stateData)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+
 	def OnSnapshotStart(self):
-		self.SendPluginMessage("snapshot-start", "Octolapse is taking a snapshot.")
+		stateData = self.Timelapse.GetStateDict()
+		data ={
+			"type":"snapshot-start"
+			, "msg":"Octolapse is taking a snapshot."
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		data.update(stateData)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
 	def OnSnapshotEnd(self, *args, **kwargs):
 		payload = args[0]
+
+		
+		statusDict = self.GetStatusDict()
 		success = payload["success"]
 		error = payload["error"]
-		snapshot_count = payload["snapshot_count"]
-		seconds_added_by_octolapse = payload["seconds_added_by_octolapse"]
-		self.SendSnapshotCompleteMessage(success, error, snapshot_count, seconds_added_by_octolapse)
+		data ={
+			"type":"snapshot-start"
+			, "msg":"Octolapse is taking a snapshot."
+			, "Status": statusDict
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+			,'success' : success
+			,'error'	: error
+		
+		}
+		stateData = self.Timelapse.GetStateDict()
+		data.update(stateData)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+
 	def OnCameraSettingsSuccess(self, *args, **kwargs):
 		settingValue = args[0]
 		settingName = args[1]
