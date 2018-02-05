@@ -10,10 +10,11 @@ $(function() {
         
     };
 
-    Octolapse.PrinterProfileViewModel = function(values) {
-        var self = this
-        self.name = ko.observable(values.name);
+    Octolapse.PrinterProfileViewModel = function (values) {
+        var self = this;
         self.guid = ko.observable(values.guid);
+        self.name = ko.observable(values.name);
+        self.description = ko.observable(values.description);
         self.retract_length = ko.observable(values.retract_length);
         self.retract_speed = ko.observable(values.retract_speed);
         self.detract_speed = ko.observable(values.detract_speed);
@@ -24,5 +25,5 @@ $(function() {
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
 
 
-    }
+    };
 });

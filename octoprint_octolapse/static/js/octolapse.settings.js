@@ -13,18 +13,18 @@ $(function () {
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
         self.loginState = parameters[1];
-        
-        
-        
+
+
+
         // Called before octoprint binds the viewmodel to the plugin
-        self.onAfterBinding = function() {
-            
+        self.onAfterBinding = function () {
+
             /*
                 Create our global settings
             */
             self.settings = self.global_settings.settings.plugins.octolapse;
             settings = ko.toJS(self.settings); // just get the values
-            
+
             /**
              * Profiles - These are bound by octolapse.profiles.js
              */
@@ -151,51 +151,51 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
-            
-        }
+
+        };
 
         // Update all octolapse settings
         self.updateSettings = function (settings) {
             // SettingsMain
-            Octolapse.SettingsMain.update(settings)
+            Octolapse.SettingsMain.update(settings);
             // Printers
-            Octolapse.Printers.profiles([])
-            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid)
+            Octolapse.Printers.profiles([]);
+            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid);
             settings.printers.forEach(function (item, index) {
                 Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
             });
             // Stabilizations
-            Octolapse.Stabilizations.profiles([])
-            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid)
+            Octolapse.Stabilizations.profiles([]);
+            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid);
             settings.stabilizations.forEach(function (item, index) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
             });
             // Snapshots
-            Octolapse.Snapshots.profiles([])
-            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid)
+            Octolapse.Snapshots.profiles([]);
+            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid);
             settings.snapshots.forEach(function (item, index) {
                 Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
             });
             // Renderings
-            Octolapse.Renderings.profiles([])
-            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid)
+            Octolapse.Renderings.profiles([]);
+            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
             settings.renderings.forEach(function (item, index) {
                 Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
             });
             // Cameras
-            Octolapse.Cameras.profiles([])
-            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid)
+            Octolapse.Cameras.profiles([]);
+            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid);
             settings.cameras.forEach(function (item, index) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
             });
             // Debugs
-            Octolapse.DebugProfiles.profiles([])
-            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid)
+            Octolapse.DebugProfiles.profiles([]);
+            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid);
             settings.debug_profiles.forEach(function (item, index) {
                 Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
             });
 
-        }
+        };
 
         /*
             reload the default settings
@@ -203,7 +203,7 @@ $(function () {
         self.restoreDefaultSettings = function () {
             if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-                var data = { "client_id": Octolapse.Globals.client_id}
+                var data = { "client_id": Octolapse.Globals.client_id };
                 $.ajax({
                     url: "/plugin/octolapse/restoreDefaults",
                     type: "POST",
@@ -224,7 +224,7 @@ $(function () {
             load all settings default settings
         */
         self.loadSettings = function () {
-            
+
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
                 url: "/plugin/octolapse/loadSettings",
@@ -239,12 +239,12 @@ $(function () {
                     alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-            
+
         };
         /*
             Profile Add/Update routine for showAddEditDialog
         */
-        self.addUpdateProfile = function(profile) {
+        self.addUpdateProfile = function (profile) {
             switch (profile.templateName) {
                 case "printer-template":
                     Octolapse.Printers.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
@@ -270,21 +270,21 @@ $(function () {
             }
 
         };
-                
+
         /*
             Modal Dialog Functions
         */
         // hide the modal dialog
-        self.hideAddEditDialog = function(sender, event) {
+        self.hideAddEditDialog = function (sender, event) {
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
         // show the modal dialog
-        self.showAddEditDialog = function(options, sender) {
+        self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
             dialog = this;
             dialog.sender = sender;
             dialog.profileObservable = options.profileObservable;
-            dialog.templateName = options.templateName
+            dialog.templateName = options.templateName;
             dialog.$addEditDialog = $("#octolapse_add_edit_profile_dialog");
             dialog.$addEditForm = dialog.$addEditDialog.find("#octolapse_add_edit_profile_form");
             dialog.$cancelButton = $("a.cancel", dialog.$addEditDialog);
@@ -301,92 +301,92 @@ $(function () {
                 rules: options.validationRules.rules,
                 messages: options.validationRules.messages,
                 ignore: ".ignore_hidden_errors:hidden",
-                errorPlacement: function(error, element) {
+                errorPlacement: function (error, element) {
                     var $field_error = $(element).parent().parent().find(".error_label_container");
                     $field_error.html(error);
                     $field_error.removeClass("checked");
-                    
+
                 },
-                highlight: function(element, errorClass) {
+                highlight: function (element, errorClass) {
                     //$(element).parent().parent().addClass(errorClass);
                     var $field_error = $(element).parent().parent().find(".error_label_container");
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
                 },
-                unhighlight: function(element, errorClass) {
+                unhighlight: function (element, errorClass) {
                     //$(element).parent().parent().removeClass(errorClass);
                     var $field_error = $(element).parent().parent().find(".error_label_container");
                     $field_error.addClass("checked");
                     $field_error.removeClass(errorClass);
                 },
-                invalidHandler: function() {
+                invalidHandler: function () {
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
-                    numErrors = dialog.validator.numberOfInvalids()
+                    numErrors = dialog.validator.numberOfInvalids();
                     if (numErrors == 1)
                         dialog.$errorCount.text("1 field is invalid");
                     else
                         dialog.$errorCount.text(numErrors + " fields are invalid");
                 },
                 errorContainer: "#add_edit_validation_summary",
-                success: function(label) {
+                success: function (label) {
                     label.html("&nbsp;");
                     label.parent().addClass('checked');
-                    $(label).parent().parent().parent().removeClass('error')
+                    $(label).parent().parent().parent().removeClass('error');
                 },
-                onfocusout: function(element, event) {
+                onfocusout: function (element, event) {
                     dialog.validator.form();
                 }
             };
             dialog.validator = null;
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
-            dialog.$addEditDialog.on("hidden.bs.modal", function() {
+            dialog.$addEditDialog.on("hidden.bs.modal", function () {
                 // Clear out error summary
                 dialog.$errorCount.empty();
                 dialog.$errorList.empty();
                 dialog.$summary.hide();
                 // Destroy the validator if it exists, both to save on resources, and to clear out any leftover junk.
                 if (dialog.validator != null) {
-                    dialog.validator.destroy()
+                    dialog.validator.destroy();
                     dialog.validator = null;
                 }
             });
             // configure the dialog shown event
-            dialog.$addEditDialog.on("show.bs.modal", function() {
-                Octolapse.Settings.AddEditProfile({ "profileObservable": dialog.profileObservable, "templateName": dialog.templateName  });
+            dialog.$addEditDialog.on("show.bs.modal", function () {
+                Octolapse.Settings.AddEditProfile({ "profileObservable": dialog.profileObservable, "templateName": dialog.templateName });
                 // Adjust the margins, height and position
                 // Set title
                 dialog.$dialogTitle.text(options.title);
 
                 dialog.$addEditDialog.css({
                     width: 'auto',
-                    'margin-left': function() { return -($(this).width() / 2); }
+                    'margin-left': function () { return -($(this).width() / 2); }
                 });
-            })
+            });
             // Configure the show event
-            dialog.$addEditDialog.on("shown.bs.modal", function() {
+            dialog.$addEditDialog.on("shown.bs.modal", function () {
                 dialog.validator = dialog.$addEditForm.validate(rules);
-                
+
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog
-                dialog.$cancelButton.bind("click", function() {
+                dialog.$cancelButton.bind("click", function () {
                     // Hide the dialog
                     self.hideAddEditDialog();
                 });
 
                 // remove any click event bindings from the defaults button
                 dialog.$defaultButton.unbind("click");
-                dialog.$defaultButton.bind("click", function() {
-                    newProfile = dialog.sender.getResetProfile(Octolapse.Settings.AddEditProfile().profileObservable())
+                dialog.$defaultButton.bind("click", function () {
+                    newProfile = dialog.sender.getResetProfile(Octolapse.Settings.AddEditProfile().profileObservable());
                     Octolapse.Settings.AddEditProfile().profileObservable(newProfile);
-                    
+
                 });
-                
+
                 // Remove any click event bindings from the save button
                 dialog.$saveButton.unbind("click");
                 // Called when a user clicks the save button on any add/update dialog.
-                dialog.$saveButton.bind("click", function() {
+                dialog.$saveButton.bind("click", function () {
                     if (dialog.$addEditForm.valid()) {
                         // the form is valid, add or update the profile
                         self.addUpdateProfile(Octolapse.Settings.AddEditProfile());
@@ -394,7 +394,7 @@ $(function () {
                     else {
                         // Search for any hidden elements that are invalid
                         //console.log("Checking ofr hidden field error");
-                        $fieldErrors = dialog.$addEditForm.find('.error_label_container.error')
+                        $fieldErrors = dialog.$addEditForm.find('.error_label_container.error');
                         $fieldErrors.each(function (index, element) {
                             // Check to make sure the field is hidden.  If it's not, don't bother showing the parent container.
                             // This can happen if more than one field is invalid in a hidden form
@@ -411,21 +411,21 @@ $(function () {
                             }
 
                         });
-                        
+
                         // The form is invalid, add a shake animation to inform the user
                         $(dialog.$addEditDialog).addClass('shake');
                         // set a timeout so the dialog stops shaking
                         setTimeout(function () { $(dialog.$addEditDialog).removeClass('shake'); }, 500);
                     }
-                    
+
                 });
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();
         };
 
-       
-    }
+
+    };
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel

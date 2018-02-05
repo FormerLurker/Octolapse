@@ -1,9 +1,11 @@
 /// Create our stabilizations view model
 $(function() {
-    Octolapse.CameraProfileViewModel = function(values) {
-        var self = this
-        self.name = ko.observable(values.name);
+    Octolapse.CameraProfileViewModel = function (values) {
+        var self = this;
+
         self.guid = ko.observable(values.guid);
+        self.name = ko.observable(values.name);
+        self.description = ko.observable(values.description);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.address = ko.observable(values.address);
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);
@@ -53,7 +55,7 @@ $(function() {
 
         self.applySettingsToCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            var data = { 'profile': ko.toJS(self)}
+            var data = { 'profile': ko.toJS(self) };
             $.ajax({
                 url: "/plugin/octolapse/applyCameraSettings",
                 type: "POST",
@@ -61,14 +63,14 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function () {
-                    alert("The settings are being applied.  It may take a few seconds for the settings to be visible within the stream.  Be sure to save the profile if you intend to keep any unsaved changes.")
+                    alert("The settings are being applied.  It may take a few seconds for the settings to be visible within the stream.  Be sure to save the profile if you intend to keep any unsaved changes.");
 
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert("Unable to update the camera settings!  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-        }
+        };
 
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
@@ -81,7 +83,7 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if (results.success)
-                        alert("A request for a snapshot came back OK.  The camera seems to be working!")
+                        alert("A request for a snapshot came back OK.  The camera seems to be working!");
                     else {
                         alert(results.error);
                     }
@@ -91,8 +93,8 @@ $(function() {
                     alert("The camera test failed :(  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-        }
-    }
+        };
+    };
     Octolapse.CameraProfileValidationRules = {
         rules: {
             snapshot_request_template: { octolapseSnapshotTemplate: true },
@@ -118,7 +120,7 @@ $(function() {
             jpeg_quality_request_template: { octolapseCameraRequestTemplate: true }
         },
         messages: {
-            name: "Please enter a name for your profile",
+            name: "Please enter a name for your profile"
         }
     };
 

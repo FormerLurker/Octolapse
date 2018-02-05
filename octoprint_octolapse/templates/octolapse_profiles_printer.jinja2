@@ -7,6 +7,13 @@
     </div>
   </div>
   <div class="control-group">
+    <label class="control-label">Description</label>
+    <div class="controls">
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
     <label class="control-label">Retraction Length</label>
     <div class="controls">
       <div class="input-append form-inline">
@@ -82,7 +89,7 @@
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">Printer position tolerance</label>
+    <label class="control-label">Printer Position Tolerance</label>
     <div class="controls">
       <div class="input-append form-inline">
         <input name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" />

@@ -17,19 +17,21 @@ class Printer(object):
 			  ,retract_speed=4000,detract_speed=3000, movement_speed=6000,z_hop=0.5, z_hop_speed=6000, snapshot_command="snap"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
-		self.retract_length = retract_length
-		self.retract_speed = retract_speed
-		self.detract_speed = detract_speed
-		self.movement_speed = movement_speed
-		self.z_hop = z_hop 
-		self.z_hop_speed = z_hop_speed
-		self.retract_speed = retract_speed
-		self.snapshot_command = snapshot_command
+		self.description = ""
+		self.retract_length = 2.0
+		self.retract_speed = 6000
+		self.detract_speed = 3000
+		self.movement_speed = 6000
+		self.z_hop = .5
+		self.z_hop_speed = 6000
+		self.retract_speed = 4000
+		self.snapshot_command = "snap"
 		self.printer_position_confirmation_tolerance = 0.005
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
 				self.name = printer.name
+				self.description = printer.description
 				self.retract_length = printer.retract_length
 				self.retract_speed = printer.retract_speed
 				self.detract_speed = printer.detract_speed
@@ -45,6 +47,8 @@ class Printer(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("retract_length" in changes.keys()):
 			self.retract_length = utility.getfloat(changes["retract_length"],self.retract_length)
 		if("retract_speed" in changes.keys()):
@@ -66,6 +70,7 @@ class Printer(object):
 		return {
 		
 			'name'				: self.name,
+			'description'		: self.description,
 			'guid'				: self.guid,
 			'retract_length'	: self.retract_length,
 			'retract_speed'		: self.retract_speed,
@@ -95,6 +100,7 @@ class Stabilization(object):
 	def __init__(self,stabilization=None, guid = None, name = "Default Stabilization"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
+		self.description = ""
 		self.x_type = "relative"
 		self.x_fixed_coordinate = 0.0
 		self.x_fixed_path = "0"
@@ -125,6 +131,8 @@ class Stabilization(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("x_type" in changes.keys()):
 			self.x_type = utility.getstring(changes["x_type"],self.x_type)
 		if("x_fixed_coordinate" in changes.keys()):
@@ -169,6 +177,7 @@ class Stabilization(object):
 	def ToDict(self):
 		return {
 			'name'							: self.name,
+			'description'					: self.description,
 			'guid'							: self.guid,
 			'x_type'						: self.x_type,
 			'x_fixed_coordinate'			: self.x_fixed_coordinate,
@@ -261,6 +270,7 @@ class Snapshot(object):
 	def __init__(self,snapshot=None, guid = None, name = "Default Snapshot"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
+		self.description = ""
 		#Initialize defaults
 		#Gcode Trigger
 		self.gcode_trigger_enabled = False
@@ -313,6 +323,7 @@ class Snapshot(object):
 		if(snapshot is not None):
 			if(isinstance(snapshot,Snapshot)):
 				self.name = snapshot.name
+				self.description = snapshot.description
 				self.guid = snapshot.guid
 				self.gcode_trigger_enabled = snapshot.gcode_trigger_enabled
 				self.gcode_trigger_require_zhop = snapshot.gcode_trigger_require_zhop
@@ -364,6 +375,8 @@ class Snapshot(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("gcode_trigger_enabled" in changes.keys()):
 			self.gcode_trigger_enabled = utility.getbool(changes["gcode_trigger_enabled"],self.gcode_trigger_enabled)
 		if("gcode_trigger_require_zhop" in changes.keys()):
@@ -475,8 +488,9 @@ class Snapshot(object):
 
 	def ToDict(self):
 		return {
-			'name'									: self.name,
 			'guid'									: self.guid,
+			'name'									: self.name,
+			'description'							: self.description,
 			# Gcode Trigger
 			'gcode_trigger_enabled'					: self.gcode_trigger_enabled,
 			'gcode_trigger_require_zhop'			: self.gcode_trigger_require_zhop,
@@ -529,6 +543,7 @@ class Rendering(object):
 	def __init__(self,rendering=None, guid = None, name = "Default Rendering"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
+		self.description = ""
 		self.enabled = True
 		self.fps_calculation_type = 'duration'
 		self.run_length_seconds = 5
@@ -548,6 +563,7 @@ class Rendering(object):
 			if(isinstance(rendering,Rendering)):
 				self.guid = rendering.guid
 				self.name = rendering.name
+				self.description = rendering.description
 				self.enabled = rendering.enabled
 				self.fps_calculation_type = rendering.fps_calculation_type
 				self.run_length_seconds = rendering.run_length_seconds
@@ -570,6 +586,8 @@ class Rendering(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("enabled" in changes.keys()):
 			self.enabled = utility.getbool(changes["enabled"],self.enabled)
 		if("fps_calculation_type" in changes.keys()):
@@ -608,6 +626,7 @@ class Rendering(object):
 		return {
 				'guid'								: self.guid,
 				'name'								: self.name,
+				'description'						: self.description,
 				'enabled'							: self.enabled,
 				'fps_calculation_type'				: self.fps_calculation_type,
 				'run_length_seconds'				: self.run_length_seconds,
@@ -630,6 +649,7 @@ class Camera(object):
 	def __init__(self,camera=None, guid = None, name = "Default Camera"):
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
+		self.description = ""
 		self.apply_settings_before_print = False
 		self.address = "http://127.0.0.1/webcam/"
 		self.snapshot_request_template = "{camera_address}?action=snapshot"
@@ -684,6 +704,8 @@ class Camera(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("address" in changes.keys()):
 			self.address = utility.getstring(changes["address"],self.address)
 		if("apply_settings_before_print" in changes.keys()):
@@ -779,8 +801,9 @@ class Camera(object):
 			self.zoom_request_template = utility.getstring(changes["zoom_request_template"],self.zoom_request_template)
 	def ToDict(self):
 		return {
-				'name'												: self.name,
 				'guid'												: self.guid,
+				'name'												: self.name,
+				'description'										: self.description,
 				'address'											: self.address,
 				'snapshot_request_template'							: self.snapshot_request_template,
 				'apply_settings_before_print'						: self.apply_settings_before_print,
@@ -837,7 +860,7 @@ class DebugProfile(object):
 		self.logFilePath = logFilePath
 		self.guid = guid if guid else str(uuid.uuid4())
 		self.name = name
-
+		self.description = ""
 		# Configure the logger if it has not been created
 		if(DebugProfile.Logger is None):
 			DebugProfile.Logger = logging.getLogger("octoprint.plugins.octolapse")
@@ -894,6 +917,8 @@ class DebugProfile(object):
 			self.guid = utility.getstring(changes["guid"],self.guid)
 		if("name" in changes.keys()):
 			self.name = utility.getstring(changes["name"],self.name)
+		if("description" in changes.keys()):
+			self.description = utility.getstring(changes["description"],self.description)
 		if("enabled" in changes.keys()):
 			self.enabled = utility.getbool(changes["enabled"],self.enabled)
 		if("is_test_mode" in changes.keys()):
@@ -965,8 +990,9 @@ class DebugProfile(object):
 			
 	def ToDict(self):
 		return {
-				'name'						: self.name,
 				'guid'						: self.guid,
+				'name'						: self.name,
+				'description'				: self.description,
 				'enabled'					: self.enabled,
 				'is_test_mode'				: self.is_test_mode,
 				'log_to_console'			: self.log_to_console,

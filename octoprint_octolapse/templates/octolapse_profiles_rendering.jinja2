@@ -9,6 +9,13 @@
     </div>
   </div>
   <div class="control-group">
+    <label class="control-label">Description</label>
+    <div class="controls">
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <div class="error_label_container text-error" ></div>
+    </div>
+  </div>
+  <div class="control-group">
     <label class="control-label">Timelapse Generation</label>
     <div class="controls">
       <label class="checkbox">
@@ -33,7 +40,6 @@
       </div>
       
     </div>
-    
     <div class="control-group">
       <label class="control-label" >FPS Type</label>
       <div class="controls">
@@ -53,32 +59,46 @@
       </div>
     </div>
     <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
-      <label class="control-label" >Fixed Run Length in Seconds</label>
+      <label class="control-label" >Fixed Run Length</label>
       <div class="controls">
-        <input name="run_length_seconds" type="number" class="input-block-level ignore_hidden_errors" data-bind="value: run_length_seconds" min="0.5" step="0.5"/>
+        <div class="input-append form-inline">
+          <input name="run_length_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: run_length_seconds" min="0.5" step="0.5"/>
+          <span class="add-on">seconds</span>
+        </div>
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Sync Output with the default Timelapse plugin</label>
+      <label class="control-label">Sync Output</label>
       <div class="controls">
         <label class="checkbox">
-          <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory."/>Enabled
+          <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory"/>Enabled
+          <span class="help-inline">
+            When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
+          </span>
         </label>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label" >Pre-Roll Seconds</label>
+      <label class="control-label" >Pre-Roll</label>
       <div class="controls">
-        <input name="pre_roll_seconds" type="number" class="input-small" data-bind="value: pre_roll_seconds" min="0" max="60" required="true"/>
+        <div class="input-append form-inline">
+          <input name="pre_roll_seconds" type="number" class="input-small" data-bind="value: pre_roll_seconds" min="0" max="60" required="true"/>
+          <span class="add-on">seconds</span>
+        </div>
+        
         <div class="error_label_container text-error" ></div>
         <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label" >Post-Roll Seconds</label>
+      <label class="control-label" >Post-Roll</label>
       <div class="controls">
-        <input name="post_roll_seconds" type="number" class="input-small" data-bind="value: post_roll_seconds" min="0" max="60" required="true"/>
+        <div class="input-append form-inline">
+          <input name="post_roll_seconds" type="number" class="input-small" data-bind="value: post_roll_seconds" min="0" max="60" required="true"/>
+          <span class="add-on">seconds</span>
+        </div>
+        
         <div class="error_label_container text-error" ></div>
         <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
       </div>
@@ -132,7 +152,7 @@
           <input id="octolapse_rendering_max_fps" name="max_fps" type="number" class="input-small" data-bind="value: max_fps" min="0.5" step="0.5" required="true"/>
           <div class="error_label_container text-error" ></div>
           <span class="help-inline">
-            When using 'Fixed Length' rendering, the calculated FPS can be no greater than this value.
+            When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
           </span>
         </div>
         
@@ -143,7 +163,7 @@
           <input id="octolapse_rendering_min_fps" name="min_fps" type="number" class="input-small" data-bind="value: min_fps" min="0.5" step="0.5" required="true"/>
           <div class="error_label_container text-error" ></div>
           <span class="help-inline">
-            When using 'Fixed Length' rendering, the calculated FPS can be no less than this value.
+            When using <i>Fixed Length</i> rendering, the calculated FPS can be no less than this value.
           </span>
         </div>
         

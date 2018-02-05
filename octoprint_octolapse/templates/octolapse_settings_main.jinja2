@@ -1,59 +1,51 @@
 <script type="text/html" id="octolapse-settings-main">
 
-  <div class="panel-heading">
-    <h3 class="profile-title">Main Settings</h3>
-  </div>
   <div class="panel-body">
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
-
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></span>
       </span>
-      <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is Enabled' : 'Octolapse is Disabled'"></span>
+      <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
     </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is enabled' : 'Auto snapshot reload is disabled'}">
 
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></span>
       </span>
       <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is enabled' : 'Auto snapshot reload is disabled'"></span>
     </div>
-
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></span>
       </span>
-      <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar Control is Enabled' : 'Navbar Control is Disabled'"></span>
+      <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar control is enabled' : 'Navbar control is disabled'"></span>
     </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
 
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></span>
       </span>
       <span data-bind="text: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
     </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'}">
 
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_changes() ) },style: { color: (Octolapse.Globals.show_position_changes()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_changes() ) },style: { color: (Octolapse.Globals.show_position_changes()  ) ? 'limegreen' : '' }"></span>
       </span>
       <span data-bind="text: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'"></span>
     </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></span>
       </span>
       <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
     </div>
-
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'}">
-        <i class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_trigger_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_trigger_state_changes() ) },style: { color: (Octolapse.Globals.show_trigger_state_changes()  ) ? 'limegreen' : '' }"></i>
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_trigger_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_trigger_state_changes() ) },style: { color: (Octolapse.Globals.show_trigger_state_changes()  ) ? 'limegreen' : '' }"></span>
       </span>
       <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
     </div>
-
-
   </div>
   <div class="panel-footer">
     <div class="row-fluid">
@@ -67,6 +59,7 @@
     <div class="modal-dialog" role="document">
 
       <div class="modal-content">
+        
         <form id="octolapse_add_edit_main_settings_form" class="form-horizontal">
           <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
@@ -74,57 +67,76 @@
           </div>
           <div class="modal-body">
             <div class="control-group">
+              <label class="control-label">Is Octolapse Enabled</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enable Octolapse
+                  <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
                 </label>
+                <span class="help-inline">If you enable or disable the plugin during a print, the current timelapse will continue until it completes.</span>
               </div>
             </div>
+            <span>
+              The following controls will only be shown while octolapse is running and your printer is printing.  <span class="label label-important">Warning</span> Disable the following setting if you have bandwidth issues.
+              <br/>
+              <hr/>
+            </span>
             <div class="control-group">
+              <label class="control-label">Navbar Icon</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Auto-Reload latest snapshot" data-bind="checked:auto_reload_latest_snapshot" />Auto-Reload the latest snapshot within the plugin tab.
-                </label>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Navbar Icon Enabled
+                  <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Enabled
                   <span class="help-inline">The navbar icon, when enabled, will only display while printing.</span>
                 </label>
               </div>
             </div>
+            <div>
+              
+            </div>
+
             <div class="control-group">
+              <label class="control-label">Auto-Reload Latest Snapshot</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Show Position State Changes on Tab
-                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                  <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:auto_reload_latest_snapshot" />Enabled
+                  
+                  <span class="help-inline">
+                    When enabled, the latest snapshot be displayed when it is available. <span class="label label-important">Warning</span> Thumbnails are around 10K each and full sized images (click on the thumbnail to display) are much larger.
+                  </span>
                 </label>
               </div>
             </div>
             <div class="control-group">
+              <label class="control-label">Show Position State Changes</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Show Position Changes on Tab
-                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
                 </label>
               </div>
             </div>
             <div class="control-group">
+              <label class="control-label">Show Position Changes</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Show Extruder State Changes on Tab
-                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
+                  <br/>
                 </label>
               </div>
             </div>
             <div class="control-group">
+              <label class="control-label">Show Extruder State Changes</label>
               <div class="controls">
                 <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Show Trigger State Changes on Tab
-                  <span class="help-inline">Disable this setting if you have bandwidth issues.</span>
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
+                  <br/>
+                </label>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Show Trigger State Changes</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
+                  <br/>
                 </label>
               </div>
             </div>

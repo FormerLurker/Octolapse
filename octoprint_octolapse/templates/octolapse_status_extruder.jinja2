@@ -17,9 +17,9 @@
               Retraction
             </div>
             <div>
-              <span class="fa-stack fa-2x">
-                <i class="fa fa-square fa-stack-2x"></i>
-                <i class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getRetractionStateIconClass"></i>
+              <span class="fa-stack fa-2x" data-bind="attr: {title: ExtruderState.getRetractionStateText}">
+                <span class="fa fa-square fa-stack-2x"></span>
+                <span class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getRetractionStateIconClass"></span>
               </span>
             </div>
             <div class="ol-text-status-1">
@@ -33,9 +33,9 @@
               Detraction
             </div>
             <div>
-              <span class="fa-stack fa-2x">
-                <i class="fa fa-square fa-stack-2x"></i>
-                <i class="fa fa-1x fa-stack-1x extruder-icon icon-fade-in" data-bind="css:ExtruderState.getDetractionIconClass"></i>
+              <span class="fa-stack fa-2x" data-bind="attr: {title: ExtruderState.getDetractionStateText}">
+                <span class="fa fa-square fa-stack-2x"></span>
+                <span class="fa fa-1x fa-stack-1x extruder-icon icon-fade-in" data-bind="css:ExtruderState.getDetractionIconClass"></span>
               </span>
             </div>
             <div class="ol-text-status-1">
@@ -50,9 +50,9 @@
             </div>
 
             <div>
-              <span class="fa-stack fa-2x">
-                <i class="fa fa-square fa-stack-2x"></i>
-                <i class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getExtrudingStateIconClass"></i>
+              <span class="fa-stack fa-2x" data-bind="attr: {title: ExtruderState.getExtrudingStateText}">
+                <span class="fa fa-square fa-stack-2x"></span>
+                <span class="fa fa-1x fa-stack-1x extruder-icon" data-bind="css:ExtruderState.getExtrudingStateIconClass"></span>
               </span>
             </div>
             <div class="ol-text-status-1">

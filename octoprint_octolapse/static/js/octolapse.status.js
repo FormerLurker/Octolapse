@@ -45,13 +45,57 @@ $(function () {
             });
         };
 
-        self.getXYZCoordinateSystem = ko.pureComputed(function () {
-            if (self.IsRelative())
-                return "Relative Coordinates";
+
+        self.getXHomedStateText = ko.pureComputed(function () {
+            if (self.XHomed())
+                return "Homed";
             else
-                return "Absolute Coordinates";
+                return "Not homed";
         }, self);
-    }
+        self.getYHomedStateText = ko.pureComputed(function () {
+            if (self.YHomed())
+                return "Homed";
+            else
+                return "Not homed";
+        }, self);
+        self.getZHomedStateText = ko.pureComputed(function () {
+            if (self.ZHomed())
+                return "Homed";
+            else
+                return "Not homed";
+        }, self);
+        self.getIsZHopStateText = ko.pureComputed(function () {
+            if (self.IsZHop())
+                return "Zhop detected";
+            else
+                return "Not a zhop";
+        }, self);
+        self.getIsExtruderRelativeStateText = ko.pureComputed(function () {
+            if (self.IsExtruderRelative())
+                return "Relative";
+            else
+                return "Absolute";
+        }, self);
+        self.getIsRelativeStateText = ko.pureComputed(function () {
+            if (self.IsRelative())
+                return "Relative";
+            else
+                return "Absolute";
+        }, self);
+
+        self.getHasPositionErrorStateText = ko.pureComputed(function () {
+            if (self.HasPositionError())
+                return "A position error was detected";
+            else
+                return "No current position errors";
+        }, self);
+        self.getIsLayerChangeStateText = ko.pureComputed(function () {
+            if (self.IsLayerChange())
+                return "Layer change detected";
+            else
+                return "Not changing layers";
+        }, self);
+    };
     Octolapse.positionViewModel = function () {
         var self = this;
         self.F = ko.observable(0).extend({ numeric: 2 });
@@ -87,7 +131,7 @@ $(function () {
             ctx.fillRect(x + 2, x - 2,4, 4);
             
         }*/
-    }
+    };
     Octolapse.extruderStateViewModel = function () {
         var self = this;
         // State variables
@@ -123,8 +167,8 @@ $(function () {
             this.IsDetracting(state.IsDetracting);
             this.IsDetracted(state.IsDetracted);
             this.HasChanged(state.HasChanged);
-        }
-        
+        };
+
         self.getRetractionStateIconClass = ko.pureComputed(function () {
             if (self.IsRetracting()) {
                 if (self.IsPartiallyRetracted() && !self.IsRetracted())
@@ -135,10 +179,10 @@ $(function () {
             return "fa-times-circle";
         }, self);
         self.getRetractionStateText = ko.pureComputed(function () {
-            
+
             if (self.IsRetracting()) {
                 text = "";
-               
+
 
                 if (self.IsPartiallyRetracted() && !self.IsRetracted()) {
                     if (self.IsRetractingStart())
@@ -147,13 +191,13 @@ $(function () {
                     return text;
                 }
                 else if (self.IsRetracted() && !self.IsPartiallyRetracted()) {
-                        if (self.IsRetractingStart())
-                            return "Retracted Start: " + self.RetractionLength() + "mm";
-                        else
-                            return "Retracted: " + self.RetractionLength() + "mm";
-                    }
+                    if (self.IsRetractingStart())
+                        return "Retracted Start: " + self.RetractionLength() + "mm";
+                    else
+                        return "Retracted: " + self.RetractionLength() + "mm";
+                }
             }
-            return "None"
+            return "None";
         }, self);
         self.getDetractionIconClass = ko.pureComputed(function () {
 
@@ -179,11 +223,11 @@ $(function () {
                 text += self.DetractionLength() + "mm";
             }
             else
-                text = "None"
+                text = "None";
             return text;
         }, self);
-        
-       
+
+
         self.getExtrudingStateIconClass = ko.pureComputed(function () {
 
             if (self.IsExtrudingStart() && !self.IsExtruding())
@@ -203,20 +247,12 @@ $(function () {
             if (self.IsPrimed())
                 return "Primed";
             if (self.IsExtrudingStart())
-                return "Start: " + self.ExtrusionLength() +"mm";
+                return "Start: " + self.ExtrusionLength() + "mm";
             if (self.IsExtruding())
-                return self.ExtrusionLength() +"mm";
+                return self.ExtrusionLength() + "mm";
             return "None";
         }, self);
-        
-
-        
-        
-        
-        
-        
-
-    }
+    };
     Octolapse.triggersStateViewModel = function () {
         var self = this;
 
@@ -301,11 +337,11 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed."
+                return "Idle until axis are homed"
             else if (self.IsTriggered())
-                return "Triggering a snapshot.";
+                return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "The trigger is paused.";
+                return "The trigger is paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 waitText = "Waiting"
@@ -317,12 +353,12 @@ $(function () {
                 if (waitList.length > 0)
                     waitText += " for: " + waitList.join(", ")
                 else
-                    waitText += " to trigger.";
+                    waitText += " to trigger";
                 return waitText;
             }
 
             else
-                return "Waiting to trigger.";
+                return "Waiting to trigger";
 
 
             return classes;
@@ -341,7 +377,7 @@ $(function () {
         }, self);
 
         self.getInfoText = ko.pureComputed(function () {
-            return "No info for this trigger.";
+            return "No info for this trigger";
         }, self);
         self.getInfoIconText = ko.pureComputed(function () {
             return "";
@@ -385,11 +421,11 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed."
+                return "Idle until axis are homed"
             else if (self.IsTriggered())
-                return "Triggering a snapshot.";
+                return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "The trigger is paused.";
+                return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 waitText = "Waiting"
@@ -401,12 +437,12 @@ $(function () {
                 if (waitList.length > 0)
                     waitText += " for: " + waitList.join(", ")
                 else
-                    waitText += " to trigger.";
+                    waitText += " to trigger";
                 return waitText;
             }
 
             else
-                return "Looking for snapshot gcode.";
+                return "Looking for snapshot gcode";
             
 
             return classes;
@@ -425,7 +461,7 @@ $(function () {
         }, self);
 
         self.getInfoText = ko.pureComputed(function () {
-            return "Triggering on gcode command:" + self.SnapshotCommand() + ".";
+            return "Triggering on gcode command: " + self.SnapshotCommand() ;
 
 
         }, self);
@@ -480,11 +516,11 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed."
+                return "Idle until axis are homed"
             else if (self.IsTriggered())
-                return "Triggering a snapshot.";
+                return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "The trigger is paused.";
+                return "The trigger is paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 waitText = "Waiting"
@@ -496,17 +532,17 @@ $(function () {
                 if (waitList.length > 0)
                     waitText += " for: " + waitList.join(", ")
                 else
-                    waitText += " to trigger.";
+                    waitText += " to trigger";
                 return waitText;
             }
 
             else {
                 if (self.HeightIncrement() > 0) {
                     heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
-                    return "Triggering when height reaches " + heightToTrigger.toFixed(1) +".";
+                    return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
                 }
                 else
-                    return "Triggering on next layer change.";
+                    return "Triggering on next layer change";
             }
 
             return classes;
@@ -529,11 +565,11 @@ $(function () {
             var val = 0;
             if (self.HeightIncrement() > 0)
 
-                val = self.HeightIncrement() + "MMs";
+                val = self.HeightIncrement() + " mm";
                 
             else
                 val = "layer"
-            return "Triggering every " + Octolapse.ToCompactInt(val) + ".";
+            return "Triggering every " + Octolapse.ToCompactInt(val);
 
             
         }, self);
@@ -583,11 +619,11 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed."
+                return "Idle until axis are homed"
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "The trigger is paused."
+                return "Paused"
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 waitText = "Waiting"
@@ -599,12 +635,12 @@ $(function () {
                 if (waitList.length > 0)
                     waitText += " for: " + waitList.join(", ")
                 else
-                    waitText += " to trigger.";
+                    waitText += " to trigger";
                 return waitText;
             }
             
             else
-                return "Triggering in " + self.SecondsToTrigger() + " seconds." ;
+                return "Triggering in " + self.SecondsToTrigger() + " seconds" ;
 
             return classes;
         }, self);

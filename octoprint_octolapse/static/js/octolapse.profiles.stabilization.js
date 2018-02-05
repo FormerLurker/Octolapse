@@ -1,9 +1,11 @@
 /// Create our stabilizations view model
 $(function() {
     Octolapse.StabilizationProfileViewModel = function (values) {
-        var self = this
-        self.name = ko.observable(values.name);
+        var self = this;
+        
         self.guid = ko.observable(values.guid);
+        self.name = ko.observable(values.name);
+        self.description = ko.observable(values.description);
         self.x_type = ko.observable(values.x_type);
         self.x_fixed_coordinate = ko.observable(values.x_fixed_coordinate);
         self.x_fixed_path = ko.observable(values.x_fixed_path);
@@ -42,7 +44,7 @@ $(function() {
 
         },
         messages: {
-            name: "Please enter a name for your profile",
+            name: "Please enter a name for your profile"
         }
     };
 });

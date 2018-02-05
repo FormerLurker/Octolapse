@@ -1,9 +1,11 @@
 /// Create our stabilizations view model
 $(function() {
-    Octolapse.RenderingProfileViewModel = function(values) {
+    Octolapse.RenderingProfileViewModel = function (values) {
         var self = this;
-        self.name = ko.observable(values.name);
+
         self.guid = ko.observable(values.guid);
+        self.name = ko.observable(values.name);
+        self.description = ko.observable(values.description);
         self.enabled = ko.observable(values.enabled);
         self.fps_calculation_type = ko.observable(values.fps_calculation_type);
         self.run_length_seconds = ko.observable(values.run_length_seconds);
@@ -19,18 +21,18 @@ $(function() {
         self.watermark = ko.observable(values.watermark);
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
-        
-    }
+
+    };
     Octolapse.RenderingProfileValidationRules = {
         rules: {
             bitrate: { required: true, ffmpegBitRate: true },
             min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
-            max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' },
+            max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' }
         },
         messages: {
             name: "Please enter a name for your profile",
             min_fps: { lessThanOrEqual: 'Must be less than or equal to the maximum fps.' },
-            max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
+            max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' }
         }
     };
 });

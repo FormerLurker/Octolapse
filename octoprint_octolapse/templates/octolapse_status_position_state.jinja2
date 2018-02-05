@@ -22,23 +22,23 @@
             <div class="row-fluid">
               <div class="span4">
                 <div>X Homed</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.XHomed())"></i>
+                <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getXHomedStateText}">
+                  <span class="fa fa-square fa-stack-2x"></span>
+                  <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.XHomed())"></span>
                 </span>
               </div>
               <div class="span4">
                 <div>Y homed</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.YHomed())"></i>
+                <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getYHomedStateText}">
+                  <span class="fa fa-square fa-stack-2x"></span>
+                  <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.YHomed())"></span>
                 </span>
               </div>
               <div class="span4">
                 <div>Z Homed</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.ZHomed())"></i>
+                <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getZHomedStateText}">
+                  <span class="fa fa-square fa-stack-2x"></span>
+                  <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.ZHomed())"></span>
                 </span>
               </div>
             </div>
@@ -47,9 +47,9 @@
         <div class="span2 octolapse-container">
           <div class="margin-small">
             <div>ZHop</div>
-            <span class="fa-stack fa-2x">
-              <i class="fa fa-square fa-stack-2x"></i>
-              <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop())"></i>
+            <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsZHopStateText}">
+              <span class="fa fa-square fa-stack-2x"></span>
+              <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop())"></span>
             </span>
           </div>
         </div>
@@ -59,9 +59,9 @@
         <div class="span2 octolapse-container">
           <div class="margin-small ">
             <div>Errors</div>
-            <span class="fa-stack fa-2x">
-              <i class="fa fa-square fa-stack-2x"></i>
-              <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError())"></i>
+            <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getHasPositionErrorStateText}">
+              <span class="fa fa-square fa-stack-2x"></span>
+              <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError())"></span>
             </span>
           </div>
         </div>
@@ -72,9 +72,9 @@
             <div class="span4 octolapse-container">
               <div class="margin-small">
                 <div>Extruder</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsExtruderRelative())"></i>
+                <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsExtruderRelativeStateText}">
+                  <span class="fa fa-square fa-stack-2x"></span>
+                  <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsExtruderRelative())"></span>
                 </span>
                 <div class="ol-text-status-1">
                   Relative
@@ -84,9 +84,9 @@
             <div class="span4 octolapse-container">
               <div class="margin-small">
                 <div>XYZ</div>
-                <span class="fa-stack fa-2x">
-                  <i class="fa fa-square fa-stack-2x"></i>
-                  <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative())"></i>
+                <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsRelativeStateText}">
+                  <span class="fa fa-square fa-stack-2x"></span>
+                  <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative())"></span>
                 </span>
                 <div class="ol-text-status-1">
                   Relative
@@ -97,9 +97,9 @@
               <div class="margin-small">
                 <div>
                   <div>Layer</div>
-                  <span class="fa-stack fa-2x">
-                    <i class="fa fa-square fa-stack-2x"></i>
-                    <i class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange())"></i>
+                  <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsLayerChangeStateText}">
+                    <span class="fa fa-square fa-stack-2x"></span>
+                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange())"></span>
                   </span>
                   <div class="ol-text-status-1">
                     Change

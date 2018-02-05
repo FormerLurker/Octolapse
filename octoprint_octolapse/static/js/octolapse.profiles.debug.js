@@ -1,10 +1,11 @@
 
 /// Create our stabilizations view model
 $(function() {
-    Octolapse.DebugProfileViewModel = function(values) {
-        var self = this
-        self.name = ko.observable(values.name);
+    Octolapse.DebugProfileViewModel = function (values) {
+        var self = this;
         self.guid = ko.observable(values.guid);
+        self.name = ko.observable(values.name);
+        self.description = ko.observable(values.description);
         self.enabled = ko.observable(values.enabled);
         self.is_test_mode = ko.observable(values.is_test_mode);
         self.log_to_console = ko.observable(values.log_to_console);
@@ -39,14 +40,14 @@ $(function() {
         self.camera_settings_apply = ko.observable(values.camera_settings_apply);
         self.gcode_sent_all = ko.observable(values.gcode_sent_all);
         self.gcode_queuing_all = ko.observable(values.gcode_queuing_all);
-        
-    }
+
+    };
     Octolapse.DebugProfileValidationRules = {
         rules: {
             name: "required"
         },
         messages: {
-            name: "Please enter a name for your profile",
+            name: "Please enter a name for your profile"
         }
     };
 });
