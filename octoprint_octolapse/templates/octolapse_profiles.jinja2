@@ -3,43 +3,47 @@
     <h3 class="profile-title"></h3>
   </div>
   <div class="panel-body">
-    <div class="octolapse_tab">
-      <div class="row">
-        <div class="span12">
-          <table class="table table-striped table-hover table-condensed table-hover">
-            <thead>
-              <tr>
-                <th class="profile_name">Name</th>
-                <th class="profile_action">Action</th>
-              </tr>
-            </thead>
-            <tbody data-bind="foreach: profiles" >
-              <tr data-bind="attr: {title: name()}">
-                <td>
-                  <span class="fa fa-star" data-bind="visible:  guid() == $root.current_profile_guid()"></span>
-                  <span data-bind="text: name(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
-                </td>
-                <td align="center">
-                  <div class="text-center">
-                    <a href="#" class="fa fa-star" title="Set as default profile" data-bind="click: function() { if (guid() != $root.current_profile_guid()) { $root.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
-                    &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile" data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
-                    &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile" data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
-                    &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile" data-bind="click: function() {  if (guid() != $root.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+
+    <div class="row">
+      <div class="span12">
+        <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
+          <thead>
+            <tr>
+              <th class="profile_name">Name</th>
+              <th class="profile_description">Description</th>
+              <th class="profile_action">Action</th>
+            </tr>
+          </thead>
+          <tbody data-bind="foreach: profiles" >
+            <tr data-bind="attr: {title: name()}">
+              <td>
+                <span class="fa fa-star" data-bind="visible:  guid() == $root.current_profile_guid()"></span>
+                <span data-bind="text: name(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
+              </td>
+              <td>
+                <span data-bind="text: description(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
+              </td>
+              <td align="center">
+                <div class="text-center">
+                  <a href="#" class="fa fa-star" title="Set as default profile" data-bind="click: function() { if (guid() != $root.current_profile_guid()) { $root.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
+                  &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile" data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
+                  &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile" data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
+                  &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile" data-bind="click: function() {  if (guid() != $root.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="row">
-        <button class="span12 btn btn-default" data-bind="click: function() {$root.showAddEditDialog(null);}">Add Profile...</button>
-      </div>
-      
     </div>
+    <div class="row">
+      <button class="span12 btn btn-default" data-bind="click: function() {$root.showAddEditDialog(null);}">Add Profile...</button>
+    </div>
+
+
   </div>
   <div class="panel-footer">
-    
+
   </div>
 </script>
 

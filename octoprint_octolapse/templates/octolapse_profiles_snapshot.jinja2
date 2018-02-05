@@ -10,7 +10,7 @@
   <div class="control-group">
     <label class="control-label">Description</label>
     <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -458,13 +458,13 @@
   </div>
   <hr/>
   <div class="control-group">
-    <div class="controls">
+    
       <small>
         <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
           <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
         </a>
       </small>
-    </div>
+  </div>
 
   </div>
   <div id="snapshot_trigger_advanced" class="control-group hide">
@@ -484,7 +484,7 @@
       <label class="control-label">Retract Before Move</label>
       <div class="controls">
         <label class="checkbox" title="If not retracted, retract before move">
-          <input type="checkbox" data-bind="checked: retract_before_move" />
+          <input type="checkbox" data-bind="checked: retract_before_move" /> Enabled
         </label>
         <span class="help-inline">If enabled, Octolapse will retract up to the length specified in the active printer profile.</span>
       </div>
@@ -493,23 +493,22 @@
       <label class="control-label">Clean Snapshots After Rendering</label>
       <div class="controls">
         <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
-          <input type="checkbox" data-bind="checked: cleanup_after_render_complete" title="After timelapse is rendered"/>Enable
-          <span class="help-inline">
-            <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary image, even those taken during a different timelapse.
-          </span>
+          <input type="checkbox" data-bind="checked: cleanup_after_render_complete" title="After timelapse is rendered"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary images, even those taken during a different timelapse.
+        </span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Clean Snapshots After Rendering Failure</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_after_render_fail" title="After timelapse fails"/>After timelaps rendering fails
-          <span class="help-inline">
-            <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting.  However, in the event that this option does not work properly, but does not cause any errors.  Currently this process will delete ALL temporary image, even those taken during a different timelapse.
-          </span>
-
+          <input type="checkbox" data-bind="checked: cleanup_after_render_fail" title="After timelapse fails"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting, but it should not cause any errors.  Currently this process will delete ALL temporary images, even those taken during a different timelapse.
+        </span>
       </div>
     </div>
   </div>

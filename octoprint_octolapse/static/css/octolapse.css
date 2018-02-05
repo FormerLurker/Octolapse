@@ -35,15 +35,34 @@ span.octolapse-icon-text {
     right: 5px;
     
 }
+table.octolapse-profiles {
+    border-collapse: collapse;
+    table-layout: auto;
+    max-width: 100%;
+    
+}
+
+table.octolapse-profiles td {
+    font-size:small
+}
+table.octolapse-profiles th.profile_name {
+    width:35%
+}
+table.octolapse-profiles th.profile_description {
+    width: 45%;
+}
+table.octolapse-profiles th.profile_action{
+    width:20%;
+}
 
 .panel {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-}
+        margin-bottom: 20px;
+        background-color: #fff;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    }
 .octolapse_status_container {
     align-items: center;
     flex-direction: row;

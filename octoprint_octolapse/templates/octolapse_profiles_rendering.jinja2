@@ -11,7 +11,7 @@
   <div class="control-group">
     <label class="control-label">Description</label>
     <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -22,7 +22,7 @@
         <input name="rendering_enabled" type="checkbox" data-bind="checked: enabled" title="Enable or disable timelapse generation"/>Enabled
       </label>
       <span class="help-inline">
-        <span class="label label-important">Attention</span>This option currently will only work if you are rendering .mp4 video.  The default timelapse module does not support any other format currently.  Perhaps a feature request is in order?
+        <span class="label label-important">Attention</span>&nbsp;This option currently will only work if you are rendering .mp4 video.  The default timelapse module does not support any other format currently.  Perhaps a feature request is in order?
       </span>
     </div>
   </div>
@@ -73,10 +73,10 @@
       <div class="controls">
         <label class="checkbox">
           <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse" title="Automatically move the finished timelapse into the standard octoprint timelapse directory"/>Enabled
-          <span class="help-inline">
-            When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
-          </span>
         </label>
+        <span class="help-inline">
+          When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -103,6 +103,7 @@
         <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
       </div>
     </div>
+    <hr/>
     <div class="control-group">
       <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
         <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
@@ -140,7 +141,7 @@
             <input name="watermark" type="checkbox" data-bind="checked: watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
           </label>
           <span class="help-inline">
-            <span class="label label-important">Warning</span>There are known issues with this option.
+            <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
           </span>
         </div>
         

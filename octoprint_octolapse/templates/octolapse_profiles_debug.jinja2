@@ -9,7 +9,7 @@
   <div class="control-group">
     <label class="control-label">Description</label>
     <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -22,6 +22,8 @@
       </label>
     </div>
   </div>
+
+  <hr/>
   <div class="control-group">
     <label class="control-label">Info Logging</label>
     <div class="controls">
@@ -30,7 +32,7 @@
       </label>
     </div>
   </div>
-  <hr/>
+  
   <div data-bind="visible: enabled">
     
     <div class="control-group">
@@ -149,7 +151,7 @@
     <div class="control-group">
       <label class="control-label">Log Snapshot Gcode</label>
       <div class="controls">
-        <label class="checkbox">Enabled
+        <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_gcode" title="Log snapshot gcode"/>Enabled
         </label>
       </div>

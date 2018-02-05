@@ -8,9 +8,9 @@
     </div>
   </div>
   <div class="control-group">
-    <label class="control-label">description</label>
+    <label class="control-label">Description</label>
     <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" required="false" maxlength="1024"/>
+      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
@@ -222,7 +222,7 @@
       <div class="error_label_container text-error" ></div>
     </div>
   </div>
-
+  <hr/>
   <div class="control-group">
     <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
       <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
@@ -232,7 +232,9 @@
     <div class="control-group">
       <label class="control-label">Ignore SSL Errors</label>
       <div class="controls">
-        <input type="checkbox" data-bind="checked: ignore_ssl_error" />Enabled
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: ignore_ssl_error" />Enabled
+        </label>
         <span class="help-inline">
           Ignore any SSL errors at the camera address.  <span class="label label-important">Attention</span>&nbsp;Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
         </span>
@@ -336,7 +338,7 @@
     </div>
 
     <div class="control-group">
-      <label class="control-label">Exposure Type Request Templatey</label>
+      <label class="control-label">Exposure Type Request Template</label>
       <div class="controls">
         <textarea name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
         <div class="error_label_container text-error" ></div>
@@ -398,7 +400,7 @@
     </div>
 
     <div class="control-group">
-      <label class="control-label">Led1 Mode Request Template</label>
+      <label class="control-label">LED 1 Mode Request Template</label>
       <div class="controls">
         <textarea name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
         <div class="error_label_container text-error" ></div>
@@ -406,7 +408,7 @@
     </div>
 
     <div class="control-group">
-      <label class="control-label">Led1 Frequency Request Template</label>
+      <label class="control-label">LED 1 Frequency Request Template</label>
       <div class="controls">
         <textarea name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
         <div class="error_label_container text-error" ></div>
@@ -414,7 +416,7 @@
     </div>
 
     <div class="control-group">
-      <label class="control-label">Jpeg Quality Request Template</label>
+      <label class="control-label">JPEG Quality Request Template</label>
       <div class="controls">
         <textarea name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
         <div class="error_label_container text-error" ></div>
