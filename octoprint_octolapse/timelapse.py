@@ -204,10 +204,10 @@ class Timelapse(object):
 
 			if(self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing()):
 				self.Triggers.Update(self.Position,cmd)
+
 				# If our triggers have changed, update our dict
-				if(self.Settings.show_trigger_state_changes):
-					if(self.Triggers.HasChanged()):
-						triggerChangeList = self.Triggers.ChangesToList()
+				if(self.Settings.show_trigger_state_changes and self.Triggers.HasChanged()):
+					triggerChangeList = self.Triggers.ChangesToList()
 					
 
 				if(self.GcodeQueuing_IsTriggering(cmd,isSnapshotGcodeCommand)):
