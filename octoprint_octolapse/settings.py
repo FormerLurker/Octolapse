@@ -27,6 +27,15 @@ class Printer(object):
 		self.retract_speed = 4000
 		self.snapshot_command = "snap"
 		self.printer_position_confirmation_tolerance = 0.005
+		self.origin_x = None
+		self.origin_y = None
+		self.origin_z = None
+		self.min_x = None
+		self.max_x = None
+		self.min_y = None
+		self.max_y = None
+		self.min_z = None
+		self.max_z = None
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
@@ -65,7 +74,26 @@ class Printer(object):
 			self.z_hop_speed = utility.getint(changes["z_hop_speed"],self.z_hop_speed)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
-			
+
+		if("origin_x" in changes.keys()):
+			self.origin_x = utility.getnullablefloat(changes["origin_x"],self.origin_x)
+		if("origin_y" in changes.keys()):
+			self.origin_y = utility.getnullablefloat(changes["origin_y"],self.origin_y)
+		if("origin_z" in changes.keys()):
+			self.origin_z = utility.getnullablefloat(changes["origin_z"],self.origin_z)
+		if("min_x" in changes.keys()):
+			self.min_x = utility.getnullablefloat(changes["min_x"],self.min_x)
+		if("max_x" in changes.keys()):
+			self.max_x = utility.getnullablefloat(changes["max_x"],self.max_x)
+		if("min_y" in changes.keys()):
+			self.min_y = utility.getnullablefloat(changes["min_y"],self.min_y)
+		if("max_y" in changes.keys()):
+			self.max_y = utility.getnullablefloat(changes["max_y"],self.max_y)
+		if("min_z" in changes.keys()):
+			self.min_z = utility.getnullablefloat(changes["min_z"],self.min_z)
+		if("max_z" in changes.keys()):
+			self.max_z = utility.getnullablefloat(changes["max_z"],self.max_z)
+		
 	def ToDict(self):
 		return {
 		
@@ -79,7 +107,16 @@ class Printer(object):
 			'z_hop'				: self.z_hop,
 			'z_hop_speed'		: self.z_hop_speed,
 			'snapshot_command'	: self.snapshot_command,
-			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance
+			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance,
+			'origin_x' : self.origin_x,
+			'origin_y' : self.origin_y,
+			'origin_z' : self.origin_z,
+			'min_x' : self.min_x,
+			'max_x' : self.max_x,
+			'min_y' : self.min_y,
+			'max_y' : self.max_y,
+			'min_z' : self.min_z,
+			'max_z' : self.max_z
 		}
 
 class StabilizationPath(object):

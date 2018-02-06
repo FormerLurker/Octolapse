@@ -53,6 +53,14 @@ $(function () {
 
         octolapsePopup = new PNotify(options);
     };
+
+    Octolapse.Popups = {}
+    Octolapse.displayPopupForKey = function (options, key) {
+        if (key in Octolapse.Popups) {
+            Octolapse.Popups[key].remove();
+        }
+        Octolapse.Popups[key] = new PNotify(options);
+    };
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
@@ -241,13 +249,16 @@ $(function () {
             $.ajax({
                 url: "/plugin/octolapse/loadState",
                 type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
                 ccontentType: "application/json",
                 dataType: "json",
-                success: function (newSettings) {
+                success: function (result) {
                     //console.log("Main Settings have been loaded.  Waiting for message");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to load the main settings tab.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    
+                    alert("Octolapse could not load the current state.  Please try again in a few minutes, or check plugin_octolapse.log in the 'Logs' menu for exceptions.");
                 }
             });
         };
@@ -533,6 +544,18 @@ $(function () {
                             }
                         };
                         Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "out-of-bounds":
+                    {
+                        //console.log("An out-of-bounds snapshot position was detected.")
+                        var options = {
+                            title: 'Octolapse - Out Of Bounds',
+                            text: data.msg ,
+                            type: 'error',
+                            hide: false
+                        };
+                        Octolapse.displayPopupForKey(options,"out-of-bounds");
                     }
                     break;
                 default:

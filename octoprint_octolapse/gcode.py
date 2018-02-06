@@ -52,14 +52,16 @@ class SnapshotGcode(object):
 class SnapshotGcodeGenerator(object):	
 	CurrentXPathIndex = 0
 	CurrentYPathIndex = 0
-	def __init__(self,octolapseSettings,octoprint_printer_profile):
+	def __init__(self,octolapseSettings,octoprintPrinterProfile):
 		self.Settings = octolapseSettings
 		self.StabilizationPaths = self.Settings.CurrentStabilization().GetStabilizationPaths()
 		self.Snapshot = Snapshot(self.Settings.CurrentSnapshot())
 		self.Printer = Printer(self.Settings.CurrentPrinter())
-		self.OctoprintPrinterProfile = octoprint_printer_profile
+		self.OctoprintPrinterProfile = octoprintPrinterProfile
+		self.BoundingBox = utility.GetBoundingBox(self.Printer,octoprintPrinterProfile)
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
-		
+		self.HasSnapshotPositionErrors = False
+		self.SnapshotPositionErrors = ""
 	def Reset(self):
 		self.RetractedBySnapshotStartGcode = None
 		self.ZhopBySnapshotStartGcode = None
@@ -69,6 +71,8 @@ class SnapshotGcodeGenerator(object):
 		self.IsExtruderRelativeCurrent = None
 		self.FOriginal = None
 		self.FCurrent = None
+		self.HasSnapshotPositionErrors = False
+		self.SnapshotPositionErrors = ""
 	def GetSnapshotPosition(self,xPos,yPos):
 		xPath = self.StabilizationPaths["X"]
 		xPath.CurrentPosition = xPos
@@ -76,12 +80,21 @@ class SnapshotGcodeGenerator(object):
 		yPath.CurrentPosition = yPos
 
 		coords = dict(X=self.GetSnapshotCoordinate(xPath), Y=self.GetSnapshotCoordinate(yPath))
-
-		if(not utility.IsXInBounds(coords["X"],self.OctoprintPrinterProfile)):
+		
+		if(not utility.IsInBounds(self.BoundingBox, x= coords["X"])):
+			message = "The snapshot X position ({0}) is out of bounds!".format(coords["X"]);
+			self.SnapshotPositionErrors = message;
+			self.HasSnapshotPositionErrors = True
+			self.Settings.CurrentDebugProfile().LogError("gcode.py - GetSnapshotPosition - {0}".format(message))
 			coords["X"] = None
-		if(not utility.IsYInBounds(coords["Y"],self.OctoprintPrinterProfile)):
+		if(not utility.IsInBounds(self.BoundingBox, y= coords["Y"])):
+			message = "The snapshot Y position ({0}) is out of bounds!".format(coords["Y"]);
+			if(len(self.SnapshotPositionErrors)>0):
+				self.SnapshotPositionErrors += "  ";
+			self.SnapshotPositionErrors += message;
+			self.HasSnapshotPositionErrors = True
+			self.Settings.CurrentDebugProfile().LogError("gcode.py - GetSnapshotPosition - {0}".format(message))
 			coords["Y"] = None
-
 		return coords
 	def GetSnapshotCoordinate(self, path):
 		if(path.Type == 'disabled'):
@@ -155,63 +168,17 @@ class SnapshotGcodeGenerator(object):
 		if(desiredSpeed > 0):
 			snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed));
 			self.FCurrent = desiredSpeed
-			
-	def CreateSnapshotStartGcode(self,z,f,isRelative, isExtruderRelative, extruder, zLift):
-		self.Reset()
-		self.FOriginal = f
-		self.FCurrent = f
-		self.RetractedBySnapshotStartGcode = False
-		self.RetractedLength = 0
-		self.ZhopBySnapshotStartGcode = False
-		self.ZLift = zLift
-		self.IsRelativeOriginal = isRelative
-		self.IsRelativeCurrent = isRelative
-		self.IsExtruderRelativeOriginal = isExtruderRelative 
-		self.IsExtruderRelativeCurrent = isExtruderRelative
-
-		newSnapshotGcode = SnapshotGcode(self.IsTestMode)
-		# retract if necessary
-		# Note that if IsRetractedStart is true, that means the printer is now retracted.  IsRetracted will be false because we've undone the previous position update.
-		if(self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart())):
-			if(not self.IsExtruderRelativeCurrent):
-				newSnapshotGcode.Append(self.GetSetExtruderRelativePositionGcode())
-				self.IsExtruderRelativeCurrent = True
-			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.retract_speed)
-			retractedLength = extruder.LengthToRetract()
-			if(retractedLength>0):
-				newSnapshotGcode.Append(self.GetRetractGcode(retractedLength))
-				self.RetractedLength = retractedLength
-				self.RetractedBySnapshotStartGcode = True
-		# Can we hop or is the print too tall?
-
-		# todo: detect zhop and only zhop if we are not currently hopping.
-		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile)
-		# if we can ZHop, do
-		if(canZHop and self.ZLift >0):
-			if(not self.IsRelativeCurrent): # must be in relative mode
-				newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
-				self.IsRelativeCurrent = True
-			self.AppendFeedrateGcode(newSnapshotGcode, self.Printer.z_hop_speed)
-			newSnapshotGcode.Append(self.GetRelativeZLiftGcode(self.ZLift))
-			self.ZhopBySnapshotStartGcode = True
-
-		# Wait for current moves to finish before requesting the startgcodeposition
-		newSnapshotGcode.Append(self.GetWaitForCurrentMovesToFinishGcode())
-		
-		# Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
-		newSnapshotGcode.Append(self.GetPositionGcode())
-		# Log the commands
-		self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Start Gcode")
-		for str in newSnapshotGcode.GcodeCommands:
-			self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
-
-
-		return newSnapshotGcode
+	
 	def CreateSnapshotGcode(self, x,y,z, f, isRelative, isExtruderRelative, extruder, zLift, savedCommand = None):
+		self.Reset()
 		if(x is None or y is None or z is None):
+			
+			self.HasSnapshotPositionErrors = True
+			message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(x,y,z)
+			self.SnapshotPositionErrors = message;
+			self.Settings.CurrentDebugProfile().LogError("gcode.py - CreateSnapshotGcode - {0}".format(message))
 			return None
 
-		self.Reset()
 		self.FOriginal = f
 		self.FCurrent = f
 		self.RetractedBySnapshotStartGcode = False
@@ -239,7 +206,7 @@ class SnapshotGcodeGenerator(object):
 		# Can we hop or is the print too tall?
 
 		# todo: detect zhop and only zhop if we are not currently hopping.
-		canZHop =  self.Printer.z_hop > 0 and utility.IsZInBounds(z + self.Printer.z_hop,self.OctoprintPrinterProfile)
+		canZHop =  self.Printer.z_hop > 0 and utility.IsInBounds(self.BoundingBox, z= z + self.Printer.z_hop)
 		# if we can ZHop, do
 		if(canZHop and self.ZLift >0):
 			if(not self.IsRelativeCurrent): # must be in relative mode

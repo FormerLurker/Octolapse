@@ -120,6 +120,10 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
 	def loadState(self):
+		if(self.Settings is None):
+			raise Exception ("Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please wait a few minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
+		if(self.Timelapse is None):
+			raise Exception ("Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please wait a few minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
 		self.SendStateLoadedMessage()
 		return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 	@octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
@@ -344,7 +348,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
 				self._logger.exception(e)
-		
+			
 		return settingsDict
 	
 	def GetStatusDict(self):
@@ -404,7 +408,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , onTimelapseStopping = self.OnTimelapseStopping
 							  , onTimelapseStopped = self.OnTimelapseStopped
 							  , onStateChanged = self.OnTimelapseStateChanged
-							  , onTimelapseStart = self.OnTimelapseStart)
+							  , onTimelapseStart = self.OnTimelapseStart
+							  ,onSnapshotPositionError = self.OnSnapshotPositionError)
 			self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 		except Exception, e:
 			if(self.Settings is not None):
@@ -556,8 +561,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			, 'success' : success
 		}
 		self._plugin_manager.send_plugin_message(self._identifier, data)
-		
-
 	def SendRenderCompleteMessage(self):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="render-complete", msg="Octolapse has completed a rendering."))
 	def OnTimelapseStart(self, *args, **kwargs):
@@ -565,6 +568,16 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		data ={
 			"type":"timelapse-start"
 			, "msg":"Octolapse has started a timelapse."
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		data.update(stateData)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+	def OnSnapshotPositionError(self,message):
+		stateData = self.Timelapse.GetStateDict()
+		data ={
+			"type":"out-of-bounds"
+			, "msg":"Unable to take a snapshot.  " + message + "  Please check your stabilization and print bed size settings."
 			, "Status": self.GetStatusDict()
 			, "MainSettings": self.Settings.GetMainSettingsDict()
 		}

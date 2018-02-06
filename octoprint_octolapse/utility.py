@@ -9,26 +9,37 @@ import errno
 import tempfile
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
-def getfloat(value,default,key=None):
+def getfloat(value,default):
 	try:
 		return float(value)
 	except ValueError:
 		return float(default)
+def getnullablefloat(value,default):
+	if(value is None):
+		return None
+	try:
+		return float(value)
+	except ValueError:
+		if(default is None):
+			return None
+		return float(default)
 
-def getint(value,default,key=None):
+def getint(value,default):
 	try:
 		return int(value)
 	except ValueError:
 		return default
-def getnullablebool(value,default,key=None):
-	try:
-		if(value is None):
+def getnullablebool(value,default):
+	if(value is None):
 			return None
+	try:
 		return bool(value)
 	except ValueError:
+		if(default is None):
+			return None
 		return default
 
-def getbool(value,default,key=None):
+def getbool(value,default):
 	try:
 		return bool(value)
 	except ValueError:
@@ -52,7 +63,7 @@ def getbitrate(value,default):
 
 	
 
-def getobject(value,default,key=None):
+def getobject(value,default):
 	if value is None:
 		return default
 	return value
@@ -187,49 +198,113 @@ def CurrentlyPrintingFileName(octoprintPrinter):
 					return GetFilenameFromFullPath(current_file_path)
 		return ""
 
-def IsInBounds(x, y, z, printerProfile):
+def IsInBounds(boundingBox, x=None, y=None, z=None ):
 	"""Determines if the given X,Y,Z coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-	return IsXInBounds(x,printerProfile) and IsYInBounds(y,printerProfile) and IsZInBounds(z,printerProfile)
+	minX = boundingBox['min_x']
+	maxX = boundingBox['max_x']
+	minY = boundingBox['min_y']
+	maxY = boundingBox['max_y']
+	minZ = boundingBox['min_z']
+	maxZ = boundingBox['max_z']
 
-def IsXInBounds(x, printerProfile):
-	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-	isInBounds = True
-	if (x is not None):
-		if(printerProfile["volume"]["custom_box"] != False):
-			customBox = printerProfile["volume"]["custom_box"]
-			if(x < customBox["x_min"] or x > customBox["x_max"]):
-				isInBounds = False
+	xIsInBounds = x is None or (x >= minX and x <= maxX)
+	yIsInBounds = y is None or (y >= minY and y <= maxY)
+	zIsInBounds = z is None or (z >= minZ and z <= maxZ)
+
+	return xIsInBounds and yIsInBounds and zIsInBounds
+
+def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
+	# get octolapse min and max
+	minX = octolapsePrinterProfile.min_x
+	maxX = octolapsePrinterProfile.max_x
+	minY = octolapsePrinterProfile.min_y
+	maxY = octolapsePrinterProfile.max_y
+	minZ = octolapsePrinterProfile.min_z
+	maxZ = octolapsePrinterProfile.max_z
+
+	volume = octoprintPrinterProfile["volume"]
+	customBox = volume["custom_box"]
+	if(minX is None):
+		if(customBox != False):
+			minX = customBox["x_min"]
 		else:
-			volume = printerProfile["volume"]
-			if(x < 0 or x > volume["width"]):
-				isInBounds = False
-
-	return isInBounds
-
-def IsYInBounds(y, printerProfile):
-	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-	isInBounds = True
-	if (y is not None):
-		if(printerProfile["volume"]["custom_box"] != False):
-			customBox = printerProfile["volume"]["custom_box"]
-			if(y < customBox["y_min"] or y > customBox["y_max"]):
-				isInBounds = False
+			minX = 0
+	if(maxX is None):
+		if(customBox != False):
+			maxX = customBox["x_max"]
 		else:
-			volume = printerProfile["volume"]
-			if(y < 0 or y > volume["depth"]):
-				isInBounds = False
-	return isInBounds
-
-def IsZInBounds(z, printerProfile):
-	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-	isInBounds = True
-	if(z is not None):
-		if(printerProfile["volume"]["custom_box"] != False):
-			customBox = printerProfile["volume"]["custom_box"]
-			if(z < customBox["z_min"] or z > customBox["z_max"]):
-				isInBounds = False
+			maxX = volume["width"];
+			
+	if(minY is None):
+		if(customBox != False):
+			minY = customBox["y_min"]
 		else:
-			volume = printerProfile["volume"]
-			if(z < 0 or z > volume["height"]):
-				isInBounds = False
-	return isInBounds
+			minY = 0
+	if(maxY is None):
+		if(customBox != False):
+			maxY = customBox["y_max"]
+		else:
+			maxY = volume["depth"];
+
+	if(minZ is None):
+		if(customBox != False):
+			minZ = customBox["z_min"]
+		else:
+			minZ = 0
+	if(maxZ is None):
+		if(customBox != False):
+			maxZ = customBox["z_max"]
+		else:
+			maxZ = volume["height"];
+
+	return {
+		"min_x" : minX,
+		"max_x" : maxX,
+		"min_y" : minY,
+		"max_y" : maxY,
+		"min_z" : minZ,
+		"max_z" : maxZ
+		}
+	
+#def IsXInBounds(x, printerProfile,octolapsePrinterProfile):
+#	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
+#	isInBounds = True
+#	if (x is not None):
+#		if(printerProfile["volume"]["custom_box"] != False):
+#			customBox = printerProfile["volume"]["custom_box"]
+#			if(x < customBox["x_min"] or x > customBox["x_max"]):
+#				isInBounds = False
+#		else:
+#			volume = printerProfile["volume"]
+#			if(x < 0 or x > volume["width"]):
+#				isInBounds = False
+
+#	return isInBounds
+
+#def IsYInBounds(y, printerProfile,octolapsePrinterProfile):
+#	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
+#	isInBounds = True
+#	if (y is not None):
+#		if(printerProfile["volume"]["custom_box"] != False):
+#			customBox = printerProfile["volume"]["custom_box"]
+#			if(y < customBox["y_min"] or y > customBox["y_max"]):
+#				isInBounds = False
+#		else:
+#			volume = printerProfile["volume"]
+#			if(y < 0 or y > volume["depth"]):
+#				isInBounds = False
+#	return isInBounds
+
+#def IsZInBounds(z, printerProfile,octolapsePrinterProfile):
+#	"""Determines if the given X coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
+#	isInBounds = True
+#	if(z is not None):
+#		if(printerProfile["volume"]["custom_box"] != False):
+#			customBox = printerProfile["volume"]["custom_box"]
+#			if(z < customBox["z_min"] or z > customBox["z_max"]):
+#				isInBounds = False
+#		else:
+#			volume = printerProfile["volume"]
+#			if(z < 0 or z > volume["height"]):
+#				isInBounds = False
+#	return isInBounds

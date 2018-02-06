@@ -44,7 +44,13 @@ $(function () {
                 }
             });
         };
-
+        
+        self.getPossitionErrorColor = ko.pureComputed(function () {
+            if (this.HasPositionError())
+                return "Red";
+            else
+                return "";
+        }, self);
 
         self.getXHomedStateText = ko.pureComputed(function () {
             if (self.XHomed())

@@ -61,7 +61,7 @@
             <div>Errors</div>
             <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getHasPositionErrorStateText}">
               <span class="fa fa-square fa-stack-2x"></span>
-              <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError())"></span>
+              <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError()), style: {color:PositionState.getPossitionErrorColor} "></span>
             </span>
           </div>
         </div>

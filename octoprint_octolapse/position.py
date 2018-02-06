@@ -9,21 +9,24 @@ import octoprint_octolapse.utility as utility
 def GetFormattedCoordinates(x,y,z,e):
 	xString = "None"
 	if(x is not None):
-		xString = "{0:.4f}".format(float(x))
+		xString = GetFormattedCoordinate(float(x))
 
 	yString = "None"
 	if(y is not None):
-		yString = "{0:.4f}".format(float(y))
+		yString = GetFormattedCoordinate(float(y))
 
 	zString = "None"
 	if(z is not None):
-		zString = "{0:.4f}".format(float(z))
+		zString = GetFormattedCoordinate(float(z))
 
 	eString = "None"
 	if(e is not None):
-		eString = "{0:.5f}".format(float(e))
+		eString = GetFormattedCoordinate(float(e))
 
 	return "(X:{0},Y:{1},Z:{2},E:{3})".format(xString,yString,zString,eString)
+
+def GetFormattedCoordinate(coord):
+	return "{0:.5f}".format(coord)
 
 class Pos(object):
 	def __init__(self, octoprintPrinterProfile, pos=None):
@@ -157,7 +160,7 @@ class Pos(object):
 			"Layer":self.Layer,
 			"Height":self.Height
 		}
-	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False):
+	def UpdatePosition(self, boundingBox, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
 			self.F = float(f)
 		if(force):
@@ -221,7 +224,7 @@ class Pos(object):
 					self.EPrevious = self.E
 					self.E = e + self.EOffset
 
-			if(not utility.IsInBounds(self.X, self.Y, self.Z, self.OctoprintPrinterProfile)):
+			if(not utility.IsInBounds(boundingBox, x=self.X, y = self.Y, z=self.Z)):
 				self.HasPositionError = True
 				self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(GetFormattedCoordinates(self.X,self.Y,self.Z,self.E))
 			else:
@@ -234,6 +237,13 @@ class Position(object):
 		self.Settings = octolapseSettings
 		self.Printer = self.Settings.CurrentPrinter()
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
+		self.Origin = {
+			"X":self.Printer.origin_x,
+			"Y":self.Printer.origin_y,
+			"Z":self.Printer.origin_z
+			}
+
+		self.BoundingBox = utility.GetBoundingBox(self.Printer,octoprintPrinterProfile)
 		self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
 		self.Positions = []
 		self.Reset()
@@ -247,17 +257,17 @@ class Position(object):
 		self.Commands = Commands()
 	
 	def Reset(self):
-
+		# todo:  This reset function doesn't seem to reset everything.
 		self.Positions = []
 		
 		self.SavedPosition = None
 
 	
-	def UpdatePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
+	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return
 		pos = self.Positions[0]
-		pos.UpdatePosition(x,y,z,e,f,force)
+		pos.UpdatePosition(self.BoundingBox, x,y,z,e,f,force)
 	def SavePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return
@@ -381,6 +391,8 @@ class Position(object):
 
 		# apply the command to the position tracker
 		if(command is not None):
+			# I'm currently too lazy to keep this DRY
+			# TODO:  Make DRY
 			if(command.Command in ["G0","G1"]):
 				#Movement
 				if(command.Parse()):
@@ -396,14 +408,14 @@ class Position(object):
 						if(pos.HasPositionError and not pos.IsRelative):
 							pos.HasPositionError = False
 							pos.PositionError = ""
-						pos.UpdatePosition(x,y,z,e=None,f=f)
+						pos.UpdatePosition(self.BoundingBox, x,y,z,e=None,f=f)
 						
 					if(e is not None):
 						if(pos.IsExtruderRelative is not None):
 							if(pos.HasPositionError and not pos.IsExtruderRelative):
 								pos.HasPositionError = False
 								pos.PositionError = ""
-							pos.UpdatePosition(x=None,y=None,z=None,e=e, f=None)
+							pos.UpdatePosition(self.BoundingBox, x=None,y=None,z=None,e=e, f=None)
 						else:
 							self.Settings.CurrentDebugProfile().LogError("Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative).")
 					message = "Position Change - {0} - {1} Move From(X:{2},Y:{3},Z:{4},E:{5}) - To(X:{6},Y:{7},Z:{8},E:{9})"
@@ -417,23 +429,52 @@ class Position(object):
 				else:
 					self.Settings.CurrentDebugProfile().LogError("Position - Unable to parse the gcode command: {0}".format(gcode))
 			elif(command.Command == "G28"):
-				# Home
+				# Home 
 				if(command.Parse()):
+					
 					x = command.Parameters["X"].Value
 					y = command.Parameters["Y"].Value
 					z = command.Parameters["Z"].Value
+					xHomed = False
+					yHomed = False
+					zHomed = False
 					if(x is not None):
-						pos.XHomed = True
+						xHomed = True
 					if(y is not None):
-						pos.YHomed = True
+						yHomed = True
 					if(z is not None):
-						pos.ZHomed = True
+						zHomed = True
 					if(x is None and y is None and z is None):
-						pos.XHomed = True
-						pos.YHomed = True
-						pos.ZHomed = True
+						xHomed = True
+						yHomed = True
+						zHomed = True
 
-					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G28 - Homing to {0}".format(GetFormattedCoordinates(x,y,z,pos.E)))
+					homeStrings = []
+					if(xHomed):
+						pos.XHomed = True
+						pos.X = self.Origin["X"]
+						if(pos.X is None):
+							homeStrings.append("Homing X to Unknown Origin.")
+						else:
+							homeStrings.append("Homing X to {0}.".format(GetFormattedCoordinate(pos.X)))
+					zHomedString = ""
+					if(yHomed):
+						pos.YHomed = True
+						pos.Y = self.Origin["Y"]
+						if(pos.Y is None):
+							homeStrings.append("Homing Y to Unknown Origin.")
+						else:
+							homeStrings.append("Homing Y to {0}.".format(GetFormattedCoordinate(pos.Y)))
+					xHomedString = ""
+					if(zHomed):
+						pos.ZHomed = True
+						pos.Z = self.Origin["Z"]
+						if(pos.Z is None):
+							homeStrings.append("Homing Z to Unknown Origin.")
+						else:
+							homeStrings.append("Homing Z to {0}.".format(GetFormattedCoordinate(pos.Z)))
+
+					self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received G28 - ".format(" ".join(homeStrings)))
 					pos.HasPositionError = False
 					pos.PositionError = None
 				else:

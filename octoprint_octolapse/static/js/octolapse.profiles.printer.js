@@ -23,7 +23,15 @@ $(function() {
         self.z_hop_speed = ko.observable(values.z_hop_speed);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
-
+        self.origin_x = ko.observable(values.origin_x);
+        self.origin_y = ko.observable(values.origin_y);
+        self.origin_z = ko.observable(values.origin_z);
+        self.min_x = ko.observable(values.min_x);
+        self.max_x = ko.observable(values.max_x);
+        self.min_y = ko.observable(values.min_y);
+        self.max_y = ko.observable(values.max_y);
+        self.min_z = ko.observable(values.min_z);
+        self.max_z = ko.observable(values.max_z);
 
     };
 });

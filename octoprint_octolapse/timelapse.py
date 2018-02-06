@@ -27,7 +27,8 @@ class Timelapse(object):
 			  , onTimelapseStopping = None
 			  , onTimelapseStopped = None
 			  , onStateChanged = None
-			  , onTimelapseStart = None):
+			  , onTimelapseStart = None
+			  , onSnapshotPositionError = None):
 		# config variables - These don't change even after a reset
 		self.Settings = octolapseSettings
 		self.DataFolder = dataFolder
@@ -44,6 +45,7 @@ class Timelapse(object):
 		self.TimelapseStoppedCallback = onTimelapseStopped
 		self.OnStateChangedCallback = onStateChanged
 		self.OnTimelapseStartCallback = onTimelapseStart
+		self.OnSnapshotPositionErrorCallback = onSnapshotPositionError
 		self.Responses = Responses() # Used to decode responses from the 3d printer
 		self.Commands = Commands() # used to parse and generate gcode
 		self.Triggers = Triggers(octolapseSettings)
@@ -62,6 +64,7 @@ class Timelapse(object):
 		# State tracking variables
 		self._reset()
 
+	
 	# public functions		
 	def StartTimelapse(self,octoprintPrinter, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder):
 		self._reset()
@@ -387,8 +390,9 @@ class Timelapse(object):
 			self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x,y,z, self.Position.F(), self.Position.IsRelative(), self.Position.IsExtruderRelative(), self.Position.Extruder, self.Position.DistanceToZLift(), savedCommand=self.SavedCommand)
 			# make sure we acutally received gcode
 			if(self.SnapshotGcodes is None):
-				self.Settings.CurrentDebugProfile().LogSnapshotGcode("No snapshot gcode was created for this snapshot.  Aborting this snapshot.")
 				self._resetSnapshot();
+				self._resumePrint()
+				self._onSnapshotPositionError()
 				return False, "Error - No Snapshot Gcode";
 
 			self.State = TimelapseState.SendingSnapshotGcode
@@ -422,6 +426,13 @@ class Timelapse(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 			# our best bet of fixing things up here is just to return to the previous position.
 			self._sendReturnCommands()
+	def _onSnapshotPositionError(self):
+		message = "No snapshot gcode was created for this snapshot.  Aborting this snapshot.  Errors: {0}".format(self.Gcode.SnapshotPositionErrors)
+		self.Settings.CurrentDebugProfile().LogError(message)
+		if(self.OnSnapshotPositionErrorCallback is not None):
+		   self.OnSnapshotPositionErrorCallback(self.Gcode.SnapshotPositionErrors)
+		
+
 	def _positionReceived_ResumePrint(self, x,y,z,e):
 		try:
 			if(not self.Position.IsAtCurrentPosition(x,y,None)):
