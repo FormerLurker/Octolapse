@@ -70,8 +70,8 @@ class Triggers(object):
 					currentTrigger.Update(position)
 
 				# Make sure there are no position errors (unknown position, out of bounds, etc)
-				if(position.HasPositionError()):
-					self.Settings.CurrentDebugProfile().LogError("A trigger has a position error:{0}".format(position.PositionError))
+				if(position.HasPositionError(0)):
+					self.Settings.CurrentDebugProfile().LogError("A trigger has a position error:{0}".format(position.PositionError(0)))
 				# see if the current trigger is triggering, indicting that a snapshot should be taken
 		except Exception, e:
 			self.Settings.CurrentDebugProfile().LogException(e)
@@ -269,7 +269,7 @@ class GcodeTrigger(Trigger):
 			state.ResetState()
 			# Don't update the trigger if we don't have a homed axis
 			# Make sure to use the previous value so the homing operation can complete
-			if(not position.HasHomedAxis(1)):
+			if(not position.HasHomedPosition(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
 			else:
@@ -397,7 +397,7 @@ class LayerTrigger(Trigger):
 			state.ResetState()
 			# Don't update the trigger if we don't have a homed axis
 			# Make sure to use the previous value so the homing operation can complete
-			if(not position.HasHomedAxis(1)):
+			if(not position.HasHomedPosition(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
 			else:
@@ -573,7 +573,7 @@ class TimerTrigger(Trigger):
 
 			# Don't update the trigger if we don't have a homed axis
 			# Make sure to use the previous value so the homing operation can complete
-			if(not position.HasHomedAxis(1)):
+			if(not position.HasHomedPosition(1)):
 				state.IsTriggered = False
 				state.IsHomed = False
 			else:

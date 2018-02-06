@@ -107,46 +107,67 @@
 
     </div>
   </div>
-  <div>
+  <div class="control-group">
+    <label class="control-label">Auto-Detect Home Position</label>
+    <div class="controls">
+      <label class="checkbox">
+        <input name="auto_detect_origin" type="checkbox" data-bind="checked: auto_detect_origin" title="Auto-detect the current position after receiving a home command"/>Enabled
+      </label>
+    </div>
+  </div>
+
+  <div data-bind="visible:!auto_detect_origin()">
     <hr/>
     <h5>Home Position</h5>
     <p>The home position, if provided, will be used to determine the X,Y and Z coordinates when the printer is homed.  If these are left empty, octolapse will wait until it encounters an absolute position for each axis before taking any snapshots.</p>
-  </div>
 
 
-  <div class="control-group">
-    <label class="control-label">X Origin</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
-        <span class="add-on">mm</span>
+
+    <div class="control-group">
+      <label class="control-label">X Origin</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
       </div>
-      <div class="error_label_container text-error" ></div>
     </div>
-  </div>
 
-  <div class="control-group">
-    <label class="control-label">Y Origin</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
-        <span class="add-on">mm</span>
+    <div class="control-group">
+      <label class="control-label">Y Origin</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
       </div>
-      <div class="error_label_container text-error" ></div>
     </div>
-  </div>
 
-  <div class="control-group">
-    <label class="control-label">Z Origin</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
-        <span class="add-on">mm</span>
+    <div class="control-group">
+      <label class="control-label">Z Origin</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
       </div>
-      <div class="error_label_container text-error" ></div>
     </div>
   </div>
   <div>
+    <div class="control-group">
+      <label class="control-label">Abort Snapshot When Out-Of-Bounds</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds"/>Enabled
+        </label>
+        <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.</span>
+      </div>
+    </div>
+
+    
     <hr/>
     <h5>Print Volume</h5>
     <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
@@ -161,7 +182,7 @@
             <input name="min_x" type="number" class="input-small text-right" data-bind="value: min_x" step="any" />
             <span class="add-on">mm</span>
           </div>
-          <div class="error_label_container text-error" ></div>   
+          <div class="error_label_container text-error" ></div>
         </div>
         <div class="span6">
           <div class="input-prepend input-append">

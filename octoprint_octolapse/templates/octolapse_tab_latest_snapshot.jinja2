@@ -1,23 +1,13 @@
 <script type="text/html" id="latest-snapshot-template">
-  <div id="octolapse_latest_snapshot_dialog" class="modal fade">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
+  <div id="octolapse_latest_snapshot_dialog" class="latest-snapshot-modal fade">
+    
           <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-          <h3 class="modal-title">Latest Snapshot</h3>
-        </div>
-        <div class="modal-body">
-          <div id="octolapse_previous_snapshot_container" >
-            <img class="octolapse-fade-in" id="octolapse_latest_snapshot"></img>
-            <img id="octolapse_previous_snapshot"></img>
+          
+          <img id="octolapse_previous_snapshot"></img>
+          <img class="octolapse-fade-in" id="octolapse_latest_snapshot"></img>
+          <a href="#" class="cancel btn btn-primary" data-bind="click: cancelLatestSnapshotDialog">Close</a>  
+          
+          
 
-          </div>
-
-        </div>
-        <div class="modal-footer" style="bottom:0;position:relative">
-          <a href="#" class="btn btn-default cancel input-block-level" data-bind="click: cancelLatestSnapshotDialog">Cancel</a>
-        </div>
-      </div>
-    </div>
   </div>
 </script>

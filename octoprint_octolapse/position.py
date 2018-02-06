@@ -63,16 +63,17 @@ class Pos(object):
 		self.IsZHop = False if pos is None else pos.IsZHop
 		self.HasPositionChanged = False if pos is None else pos.HasPositionChanged
 		self.HasStateChanged = False if pos is None else pos.HasStateChanged
+		self.HasReceivedHomeCommand = False if pos is None else pos.HasStateChanged
 		#Error Flags
 		self.HasPositionError = False if pos is None else pos.HasPositionError
 		self.PositionError = None if pos is None else pos.PositionError
-		
 	def ResetState(self):
 		self.IsLayerChange = False
 		self.IsHeightChange = False
 		self.IsZHop = False
 		self.HasPositionChanged = False 
 		self.HasStateChanged = False
+		self.HasReceivedHomeCommand = False
 	def IsStateEqual(self, pos, tolerance):
 		if(
 				self.XHomed == pos.XHomed
@@ -87,7 +88,8 @@ class Pos(object):
 			and utility.round_to(pos.Height, tolerance) != utility.round_to(self.Height, tolerance)
 			and utility.round_to(pos.LastExtrusionHeight, tolerance) != utility.round_to(self.LastExtrusionHeight, tolerance)
 			and self.HasPositionError == pos.HasPositionError
-			and self.PositionError == pos.PositionError):
+			and self.PositionError == pos.PositionError
+			and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand):
 			return True
 		
 		return False
@@ -117,7 +119,8 @@ class Pos(object):
 			"Height":self.Height,
 			"LastExtrusionHeight":self.LastExtrusionHeight,
 			"HasPositionError":self.HasPositionError,
-			"PositionError":self.PositionError	
+			"PositionError":self.PositionError,
+			"HasReceivedHomeCommand":self.HasReceivedHomeCommand
 		}
 	def ToPositionDict(self):
 		return {
@@ -158,7 +161,8 @@ class Pos(object):
 			"HasStateChanged":self.HasStateChanged,
 			"IsLayerChange":self.IsLayerChange,
 			"Layer":self.Layer,
-			"Height":self.Height
+			"Height":self.Height,
+			"HasReceivedHomeCommand" : self.HasReceivedHomeCommand
 		}
 	def UpdatePosition(self, boundingBox, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
@@ -261,8 +265,6 @@ class Position(object):
 		self.Positions = []
 		
 		self.SavedPosition = None
-
-	
 	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return
@@ -312,10 +314,6 @@ class Position(object):
 		if(len(self.Positions)>index):
 			return self.Positions[index].HasPositionError
 		return None
-	def X(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].X
-		return None
 	def DistanceToZLift(self, index=0):
 		if(len(self.Positions)>index):
 			pos = self.Positions[index]
@@ -323,6 +321,14 @@ class Position(object):
 			if(currentLift < self.Printer.z_hop):
 				return self.Printer.z_hop - currentLift
 			return 0
+		return None
+	def PositionError(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].PositionError
+		return None
+	def X(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].X
 		return None
 	def Y(self, index=0):
 		if(len(self.Positions)>index):
@@ -364,6 +370,11 @@ class Position(object):
 		if(len(self.Positions)>index):
 			return self.Positions[index].IsExtruderRelative
 		return None
+	def HasReceivedHomeCommand(self, index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index].HasReceivedHomeCommand and self.HasHomedAxis(index)
+		return False
+
 	def UndoUpdate(self):
 		if(len(self.Positions)>0):
 			del self.Positions[0]
@@ -431,7 +442,7 @@ class Position(object):
 			elif(command.Command == "G28"):
 				# Home 
 				if(command.Parse()):
-					
+					pos.HasReceivedHomeCommand = True
 					x = command.Parameters["X"].Value
 					y = command.Parameters["Y"].Value
 					z = command.Parameters["Z"].Value
@@ -452,7 +463,7 @@ class Position(object):
 					homeStrings = []
 					if(xHomed):
 						pos.XHomed = True
-						pos.X = self.Origin["X"]
+						pos.X = self.Origin["X"] if not self.Printer.auto_detect_origin else None
 						if(pos.X is None):
 							homeStrings.append("Homing X to Unknown Origin.")
 						else:
@@ -460,7 +471,7 @@ class Position(object):
 					zHomedString = ""
 					if(yHomed):
 						pos.YHomed = True
-						pos.Y = self.Origin["Y"]
+						pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_origin else None
 						if(pos.Y is None):
 							homeStrings.append("Homing Y to Unknown Origin.")
 						else:
@@ -468,7 +479,7 @@ class Position(object):
 					xHomedString = ""
 					if(zHomed):
 						pos.ZHomed = True
-						pos.Z = self.Origin["Z"]
+						pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_origin else None
 						if(pos.Z is None):
 							homeStrings.append("Homing Z to Unknown Origin.")
 						else:
@@ -557,7 +568,7 @@ class Position(object):
 			pos.HasPositionChanged = not pos.IsPositionEqual(previousPos,self.PrinterTolerance)
 			pos.HasStateChanged = not pos.IsStateEqual(previousPos,self.PrinterTolerance )
 
-			if(self.HasHomedAxis()):
+			if(self.HasHomedPosition()):
 				
 				if(hasExtruderChanged or pos.HasPositionChanged):
 						
@@ -596,20 +607,24 @@ class Position(object):
 		self.Positions.insert(0,pos)
 		while (len(self.Positions)> 5):
 			del self.Positions[5]
+	def HasHomedPosition(self, index=0):
+		if(len(self.Positions)<=index):
+			return None
+		pos = self.Positions[index]
+		return (self.HasHomedAxis(index)
+				and pos.X is not None
+				and pos.Y is not None
+				and pos.Z is not None)
+
 	
 	def HasHomedAxis(self, index=0):
 		if(len(self.Positions)<=index):
 			return None
-		
 		pos = self.Positions[index]
-
 		return (pos.XHomed
 				and pos.YHomed
-			    and pos.ZHomed
-				and pos.X is not None
-				and pos.Y is not None
-				and pos.Z is not None)
-	
+			    and pos.ZHomed)
+
 	def XRelative(self):
 		if(len(self.Positions)<2):
 			return None

@@ -28,22 +28,9 @@ span.octolapse-icon-text {
     font-weight: 600;
     color: greenyellow;
 }
-#refresh_thumbnail_container {
-    z-index: 5;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    
-}
-table.octolapse-profiles {
-    border-collapse: collapse;
-    table-layout: auto;
-    max-width: 100%;
-    
-}
 
 table.octolapse-profiles td {
-    font-size:small
+    font-size: small
 }
 table.octolapse-profiles th.profile_name {
     width:35%
@@ -88,19 +75,39 @@ table.octolapse-profiles th.profile_action{
     min-height: 150px;
 }
 
-#octolapse_latest_snapshot_dialog.modal {
-    width: auto;
-    max-width: 100%;
-    left: unset;
-    margin-left: auto;
-    margin-right: auto;
-    margin: 10%;
+#refresh_thumbnail_container {
+    z-index: 5;
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }
 
-#octolapse_latest_snapshot_dialog .modal-body {
-    max-width: 100% !important;
-    width: auto;
+table.octolapse-profiles {
+    border-collapse: collapse;
+    table-layout: auto;
+    max-width: 100%;
 }
+
+
+
+.latest-snapshot-modal .close {
+    z-index: 1000;
+    position: absolute;
+    right: 50px;
+    top: 50px;
+    font-size: 50px;
+    
+}
+
+.latest-snapshot-modal .cancel {
+    z-index: 1000;
+    position: absolute;
+    bottom: 10px;
+    width:100px;
+    left:50%;
+    margin-left:-50px;
+}
+
 
 #octolapse_previous_snapshot_thumbnail,
 #octolapse_latest_snapshot_thumbnail {
@@ -123,22 +130,18 @@ table.octolapse-profiles th.profile_action{
 }
 #octolapse_previous_snapshot,
 #octolapse_latest_snapshot {
-    width:100%;
-    height:100%;
-    max-width:100%;
-    max-height:100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto;
+    overflow: auto;
 }
 
-#octolapse_latest_snapshot {
-    position: relative;
-    z-index: 2;
-}
-#octolapse_previous_snapshot {
-    position: absolute;
-    top:0;
-    left:0;
-    z-index:1
-}
+
 
 #octolapse_latest_snapshot {
 

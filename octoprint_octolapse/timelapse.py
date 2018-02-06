@@ -28,7 +28,8 @@ class Timelapse(object):
 			  , onTimelapseStopped = None
 			  , onStateChanged = None
 			  , onTimelapseStart = None
-			  , onSnapshotPositionError = None):
+			  , onSnapshotPositionError = None
+			  , onPositionError = None):
 		# config variables - These don't change even after a reset
 		self.Settings = octolapseSettings
 		self.DataFolder = dataFolder
@@ -46,6 +47,7 @@ class Timelapse(object):
 		self.OnStateChangedCallback = onStateChanged
 		self.OnTimelapseStartCallback = onTimelapseStart
 		self.OnSnapshotPositionErrorCallback = onSnapshotPositionError
+		self.OnPositionErrorCallback = onPositionError
 		self.Responses = Responses() # Used to decode responses from the 3d printer
 		self.Commands = Commands() # used to parse and generate gcode
 		self.Triggers = Triggers(octolapseSettings)
@@ -147,8 +149,6 @@ class Timelapse(object):
 						return
 				self._renderTimelapse()
 				self._reset();
-			else:
-				self.Settings.CurrentDebugProfile().LogError("timelapse.py - An EndTimelapse request was made, but the timelapse was idling!")
 		except Exception as e:
 			self.Settings.CurrentDebugProfile().LogException(e)
 	def PrintPaused(self):
@@ -193,6 +193,8 @@ class Timelapse(object):
 			extruderChangeDict = None
 			triggerChangeList = None
 			self.Position.Update(cmd)
+			if(self.Position.HasPositionError(0)):
+				self._onPositionError()
 			# capture any changes, if neccessary, to the position, position state and extruder state
 			# Note:  We'll get the trigger state later
 			if(self.Settings.show_position_changes and (self.Position.HasPositionChanged() or  not self.HasSentInitialStatus)):
@@ -204,8 +206,14 @@ class Timelapse(object):
 			# get the position state in case it has changed
 			# if there has been a position or extruder state change, inform any listener
 			isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
-
-			if(self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing()):
+			# check to see if we've just completed a home command
+			if(self.State == TimelapseState.WaitingForTrigger and self.Position.HasReceivedHomeCommand(1) and self.OctoprintPrinter.is_printing()):
+				if(self.Printer.auto_detect_origin):
+					self.State = TimelapseState.AcquiringHomeLocation
+					self.SavedCommand = cmd
+					cmd = None,
+					self._pausePrint()
+			elif(self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing() and not self.Position.HasPositionError(0)):
 				self.Triggers.Update(self.Position,cmd)
 
 				# If our triggers have changed, update our dict
@@ -289,6 +297,9 @@ class Timelapse(object):
 		y=payload["y"]
 		z=payload["z"]
 		e=payload["e"]
+		if(self.State == TimelapseState.AcquiringHomeLocation):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
+			self._positionReceived_Home(x,y,z,e)
 		if(self.State == TimelapseState.RequestingReturnPosition):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
 			self._positionReceived_Return(x,y,z,e)
@@ -365,6 +376,16 @@ class Timelapse(object):
 		if(waitingTrigger is not None):
 			return True
 		return False
+	def _positionReceived_Home(self,x,y,z,e):
+		try:
+			self.Position.UpdatePosition(x=x,y=y,z=z,e=e,force=True)
+		except Exception as e:
+			self.Settings.CurrentDebugProfile().LogException(e)
+			# we need to abandon the snapshot completely, reset and resume
+		self.State = TimelapseState.WaitingForTrigger
+		self.OctoprintPrinter.commands(self.SavedCommand)
+		self.SavedCommand = "";
+		self._resumePrint()
 	def _positionReceived_Return(self, x,y,z,e):
 		try:
 
@@ -394,6 +415,9 @@ class Timelapse(object):
 				self._resumePrint()
 				self._onSnapshotPositionError()
 				return False, "Error - No Snapshot Gcode";
+			elif (self.Gcode.HasSnapshotPositionErrors):
+				# there is a position error, but gcode was generated.  Just report it to the user.
+				self._onSnapshotPositionError()
 
 			self.State = TimelapseState.SendingSnapshotGcode
 
@@ -426,11 +450,20 @@ class Timelapse(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 			# our best bet of fixing things up here is just to return to the previous position.
 			self._sendReturnCommands()
+	def _onPositionError(self):
+		message = self.Position.PositionError(0)
+		self.Settings.CurrentDebugProfile().LogError(message)
+		if(self.OnPositionErrorCallback is not None):
+		   self.OnPositionErrorCallback(message)
+
 	def _onSnapshotPositionError(self):
-		message = "No snapshot gcode was created for this snapshot.  Aborting this snapshot.  Errors: {0}".format(self.Gcode.SnapshotPositionErrors)
+		if(self.Printer.abort_out_of_bounds):
+			message = "No snapshot gcode was created for this snapshot.  Aborting this snapshot.  Details: {0}".format(self.Gcode.SnapshotPositionErrors)
+		else:
+			message = "The snapshot position has been updated due to an out-of-bounds error.  Details: {0}".format(self.Gcode.SnapshotPositionErrors)
 		self.Settings.CurrentDebugProfile().LogError(message)
 		if(self.OnSnapshotPositionErrorCallback is not None):
-		   self.OnSnapshotPositionErrorCallback(self.Gcode.SnapshotPositionErrors)
+		   self.OnSnapshotPositionErrorCallback(message)
 		
 
 	def _positionReceived_ResumePrint(self, x,y,z,e):
@@ -636,7 +669,7 @@ class Timelapse(object):
 		payload = dict(gcode="unknown",
 				movie=finalFilename,
 				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse.  Your timelapse has been synchronized and is now available within the default timelapse plugin tab.",
+				movie_prefix="from Octolapse has been synchronized and is now available within the default timelapse plugin tab.  Octolapse ",
 				returncode=0,
 				reason="See the octolapse log for details.")
 		if(self.OnRenderingSynchronizeCompleteCallback is not None):
@@ -694,8 +727,9 @@ class Timelapse(object):
 class TimelapseState(object):
 	Idle = 1
 	WaitingForTrigger = 2
-	RequestingReturnPosition = 3
-	SendingSnapshotGcode = 4
-	TakingSnapshot = 5
-	SendingReturnGcode = 6
-	WaitingToRender = 7
+	AcquiringHomeLocation = 3
+	RequestingReturnPosition = 4
+	SendingSnapshotGcode = 5
+	TakingSnapshot = 6
+	SendingReturnGcode = 7
+	WaitingToRender = 8

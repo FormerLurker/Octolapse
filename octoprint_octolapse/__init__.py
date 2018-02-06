@@ -409,7 +409,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , onTimelapseStopped = self.OnTimelapseStopped
 							  , onStateChanged = self.OnTimelapseStateChanged
 							  , onTimelapseStart = self.OnTimelapseStart
-							  ,onSnapshotPositionError = self.OnSnapshotPositionError)
+							  , onSnapshotPositionError = self.OnSnapshotPositionError
+							  , onPositionError = self.OnPositionError)
 			self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 		except Exception, e:
 			if(self.Settings is not None):
@@ -479,6 +480,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Unable to start the timelapse. Error:{0}".format(result["error"]))
 			return
 
+		if(result["warning"]!=False):
+			self.SendPopupMessage(result["warning"]);
+
 		self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Started - Timelapse Started.")
 		if(self.Settings.CurrentCamera().apply_settings_before_print):
 			self.ApplyCameraSettings(self.Settings.CurrentCamera())
@@ -490,16 +494,16 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			ffmpegPath = self._settings.settings.get(["webcam","ffmpeg"])
 			if(self.Settings.CurrentRendering().enabled and ffmpegPath == ""):
 				self.Settings.CurrentDebugProfile().LogError("A timelapse was started, but there is no ffmpeg path set!")
-				return {'success':False, 'error':"No ffmpeg path is set.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG."}
+				return {'success':False, 'error':"No ffmpeg path is set.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.",'warning':False}
 		except Exception, e:
 			if(self.Settings is not None):
 				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
 				self._logger.exception(e)
-			return {'success':False, 'error':"An exception occurred while trying to acquire the ffmpeg path from Octoprint.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG."}
+			return {'success':False, 'error':"An exception occurred while trying to acquire the ffmpeg path from Octoprint.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.",'warning':False}
 		if(not os.path.isfile(ffmpegPath)):
 			# todo:  throw some kind of exception
-			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath)}
+			return {'success':False, 'error':"The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.".format(ffmpegPath),'warning':False}
 		g90InfluencesExtruder = False
 		try:
 			g90InfluencesExtruder = self._settings.settings.get(["feature","g90InfluencesExtruder"])
@@ -509,9 +513,19 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				self.Settings.CurrentDebugProfile().LogException(e)
 			else:
 				self._logger.exception(e)
-		self.Timelapse.StartTimelapse(self._printer, self._printer_profile_manager.get_current(), ffmpegPath,g90InfluencesExtruder)
+
+		octoprintPrinterProfile = self._printer_profile_manager.get_current()
+		# check for circular bed.  If it exists, we can't continue:
+		if(octoprintPrinterProfile["volume"]["formFactor"] == "circle"):
+			return {'success':False, 'error':"Octolapse does not yet support circular beds, sorry.",'warning':False}
+
 		
-		return {'success':True}
+		self.Timelapse.StartTimelapse(self._printer, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder)
+
+		if(octoprintPrinterProfile["volume"]["origin"] != "lowerleft"):
+			return {'success':True, 'warning':"Octolapse has not been tested on printers with origins that are not in the lower left.  Use at your own risk."}
+
+		return {'success':True, 'warning':False}
 
 	def SendPopupMessage(self, msg):
 		self.SendPluginMessage("popup", msg)
@@ -573,11 +587,22 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		}
 		data.update(stateData)
 		self._plugin_manager.send_plugin_message(self._identifier, data)
+	def OnPositionError(self,message):
+		stateData = self.Timelapse.GetStateDict()
+		data ={
+			"type":"position-error"
+			, "msg":message
+			, "Status": self.GetStatusDict()
+			, "MainSettings": self.Settings.GetMainSettingsDict()
+		}
+		data.update(stateData)
+		self._plugin_manager.send_plugin_message(self._identifier, data)
+
 	def OnSnapshotPositionError(self,message):
 		stateData = self.Timelapse.GetStateDict()
 		data ={
 			"type":"out-of-bounds"
-			, "msg":"Unable to take a snapshot.  " + message + "  Please check your stabilization and print bed size settings."
+			, "msg":message
 			, "Status": self.GetStatusDict()
 			, "MainSettings": self.Settings.GetMainSettingsDict()
 		}
@@ -624,8 +649,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		success = payload["success"]
 		error = payload["error"]
 		data ={
-			"type":"snapshot-start"
-			, "msg":"Octolapse is taking a snapshot."
+			"type":"snapshot-complete"
+			, "msg":"Octolapse has completed the current snapshot."
 			, "Status": statusDict
 			, "MainSettings": self.Settings.GetMainSettingsDict()
 			,'success' : success
@@ -737,7 +762,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnRenderEnd(self, *args, **kwargs):
 		"""Called after all rendering and synchronization attemps are complete."""
 		payload = args[0]
-		self.SendRenderEndMessage(payload["success"])
+		if(not self.IsRenderingSynchronized):
+			self.SendRenderEndMessage(payload["success"])
 
 	
 	##~~ AssetPlugin mixin

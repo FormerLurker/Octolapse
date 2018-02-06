@@ -128,7 +128,7 @@ $(function () {
         /*
         self.plotPosition = function(x, y,z)
         {
-            console.log("Plotting Position")
+            //console.log("Plotting Position")
             var canvas = document.getElementById("octolapse_position_canvas");
             canvas.width = 250;
             canvas.height = 200;
@@ -718,9 +718,16 @@ $(function () {
                 self.IsLatestSnapshotDialogShowing = false;
             });
             // configure the dialog shown event
-            self.$SnapshotDialog.on("show.bs.modal", function () {
-               // console.log("Showing snapshot dialog.");
+            
+            self.$SnapshotDialog.on("shown.bs.modal", function () {
+                //console.log("Showing snapshot dialog.");
                 
+
+            });
+            
+            // configure the dialog show event
+            self.$SnapshotDialog.on("show.bs.modal", function () {
+               //console.log("Showing snapshot dialog.");
                 
             });
             
@@ -728,9 +735,11 @@ $(function () {
             {
                 snapshotImage = this;
                 //console.log("Snapshot Image Loaded.");
+                
+                
                 $(this).fadeIn(1000, function () {
                     //console.log("Snapshot Image has been shown, hiding previous image.");
-                    
+                   
                     
                 });
             });
@@ -764,8 +773,11 @@ $(function () {
             }
         }
         self.updateLatestSnapshotImage = function (force = false) {
-            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot())
+            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
+                //console.log("Auto-Update latest snapshot image is disabled.");
                 return;
+            }
+                
 
             if (self.IsLatestSnapshotDialogShowing) {
                 //console.log("Updating Snapshot Image");
@@ -790,8 +802,11 @@ $(function () {
             self.updateLatestSnapshotThumbnailImage(true);
         }
         self.updateLatestSnapshotThumbnailImage = function (force = false) {
-            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot())
+
+            if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
+                //console.log("Auto-Update latest snapshot image is disabled.");
                 return;
+            }
             if (self.IsTabShowing) {
                 //console.log("Updating Snapshot Image");
                 $snapshotThumbnailImage = $("#octolapse_latest_snapshot_thumbnail");
@@ -802,7 +817,9 @@ $(function () {
                 // set the current src
                 $snapshotThumbnailImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
             }
-
+            else {
+                //console.log("Octolapse tab is not showing, not updating the latest snapshot image.");
+            }
         };
                
         self.GetTriggerStateTemplate = function (type) {

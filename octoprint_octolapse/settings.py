@@ -26,16 +26,19 @@ class Printer(object):
 		self.z_hop_speed = 6000
 		self.retract_speed = 4000
 		self.snapshot_command = "snap"
-		self.printer_position_confirmation_tolerance = 0.005
+		self.printer_position_confirmation_tolerance = 0.01
+		self.auto_detect_origin = True
 		self.origin_x = None
 		self.origin_y = None
 		self.origin_z = None
+		self.abort_out_of_bounds = True
 		self.min_x = None
 		self.max_x = None
 		self.min_y = None
 		self.max_y = None
 		self.min_z = None
 		self.max_z = None
+
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
@@ -49,6 +52,17 @@ class Printer(object):
 				self.z_hop_speed = printer.z_hop_speed
 				self.snapshot_command = printer.snapshot_command
 				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
+				self.auto_detect_origin = printer.auto_detect_origin
+				self.origin_x = printer.origin_x
+				self.origin_y = printer.origin_y
+				self.origin_z = printer.origin_z
+				self.abort_out_of_bounds = printer.abort_out_of_bounds
+				self.min_x = printer.min_x
+				self.max_x = printer.max_x
+				self.min_y = printer.min_y
+				self.max_y = printer.max_y
+				self.min_z = printer.min_z
+				self.max_z = printer.max_z
 			else:
 				self.Update(printer)
 	def Update(self,changes):
@@ -74,13 +88,16 @@ class Printer(object):
 			self.z_hop_speed = utility.getint(changes["z_hop_speed"],self.z_hop_speed)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
-
+		if("auto_detect_origin" in changes.keys()):
+			self.auto_detect_origin = utility.getbool(changes["auto_detect_origin"],self.auto_detect_origin)
 		if("origin_x" in changes.keys()):
 			self.origin_x = utility.getnullablefloat(changes["origin_x"],self.origin_x)
 		if("origin_y" in changes.keys()):
 			self.origin_y = utility.getnullablefloat(changes["origin_y"],self.origin_y)
 		if("origin_z" in changes.keys()):
 			self.origin_z = utility.getnullablefloat(changes["origin_z"],self.origin_z)
+		if("abort_out_of_bounds" in changes.keys()):
+			self.abort_out_of_bounds = utility.getbool(changes["abort_out_of_bounds"],self.abort_out_of_bounds)
 		if("min_x" in changes.keys()):
 			self.min_x = utility.getnullablefloat(changes["min_x"],self.min_x)
 		if("max_x" in changes.keys()):
@@ -108,9 +125,11 @@ class Printer(object):
 			'z_hop_speed'		: self.z_hop_speed,
 			'snapshot_command'	: self.snapshot_command,
 			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance,
+			'auto_detect_origin' : self.auto_detect_origin,
 			'origin_x' : self.origin_x,
 			'origin_y' : self.origin_y,
 			'origin_z' : self.origin_z,
+			'abort_out_of_bounds' : self.abort_out_of_bounds,
 			'min_x' : self.min_x,
 			'max_x' : self.max_x,
 			'min_y' : self.min_y,
@@ -170,6 +189,7 @@ class Stabilization(object):
 			self.name = utility.getstring(changes["name"],self.name)
 		if("description" in changes.keys()):
 			self.description = utility.getstring(changes["description"],self.description)
+		
 		if("x_type" in changes.keys()):
 			self.x_type = utility.getstring(changes["x_type"],self.x_type)
 		if("x_fixed_coordinate" in changes.keys()):
@@ -213,9 +233,9 @@ class Stabilization(object):
 		
 	def ToDict(self):
 		return {
+			'guid'							: self.guid,
 			'name'							: self.name,
 			'description'					: self.description,
-			'guid'							: self.guid,
 			'x_type'						: self.x_type,
 			'x_fixed_coordinate'			: self.x_fixed_coordinate,
 			'x_fixed_path'					: self.x_fixed_path,

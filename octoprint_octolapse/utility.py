@@ -213,6 +213,33 @@ def IsInBounds(boundingBox, x=None, y=None, z=None ):
 
 	return xIsInBounds and yIsInBounds and zIsInBounds
 
+def GetClosestInBoundsPosition(boundingBox, x=None, y=None,z=None):
+
+	minX = boundingBox['min_x']
+	maxX = boundingBox['max_x']
+	minY = boundingBox['min_y']
+	maxY = boundingBox['max_y']
+	minZ = boundingBox['min_z']
+	maxZ = boundingBox['max_z']
+	if(x is not None):
+		if(x > maxX):
+			x = maxX
+		elif(x < minX):
+			x = minX
+
+	if(y is not None):
+		if(y > maxY):
+			y = maxY
+		elif(y < minY):
+			y = minY
+
+	if(z is not None):
+		if(z > maxZ):
+			z = maxZ
+		elif(z < minZ):
+			z = minZ
+	return {'X':x,'Y':y,'Z':z}
+
 def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
 	# get octolapse min and max
 	minX = octolapsePrinterProfile.min_x

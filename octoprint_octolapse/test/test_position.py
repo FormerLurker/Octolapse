@@ -192,7 +192,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.ZHomed)
 		self.assertTrue(position.Z == None)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 		position.Reset()
 		position.Update("G28 X");
 		self.assertTrue(position.X == None)
@@ -201,7 +201,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(not position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(not position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Y");
@@ -211,7 +211,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(not position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Z");
@@ -221,7 +221,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(not position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Z X Y");
@@ -231,7 +231,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 W");
@@ -241,7 +241,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z is None)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("g28")
@@ -253,7 +253,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z == 0)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(not position.HasHomedAxis())
+		self.assertTrue(not position.HasHomedPosition())
 		# give it another position, now we have homed axis with a known position
 		position.Update("g1 x0 y0 z0")
 		self.assertTrue(position.X == 0)
@@ -262,7 +262,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.YHomed)
 		self.assertTrue(position.Z == 0)
 		self.assertTrue(position.ZHomed)
-		self.assertTrue(position.HasHomedAxis())
+		self.assertTrue(position.HasHomedPosition())
 
 	def test_UpdatePosition_force(self):
 		"""Test the UpdatePosition function with the force option set to true."""

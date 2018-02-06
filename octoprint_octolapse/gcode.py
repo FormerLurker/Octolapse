@@ -82,19 +82,28 @@ class SnapshotGcodeGenerator(object):
 		coords = dict(X=self.GetSnapshotCoordinate(xPath), Y=self.GetSnapshotCoordinate(yPath))
 		
 		if(not utility.IsInBounds(self.BoundingBox, x= coords["X"])):
+			
 			message = "The snapshot X position ({0}) is out of bounds!".format(coords["X"]);
-			self.SnapshotPositionErrors = message;
 			self.HasSnapshotPositionErrors = True
 			self.Settings.CurrentDebugProfile().LogError("gcode.py - GetSnapshotPosition - {0}".format(message))
-			coords["X"] = None
+			if(self.Printer.abort_out_of_bounds):
+				coords["X"] = None
+			else:
+				coords["X"] = utility.GetClosestInBoundsPosition(self.BoundingBox, x = coords["X"])["X"]
+				message += "  Using nearest in-bound position ({0}).".format(coords["X"])
+			self.SnapshotPositionErrors += message;
 		if(not utility.IsInBounds(self.BoundingBox, y= coords["Y"])):
 			message = "The snapshot Y position ({0}) is out of bounds!".format(coords["Y"]);
+			self.HasSnapshotPositionErrors = True
+			self.Settings.CurrentDebugProfile().LogError("gcode.py - GetSnapshotPosition - {0}".format(message))
+			if(self.Printer.abort_out_of_bounds):
+				coords["Y"] = None
+			else:
+				coords["Y"] = utility.GetClosestInBoundsPosition(self.BoundingBox, y = coords["Y"])["Y"]
+				message += "  Using nearest in-bound position ({0}).".format(coords["Y"])
 			if(len(self.SnapshotPositionErrors)>0):
 				self.SnapshotPositionErrors += "  ";
 			self.SnapshotPositionErrors += message;
-			self.HasSnapshotPositionErrors = True
-			self.Settings.CurrentDebugProfile().LogError("gcode.py - GetSnapshotPosition - {0}".format(message))
-			coords["Y"] = None
 		return coords
 	def GetSnapshotCoordinate(self, path):
 		if(path.Type == 'disabled'):
@@ -147,20 +156,12 @@ class SnapshotGcodeGenerator(object):
 
 		return relCoord
 	def GetBedRelativeX(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["x_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["width"])
+		return self.GetRelativeCoordinate(percent,self.BoundingBox["min_x"],self.BoundingBox["max_x"])
 	def GetBedRelativeY(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["y_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["y_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["depth"])
+		return self.GetRelativeCoordinate(percent,self.BoundingBox["min_y"],self.BoundingBox["max_y"])
+		
 	def GetBedRelativeZ(self,percent):
-		if(self.OctoprintPrinterProfile["volume"]["custom_box"] != False):
-			return self.GetRelativeCoordinate(percent,self.OctoprintPrinterProfile["volume"]["custom_box"]["z_min"],self.OctoprintPrinterProfile["volume"]["custom_box"]["x_max"])
-		else:
-			return self.GetRelativeCoordinate(percent,0,self.OctoprintPrinterProfile["volume"]["height"])
+		return self.GetRelativeCoordinate(percent,self.BoundingBox["min_z"],self.BoundingBox["max_z"])
 	def GetRelativeCoordinate(self,percent,min,max):
 		return ((float(max)-float(min))*(percent/100.0))+float(min)
 
@@ -324,7 +325,7 @@ class SnapshotGcodeGenerator(object):
 			
 		self.Settings.CurrentDebugProfile().LogSnapshotPosition("Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X,newSnapshotGcode.Y))
 		self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX,newSnapshotGcode.ReturnY))
-		self.Reset()
+		
 		return newSnapshotGcode
 
 	def GetSetExtruderRelativePositionGcode(self):

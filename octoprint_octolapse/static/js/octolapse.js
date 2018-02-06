@@ -558,6 +558,17 @@ $(function () {
                         Octolapse.displayPopupForKey(options,"out-of-bounds");
                     }
                     break;
+                case "position-error":
+                    {
+                        //console.log("An out-of-bounds snapshot position was detected.")
+                        var options = {
+                            title: 'Octolapse - Out Of Bounds',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false
+                        };
+                        Octolapse.displayPopupForKey(options, "position-error");
+                    }
                 default:
                     {
                         //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
