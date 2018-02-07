@@ -789,26 +789,18 @@ $(function () {
 
                 // Bugfix for firefox img load issue.  We will create a new img tag for each of these
                 // Do the previous image first so it's there when the current image fades in
-                previousImgNew = new Image();
-                previousImgNew.id = "octolapse_previous_snapshot";
-                previousImgNew.src = previousUrl
-                $("#octolapse_previous_snapshot").replaceWith(previousImgNew);
+                $("#octolapse_previous_snapshot").attr("src", previousUrl);
 
                 // Now hide the current image
                 $("#octolapse_latest_snapshot").hide();
-                imgNew = new Image();
-                imgNew.id = "octolapse_latest_snapshot";
-                imgNew.className = "octolapse-fade-in";
-                imgNew.style.display = "none"
-                imgNew.src = newSnapshotUrl;
                 setTimeout(function () {
-                    $("#octolapse_latest_snapshot").replaceWith(imgNew);
-                    $("#octolapse_latest_snapshot").fadeIn();
+                    $("#octolapse_latest_snapshot").one("load", function () {
+                        //console.log("Snapshot Image Loaded.");
+                        $(this).fadeIn(1000);
+                    });
+                    $("#octolapse_latest_snapshot").attr("src", newSnapshotUrl);
                 }, 50);
                 
-
-
-
             }
 
         };
