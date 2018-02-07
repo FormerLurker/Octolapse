@@ -20,6 +20,12 @@
       </span>
       <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar control is enabled' : 'Navbar control is disabled'"></span>
     </div>
+    <div data-bind="visible:Octolapse.Globals.navbar_enabled">
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'}">
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_navbar_when_not_printing()  ), 'fa-close': (!Octolapse.Globals.show_navbar_when_not_printing() ) },style: { color: (Octolapse.Globals.show_navbar_when_not_printing()  ) ? 'limegreen' : '' }"></span>
+      </span>
+      <span data-bind="text: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'"></span>
+    </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
 
@@ -59,7 +65,7 @@
     <div class="modal-dialog" role="document">
 
       <div class="modal-content">
-        
+
         <form id="octolapse_add_edit_main_settings_form" class="form-horizontal">
           <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
@@ -81,16 +87,26 @@
               <hr/>
             </span>
             <div class="control-group">
-              <label class="control-label">Navbar Icon</label>
+              <label class="control-label">Navbar Control</label>
               <div class="controls">
                 <label class="checkbox">
                   <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Enabled
-                  <span class="help-inline">The navbar icon, when enabled, will only display while printing.</span>
                 </label>
+                <span class="help-inline">The navbar control shows you, at a glance, what Octolapse is doing.  Clicking the navbar opens the Octolapse tab.</span>
               </div>
             </div>
+            <div class="control-group" data-bind="visible:show_navbar_icon">
+              <label class="control-label">Always Display Navbar</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" title="Show the navbar when not printing" data-bind="checked:show_navbar_when_not_printing" />Enabled
+                </label>
+                <span class="help-inline">When enabled, the navbar icon will always be shown.  When disabled, the navbar icon will be hidden unless a timelapse is running.</span>
+              </div>
+            </div>
+            <hr/>
             <div>
-              
+
             </div>
 
             <div class="control-group">
@@ -98,49 +114,53 @@
               <div class="controls">
                 <label class="checkbox">
                   <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:auto_reload_latest_snapshot" />Enabled
-                  
-                  <span class="help-inline">
-                    When enabled, the latest snapshot be displayed when it is available. <span class="label label-important">Warning</span> Thumbnails are around 10K each and full sized images (click on the thumbnail to display) are much larger.
-                  </span>
                 </label>
+                <span class="help-inline">
+                  When enabled, the latest snapshot be displayed when it is available. <span class="label label-important">Warning</span> Thumbnails are around 10K each and full sized images (click on the thumbnail to display) are much larger.
+                </span>
               </div>
             </div>
-            <div class="control-group">
-              <label class="control-label">Show Position State Changes</label>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
-                </label>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label">Show Position Changes</label>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
-                  <br/>
-                </label>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label">Show Extruder State Changes</label>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
-                  <br/>
-                </label>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label">Show Trigger State Changes</label>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
-                  <br/>
-                </label>
-              </div>
-            </div>
+            <hr/>
+            <div>
+              <h5>Info Panels</h5>
 
+              <span>Show or hide various info panels that display various bits of information that can be used to monitor Octolapse.  They can be useful for understanding the effects of certain settings, to try untested printers with Octolapse (any that aren't listed in the default printer settings), or to track down bugs.</span>
+              <div class="control-group">
+                <label class="control-label">Show Position State Changes</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Show Position Changes</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
+                    <br/>
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Show Extruder State Changes</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
+                    <br/>
+                  </label>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label">Show Trigger State Changes</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
+                    <br/>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer" style="bottom:0;position:relative">
             <div class="row-fluid">

@@ -130,7 +130,7 @@ table.octolapse-profiles {
 }
 #octolapse_previous_snapshot,
 #octolapse_latest_snapshot {
-    position: absolute;
+    position: relative;
     top: 0;
     bottom: 0;
     left: 0;
@@ -143,13 +143,9 @@ table.octolapse-profiles {
 
 
 
-#octolapse_latest_snapshot {
 
-    
-    z-index: 3
-}
 #octolapse_latest_snapshot, #octolapse_latest_snapshot_thumbnail {
-    z-index: 4
+    z-index: 1
 }
 
 #octolapse_add_edit_profile_form {

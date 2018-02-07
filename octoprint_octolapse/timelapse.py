@@ -640,12 +640,13 @@ class Timelapse(object):
 		if(self.OnRenderFailCallback is not None):
 			self.OnRenderFailCallback(payload)
 	def _onRenderSuccess(self, *args, **kwargs):
-		self.IsRendering = False
+		
 		finalFilename = args[0]
 		baseFileName = args[1]
 		#TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
 	def _onRenderComplete(self, *args, **kwargs):
+		self.IsRendering = False
 		finalFileName = args[0]
 		synchronize = args[1]
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering the timelapse.")

@@ -2,6 +2,7 @@
 $(function () {
     Octolapse = this;
     // Finds the first index of an array with the matching predicate
+    Octolapse.IsShowingSettingsChangedPopup = false;
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
         for (var i = 0, j = array.length; i < j; i++) {
             if (predicate.call(predicateOwner, array[i])) {
@@ -61,6 +62,7 @@ $(function () {
         }
         Octolapse.Popups[key] = new PNotify(options);
     };
+    
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
@@ -232,6 +234,7 @@ $(function () {
         self.is_admin = ko.observable(false)
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
+        self.show_navbar_when_not_printing = ko.observable(false);
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid()
 
@@ -302,7 +305,8 @@ $(function () {
             }
             if (state.MainSettings != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');
-                Octolapse.SettingsMain.update(state.MainSettings);
+                // Do not update the main settings unless they are saved.
+                //Octolapse.SettingsMain.update(state.MainSettings);
                 Octolapse.Globals.update(state.MainSettings);
 
             }
@@ -328,6 +332,12 @@ $(function () {
                 self.navbar_enabled(settings.show_navbar_icon())
             else
                 self.navbar_enabled(settings.show_navbar_icon)
+
+            if (ko.isObservable(settings.show_navbar_when_not_printing))
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing())
+            else
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing)
+            
 
             if (ko.isObservable(settings.show_position_state_changes))
                 self.show_position_state_changes(settings.show_position_state_changes())
@@ -358,28 +368,18 @@ $(function () {
             switch (data.type) {
                 case "settings-changed":
                     {
-                        // (update the main settings)
-                        if (self.client_id != data.client_id) {
-                            Octolapse.Status.loadStatus();
-                            if (self.is_admin()) {
-                                //console.log('octolapse - settings-changed, reloading');
-                                Octolapse.Settings.loadSettings();
-                                var options = {
-                                    title: 'Octolapse',
-                                    text: "A profile change was detected from another client.",
-                                    type: 'notice',
-                                    hide: true,
-                                    desktop: {
-                                        desktop: true
-                                    }
-                                };
-                                Octolapse.displayPopup(options);
+                        // Was this from us?
+                        if (self.client_id != data.client_id && self.is_admin())
+                        {
+                            if (!Octolapse.IsShowingSettingsChangedPopup)
+                            {
+                                Octolapse.IsShowingSettingsChangedPopup = true;
+                                if (confirm("A settings change was detected from another client.  Reload settings?"))
+                                {
+                                    Octolapse.Settings.loadSettings();
+                                }
+                                Octolapse.IsShowingSettingsChangedPopup = false;
                             }
-
-
-                            //else {
-                            //console.log('octolapse.js - settings-changed, ignoring - came from self or not signed in.');
-                            //}
                         }
                     }
                     break;
@@ -424,7 +424,7 @@ $(function () {
                     break;
                 case "snapshot-start":
                     {
-                        //console.log('octolapse.js - snapshot-start');
+                        console.log('octolapse.js - snapshot-start');
                         self.updateState(data);
                         Octolapse.DisableResumeButton();
                         Octolapse.Status.snapshot_error(false);
@@ -433,7 +433,7 @@ $(function () {
                     break;
                 case "snapshot-complete":
                     {
-                        //console.log('octolapse.js - snapshot-complete');
+                        console.log('octolapse.js - snapshot-complete');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);
@@ -483,19 +483,22 @@ $(function () {
                     {
                         //console.log('octolapse.js - render-end');
                         self.updateState(data);
-                        // Make sure we aren't synchronized, else there's no reason to display a popup
-                        if (!data.is_synchronized && data.success) {
-                            var options = {
-                                title: 'Octolapse Rendering Complete',
-                                text: data.msg,
-                                type: 'success',
-                                hide: false,
-                                desktop: {
-                                    desktop: true
-                                }
-                            };
-                            Octolapse.displayPopup(options);
+                        if (!data.is_synchronized) {
+                            // Make sure we aren't synchronized, else there's no reason to display a popup
+                            if (!data.is_synchronized && data.success) {
+                                var options = {
+                                    title: 'Octolapse Rendering Complete',
+                                    text: data.msg,
+                                    type: 'success',
+                                    hide: false,
+                                    desktop: {
+                                        desktop: true
+                                    }
+                                };
+                                Octolapse.displayPopup(options);
+                            }
                         }
+                        
                     }
                     break;
                 case "synchronize-failed":

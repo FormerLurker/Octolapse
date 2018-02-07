@@ -100,6 +100,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self.Settings.is_octolapse_enabled = requestValues["is_octolapse_enabled"];
 		self.Settings.auto_reload_latest_snapshot = requestValues["auto_reload_latest_snapshot"];
 		self.Settings.show_navbar_icon = requestValues["show_navbar_icon"];
+		self.Settings.show_navbar_when_not_printing = requestValues["show_navbar_when_not_printing"];
 		self.Settings.show_position_state_changes = requestValues["show_position_state_changes"];
 		self.Settings.show_position_changes = requestValues["show_position_changes"];
 		self.Settings.show_extruder_state_changes = requestValues["show_extruder_state_changes"];
@@ -366,7 +367,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 				secondsAddedByOctolapse = self.Timelapse.SecondsAddedByOctolapse
 				isTimelapseActive = self.Timelapse.IsTimelapseActive()
 				isRendering = self.Timelapse.IsRendering
-				isTakingSnapshot = self.Timelapse.State == TimelapseState.TakingSnapshot
+				isTakingSnapshot = self.Timelapse.State >= TimelapseState.RequestingReturnPosition and self.Timelapse.State < TimelapseState.WaitingToRender 
 				timelapseState = self.Timelapse.State
 				isWaitingToRender = self.Timelapse.State == TimelapseState.WaitingToRender
 			return {  'snapshot_count': snapshotCount,
@@ -542,7 +543,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			"type":"settings-changed"
 			,"client_id" : client_id
 			}
-		data.update(self.Settings.ToDict())
 		self._plugin_manager.send_plugin_message(self._identifier, data)
 	
 	def SendPluginMessage(self, type, msg):
@@ -567,7 +567,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def SendRenderEndMessage(self,success):
 		data = {
-			"type":"render-start"
+			"type":"render-end"
 			, "msg":"Octolapse is finished rendering a timelapse."
 			, "Status": self.GetStatusDict()
 			, "MainSettings": self.Settings.GetMainSettingsDict()
@@ -633,6 +633,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 	def OnSnapshotStart(self):
 		stateData = self.Timelapse.GetStateDict()
+		
 		data ={
 			"type":"snapshot-start"
 			, "msg":"Octolapse is taking a snapshot."
@@ -643,8 +644,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._plugin_manager.send_plugin_message(self._identifier, data)
 	def OnSnapshotEnd(self, *args, **kwargs):
 		payload = args[0]
-
-		
+	
 		statusDict = self.GetStatusDict()
 		success = payload["success"]
 		error = payload["error"]
@@ -758,6 +758,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# Octoprint Event Manager Code
 		self.IsRenderingSynchronized = True
 		eventManager().fire(Events.MOVIE_DONE, payload)
+		self.SendRenderEndMessage(payload["success"])
 
 	def OnRenderEnd(self, *args, **kwargs):
 		"""Called after all rendering and synchronization attemps are complete."""

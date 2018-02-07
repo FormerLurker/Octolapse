@@ -14,6 +14,8 @@ $(function () {
         self.is_octolapse_enabled = ko.observable();
         self.auto_reload_latest_snapshot = ko.observable();
         self.show_navbar_icon = ko.observable();
+        self.show_navbar_when_not_printing = ko.observable();
+        
         self.show_position_state_changes = ko.observable();
         self.show_position_changes = ko.observable();
         self.show_extruder_state_changes = ko.observable();
@@ -34,6 +36,8 @@ $(function () {
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
 
             self.show_navbar_icon(settings.show_navbar_icon());
+            self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
+            
             self.show_position_state_changes(settings.show_position_state_changes());
             self.show_position_changes(settings.show_position_changes());
             self.show_extruder_state_changes(settings.show_extruder_state_changes());
@@ -71,6 +75,7 @@ $(function () {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
             self.show_navbar_icon(settings.show_navbar_icon);
+            self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
             self.show_position_state_changes(settings.show_position_state_changes);
             self.show_position_changes(settings.show_position_changes);
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
@@ -80,9 +85,16 @@ $(function () {
             self.setSettingsVisibility(settings.is_octolapse_enabled);
         };
 
-
         self.showEditMainSettingsPopup = function () {
             //console.log("showing main settings")
+            self.is_octolapse_enabled(Octolapse.Globals.enabled());
+            self.auto_reload_latest_snapshot(Octolapse.Globals.auto_reload_latest_snapshot());
+            self.show_navbar_icon(Octolapse.Globals.navbar_enabled());
+            self.show_navbar_when_not_printing(Octolapse.Globals.show_navbar_when_not_printing());
+            self.show_position_state_changes(Octolapse.Globals.show_position_state_changes());
+            self.show_position_changes(Octolapse.Globals.show_position_changes());
+            self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
+            self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
             self.$addEditDialog.modal();
         };
         // cancel button click handler
@@ -96,13 +108,14 @@ $(function () {
                 "is_octolapse_enabled": self.is_octolapse_enabled()
                 , "auto_reload_latest_snapshot": self.auto_reload_latest_snapshot()
                 , "show_navbar_icon": self.show_navbar_icon()
+                , "show_navbar_when_not_printing": self.show_navbar_when_not_printing()
                 , "show_position_state_changes": self.show_position_state_changes()
                 , "show_position_changes": self.show_position_changes()
                 , "show_extruder_state_changes": self.show_extruder_state_changes()
                 , "show_trigger_state_changes": self.show_trigger_state_changes()
                 , "client_id": Octolapse.Globals.client_id
             };
-            //console.log("Saving main settings.")
+            console.log("Saving main settings.")
             $.ajax({
                 url: "/plugin/octolapse/saveMainSettings",
                 type: "POST",
@@ -122,6 +135,7 @@ $(function () {
             self.is_octolapse_enabled(true);
             self.auto_reload_latest_snapshot(true);
             self.show_navbar_icon(true);
+            self.show_navbar_when_not_printing(false);
             self.show_position_state_changes(false);
             self.show_position_changes(false);
             self.show_extruder_state_changes(false);

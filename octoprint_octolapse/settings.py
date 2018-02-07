@@ -1232,8 +1232,6 @@ class DebugProfile(object):
 			self.LogInfo(message)
 	
 class OctolapseSettings(object):
-
-	
 	DefaultDebugProfile = None;
 	Logger = None;
 	# constants
@@ -1247,6 +1245,7 @@ class OctolapseSettings(object):
 		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
 		self.version = "0.0.1.0"
 		self.show_navbar_icon = True
+		self.show_navbar_when_not_printing = True
 		self.is_octolapse_enabled = True
 		self.auto_reload_latest_snapshot = True
 		self.show_position_state_changes = False
@@ -1322,6 +1321,7 @@ class OctolapseSettings(object):
 		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
 		if (HasKey(changes,"auto_reload_latest_snapshot")) : self.auto_reload_latest_snapshot = bool(GetValue(changes,"auto_reload_latest_snapshot",self.auto_reload_latest_snapshot))
 		if (HasKey(changes,"show_navbar_icon")) : self.show_navbar_icon = bool(GetValue(changes,"show_navbar_icon",self.show_navbar_icon))
+		if (HasKey(changes,"show_navbar_when_not_printing")) : self.show_navbar_when_not_printing = bool(GetValue(changes,"show_navbar_when_not_printing",self.show_navbar_when_not_printing))
 		if (HasKey(changes,"show_position_state_changes")) : self.show_position_state_changes = bool(GetValue(changes,"show_position_state_changes",self.show_position_state_changes))
 		if (HasKey(changes,"show_position_changes")) : self.show_position_changes = bool(GetValue(changes,"show_position_changes",self.show_position_changes))
 		if (HasKey(changes,"show_extruder_state_changes")) : self.show_extruder_state_changes = bool(GetValue(changes,"show_extruder_state_changes",self.show_extruder_state_changes))
@@ -1396,6 +1396,7 @@ class OctolapseSettings(object):
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			"auto_reload_latest_snapshot": utility.getbool(self.auto_reload_latest_snapshot,defaults.auto_reload_latest_snapshot),
 			"show_navbar_icon" : utility.getbool(self.show_navbar_icon,defaults.show_navbar_icon),
+			"show_navbar_when_not_printing" : utility.getbool(self.show_navbar_when_not_printing,defaults.show_navbar_when_not_printing),
 			"show_position_changes" : utility.getbool(self.show_position_changes,defaults.show_position_changes),
 			"show_position_state_changes" : utility.getbool(self.show_position_state_changes,defaults.show_position_state_changes),
 			"show_extruder_state_changes" : utility.getbool(self.show_extruder_state_changes,defaults.show_extruder_state_changes),
@@ -1481,6 +1482,7 @@ class OctolapseSettings(object):
 			'is_octolapse_enabled':self.is_octolapse_enabled
 			,'auto_reload_latest_snapshot':self.auto_reload_latest_snapshot
 			,'show_navbar_icon':self.show_navbar_icon
+			,'show_navbar_when_not_printing': self.show_navbar_when_not_printing
 			,'show_position_state_changes':self.show_position_state_changes
 			,'show_position_changes':self.show_position_changes
 			,'show_extruder_state_changes':self.show_extruder_state_changes
