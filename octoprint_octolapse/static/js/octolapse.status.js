@@ -1,6 +1,6 @@
 /// Create our printers view model
 $(function () {
-
+    
     Octolapse.positionStateViewModel = function () {
         var self = this;
         self.GCode = ko.observable("");
@@ -44,7 +44,7 @@ $(function () {
                 }
             });
         };
-
+        
         self.getPossitionErrorColor = ko.pureComputed(function () {
             if (this.HasPositionError())
                 return "Red";
@@ -288,10 +288,11 @@ $(function () {
             self.Triggers.removeAll();
         }
         self.update = function (states) {
-
+            
             self.Name(states.Name)
             triggers = states.Triggers
-            for (var sI = 0; sI < triggers.length; sI++) {
+            for (var sI = 0; sI < triggers.length; sI++)
+            {
                 state = triggers[sI];
                 var foundState = false;
                 for (var i = 0; i < self.Triggers().length; i++) {
@@ -307,7 +308,7 @@ $(function () {
                 }
             }
         };
-
+        
     }
     Octolapse.genericTriggerStateViewModel = function (state) {
         var self = this;
@@ -355,9 +356,9 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 1)
+                if (waitList.length >1)
                     waitText += " for " + waitList.join(" and ")
-                else if (waitList.length == 1)
+                else if(waitList.length == 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
@@ -400,7 +401,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
-
+        
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -448,7 +449,7 @@ $(function () {
 
             else
                 return "Looking for snapshot gcode";
-
+            
 
             return classes;
         }, self);
@@ -466,7 +467,7 @@ $(function () {
         }, self);
 
         self.getInfoText = ko.pureComputed(function () {
-            return "Triggering on gcode command: " + self.SnapshotCommand();
+            return "Triggering on gcode command: " + self.SnapshotCommand() ;
 
 
         }, self);
@@ -542,14 +543,14 @@ $(function () {
                 return waitText;
             }
             else if (self.HeightIncrement() > 0) {
-                heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
-                return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
-            }
+                    heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
+                    return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
+                }
             else
                 return "Triggering on next layer change";
 
         }, self);
-
+        
         self.triggerIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
                 return "not-homed";
@@ -568,12 +569,12 @@ $(function () {
             if (self.HeightIncrement() > 0)
 
                 val = self.HeightIncrement() + " mm";
-
+                
             else
                 val = "layer"
             return "Triggering every " + Octolapse.ToCompactInt(val);
 
-
+            
         }, self);
         self.getInfoIconText = ko.pureComputed(function () {
             var val = 0;
@@ -600,7 +601,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.IsHomed = ko.observable(state.IsHomed);
-
+        
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -617,7 +618,7 @@ $(function () {
             self.IsHomed(state.IsHomed);
         }
 
-
+        
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -632,7 +633,7 @@ $(function () {
                 waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop")
-                if (self.IsWaitingOnExtruder())
+                if (self.IsWaitingOnExtruder()) 
                     waitList.push("extruder")
                 if (waitList.length > 1)
                     waitText += " for " + waitList.join(" and ")
@@ -640,14 +641,14 @@ $(function () {
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
-
+            
             else
-                return "Triggering in " + self.SecondsToTrigger() + " seconds";
+                return "Triggering in " + self.SecondsToTrigger() + " seconds" ;
 
             return classes;
         }, self);
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
-            if (!self.IsHomed())
+            if(!self.IsHomed())
                 return "bg-not-homed";
             else if (!self.IsTriggered() && Octolapse.PrinterStatus.isPaused())
                 return " bg-paused";
@@ -667,7 +668,7 @@ $(function () {
         self.getInfoText = ko.pureComputed(function () {
             return "Triggering every " + Octolapse.ToTimer(self.IntervalSeconds());
         }, self);
-        self.getInfoIconText = ko.pureComputed(function () {
+        self.getInfoIconText =  ko.pureComputed(function () {
             return "Triggering every " + Octolapse.ToTimer(self.IntervalSeconds());
         }, self);
     }
@@ -677,28 +678,28 @@ $(function () {
         // Add this object to our Octolapse namespace
         Octolapse.Status = this;
         // Assign the Octoprint settings to our namespace
-
+        
         self.is_timelapse_active = ko.observable(false);
         self.is_taking_snapshot = ko.observable(false);
         self.is_rendering = ko.observable(false);
         self.seconds_added_by_octolapse = ko.observable(0);
-        self.snapshot_count = ko.observable(0);
+        self.snapshot_count = ko.observable(0);        
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
         self.waiting_to_render = ko.observable();
-
+        
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
-
+        
         self.IsTabShowing = false;
         self.IsLatestSnapshotDialogShowing = false;
         self.showLatestSnapshotDialog = function () {
             self.IsLatestSnapshotDialogShowing = true;
             self.updateLatestSnapshotImage(true)
             self.$SnapshotDialog.modal();
-
+            
         }
         // cancel button click handler
         self.cancelLatestSnapshotDialog = function () {
@@ -706,7 +707,7 @@ $(function () {
             self.IsLatestSnapshotDialogShowing = false;
             self.$SnapshotDialog.modal("hide");
         }
-
+        
 
 
         self.onAfterBinding = function () {
@@ -717,31 +718,32 @@ $(function () {
                 self.IsLatestSnapshotDialogShowing = false;
             });
             // configure the dialog shown event
-
+            
             self.$SnapshotDialog.on("shown.bs.modal", function () {
                 //console.log("Showing snapshot dialog.");
-
+                
 
             });
-
+            
             // configure the dialog show event
             self.$SnapshotDialog.on("show.bs.modal", function () {
-                //console.log("Showing snapshot dialog.");
-
+               //console.log("Showing snapshot dialog.");
+                
             });
-
-            $("#octolapse_latest_snapshot").bind("load", function () {
+            
+            $("#octolapse_latest_snapshot").bind("load", function ()
+            {
                 snapshotImage = this;
                 //console.log("Snapshot Image Loaded.");
-
-
+                
+                
                 $(this).fadeIn(1000, function () {
                     //console.log("Snapshot Image has been shown, hiding previous image.");
-
-
+                   
+                    
                 });
             });
-
+           
             $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
             $("#octolapse_latest_snapshot_thumbnail").bind("load", function () {
                 //console.log("Snapshot Image Loaded.");
@@ -752,7 +754,7 @@ $(function () {
                 });
             });
         }
-
+                
         self.onTabChange = function (current, previous) {
 
             if (current != null && current == "#tab_plugin_octolapse") {
@@ -770,17 +772,17 @@ $(function () {
                 self.IsTabShowing = false;
             }
         }
-
+        
         self.updateLatestSnapshotImage = function (force = false) {
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
                 //console.log("Auto-Update latest snapshot image is disabled.");
                 return;
             }
-
+            
             if (self.IsLatestSnapshotDialogShowing) {
                 //console.log("Updating Snapshot Image");
                 newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
-
+                
                 previousUrl = $("#octolapse_latest_snapshot").attr('src')
                 if (previousUrl == null || previousUrl == "")
                     previousUrl = newSnapshotUrl;
@@ -799,8 +801,11 @@ $(function () {
                 imgNew.className = "octolapse-fade-in";
                 imgNew.style.display = "none"
                 imgNew.src = newSnapshotUrl;
-                $("#octolapse_latest_snapshot").replaceWith(imgNew);
-                $("#octolapse_latest_snapshot").fadeIn();
+                setTimeout(function () {
+                    $("#octolapse_latest_snapshot").replaceWith(imgNew);
+                    $("#octolapse_latest_snapshot").fadeIn();
+                }, 50);
+                
 
 
 
@@ -832,7 +837,7 @@ $(function () {
                 //console.log("Octolapse tab is not showing, not updating the latest snapshot image.");
             }
         };
-
+               
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
                 case "gcode":
@@ -856,8 +861,8 @@ $(function () {
                 return 'Octolapse';
             return 'Octolapse - Disabled';
         }, self);
-
-
+        
+            
         self.updatePositionState = function (state) {
             // State variables
             self.PositionState.update(state);
@@ -870,7 +875,7 @@ $(function () {
             // State variables
             self.ExtruderState.update(state);
         };
-
+        
         self.updateTriggerStates = function (states) {
             self.TriggerState.update(states);
         };
@@ -883,13 +888,13 @@ $(function () {
             self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
             self.waiting_to_render(settings.waiting_to_render);
         };
-
+        
         self.onTimelapseStop = function () {
             self.is_timelapse_active(false);
             self.is_taking_snapshot(false);
             self.waiting_to_render(true);
         }
-
+        
 
         self.stopTimelapse = function () {
             if (Octolapse.Globals.is_admin()) {
@@ -919,12 +924,12 @@ $(function () {
         self.navbarClicked = function () {
             $("#tab_plugin_octolapse_link a").click();
         }
-
+        
     }
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.StatusViewModel
         , []
-        , ["#octolapse_tab", "#octolapse_navbar"]
+        , ["#octolapse_tab","#octolapse_navbar"]
     ]);
 });
