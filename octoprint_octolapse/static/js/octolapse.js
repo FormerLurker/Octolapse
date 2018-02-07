@@ -237,14 +237,16 @@ $(function () {
         self.show_navbar_when_not_printing = ko.observable(false);
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid()
+        // Have we loaded the state yet?
+        self.HasLoadedState = false;
+        
 
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
         };
         self.onAfterBinding = function () {
             self.loadState();
-            Octolapse.Status.updateLatestSnapshotImage();
-            Octolapse.Status.updateLatestSnapshotThumbnailImage();
+            
         };
 
         self.loadState = function () {
@@ -258,6 +260,7 @@ $(function () {
                 dataType: "json",
                 success: function (result) {
                     //console.log("Main Settings have been loaded.  Waiting for message");
+                    
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     
@@ -286,6 +289,7 @@ $(function () {
             Octolapse.EnableResumeButton()
         }
         self.updateState = function (state) {
+            
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
@@ -314,6 +318,12 @@ $(function () {
                 //console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.Status.update(state.Status);
             }
+            if (!self.HasLoadedState) {
+                Octolapse.Status.updateLatestSnapshotImageUrls(true);
+                Octolapse.Status.updateLatestSnapshotThumbnailUrls(true);
+            }
+            
+            self.HasLoadedState = true;
         };
         self.update = function (settings) {
             // enabled
@@ -433,12 +443,12 @@ $(function () {
                     break;
                 case "snapshot-complete":
                     {
-                        //console.log('octolapse.js - snapshot-complete');
+                        console.log('octolapse.js - snapshot-complete');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);
-                        Octolapse.Status.updateLatestSnapshotThumbnailImage();
-                        Octolapse.Status.updateLatestSnapshotImage();
+                        Octolapse.Status.updateLatestSnapshotThumbnailUrls();
+                        Octolapse.Status.updateLatestSnapshotImageUrls();
                     }
                     break;
                 case "render-start":

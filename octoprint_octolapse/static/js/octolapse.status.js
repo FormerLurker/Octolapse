@@ -687,7 +687,9 @@ $(function () {
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
         self.waiting_to_render = ko.observable();
-        
+        self.latestSnapshotImageUrls = ko.observableArray();
+        self.latestSnapshotThumbnailUrls = ko.observableArray();
+
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -697,16 +699,17 @@ $(function () {
         self.IsLatestSnapshotDialogShowing = false;
         self.showLatestSnapshotDialog = function () {
             self.IsLatestSnapshotDialogShowing = true;
-            self.updateLatestSnapshotImage(true)
+            self.latestSnapshotImageUrls.removeAll();
+            self.updateLatestSnapshotImageUrls(force = true);
             self.$SnapshotDialog.modal();
-            
-        }
+
+        };
         // cancel button click handler
         self.cancelLatestSnapshotDialog = function () {
             // hide the modal
             self.IsLatestSnapshotDialogShowing = false;
             self.$SnapshotDialog.modal("hide");
-        }
+        };
         
 
 
@@ -731,37 +734,18 @@ $(function () {
                 
             });
             
-            $("#octolapse_latest_snapshot").bind("load", function ()
-            {
-                snapshotImage = this;
-                //console.log("Snapshot Image Loaded.");
-                
-                
-                $(this).fadeIn(1000, function () {
-                    //console.log("Snapshot Image has been shown, hiding previous image.");
-                   
-                    
-                });
-            });
-           
             
-            $("#octolapse_latest_snapshot_thumbnail").bind("load", function () {
-                //console.log("Snapshot Image Loaded.");
-                $("#refresh_thumbnail_button").fadeIn();
-            });
         }
                 
         self.onTabChange = function (current, previous) {
-
+            
             if (current != null && current == "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is showing");
                 self.IsTabShowing = true;
-                $snapshotImage = $("#octolapse_latest_snapshot_thumbnail");
-                currentImageSrc = $snapshotImage.attr("src");
-                if (currentImageSrc == null || currentImageSrc == "") {
-                    self.updateLatestSnapshotThumbnailImage(true);
-                }
-                self.$SnapshotDialog.modal("hide");
+                self.updateLatestSnapshotThumbnailUrls();    
+                // Do we need this?
+                // Todo: Figure out if this is needed
+                //self.$SnapshotDialog.modal("hide");
             }
             else if (previous != null && previous == "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is not showing");
@@ -769,9 +753,177 @@ $(function () {
             }
         }
 
-        //  I specifically did NOT use jquery for this function because changing the SRC attribute of too many large images
-        // at the same time causes a loading error (image is truncated or corrupt), but only in firefox.
-        // This has been a troublesome error.
+        /*
+            Snapshot client animation preview functions
+        */
+
+        self.refreshThumbnail = function () {
+            //alert("Not implemented");
+            //console.log("Refreshing Snapshot Thumbnail");
+            $("#refresh_thumbnail_button").hide();
+            self.latestSnapshotThumbnailUrls.removeAll();
+            self.updateLatestSnapshotThumbnailUrls(force=true);
+            setTimeout(function () {
+                $("#refresh_thumbnail_button").fadeIn();
+            }, 1.25);
+        }
+        self.MaxSnapshotImages = 5;
+        
+        self.updateLatestSnapshotThumbnailUrls = function (force = false) {
+            console.log("Trying to update the latest snapshot thumbnail urls.");
+            if (!force) {
+                if (!self.IsTabShowing) {
+                    console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
+                    self.latestSnapshotThumbnailUrls.removeAll();
+                    return
+                }
+                else if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    console.log("Not updating the thumbnail, auto-reload is disabled.");
+                    return
+                }
+                else if (self.IsLatestSnapshotDialogShowing) {
+                    console.log("The full screen dialog is showing, not updating the thumbnail.  Clearing the image history.");
+                    self.latestSnapshotThumbnailUrls.removeAll();
+                    return;
+                }
+            }
+            newSnapshotUrl = getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime();
+            if (self.latestSnapshotThumbnailUrls().length == self.MaxSnapshotImages) {
+                self.latestSnapshotThumbnailUrls().shift();
+            }
+            self.latestSnapshotThumbnailUrls.push(ko.observable({ 'imageUrl': newSnapshotUrl }));
+
+        }
+        self.updateLatestSnapshotImageUrls = function (force = false) {
+            console.log("Trying to update the latest snapshot image urls.");
+            if (!force) {
+                if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    console.log("Auto-Update latest snapshot image is disabled.");
+                    return
+                }
+                else if (!self.IsLatestSnapshotDialogShowing) {
+                    console.log("The full screen dialog is not showing, not updating the latest snapshot.  Clearing the image history.");
+                    self.latestSnapshotImageUrls.removeAll();
+                }
+            }
+
+            
+            var newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
+
+            if (self.latestSnapshotImageUrls().length == self.MaxSnapshotImages) {
+                self.latestSnapshotImageUrls().shift();
+            }
+            self.latestSnapshotImageUrls.push(ko.observable({ 'imageUrl': newSnapshotUrl }));
+            
+        }
+        self.getAnimatedSnapshotClass = function (index,length) {
+            return "latest-snapshot fade-in-" + index;
+        }
+        self.getAnimatedThumbnailClass = function (index, length) {
+            return "latest-thumbnail fade-in-" + index;
+        }
+
+        self.IsAnimatingLatestSnapshotImage = false;
+        self.latestSnapshotImageUrls.subscribe(function (changes) {
+            hasAdded = false;
+            for (var index = 0; index < changes.length; index++) {
+                if (changes[index].status = "added") {
+                    hasAdded = true;
+                    break;
+                }
+            }
+            if (!hasAdded)
+                return;
+
+            if (!self.IsAnimatingLatestSnapshotImage) {
+                self.IsAnimatingLatestSnapshotImage = true;
+                var numImages = self.latestSnapshotImageUrls().length;
+                for (imageIndex = 0; imageIndex < numImages; imageIndex++) {
+                    console.log("making image " + imageIndex + " visible.")
+                    var $imageElement = $(".latest-snapshot." + "fade-in-" + imageIndex);
+                    $imageElement.removeClass("hidden")
+                    $imageElement.addClass("visible")
+                }
+                // Set a timer for .25* num images to allow a new animation.
+                setTimeout(function () {
+                    self.IsAnimatingLatestSnapshotImage = false;
+
+                }, numImages * 0.25);
+            }
+            
+        }, null, "arrayChange");
+        self.IsAnimatingLatestSnapshotThumbnail = false;
+        self.latestSnapshotThumbnailUrls.subscribe(function (changes) {
+            hasAdded = false;
+            for (var index = 0; index < changes.length; index++) {
+                if (changes[index].status = "added") {
+                    hasAdded = true;
+                    break;
+                }
+            }
+            if (!hasAdded)
+                return;
+
+            if (!self.IsAnimatingLatestSnapshotImage) {
+                self.IsAnimatingLatestSnapshotImage = true;
+                var numImages = self.latestSnapshotThumbnailUrls().length;
+                for (imageIndex = 0; imageIndex < numImages; imageIndex++) {
+                    console.log("making thumbnail " + imageIndex + " visible.")
+                    var $imageElement = $(".latest-thumbnail." + "fade-in-" + imageIndex);
+                    $imageElement.removeClass("hidden")
+                    $imageElement.addClass("visible")
+                }
+                // Set a timer for .25* num images to allow a new animation.
+                setTimeout(function () {
+                    self.IsAnimatingLatestSnapshotImage = false;
+
+                }, numImages * 0.25);
+            }
+
+        }, null, "arrayChange");
+        /*
+        self.animateImages = function (images, elementBaseId){
+            //console.log("Updating Snapshot Image");
+            // retrieve the current url
+            // retrieve the previous URL
+            console.log("Animating images.")
+            console.log(images);
+            console.log(elementBaseId);
+            // Special case if there's only one image
+            if (images.length == 1) {
+                // Add another image so we have a background for the transition
+                images.splice(0,0,images[0], 1);
+            }
+
+            var firstElement = null;
+            for (imageIndex = 0; imageIndex < images.length; imageIndex++) {
+                var imageUrl = images[imageIndex];
+                    
+                var imageElement = document.getElementById("latest_snapshot_image_" + imageIndex);
+                if (imageIndex == 0)
+                    firstElement = imageElement;
+
+                imageElement.style.display = "block";
+                imageElement.className = "fade-in hidden img_"+imageIndex;
+                
+                console.log("Setting image " + imageIndex + " src to: " + imageUrl);
+                imageElement.src = imageUrl;                
+            }
+            if (firstElement != null) {
+                setTimeout(function () {
+                    // Now switch the url
+                    firstElement.src = newSnapshotUrl;
+                    // Now show the image
+                    // Hopefully css transitions will work for everythign else
+                    // Now hide the current image
+                    imageElement.className = "fade-in visible";
+                }, 100);
+            }    
+           
+            
+
+        }
+        
         self.updateLatestSnapshotImage = function (force = false) {
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
                 //console.log("Auto-Update latest snapshot image is disabled.");
@@ -782,10 +934,19 @@ $(function () {
                 //console.log("Updating Snapshot Image");
                 // Get the new URL.  Timestamped to prevent caching.
                 newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
-                // Get the latest snapshot element
-                latestSnapshot = document.getElementById("octolapse_latest_snapshot")
+                self.latestSnapshotImageUrls.splice(0, 0, newSnapshotUrl);
+                if (self.latestSnapshotImageUrls.length > self.MaxSnapshotImages) {
+                    self.latestSnapshotImageUrls.splice(self.MaxSnapshotImages, 1);
+                }
+                
                 // retrieve the previous URL
-                previousUrl = latestSnapshot.src;
+                if (self.latestSnapshotImageUrls.length > 1) {
+                    previousUrl = self.latestSnapshotImageUrls[1]
+                }
+                else {
+                    previousUrl = self.latestSnapshotImageUrls[0]
+                }
+
                 // If the previous url does not exist, set it to the new one.
                 if (previousUrl == null || previousUrl == "")
                     previousUrl = newSnapshotUrl;
@@ -795,9 +956,10 @@ $(function () {
                 // Set the src to that of the previousImageURL so we have something to transition into, or if there was
                 previousSnapshot.src = previousUrl;
 
+                // Get the latest snapshot element
+                latestSnapshot = document.getElementById("octolapse_latest_snapshot")
                 // Now hide the current image
                 latestSnapshot.className = "fade-in hidden";
-                
                 // After a brief delay, set the url of the latest snapshot
                 setTimeout(function () {
                     // Now switch the url
@@ -812,12 +974,11 @@ $(function () {
             }
 
         };
-        self.refreshThumbnail = function () {
-            //console.log("Refreshing Snapshot Thumbnail");
-            $("#refresh_thumbnail_button").hide();
-            self.updateLatestSnapshotThumbnailImage(true);
-        }
+        */
         
+
+        /*
+        self.latestSnapshotImageThumbnailUrls = [];
         self.updateLatestSnapshotThumbnailImage = function (force = false) {
 
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -859,7 +1020,7 @@ $(function () {
             else {
                 //console.log("Octolapse tab is not showing, not updating the latest snapshot image.");
             }
-        };
+        };*/
                
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
