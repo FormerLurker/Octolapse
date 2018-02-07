@@ -321,6 +321,19 @@ class Commands(object):
 		,parameters = [CommandParameter("P","(?i)^p(?P<p>-?[0-9]{0,15})$",order=1),
 						CommandParameter("H","(?i)^h(?P<h>-?[0-9]{0,15})$",order=2),
 						CommandParameter("C","(?i)^c(?P<c>-?[0-9]{0,15})$",order=3)])
+
+	M106 = Command(name="Set Part Fan Speed"
+		,command="M106"
+		,displayTemplate="M106 - Set Part Fan Speed{Comment}"
+		,parameters = [CommandParameter("S","(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$",order=1),
+						CommandParameter("P","(?i)^p(?P<p>-?[0-9]{0,15})$",order=2),
+						CommandParameter("I","(?i)^(i)$",order=3),
+						CommandParameter("F","(?i)^p(?P<f>-?[0-9]{0,15})$",order=4),
+						CommandParameter("L","(?i)^s(?P<l>-?[0-9]{0,15}.?[0-9]{1,15})$",order=5),
+						CommandParameter("B","(?i)^p(?P<b>-?[0-9]{0,15})$",order=6),
+						CommandParameter("R","(?i)^p(?P<r>-?[0-9]{0,15})$",order=7),
+						CommandParameter("T","(?i)^p(?P<t>-?[0-9]{0,15})$",order=8),
+						])
 	CommandsDictionary = {
 	    G0.Command:G0,
 		G1.Command:G1,
@@ -337,7 +350,8 @@ class Commands(object):
 		M109.Command:M109,
 		M190.Command:M190,
 		M191.Command:M191,
-		M116.Command:M116
+		M116.Command:M116,
+		M106.Command:M106
 
     }
 
@@ -350,7 +364,7 @@ class Commands(object):
 		elif(gcodeCommand.Command in [self.G0.Command, self.G1.Command]):
 			gcodeCommand.Parameters["E"].Value = None
 			return gcodeCommand.ToString(reform=True),
-		elif(gcodeCommand.Command in [self.M104.Command,self.M140.Command,self.M141.Command,self.M109.Command,self.M190.Command,self.M191.Command,self.M116.Command]):
+		elif(gcodeCommand.Command in [self.M104.Command,self.M140.Command,self.M141.Command,self.M109.Command,self.M190.Command,self.M191.Command,self.M116.Command, self.M106.Command]):
 			return (None,)
 		else:
 			return None
@@ -362,7 +376,7 @@ class Commands(object):
 		elif(gcodeCommand.Command in [self.G0.Command, self.G1.Command]):
 			gcodeCommand.Parameters["E"].Value = None
 			return gcodeCommand.ToString(reform=True)
-		elif(gcodeCommand.Command in [self.M104.Command,self.M140.Command,self.M141.Command,self.M109.Command,self.M190.Command,self.M191.Command,self.M116.Command]):
+		elif(gcodeCommand.Command in [self.M104.Command,self.M140.Command,self.M141.Command,self.M109.Command,self.M190.Command,self.M191.Command,self.M116.Command, self.M106.Command]):
 			return ""
 		else:
 			return cmd
