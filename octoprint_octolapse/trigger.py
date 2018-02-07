@@ -274,7 +274,6 @@ class GcodeTrigger(Trigger):
 				state.IsHomed = False
 			else:
 				state.IsHomed = True
-
 				if (self.IsSnapshotCommand(commandName)):
 					state.IsWaiting = True
 				if(state.IsWaiting == True):

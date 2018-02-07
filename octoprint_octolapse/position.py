@@ -164,6 +164,8 @@ class Pos(object):
 			"Height":self.Height,
 			"HasReceivedHomeCommand" : self.HasReceivedHomeCommand
 		}
+	
+
 	def UpdatePosition(self, boundingBox, x=None,y=None,z=None,e=None,f=None,force=False):
 		if(f is not None):
 			self.F = float(f)
@@ -265,11 +267,17 @@ class Position(object):
 		self.Positions = []
 		
 		self.SavedPosition = None
-	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False):
-		if(len(self.Positions)==0):
+	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False,calculateChanges=False):
+		numPositions = len(self.Positions)
+		if(numPositions==0):
 			return
 		pos = self.Positions[0]
 		pos.UpdatePosition(self.BoundingBox, x,y,z,e,f,force)
+		if(calculateChanges and numPositions > 1):
+			previousPos = self.Positions[1]
+			pos.HasPositionChanged = not pos.IsPositionEqual(previousPos,self.PrinterTolerance)
+			pos.HasStateChanged = not pos.IsStateEqual(previousPos,self.PrinterTolerance )
+
 	def SavePosition(self,x=None,y=None,z=None,e=None,f=None,force=False):
 		if(len(self.Positions)==0):
 			return

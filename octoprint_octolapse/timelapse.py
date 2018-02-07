@@ -210,6 +210,8 @@ class Timelapse(object):
 			if(self.State == TimelapseState.WaitingForTrigger and self.Position.HasReceivedHomeCommand(1) and self.OctoprintPrinter.is_printing()):
 				if(self.Printer.auto_detect_origin):
 					self.State = TimelapseState.AcquiringHomeLocation
+					if(self.IsTestMode):
+						cmd = self.Commands.GetTestModeCommandString(cmd)
 					self.SavedCommand = cmd
 					cmd = None,
 					self._pausePrint()
@@ -219,8 +221,7 @@ class Timelapse(object):
 				# If our triggers have changed, update our dict
 				if(self.Settings.show_trigger_state_changes and self.Triggers.HasChanged()):
 					triggerChangeList = self.Triggers.ChangesToList()
-					
-
+		
 				if(self.GcodeQueuing_IsTriggering(cmd,isSnapshotGcodeCommand)):
 					# Undo the last position update, we're not going to be using it!
 					self.Position.UndoUpdate()
@@ -245,7 +246,10 @@ class Timelapse(object):
 					# suppress the command
 					cmd = None,
 				
-			elif(self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.SendingReturnGcode):
+			elif(
+				(self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.SendingReturnGcode)
+				or (self.State in [TimelapseState.AcquiringHomeLocation,TimelapseState.SendingSavedHomeLocationCommand])
+			):
 				# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
 				# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
 				if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
@@ -298,9 +302,12 @@ class Timelapse(object):
 		z=payload["z"]
 		e=payload["e"]
 		if(self.State == TimelapseState.AcquiringHomeLocation):
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot home position received by Octolapse.")
 			self._positionReceived_Home(x,y,z,e)
-		if(self.State == TimelapseState.RequestingReturnPosition):
+		elif(self.State == TimelapseState.SendingSavedHomeLocationCommand):
+			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot home saved command position received by Octolapse.")
+			self._positionReceived_HomeLocationSavedCommand(x,y,z,e)
+		elif(self.State == TimelapseState.RequestingReturnPosition):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot return position received by Octolapse.")
 			self._positionReceived_Return(x,y,z,e)
 		elif(self.State == TimelapseState.SendingSnapshotGcode):
@@ -378,17 +385,24 @@ class Timelapse(object):
 		return False
 	def _positionReceived_Home(self,x,y,z,e):
 		try:
-			self.Position.UpdatePosition(x=x,y=y,z=z,e=e,force=True)
+			self.Position.UpdatePosition(x=x,y=y,z=z,e=e,force=True,calculateChanges=True)
 		except Exception as e:
 			self.Settings.CurrentDebugProfile().LogException(e)
 			# we need to abandon the snapshot completely, reset and resume
-		self.State = TimelapseState.WaitingForTrigger
+		self.State = TimelapseState.SendingSavedHomeLocationCommand
 		self.OctoprintPrinter.commands(self.SavedCommand)
 		self.SavedCommand = "";
+		self.OctoprintPrinter.commands("M400")
+		self.OctoprintPrinter.commands("M114")
+
+	def _positionReceived_HomeLocationSavedCommand(self,x,y,z,e):
+		# just sent so we can resume after the commands were sent.
+		# Todo:  do this in the gcode sent function instead of sending an m400/m114 combo
+		self.State = TimelapseState.WaitingForTrigger
 		self._resumePrint()
+
 	def _positionReceived_Return(self, x,y,z,e):
 		try:
-
 			self.ReturnPositionReceivedTime = time.time()
 			#todo:  Do we need to re-request the position like we do for the return?  Maybe...
 			printerTolerance = self.Printer.printer_position_confirmation_tolerance
@@ -729,8 +743,9 @@ class TimelapseState(object):
 	Idle = 1
 	WaitingForTrigger = 2
 	AcquiringHomeLocation = 3
-	RequestingReturnPosition = 4
-	SendingSnapshotGcode = 5
-	TakingSnapshot = 6
-	SendingReturnGcode = 7
-	WaitingToRender = 8
+	SendingSavedHomeLocationCommand = 4
+	RequestingReturnPosition = 5
+	SendingSnapshotGcode = 6
+	TakingSnapshot = 7
+	SendingReturnGcode = 8
+	WaitingToRender = 9
