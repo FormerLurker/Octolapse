@@ -758,7 +758,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		# Octoprint Event Manager Code
 		self.IsRenderingSynchronized = True
 		eventManager().fire(Events.MOVIE_DONE, payload)
-		self.SendRenderEndMessage(payload["success"])
+		self.SendRenderEndMessage(True)
 
 	def OnRenderEnd(self, *args, **kwargs):
 		"""Called after all rendering and synchronization attemps are complete."""

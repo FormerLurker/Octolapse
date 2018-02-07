@@ -70,7 +70,7 @@ table.octolapse-profiles th.profile_action{
 }
 
 
-#octolapse_snapshot_thumbnail_container, #octolapse_previous_snapshot_container {
+#octolapse_snapshot_thumbnail_container {
     position: relative;
     min-height: 150px;
 }
@@ -130,7 +130,7 @@ table.octolapse-profiles {
 }
 #octolapse_previous_snapshot,
 #octolapse_latest_snapshot {
-    position: relative;
+    position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
@@ -139,12 +139,15 @@ table.octolapse-profiles {
     max-height: 100%;
     margin: auto;
     overflow: auto;
+    
+}
+#octolapse_previous_snapshot{
+    
 }
 
 
 
-
-#octolapse_latest_snapshot, #octolapse_latest_snapshot_thumbnail {
+#octolapse_latest_snapshot,#octolapse_latest_snapshot_thumbnail {
     z-index: 1
 }
 
