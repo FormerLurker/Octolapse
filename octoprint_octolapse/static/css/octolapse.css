@@ -145,8 +145,6 @@ table.octolapse-profiles {
     
 }
 
-
-
 #octolapse_latest_snapshot,#octolapse_latest_snapshot_thumbnail {
     z-index: 1
 }
@@ -261,6 +259,10 @@ table.octolapse-profiles {
 .bg-trigger-info, .bg-trigger-count {
     color: #656565;
 }
+
+/*CSS Animations*/
+
+
 .shake {
     -webkit-animation: shakeIt 0.25s linear 4;
     -moz-animation: shakeIt 0.25s linear 4;
@@ -288,9 +290,19 @@ table.octolapse-profiles {
     }
 }
 
-input.error {
-    border-color: #f39c12;
+.fade-in.hidden {
+    visibility: hidden;
+    /*opacity: 0;*/
+    
 }
+.fade-in.visible {
+    -webkit-animation: fadeIn 1.25s linear 1;
+    -moz-animation: fadeIn 1.25s linear 1;
+    -ms-animation: fadeIn 1.25s linear 1;
+    -o-animation: fadeIn 1.25s linear 1;
+    animation: fadeIn 1.25s linear 1;
+}
+
 @-webkit-keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -312,6 +324,10 @@ input.error {
     -webkit-animation: fadeIn 1s;
     animation: fadeIn 1s;
     
+}
+
+input.error {
+    border-color: #f39c12;
 }
 
 /*Bootstrap 3 css to make life easier*/

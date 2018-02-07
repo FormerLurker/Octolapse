@@ -744,14 +744,10 @@ $(function () {
                 });
             });
            
-            $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
+            
             $("#octolapse_latest_snapshot_thumbnail").bind("load", function () {
                 //console.log("Snapshot Image Loaded.");
-                $(this).fadeIn(1000, function () {
-                    //console.log("Snapshot Image has been shown, hiding previous image.");
-                    $previousSnapshotThumbnailImage.attr("src", "");
-                    $("#refresh_thumbnail_button").fadeIn();
-                });
+                $("#refresh_thumbnail_button").fadeIn();
             });
         }
                 
@@ -772,7 +768,10 @@ $(function () {
                 self.IsTabShowing = false;
             }
         }
-        
+
+        //  I specifically did NOT use jquery for this function because changing the SRC attribute of too many large images
+        // at the same time causes a loading error (image is truncated or corrupt), but only in firefox.
+        // This has been a troublesome error.
         self.updateLatestSnapshotImage = function (force = false) {
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
                 //console.log("Auto-Update latest snapshot image is disabled.");
@@ -781,26 +780,35 @@ $(function () {
             
             if (self.IsLatestSnapshotDialogShowing) {
                 //console.log("Updating Snapshot Image");
+                // Get the new URL.  Timestamped to prevent caching.
                 newSnapshotUrl = getLatestSnapshotUrl() + "&time=" + new Date().getTime()
-                
-                previousUrl = $("#octolapse_latest_snapshot").attr('src')
+                // Get the latest snapshot element
+                latestSnapshot = document.getElementById("octolapse_latest_snapshot")
+                // retrieve the previous URL
+                previousUrl = latestSnapshot.src;
+                // If the previous url does not exist, set it to the new one.
                 if (previousUrl == null || previousUrl == "")
                     previousUrl = newSnapshotUrl;
 
-                // Bugfix for firefox img load issue.  We will create a new img tag for each of these
-                // Do the previous image first so it's there when the current image fades in
-                $("#octolapse_previous_snapshot").attr("src", previousUrl);
+                // get the previous snapshot element
+                previousSnapshot = document.getElementById("octolapse_previous_snapshot")
+                // Set the src to that of the previousImageURL so we have something to transition into, or if there was
+                previousSnapshot.src = previousUrl;
 
                 // Now hide the current image
-                $("#octolapse_latest_snapshot").hide();
-                setTimeout(function () {
-                    $("#octolapse_latest_snapshot").one("load", function () {
-                        //console.log("Snapshot Image Loaded.");
-                        $(this).fadeIn(1000);
-                    });
-                    $("#octolapse_latest_snapshot").attr("src", newSnapshotUrl);
-                }, 50);
+                latestSnapshot.className = "fade-in hidden";
                 
+                // After a brief delay, set the url of the latest snapshot
+                setTimeout(function () {
+                    // Now switch the url
+                    latestSnapshot.src = newSnapshotUrl;
+                    // Now show the image
+                    // Hopefully css transitions will work for everythign else
+                    // Now hide the current image
+                    latestSnapshot.className = "fade-in visible";
+                }, 100);
+                
+               
             }
 
         };
@@ -809,6 +817,7 @@ $(function () {
             $("#refresh_thumbnail_button").hide();
             self.updateLatestSnapshotThumbnailImage(true);
         }
+        
         self.updateLatestSnapshotThumbnailImage = function (force = false) {
 
             if (!force && !Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -817,13 +826,35 @@ $(function () {
             }
             if (self.IsTabShowing) {
                 //console.log("Updating Snapshot Image");
-                $snapshotThumbnailImage = $("#octolapse_latest_snapshot_thumbnail");
-                $previousSnapshotThumbnailImage = $("#octolapse_previous_snapshot_thumbnail");
-                // copy the existing image url into the previous snapshot image src.
-                $previousSnapshotThumbnailImage.attr("src", $snapshotThumbnailImage.attr("src"));
-                $snapshotThumbnailImage.hide();
-                // set the current src
-                $snapshotThumbnailImage.attr("src", getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
+                
+                // Get the new URL.  Timestamped to prevent caching.
+                newSnapshotUrl = getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime();
+                // Get the latest snapshot element
+                latestSnapshot = document.getElementById("octolapse_latest_snapshot_thumbnail")
+                // retrieve the previous URL
+                previousUrl = latestSnapshot.src;
+                // If the previous url does not exist, set it to the new one.
+                if (previousUrl == null || previousUrl == "")
+                    previousUrl = newSnapshotUrl;
+
+                // get the previous snapshot element
+                previousSnapshot = document.getElementById("octolapse_previous_snapshot_thumbnail")
+                // Set the src to that of the previousImageURL so we have something to transition into, or if there was
+                previousSnapshot.src = previousUrl;
+
+                // Now hide the current image
+                latestSnapshot.className = "fade-in hidden";
+
+                // After a brief delay, set the url of the latest snapshot
+                setTimeout(function () {
+                    // Now switch the url
+                    latestSnapshot.src = newSnapshotUrl;
+                    // Now show the image
+                    // Hopefully css transitions will work for everythign else
+                    // Now hide the current image
+                    latestSnapshot.className = "fade-in visible";
+                }, 100);
+
             }
             else {
                 //console.log("Octolapse tab is not showing, not updating the latest snapshot image.");
