@@ -277,11 +277,11 @@ table.octolapse-profiles {
 .previous-snapshots img.visible {
     visibility: visible;
     opacity: 0;
-    -webkit-animation: fadeOut 0.5s linear 1;
-    -moz-animation: fadeOut 0.5s linear 1;
-    -ms-animation: fadeOut 0.5s linear 1;
-    -o-animation: fadeOut 0.5s linear 1;
-    animation: fadeOut 0.5s linear 1;
+    -webkit-animation: fadeOut 0.25s linear 1;
+    -moz-animation: fadeOut 0.25s linear 1;
+    -ms-animation: fadeOut 0.25s linear 1;
+    -o-animation: fadeOut 0.25s linear 1;
+    animation: fadeOut 0.25s linear 1;
     animation-iteration-count: 1;
 }
 
@@ -299,19 +299,19 @@ table.octolapse-profiles {
     animation-duration: 1.00s
 }
 .snapshot-animation-duration-5 {
-    animation-duration: 2.5s
+    animation-duration: 1.25s
 }
 .snapshot-animation-duration-6 {
-    animation-duration: 2.5s
+    animation-duration: 1.5s
 }
 .snapshot-animation-duration-7 {
-    animation-duration: 2.5s
+    animation-duration: 1.75s
 }
 .snapshot-animation-duration-8 {
-    animation-duration: 2.5s
+    animation-duration: 2.0s
 }
 .snapshot-animation-duration-9 {
-    animation-duration: 2.5s
+    animation-duration: 2.25s
 }
 .snapshot-animation-duration-10 {
     animation-duration: 2.5s
