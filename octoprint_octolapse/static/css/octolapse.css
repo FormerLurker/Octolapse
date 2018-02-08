@@ -223,7 +223,7 @@ table.octolapse-profiles th.profile_action{
 }
 
 #refresh_thumbnail_container {
-    z-index: 5;
+    z-index: 40;
     position: absolute;
     top: 5px;
     right: 5px;

@@ -697,35 +697,36 @@ $(function () {
         self.IsLatestSnapshotDialogShowing = false;
 
         self.showLatestSnapshotDialog = function () {
+            
             self.IsLatestSnapshotDialogShowing = true;
-            self.updateLatestSnapshotImage(force = true);
             self.$SnapshotDialog.modal();
 
         };
         // cancel button click handler
         self.cancelLatestSnapshotDialog = function () {
-            // hide the modal
             self.IsLatestSnapshotDialogShowing = false;
             self.$SnapshotDialog.modal("hide");
         };
         
         self.onAfterBinding = function () {
-            $previousSnapshotImage = $("#octolapse_previous_snapshot");
             self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             self.$SnapshotDialog.on("hidden.bs.modal", function () {
+                console.log("Snapshot dialog hidden.");
                 self.IsLatestSnapshotDialogShowing = false;
             });
             // configure the dialog shown event
             
             self.$SnapshotDialog.on("shown.bs.modal", function () {
-                //console.log("Showing snapshot dialog.");
+                console.log("Snapshot dialog shown.");
+                self.IsLatestSnapshotDialogShowing = true;
+                self.updateLatestSnapshotImage(force = true);
             });
             
             // configure the dialog show event
             self.$SnapshotDialog.on("show.bs.modal", function () {
-               //console.log("Showing snapshot dialog.");
-                
+               console.log("Snapshot dialog showing.");
+                self.IsLatestSnapshotDialogShowing = true;
             });
             
             
@@ -768,10 +769,6 @@ $(function () {
                 else if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log("Not updating the thumbnail, auto-reload is disabled.");
                     return
-                }
-                else if (self.IsLatestSnapshotDialogShowing) {
-                    //console.log("The full screen dialog is showing, not updating the thumbnail.  Clearing the image history.");
-                    return;
                 }
             }
             self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
