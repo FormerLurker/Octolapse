@@ -1,9 +1,15 @@
 <script type="text/html" id="latest-snapshot-template">
   <div id="octolapse_latest_snapshot_dialog" class="latest-snapshot-modal fade hide" >
-          <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-    <div id="snapshot_container" data-bind="foreach: latestSnapshotImageUrls">
-      <img data-bind="attr:{src: imageUrl},css: Octolapse.Status.getAnimatedSnapshotClass($index())" ></img>
+    <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+    <div id="octolapse_snapshot_image_container">
+      <div class="snapshot_container">
+        <span class="previous-snapshots">
+        </span>
+        <span class="latest-snapshot">
+          <img class="latest"></img>
+        </span>
+      </div>
+      <a href="#" class="cancel btn btn-primary" data-bind="click: cancelLatestSnapshotDialog">Close</a>
     </div>
-    <a href="#" class="cancel btn btn-primary" data-bind="click: cancelLatestSnapshotDialog">Close</a>
   </div>
 </script>

@@ -1248,6 +1248,7 @@ class OctolapseSettings(object):
 		self.show_navbar_when_not_printing = True
 		self.is_octolapse_enabled = True
 		self.auto_reload_latest_snapshot = True
+		self.auto_reload_frames = 5
 		self.show_position_state_changes = False
 		self.show_position_changes = False
 		self.show_extruder_state_changes = False
@@ -1320,6 +1321,7 @@ class OctolapseSettings(object):
 		
 		if (HasKey(changes,"is_octolapse_enabled")) : self.is_octolapse_enabled = bool(GetValue(changes,"is_octolapse_enabled",self.is_octolapse_enabled))
 		if (HasKey(changes,"auto_reload_latest_snapshot")) : self.auto_reload_latest_snapshot = bool(GetValue(changes,"auto_reload_latest_snapshot",self.auto_reload_latest_snapshot))
+		if (HasKey(changes,"auto_reload_frames")) : self.auto_reload_frames = int(GetValue(changes,"auto_reload_frames",self.auto_reload_frames))
 		if (HasKey(changes,"show_navbar_icon")) : self.show_navbar_icon = bool(GetValue(changes,"show_navbar_icon",self.show_navbar_icon))
 		if (HasKey(changes,"show_navbar_when_not_printing")) : self.show_navbar_when_not_printing = bool(GetValue(changes,"show_navbar_when_not_printing",self.show_navbar_when_not_printing))
 		if (HasKey(changes,"show_position_state_changes")) : self.show_position_state_changes = bool(GetValue(changes,"show_position_state_changes",self.show_position_state_changes))
@@ -1395,6 +1397,7 @@ class OctolapseSettings(object):
 			'version' :  utility.getstring(self.version,defaults.version),
 			"is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled,defaults.is_octolapse_enabled),
 			"auto_reload_latest_snapshot": utility.getbool(self.auto_reload_latest_snapshot,defaults.auto_reload_latest_snapshot),
+			"auto_reload_frames" : utility.getint(self.auto_reload_frames,defaults.auto_reload_frames),
 			"show_navbar_icon" : utility.getbool(self.show_navbar_icon,defaults.show_navbar_icon),
 			"show_navbar_when_not_printing" : utility.getbool(self.show_navbar_when_not_printing,defaults.show_navbar_when_not_printing),
 			"show_position_changes" : utility.getbool(self.show_position_changes,defaults.show_position_changes),
@@ -1481,6 +1484,7 @@ class OctolapseSettings(object):
 		return {
 			'is_octolapse_enabled':self.is_octolapse_enabled
 			,'auto_reload_latest_snapshot':self.auto_reload_latest_snapshot
+			,'auto_reload_frames' : int(self.auto_reload_frames)
 			,'show_navbar_icon':self.show_navbar_icon
 			,'show_navbar_when_not_printing': self.show_navbar_when_not_printing
 			,'show_position_state_changes':self.show_position_state_changes

@@ -70,84 +70,7 @@ table.octolapse-profiles th.profile_action{
 }
 
 
-#octolapse_snapshot_thumbnail_container {
-    position: relative;
-    min-height: 150px;
-}
 
-#refresh_thumbnail_container {
-    z-index: 5;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-}
-
-table.octolapse-profiles {
-    border-collapse: collapse;
-    table-layout: auto;
-    max-width: 100%;
-}
-
-
-
-.latest-snapshot-modal .close {
-    z-index: 1000;
-    position: absolute;
-    right: 50px;
-    top: 50px;
-    font-size: 50px;
-    
-}
-
-.latest-snapshot-modal .cancel {
-    z-index: 1000;
-    position: absolute;
-    bottom: 10px;
-    width:100px;
-    left:50%;
-    margin-left:-50px;
-}
-
-
-#octolapse_previous_snapshot_thumbnail,
-#octolapse_latest_snapshot_thumbnail {
-    vertical-align: auto;
-    position: absolute;
-    display: block;
-    max-width: 300px;
-    max-height: 150px;
-    width: auto;
-    height: auto;
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-}
-#octolapse_previous_snapshot_thumbnail,
-#octolapse_latest_snapshot_thumbnail {
-    max-width: 300px;
-    max-height: 150px;
-}
-#octolapse_previous_snapshot,
-#octolapse_latest_snapshot {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 100%;
-    max-height: 100%;
-    margin: auto;
-    overflow: auto;
-    
-}
-#octolapse_previous_snapshot{
-    
-}
-
-#octolapse_latest_snapshot,#octolapse_latest_snapshot_thumbnail {
-    z-index: 1
-}
 
 #octolapse_add_edit_profile_form {
     margin: 0;
@@ -290,69 +213,190 @@ table.octolapse-profiles {
     }
 }
 
-.fade-in-0, .fade-in-1, .fade-in-2, .fade-in-3, .fade-in-4 {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 100%;
-    max-height: 100%;
-    margin: auto;
-    overflow: auto;
-    -webkit-backface-visibility: hidden;
-}
-    .fade-in-1.visible, .fade-in-2.visible, .fade-in-3.visible, .fade-in-4.visible {
-        -webkit-animation: fadeIn 0.2s linear 1;
-        -moz-animation: fadeIn 0.2s linear 1;
-        -ms-animation: fadeIn 0.2s linear 1;
-        -o-animation: fadeIn 0.2s linear 1;
-        animation: fadeIn 0.2s linear 1;
-        animation-iteration-count: 1;
-        animation-duration: 1.25s;
-    }
-.fade-in-4 {
-    opacity: 0;
-    z-index: 5;
-    -webkit-animation-delay: 1s;
-    -moz-animation-delay: 1s;
-    -o-animation-delay: 1s;
-    -ms-animation-delay: 1s;
-    animation-delay: 1s;
-}
-.fade-in-3 {
-    opacity: 0;
-    z-index: 4;
-    -webkit-animation-delay: 0.75s;
-    -moz-animation-delay: 0.75s;
-    -o-animation-delay: 0.75s;
-    -ms-animation-delay: 0.75s;
-    animation-delay: 0.75s;
-}
-.fade-in-2 {
-    opacity: 0;
-    z-index: 3;
-    -webkit-animation-delay: 0.5s;
-    -moz-animation-delay: 0.5s;
-    -o-animation-delay: 0.5s;
-    -ms-animation-delay: 0.5s;
-    animation-delay: 0.5s;
-}
-.fade-in-1 {
-    opacity: 0;
-    z-index: 2;
-    -webkit-animation-delay: 0.25s;
-    -moz-animation-delay: 0.25s;
-    -o-animation-delay: 0.25s;
-    -ms-animation-delay: 0.25s;
-    animation-delay: 0.25s;
-}
-.fade-in-0 {
-    z-index: 1;
-    display:block;
-    opacity: 1;
+#octolapse_snapshot_image_container{
+
 }
 
+#octolapse_snapshot_thumbnail_container {
+    position: relative;
+    min-height: 150px;
+}
+
+#refresh_thumbnail_container {
+    z-index: 5;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+table.octolapse-profiles {
+    border-collapse: collapse;
+    table-layout: auto;
+    max-width: 100%;
+}
+
+.latest-snapshot-modal .close {
+    z-index: 1000;
+    position: absolute;
+    right: 50px;
+    top: 50px;
+    font-size: 50px;
+}
+
+.latest-snapshot-modal .cancel {
+    z-index: 1000;
+    position: absolute;
+    bottom: 10px;
+    width: 100px;
+    left: 50%;
+    margin-left: -50px;
+}
+
+.snapshot_container img {
+    vertical-align: auto;
+    position: absolute;
+    display: block;
+    width: auto;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+    max-height: 100%;
+    left: 0;
+    right: 0;
+}
+#octolapse_snapshot_thumbnail_container{
+    max-width: 300px;
+    max-height: 150px;
+}
+.previous-snapshots img.hidden {
+    visibility: hidden;
+}
+
+
+.previous-snapshots img.visible {
+    visibility: visible;
+    opacity: 0;
+    -webkit-animation: fadeOut 0.5s linear 1;
+    -moz-animation: fadeOut 0.5s linear 1;
+    -ms-animation: fadeOut 0.5s linear 1;
+    -o-animation: fadeOut 0.5s linear 1;
+    animation: fadeOut 0.5s linear 1;
+    animation-iteration-count: 1;
+}
+
+
+
+
+
+img.effect-delay-0 {
+    z-index: 12;
+    -webkit-animation-delay: 0.00s;
+    -moz-animation-delay: 0.00s;
+    -o-animation-delay: 0.00s;
+    -ms-animation-delay: 0.00s;
+    animation-delay: 0.00s;
+}
+img.effect-delay-1 {
+    z-index: 11;
+    -webkit-animation-delay: 0.50s;
+    -moz-animation-delay: 0.50s;
+    -o-animation-delay: 0.50s;
+    -ms-animation-delay: 0.50s;
+    animation-delay: 0.50s;
+}
+img.effect-delay-2 {
+    z-index: 10;
+    -webkit-animation-delay: 1.0s;
+    -moz-animation-delay: 1.0s;
+    -o-animation-delay: 1.0s;
+    -ms-animation-delay: 1.0s;
+    animation-delay: 1.0s;
+}
+img.effect-delay-3 {
+    z-index: 9;
+    -webkit-animation-delay: 1.50s;
+    -moz-animation-delay: 1.50s;
+    -o-animation-delay: 1.50s;
+    -ms-animation-delay: 1.50s;
+    animation-delay: 1.50s;
+}
+img.effect-delay-4 {
+    z-index: 8;
+    -webkit-animation-delay: 2.00s;
+    -moz-animation-delay: 2.00s;
+    -o-animation-delay: 2.00s;
+    -ms-animation-delay: 2.00s;
+    animation-delay: 2.00s;
+}
+img.effect-delay-5 {
+    z-index: 7;
+    -webkit-animation-delay: 2.50s;
+    -moz-animation-delay: 2.50s;
+    -o-animation-delay: 2.50s;
+    -ms-animation-delay: 2.50s;
+    animation-delay: 2.50s;
+}
+img.effect-delay-6 {
+    z-index: 6;
+    -webkit-animation-delay: 3.00s;
+    -moz-animation-delay: 3.00s;
+    -o-animation-delay: 3.00s;
+    -ms-animation-delay: 3.00s;
+    animation-delay: 3.00s;
+}
+img.effect-delay-7 {
+    z-index: 5;
+    -webkit-animation-delay: 3.50s;
+    -moz-animation-delay: 3.50s;
+    -o-animation-delay: 3.50s;
+    -ms-animation-delay: 3.50s;
+    animation-delay: 3.50s;
+}
+img.effect-delay-8 {
+    z-index: 4;
+    -webkit-animation-delay: 4.00s;
+    -moz-animation-delay: 4.00s;
+    -o-animation-delay: 4.00s;
+    -ms-animation-delay: 4.00s;
+    animation-delay: 4.00s;
+}
+.effect-delay-9 {
+    z-index: 3;
+    -webkit-animation-delay: 4.50s;
+    -moz-animation-delay: 4.50s;
+    -o-animation-delay: 4.50s;
+    -ms-animation-delay: 4.50s;
+    animation-delay: 4.50s;
+}
+img.effect-delay-10 {
+    z-index: 2;
+    -webkit-animation-delay: 5.00s;
+    -moz-animation-delay: 5.00s;
+    -o-animation-delay: 5.00s;
+    -ms-animation-delay: 5.00s;
+    animation-delay: 5.00s;
+}
+
+@-webkit-keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
 
 @-webkit-keyframes fadeIn {
     from { opacity: 0; }

@@ -8,11 +8,11 @@
       <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
     </div>
     <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is enabled' : 'Auto snapshot reload is disabled'}">
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.'  : 'Auto snapshot reload is disabled'}">
 
         <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></span>
       </span>
-      <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto snapshot reload is enabled' : 'Auto snapshot reload is disabled'"></span>
+      <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.' : 'Auto snapshot reload is disabled'"></span>
     </div>
     <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
@@ -120,6 +120,19 @@
                 </span>
               </div>
             </div>
+            <div class="control-group" data-bind="visibility: auto_reload_latest_snapshot">
+              <label class="control-label">Auto-Reload Frames</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input name="auto_reload_frames" class="input-small ignore_hidden_errors" title="The number of frames to animate during auto-reload" type="number" class="input-small" data-bind="value: auto_reload_frames"  min="1" max="10" step="1" required="true"/>
+                  <div class="error_label_container text-error" ></div>
+                </label>
+                <span class="help-inline">
+                  Determines the number of frames that will be used to create an animtion when the latest snapshot loads
+                </span>
+              </div>
+            </div>
+            auto_reload_frames
             <hr/>
             <div>
               <h5>Info Panels</h5>

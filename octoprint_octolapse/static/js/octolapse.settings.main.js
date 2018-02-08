@@ -13,6 +13,7 @@ $(function () {
         // Settings values
         self.is_octolapse_enabled = ko.observable();
         self.auto_reload_latest_snapshot = ko.observable();
+        self.auto_reload_frames = ko.observable();
         self.show_navbar_icon = ko.observable();
         self.show_navbar_when_not_printing = ko.observable();
         
@@ -34,7 +35,7 @@ $(function () {
             settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
-
+            self.auto_reload_frames(settings.auto_reload_frames());
             self.show_navbar_icon(settings.show_navbar_icon());
             self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
             
@@ -74,6 +75,7 @@ $(function () {
         self.update = function (settings) {
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
+            self.auto_reload_frames(settings.auto_reload_frames);
             self.show_navbar_icon(settings.show_navbar_icon);
             self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
             self.show_position_state_changes(settings.show_position_state_changes);
@@ -89,6 +91,7 @@ $(function () {
             //console.log("showing main settings")
             self.is_octolapse_enabled(Octolapse.Globals.enabled());
             self.auto_reload_latest_snapshot(Octolapse.Globals.auto_reload_latest_snapshot());
+            self.auto_reload_frames(Octolapse.Globals.auto_reload_frames());
             self.show_navbar_icon(Octolapse.Globals.navbar_enabled());
             self.show_navbar_when_not_printing(Octolapse.Globals.show_navbar_when_not_printing());
             self.show_position_state_changes(Octolapse.Globals.show_position_state_changes());
@@ -107,6 +110,7 @@ $(function () {
             var data = {
                 "is_octolapse_enabled": self.is_octolapse_enabled()
                 , "auto_reload_latest_snapshot": self.auto_reload_latest_snapshot()
+                , "auto_reload_frames": self.auto_reload_frames()
                 , "show_navbar_icon": self.show_navbar_icon()
                 , "show_navbar_when_not_printing": self.show_navbar_when_not_printing()
                 , "show_position_state_changes": self.show_position_state_changes()
@@ -115,7 +119,7 @@ $(function () {
                 , "show_trigger_state_changes": self.show_trigger_state_changes()
                 , "client_id": Octolapse.Globals.client_id
             };
-            console.log("Saving main settings.")
+            //console.log("Saving main settings.")
             $.ajax({
                 url: "/plugin/octolapse/saveMainSettings",
                 type: "POST",
@@ -134,6 +138,7 @@ $(function () {
             // Set the options to the current settings
             self.is_octolapse_enabled(true);
             self.auto_reload_latest_snapshot(true);
+            self.auto_reload_frames(5);
             self.show_navbar_icon(true);
             self.show_navbar_when_not_printing(false);
             self.show_position_state_changes(false);

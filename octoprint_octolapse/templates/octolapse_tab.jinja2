@@ -57,12 +57,15 @@
         </div>
         <div class="span6 text-center">
           <div id="octolapse_snapshot_thumbnail_container" >
-            <a id="show_latest_snapshot" href="#"  data-bind="click:showLatestSnapshotDialog" title="View a larger image">
-              <div data-bind="foreach: latestSnapshotThumbnailUrls">
-                <img data-bind="attr:{src: imageUrl},css: Octolapse.Status.getAnimatedThumbnailClass($index())" ></img>
-              </div>
-            </a>
-            <img id="octolapse_previous_snapshot_thumbnail"></img>
+            <div class="snapshot_container">
+              <a id="show_latest_snapshot" href="#"  data-bind="click:showLatestSnapshotDialog" title="View a larger image">
+                <span class="previous-snapshots">
+                </span>
+                <span class="latest-snapshot">
+                  <img class="latest" src=""></img>
+                </span>
+              </a>
+            </div>
             
             <div id="refresh_thumbnail_container" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
               <a id="refresh_thumbnail_button" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot(),click:refreshThumbnail" href="#">

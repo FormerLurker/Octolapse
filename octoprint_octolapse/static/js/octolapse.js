@@ -230,7 +230,7 @@ $(function () {
         self.show_extruder_state_changes = ko.observable(false)
         self.show_trigger_state_changes = ko.observable(false)
         self.auto_reload_latest_snapshot = ko.observable(false)
-        
+        self.auto_reload_frames = ko.observable(5);
         self.is_admin = ko.observable(false)
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
@@ -319,8 +319,8 @@ $(function () {
                 Octolapse.Status.update(state.Status);
             }
             if (!self.HasLoadedState) {
-                Octolapse.Status.updateLatestSnapshotImageUrls(true);
-                Octolapse.Status.updateLatestSnapshotThumbnailUrls(true);
+                Octolapse.Status.updateLatestSnapshotImage(true);
+                Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
             
             self.HasLoadedState = true;
@@ -336,7 +336,11 @@ $(function () {
                 self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot())
             else
                 self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot)
-            
+            //auto_reload_frames
+            if (ko.isObservable(settings.auto_reload_frames))
+                self.auto_reload_frames(settings.auto_reload_frames())
+            else
+                self.auto_reload_frames(settings.auto_reload_frames)
             // navbar_enabled
             if (ko.isObservable(settings.show_navbar_icon))
                 self.navbar_enabled(settings.show_navbar_icon())
@@ -443,12 +447,12 @@ $(function () {
                     break;
                 case "snapshot-complete":
                     {
-                        console.log('octolapse.js - snapshot-complete');
+                        //console.log('octolapse.js - snapshot-complete');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);
-                        Octolapse.Status.updateLatestSnapshotThumbnailUrls();
-                        Octolapse.Status.updateLatestSnapshotImageUrls();
+                        Octolapse.Status.updateLatestSnapshotThumbnail();
+                        Octolapse.Status.updateLatestSnapshotImage();
                     }
                     break;
                 case "render-start":
