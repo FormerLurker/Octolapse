@@ -272,81 +272,83 @@ table.octolapse-profiles {
 img.effect-delay-0.visible {
     z-index: 12;
     opacity: 1;
-    -webkit-transition: opacity 0.25s ease;
-    -moz-transition: opacity 0.25s ease;
-    -o-transition: opacity 0.25s ease;
-    transition: opacity 0.25s ease;
+    -webkit-transition: opacity 0.25s linear ;
+    -moz-transition: opacity 0.25s linear;
+    -o-transition: opacity 0.25s linear;
+    transition: opacity 0.25s linear;
 }
+
+
 img.effect-delay-1.visible {
     z-index: 11;
-    -webkit-transition: opacity 0.25s 0.25s ease;
-    -moz-transition: opacity 0.25s 0.25s ease;
-    -o-transition: opacity 0.25s 0.25s ease;
-    transition: opacity 0.25s 0.25s ease;
+    -webkit-transition: opacity 0.25s 0.25s linear;
+    -moz-transition: opacity 0.25s 0.25s linear;
+    -o-transition: opacity 0.25s 0.25s linear;
+    transition: opacity 0.25s 0.25s linear;
     opacity: 1;
 }
 img.effect-delay-2.visible {
     z-index: 10;
-    -webkit-transition: opacity 0.25s 0.5s ease;
-    -moz-transition: opacity 0.25s 0.5s ease;
-    -o-transition: opacity 0.25s 0.5s ease;
-    transition: opacity 0.25s 0.5s ease;
+    -webkit-transition: opacity 0.25s 0.5s linear;
+    -moz-transition: opacity 0.25s 0.5s linear;
+    -o-transition: opacity 0.25s 0.5s linear;
+    transition: opacity 0.25s 0.5s linear;
     opacity: 1;
 }
 img.effect-delay-3.visible {
     z-index: 9;
-    -webkit-transition: opacity 0.25s 0.75s ease;
-    -moz-transition: opacity 0.25s 0.75s ease;
-    -o-transition: opacity 0.25s 0.75s ease;
-    transition: opacity 0.25s 0.75s ease;
+    -webkit-transition: opacity 0.25s 0.75s linear;
+    -moz-transition: opacity 0.25s 0.75s linear;
+    -o-transition: opacity 0.25s 0.75s linear;
+    transition: opacity 0.25s 0.75s linear;
     opacity: 1;
 }
 img.effect-delay-4.visible {
     z-index: 8;
-    -webkit-transition: opacity 0.25s 1s ease;
-    -moz-transition: opacity 0.25s 1s ease;
-    -o-transition: opacity 0.25s 1s ease;
-    transition: opacity 0.25s 1s ease;
+    -webkit-transition: opacity 0.25s 1s linear;
+    -moz-transition: opacity 0.25s 1s linear;
+    -o-transition: opacity 0.25s 1s linear;
+    transition: opacity 0.25s 1s linear;
     opacity: 1;
 }
 img.effect-delay-5.visible {
     z-index: 7;
-    -webkit-transition: opacity 0.25s 1.25s ease;
-    -moz-transition: opacity 0.25s 1.25s ease;
-    -o-transition: opacity 0.25s 1.25s ease;
-    transition: opacity 0.25s 1.25s ease;
+    -webkit-transition: opacity 0.25s 1.25s linear;
+    -moz-transition: opacity 0.25s 1.25s linear;
+    -o-transition: opacity 0.25s 1.25s linear;
+    transition: opacity 0.25s 1.25s linear;
     opacity: 1;
 }
 img.effect-delay-6.visible {
     z-index: 6;
-    -webkit-transition: opacity 0.25s 1.5s ease;
-    -moz-transition: opacity 0.25s 1.5s ease;
-    -o-transition: opacity 0.25s 1.5s ease;
-    transition: opacity 0.25s 1.5s ease;
+    -webkit-transition: opacity 0.25s 1.5s linear;
+    -moz-transition: opacity 0.25s 1.5s linear;
+    -o-transition: opacity 0.25s 1.5s linear;
+    transition: opacity 0.25s 1.5s linear;
     opacity: 1;
 }
 img.effect-delay-7.visible {
     z-index: 5;
-    -webkit-transition: opacity 0.25s 1.75s ease;
-    -moz-transition: opacity 0.25s 1.75s ease;
-    -o-transition: opacity 0.25s 1.75s ease;
-    transition: opacity 0.25s 1.75s ease;
+    -webkit-transition: opacity 0.25s 1.75s linear;
+    -moz-transition: opacity 0.25s 1.75s linear;
+    -o-transition: opacity 0.25s 1.75s linear;
+    transition: opacity 0.25s 1.75s linear;
     opacity: 1;
 }
 img.effect-delay-8.visible {
     z-index: 4;
-    -webkit-transition: opacity 0.25s 2s ease;
-    -moz-transition: opacity 0.25s 2s ease;
-    -o-transition: opacity 0.25s 2s ease;
-    transition: opacity 0.25s 2s ease;
+    -webkit-transition: opacity 0.25s 2s linear;
+    -moz-transition: opacity 0.25s 2s linear;
+    -o-transition: opacity 0.25s 2s linear;
+    transition: opacity 0.25s 2s linear;
     opacity: 1;
 }
 img.effect-delay-9.visible {
     z-index: 3;
-    -webkit-transition: opacity 0.25s 2.25s ease;
-    -moz-transition: opacity 0.25s 2.25s ease;
-    -o-transition: opacity 0.25s 2.25s ease;
-    transition: opacity 0.25s 2.25s ease;
+    -webkit-transition: opacity 0.25s 2.25s linear;
+    -moz-transition: opacity 0.25s 2.25s linear;
+    -o-transition: opacity 0.25s 2.25s linear;
+    transition: opacity 0.25s 2.25s linear;
 }
 .previous-snapshots {
     visibility: hidden;
@@ -362,6 +364,15 @@ img.effect-delay-9.visible {
     opacity: 0;
 }
 
+@keyframes fadeInVisibility {
+    99% {
+        visibility: hidden;
+    }
+
+    100% {
+        visibility: visible;
+    }
+}
 
 @-webkit-keyframes fadeIn {
     from { opacity: 0; }

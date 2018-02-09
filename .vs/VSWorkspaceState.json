@@ -3,8 +3,9 @@
     "",
     "\\octoprint_octolapse",
     "\\octoprint_octolapse\\static",
+    "\\octoprint_octolapse\\static\\css",
     "\\octoprint_octolapse\\static\\js"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\trigger.py",
+  "SelectedNode": "\\octoprint_octolapse\\static\\css\\octolapse.css",
   "PreviewInSolutionExplorer": false
 }

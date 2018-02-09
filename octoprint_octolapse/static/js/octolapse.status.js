@@ -854,6 +854,7 @@ $(function () {
                 $newSnapshot.one('load', function () {
                     $previousSnapshotContainer.find("img").each(function (index, element) {
                         //console.log("The newest image has loaded, adding visible class to previous images.");
+                        
                         $(element).removeClass('hidden');
                         $(element).addClass('visible');
                         self.IsAnimating = false;
