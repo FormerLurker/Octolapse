@@ -699,6 +699,7 @@ $(function () {
         self.showLatestSnapshotDialog = function () {
             
             self.IsLatestSnapshotDialogShowing = true;
+            self.erasePreviousSnapshotImages();
             self.$SnapshotDialog.modal();
 
         };
@@ -737,9 +738,7 @@ $(function () {
                 //console.log("Octolapse Tab is showing");
                 self.IsTabShowing = true;
                 self.updateLatestSnapshotThumbnail(true);    
-                // Do we need this?
-                // Todo: Figure out if this is needed
-                //self.$SnapshotDialog.modal("hide");
+
             }
             else if (previous != null && previous == "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is not showing");
@@ -773,6 +772,12 @@ $(function () {
             }
             self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
 
+        }
+
+        self.erasePreviousSnapshotImages = function () {
+            $('#octolapse_snapshot_image_container .snapshot_container .previous-snapshots img').each(function (index, element) {
+                $(this).remove();
+            });
         }
         // takes the list of images, update the frames in the target accordingly and starts any animations
         self.IsAnimating = false;
