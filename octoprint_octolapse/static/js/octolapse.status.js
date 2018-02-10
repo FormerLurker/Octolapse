@@ -43,20 +43,20 @@ $(function () {
             self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             self.$SnapshotDialog.on("hidden.bs.modal", function () {
-                console.log("Snapshot dialog hidden.");
+                //console.log("Snapshot dialog hidden.");
                 self.IsLatestSnapshotDialogShowing = false;
             });
             // configure the dialog shown event
 
             self.$SnapshotDialog.on("shown.bs.modal", function () {
-                console.log("Snapshot dialog shown.");
+                //console.log("Snapshot dialog shown.");
                 self.IsLatestSnapshotDialogShowing = true;
                 self.updateLatestSnapshotImage(force = true);
             });
 
             // configure the dialog show event
             self.$SnapshotDialog.on("show.bs.modal", function () {
-                console.log("Snapshot dialog showing.");
+                //console.log("Snapshot dialog showing.");
                 self.IsLatestSnapshotDialogShowing = true;
             });
 
@@ -82,14 +82,11 @@ $(function () {
             //console.log("Refreshing Snapshot Thumbnail");
             var $target = $('#' + targetId + ' .snapshot_refresh_container a.refresh');
 
-            $target.hide();
+            
             if (isThumbnail)
                 self.updateLatestSnapshotThumbnail(force = true);
             else
                 self.updateLatestSnapshotImage(force = true);
-            setTimeout(function () {
-                $target.fadeIn();
-            }, 2);
         }
         self.startSnapshotAnimation = function (targetId, fadeButton = false) {
 
@@ -97,10 +94,6 @@ $(function () {
             // Hide and show the play/refresh button
             if (fadeButton && Octolapse.Globals.auto_reload_latest_snapshot()) {
                 var $target = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
-                $target.hide();
-                setTimeout(function () {
-                    $target.fadeIn();
-                }, 2);
             }
 
 

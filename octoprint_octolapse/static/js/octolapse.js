@@ -464,7 +464,7 @@ $(function () {
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container', true);
                             Octolapse.Status.updateLatestSnapshotThumbnail(true);
-                            Octolapse.Status.updateLatestSnapshotImage(true);
+                            Octolapse.Status.updateLatestSnapshotImage();
                         }
                         else
                         {
