@@ -1,7 +1,24 @@
 <script type="text/html" id="latest-snapshot-template">
   <div id="octolapse_latest_snapshot_dialog" class="latest-snapshot-modal fade hide" >
     <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+    
     <div id="octolapse_snapshot_image_container">
+      <div class="button-container top-right">
+        <div class="snapshot_refresh_container ">
+          <a class="start-animation" data-bind="click:startSnapshotAnimation('octolapse_snapshot_image_container',true),visible:Octolapse.Globals.auto_reload_latest_snapshot" href="#">
+            <span class="fa-stack fa-2x" style="position:inline;">
+              <i class="fa fa-square fa-stack-2x" ></i>
+              <i class="fa fa-play-circle fa-stack-1x"></i>
+            </span>
+          </a>
+          <a class="refresh" data-bind="click:refreshLatestImage('octolapse_snapshot_image_container'),visible:!Octolapse.Globals.auto_reload_latest_snapshot()" href="#">
+            <span class="fa-stack fa-2x" style="position:inline;">
+              <i class="fa fa-square fa-stack-2x" ></i>
+              <i class="fa fa-refresh fa-stack-1x"></i>
+            </span>
+          </a>
+        </div>
+      </div>
       <div class="snapshot_container">
         <span class="previous-snapshots">
         </span>
@@ -9,7 +26,11 @@
           <img class="latest"></img>
         </span>
       </div>
-      <a href="#" class="cancel btn btn-primary" data-bind="click: cancelLatestSnapshotDialog">Close</a>
+      <div class="button-container bottom-center">
+        <a href="#" class="cancel btn btn-primary" data-bind="click: cancelLatestSnapshotDialog">Close</a>
+        
+      </div>
+
     </div>
   </div>
 </script>

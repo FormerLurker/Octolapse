@@ -1,6 +1,379 @@
 /// Create our printers view model
 $(function () {
-    
+
+
+    Octolapse.StatusViewModel = function (parameters) {
+        // Create a reference to this object
+        var self = this
+        // Add this object to our Octolapse namespace
+        Octolapse.Status = this;
+        // Assign the Octoprint settings to our namespace
+
+        self.is_timelapse_active = ko.observable(false);
+        self.is_taking_snapshot = ko.observable(false);
+        self.is_rendering = ko.observable(false);
+        self.seconds_added_by_octolapse = ko.observable(0);
+        self.snapshot_count = ko.observable(0);
+        self.snapshot_error = ko.observable(false);
+        self.snapshot_error_message = ko.observable("");
+        self.waiting_to_render = ko.observable();
+
+        self.PositionState = new Octolapse.positionStateViewModel();
+        self.Position = new Octolapse.positionViewModel();
+        self.ExtruderState = new Octolapse.extruderStateViewModel();
+        self.TriggerState = new Octolapse.triggersStateViewModel();
+
+        self.IsTabShowing = false;
+        self.IsLatestSnapshotDialogShowing = false;
+
+        self.showLatestSnapshotDialog = function () {
+
+            self.IsLatestSnapshotDialogShowing = true;
+            self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
+            self.$SnapshotDialog.modal();
+
+        };
+        // cancel button click handler
+        self.cancelLatestSnapshotDialog = function () {
+            self.IsLatestSnapshotDialogShowing = false;
+            self.$SnapshotDialog.modal("hide");
+        };
+
+        self.onAfterBinding = function () {
+            self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
+            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
+            self.$SnapshotDialog.on("hidden.bs.modal", function () {
+                console.log("Snapshot dialog hidden.");
+                self.IsLatestSnapshotDialogShowing = false;
+            });
+            // configure the dialog shown event
+
+            self.$SnapshotDialog.on("shown.bs.modal", function () {
+                console.log("Snapshot dialog shown.");
+                self.IsLatestSnapshotDialogShowing = true;
+                self.updateLatestSnapshotImage(force = true);
+            });
+
+            // configure the dialog show event
+            self.$SnapshotDialog.on("show.bs.modal", function () {
+                console.log("Snapshot dialog showing.");
+                self.IsLatestSnapshotDialogShowing = true;
+            });
+
+
+        }
+
+        self.onTabChange = function (current, previous) {
+            if (current != null && current == "#tab_plugin_octolapse") {
+                //console.log("Octolapse Tab is showing");
+                self.IsTabShowing = true;
+                self.updateLatestSnapshotThumbnail(true);
+
+            }
+            else if (previous != null && previous == "#tab_plugin_octolapse") {
+                //console.log("Octolapse Tab is not showing");
+                self.IsTabShowing = false;
+            }
+        }
+        /*
+            Snapshot client animation preview functions
+        */
+        self.refreshLatestImage = function (targetId, isThumbnail = false) {
+            //console.log("Refreshing Snapshot Thumbnail");
+            var $target = $('#' + targetId + ' .snapshot_refresh_container a.refresh');
+
+            $target.hide();
+            if (isThumbnail)
+                self.updateLatestSnapshotThumbnail(force = true);
+            else
+                self.updateLatestSnapshotImage(force = true);
+            setTimeout(function () {
+                $target.fadeIn();
+            }, 2);
+        }
+        self.startSnapshotAnimation = function (targetId, fadeButton = false) {
+
+            //console.log("Refreshing Snapshot Thumbnail");
+            // Hide and show the play/refresh button
+            if (fadeButton && Octolapse.Globals.auto_reload_latest_snapshot()) {
+                var $target = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
+                $target.hide();
+                setTimeout(function () {
+                    $target.fadeIn();
+                }, 2);
+            }
+
+
+            //console.log("Starting animation on " + targetId);
+            // Get the images
+            var $images = $('#' + targetId + ' .snapshot_container .previous-snapshots img');
+            // Remove any existing visible class
+            $images.each(function (index, element) {
+                $(element).removeClass('visible');
+            });
+            // Set a delay to unblock
+            setTimeout(function () {
+                // Remove any hidden class and add visible to trigger the animation.
+                $images.each(function (index, element) {
+                    $(element).removeClass('hidden');
+                    $(element).addClass('visible');
+                });
+            }, 1)
+
+        }
+
+        self.updateLatestSnapshotThumbnail = function (force = false) {
+            //console.log("Trying to update the latest snapshot thumbnail.");
+            if (!force) {
+                if (!self.IsTabShowing) {
+                    //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
+                    return
+                }
+                else if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    //console.log("Not updating the thumbnail, auto-reload is disabled.");
+                    return
+                }
+            }
+            self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
+
+        }
+
+
+        self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage = false) {
+            if (eraseCurrentImage) {
+                $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function (index, element) {
+                    $(this).remove();
+                });
+            }
+            $('#' + targetId + ' .snapshot_container .previous-snapshots img').each(function (index, element) {
+                $(this).remove();
+            });
+        }
+        // takes the list of images, update the frames in the target accordingly and starts any animations
+        self.IsAnimating = false;
+        self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
+            //console.log("Updating animation for target id: " + targetId);
+            // Get the snapshot_container within the target
+            var $target = $('#' + targetId + ' .snapshot_container');
+            // Get the latest image
+            var $latestSnapshotContainer = $target.find('.latest-snapshot');
+            var $latestSnapshot = $latestSnapshotContainer.find('img');
+            if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                // Get the previous snapshot container
+                var $previousSnapshotContainer = $target.find('.previous-snapshots');
+
+                // Add the latest image to the previous snapshots list
+                if ($latestSnapshot.length > 0) {
+                    srcAttr = $latestSnapshot.attr('src')
+                    // If the image has a src, and that src is not empty
+                    if (typeof srcAttr !== typeof undefined && srcAttr !== false && srcAttr.length > 0) {
+                        //console.log("Moving the latest image into the previous image container");
+                        $latestSnapshot.appendTo($previousSnapshotContainer);
+                    }
+                    else {
+                        $latestSnapshot.remove();
+                    }
+                }
+
+                // Get all of the images within the $previousSnapshotContainer, included the latest image we copied in
+                var $previousSnapshots = $previousSnapshotContainer.find("img");
+
+                var numSnapshots = $previousSnapshots.length;
+
+                while (numSnapshots > parseInt(Octolapse.Globals.auto_reload_frames())) {
+                    //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
+                    $element = $previousSnapshots.first();
+                    $element.remove();
+
+                    numSnapshots--;
+                }
+
+                // Set the total animation duration based on the number of snapshots
+                $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots)
+
+                // TODO: Do we need to do this??  Find out
+                $previousSnapshots = $previousSnapshotContainer.find("img");
+                numPreviousSnapshots = $previousSnapshots.length
+                var newestImageIndex = numPreviousSnapshots - 1
+                //console.log("Updating classes for previous " + numPreviousSnapshots + " images.");
+                for (var previousImageIndex = 0; previousImageIndex < numPreviousSnapshots; previousImageIndex++) {
+                    $element = $($previousSnapshots.eq(previousImageIndex));
+                    $element.removeClass()
+                    if (previousImageIndex == newestImageIndex) {
+                        //console.log("Updating classes for the newest image.");
+                        $element.addClass("newest");
+                    }
+                    else {
+                        $element.addClass("hidden");
+                    }
+                    previousImageDelayClass = "effect-delay-" + previousImageIndex;
+                    //console.log("Updating classes for the previous image delay " + previousImageDelayClass+ ".");
+                    $element.addClass(previousImageDelayClass);
+
+
+                }
+
+            }
+            
+
+            // create the newest image
+            var $newSnapshot = $(document.createElement('img'));
+            // append the image to the container
+
+            //console.log("Adding the new snapshot image to the latest snapshot container.");
+            // create on load event for the newest image
+            if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                // Add the new snapshot to the container
+                $newSnapshot.appendTo($latestSnapshotContainer);
+                $newSnapshot.one('load', function () {
+                    self.IsAnimating = false;
+                    self.startSnapshotAnimation(targetId);
+                });
+                // create an error handler for the newest image
+                
+            }
+            else {
+                
+                $newSnapshot.one('load', function () {
+                    // Hide the latest image
+                    $latestSnapshot.fadeOut(250, function () {
+                        // Remove the latest image
+                        $latestSnapshot.remove();
+                        // Set the new snapshot to hidden initially
+                        $newSnapshot.css('display', 'none');
+                        // Add the new snapshot to the container
+                        $newSnapshot.appendTo($latestSnapshotContainer);
+                        // fade it in.  Ahhh..
+                        $newSnapshot.fadeIn(250);
+                    });
+                });
+                
+
+            }
+            $newSnapshot.one('error', function () {
+                //console.log("An error occurred loading the newest image, reverting to previous image.");
+                // move the latest preview image back into the newest image section
+                self.IsAnimating = false;
+                $latestSnapshot.removeClass();
+                $newSnapshot.addClass('latest')
+                $latestSnapshot.appendTo($latestSnapshotContainer)
+
+            });
+
+            // set the class
+            $newSnapshot.addClass('latest')
+            // set the src and start to load
+            $newSnapshot.attr('src', newSnapshotAddress)
+        }
+
+
+        self.updateLatestSnapshotImage = function (force = false) {
+            //console.log("Trying to update the latest snapshot image.");
+            if (!force) {
+                if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    //console.log("Auto-Update latest snapshot image is disabled.");
+                    return
+                }
+                else if (!self.IsLatestSnapshotDialogShowing) {
+                    //console.log("The full screen dialog is not showing, not updating the latest snapshot.");
+                    return
+                }
+            }
+            self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
+
+        }
+        self.GetTriggerStateTemplate = function (type) {
+            switch (type) {
+                case "gcode":
+                    return "gcode-trigger-status-template";
+                case "layer":
+                    return "layer-trigger-status-template";
+                case "timer":
+                    return "timer-trigger-status-template"
+                default:
+                    return "trigger-status-template"
+            }
+        };
+        self.getStatusText = ko.pureComputed(function () {
+            if (self.is_timelapse_active())
+                return 'Octolapse - Running';
+            if (self.is_rendering())
+                return 'Octolapse - Rendering';
+            if (self.waiting_to_render())
+                return 'Octolapse - Waiting to Render';
+            if (Octolapse.Globals.enabled())
+                return 'Octolapse';
+            return 'Octolapse - Disabled';
+        }, self);
+
+
+        self.updatePositionState = function (state) {
+            // State variables
+            self.PositionState.update(state);
+        };
+        self.updatePosition = function (state) {
+            // State variables
+            self.Position.update(state);
+        };
+        self.updateExtruderState = function (state) {
+            // State variables
+            self.ExtruderState.update(state);
+        };
+
+        self.updateTriggerStates = function (states) {
+            self.TriggerState.update(states);
+        };
+
+        self.update = function (settings) {
+            self.is_timelapse_active(settings.is_timelapse_active);
+            self.snapshot_count(settings.snapshot_count);
+            self.is_taking_snapshot(settings.is_taking_snapshot);
+            self.is_rendering(settings.is_rendering);
+            self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
+            self.waiting_to_render(settings.waiting_to_render);
+        };
+
+        self.onTimelapseStop = function () {
+            self.is_timelapse_active(false);
+            self.is_taking_snapshot(false);
+            self.waiting_to_render(true);
+        }
+
+
+        self.stopTimelapse = function () {
+            if (Octolapse.Globals.is_admin()) {
+                //console.log("octolapse.status.js - ButtonClick: StopTimelapse");
+                if (confirm("Warning: You cannot restart octolapse once it is stopped until the next print.  Do you want to stop Octolapse?")) {
+                    $.ajax({
+                        url: "/plugin/octolapse/stopTimelapse",
+                        type: "POST",
+                        contentType: "application/json",
+                        success: function (data) {
+                            //console.log("octolapse.status.js - stopTimelapse - success" + data);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            alert("Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        }
+                    });
+                }
+            }
+        };
+
+        self.snapshotTime = function () {
+            var date = new Date(null);
+            date.setSeconds(this.seconds_added_by_octolapse());
+            var result = date.toISOString().substr(11, 8);
+            return result;
+        }
+        self.navbarClicked = function () {
+            $("#tab_plugin_octolapse_link a").click();
+        }
+
+    }
+
+    /*
+        Status Tab viewmodels
+    */
     Octolapse.positionStateViewModel = function () {
         var self = this;
         self.GCode = ko.observable("");
@@ -44,7 +417,7 @@ $(function () {
                 }
             });
         };
-        
+
         self.getPossitionErrorColor = ko.pureComputed(function () {
             if (this.HasPositionError())
                 return "Red";
@@ -288,11 +661,10 @@ $(function () {
             self.Triggers.removeAll();
         }
         self.update = function (states) {
-            
+
             self.Name(states.Name)
             triggers = states.Triggers
-            for (var sI = 0; sI < triggers.length; sI++)
-            {
+            for (var sI = 0; sI < triggers.length; sI++) {
                 state = triggers[sI];
                 var foundState = false;
                 for (var i = 0; i < self.Triggers().length; i++) {
@@ -308,7 +680,7 @@ $(function () {
                 }
             }
         };
-        
+
     }
     Octolapse.genericTriggerStateViewModel = function (state) {
         var self = this;
@@ -356,9 +728,9 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length >1)
+                if (waitList.length > 1)
                     waitText += " for " + waitList.join(" and ")
-                else if(waitList.length == 1)
+                else if (waitList.length == 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
@@ -401,7 +773,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
-        
+
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -449,7 +821,7 @@ $(function () {
 
             else
                 return "Looking for snapshot gcode";
-            
+
 
             return classes;
         }, self);
@@ -467,7 +839,7 @@ $(function () {
         }, self);
 
         self.getInfoText = ko.pureComputed(function () {
-            return "Triggering on gcode command: " + self.SnapshotCommand() ;
+            return "Triggering on gcode command: " + self.SnapshotCommand();
 
 
         }, self);
@@ -543,14 +915,14 @@ $(function () {
                 return waitText;
             }
             else if (self.HeightIncrement() > 0) {
-                    heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
-                    return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
-                }
+                heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
+                return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
+            }
             else
                 return "Triggering on next layer change";
 
         }, self);
-        
+
         self.triggerIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
                 return "not-homed";
@@ -569,12 +941,12 @@ $(function () {
             if (self.HeightIncrement() > 0)
 
                 val = self.HeightIncrement() + " mm";
-                
+
             else
                 val = "layer"
             return "Triggering every " + Octolapse.ToCompactInt(val);
 
-            
+
         }, self);
         self.getInfoIconText = ko.pureComputed(function () {
             var val = 0;
@@ -601,7 +973,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.IsHomed = ko.observable(state.IsHomed);
-        
+
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -618,7 +990,7 @@ $(function () {
             self.IsHomed(state.IsHomed);
         }
 
-        
+
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -633,7 +1005,7 @@ $(function () {
                 waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop")
-                if (self.IsWaitingOnExtruder()) 
+                if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
                 if (waitList.length > 1)
                     waitText += " for " + waitList.join(" and ")
@@ -641,14 +1013,14 @@ $(function () {
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
-            
+
             else
-                return "Triggering in " + self.SecondsToTrigger() + " seconds" ;
+                return "Triggering in " + self.SecondsToTrigger() + " seconds";
 
             return classes;
         }, self);
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
-            if(!self.IsHomed())
+            if (!self.IsHomed())
                 return "bg-not-homed";
             else if (!self.IsTriggered() && Octolapse.PrinterStatus.isPaused())
                 return " bg-paused";
@@ -668,319 +1040,15 @@ $(function () {
         self.getInfoText = ko.pureComputed(function () {
             return "Triggering every " + Octolapse.ToTimer(self.IntervalSeconds());
         }, self);
-        self.getInfoIconText =  ko.pureComputed(function () {
+        self.getInfoIconText = ko.pureComputed(function () {
             return "Triggering every " + Octolapse.ToTimer(self.IntervalSeconds());
         }, self);
     }
-    Octolapse.StatusViewModel = function (parameters) {
-        // Create a reference to this object
-        var self = this
-        // Add this object to our Octolapse namespace
-        Octolapse.Status = this;
-        // Assign the Octoprint settings to our namespace
-        
-        self.is_timelapse_active = ko.observable(false);
-        self.is_taking_snapshot = ko.observable(false);
-        self.is_rendering = ko.observable(false);
-        self.seconds_added_by_octolapse = ko.observable(0);
-        self.snapshot_count = ko.observable(0);        
-        self.snapshot_error = ko.observable(false);
-        self.snapshot_error_message = ko.observable("");
-        self.waiting_to_render = ko.observable();
-        
-        self.PositionState = new Octolapse.positionStateViewModel();
-        self.Position = new Octolapse.positionViewModel();
-        self.ExtruderState = new Octolapse.extruderStateViewModel();
-        self.TriggerState = new Octolapse.triggersStateViewModel();
-        
-        self.IsTabShowing = false;
-        self.IsLatestSnapshotDialogShowing = false;
 
-        self.showLatestSnapshotDialog = function () {
-            
-            self.IsLatestSnapshotDialogShowing = true;
-            self.erasePreviousSnapshotImages();
-            self.$SnapshotDialog.modal();
-
-        };
-        // cancel button click handler
-        self.cancelLatestSnapshotDialog = function () {
-            self.IsLatestSnapshotDialogShowing = false;
-            self.$SnapshotDialog.modal("hide");
-        };
-        
-        self.onAfterBinding = function () {
-            self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
-            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
-            self.$SnapshotDialog.on("hidden.bs.modal", function () {
-                console.log("Snapshot dialog hidden.");
-                self.IsLatestSnapshotDialogShowing = false;
-            });
-            // configure the dialog shown event
-            
-            self.$SnapshotDialog.on("shown.bs.modal", function () {
-                console.log("Snapshot dialog shown.");
-                self.IsLatestSnapshotDialogShowing = true;
-                self.updateLatestSnapshotImage(force = true);
-            });
-            
-            // configure the dialog show event
-            self.$SnapshotDialog.on("show.bs.modal", function () {
-               console.log("Snapshot dialog showing.");
-                self.IsLatestSnapshotDialogShowing = true;
-            });
-            
-            
-        }
-                
-        self.onTabChange = function (current, previous) {
-            if (current != null && current == "#tab_plugin_octolapse") {
-                //console.log("Octolapse Tab is showing");
-                self.IsTabShowing = true;
-                self.updateLatestSnapshotThumbnail(true);    
-
-            }
-            else if (previous != null && previous == "#tab_plugin_octolapse") {
-                //console.log("Octolapse Tab is not showing");
-                self.IsTabShowing = false;
-            }
-        }
-        /*
-            Snapshot client animation preview functions
-        */
-        self.refreshThumbnail = function () {
-            //alert("Not implemented");
-            //console.log("Refreshing Snapshot Thumbnail");
-            $("#refresh_thumbnail_button").hide();
-            self.updateLatestSnapshotThumbnail(force=true);
-            setTimeout(function () {
-                $("#refresh_thumbnail_button").fadeIn();
-            }, 2);
-        }
-        
-        self.updateLatestSnapshotThumbnail = function (force = false) {
-            //console.log("Trying to update the latest snapshot thumbnail.");
-            if (!force) {
-                if (!self.IsTabShowing) {
-                    //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
-                    return
-                }
-                else if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    //console.log("Not updating the thumbnail, auto-reload is disabled.");
-                    return
-                }
-            }
-            self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
-
-        }
-
-        self.erasePreviousSnapshotImages = function () {
-            $('#octolapse_snapshot_image_container .snapshot_container .previous-snapshots img').each(function (index, element) {
-                $(this).remove();
-            });
-        }
-        // takes the list of images, update the frames in the target accordingly and starts any animations
-        self.IsAnimating = false;
-        self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
-            //console.log("Updating animation for target id: " + targetId);
-            if (!self.IsAnimating) {
-                
-                //self.IsAnimating = true;
-                // Get the snapshot_container within the target
-                var $target = $('#' + targetId + ' .snapshot_container');
-                // Get the latest image
-                var $latestSnapshotContainer = $target.find('.latest-snapshot');
-                var $latestSnapshot = $latestSnapshotContainer.find('img');
-                // Get the previous snapshot container
-                var $previousSnapshotContainer = $target.find('.previous-snapshots');
-                // Add the latest image to the previous snapshots list
-                if ($latestSnapshot.length > 0) {
-                    srcAttr = $latestSnapshot.attr('src')
-                    // If the image has a src, and that src is not empty
-                    if (typeof srcAttr !== typeof undefined && srcAttr !== false && srcAttr.length > 0) {
-                        //console.log("Moving the latest image into the previous image container");
-                        $latestSnapshot.appendTo($previousSnapshotContainer);
-                    }
-                    else {
-                        $latestSnapshot.remove();
-                    }
-                }
-                
-                // Get all of the images within the $previousSnapshotContainer, included the latest image we copied in
-                var $previousSnapshots = $previousSnapshotContainer.find("img");
-                
-                var numSnapshots = $previousSnapshots.length;
-                
-                while (numSnapshots > parseInt(Octolapse.Globals.auto_reload_frames())) {
-                    //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
-                    $element = $previousSnapshots.first();
-                    $element.remove();
-
-                    numSnapshots--;
-                }
-
-                // Set the total animation duration based on the number of snapshots
-                $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots)
-
-                // TODO: Do we need to do this??  Find out
-                $previousSnapshots = $previousSnapshotContainer.find("img");
-                numPreviousSnapshots = $previousSnapshots.length
-                var newestImageIndex = numPreviousSnapshots - 1
-                //console.log("Updating classes for previous " + numPreviousSnapshots + " images.");
-                for (var previousImageIndex = 0; previousImageIndex < numPreviousSnapshots; previousImageIndex++) {
-                    $element = $($previousSnapshots.eq(previousImageIndex));
-                    $element.removeClass()
-                    if (previousImageIndex == newestImageIndex) {
-                        //console.log("Updating classes for the newest image.");
-                        $element.addClass("newest");
-                    }
-                    else {
-                        $element.addClass("hidden");
-                    }
-                    previousImageDelayClass = "effect-delay-" + previousImageIndex;
-                    //console.log("Updating classes for the previous image delay " + previousImageDelayClass+ ".");
-                    $element.addClass(previousImageDelayClass);
-                    
-                 
-                }
-                // create the newest image
-                var $newSnapshot = $(document.createElement('img'));
-                // append the image to the container
-
-                // add the $newestImg to the latest image container
-                //console.log("Adding the new snapshot image to the latest snapshot container.");
-                $newSnapshot.appendTo($latestSnapshotContainer);
-                // create on load event for the newest image
-                $newSnapshot.one('load', function () {
-                    $previousSnapshotContainer.find("img").each(function (index, element) {
-                        //console.log("The newest image has loaded, adding visible class to previous images.");
-                        
-                        $(element).removeClass('hidden');
-                        $(element).addClass('visible');
-                        self.IsAnimating = false;
-                    });
-                });
-                // create an error handler for the newest image
-                $newSnapshot.one('error', function () {
-                    //console.log("An error occurred loading the newest image, reverting to previous image.");
-                    // move the latest preview image back into the newest image section
-                    $latestSnapshot.removeClass();
-                    $newSnapshot.addClass('latest')
-                    $latestSnapshot.appendTo($latestSnapshotContainer)
-                })
-                // set the class
-                $newSnapshot.addClass('latest')
-                // set the src and start to load
-                $newSnapshot.attr('src', newSnapshotAddress)
-            }
-        }
-        self.updateLatestSnapshotImage = function (force = false) {
-            //console.log("Trying to update the latest snapshot image.");
-            if (!force) {
-                if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    //console.log("Auto-Update latest snapshot image is disabled.");
-                    return
-                }
-                else if (!self.IsLatestSnapshotDialogShowing) {
-                    //console.log("The full screen dialog is not showing, not updating the latest snapshot.");
-                    return
-                }
-            }
-            self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
-            
-        }
-        self.GetTriggerStateTemplate = function (type) {
-            switch (type) {
-                case "gcode":
-                    return "gcode-trigger-status-template";
-                case "layer":
-                    return "layer-trigger-status-template";
-                case "timer":
-                    return "timer-trigger-status-template"
-                default:
-                    return "trigger-status-template"
-            }
-        };
-        self.getStatusText = ko.pureComputed(function () {
-            if (self.is_timelapse_active())
-                return 'Octolapse - Running';
-            if (self.is_rendering())
-                return 'Octolapse - Rendering';
-            if (self.waiting_to_render())
-                return 'Octolapse - Waiting to Render';
-            if (Octolapse.Globals.enabled())
-                return 'Octolapse';
-            return 'Octolapse - Disabled';
-        }, self);
-        
-            
-        self.updatePositionState = function (state) {
-            // State variables
-            self.PositionState.update(state);
-        };
-        self.updatePosition = function (state) {
-            // State variables
-            self.Position.update(state);
-        };
-        self.updateExtruderState = function (state) {
-            // State variables
-            self.ExtruderState.update(state);
-        };
-        
-        self.updateTriggerStates = function (states) {
-            self.TriggerState.update(states);
-        };
-
-        self.update = function (settings) {
-            self.is_timelapse_active(settings.is_timelapse_active);
-            self.snapshot_count(settings.snapshot_count);
-            self.is_taking_snapshot(settings.is_taking_snapshot);
-            self.is_rendering(settings.is_rendering);
-            self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
-            self.waiting_to_render(settings.waiting_to_render);
-        };
-        
-        self.onTimelapseStop = function () {
-            self.is_timelapse_active(false);
-            self.is_taking_snapshot(false);
-            self.waiting_to_render(true);
-        }
-        
-
-        self.stopTimelapse = function () {
-            if (Octolapse.Globals.is_admin()) {
-                //console.log("octolapse.status.js - ButtonClick: StopTimelapse");
-                if (confirm("Warning: You cannot restart octolapse once it is stopped until the next print.  Do you want to stop Octolapse?")) {
-                    $.ajax({
-                        url: "/plugin/octolapse/stopTimelapse",
-                        type: "POST",
-                        contentType: "application/json",
-                        success: function (data) {
-                            //console.log("octolapse.status.js - stopTimelapse - success" + data);
-                        },
-                        error: function (XMLHttpRequest, textStatus, errorThrown) {
-                            alert("Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
-                        }
-                    });
-                }
-            }
-        };
-
-        self.snapshotTime = function () {
-            var date = new Date(null);
-            date.setSeconds(this.seconds_added_by_octolapse());
-            var result = date.toISOString().substr(11, 8);
-            return result;
-        }
-        self.navbarClicked = function () {
-            $("#tab_plugin_octolapse_link a").click();
-        }
-        
-    }
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.StatusViewModel
         , []
-        , ["#octolapse_tab","#octolapse_navbar"]
+        , ["#octolapse_tab", "#octolapse_navbar"]
     ]);
 });

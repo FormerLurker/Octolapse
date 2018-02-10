@@ -67,14 +67,21 @@
               </a>
             </div>
             
-            <div id="refresh_thumbnail_container" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
-              <a id="refresh_thumbnail_button" data-bind="visible:!Octolapse.Globals.auto_reload_latest_snapshot(),click:refreshThumbnail" href="#">
+            <div class="snapshot_refresh_container ">
+              <a class="start-animation" data-bind="click:startSnapshotAnimation('octolapse_snapshot_thumbnail_container',true),visible:Octolapse.Globals.auto_reload_latest_snapshot" href="#">
+                <span class="fa-stack" style="position:inline;">
+                  <i class="fa fa-square fa-stack-2x" ></i>
+                  <i class="fa fa-play-circle fa-stack-1x"></i>
+                </span>
+              </a>
+              <a class="refresh" data-bind="click:refreshLatestImage('octolapse_snapshot_thumbnail_container',true),visible:!Octolapse.Globals.auto_reload_latest_snapshot()" href="#">
                 <span class="fa-stack" style="position:inline;">
                   <i class="fa fa-square fa-stack-2x" ></i>
                   <i class="fa fa-refresh fa-stack-1x"></i>
                 </span>
               </a>
             </div>
+            
           </div>
         </div>
       </div>

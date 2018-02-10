@@ -21,7 +21,7 @@ $(function () {
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     }
-
+    Octolapse.HasTakenFirstSnapshot = false;
     // Retruns an observable sorted by name(), case insensitive
     Octolapse.nameSort = function (observable) {
         return observable().sort(
@@ -309,7 +309,14 @@ $(function () {
                 //console.log('octolapse.js - state-changed - Trigger State');
                 // Do not update the main settings unless they are saved.
                 //Octolapse.SettingsMain.update(state.MainSettings);
+                // detect changes to auto_reload_latest_snapshot
+                var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
                 Octolapse.Globals.update(state.MainSettings);
+                if (cur_auto_reload_latest_snapshot != Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
+                    Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
+                    Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
+                }
 
             }
             if (state.Status != null) {
@@ -425,6 +432,8 @@ $(function () {
                 case "timelapse-start":
                     {
                         //console.log('octolapse.js - timelapse-start');
+                        // Erase any previous images
+                        Octolapse.HasTakenFirstSnapshot = false;
                         self.updateState(data);
                     }
                     break;
@@ -446,11 +455,22 @@ $(function () {
                 case "snapshot-complete":
                     {
                         //console.log('octolapse.js - snapshot-complete');
+
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);
-                        Octolapse.Status.updateLatestSnapshotThumbnail();
-                        Octolapse.Status.updateLatestSnapshotImage();
+                        if (!Octolapse.HasTakenFirstSnapshot) {
+                            Octolapse.HasTakenFirstSnapshot = true
+                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
+                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container', true);
+                            Octolapse.Status.updateLatestSnapshotThumbnail(true);
+                            Octolapse.Status.updateLatestSnapshotImage(true);
+                        }
+                        else
+                        {
+                            Octolapse.Status.updateLatestSnapshotThumbnail();
+                            Octolapse.Status.updateLatestSnapshotImage();
+                        }
                     }
                     break;
                 case "render-start":

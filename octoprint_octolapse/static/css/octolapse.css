@@ -10,13 +10,14 @@ a.disabled {
     cursor: default;
 }
 
-#refresh_thumbnail_button {
+.snapshot_refresh_container a{
     color: greenyellow;
 }
-#refresh_thumbnail_button .fa-square{
+
+.snapshot_refresh_container .fa-square {
     color: black;
 }
-#refresh_thumbnail_button:not(.disable):hover {
+.snapshot_refresh_container a:not(.disable):hover {
     color: orange
 }
 
@@ -219,8 +220,8 @@ table.octolapse-profiles th.profile_action{
     min-height: 150px;
 }
 
-#refresh_thumbnail_container {
-    z-index: 40;
+.snapshot_refresh_container {
+    z-index: 999;
     position: absolute;
     top: 5px;
     right: 5px;
@@ -232,17 +233,18 @@ table.octolapse-profiles {
     max-width: 100%;
 }
 
-.latest-snapshot-modal .close {
+.latest-snapshot-modal .button-container{
     z-index: 1000;
     position: absolute;
-    right: 50px;
-    top: 50px;
-    font-size: 50px;
+    
 }
 
-.latest-snapshot-modal .cancel {
-    z-index: 1000;
-    position: absolute;
+.button-container.top-right {
+    top: 10px;
+    right: 0;
+    margin-right: 10px;
+}
+.button-container.bottom-center {
     bottom: 10px;
     width: 100px;
     left: 50%;
@@ -262,6 +264,7 @@ table.octolapse-profiles {
     left: 0;
     right: 0;
 }
+
 #octolapse_snapshot_thumbnail_container{
     max-width: 300px;
     max-height: 150px;
@@ -269,87 +272,263 @@ table.octolapse-profiles {
 
 
 /* .25s per frame */
-img.effect-delay-0.visible {
-    z-index: 12;
-    opacity: 1;
-    -webkit-transition: opacity 0.25s linear ;
-    -moz-transition: opacity 0.25s linear;
-    -o-transition: opacity 0.25s linear;
-    transition: opacity 0.25s linear;
-}
+img.effect-delay-0.visible {z-index: 102;-webkit-transition: opacity 0.0333s 0s linear;-moz-transition: 0.0333s 0s linear;-o-transition: 0.0333s 0s linear;transition: 0.0333s 0s linear;}
+img.effect-delay-1.visible {z-index: 101;-webkit-transition: opacity 0.0333s 0.0333s linear;-moz-transition: 0.0333s 0.0333s linear;-o-transition: 0.0333s 0.0333s linear;transition: 0.0333s 0.0333s linear;}
+img.effect-delay-2.visible {z-index: 100;-webkit-transition: opacity 0.0333s 0.0666s linear;-moz-transition: 0.0333s 0.0666s linear;-o-transition: 0.0333s 0.0666s linear;transition: 0.0333s 0.0666s linear;}
+img.effect-delay-3.visible {z-index: 99;-webkit-transition: opacity 0.0333s 0.0999s linear;-moz-transition: 0.0333s 0.0999s linear;-o-transition: 0.0333s 0.0999s linear;transition: 0.0333s 0.0999s linear;}
+img.effect-delay-4.visible {z-index: 98;-webkit-transition: opacity 0.0333s 0.1332s linear;-moz-transition: 0.0333s 0.1332s linear;-o-transition: 0.0333s 0.1332s linear;transition: 0.0333s 0.1332s linear;}
+img.effect-delay-5.visible {z-index: 97;-webkit-transition: opacity 0.0333s 0.1665s linear;-moz-transition: 0.0333s 0.1665s linear;-o-transition: 0.0333s 0.1665s linear;transition: 0.0333s 0.1665s linear;}
+img.effect-delay-6.visible {z-index: 96;-webkit-transition: opacity 0.0333s 0.1998s linear;-moz-transition: 0.0333s 0.1998s linear;-o-transition: 0.0333s 0.1998s linear;transition: 0.0333s 0.1998s linear;}
+img.effect-delay-7.visible {z-index: 95;-webkit-transition: opacity 0.0333s 0.2331s linear;-moz-transition: 0.0333s 0.2331s linear;-o-transition: 0.0333s 0.2331s linear;transition: 0.0333s 0.2331s linear;}
+img.effect-delay-8.visible {z-index: 94;-webkit-transition: opacity 0.0333s 0.2664s linear;-moz-transition: 0.0333s 0.2664s linear;-o-transition: 0.0333s 0.2664s linear;transition: 0.0333s 0.2664s linear;}
+img.effect-delay-9.visible {z-index: 93;-webkit-transition: opacity 0.0333s 0.2997s linear;-moz-transition: 0.0333s 0.2997s linear;-o-transition: 0.0333s 0.2997s linear;transition: 0.0333s 0.2997s linear;}
+img.effect-delay-10.visible {z-index: 92;-webkit-transition: opacity 0.0333s 0.333s linear;-moz-transition: 0.0333s 0.333s linear;-o-transition: 0.0333s 0.333s linear;transition: 0.0333s 0.333s linear;}
+img.effect-delay-11.visible {z-index: 91;-webkit-transition: opacity 0.0333s 0.3663s linear;-moz-transition: 0.0333s 0.3663s linear;-o-transition: 0.0333s 0.3663s linear;transition: 0.0333s 0.3663s linear;}
+img.effect-delay-12.visible {z-index: 90;-webkit-transition: opacity 0.0333s 0.3996s linear;-moz-transition: 0.0333s 0.3996s linear;-o-transition: 0.0333s 0.3996s linear;transition: 0.0333s 0.3996s linear;}
+img.effect-delay-13.visible {z-index: 89;-webkit-transition: opacity 0.0333s 0.4329s linear;-moz-transition: 0.0333s 0.4329s linear;-o-transition: 0.0333s 0.4329s linear;transition: 0.0333s 0.4329s linear;}
+img.effect-delay-14.visible {z-index: 88;-webkit-transition: opacity 0.0333s 0.4662s linear;-moz-transition: 0.0333s 0.4662s linear;-o-transition: 0.0333s 0.4662s linear;transition: 0.0333s 0.4662s linear;}
+img.effect-delay-15.visible {z-index: 87;-webkit-transition: opacity 0.0333s 0.4995s linear;-moz-transition: 0.0333s 0.4995s linear;-o-transition: 0.0333s 0.4995s linear;transition: 0.0333s 0.4995s linear;}
+img.effect-delay-16.visible {z-index: 86;-webkit-transition: opacity 0.0333s 0.5328s linear;-moz-transition: 0.0333s 0.5328s linear;-o-transition: 0.0333s 0.5328s linear;transition: 0.0333s 0.5328s linear;}
+img.effect-delay-17.visible {z-index: 85;-webkit-transition: opacity 0.0333s 0.5661s linear;-moz-transition: 0.0333s 0.5661s linear;-o-transition: 0.0333s 0.5661s linear;transition: 0.0333s 0.5661s linear;}
+img.effect-delay-18.visible {z-index: 84;-webkit-transition: opacity 0.0333s 0.5994s linear;-moz-transition: 0.0333s 0.5994s linear;-o-transition: 0.0333s 0.5994s linear;transition: 0.0333s 0.5994s linear;}
+img.effect-delay-19.visible {z-index: 83;-webkit-transition: opacity 0.0333s 0.6327s linear;-moz-transition: 0.0333s 0.6327s linear;-o-transition: 0.0333s 0.6327s linear;transition: 0.0333s 0.6327s linear;}
+img.effect-delay-20.visible {z-index: 82;-webkit-transition: opacity 0.0333s 0.666s linear;-moz-transition: 0.0333s 0.666s linear;-o-transition: 0.0333s 0.666s linear;transition: 0.0333s 0.666s linear;}
+img.effect-delay-21.visible {z-index: 81;-webkit-transition: opacity 0.0333s 0.6993s linear;-moz-transition: 0.0333s 0.6993s linear;-o-transition: 0.0333s 0.6993s linear;transition: 0.0333s 0.6993s linear;}
+img.effect-delay-22.visible {z-index: 80;-webkit-transition: opacity 0.0333s 0.7326s linear;-moz-transition: 0.0333s 0.7326s linear;-o-transition: 0.0333s 0.7326s linear;transition: 0.0333s 0.7326s linear;}
+img.effect-delay-23.visible {z-index: 79;-webkit-transition: opacity 0.0333s 0.7659s linear;-moz-transition: 0.0333s 0.7659s linear;-o-transition: 0.0333s 0.7659s linear;transition: 0.0333s 0.7659s linear;}
+img.effect-delay-24.visible {z-index: 78;-webkit-transition: opacity 0.0333s 0.7992s linear;-moz-transition: 0.0333s 0.7992s linear;-o-transition: 0.0333s 0.7992s linear;transition: 0.0333s 0.7992s linear;}
+img.effect-delay-25.visible {z-index: 77;-webkit-transition: opacity 0.0333s 0.8325s linear;-moz-transition: 0.0333s 0.8325s linear;-o-transition: 0.0333s 0.8325s linear;transition: 0.0333s 0.8325s linear;}
+img.effect-delay-26.visible {z-index: 76;-webkit-transition: opacity 0.0333s 0.8658s linear;-moz-transition: 0.0333s 0.8658s linear;-o-transition: 0.0333s 0.8658s linear;transition: 0.0333s 0.8658s linear;}
+img.effect-delay-27.visible {z-index: 75;-webkit-transition: opacity 0.0333s 0.8991s linear;-moz-transition: 0.0333s 0.8991s linear;-o-transition: 0.0333s 0.8991s linear;transition: 0.0333s 0.8991s linear;}
+img.effect-delay-28.visible {z-index: 74;-webkit-transition: opacity 0.0333s 0.9324s linear;-moz-transition: 0.0333s 0.9324s linear;-o-transition: 0.0333s 0.9324s linear;transition: 0.0333s 0.9324s linear;}
+img.effect-delay-29.visible {z-index: 73;-webkit-transition: opacity 0.0333s 0.9657s linear;-moz-transition: 0.0333s 0.9657s linear;-o-transition: 0.0333s 0.9657s linear;transition: 0.0333s 0.9657s linear;}
+img.effect-delay-30.visible {z-index: 72;-webkit-transition: opacity 0.0333s 0.999s linear;-moz-transition: 0.0333s 0.999s linear;-o-transition: 0.0333s 0.999s linear;transition: 0.0333s 0.999s linear;}
+img.effect-delay-31.visible {z-index: 71;-webkit-transition: opacity 0.0333s 1.0323s linear;-moz-transition: 0.0333s 1.0323s linear;-o-transition: 0.0333s 1.0323s linear;transition: 0.0333s 1.0323s linear;}
+img.effect-delay-32.visible {z-index: 70;-webkit-transition: opacity 0.0333s 1.0656s linear;-moz-transition: 0.0333s 1.0656s linear;-o-transition: 0.0333s 1.0656s linear;transition: 0.0333s 1.0656s linear;}
+img.effect-delay-33.visible {z-index: 69;-webkit-transition: opacity 0.0333s 1.0989s linear;-moz-transition: 0.0333s 1.0989s linear;-o-transition: 0.0333s 1.0989s linear;transition: 0.0333s 1.0989s linear;}
+img.effect-delay-34.visible {z-index: 68;-webkit-transition: opacity 0.0333s 1.1322s linear;-moz-transition: 0.0333s 1.1322s linear;-o-transition: 0.0333s 1.1322s linear;transition: 0.0333s 1.1322s linear;}
+img.effect-delay-35.visible {z-index: 67;-webkit-transition: opacity 0.0333s 1.1655s linear;-moz-transition: 0.0333s 1.1655s linear;-o-transition: 0.0333s 1.1655s linear;transition: 0.0333s 1.1655s linear;}
+img.effect-delay-36.visible {z-index: 66;-webkit-transition: opacity 0.0333s 1.1988s linear;-moz-transition: 0.0333s 1.1988s linear;-o-transition: 0.0333s 1.1988s linear;transition: 0.0333s 1.1988s linear;}
+img.effect-delay-37.visible {z-index: 65;-webkit-transition: opacity 0.0333s 1.2321s linear;-moz-transition: 0.0333s 1.2321s linear;-o-transition: 0.0333s 1.2321s linear;transition: 0.0333s 1.2321s linear;}
+img.effect-delay-38.visible {z-index: 64;-webkit-transition: opacity 0.0333s 1.2654s linear;-moz-transition: 0.0333s 1.2654s linear;-o-transition: 0.0333s 1.2654s linear;transition: 0.0333s 1.2654s linear;}
+img.effect-delay-39.visible {z-index: 63;-webkit-transition: opacity 0.0333s 1.2987s linear;-moz-transition: 0.0333s 1.2987s linear;-o-transition: 0.0333s 1.2987s linear;transition: 0.0333s 1.2987s linear;}
+img.effect-delay-40.visible {z-index: 62;-webkit-transition: opacity 0.0333s 1.332s linear;-moz-transition: 0.0333s 1.332s linear;-o-transition: 0.0333s 1.332s linear;transition: 0.0333s 1.332s linear;}
+img.effect-delay-41.visible {z-index: 61;-webkit-transition: opacity 0.0333s 1.3653s linear;-moz-transition: 0.0333s 1.3653s linear;-o-transition: 0.0333s 1.3653s linear;transition: 0.0333s 1.3653s linear;}
+img.effect-delay-42.visible {z-index: 60;-webkit-transition: opacity 0.0333s 1.3986s linear;-moz-transition: 0.0333s 1.3986s linear;-o-transition: 0.0333s 1.3986s linear;transition: 0.0333s 1.3986s linear;}
+img.effect-delay-43.visible {z-index: 59;-webkit-transition: opacity 0.0333s 1.4319s linear;-moz-transition: 0.0333s 1.4319s linear;-o-transition: 0.0333s 1.4319s linear;transition: 0.0333s 1.4319s linear;}
+img.effect-delay-44.visible {z-index: 58;-webkit-transition: opacity 0.0333s 1.4652s linear;-moz-transition: 0.0333s 1.4652s linear;-o-transition: 0.0333s 1.4652s linear;transition: 0.0333s 1.4652s linear;}
+img.effect-delay-45.visible {z-index: 57;-webkit-transition: opacity 0.0333s 1.4985s linear;-moz-transition: 0.0333s 1.4985s linear;-o-transition: 0.0333s 1.4985s linear;transition: 0.0333s 1.4985s linear;}
+img.effect-delay-46.visible {z-index: 56;-webkit-transition: opacity 0.0333s 1.5318s linear;-moz-transition: 0.0333s 1.5318s linear;-o-transition: 0.0333s 1.5318s linear;transition: 0.0333s 1.5318s linear;}
+img.effect-delay-47.visible {z-index: 55;-webkit-transition: opacity 0.0333s 1.5651s linear;-moz-transition: 0.0333s 1.5651s linear;-o-transition: 0.0333s 1.5651s linear;transition: 0.0333s 1.5651s linear;}
+img.effect-delay-48.visible {z-index: 54;-webkit-transition: opacity 0.0333s 1.5984s linear;-moz-transition: 0.0333s 1.5984s linear;-o-transition: 0.0333s 1.5984s linear;transition: 0.0333s 1.5984s linear;}
+img.effect-delay-49.visible {z-index: 53;-webkit-transition: opacity 0.0333s 1.6317s linear;-moz-transition: 0.0333s 1.6317s linear;-o-transition: 0.0333s 1.6317s linear;transition: 0.0333s 1.6317s linear;}
+img.effect-delay-50.visible {z-index: 52;-webkit-transition: opacity 0.0333s 1.665s linear;-moz-transition: 0.0333s 1.665s linear;-o-transition: 0.0333s 1.665s linear;transition: 0.0333s 1.665s linear;}
+img.effect-delay-51.visible {z-index: 51;-webkit-transition: opacity 0.0333s 1.6983s linear;-moz-transition: 0.0333s 1.6983s linear;-o-transition: 0.0333s 1.6983s linear;transition: 0.0333s 1.6983s linear;}
+img.effect-delay-52.visible {z-index: 50;-webkit-transition: opacity 0.0333s 1.7316s linear;-moz-transition: 0.0333s 1.7316s linear;-o-transition: 0.0333s 1.7316s linear;transition: 0.0333s 1.7316s linear;}
+img.effect-delay-53.visible {z-index: 49;-webkit-transition: opacity 0.0333s 1.7649s linear;-moz-transition: 0.0333s 1.7649s linear;-o-transition: 0.0333s 1.7649s linear;transition: 0.0333s 1.7649s linear;}
+img.effect-delay-54.visible {z-index: 48;-webkit-transition: opacity 0.0333s 1.7982s linear;-moz-transition: 0.0333s 1.7982s linear;-o-transition: 0.0333s 1.7982s linear;transition: 0.0333s 1.7982s linear;}
+img.effect-delay-55.visible {z-index: 47;-webkit-transition: opacity 0.0333s 1.8315s linear;-moz-transition: 0.0333s 1.8315s linear;-o-transition: 0.0333s 1.8315s linear;transition: 0.0333s 1.8315s linear;}
+img.effect-delay-56.visible {z-index: 46;-webkit-transition: opacity 0.0333s 1.8648s linear;-moz-transition: 0.0333s 1.8648s linear;-o-transition: 0.0333s 1.8648s linear;transition: 0.0333s 1.8648s linear;}
+img.effect-delay-57.visible {z-index: 45;-webkit-transition: opacity 0.0333s 1.8981s linear;-moz-transition: 0.0333s 1.8981s linear;-o-transition: 0.0333s 1.8981s linear;transition: 0.0333s 1.8981s linear;}
+img.effect-delay-58.visible {z-index: 44;-webkit-transition: opacity 0.0333s 1.9314s linear;-moz-transition: 0.0333s 1.9314s linear;-o-transition: 0.0333s 1.9314s linear;transition: 0.0333s 1.9314s linear;}
+img.effect-delay-59.visible {z-index: 43;-webkit-transition: opacity 0.0333s 1.9647s linear;-moz-transition: 0.0333s 1.9647s linear;-o-transition: 0.0333s 1.9647s linear;transition: 0.0333s 1.9647s linear;}
+img.effect-delay-60.visible {z-index: 42;-webkit-transition: opacity 0.0333s 1.998s linear;-moz-transition: 0.0333s 1.998s linear;-o-transition: 0.0333s 1.998s linear;transition: 0.0333s 1.998s linear;}
+img.effect-delay-61.visible {z-index: 41;-webkit-transition: opacity 0.0333s 2.0313s linear;-moz-transition: 0.0333s 2.0313s linear;-o-transition: 0.0333s 2.0313s linear;transition: 0.0333s 2.0313s linear;}
+img.effect-delay-62.visible {z-index: 40;-webkit-transition: opacity 0.0333s 2.0646s linear;-moz-transition: 0.0333s 2.0646s linear;-o-transition: 0.0333s 2.0646s linear;transition: 0.0333s 2.0646s linear;}
+img.effect-delay-63.visible {z-index: 39;-webkit-transition: opacity 0.0333s 2.0979s linear;-moz-transition: 0.0333s 2.0979s linear;-o-transition: 0.0333s 2.0979s linear;transition: 0.0333s 2.0979s linear;}
+img.effect-delay-64.visible {z-index: 38;-webkit-transition: opacity 0.0333s 2.1312s linear;-moz-transition: 0.0333s 2.1312s linear;-o-transition: 0.0333s 2.1312s linear;transition: 0.0333s 2.1312s linear;}
+img.effect-delay-65.visible {z-index: 37;-webkit-transition: opacity 0.0333s 2.1645s linear;-moz-transition: 0.0333s 2.1645s linear;-o-transition: 0.0333s 2.1645s linear;transition: 0.0333s 2.1645s linear;}
+img.effect-delay-66.visible {z-index: 36;-webkit-transition: opacity 0.0333s 2.1978s linear;-moz-transition: 0.0333s 2.1978s linear;-o-transition: 0.0333s 2.1978s linear;transition: 0.0333s 2.1978s linear;}
+img.effect-delay-67.visible {z-index: 35;-webkit-transition: opacity 0.0333s 2.2311s linear;-moz-transition: 0.0333s 2.2311s linear;-o-transition: 0.0333s 2.2311s linear;transition: 0.0333s 2.2311s linear;}
+img.effect-delay-68.visible {z-index: 34;-webkit-transition: opacity 0.0333s 2.2644s linear;-moz-transition: 0.0333s 2.2644s linear;-o-transition: 0.0333s 2.2644s linear;transition: 0.0333s 2.2644s linear;}
+img.effect-delay-69.visible {z-index: 33;-webkit-transition: opacity 0.0333s 2.2977s linear;-moz-transition: 0.0333s 2.2977s linear;-o-transition: 0.0333s 2.2977s linear;transition: 0.0333s 2.2977s linear;}
+img.effect-delay-70.visible {z-index: 32;-webkit-transition: opacity 0.0333s 2.331s linear;-moz-transition: 0.0333s 2.331s linear;-o-transition: 0.0333s 2.331s linear;transition: 0.0333s 2.331s linear;}
+img.effect-delay-71.visible {z-index: 31;-webkit-transition: opacity 0.0333s 2.3643s linear;-moz-transition: 0.0333s 2.3643s linear;-o-transition: 0.0333s 2.3643s linear;transition: 0.0333s 2.3643s linear;}
+img.effect-delay-72.visible {z-index: 30;-webkit-transition: opacity 0.0333s 2.3976s linear;-moz-transition: 0.0333s 2.3976s linear;-o-transition: 0.0333s 2.3976s linear;transition: 0.0333s 2.3976s linear;}
+img.effect-delay-73.visible {z-index: 29;-webkit-transition: opacity 0.0333s 2.4309s linear;-moz-transition: 0.0333s 2.4309s linear;-o-transition: 0.0333s 2.4309s linear;transition: 0.0333s 2.4309s linear;}
+img.effect-delay-74.visible {z-index: 28;-webkit-transition: opacity 0.0333s 2.4642s linear;-moz-transition: 0.0333s 2.4642s linear;-o-transition: 0.0333s 2.4642s linear;transition: 0.0333s 2.4642s linear;}
+img.effect-delay-75.visible {z-index: 27;-webkit-transition: opacity 0.0333s 2.4975s linear;-moz-transition: 0.0333s 2.4975s linear;-o-transition: 0.0333s 2.4975s linear;transition: 0.0333s 2.4975s linear;}
+img.effect-delay-76.visible {z-index: 26;-webkit-transition: opacity 0.0333s 2.5308s linear;-moz-transition: 0.0333s 2.5308s linear;-o-transition: 0.0333s 2.5308s linear;transition: 0.0333s 2.5308s linear;}
+img.effect-delay-77.visible {z-index: 25;-webkit-transition: opacity 0.0333s 2.5641s linear;-moz-transition: 0.0333s 2.5641s linear;-o-transition: 0.0333s 2.5641s linear;transition: 0.0333s 2.5641s linear;}
+img.effect-delay-78.visible {z-index: 24;-webkit-transition: opacity 0.0333s 2.5974s linear;-moz-transition: 0.0333s 2.5974s linear;-o-transition: 0.0333s 2.5974s linear;transition: 0.0333s 2.5974s linear;}
+img.effect-delay-79.visible {z-index: 23;-webkit-transition: opacity 0.0333s 2.6307s linear;-moz-transition: 0.0333s 2.6307s linear;-o-transition: 0.0333s 2.6307s linear;transition: 0.0333s 2.6307s linear;}
+img.effect-delay-80.visible {z-index: 22;-webkit-transition: opacity 0.0333s 2.664s linear;-moz-transition: 0.0333s 2.664s linear;-o-transition: 0.0333s 2.664s linear;transition: 0.0333s 2.664s linear;}
+img.effect-delay-81.visible {z-index: 21;-webkit-transition: opacity 0.0333s 2.6973s linear;-moz-transition: 0.0333s 2.6973s linear;-o-transition: 0.0333s 2.6973s linear;transition: 0.0333s 2.6973s linear;}
+img.effect-delay-82.visible {z-index: 20;-webkit-transition: opacity 0.0333s 2.7306s linear;-moz-transition: 0.0333s 2.7306s linear;-o-transition: 0.0333s 2.7306s linear;transition: 0.0333s 2.7306s linear;}
+img.effect-delay-83.visible {z-index: 19;-webkit-transition: opacity 0.0333s 2.7639s linear;-moz-transition: 0.0333s 2.7639s linear;-o-transition: 0.0333s 2.7639s linear;transition: 0.0333s 2.7639s linear;}
+img.effect-delay-84.visible {z-index: 18;-webkit-transition: opacity 0.0333s 2.7972s linear;-moz-transition: 0.0333s 2.7972s linear;-o-transition: 0.0333s 2.7972s linear;transition: 0.0333s 2.7972s linear;}
+img.effect-delay-85.visible {z-index: 17;-webkit-transition: opacity 0.0333s 2.8305s linear;-moz-transition: 0.0333s 2.8305s linear;-o-transition: 0.0333s 2.8305s linear;transition: 0.0333s 2.8305s linear;}
+img.effect-delay-86.visible {z-index: 16;-webkit-transition: opacity 0.0333s 2.8638s linear;-moz-transition: 0.0333s 2.8638s linear;-o-transition: 0.0333s 2.8638s linear;transition: 0.0333s 2.8638s linear;}
+img.effect-delay-87.visible {z-index: 15;-webkit-transition: opacity 0.0333s 2.8971s linear;-moz-transition: 0.0333s 2.8971s linear;-o-transition: 0.0333s 2.8971s linear;transition: 0.0333s 2.8971s linear;}
+img.effect-delay-88.visible {z-index: 14;-webkit-transition: opacity 0.0333s 2.9304s linear;-moz-transition: 0.0333s 2.9304s linear;-o-transition: 0.0333s 2.9304s linear;transition: 0.0333s 2.9304s linear;}
+img.effect-delay-89.visible {z-index: 13;-webkit-transition: opacity 0.0333s 2.9637s linear;-moz-transition: 0.0333s 2.9637s linear;-o-transition: 0.0333s 2.9637s linear;transition: 0.0333s 2.9637s linear;}
+img.effect-delay-90.visible {z-index: 12;-webkit-transition: opacity 0.0333s 2.997s linear;-moz-transition: 0.0333s 2.997s linear;-o-transition: 0.0333s 2.997s linear;transition: 0.0333s 2.997s linear;}
+img.effect-delay-91.visible {z-index: 11;-webkit-transition: opacity 0.0333s 3.0303s linear;-moz-transition: 0.0333s 3.0303s linear;-o-transition: 0.0333s 3.0303s linear;transition: 0.0333s 3.0303s linear;}
+img.effect-delay-92.visible {z-index: 10;-webkit-transition: opacity 0.0333s 3.0636s linear;-moz-transition: 0.0333s 3.0636s linear;-o-transition: 0.0333s 3.0636s linear;transition: 0.0333s 3.0636s linear;}
+img.effect-delay-93.visible {z-index: 9;-webkit-transition: opacity 0.0333s 3.0969s linear;-moz-transition: 0.0333s 3.0969s linear;-o-transition: 0.0333s 3.0969s linear;transition: 0.0333s 3.0969s linear;}
+img.effect-delay-94.visible {z-index: 8;-webkit-transition: opacity 0.0333s 3.1302s linear;-moz-transition: 0.0333s 3.1302s linear;-o-transition: 0.0333s 3.1302s linear;transition: 0.0333s 3.1302s linear;}
+img.effect-delay-95.visible {z-index: 7;-webkit-transition: opacity 0.0333s 3.1635s linear;-moz-transition: 0.0333s 3.1635s linear;-o-transition: 0.0333s 3.1635s linear;transition: 0.0333s 3.1635s linear;}
+img.effect-delay-96.visible {z-index: 6;-webkit-transition: opacity 0.0333s 3.1968s linear;-moz-transition: 0.0333s 3.1968s linear;-o-transition: 0.0333s 3.1968s linear;transition: 0.0333s 3.1968s linear;}
+img.effect-delay-97.visible {z-index: 5;-webkit-transition: opacity 0.0333s 3.2301s linear;-moz-transition: 0.0333s 3.2301s linear;-o-transition: 0.0333s 3.2301s linear;transition: 0.0333s 3.2301s linear;}
+img.effect-delay-98.visible {z-index: 4;-webkit-transition: opacity 0.0333s 3.2634s linear;-moz-transition: 0.0333s 3.2634s linear;-o-transition: 0.0333s 3.2634s linear;transition: 0.0333s 3.2634s linear;}
+img.effect-delay-99.visible {z-index: 3;-webkit-transition: opacity 0.0333s 3.2967s linear;-moz-transition: 0.0333s 3.2967s linear;-o-transition: 0.0333s 3.2967s linear;transition: 0.0333s 3.2967s linear;}
+img.effect-delay-100.visible {z-index: 2;-webkit-transition: opacity 0.0333s 3.33s linear;-moz-transition: 0.0333s 3.33s linear;-o-transition: 0.0333s 3.33s linear;transition: 0.0333s 3.33s linear;}
+img.effect-delay-101.visible {z-index: 1;-webkit-transition: opacity 0.0333s 3.3633s linear;-moz-transition: 0.0333s 3.3633s linear;-o-transition: 0.0333s 3.3633s linear;transition: 0.0333s 3.3633s linear;}
+img.effect-delay-102.visible {z-index: 0;-webkit-transition: opacity 0.0333s 3.3966s linear;-moz-transition: 0.0333s 3.3966s linear;-o-transition: 0.0333s 3.3966s linear;transition: 0.0333s 3.3966s linear;}
+img.effect-delay-103.visible {z-index: -1;-webkit-transition: opacity 0.0333s 3.4299s linear;-moz-transition: 0.0333s 3.4299s linear;-o-transition: 0.0333s 3.4299s linear;transition: 0.0333s 3.4299s linear;}
+img.effect-delay-104.visible {z-index: -2;-webkit-transition: opacity 0.0333s 3.4632s linear;-moz-transition: 0.0333s 3.4632s linear;-o-transition: 0.0333s 3.4632s linear;transition: 0.0333s 3.4632s linear;}
+img.effect-delay-105.visible {z-index: -3;-webkit-transition: opacity 0.0333s 3.4965s linear;-moz-transition: 0.0333s 3.4965s linear;-o-transition: 0.0333s 3.4965s linear;transition: 0.0333s 3.4965s linear;}
+img.effect-delay-106.visible {z-index: -4;-webkit-transition: opacity 0.0333s 3.5298s linear;-moz-transition: 0.0333s 3.5298s linear;-o-transition: 0.0333s 3.5298s linear;transition: 0.0333s 3.5298s linear;}
+img.effect-delay-107.visible {z-index: -5;-webkit-transition: opacity 0.0333s 3.5631s linear;-moz-transition: 0.0333s 3.5631s linear;-o-transition: 0.0333s 3.5631s linear;transition: 0.0333s 3.5631s linear;}
+img.effect-delay-108.visible {z-index: -6;-webkit-transition: opacity 0.0333s 3.5964s linear;-moz-transition: 0.0333s 3.5964s linear;-o-transition: 0.0333s 3.5964s linear;transition: 0.0333s 3.5964s linear;}
+img.effect-delay-109.visible {z-index: -7;-webkit-transition: opacity 0.0333s 3.6297s linear;-moz-transition: 0.0333s 3.6297s linear;-o-transition: 0.0333s 3.6297s linear;transition: 0.0333s 3.6297s linear;}
+img.effect-delay-110.visible {z-index: -8;-webkit-transition: opacity 0.0333s 3.663s linear;-moz-transition: 0.0333s 3.663s linear;-o-transition: 0.0333s 3.663s linear;transition: 0.0333s 3.663s linear;}
+img.effect-delay-111.visible {z-index: -9;-webkit-transition: opacity 0.0333s 3.6963s linear;-moz-transition: 0.0333s 3.6963s linear;-o-transition: 0.0333s 3.6963s linear;transition: 0.0333s 3.6963s linear;}
+img.effect-delay-112.visible {z-index: -10;-webkit-transition: opacity 0.0333s 3.7296s linear;-moz-transition: 0.0333s 3.7296s linear;-o-transition: 0.0333s 3.7296s linear;transition: 0.0333s 3.7296s linear;}
+img.effect-delay-113.visible {z-index: -11;-webkit-transition: opacity 0.0333s 3.7629s linear;-moz-transition: 0.0333s 3.7629s linear;-o-transition: 0.0333s 3.7629s linear;transition: 0.0333s 3.7629s linear;}
+img.effect-delay-114.visible {z-index: -12;-webkit-transition: opacity 0.0333s 3.7962s linear;-moz-transition: 0.0333s 3.7962s linear;-o-transition: 0.0333s 3.7962s linear;transition: 0.0333s 3.7962s linear;}
+img.effect-delay-115.visible {z-index: -13;-webkit-transition: opacity 0.0333s 3.8295s linear;-moz-transition: 0.0333s 3.8295s linear;-o-transition: 0.0333s 3.8295s linear;transition: 0.0333s 3.8295s linear;}
+img.effect-delay-116.visible {z-index: -14;-webkit-transition: opacity 0.0333s 3.8628s linear;-moz-transition: 0.0333s 3.8628s linear;-o-transition: 0.0333s 3.8628s linear;transition: 0.0333s 3.8628s linear;}
+img.effect-delay-117.visible {z-index: -15;-webkit-transition: opacity 0.0333s 3.8961s linear;-moz-transition: 0.0333s 3.8961s linear;-o-transition: 0.0333s 3.8961s linear;transition: 0.0333s 3.8961s linear;}
+img.effect-delay-118.visible {z-index: -16;-webkit-transition: opacity 0.0333s 3.9294s linear;-moz-transition: 0.0333s 3.9294s linear;-o-transition: 0.0333s 3.9294s linear;transition: 0.0333s 3.9294s linear;}
+img.effect-delay-119.visible {z-index: -17;-webkit-transition: opacity 0.0333s 3.9627s linear;-moz-transition: 0.0333s 3.9627s linear;-o-transition: 0.0333s 3.9627s linear;transition: 0.0333s 3.9627s linear;}
+img.effect-delay-120.visible {z-index: -18;-webkit-transition: opacity 0.0333s 3.996s linear;-moz-transition: 0.0333s 3.996s linear;-o-transition: 0.0333s 3.996s linear;transition: 0.0333s 3.996s linear;}
+img.effect-delay-121.visible {z-index: -19;-webkit-transition: opacity 0.0333s 4.0293s linear;-moz-transition: 0.0333s 4.0293s linear;-o-transition: 0.0333s 4.0293s linear;transition: 0.0333s 4.0293s linear;}
+img.effect-delay-122.visible {z-index: -20;-webkit-transition: opacity 0.0333s 4.0626s linear;-moz-transition: 0.0333s 4.0626s linear;-o-transition: 0.0333s 4.0626s linear;transition: 0.0333s 4.0626s linear;}
+img.effect-delay-123.visible {z-index: -21;-webkit-transition: opacity 0.0333s 4.0959s linear;-moz-transition: 0.0333s 4.0959s linear;-o-transition: 0.0333s 4.0959s linear;transition: 0.0333s 4.0959s linear;}
+img.effect-delay-124.visible {z-index: -22;-webkit-transition: opacity 0.0333s 4.1292s linear;-moz-transition: 0.0333s 4.1292s linear;-o-transition: 0.0333s 4.1292s linear;transition: 0.0333s 4.1292s linear;}
+img.effect-delay-125.visible {z-index: -23;-webkit-transition: opacity 0.0333s 4.1625s linear;-moz-transition: 0.0333s 4.1625s linear;-o-transition: 0.0333s 4.1625s linear;transition: 0.0333s 4.1625s linear;}
+img.effect-delay-126.visible {z-index: -24;-webkit-transition: opacity 0.0333s 4.1958s linear;-moz-transition: 0.0333s 4.1958s linear;-o-transition: 0.0333s 4.1958s linear;transition: 0.0333s 4.1958s linear;}
+img.effect-delay-127.visible {z-index: -25;-webkit-transition: opacity 0.0333s 4.2291s linear;-moz-transition: 0.0333s 4.2291s linear;-o-transition: 0.0333s 4.2291s linear;transition: 0.0333s 4.2291s linear;}
+img.effect-delay-128.visible {z-index: -26;-webkit-transition: opacity 0.0333s 4.2624s linear;-moz-transition: 0.0333s 4.2624s linear;-o-transition: 0.0333s 4.2624s linear;transition: 0.0333s 4.2624s linear;}
+img.effect-delay-129.visible {z-index: -27;-webkit-transition: opacity 0.0333s 4.2957s linear;-moz-transition: 0.0333s 4.2957s linear;-o-transition: 0.0333s 4.2957s linear;transition: 0.0333s 4.2957s linear;}
+img.effect-delay-130.visible {z-index: -28;-webkit-transition: opacity 0.0333s 4.329s linear;-moz-transition: 0.0333s 4.329s linear;-o-transition: 0.0333s 4.329s linear;transition: 0.0333s 4.329s linear;}
+img.effect-delay-131.visible {z-index: -29;-webkit-transition: opacity 0.0333s 4.3623s linear;-moz-transition: 0.0333s 4.3623s linear;-o-transition: 0.0333s 4.3623s linear;transition: 0.0333s 4.3623s linear;}
+img.effect-delay-132.visible {z-index: -30;-webkit-transition: opacity 0.0333s 4.3956s linear;-moz-transition: 0.0333s 4.3956s linear;-o-transition: 0.0333s 4.3956s linear;transition: 0.0333s 4.3956s linear;}
+img.effect-delay-133.visible {z-index: -31;-webkit-transition: opacity 0.0333s 4.4289s linear;-moz-transition: 0.0333s 4.4289s linear;-o-transition: 0.0333s 4.4289s linear;transition: 0.0333s 4.4289s linear;}
+img.effect-delay-134.visible {z-index: -32;-webkit-transition: opacity 0.0333s 4.4622s linear;-moz-transition: 0.0333s 4.4622s linear;-o-transition: 0.0333s 4.4622s linear;transition: 0.0333s 4.4622s linear;}
+img.effect-delay-135.visible {z-index: -33;-webkit-transition: opacity 0.0333s 4.4955s linear;-moz-transition: 0.0333s 4.4955s linear;-o-transition: 0.0333s 4.4955s linear;transition: 0.0333s 4.4955s linear;}
+img.effect-delay-136.visible {z-index: -34;-webkit-transition: opacity 0.0333s 4.5288s linear;-moz-transition: 0.0333s 4.5288s linear;-o-transition: 0.0333s 4.5288s linear;transition: 0.0333s 4.5288s linear;}
+img.effect-delay-137.visible {z-index: -35;-webkit-transition: opacity 0.0333s 4.5621s linear;-moz-transition: 0.0333s 4.5621s linear;-o-transition: 0.0333s 4.5621s linear;transition: 0.0333s 4.5621s linear;}
+img.effect-delay-138.visible {z-index: -36;-webkit-transition: opacity 0.0333s 4.5954s linear;-moz-transition: 0.0333s 4.5954s linear;-o-transition: 0.0333s 4.5954s linear;transition: 0.0333s 4.5954s linear;}
+img.effect-delay-139.visible {z-index: -37;-webkit-transition: opacity 0.0333s 4.6287s linear;-moz-transition: 0.0333s 4.6287s linear;-o-transition: 0.0333s 4.6287s linear;transition: 0.0333s 4.6287s linear;}
+img.effect-delay-140.visible {z-index: -38;-webkit-transition: opacity 0.0333s 4.662s linear;-moz-transition: 0.0333s 4.662s linear;-o-transition: 0.0333s 4.662s linear;transition: 0.0333s 4.662s linear;}
+img.effect-delay-141.visible {z-index: -39;-webkit-transition: opacity 0.0333s 4.6953s linear;-moz-transition: 0.0333s 4.6953s linear;-o-transition: 0.0333s 4.6953s linear;transition: 0.0333s 4.6953s linear;}
+img.effect-delay-142.visible {z-index: -40;-webkit-transition: opacity 0.0333s 4.7286s linear;-moz-transition: 0.0333s 4.7286s linear;-o-transition: 0.0333s 4.7286s linear;transition: 0.0333s 4.7286s linear;}
+img.effect-delay-143.visible {z-index: -41;-webkit-transition: opacity 0.0333s 4.7619s linear;-moz-transition: 0.0333s 4.7619s linear;-o-transition: 0.0333s 4.7619s linear;transition: 0.0333s 4.7619s linear;}
+img.effect-delay-144.visible {z-index: -42;-webkit-transition: opacity 0.0333s 4.7952s linear;-moz-transition: 0.0333s 4.7952s linear;-o-transition: 0.0333s 4.7952s linear;transition: 0.0333s 4.7952s linear;}
+img.effect-delay-145.visible {z-index: -43;-webkit-transition: opacity 0.0333s 4.8285s linear;-moz-transition: 0.0333s 4.8285s linear;-o-transition: 0.0333s 4.8285s linear;transition: 0.0333s 4.8285s linear;}
+img.effect-delay-146.visible {z-index: -44;-webkit-transition: opacity 0.0333s 4.8618s linear;-moz-transition: 0.0333s 4.8618s linear;-o-transition: 0.0333s 4.8618s linear;transition: 0.0333s 4.8618s linear;}
+img.effect-delay-147.visible {z-index: -45;-webkit-transition: opacity 0.0333s 4.8951s linear;-moz-transition: 0.0333s 4.8951s linear;-o-transition: 0.0333s 4.8951s linear;transition: 0.0333s 4.8951s linear;}
+img.effect-delay-148.visible {z-index: -46;-webkit-transition: opacity 0.0333s 4.9284s linear;-moz-transition: 0.0333s 4.9284s linear;-o-transition: 0.0333s 4.9284s linear;transition: 0.0333s 4.9284s linear;}
+img.effect-delay-149.visible {z-index: -47;-webkit-transition: opacity 0.0333s 4.9617s linear;-moz-transition: 0.0333s 4.9617s linear;-o-transition: 0.0333s 4.9617s linear;transition: 0.0333s 4.9617s linear;}
+img.effect-delay-150.visible {z-index: -48;-webkit-transition: opacity 0.0333s 4.995s linear;-moz-transition: 0.0333s 4.995s linear;-o-transition: 0.0333s 4.995s linear;transition: 0.0333s 4.995s linear;}
+img.effect-delay-151.visible {z-index: -49;-webkit-transition: opacity 0.0333s 5.0283s linear;-moz-transition: 0.0333s 5.0283s linear;-o-transition: 0.0333s 5.0283s linear;transition: 0.0333s 5.0283s linear;}
+img.effect-delay-152.visible {z-index: -50;-webkit-transition: opacity 0.0333s 5.0616s linear;-moz-transition: 0.0333s 5.0616s linear;-o-transition: 0.0333s 5.0616s linear;transition: 0.0333s 5.0616s linear;}
+img.effect-delay-153.visible {z-index: -51;-webkit-transition: opacity 0.0333s 5.0949s linear;-moz-transition: 0.0333s 5.0949s linear;-o-transition: 0.0333s 5.0949s linear;transition: 0.0333s 5.0949s linear;}
+img.effect-delay-154.visible {z-index: -52;-webkit-transition: opacity 0.0333s 5.1282s linear;-moz-transition: 0.0333s 5.1282s linear;-o-transition: 0.0333s 5.1282s linear;transition: 0.0333s 5.1282s linear;}
+img.effect-delay-155.visible {z-index: -53;-webkit-transition: opacity 0.0333s 5.1615s linear;-moz-transition: 0.0333s 5.1615s linear;-o-transition: 0.0333s 5.1615s linear;transition: 0.0333s 5.1615s linear;}
+img.effect-delay-156.visible {z-index: -54;-webkit-transition: opacity 0.0333s 5.1948s linear;-moz-transition: 0.0333s 5.1948s linear;-o-transition: 0.0333s 5.1948s linear;transition: 0.0333s 5.1948s linear;}
+img.effect-delay-157.visible {z-index: -55;-webkit-transition: opacity 0.0333s 5.2281s linear;-moz-transition: 0.0333s 5.2281s linear;-o-transition: 0.0333s 5.2281s linear;transition: 0.0333s 5.2281s linear;}
+img.effect-delay-158.visible {z-index: -56;-webkit-transition: opacity 0.0333s 5.2614s linear;-moz-transition: 0.0333s 5.2614s linear;-o-transition: 0.0333s 5.2614s linear;transition: 0.0333s 5.2614s linear;}
+img.effect-delay-159.visible {z-index: -57;-webkit-transition: opacity 0.0333s 5.2947s linear;-moz-transition: 0.0333s 5.2947s linear;-o-transition: 0.0333s 5.2947s linear;transition: 0.0333s 5.2947s linear;}
+img.effect-delay-160.visible {z-index: -58;-webkit-transition: opacity 0.0333s 5.328s linear;-moz-transition: 0.0333s 5.328s linear;-o-transition: 0.0333s 5.328s linear;transition: 0.0333s 5.328s linear;}
+img.effect-delay-161.visible {z-index: -59;-webkit-transition: opacity 0.0333s 5.3613s linear;-moz-transition: 0.0333s 5.3613s linear;-o-transition: 0.0333s 5.3613s linear;transition: 0.0333s 5.3613s linear;}
+img.effect-delay-162.visible {z-index: -60;-webkit-transition: opacity 0.0333s 5.3946s linear;-moz-transition: 0.0333s 5.3946s linear;-o-transition: 0.0333s 5.3946s linear;transition: 0.0333s 5.3946s linear;}
+img.effect-delay-163.visible {z-index: -61;-webkit-transition: opacity 0.0333s 5.4279s linear;-moz-transition: 0.0333s 5.4279s linear;-o-transition: 0.0333s 5.4279s linear;transition: 0.0333s 5.4279s linear;}
+img.effect-delay-164.visible {z-index: -62;-webkit-transition: opacity 0.0333s 5.4612s linear;-moz-transition: 0.0333s 5.4612s linear;-o-transition: 0.0333s 5.4612s linear;transition: 0.0333s 5.4612s linear;}
+img.effect-delay-165.visible {z-index: -63;-webkit-transition: opacity 0.0333s 5.4945s linear;-moz-transition: 0.0333s 5.4945s linear;-o-transition: 0.0333s 5.4945s linear;transition: 0.0333s 5.4945s linear;}
+img.effect-delay-166.visible {z-index: -64;-webkit-transition: opacity 0.0333s 5.5278s linear;-moz-transition: 0.0333s 5.5278s linear;-o-transition: 0.0333s 5.5278s linear;transition: 0.0333s 5.5278s linear;}
+img.effect-delay-167.visible {z-index: -65;-webkit-transition: opacity 0.0333s 5.5611s linear;-moz-transition: 0.0333s 5.5611s linear;-o-transition: 0.0333s 5.5611s linear;transition: 0.0333s 5.5611s linear;}
+img.effect-delay-168.visible {z-index: -66;-webkit-transition: opacity 0.0333s 5.5944s linear;-moz-transition: 0.0333s 5.5944s linear;-o-transition: 0.0333s 5.5944s linear;transition: 0.0333s 5.5944s linear;}
+img.effect-delay-169.visible {z-index: -67;-webkit-transition: opacity 0.0333s 5.6277s linear;-moz-transition: 0.0333s 5.6277s linear;-o-transition: 0.0333s 5.6277s linear;transition: 0.0333s 5.6277s linear;}
+img.effect-delay-170.visible {z-index: -68;-webkit-transition: opacity 0.0333s 5.661s linear;-moz-transition: 0.0333s 5.661s linear;-o-transition: 0.0333s 5.661s linear;transition: 0.0333s 5.661s linear;}
+img.effect-delay-171.visible {z-index: -69;-webkit-transition: opacity 0.0333s 5.6943s linear;-moz-transition: 0.0333s 5.6943s linear;-o-transition: 0.0333s 5.6943s linear;transition: 0.0333s 5.6943s linear;}
+img.effect-delay-172.visible {z-index: -70;-webkit-transition: opacity 0.0333s 5.7276s linear;-moz-transition: 0.0333s 5.7276s linear;-o-transition: 0.0333s 5.7276s linear;transition: 0.0333s 5.7276s linear;}
+img.effect-delay-173.visible {z-index: -71;-webkit-transition: opacity 0.0333s 5.7609s linear;-moz-transition: 0.0333s 5.7609s linear;-o-transition: 0.0333s 5.7609s linear;transition: 0.0333s 5.7609s linear;}
+img.effect-delay-174.visible {z-index: -72;-webkit-transition: opacity 0.0333s 5.7942s linear;-moz-transition: 0.0333s 5.7942s linear;-o-transition: 0.0333s 5.7942s linear;transition: 0.0333s 5.7942s linear;}
+img.effect-delay-175.visible {z-index: -73;-webkit-transition: opacity 0.0333s 5.8275s linear;-moz-transition: 0.0333s 5.8275s linear;-o-transition: 0.0333s 5.8275s linear;transition: 0.0333s 5.8275s linear;}
+img.effect-delay-176.visible {z-index: -74;-webkit-transition: opacity 0.0333s 5.8608s linear;-moz-transition: 0.0333s 5.8608s linear;-o-transition: 0.0333s 5.8608s linear;transition: 0.0333s 5.8608s linear;}
+img.effect-delay-177.visible {z-index: -75;-webkit-transition: opacity 0.0333s 5.8941s linear;-moz-transition: 0.0333s 5.8941s linear;-o-transition: 0.0333s 5.8941s linear;transition: 0.0333s 5.8941s linear;}
+img.effect-delay-178.visible {z-index: -76;-webkit-transition: opacity 0.0333s 5.9274s linear;-moz-transition: 0.0333s 5.9274s linear;-o-transition: 0.0333s 5.9274s linear;transition: 0.0333s 5.9274s linear;}
+img.effect-delay-179.visible {z-index: -77;-webkit-transition: opacity 0.0333s 5.9607s linear;-moz-transition: 0.0333s 5.9607s linear;-o-transition: 0.0333s 5.9607s linear;transition: 0.0333s 5.9607s linear;}
+img.effect-delay-180.visible {z-index: -78;-webkit-transition: opacity 0.0333s 5.994s linear;-moz-transition: 0.0333s 5.994s linear;-o-transition: 0.0333s 5.994s linear;transition: 0.0333s 5.994s linear;}
+img.effect-delay-181.visible {z-index: -79;-webkit-transition: opacity 0.0333s 6.0273s linear;-moz-transition: 0.0333s 6.0273s linear;-o-transition: 0.0333s 6.0273s linear;transition: 0.0333s 6.0273s linear;}
+img.effect-delay-182.visible {z-index: -80;-webkit-transition: opacity 0.0333s 6.0606s linear;-moz-transition: 0.0333s 6.0606s linear;-o-transition: 0.0333s 6.0606s linear;transition: 0.0333s 6.0606s linear;}
+img.effect-delay-183.visible {z-index: -81;-webkit-transition: opacity 0.0333s 6.0939s linear;-moz-transition: 0.0333s 6.0939s linear;-o-transition: 0.0333s 6.0939s linear;transition: 0.0333s 6.0939s linear;}
+img.effect-delay-184.visible {z-index: -82;-webkit-transition: opacity 0.0333s 6.1272s linear;-moz-transition: 0.0333s 6.1272s linear;-o-transition: 0.0333s 6.1272s linear;transition: 0.0333s 6.1272s linear;}
+img.effect-delay-185.visible {z-index: -83;-webkit-transition: opacity 0.0333s 6.1605s linear;-moz-transition: 0.0333s 6.1605s linear;-o-transition: 0.0333s 6.1605s linear;transition: 0.0333s 6.1605s linear;}
+img.effect-delay-186.visible {z-index: -84;-webkit-transition: opacity 0.0333s 6.1938s linear;-moz-transition: 0.0333s 6.1938s linear;-o-transition: 0.0333s 6.1938s linear;transition: 0.0333s 6.1938s linear;}
+img.effect-delay-187.visible {z-index: -85;-webkit-transition: opacity 0.0333s 6.2271s linear;-moz-transition: 0.0333s 6.2271s linear;-o-transition: 0.0333s 6.2271s linear;transition: 0.0333s 6.2271s linear;}
+img.effect-delay-188.visible {z-index: -86;-webkit-transition: opacity 0.0333s 6.2604s linear;-moz-transition: 0.0333s 6.2604s linear;-o-transition: 0.0333s 6.2604s linear;transition: 0.0333s 6.2604s linear;}
+img.effect-delay-189.visible {z-index: -87;-webkit-transition: opacity 0.0333s 6.2937s linear;-moz-transition: 0.0333s 6.2937s linear;-o-transition: 0.0333s 6.2937s linear;transition: 0.0333s 6.2937s linear;}
+img.effect-delay-190.visible {z-index: -88;-webkit-transition: opacity 0.0333s 6.327s linear;-moz-transition: 0.0333s 6.327s linear;-o-transition: 0.0333s 6.327s linear;transition: 0.0333s 6.327s linear;}
+img.effect-delay-191.visible {z-index: -89;-webkit-transition: opacity 0.0333s 6.3603s linear;-moz-transition: 0.0333s 6.3603s linear;-o-transition: 0.0333s 6.3603s linear;transition: 0.0333s 6.3603s linear;}
+img.effect-delay-192.visible {z-index: -90;-webkit-transition: opacity 0.0333s 6.3936s linear;-moz-transition: 0.0333s 6.3936s linear;-o-transition: 0.0333s 6.3936s linear;transition: 0.0333s 6.3936s linear;}
+img.effect-delay-193.visible {z-index: -91;-webkit-transition: opacity 0.0333s 6.4269s linear;-moz-transition: 0.0333s 6.4269s linear;-o-transition: 0.0333s 6.4269s linear;transition: 0.0333s 6.4269s linear;}
+img.effect-delay-194.visible {z-index: -92;-webkit-transition: opacity 0.0333s 6.4602s linear;-moz-transition: 0.0333s 6.4602s linear;-o-transition: 0.0333s 6.4602s linear;transition: 0.0333s 6.4602s linear;}
+img.effect-delay-195.visible {z-index: -93;-webkit-transition: opacity 0.0333s 6.4935s linear;-moz-transition: 0.0333s 6.4935s linear;-o-transition: 0.0333s 6.4935s linear;transition: 0.0333s 6.4935s linear;}
+img.effect-delay-196.visible {z-index: -94;-webkit-transition: opacity 0.0333s 6.5268s linear;-moz-transition: 0.0333s 6.5268s linear;-o-transition: 0.0333s 6.5268s linear;transition: 0.0333s 6.5268s linear;}
+img.effect-delay-197.visible {z-index: -95;-webkit-transition: opacity 0.0333s 6.5601s linear;-moz-transition: 0.0333s 6.5601s linear;-o-transition: 0.0333s 6.5601s linear;transition: 0.0333s 6.5601s linear;}
+img.effect-delay-198.visible {z-index: -96;-webkit-transition: opacity 0.0333s 6.5934s linear;-moz-transition: 0.0333s 6.5934s linear;-o-transition: 0.0333s 6.5934s linear;transition: 0.0333s 6.5934s linear;}
+img.effect-delay-199.visible {z-index: -97;-webkit-transition: opacity 0.0333s 6.6267s linear;-moz-transition: 0.0333s 6.6267s linear;-o-transition: 0.0333s 6.6267s linear;transition: 0.0333s 6.6267s linear;}
+img.effect-delay-200.visible {z-index: -98;-webkit-transition: opacity 0.0333s 6.66s linear;-moz-transition: 0.0333s 6.66s linear;-o-transition: 0.0333s 6.66s linear;transition: 0.0333s 6.66s linear;}
+img.effect-delay-201.visible {z-index: -99;-webkit-transition: opacity 0.0333s 6.6933s linear;-moz-transition: 0.0333s 6.6933s linear;-o-transition: 0.0333s 6.6933s linear;transition: 0.0333s 6.6933s linear;}
+img.effect-delay-202.visible {z-index: -100;-webkit-transition: opacity 0.0333s 6.7266s linear;-moz-transition: 0.0333s 6.7266s linear;-o-transition: 0.0333s 6.7266s linear;transition: 0.0333s 6.7266s linear;}
+img.effect-delay-203.visible {z-index: -101;-webkit-transition: opacity 0.0333s 6.7599s linear;-moz-transition: 0.0333s 6.7599s linear;-o-transition: 0.0333s 6.7599s linear;transition: 0.0333s 6.7599s linear;}
+img.effect-delay-204.visible {z-index: -102;-webkit-transition: opacity 0.0333s 6.7932s linear;-moz-transition: 0.0333s 6.7932s linear;-o-transition: 0.0333s 6.7932s linear;transition: 0.0333s 6.7932s linear;}
+img.effect-delay-205.visible {z-index: -103;-webkit-transition: opacity 0.0333s 6.8265s linear;-moz-transition: 0.0333s 6.8265s linear;-o-transition: 0.0333s 6.8265s linear;transition: 0.0333s 6.8265s linear;}
+img.effect-delay-206.visible {z-index: -104;-webkit-transition: opacity 0.0333s 6.8598s linear;-moz-transition: 0.0333s 6.8598s linear;-o-transition: 0.0333s 6.8598s linear;transition: 0.0333s 6.8598s linear;}
+img.effect-delay-207.visible {z-index: -105;-webkit-transition: opacity 0.0333s 6.8931s linear;-moz-transition: 0.0333s 6.8931s linear;-o-transition: 0.0333s 6.8931s linear;transition: 0.0333s 6.8931s linear;}
+img.effect-delay-208.visible {z-index: -106;-webkit-transition: opacity 0.0333s 6.9264s linear;-moz-transition: 0.0333s 6.9264s linear;-o-transition: 0.0333s 6.9264s linear;transition: 0.0333s 6.9264s linear;}
+img.effect-delay-209.visible {z-index: -107;-webkit-transition: opacity 0.0333s 6.9597s linear;-moz-transition: 0.0333s 6.9597s linear;-o-transition: 0.0333s 6.9597s linear;transition: 0.0333s 6.9597s linear;}
+img.effect-delay-210.visible {z-index: -108;-webkit-transition: opacity 0.0333s 6.993s linear;-moz-transition: 0.0333s 6.993s linear;-o-transition: 0.0333s 6.993s linear;transition: 0.0333s 6.993s linear;}
+img.effect-delay-211.visible {z-index: -109;-webkit-transition: opacity 0.0333s 7.0263s linear;-moz-transition: 0.0333s 7.0263s linear;-o-transition: 0.0333s 7.0263s linear;transition: 0.0333s 7.0263s linear;}
+img.effect-delay-212.visible {z-index: -110;-webkit-transition: opacity 0.0333s 7.0596s linear;-moz-transition: 0.0333s 7.0596s linear;-o-transition: 0.0333s 7.0596s linear;transition: 0.0333s 7.0596s linear;}
+img.effect-delay-213.visible {z-index: -111;-webkit-transition: opacity 0.0333s 7.0929s linear;-moz-transition: 0.0333s 7.0929s linear;-o-transition: 0.0333s 7.0929s linear;transition: 0.0333s 7.0929s linear;}
+img.effect-delay-214.visible {z-index: -112;-webkit-transition: opacity 0.0333s 7.1262s linear;-moz-transition: 0.0333s 7.1262s linear;-o-transition: 0.0333s 7.1262s linear;transition: 0.0333s 7.1262s linear;}
+img.effect-delay-215.visible {z-index: -113;-webkit-transition: opacity 0.0333s 7.1595s linear;-moz-transition: 0.0333s 7.1595s linear;-o-transition: 0.0333s 7.1595s linear;transition: 0.0333s 7.1595s linear;}
+img.effect-delay-216.visible {z-index: -114;-webkit-transition: opacity 0.0333s 7.1928s linear;-moz-transition: 0.0333s 7.1928s linear;-o-transition: 0.0333s 7.1928s linear;transition: 0.0333s 7.1928s linear;}
+img.effect-delay-217.visible {z-index: -115;-webkit-transition: opacity 0.0333s 7.2261s linear;-moz-transition: 0.0333s 7.2261s linear;-o-transition: 0.0333s 7.2261s linear;transition: 0.0333s 7.2261s linear;}
+img.effect-delay-218.visible {z-index: -116;-webkit-transition: opacity 0.0333s 7.2594s linear;-moz-transition: 0.0333s 7.2594s linear;-o-transition: 0.0333s 7.2594s linear;transition: 0.0333s 7.2594s linear;}
+img.effect-delay-219.visible {z-index: -117;-webkit-transition: opacity 0.0333s 7.2927s linear;-moz-transition: 0.0333s 7.2927s linear;-o-transition: 0.0333s 7.2927s linear;transition: 0.0333s 7.2927s linear;}
+img.effect-delay-220.visible {z-index: -118;-webkit-transition: opacity 0.0333s 7.326s linear;-moz-transition: 0.0333s 7.326s linear;-o-transition: 0.0333s 7.326s linear;transition: 0.0333s 7.326s linear;}
+img.effect-delay-221.visible {z-index: -119;-webkit-transition: opacity 0.0333s 7.3593s linear;-moz-transition: 0.0333s 7.3593s linear;-o-transition: 0.0333s 7.3593s linear;transition: 0.0333s 7.3593s linear;}
+img.effect-delay-222.visible {z-index: -120;-webkit-transition: opacity 0.0333s 7.3926s linear;-moz-transition: 0.0333s 7.3926s linear;-o-transition: 0.0333s 7.3926s linear;transition: 0.0333s 7.3926s linear;}
+img.effect-delay-223.visible {z-index: -121;-webkit-transition: opacity 0.0333s 7.4259s linear;-moz-transition: 0.0333s 7.4259s linear;-o-transition: 0.0333s 7.4259s linear;transition: 0.0333s 7.4259s linear;}
+img.effect-delay-224.visible {z-index: -122;-webkit-transition: opacity 0.0333s 7.4592s linear;-moz-transition: 0.0333s 7.4592s linear;-o-transition: 0.0333s 7.4592s linear;transition: 0.0333s 7.4592s linear;}
+img.effect-delay-225.visible {z-index: -123;-webkit-transition: opacity 0.0333s 7.4925s linear;-moz-transition: 0.0333s 7.4925s linear;-o-transition: 0.0333s 7.4925s linear;transition: 0.0333s 7.4925s linear;}
+img.effect-delay-226.visible {z-index: -124;-webkit-transition: opacity 0.0333s 7.5258s linear;-moz-transition: 0.0333s 7.5258s linear;-o-transition: 0.0333s 7.5258s linear;transition: 0.0333s 7.5258s linear;}
+img.effect-delay-227.visible {z-index: -125;-webkit-transition: opacity 0.0333s 7.5591s linear;-moz-transition: 0.0333s 7.5591s linear;-o-transition: 0.0333s 7.5591s linear;transition: 0.0333s 7.5591s linear;}
+img.effect-delay-228.visible {z-index: -126;-webkit-transition: opacity 0.0333s 7.5924s linear;-moz-transition: 0.0333s 7.5924s linear;-o-transition: 0.0333s 7.5924s linear;transition: 0.0333s 7.5924s linear;}
+img.effect-delay-229.visible {z-index: -127;-webkit-transition: opacity 0.0333s 7.6257s linear;-moz-transition: 0.0333s 7.6257s linear;-o-transition: 0.0333s 7.6257s linear;transition: 0.0333s 7.6257s linear;}
+img.effect-delay-230.visible {z-index: -128;-webkit-transition: opacity 0.0333s 7.659s linear;-moz-transition: 0.0333s 7.659s linear;-o-transition: 0.0333s 7.659s linear;transition: 0.0333s 7.659s linear;}
+img.effect-delay-231.visible {z-index: -129;-webkit-transition: opacity 0.0333s 7.6923s linear;-moz-transition: 0.0333s 7.6923s linear;-o-transition: 0.0333s 7.6923s linear;transition: 0.0333s 7.6923s linear;}
+img.effect-delay-232.visible {z-index: -130;-webkit-transition: opacity 0.0333s 7.7256s linear;-moz-transition: 0.0333s 7.7256s linear;-o-transition: 0.0333s 7.7256s linear;transition: 0.0333s 7.7256s linear;}
+img.effect-delay-233.visible {z-index: -131;-webkit-transition: opacity 0.0333s 7.7589s linear;-moz-transition: 0.0333s 7.7589s linear;-o-transition: 0.0333s 7.7589s linear;transition: 0.0333s 7.7589s linear;}
+img.effect-delay-234.visible {z-index: -132;-webkit-transition: opacity 0.0333s 7.7922s linear;-moz-transition: 0.0333s 7.7922s linear;-o-transition: 0.0333s 7.7922s linear;transition: 0.0333s 7.7922s linear;}
+img.effect-delay-235.visible {z-index: -133;-webkit-transition: opacity 0.0333s 7.8255s linear;-moz-transition: 0.0333s 7.8255s linear;-o-transition: 0.0333s 7.8255s linear;transition: 0.0333s 7.8255s linear;}
+img.effect-delay-236.visible {z-index: -134;-webkit-transition: opacity 0.0333s 7.8588s linear;-moz-transition: 0.0333s 7.8588s linear;-o-transition: 0.0333s 7.8588s linear;transition: 0.0333s 7.8588s linear;}
+img.effect-delay-237.visible {z-index: -135;-webkit-transition: opacity 0.0333s 7.8921s linear;-moz-transition: 0.0333s 7.8921s linear;-o-transition: 0.0333s 7.8921s linear;transition: 0.0333s 7.8921s linear;}
+img.effect-delay-238.visible {z-index: -136;-webkit-transition: opacity 0.0333s 7.9254s linear;-moz-transition: 0.0333s 7.9254s linear;-o-transition: 0.0333s 7.9254s linear;transition: 0.0333s 7.9254s linear;}
+img.effect-delay-239.visible {z-index: -137;-webkit-transition: opacity 0.0333s 7.9587s linear;-moz-transition: 0.0333s 7.9587s linear;-o-transition: 0.0333s 7.9587s linear;transition: 0.0333s 7.9587s linear;}
+img.effect-delay-240.visible {z-index: -138;-webkit-transition: opacity 0.0333s 7.992s linear;-moz-transition: 0.0333s 7.992s linear;-o-transition: 0.0333s 7.992s linear;transition: 0.0333s 7.992s linear;}
+img.effect-delay-241.visible {z-index: -139;-webkit-transition: opacity 0.0333s 8.0253s linear;-moz-transition: 0.0333s 8.0253s linear;-o-transition: 0.0333s 8.0253s linear;transition: 0.0333s 8.0253s linear;}
+img.effect-delay-242.visible {z-index: -140;-webkit-transition: opacity 0.0333s 8.0586s linear;-moz-transition: 0.0333s 8.0586s linear;-o-transition: 0.0333s 8.0586s linear;transition: 0.0333s 8.0586s linear;}
+img.effect-delay-243.visible {z-index: -141;-webkit-transition: opacity 0.0333s 8.0919s linear;-moz-transition: 0.0333s 8.0919s linear;-o-transition: 0.0333s 8.0919s linear;transition: 0.0333s 8.0919s linear;}
+img.effect-delay-244.visible {z-index: -142;-webkit-transition: opacity 0.0333s 8.1252s linear;-moz-transition: 0.0333s 8.1252s linear;-o-transition: 0.0333s 8.1252s linear;transition: 0.0333s 8.1252s linear;}
+img.effect-delay-245.visible {z-index: -143;-webkit-transition: opacity 0.0333s 8.1585s linear;-moz-transition: 0.0333s 8.1585s linear;-o-transition: 0.0333s 8.1585s linear;transition: 0.0333s 8.1585s linear;}
+img.effect-delay-246.visible {z-index: -144;-webkit-transition: opacity 0.0333s 8.1918s linear;-moz-transition: 0.0333s 8.1918s linear;-o-transition: 0.0333s 8.1918s linear;transition: 0.0333s 8.1918s linear;}
+img.effect-delay-247.visible {z-index: -145;-webkit-transition: opacity 0.0333s 8.2251s linear;-moz-transition: 0.0333s 8.2251s linear;-o-transition: 0.0333s 8.2251s linear;transition: 0.0333s 8.2251s linear;}
+img.effect-delay-248.visible {z-index: -146;-webkit-transition: opacity 0.0333s 8.2584s linear;-moz-transition: 0.0333s 8.2584s linear;-o-transition: 0.0333s 8.2584s linear;transition: 0.0333s 8.2584s linear;}
+img.effect-delay-249.visible {z-index: -147;-webkit-transition: opacity 0.0333s 8.2917s linear;-moz-transition: 0.0333s 8.2917s linear;-o-transition: 0.0333s 8.2917s linear;transition: 0.0333s 8.2917s linear;}
+img.effect-delay-250.visible {z-index: -148;-webkit-transition: opacity 0.0333s 8.325s linear;-moz-transition: 0.0333s 8.325s linear;-o-transition: 0.0333s 8.325s linear;transition: 0.0333s 8.325s linear;}
+img.effect-delay-251.visible {z-index: -149;-webkit-transition: opacity 0.0333s 8.3583s linear;-moz-transition: 0.0333s 8.3583s linear;-o-transition: 0.0333s 8.3583s linear;transition: 0.0333s 8.3583s linear;}
+img.effect-delay-252.visible {z-index: -150;-webkit-transition: opacity 0.0333s 8.3916s linear;-moz-transition: 0.0333s 8.3916s linear;-o-transition: 0.0333s 8.3916s linear;transition: 0.0333s 8.3916s linear;}
+img.effect-delay-253.visible {z-index: -151;-webkit-transition: opacity 0.0333s 8.4249s linear;-moz-transition: 0.0333s 8.4249s linear;-o-transition: 0.0333s 8.4249s linear;transition: 0.0333s 8.4249s linear;}
+img.effect-delay-254.visible {z-index: -152;-webkit-transition: opacity 0.0333s 8.4582s linear;-moz-transition: 0.0333s 8.4582s linear;-o-transition: 0.0333s 8.4582s linear;transition: 0.0333s 8.4582s linear;}
+img.effect-delay-255.visible {z-index: -153;-webkit-transition: opacity 0.0333s 8.4915s linear;-moz-transition: 0.0333s 8.4915s linear;-o-transition: 0.0333s 8.4915s linear;transition: 0.0333s 8.4915s linear;}
 
-
-img.effect-delay-1.visible {
-    z-index: 11;
-    -webkit-transition: opacity 0.25s 0.25s linear;
-    -moz-transition: opacity 0.25s 0.25s linear;
-    -o-transition: opacity 0.25s 0.25s linear;
-    transition: opacity 0.25s 0.25s linear;
-    opacity: 1;
-}
-img.effect-delay-2.visible {
-    z-index: 10;
-    -webkit-transition: opacity 0.25s 0.5s linear;
-    -moz-transition: opacity 0.25s 0.5s linear;
-    -o-transition: opacity 0.25s 0.5s linear;
-    transition: opacity 0.25s 0.5s linear;
-    opacity: 1;
-}
-img.effect-delay-3.visible {
-    z-index: 9;
-    -webkit-transition: opacity 0.25s 0.75s linear;
-    -moz-transition: opacity 0.25s 0.75s linear;
-    -o-transition: opacity 0.25s 0.75s linear;
-    transition: opacity 0.25s 0.75s linear;
-    opacity: 1;
-}
-img.effect-delay-4.visible {
-    z-index: 8;
-    -webkit-transition: opacity 0.25s 1s linear;
-    -moz-transition: opacity 0.25s 1s linear;
-    -o-transition: opacity 0.25s 1s linear;
-    transition: opacity 0.25s 1s linear;
-    opacity: 1;
-}
-img.effect-delay-5.visible {
-    z-index: 7;
-    -webkit-transition: opacity 0.25s 1.25s linear;
-    -moz-transition: opacity 0.25s 1.25s linear;
-    -o-transition: opacity 0.25s 1.25s linear;
-    transition: opacity 0.25s 1.25s linear;
-    opacity: 1;
-}
-img.effect-delay-6.visible {
-    z-index: 6;
-    -webkit-transition: opacity 0.25s 1.5s linear;
-    -moz-transition: opacity 0.25s 1.5s linear;
-    -o-transition: opacity 0.25s 1.5s linear;
-    transition: opacity 0.25s 1.5s linear;
-    opacity: 1;
-}
-img.effect-delay-7.visible {
-    z-index: 5;
-    -webkit-transition: opacity 0.25s 1.75s linear;
-    -moz-transition: opacity 0.25s 1.75s linear;
-    -o-transition: opacity 0.25s 1.75s linear;
-    transition: opacity 0.25s 1.75s linear;
-    opacity: 1;
-}
-img.effect-delay-8.visible {
-    z-index: 4;
-    -webkit-transition: opacity 0.25s 2s linear;
-    -moz-transition: opacity 0.25s 2s linear;
-    -o-transition: opacity 0.25s 2s linear;
-    transition: opacity 0.25s 2s linear;
-    opacity: 1;
-}
-img.effect-delay-9.visible {
-    z-index: 3;
-    -webkit-transition: opacity 0.25s 2.25s linear;
-    -moz-transition: opacity 0.25s 2.25s linear;
-    -o-transition: opacity 0.25s 2.25s linear;
-    transition: opacity 0.25s 2.25s linear;
-}
 .previous-snapshots {
     visibility: hidden;
     opacity: 1;
