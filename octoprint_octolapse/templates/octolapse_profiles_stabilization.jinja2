@@ -1,22 +1,29 @@
 <script type="text/html" id="stabilization-template">
   <input type="hidden"  data-bind="value : guid" />
-  <div class="control-group">
-    <label class="control-label">Profile Name</label>
-    <div class="controls">
-      <input type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
-      <div class="error_label_container text-error" ></div>
+  <div>
+    <div>
+      <h4>Profile</h4>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Name</label>
+      <div class="controls">
+        <input type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Description</label>
+      <div class="controls">
+        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
   </div>
-  <div class="control-group">
-    <label class="control-label">Description</label>
-    <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-      <div class="error_label_container text-error" ></div>
+  <div>
+    <div>
+      <h4>X-Stabilization Options</h4>
+      <p>Controlls the X axis stabilizations, which is the position the X axis will be when we take a snapshot.</p>
     </div>
-  </div>
-  <div id="octolapse_stabilization_x">
-    <h4>X-Stabilization Options</h4>
-
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
@@ -105,8 +112,11 @@
       </div>
     </div>
   </div>
-  <div id="octolapse_stabilization_y">
-    <h4>Y-Stabilization Options</h4>
+  <div>
+    <div>
+      <h4>Y-Stabilization Options</h4>
+      <p>Controlls the Y axis stabilizations, which is the position the Y axis will be when we take a snapshot.</p>
+    </div>
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
@@ -195,7 +205,6 @@
       </div>
     </div>
   </div>
-
 </script>
 
 

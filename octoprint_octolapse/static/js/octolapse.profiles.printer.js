@@ -2,12 +2,22 @@
 $(function() {
     Octolapse.PrinterProfileValidationRules = {
         rules: {
-           
+            min_x: { lessThanOrEqual: "#octolapse_printer_max_x" },
+            max_x: { greaterThanOrEqual: "#octolapse_printer_min_x"},
+            min_y: { lessThanOrEqual: "#octolapse_printer_max_y" },
+            max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
+            min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
+            max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" }
         },
         messages: {
-            name: "Please enter a name for your profile"
+            name: "Please enter a name for your profile",
+            min_x : { lessThanOrEqual: "Must be less than or equal to the 'X - Width Max' field." },
+            max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''X - Width Min'' field." },
+            min_y : { lessThanOrEqual: "Must be less than or equal to the 'Y - Width Max' field." },
+            max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Y - Width Min'' field." },
+            min_z : { lessThanOrEqual: "Must be less than or equal to the 'Z - Width Max' field." },
+            max_z : { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." }
         }
-        
     };
 
     Octolapse.PrinterProfileViewModel = function (values) {
@@ -28,6 +38,7 @@ $(function() {
         self.origin_y = ko.observable(values.origin_y);
         self.origin_z = ko.observable(values.origin_z);
         self.abort_out_of_bounds = ko.observable(values.abort_out_of_bounds);
+        self.override_octoprint_print_volume = ko.observable(values.override_octoprint_print_volume);
         self.min_x = ko.observable(values.min_x);
         self.max_x = ko.observable(values.max_x);
         self.min_y = ko.observable(values.min_y);

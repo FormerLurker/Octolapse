@@ -10,6 +10,8 @@ import tempfile
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 def getfloat(value,default):
+	if(value is None):
+		return default
 	try:
 		return float(value)
 	except ValueError:
@@ -23,8 +25,9 @@ def getnullablefloat(value,default):
 		if(default is None):
 			return None
 		return float(default)
-
 def getint(value,default):
+	if(value is None):
+		return default
 	try:
 		return int(value)
 	except ValueError:
@@ -38,8 +41,9 @@ def getnullablebool(value,default):
 		if(default is None):
 			return None
 		return default
-
 def getbool(value,default):
+	if(value is None):
+		return default
 	try:
 		return bool(value)
 	except ValueError:
@@ -48,7 +52,6 @@ def getstring(value,default):
 	if value is not None and len(value) > 0:
 		return value
 	return default
-
 def getbitrate(value,default):
 	if(value is None):
 		return default
@@ -60,9 +63,6 @@ def getbitrate(value,default):
 	if(matches is None):
 		return default
 	return value
-
-	
-
 def getobject(value,default):
 	if value is None:
 		return default
@@ -71,43 +71,33 @@ def is_sequence(arg):
     return (not hasattr(arg, "strip") and
             hasattr(arg, "__getitem__") or
             hasattr(arg, "__iter__"))
-
 def GetFilenameFromFullPath(path):
 	baseName = ntpath.basename(path)
 	head, tail = ntpath.split(baseName)
 	fileName = tail or ntpath.basename(head)
 	return os.path.splitext(fileName)[0]
-
 def GetExtensionFromFileName(fileName):
 	extension = os.path.splitext(filename)[1]
 	return extension
-
 def isclose(a, b, abs_tol=0.01000):
 	 return abs(a-b) <= abs_tol
 def round_to(n, precision):
     correction = 0.5 if n >= 0 else -0.5
     return int( n/precision+correction ) * precision
-
 def GetTempSnapshotDirectoryTemplate():
 	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"tempsnapshots",os.sep )
 def GetSnapshotDirectory(dataDirectory):
 	return "{0}{1}{2}{3}".format(dataDirectory,os.sep,"snapshots",os.sep )
-
 def GetSnapshotFilenameTemplate():
 	return "{0}{1}{2}".format("{FILENAME}_{PRINTSTARTTIME}",os.sep,"{FILENAME}")
-
 def GetRenderingDirectoryFromDataDirectory(dataDirectory):
 	return GetRenderingDirectoryTemplate().replace("{DATADIRECTORY}",dataDirectory)
-
 def GetSnapshotDownloadPath(dataDirectory, fileName):
 	return "{0}{1}{2}{3}{4}".format(dataDirectory,os.sep,"snapshots",os.sep,fileName)
-
 def GetLatestSnapshotDownloadPath(dataDirectory):
 	return "{0}{1}".format(GetSnapshotDirectory(dataDirectory),"latest_snapshot.jpeg")
-
 def GetLatestSnapshotThumbnailDownloadPath(dataDirectory):
 	return "{0}{1}".format(GetSnapshotDirectory(dataDirectory),"latest_snapshot_thumbnail_300px.jpeg")
-
 def GetImagesDownloadPath(baseFolder, fileName):
 	return "{0}{1}data{2}{3}{4}{5}".format(baseFolder,os.sep,os.sep,"Images",os.sep,fileName)
 def GetErrorImageDownloadPath(baseFolder):
@@ -118,10 +108,8 @@ def GetErrorImageDownloadPath(baseFolder):
 	return GetImagesDownloadPath(baseFolder, "no-image-available.png")
 def GetRenderingDirectoryTemplate():
 	return "{0}{1}{2}{3}".format("{DATADIRECTORY}",os.sep,"timelapses",os.sep )
-
 def GetRenderingBaseFilenameTemplate():
 	return "{FILENAME}_{DATETIMESTAMP}"
-
 def GetRenderingBaseFilename(printName, printStartTime, printEndTime = None):
 	fileTemplate = GetRenderingBaseFilenameTemplate()
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
@@ -130,9 +118,7 @@ def GetRenderingBaseFilename(printName, printStartTime, printEndTime = None):
 	fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
 	if(printEndTime is not None):
 		fileTemplate = fileTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
-	
 	return fileTemplate
-
 def GetSnapshotFilename(printName, printStartTime, snapshotNumber):
 	fileTemplate = GetSnapshotFilenameTemplate()
 	dateStamp = "{0:d}".format(math.trunc(round(time.time(),2)*100))
@@ -214,7 +200,6 @@ def IsInBounds(boundingBox, x=None, y=None, z=None ):
 	return xIsInBounds and yIsInBounds and zIsInBounds
 
 def GetClosestInBoundsPosition(boundingBox, x=None, y=None,z=None):
-
 	minX = boundingBox['min_x']
 	maxX = boundingBox['max_x']
 	minY = boundingBox['min_y']
@@ -239,51 +224,40 @@ def GetClosestInBoundsPosition(boundingBox, x=None, y=None,z=None):
 		elif(z < minZ):
 			z = minZ
 	return {'X':x,'Y':y,'Z':z}
-
 def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
 	# get octolapse min and max
-	minX = octolapsePrinterProfile.min_x
-	maxX = octolapsePrinterProfile.max_x
-	minY = octolapsePrinterProfile.min_y
-	maxY = octolapsePrinterProfile.max_y
-	minZ = octolapsePrinterProfile.min_z
-	maxZ = octolapsePrinterProfile.max_z
-
-	volume = octoprintPrinterProfile["volume"]
-	customBox = volume["custom_box"]
-	if(minX is None):
+	minX = None
+	maxX = None
+	minY = None
+	maxY = None
+	minZ = None
+	maxZ = None
+	if(octolapsePrinterProfile.override_octoprint_print_volume):
+		minX = octolapsePrinterProfile.min_x
+		maxX = octolapsePrinterProfile.max_x
+		minY = octolapsePrinterProfile.min_y
+		maxY = octolapsePrinterProfile.max_y
+		minZ = octolapsePrinterProfile.min_z
+		maxZ = octolapsePrinterProfile.max_z
+	else:
+		volume = octoprintPrinterProfile["volume"]
+		customBox = volume["custom_box"]
+		# see if we have a custom bounding box
 		if(customBox != False):
 			minX = customBox["x_min"]
-		else:
-			minX = 0
-	if(maxX is None):
-		if(customBox != False):
 			maxX = customBox["x_max"]
-		else:
-			maxX = volume["width"];
-			
-	if(minY is None):
-		if(customBox != False):
 			minY = customBox["y_min"]
-		else:
-			minY = 0
-	if(maxY is None):
-		if(customBox != False):
 			maxY = customBox["y_max"]
-		else:
-			maxY = volume["depth"];
-
-	if(minZ is None):
-		if(customBox != False):
 			minZ = customBox["z_min"]
-		else:
-			minZ = 0
-	if(maxZ is None):
-		if(customBox != False):
 			maxZ = customBox["z_max"]
 		else:
+			minX = 0
+			maxX = volume["width"];
+			minY = 0
+			maxY = volume["depth"];
+			minZ = 0
 			maxZ = volume["height"];
-
+		
 	return {
 		"min_x" : minX,
 		"max_x" : maxX,

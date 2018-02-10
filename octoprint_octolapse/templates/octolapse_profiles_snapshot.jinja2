@@ -1,312 +1,34 @@
 <script type="text/html" id="snapshot-template">
   <input type="hidden"  data-bind="value : guid" />
-  <div class="control-group">
-    <label class="control-label">Snapshot Profile Name</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: name" required="true"/>
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Description</label>
-    <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <hr/>
   <div>
-
+    <div>
+      <h4>Profile</h4>
+    </div>
     <div class="control-group">
-      <label class="control-label">Gcode Trigger</label>
+      <label class="control-label">Name</label>
       <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_trigger_enabled" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
-      <label class="control-label" >Trigger on Zhop Only</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
-      <div class="controls">
-        <small>
-          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
-            <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
-          </a>
-        </small>
-      </div>
-
-      <div id="trigger_gcode_advanced" class="hide">
-        <div class="control-group">
-          <label class="control-label" >Extrusion Starting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: gcode_trigger_on_extruding_start"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >During Extrusion</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: gcode_trigger_on_extruding"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >On Extruder Primed</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_primed"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_retracting_start"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_retracting"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Partially Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_partially_retracted"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Fully Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_retracted"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_detracting_start"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_detracting"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Trigger on Detracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: gcode_trigger_on_detracted"></select>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-  <hr/>
-  <div>
-    <div class="control-group">
-      <label class="control-label">Timer Trigger:</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: timer_trigger_enabled" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <label class="control-label" >Trigger on Zhop Only</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: timer_trigger_require_zhop" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <label class="control-label">Seconds to Trigger</label>
-      <div class="controls">
-        <input name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
+        <input type="text" class="input-block-level" data-bind="value: name" required="true"/>
         <div class="error_label_container text-error" ></div>
-
       </div>
     </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
+    <div class="control-group">
+      <label class="control-label">Description</label>
       <div class="controls">
-        <small>
-          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
-            <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
-          </a>
-        </small>
-      </div>
-    </div>
-    <div id="trigger_timer_advanced" class="hide collapsible">
-      <div class="control-group">
-        <label class="control-label" >Extrusion Starting</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_extruding_start"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >During Extrusion</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_extruding"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >On Extruder Primed</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_primed"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Start Retracting</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_retracting_start"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Retracting</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_retracting"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Partially Retracted</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_partially_retracted"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Fully Retracted</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_retracted"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Start Detracting</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_detracting_start"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Detracting</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_detracting"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >Trigger on Detracted</label>
-        <div class="controls">
-          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: timer_trigger_on_detracted"></select>
-          <div class="error_label_container text-error" ></div>
-        </div>
+        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" ></div>
       </div>
     </div>
   </div>
+  
+  
   <hr/>
   <div>
+    <div>
+      <h4>Layer/Height Trigger</h4>
+      <span>Allows you to take snapshots either every layer, or on a specific height interval.</span>
+      <br/>
+    </div>
     <div class="control-group">
-      <label class="control-label">Layer/Height Trigger:</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: layer_trigger_enabled" />Enabled
@@ -457,13 +179,308 @@
     </div>
   </div>
   <hr/>
+  <div>
+    <div>
+      <h4>Timer Trigger</h4>
+      <span>Allows you to take snapshots on a time interval.</span>
+      <br/>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: timer_trigger_enabled" />Enabled
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: timer_trigger_enabled">
+      <label class="control-label" >Trigger on Zhop Only</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: timer_trigger_require_zhop" />Enabled
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: timer_trigger_enabled">
+      <label class="control-label">Seconds to Trigger</label>
+      <div class="controls">
+        <input name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: timer_trigger_enabled">
+      <div class="controls">
+        <small>
+          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
+            <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
+          </a>
+        </small>
+      </div>
+    </div>
+    <div id="trigger_timer_advanced" class="hide collapsible">
+      <div class="control-group">
+        <label class="control-label" >Extrusion Starting</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_extruding_start"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >During Extrusion</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_extruding"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >On Extruder Primed</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_primed"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Start Retracting</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_retracting_start"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Retracting</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_retracting"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Partially Retracted</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_partially_retracted"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Fully Retracted</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_retracted"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Start Detracting</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_detracting_start"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Detracting</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_detracting"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Trigger on Detracted</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: timer_trigger_on_detracted"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr/>
+  <div>
+    <div>
+      <h4>Gcode Trigger</h4>
+      <span>This allows you to insert custom gcode (see printer settings for the snapshot command) that will trigger a snapshot.  This is the most precise way to define when snapshots should occur, but it takes a bit more effort.</span>
+      <br/>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_trigger_enabled" />Enabled
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
+      <label class="control-label" >Trigger on Zhop Only</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop" />Enabled
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
+      <div class="controls">
+        <small>
+          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
+            <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
+          </a>
+        </small>
+      </div>
+
+      <div id="trigger_gcode_advanced" class="hide">
+        <div class="control-group">
+          <label class="control-label" >Extrusion Starting</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: gcode_trigger_on_extruding_start"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >During Extrusion</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: gcode_trigger_on_extruding"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >On Extruder Primed</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_primed"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Start Retracting</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_retracting_start"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Retracting</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_retracting"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Partially Retracted</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_partially_retracted"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Fully Retracted</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_retracted"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Start Detracting</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_detracting_start"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Detracting</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_detracting"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" >Trigger on Detracted</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: gcode_trigger_on_detracted"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr/>
   <div class="control-group">
-    
-      <small>
-        <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
-          <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
-        </a>
-      </small>
+
+    <small>
+      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
+        <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
+      </a>
+    </small>
   </div>
 
   </div>

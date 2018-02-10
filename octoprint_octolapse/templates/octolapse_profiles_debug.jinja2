@@ -1,16 +1,21 @@
 <script type="text/html" id="debug-template">
-  <div class="control-group">
-    <label class="control-label">Printer Profile Name:</label>
-    <div class="controls">
-      <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
-      <div class="error_label_container text-error" ></div>
+  <div>
+    <div>
+      <h4>Profile</h4>
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Description</label>
-    <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-      <div class="error_label_container text-error" ></div>
+    <div class="control-group">
+      <label class="control-label">Name:</label>
+      <div class="controls">
+        <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Description</label>
+      <div class="controls">
+        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" ></div>
+      </div>
     </div>
   </div>
   <div class="control-group">
@@ -32,9 +37,9 @@
       </label>
     </div>
   </div>
-  
+
   <div data-bind="visible: enabled">
-    
+
     <div class="control-group">
       <label class="control-label">Write To Console</label>
       <div class="controls">
@@ -75,7 +80,7 @@
         </label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <label class="control-label">Log Snapshot Trigger Create</label>
       <div class="controls">
@@ -188,7 +193,7 @@
         </label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <label class="control-label">Log Snapshot Save</label>
       <div class="controls">
@@ -293,7 +298,7 @@
         </label>
       </div>
     </div>
-    
+
 
   </div>
 </script>

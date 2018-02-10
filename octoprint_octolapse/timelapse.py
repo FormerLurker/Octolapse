@@ -529,34 +529,7 @@ class Timelapse(object):
 	def _onSnapshotSuccess(self, *args, **kwargs):
 		# Increment the number of snapshots received
 		self.SnapshotCount += 1
-		# get the save path
-		snapshotInfo = args[0]
-		# get the current file name
-		newSnapshotName = snapshotInfo.GetFullPath(self.SnapshotCount)
-		self.Settings.CurrentDebugProfile().LogSnapshotSave("Renaming snapshot {0} to {1}".format(snapshotInfo.GetTempFullPath(),newSnapshotName))
-		# create the output directory if it does not exist
-		try:
-			tempSnapshotPath = os.path.dirname(newSnapshotName)
-			latestSnapshotPath = utility.GetSnapshotDirectory(self.DataFolder)
-			if not os.path.exists(tempSnapshotPath):
-				os.makedirs(tempSnapshotPath)
-			if not os.path.exists(latestSnapshotPath):
-				os.makedirs(latestSnapshotPath)
-		except Exception as e:
-			self.Settings.CurrentDebugProfile().LogException(e)
-			return
-		try:
-			
-			# rename the current file
-			shutil.move(snapshotInfo.GetTempFullPath(),newSnapshotName)
-			self.SnapshotSuccess = True
-		except:
-			type = sys.exc_info()[0]
-			value = sys.exc_info()[1]
-			message = "Could rename the snapshot {0} to {1}!   Error Type:{2}, Details:{3}".format(snapshotInfo.GetTempFullPath(), newSnapshotName,type,value)
-			self.Settings.CurrentDebugProfile().LogSnapshotSave(message)
-			self.SnapshotSuccess = False
-			self.SnapshotError = message
+		self.SnapshotSuccess = True;
 	def _onSnapshotFail(self, *args, **kwargs):
 		reason = args[0]
 		message = "Failed to download the snapshot.  Reason:{0}".format(reason)

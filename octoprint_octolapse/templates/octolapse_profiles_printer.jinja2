@@ -1,162 +1,249 @@
 <script type="text/html" id="printer-template">
-  <div class="control-group">
-    <label class="control-label">Printer Profile Name:</label>
-    <div class="controls">
-      <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="True"/>
-      <div class="error_label_container text-error" ></div>
+  <div>
+    <div>
+      <h4>Profile</h4>
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Description</label>
-    <div class="controls">
-      <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Retraction Length</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
-        <span class="add-on">mm</span>
+    <div class="control-group">
+      <label class="control-label">Name:</label>
+      <div class="controls">
+        <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="True"/>
+        <div class="error_label_container text-error" ></div>
       </div>
-      <div class="error_label_container text-error" ></div>
     </div>
-
-  </div>
-
-  <div class="control-group">
-    <label class="control-label">Retraction Speed</label>
-
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
-        <span class="add-on">mm</span>
-        <span class="add-on">min</span>
+    <div class="control-group">
+      <label class="control-label">Description</label>
+      <div class="controls">
+        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" ></div>
       </div>
-      <div class="error_label_container text-error" ></div>
-      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Detraction Speed</label>
-
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
-        <span class="add-on">mm</span>
-        <span class="add-on">min</span>
-      </div>
-      <div class="error_label_container text-error" ></div>
-      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Movement Speed</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
-        <span class="add-on">mm</span>
-        <span class="add-on">min</span>
-      </div>
-      <div class="error_label_container text-error" ></div>
-      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
-    </div>
-  </div>
-
-
-
-  <div class="control-group">
-    <label class="control-label">Z-Hop Height</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
-        <span class="add-on">mm</span>
-      </div>
-      <div class="error_label_container text-error" ></div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Z-Hop Speed</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
-        <span class="add-on">mm</span>
-        <span class="add-on">min</span>
-      </div>
-      <div class="error_label_container text-error" ></div>
-      <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Printer Position Tolerance</label>
-    <div class="controls">
-      <div class="input-append form-inline">
-        <input name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" />
-        <span class="add-on">mm</span>
-      </div>
-      <div class="error_label_container text-error" ></div>
-      <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Snapshot Command</label>
-    <div class="controls">
-      <input name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
-      <div class="error_label_container text-error" ></div>
-
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Auto-Detect Home Position</label>
-    <div class="controls">
-      <label class="checkbox">
-        <input name="auto_detect_origin" type="checkbox" data-bind="checked: auto_detect_origin" title="Auto-detect the current position after receiving a home command"/>Enabled
-      </label>
-    </div>
-  </div>
-
-  <div data-bind="visible:!auto_detect_origin()">
     <hr/>
-    <h5>Home Position</h5>
-    <p>The home position, if provided, will be used to determine the X,Y and Z coordinates when the printer is homed.  If these are left empty, octolapse will wait until it encounters an absolute position for each axis before taking any snapshots.</p>
-
-
-
-    <div class="control-group">
-      <label class="control-label">X Origin</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-
-    <div class="control-group">
-      <label class="control-label">Y Origin</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-
-    <div class="control-group">
-      <label class="control-label">Z Origin</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
   </div>
   <div>
+    <div>
+      <h4>Axis Speed Settings</h4>
+      <p>Control detraction/retraction speed and length.  Used for both snapshot gcode generation and position/state detection.</p>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Movement Speed</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
+          <span class="add-on">mm</span>
+          <span class="add-on">min</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Retraction Speed</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
+          <span class="add-on">mm</span>
+          <span class="add-on">min</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Detraction Speed</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+          <span class="add-on">mm</span>
+          <span class="add-on">min</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Z Movement Speed</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+          <span class="add-on">mm</span>
+          <span class="add-on">min</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+      </div>
+    </div>
+
+  </div>
+  <hr/>
+  <div>
+    <div>
+      <h4>Retract/Z-Hop Distance</h4>
+      <p>Used both to detect retraction/detraction and to control snapshot gcode generation for lift and retract.</p>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Retraction Length</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Z-Hop Height</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <hr/>
+    <div>
+      <h4>Home Position</h4>
+      <p>The home position, if provided, will be used to determine the X,Y and Z coordinates when the printer is homed.  If these are left empty, octolapse will wait until it encounters an absolute position for each axis before taking any snapshots.</p>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">Auto-Detect Home Position</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="auto_detect_origin" type="checkbox" data-bind="checked: auto_detect_origin" title="Auto-detect the current position after receiving a home command"/>Enabled
+          <span class="help-inline">
+            Setting this option to true causes Octolapse to pause the print after it receives a home command in order to aquire a location (M114).
+          </span>
+        </label>
+      </div>
+    </div>
+    <div data-bind="visible:!auto_detect_origin()">
+      <div class="control-group">
+        <label class="control-label">X Origin</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
+            <span class="add-on">mm</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Y Origin</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
+            <span class="add-on">mm</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Z Origin</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
+            <span class="add-on">mm</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div>
+    <div>
+      <hr/>
+      <h4>Print Volume</h4>
+      <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Override Octoprint Printer Profile</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="auto_detect_origin" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
+          <span class="help-inline">
+            When selected the print volume will be termined by the current Octoprint printer profile.
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+      <label class="control-label">X - Width</label>
+      <div class="controls">
+        <div class="row-fluid">
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Min</span>
+              <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Max</span>
+              <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+      <label class="control-label">Y - Depth</label>
+      <div class="controls">
+        <div class="row-fluid">
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Min</span>
+              <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Max</span>
+              <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+      <label class="control-label">Z - Height</label>
+      <div class="controls">
+        <div class="row-fluid">
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Min</span>
+              <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+          <div class="span6">
+            <div class="input-prepend input-append">
+              <span class="add-on">Max</span>
+              <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required="true" />
+              <span class="add-on">mm</span>
+            </div>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="control-group">
       <label class="control-label">Abort Snapshot When Out-Of-Bounds</label>
       <div class="controls">
@@ -166,78 +253,29 @@
         <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.</span>
       </div>
     </div>
+  </div>
+  <hr/>
+  <div>
+    <div>
+      <h4>Miscellaneous Settings</h4>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Printer Position Tolerance</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Snapshot Command</label>
+      <div class="controls">
+        <input name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
+        <div class="error_label_container text-error" ></div>
 
-    
-    <hr/>
-    <h5>Print Volume</h5>
-    <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
-  </div>
-  <div class="control-group">
-    <label class="control-label">X - Width</label>
-    <div class="controls">
-      <div class="row-fluid">
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Min</span>
-            <input name="min_x" type="number" class="input-small text-right" data-bind="value: min_x" step="any" />
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" ></div>
-        </div>
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Max</span>
-            <input name="max_x" type="number" class="input-small text-right" data-bind="value: max_x" step="any" />
-            <span class="add-on">mm</span>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Y - Depth</label>
-    <div class="controls">
-      <div class="row-fluid">
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Min</span>
-            <input name="min_y" type="number" class="input-small text-right" data-bind="value: min_y" step="any" />
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" ></div>
-        </div>
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Max</span>
-            <input name="max_y" type="number" class="input-small text-right" data-bind="value: max_y" step="any" />
-            <span class="add-on">mm</span>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">Z - Height</label>
-    <div class="controls">
-      <div class="row-fluid">
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Min</span>
-            <input name="min_z" type="number" class="input-small text-right" data-bind="value: min_z" step="any" />
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" ></div>
-        </div>
-        <div class="span6">
-          <div class="input-prepend input-append">
-            <span class="add-on">Max</span>
-            <input name="max_z" type="number" class="input-small text-right" data-bind="value: max_z" step="any" />
-            <span class="add-on">mm</span>
-            <div class="error_label_container text-error" ></div>
-          </div>
-        </div>
       </div>
     </div>
   </div>

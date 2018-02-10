@@ -151,14 +151,7 @@ class TimelapseRenderJob(object):
 
 		self._baseOutputFileName = utility.GetFilenameFromFullPath(self._output)
 		self._synchronize = (self._rendering.sync_with_timelapse and self._rendering.output_format == "mp4")
-		 
-		if(not self._pre_render()):
-			if(self._imageCount == 0):
-				self._on_render_fail("No frames were captured.")
-			else:
-				self._on_render_fail("Rendering failed during the pre-render phase.  Please check the logs (plugin_octolapse.log) for details.")
-			return
-
+		
 		self._thread = threading.Thread(target=self._render,
 		                                name="TimelapseRenderJob_{name}".format(name = self._printFileName))
 		self._thread.daemon = True
@@ -269,6 +262,14 @@ class TimelapseRenderJob(object):
 		success = False
 		
 		try:
+			# I've had bad luck doing this inside of the thread
+			if(not self._pre_render()):
+				if(self._imageCount == 0):
+					self._on_render_fail("No frames were captured.")
+				else:
+					self._on_render_fail("Rendering failed during the pre-render phase.  Please check the logs (plugin_octolapse.log) for details.")
+				return
+
 			# notify any listeners that we are rendering.
 			self._on_render_start()
 

@@ -67,9 +67,7 @@ $(function () {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
     };
-
     
-
     Octolapse.DisableResumeButton = function(){
         $("#state_wrapper #job_pause").attr("disabled", "disabled");
         $("#state_wrapper #job_pause span:nth-of-type(1)").text("Snapshot");

@@ -32,12 +32,13 @@ class Printer(object):
 		self.origin_y = None
 		self.origin_z = None
 		self.abort_out_of_bounds = True
-		self.min_x = None
-		self.max_x = None
-		self.min_y = None
-		self.max_y = None
-		self.min_z = None
-		self.max_z = None
+		self.override_octoprint_print_volume = False
+		self.min_x = 0.0
+		self.max_x = 0.0
+		self.min_y = 0.0
+		self.max_y = 0.0
+		self.min_z = 0.0
+		self.max_z = 0.0
 
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
@@ -57,6 +58,7 @@ class Printer(object):
 				self.origin_y = printer.origin_y
 				self.origin_z = printer.origin_z
 				self.abort_out_of_bounds = printer.abort_out_of_bounds
+				self.override_octoprint_print_volume = printer.override_octoprint_print_volume
 				self.min_x = printer.min_x
 				self.max_x = printer.max_x
 				self.min_y = printer.min_y
@@ -98,18 +100,21 @@ class Printer(object):
 			self.origin_z = utility.getnullablefloat(changes["origin_z"],self.origin_z)
 		if("abort_out_of_bounds" in changes.keys()):
 			self.abort_out_of_bounds = utility.getbool(changes["abort_out_of_bounds"],self.abort_out_of_bounds)
+		if("override_octoprint_print_volume" in changes.keys()):
+			self.override_octoprint_print_volume = utility.getbool(changes["override_octoprint_print_volume"],self.override_octoprint_print_volume)
+			
 		if("min_x" in changes.keys()):
-			self.min_x = utility.getnullablefloat(changes["min_x"],self.min_x)
+			self.min_x = utility.getfloat(changes["min_x"],self.min_x)
 		if("max_x" in changes.keys()):
-			self.max_x = utility.getnullablefloat(changes["max_x"],self.max_x)
+			self.max_x = utility.getfloat(changes["max_x"],self.max_x)
 		if("min_y" in changes.keys()):
-			self.min_y = utility.getnullablefloat(changes["min_y"],self.min_y)
+			self.min_y = utility.getfloat(changes["min_y"],self.min_y)
 		if("max_y" in changes.keys()):
-			self.max_y = utility.getnullablefloat(changes["max_y"],self.max_y)
+			self.max_y = utility.getfloat(changes["max_y"],self.max_y)
 		if("min_z" in changes.keys()):
-			self.min_z = utility.getnullablefloat(changes["min_z"],self.min_z)
+			self.min_z = utility.getfloat(changes["min_z"],self.min_z)
 		if("max_z" in changes.keys()):
-			self.max_z = utility.getnullablefloat(changes["max_z"],self.max_z)
+			self.max_z = utility.getfloat(changes["max_z"],self.max_z)
 		
 	def ToDict(self):
 		return {
@@ -130,6 +135,7 @@ class Printer(object):
 			'origin_y' : self.origin_y,
 			'origin_z' : self.origin_z,
 			'abort_out_of_bounds' : self.abort_out_of_bounds,
+			'override_octoprint_print_volume' : self.override_octoprint_print_volume,
 			'min_x' : self.min_x,
 			'max_x' : self.max_x,
 			'min_y' : self.min_y,
