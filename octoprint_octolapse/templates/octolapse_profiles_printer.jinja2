@@ -22,7 +22,7 @@
   <div>
     <div>
       <h4>Retract/Z-Hop Distance</h4>
-      <p>Used both to detect retraction/detraction and to control snapshot gcode generation for lift and retract.</p>
+      <p>Used both to detect retraction/detraction and to control snapshot GCode generation for lift and retract.</p>
     </div>
     <div class="control-group">
       <label class="control-label">Retraction Length</label>
@@ -49,7 +49,7 @@
   <div>
     <div>
       <h4>Axis Speed Settings</h4>
-      <p>Control detraction/retraction speed and length.  Used for both snapshot gcode generation and position/state detection.</p>
+      <p>Control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
     </div>
     <div class="control-group">
       <label class="control-label">Movement Speed</label>
@@ -112,7 +112,7 @@
         <label class="checkbox">
           <input name="auto_detect_origin" type="checkbox" data-bind="checked: auto_detect_origin" title="Auto-detect the current position after receiving a home command"/>Enabled
           <span class="help-inline">
-            Setting this option to true causes Octolapse to pause the print after it receives a home command in order to aquire a location (M114).
+            Setting this option to true causes Octolapse to pause the print after it receives a home command in order to aquire a location.  It will resume the print when complete.
           </span>
         </label>
       </div>
@@ -167,7 +167,7 @@
         <label class="checkbox">
           <input name="auto_detect_origin" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
           <span class="help-inline">
-            When selected the print volume will be termined by the current Octoprint printer profile.
+            When selected the print volume will be determined by the current Octoprint printer profile.
           </span>
         </label>
       </div>

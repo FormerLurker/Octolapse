@@ -25,7 +25,7 @@
   <div>
     <div>
       <h4>Layer/Height Trigger</h4>
-      <span>Allows you to take snapshots either every layer, or on a specific height interval.</span>
+      <span>Allows you to take snapshots either every layer or on a specific height interval.</span>
       <br/>
     </div>
     <div class="control-group">
@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="control-group" data-bind="visible: layer_trigger_enabled">
-      <label class="control-label" >Trigger on Zhop Only</label>
+      <label class="control-label" >Trigger on Z-Hop Only</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: layer_trigger_require_zhop" />Enabled
@@ -193,7 +193,7 @@
       </div>
     </div>
     <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <label class="control-label" >Trigger on Zhop Only</label>
+      <label class="control-label" >Trigger on Z-Hop Only</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: timer_trigger_require_zhop" />Enabled
@@ -334,7 +334,7 @@
   <div>
     <div>
       <h4>Gcode Trigger</h4>
-      <span>This allows you to insert custom gcode (see printer settings for the snapshot command) that will trigger a snapshot.  This is the most precise way to define when snapshots should occur, but it takes a bit more effort.</span>
+      <span>This allows you to insert custom GCode (see printer settings for the snapshot command) that will trigger a snapshot.  This is the most precise way to define when snapshots should occur, but it takes a bit more effort.</span>
       <br/>
     </div>
     <div class="control-group">
@@ -345,7 +345,7 @@
       </div>
     </div>
     <div class="control-group" data-bind="visible: gcode_trigger_enabled">
-      <label class="control-label" >Trigger on Zhop Only</label>
+      <label class="control-label" >Trigger on Z-Hop Only</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop" />Enabled
@@ -356,7 +356,7 @@
       <div class="controls">
         <small>
           <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
-            <i class="fa fa-caret-right"></i> {{ _('Advanced Gcode Trigger Options') }}
+            <i class="fa fa-caret-right"></i> {{ _('Advanced GCode Trigger Options') }}
           </a>
         </small>
       </div>

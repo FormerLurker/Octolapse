@@ -23,10 +23,10 @@
     <div>
       <h4>Test Mode</h4>
       <p>
-        Strips all extrusion, temperature change and fan commands from the gcode.  This is useful for testing new settings without wasting plastic or waiting for the printer to heat up!  This is also very useful for debugging issues with Octolapse in general.  If you find any other uses for test mode, please let me know.
+        Strips all extrusion, temperature change and fan commands from the GCode.  This is useful for testing new settings without wasting plastic or waiting for the printer to heat up!  This is also very useful for debugging issues with Octolapse in general.  If you find any other uses for test mode, please let me know.
       </p>
       <p>
-        <span class="label label-important">Attention</span>&nbsp;  This is a beta product that is not yet battle hardened.  It's possible I left out or messed up some gcode commands.  Please report any issues you have while using test mode so that I can improve it.
+        <span class="label label-important">Attention</span>&nbsp;  This is a beta product that is not yet battle-hardened.  It's possible I left out or messed up some GCode commands.  Please report any issues you have while using test mode so that I can improve it.
       </p>
     </div>
     <div class="control-group">
@@ -73,7 +73,7 @@
           <input type="checkbox" data-bind="checked: position_change" title="Log position changes"/>Enabled
         </label>
         <span class="help-inline">
-          Logs every detected position change.  <span class="label label-important">Attention</span>&nbsp;This generates a lot of output, take care when using.
+          Logs every detected position change.  <span class="label label-important">Attention</span>&nbsp;This generates a lot of output.  Take care when using.
         </span>  
       </div>
     </div>
@@ -84,7 +84,7 @@
           <input type="checkbox" data-bind="checked: position_command_received" title="Log position commands"/>Enabled
         </label>
         <span class="help-inline">
-          Logs commands as they are parsed by the Position module.&nbsp;<span class="label label-important">Attention</span>&nbsp;This generates a lot of output, take care when using.
+          Logs commands as they are parsed by the Position module.&nbsp;<span class="label label-important">Attention</span>&nbsp;This generates a lot of output.  Take care when using.
         </span>
 
       </div>
@@ -104,7 +104,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: extruder_triggered" title="Log extruder triggering"/>Enabled
         </label>
-        <span class="help-inline">Add a log entry ef the extruder state matches the extruder triggers configured within the current snapshot profile.</span>
+        <span class="help-inline">Add a log entry if the extruder state matches the extruder triggers configured within the current snapshot profile.</span>
       </div>
     </div>
 
@@ -175,7 +175,7 @@
           <input type="checkbox" data-bind="checked: trigger_time_remaining" title="Log trigger time remaining"/>Enabled
         </label>
         <span class="help-inline">
-          <span class="label label-important">Attention</span>&nbsp;  This generates a lot of output, take care when using.
+          <span class="label label-important">Attention</span>&nbsp;  This generates a lot of output.  Take care when using.
         </span>
       </div>
     </div>
@@ -191,21 +191,21 @@
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Log Snapshot Gcode</label>
+      <label class="control-label">Log Snapshot GCode</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: snapshot_gcode" title="Log snapshot gcode"/>Enabled
+          <input type="checkbox" data-bind="checked: snapshot_gcode" title="Log snapshot GCode"/>Enabled
         </label>
         <span class="help-inline">I love this setting.  It's the most enjoyable thing to watch while debugging.</span>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Log Snapshot Gcode Endcommand Status</label>
+      <label class="control-label">Log Snapshot GCode Endcommand Status</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_gcode_endcommand" title="Log snapshot endcommand status"/>Enabled
         </label>
-        <span class="help-inline">When generating a snapshot, Octolapse saves the gcode command following the one triggered the snapshot and sends it to the printer when the snapshot is complete.  This setting logs that process.</span>
+        <span class="help-inline">When generating a snapshot, Octolapse saves the GCode command following the one triggered the snapshot and sends it to the printer when the snapshot is complete.  This setting logs that process.</span>
       </div>
     </div>
     <div class="control-group">
@@ -223,7 +223,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_position_return" title="Log snapshot return position"/>Enabled
         </label>
-        <span class="help-inline">Logs the position of the axis right before any snapshot gcodes are executed.</span>
+        <span class="help-inline">Logs the position of the axis right before any snapshot GCodes are executed.</span>
       </div>
     </div>
     <div class="control-group">
@@ -344,24 +344,24 @@
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Log Gcode Queuing</label>
+      <label class="control-label">Log GCode Queuing</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_queuing_all" title="Log all gcode that is about to queue"/>Enabled
+          <input type="checkbox" data-bind="checked: gcode_queuing_all" title="Log all GCode that is about to queue"/>Enabled
         </label>
         <span class="help-inline">
-          <span class="label label-important">Attention</span>&nbsp;  This option will log every gcode command that is queued, but not sent to the printer.  This can be very useful, but also will create a lot of log entries.
+          <span class="label label-important">Attention</span>&nbsp;  This option will log every GCode command that is queued but not sent to the printer.  This can be very useful but also will create a lot of log entries.
         </span>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Log Gcode Sent</label>
+      <label class="control-label">Log GCode Sent</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_sent_all" title="Log all gcode sent to printer"/>Enabled
+          <input type="checkbox" data-bind="checked: gcode_sent_all" title="Log all GCode sent to printer"/>Enabled
         </label>
         <span class="help-inline">
-          <span class="label label-important">Attention</span>&nbsp;  This option will log every gcode command that has been sent to the printer.  This can be very useful, but also will create a lot of log entries.
+          <span class="label label-important">Attention</span>&nbsp;  This option will log every GCode command that has been sent to the printer.  This can be very useful but also will create a lot of log entries.
         </span>
       </div>
     </div>
