@@ -1246,14 +1246,16 @@ class OctolapseSettings(object):
 	Logger = None;
 	# constants
 	def __init__(self, logFilePath,  settings=None):
-		self.DefaultPrinter = Printer(name="Default Printer", guid="88a173b1-0071-4d93-84fa-6662af279e5e");
-		self.DefaultStabilization = Stabilization(name="Default Stabilization", guid="2a0d92b3-6dc3-4d28-9564-8ecacec92412");
-		self.DefaultSnapshot = Snapshot(name="Default Snapshot", guid="fae0ca93-8c06-450e-a734-eb29426769ca");
-		self.DefaultRendering = Rendering(name="Default Rendering", guid="4257a753-bb4b-4c9f-9f2d-4032b4b2dc9a");
-		self.DefaultCamera = Camera(name="Default Camera", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
+
+		self.DefaultPrinter = Printer(name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e");
+		self.DefaultStabilization = Stabilization(name="Default Stabilization", guid="3a94e945-f5d5-4655-909a-e61c1122cc1f");
+		self.DefaultSnapshot = Snapshot(name="Default Snapshot", guid="5d16f0cb-512c-476a-b32d-a10191ad0d0e");
+		self.DefaultRendering = Rendering(name="Default Rendering", guid="32d6ad28-0314-4a14-974c-0d7d92325f17");
+		self.DefaultCamera = Camera(name="Default Camera", guid="6b3361a7-82b7-4abf-b3d1-e3046d457d8c");
+		self.DefaultDebugProfile =DebugProfile(logFilePath = logFilePath, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7");
 		self.LogFilePath = logFilePath
-		self.DefaultDebugProfile =DebugProfile(logFilePath = self.LogFilePath, name="Default Debug", guid="6794bb27-1f61-4bc8-b3d0-db8d6901326e");
-		self.version = "0.0.1.0"
+		
+		self.version = "0.1.0.0"
 		self.show_navbar_icon = True
 		self.show_navbar_when_not_printing = True
 		self.is_octolapse_enabled = True
