@@ -15,21 +15,21 @@
             </tr>
           </thead>
           <tbody data-bind="foreach: profiles" >
-            <tr data-bind="attr: {title: name()}">
-              <td>
-                <span class="fa fa-star" data-bind="visible:  guid() == $root.current_profile_guid()"></span>
-                <span data-bind="text: name(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
+            <tr>
+              <td class="profile_name" data-bind="attr: {title: name()}">
+                <span>
+                  <span class="fa fa-star" data-bind="visible:  guid() == $root.current_profile_guid()"></span>
+                  <span data-bind="text: name(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
+                </span>
+             </td>
+              <td class="profile_description"  data-bind="attr: {title: description()}">
+                  <span data-bind="text: description(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
               </td>
-              <td>
-                <span data-bind="text: description(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
-              </td>
-              <td align="center">
-                <div class="text-center">
+              <td class="profile_action text-center" align="center">
                   <a href="#" class="fa fa-star" title="Set as default profile" data-bind="click: function() { if (guid() != $root.current_profile_guid()) { $root.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
                   &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile" data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
                   &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile" data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
                   &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile" data-bind="click: function() {  if (guid() != $root.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
-                </div>
               </td>
             </tr>
           </tbody>

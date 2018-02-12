@@ -362,6 +362,7 @@
       </div>
 
       <div id="trigger_gcode_advanced" class="hide">
+        <p>Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.</p>
         <div class="control-group">
           <label class="control-label" >Extrusion Starting</label>
           <div class="controls">
@@ -474,7 +475,7 @@
     </div>
   </div>
   <hr/>
-  <div class="control-group">
+  <div>
 
     <small>
       <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
@@ -482,9 +483,10 @@
       </a>
     </small>
   </div>
-
-  </div>
   <div id="snapshot_trigger_advanced" class="control-group hide">
+    <div>
+      <h4>Advanced Snapshot Settings</h4>
+    </div>
     <div class="control-group">
       <label class="control-label">Snapshot Delay</label>
       <div class="controls">

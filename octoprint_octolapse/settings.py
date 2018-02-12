@@ -1436,9 +1436,11 @@ class OctolapseSettings(object):
 					,dict(value='60',name='60 HZ (North/South America, Japan, etc')
 			],
 			'camera_exposure_type_options' : [
-				dict(value='0',name='Auto')
-				,dict(value='1',name='Manual (based on exposure setting)')
-				,dict(value='3',name='Aperture Priority Mode')
+				dict(value='0',name='Unknown - Let me know if you know what this option does.')
+				,dict(value='1',name='Manual')
+				,dict(value='2',name='Unknown - Let me know if you know what this option does.')
+				,dict(value='3',name='Auto - Aperture Priority Mode')
+				
 			],
 			'camera_led_1_mode_options' : [
 				dict(value='on',name='On')

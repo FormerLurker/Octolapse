@@ -17,8 +17,35 @@
         <div class="error_label_container text-error" ></div>
       </div>
     </div>
-    <hr/>
   </div>
+  <hr/>
+  <div>
+    <div>
+      <h4>Retract/Z-Hop Distance</h4>
+      <p>Used both to detect retraction/detraction and to control snapshot gcode generation for lift and retract.</p>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Retraction Length</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Z-Hop Height</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+      </div>
+    </div>
+  </div>
+  <hr/>
   <div>
     <div>
       <h4>Axis Speed Settings</h4>
@@ -72,43 +99,13 @@
         <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
       </div>
     </div>
-
   </div>
   <hr/>
   <div>
     <div>
-      <h4>Retract/Z-Hop Distance</h4>
-      <p>Used both to detect retraction/detraction and to control snapshot gcode generation for lift and retract.</p>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Retraction Length</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Z-Hop Height</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-  </div>
-
-  <div>
-    <hr/>
-    <div>
       <h4>Home Position</h4>
-      <p>The home position, if provided, will be used to determine the X,Y and Z coordinates when the printer is homed.  If these are left empty, octolapse will wait until it encounters an absolute position for each axis before taking any snapshots.</p>
+      <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
     </div>
-
     <div class="control-group">
       <label class="control-label">Auto-Detect Home Position</label>
       <div class="controls">
@@ -120,7 +117,9 @@
         </label>
       </div>
     </div>
+    
     <div data-bind="visible:!auto_detect_origin()">
+      <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
       <div class="control-group">
         <label class="control-label">X Origin</label>
         <div class="controls">
@@ -153,14 +152,12 @@
           <div class="error_label_container text-error" ></div>
         </div>
       </div>
+      
     </div>
   </div>
-
-
-
+  <hr/>
   <div>
     <div>
-      <hr/>
       <h4>Print Volume</h4>
       <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
     </div>
@@ -250,7 +247,7 @@
         <label class="checkbox">
           <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds"/>Enabled
         </label>
-        <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.</span>
+        <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
       </div>
     </div>
   </div>

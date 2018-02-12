@@ -18,20 +18,37 @@
       </div>
     </div>
   </div>
-  <div class="control-group">
-    <label class="control-label">Test Mode</label>
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode"/>Enabled
-        <span class="help-inline">Strip all extrusion and temperature commands from the gcode.  Allows you to test snapshot settings without wasting plastic or waiting for the printer to heat up!</span>
-      </label>
+  <hr/>
+  <div>
+    <div>
+      <h4>Test Mode</h4>
+      <p>
+        Strips all extrusion, temperature change and fan commands from the gcode.  This is useful for testing new settings without wasting plastic or waiting for the printer to heat up!  This is also very useful for debugging issues with Octolapse in general.  If you find any other uses for test mode, please let me know.
+      </p>
+      <p>
+        <span class="label label-important">Attention</span>&nbsp;  This is a beta product that is not yet battle hardened.  It's possible I left out or messed up some gcode commands.  Please report any issues you have while using test mode so that I can improve it.
+      </p>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode"/>Enabled
+        </label>
+      </div>
     </div>
   </div>
-
-  <hr/>
+    <hr/>
+  <div>
+    <div>
+      <h4>Log Additional Information</h4>
+      <p>
+        Here you can enable or disable additional logging info that will appear in plugin_octolapse.log, which you can download from the <i>Logs</i> page available in the main menu.  The log file can grow quite large, so do not enable these unless it is necessary.
+      </p>
+      <p>A slight disclaimer is in order here.  Most of these commands were implemented to help me test or solve particular problems.  Some of these may not do exactly what they say they do, and it's possible that some are obsolete.  I will review the logging functions at some point, especially those that turn out to be useful to actual users.</p>
+    </div>
+  </div>
   <div class="control-group">
-    <label class="control-label">Info Logging</label>
-    <div class="controls">
+      <div class="controls">
       <label class="checkbox">
         <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging"/>Enabled
       </label>
@@ -46,14 +63,18 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console"/>Enabled
         </label>
+        <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Log Position Changes</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: position_change" title="Log oosition changes"/>Enabled
+          <input type="checkbox" data-bind="checked: position_change" title="Log position changes"/>Enabled
         </label>
+        <span class="help-inline">
+          Logs every detected position change.  <span class="label label-important">Attention</span>&nbsp;This generates a lot of output, take care when using.
+        </span>  
       </div>
     </div>
     <div class="control-group">
@@ -62,6 +83,10 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: position_command_received" title="Log position commands"/>Enabled
         </label>
+        <span class="help-inline">
+          Logs commands as they are parsed by the Position module.&nbsp;<span class="label label-important">Attention</span>&nbsp;This generates a lot of output, take care when using.
+        </span>
+
       </div>
     </div>
     <div class="control-group">
@@ -70,6 +95,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: extruder_change" title="Log extruder state changes"/>Enabled
         </label>
+        <span class="help-inline">Logs any change in extruder state, such as: Extruding, Retracting, Detracting, Partially Retracted, etc.</span>
       </div>
     </div>
     <div class="control-group">
@@ -78,6 +104,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: extruder_triggered" title="Log extruder triggering"/>Enabled
         </label>
+        <span class="help-inline">Add a log entry ef the extruder state matches the extruder triggers configured within the current snapshot profile.</span>
       </div>
     </div>
 
@@ -95,6 +122,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_wait_state" title="Log snapshot trigger wait state"/>Enabled
         </label>
+        <span class="help-inline">When a snapshot is delayed because of the current extruder/position state, log the reason.</span>
       </div>
     </div>
     <div class="control-group">
@@ -103,18 +131,21 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_triggering" title="Log snapshot trigger is triggering"/>Enabled
         </label>
+        <span class="help-inline">Logs the moment when a snapshot is triggered.</span>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Log Snapshtot Triggering State</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: trigger_triggering_state" title="Log snapshot trigger state"/>Enabled
-        </label>
+    <!-- Unused, I'm not sure why.  Todo:  Remove the setting or add the logging.
+      <div class="control-group">
+        <label class="control-label">Log Snapshtot Triggering State</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: trigger_triggering_state" title="Log snapshot trigger state"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
+    -->
     <div class="control-group">
-      <label class="control-label">Log Layer Change</label>
+      <label class="control-label">Log Layer Changes</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_layer_change" title="Log layer change"/>Enabled
@@ -122,7 +153,7 @@
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">Log Height Change</label>
+      <label class="control-label">Log Height Changes</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_height_change" title="Log height change"/>Enabled
@@ -143,6 +174,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_time_remaining" title="Log trigger time remaining"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This generates a lot of output, take care when using.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -151,6 +185,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: trigger_time_unpaused" title="Log trigger unpause"/>Enabled
         </label>
+        <span class="help-inline">
+          When prints are paused, the timer trigger also pauses.  This setting is probably not particularly useful, but it logs the calculation of the trigger time after we unpause the print.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -159,6 +196,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_gcode" title="Log snapshot gcode"/>Enabled
         </label>
+        <span class="help-inline">I love this setting.  It's the most enjoyable thing to watch while debugging.</span>
       </div>
     </div>
     <div class="control-group">
@@ -167,6 +205,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_gcode_endcommand" title="Log snapshot endcommand status"/>Enabled
         </label>
+        <span class="help-inline">When generating a snapshot, Octolapse saves the gcode command following the one triggered the snapshot and sends it to the printer when the snapshot is complete.  This setting logs that process.</span>
       </div>
     </div>
     <div class="control-group">
@@ -175,6 +214,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_position" title="Log snapshot position"/>Enabled
         </label>
+        <span class="help-inline">Logs the position of the axis of the current snapshot.</span>
       </div>
     </div>
     <div class="control-group">
@@ -183,39 +223,45 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_position_return" title="Log snapshot return position"/>Enabled
         </label>
+        <span class="help-inline">Logs the position of the axis right before any snapshot gcodes are executed.</span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Log Snapshot Resume Print Position</label>
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: snapshot_position_resume_print" title="Log snapshot return position"/>Enabled
+          <input type="checkbox" data-bind="checked: snapshot_position_resume_print" title="Log Snapshot Resume Print Position"/>Enabled
         </label>
+        <span class="help-inline">Logs the position of the axis after the saved command is sent to the printer.</span>
       </div>
     </div>
 
-    <div class="control-group">
-      <label class="control-label">Log Snapshot Save</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: snapshot_save" title="Log snapshot save"/>Enabled
-        </label>
-      </div>
-    </div>
     <div class="control-group">
       <label class="control-label">Log Snapshot Download</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_download" title="Log snapshot download"/>Enabled
         </label>
+        <span class="help-inline">Logs the snapshot request and download process.</span>
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label">Log Snapshot Save</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: snapshot_save" title="Log snapshot save"/>Enabled
+        </label>
+        <span class="help-inline">Logs the snapshot save/rename process after the snapshot is downloaded from the server.</span>
+      </div>
+    </div>
+    
     <div class="control-group">
       <label class="control-label">Log Rendering Start</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: render_start" title="Log rendering start"/>Enabled
         </label>
+        <span class="help-inline">Logs the rendering process right up until ffmpeg is started.</span>
       </div>
     </div>
     <div class="control-group">
@@ -232,6 +278,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: render_fail" title="Log render failure"/>Enabled
         </label>
+        <span class="help-inline">Logs any non-exception errors that occur during rendering.</span>
       </div>
     </div>
     <div class="control-group">
@@ -240,6 +287,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: render_sync" title="Log render synchronization with Octoprint timelapse plugin"/>Enabled
         </label>
+        <span class="help-inline">Logs the process of moving timelapses to the Octoprint timelapse folder.</span>
       </div>
     </div>
     <div class="control-group">
@@ -248,6 +296,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: snapshot_clean" title="Log cleaning of snapshots"/>Enabled
         </label>
+        <span class="help-inline">Logs the deletion of temporary snapshot images.</span>
       </div>
     </div>
     <div class="control-group">
@@ -256,6 +305,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: settings_save" title="Log settings on save"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This option will output your settings to the log in json format, which will include the camera username and passwords that are entered within any camera profiles.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -264,6 +316,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: settings_load" title="Log settings on save"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This option will output your settings to the log in json format, which will include the camera username and passwords that are entered within any camera profiles.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -272,6 +327,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: camera_settings_apply" title="Log camera settings changes"/>Enabled
         </label>
+        <span class="help-inline">
+          Logs the completed camera settings template URLs when applying camera image settings.  This might be useful for getting different cameras working with Octolapse.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -280,6 +338,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: print_state_changed" title="Log print state changes"/>Enabled
         </label>
+        <span class="help-inline">
+          Logs any received printer state changes including:  Paused, Printing, Operational, etc.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -288,6 +349,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: gcode_queuing_all" title="Log all gcode that is about to queue"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This option will log every gcode command that is queued, but not sent to the printer.  This can be very useful, but also will create a lot of log entries.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -296,6 +360,9 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: gcode_sent_all" title="Log all gcode sent to printer"/>Enabled
         </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This option will log every gcode command that has been sent to the printer.  This can be very useful, but also will create a lot of log entries.
+        </span>
       </div>
     </div>
 

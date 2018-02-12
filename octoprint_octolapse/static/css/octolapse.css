@@ -51,17 +51,28 @@ table.octolapse-profiles td {
     font-size: small
 }
 
-table.octolapse-profiles th.profile_name {
-    width: 35%
+table.octolapse-profiles td.profile_name,
+table.octolapse-profiles td.profile_description,
+table.octolapse-profiles td.profile_action {
+    height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-table.octolapse-profiles th.profile_description {
-    width: 45%;
+table.octolapse-profiles td.profile_name {
+    max-width: 180px;
+    min-width: 180px;
+}
+table.octolapse-profiles td.profile_description {
+    max-width: 300px;
+    min-width: 300px;
+}
+table.octolapse-profiles td.profile_action {
+    max-width: 120px;
+    min-width: 120px;
 }
 
-table.octolapse-profiles th.profile_action {
-    width: 20%;
-}
 
 .panel {
     margin-bottom: 20px;

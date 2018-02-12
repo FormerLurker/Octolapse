@@ -27,50 +27,27 @@
         <input name="rendering_enabled" type="checkbox" data-bind="checked: enabled" title="Enable or disable timelapse generation"/>Enabled
       </label>
       <span class="help-inline">
-        <span class="label label-important">Attention</span>&nbsp;This option currently will only work if you are rendering .mp4 video.  The default timelapse module does not support any other format currently.  Perhaps a feature request is in order?
+        When disabled, no timelapse will be generated.  This can be useful if you want to manually generate your own timelapse.
       </span>
     </div>
   </div>
-  <div class="collapsible" data-bind="visible: enabled">
-    <div class="control-group">
-      <label class="control-label" >Bitrate</label>
-      <div class="controls">
-        <div class="input-append">
-          <input name="bitrate" type="text" class="input-small" data-bind="value: bitrate" required="true"/>  
-          <span class="add-on">kbps</span>
-          <span class="add-on">mbps</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
-      </div>
-      
+  <div data-bind="visible:enabled">
+    <hr/>
+    <div>
+      <h4>Output and Sync</h4>
     </div>
     <div class="control-group">
-      <label class="control-label" >FPS Type</label>
+      <label class="control-label" >Output File Format</label>
       <div class="controls">
-        <select name="fps_calculation_type" data-bind="options: Octolapse.Renderings.profileOptions.rendering_fps_calculation_options,
+        <select name="output_format" data-bind="options: Octolapse.Renderings.profileOptions.rendering_output_format_options,
                                  optionsText: 'name',
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
-                                 value: fps_calculation_type"></select>
+                                 value: output_format"></select>
         <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
-      <label class="control-label" >Static FPS</label>
-      <div class="controls">
-        <input name="fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: fps" min="1" required="true"/>
-        <div class="error_label_container text-error" ></div>
-      </div>
-    </div>
-    <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
-      <label class="control-label" >Fixed Run Length</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="run_length_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: run_length_seconds" min="0.5" step="0.5"/>
-          <span class="add-on">seconds</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
+        <span class="help-inline" data-bind="visible:output_format() != 'mp4'">
+          <span class="label label-important">Attention</span>&nbsp;Sync Output may not work correctly unless you have selected mp4.
+        </span>
       </div>
     </div>
     <div class="control-group">
@@ -84,105 +61,139 @@
         </span>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" >Pre-Roll</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="pre_roll_seconds" type="number" class="input-small" data-bind="value: pre_roll_seconds" min="0" max="60" required="true"/>
-          <span class="add-on">seconds</span>
-        </div>
-        
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
-      </div>
+    <br/>
+    <div>
+      <h4>Quality and Duration</h4>
+      <p>These options allow you to control the FPS, run length, pre/post roll and bitrate of the final rendered timelapse.</p>
     </div>
-    <div class="control-group">
-      <label class="control-label" >Post-Roll</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="post_roll_seconds" type="number" class="input-small" data-bind="value: post_roll_seconds" min="0" max="60" required="true"/>
-          <span class="add-on">seconds</span>
-        </div>
-        
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
-      </div>
-    </div>
-    <hr/>
-    <div class="control-group">
-      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
-        <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
-      </a>
-    </div>
-    <div class="control-group hide" id="rendering-advanced">
-      <div class="control-group">
-        <label class="control-label">Flip Horizontal</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input name="flip_h" type="checkbox" data-bind="checked: flip_h" title="Flip the resulting timelapse along the horizontal axis"/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Flip Vertical</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input name="flip_v" type="checkbox" data-bind="checked: flip_v" title="Flip the resulting timelapse along the vertical axis"/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Rotate 90 Degrees</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input name="rotate_90" type="checkbox" data-bind="checked: rotate_90" title="Rotate the resulting timelapse 90 degrees"/>Enabled
-          </label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Embed watermark</label>
-        <div class="controls">
-          <label class="checkbox">
-            <input name="watermark" type="checkbox" data-bind="checked: watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
-          </label>
-          <span class="help-inline">
-            <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
-          </span>
-        </div>
-        
+    <div class="collapsible" data-bind="visible: enabled">
 
-      </div>
       <div class="control-group">
-        <label class="control-label" >Maximum FPS</label>
+        <label class="control-label" >FPS Type</label>
         <div class="controls">
-          <input id="octolapse_rendering_max_fps" name="max_fps" type="number" class="input-small" data-bind="value: max_fps" min="0.5" step="0.5" required="true"/>
+          <select name="fps_calculation_type" data-bind="options: Octolapse.Renderings.profileOptions.rendering_fps_calculation_options,
+                                 optionsText: 'name',
+                                 optionsValue: 'value',
+                                 optionsCaption: 'Select One...',
+                                 value: fps_calculation_type"></select>
           <div class="error_label_container text-error" ></div>
-          <span class="help-inline">
-            When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
-          </span>
         </div>
-        
       </div>
-      <div class="control-group">
+      <div class="control-group"  data-bind="visible: fps_calculation_type() === 'static'">
+        <label class="control-label" >Static FPS</label>
+        <div class="controls">
+          <input name="fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: fps" min="1" required="true"/>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
+        <label class="control-label" >Fixed Run Length</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="run_length_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: run_length_seconds" min="0.5" step="0.5"/>
+            <span class="add-on">seconds</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+      <div class="control-group"  data-bind="visible: fps_calculation_type() === 'duration'">
         <label class="control-label" >Minimum FPS</label>
         <div class="controls">
-          <input id="octolapse_rendering_min_fps" name="min_fps" type="number" class="input-small" data-bind="value: min_fps" min="0.5" step="0.5" required="true"/>
+          <input id="octolapse_rendering_min_fps" name="min_fps" type="number" class=" ignore_hidden_errors input-small" data-bind="value: min_fps" min="0.5" step="0.5" required="true"/>
           <div class="error_label_container text-error" ></div>
           <span class="help-inline">
             When using <i>Fixed Length</i> rendering, the calculated FPS can be no less than this value.
           </span>
         </div>
-        
+      </div>
+      <div class="control-group" data-bind="visible: fps_calculation_type() === 'duration'">
+        <label class="control-label" >Maximum FPS</label>
+        <div class="controls">
+          <input id="octolapse_rendering_max_fps" name="max_fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: max_fps" min="0.5" step="0.5" required="true"/>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">
+            When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
+          </span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" >Pre-Roll</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="pre_roll_seconds" type="number" class="input-small" data-bind="value: pre_roll_seconds" min="0" max="60" required="true"/>
+            <span class="add-on">seconds</span>
+          </div>
+
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
+        </div>
       </div>
       <div class="control-group">
-        <label class="control-label" >Output File Format</label>
+        <label class="control-label" >Post-Roll</label>
         <div class="controls">
-          <select name="output_format" data-bind="options: Octolapse.Renderings.profileOptions.rendering_output_format_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: output_format"></select>
+          <div class="input-append form-inline">
+            <input name="post_roll_seconds" type="number" class="input-small" data-bind="value: post_roll_seconds" min="0" max="60" required="true"/>
+            <span class="add-on">seconds</span>
+          </div>
+
           <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" >Bitrate</label>
+        <div class="controls">
+          <div class="input-append">
+            <input name="bitrate" type="text" class="input-small" data-bind="value: bitrate" required="true"/>
+            <span class="add-on">kbps</span>
+            <span class="add-on">mbps</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
+        </div>
+      </div>
+      <hr/>
+      <div class="control-group">
+        <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#rendering-advanced.hide' }">
+          <i class="fa fa-caret-right"></i> {{ _('Advanced Rendering Options') }}
+        </a>
+      </div>
+      <div class="control-group hide" id="rendering-advanced">
+        <div class="control-group">
+          <label class="control-label">Flip Horizontal</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input name="flip_h" type="checkbox" data-bind="checked: flip_h" title="Flip the resulting timelapse along the horizontal axis"/>Enabled
+            </label>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Flip Vertical</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input name="flip_v" type="checkbox" data-bind="checked: flip_v" title="Flip the resulting timelapse along the vertical axis"/>Enabled
+            </label>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Rotate 90 Degrees</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input name="rotate_90" type="checkbox" data-bind="checked: rotate_90" title="Rotate the resulting timelapse 90 degrees"/>Enabled
+            </label>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Embed watermark</label>
+          <div class="controls">
+            <label class="checkbox">
+              <input name="watermark" type="checkbox" data-bind="checked: watermark" title="Embed a watermark in the resulting timelapse"/>Enabled
+            </label>
+            <span class="help-inline">
+              <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -370,10 +370,8 @@ class TimelapseRenderJob(object):
 			try:
 				shutil.rmtree(path)
 				self._debug.LogSnapshotClean("Snapshots cleaned.")
-			except:
-				type = sys.exc_info()[0]
-				value = sys.exc_info()[1]
-				self._debug.LogSnapshotClean("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
+			except Exception as e:
+				self._debug.LogException(e)
 		else:
 			self._debug.LogSnapshotClean("Snapshot - No need to clean snapshots: they have already been removed.")	
 	@classmethod
