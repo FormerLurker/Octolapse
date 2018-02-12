@@ -1,5 +1,8 @@
-
 # coding=utf-8
+
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
 from octoprint_octolapse.position import *
 from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.gcode import *

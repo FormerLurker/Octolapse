@@ -1,4 +1,7 @@
-/// Create our generic profile view model
+/*
+This file is subject to the terms and conditions defined in
+    a file called 'LICENSE', which is part of this source code package.
+*/
 $(function() {
     Octolapse.ProfilesViewModel = function(settings) {
         // Create all observables and a reference to this instance for event handlers.

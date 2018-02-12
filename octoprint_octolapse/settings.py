@@ -1,4 +1,8 @@
 # coding=utf-8
+
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
 from octoprint.plugin import PluginSettings
 import time
 from datetime import datetime

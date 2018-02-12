@@ -1,5 +1,9 @@
-
 # coding=utf-8
+
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
+
 import logging
 import os
 import threading

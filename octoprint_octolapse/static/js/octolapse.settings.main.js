@@ -1,4 +1,7 @@
-/// Create our printers view model
+/*
+    This file is subject to the terms and conditions defined in
+    a file called 'LICENSE', which is part of this source code package.
+*/
 $(function () {
 
     Octolapse.MainSettingsViewModel = function (parameters) {

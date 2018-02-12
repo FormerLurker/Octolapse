@@ -1,3 +1,6 @@
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
 from octoprint_octolapse.settings import *
 import octoprint_octolapse.utility as utility
 

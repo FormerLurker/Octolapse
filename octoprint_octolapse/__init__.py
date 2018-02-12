@@ -1,3 +1,6 @@
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
 # coding=utf-8
 from __future__ import absolute_import
 import octoprint.plugin

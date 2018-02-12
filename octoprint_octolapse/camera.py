@@ -1,4 +1,7 @@
 # coding=utf-8
+
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
 import requests
 import threading
 import logging
