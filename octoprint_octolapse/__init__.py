@@ -250,9 +250,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def LoadSettings(self,forceDefaults = False):
 		try:
 			# if the settings file does not exist, create one from the default settings
-			
 			createNewSettings = False
-
 			if(not os.path.isfile(self.SettingsFilePath()) or forceDefaults):
 				# create new settings from default setting file
 				with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:

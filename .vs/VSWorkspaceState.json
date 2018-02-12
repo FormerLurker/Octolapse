@@ -1,8 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\octoprint_octolapse"
+    "\\octoprint_octolapse",
+    "\\octoprint_octolapse\\static",
+    "\\octoprint_octolapse\\static\\js"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\octoprint_octolapse\\static\\js\\octolapse.settings.js",
   "PreviewInSolutionExplorer": false
 }

@@ -1642,7 +1642,7 @@
       "override_octoprint_print_volume": false,
       "z_hop_speed": 7200,
       "printer_position_confirmation_tolerance": 0.01,
-      "auto_detect_origin": false
+      "auto_detect_origin": true
     },
     {
       "movement_speed": 6000,
