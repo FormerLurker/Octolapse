@@ -215,7 +215,7 @@ $(function () {
                     dataType: "json",
                     success: function (newSettings) {
                         self.updateSettings(newSettings);
-                        alert("The default settings have been restored.");
+                        alert("The default settings have been restored.  You must reboot octoprint before the settings take effect.");
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
