@@ -262,7 +262,8 @@ class TimelapseRenderJob(object):
 								  , snapshotCount = self._imageCount
 								  , secondsAddedToPrint = self._secondsAddedToPrint)
 	def _on_render_start(self):
-		self._notify_callback(self._render_start_callback, self._output, self._baseOutputFileName,self._synchronize, self._imageCount, self._secondsAddedToPrint)
+		payload = self._createCallbackPayload(0,"The rendering has started.")
+		self._notify_callback(self._render_start_callback,payload)
 	def _on_render_fail(self, returnCode, message):
 		# we've failed, inform the client
 		payload = self._createCallbackPayload(0,message)

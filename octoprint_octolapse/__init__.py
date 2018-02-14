@@ -182,6 +182,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		data = {'success':True}
 		data.update(self.Settings.ToDict())
 		self.SendSettingsChangedMessage(client_id)
+
 		return json.dumps(data), 200, {'ContentType':'application/json'} ;
 
 	@octoprint.plugin.BlueprintPlugin.route("/loadSettings", methods=["POST"])
@@ -391,14 +392,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		self._logger.info("Octolapse - is loading template configurations.")
 		return [dict(type="settings", custom_bindings=True)]
 
-	def on_after_startup(self):
-		try:
-			self.LoadSettings()
-			# create our initial timelapse object
-			# create our timelapse object
-
-			self.Timelapse = Timelapse(self.Settings
-							  , self.get_plugin_data_folder()
+	def CreateTimelapseObject(self):
+		self.Timelapse = Timelapse(self.get_plugin_data_folder()
 							  , self._settings.getBaseFolder("timelapse")
 							  ,onRenderStart = self.OnRenderStart
 							  , onRenderComplete = self.OnRenderComplete
@@ -414,6 +409,13 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 							  , onTimelapseStart = self.OnTimelapseStart
 							  , onSnapshotPositionError = self.OnSnapshotPositionError
 							  , onPositionError = self.OnPositionError)
+	def on_after_startup(self):
+		try:
+			self.LoadSettings()
+			# create our initial timelapse object
+			# create our timelapse object
+
+			self.CreateTimelapseObject()
 			self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
 		except Exception, e:
 			if(self.Settings is not None):
@@ -523,7 +525,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return {'success':False, 'error':"Octolapse does not yet support circular beds, sorry.",'warning':False}
 
 		
-		self.Timelapse.StartTimelapse(self._printer, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder)
+		self.Timelapse.StartTimelapse(self.Settings, self._printer, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder)
 
 		if(octoprintPrinterProfile["volume"]["origin"] != "lowerleft"):
 			return {'success':True, 'warning':"Octolapse has not been tested on printers with origins that are not in the lower left.  Use at your own risk."}
@@ -730,7 +732,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		willSyncMessage = ""
 
 		if (payload.Synchronize):
-			willSyncMessage = "  This timelapse will synchronized with the default timelapse module, and will be available within the default timelapse plugin as '{0}' after rendering is complete.".format(RenderingFileName)
+			willSyncMessage = "  This timelapse will synchronized with the default timelapse module, and will be available within the default timelapse plugin as '{0}' after rendering is complete.".format(payload.RenderingFileName)
 		else:
 			willSyncMessage = "  Due to your rendering settings, this timelapse will NOT be synchronized with the default timelapse module.  You will be able to find on your octoprint server here: {0}".format(payload.RenderingFullPath)
 

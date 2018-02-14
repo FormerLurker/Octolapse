@@ -19,7 +19,7 @@ import octoprint_octolapse.utility as utility
 
 class Timelapse(object):
 	
-	def __init__(self,octolapseSettings, dataFolder, timelapseFolder
+	def __init__(self,dataFolder, timelapseFolder
 			  , onSnapshotStart = None
 			  , onSnapshotEnd = None
 			  , onRenderStart = None
@@ -35,7 +35,7 @@ class Timelapse(object):
 			  , onSnapshotPositionError = None
 			  , onPositionError = None):
 		# config variables - These don't change even after a reset
-		self.Settings = octolapseSettings
+		self.Settings = None
 		self.DataFolder = dataFolder
 		self.DefaultTimelapseDirectory =  timelapseFolder
 		self.OnRenderStartCallback = onRenderStart
@@ -54,7 +54,7 @@ class Timelapse(object):
 		self.OnPositionErrorCallback = onPositionError
 		self.Responses = Responses() # Used to decode responses from the 3d printer
 		self.Commands = Commands() # used to parse and generate gcode
-		self.Triggers = Triggers(octolapseSettings)
+		self.Triggers = None
 		# Settings that may be different after StartTimelapse is called
 		self.FfMpegPath = None
 		self.Snapshot = None
@@ -72,7 +72,10 @@ class Timelapse(object):
 
 	
 	# public functions		
-	def StartTimelapse(self,octoprintPrinter, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder):
+	def StartTimelapse(self,settings, octoprintPrinter, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder):
+		# we must supply the settings first!  Else reset won't work properly.
+		self.Settings = settings
+
 		self._reset()
 		self.HasSentInitialStatus = False
 		self.RequiresLocationDetectionAfterHome = False
@@ -88,6 +91,7 @@ class Timelapse(object):
 		self.Position = Position(self.Settings,octoprintPrinterProfile, g90InfluencesExtruder)
 		self.State = TimelapseState.WaitingForTrigger
 		self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
+		self.Triggers = Triggers(settings)
 		self.Triggers.Create()
 		# send an initial state message
 		self._onTimelapseStart()
@@ -99,18 +103,19 @@ class Timelapse(object):
 			positionStateDict = None
 			extruderDict = None
 			triggerState = None
+			if(self.Settings is not None):
 
-			if(self.Settings.show_position_changes and self.Position is not None):
-				positionDict=self.Position.ToPositionDict()
-			if(self.Settings.show_position_state_changes and self.Position is not None):
-				positionStateDict = self.Position.ToStateDict()
-			if(self.Settings.show_extruder_state_changes and self.Position is not None):
-				extruderDict = self.Position.Extruder.ToDict()
-			if(self.Settings.show_trigger_state_changes):
-				triggerState = {
-				   "Name": self.Triggers.Name,
-				   "Triggers": self.Triggers.StateToList()
-				   }
+				if(self.Settings.show_position_changes and self.Position is not None):
+					positionDict=self.Position.ToPositionDict()
+				if(self.Settings.show_position_state_changes and self.Position is not None):
+					positionStateDict = self.Position.ToStateDict()
+				if(self.Settings.show_extruder_state_changes and self.Position is not None):
+					extruderDict = self.Position.Extruder.ToDict()
+				if(self.Settings.show_trigger_state_changes and self.Triggers is not None):
+					triggerState = {
+					   "Name": self.Triggers.Name,
+					   "Triggers": self.Triggers.StateToList()
+					   }
 			stateDict = {
 						"Extruder": extruderDict,
 						"Position": positionDict,
@@ -176,7 +181,8 @@ class Timelapse(object):
 	def IsTimelapseActive(self):
 		try:
 			if(
-				self.State == TimelapseState.Idle
+				self.Settings is None
+				or self.State == TimelapseState.Idle
 				or self.State == TimelapseState.WaitingToRender
 				or self.Triggers.Count()<1
 			):
@@ -707,7 +713,8 @@ class Timelapse(object):
 	def _reset(self):
 		self.State = TimelapseState.Idle
 		self.HasSentInitialStatus = False
-		self.Triggers.Reset()
+		if(self.Triggers is not None):
+			self.Triggers.Reset()
 		self.CommandIndex = -1
 		self.SnapshotCount = 0
 		self.PrintStartTime = None
