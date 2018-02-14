@@ -81,7 +81,11 @@ $(function () {
         $("#state_wrapper #job_pause span:nth-of-type(1)").text("Pause");
         $("#state_wrapper #job_pause span:nth-of-type(2)").text("Resume");
     }
-
+    // Add custom validator for csv strings (no inner whitespace)
+    /*
+    $.validator.addMethod('csvString', function (value) {
+        return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
+    }, 'Please enter a list of decimals separated by commas.');*/
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);

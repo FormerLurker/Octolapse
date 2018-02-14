@@ -139,12 +139,8 @@ def FormatSnapshotNumber(number):
 	# not an int, return the original field
 	return number
 
-def GetSnapshotTempDirectory(dataDirectory, printName, printStartTime, printEndTime = None):
+def GetSnapshotTempDirectory(dataDirectory):
 	directoryTemplate = GetTempSnapshotDirectoryTemplate()
-	directoryTemplate = directoryTemplate.replace("{FILENAME}",getstring(printName,""))
-	directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}","{0:d}".format(math.trunc(round(printStartTime,2)*100)))
-	if(printEndTime is not None):
-		directoryTemplate = directoryTemplate.replace("{PRINTENDTIME}","{0:d}".format(math.trunc(round(printEndTime,2)*100)))
 	directoryTemplate = directoryTemplate.replace("{DATADIRECTORY}",dataDirectory)
 		
 	return directoryTemplate

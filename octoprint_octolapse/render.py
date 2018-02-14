@@ -49,7 +49,7 @@ class Render(object):
 	def Process(self, printName, printStartTime, printEndTime):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
 		# Get the capture file and directory info
-		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory, printName,printStartTime)
+		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory)
 		snapshotFileNameTemplate  = utility.GetSnapshotFilename(printName, printStartTime, utility.SnapshotNumberFormat)
 		# get the output file and directory info
 		outputDirectory = utility.GetRenderingDirectory(self.DataDirectory, printName,printStartTime, self.Rendering.output_format,printEndTime)
@@ -122,7 +122,7 @@ class TimelapseRenderJob(object):
 		self._octoprintTimelapseFolder = octoprintTimelapseFolder
 		self._fps = None
 		self._imageCount = None
-		self._timeAdded = timeAdded
+		self._secondsAddedToPrint = timeAdded
 		self._threads = threads
 		self._ffmpeg = ffmpegPath
 
@@ -162,10 +162,14 @@ class TimelapseRenderJob(object):
 		self._thread.start()
 		
 	def _pre_render(self):
+
 		try:
 			self._countImages()
 			if(self._imageCount == 0):
 				self._debug.LogRenderFail( "No images were captured, or they have been removed.")
+				return False;
+			if(self._imageCount == 1):
+				self._debug.LogRenderFail( "Only 1 frame was captured, cannot make a timelapse with a single frame.")
 				return False;
 			# calculate the FPS
 			self._calculateFps()
@@ -194,8 +198,9 @@ class TimelapseRenderJob(object):
 
 	def _countImages(self):
 		"""get the number of frames"""
-		# we need to start with index 1.
-		imageIndex = 1
+
+		# we need to start with index 0, apparently.  Before I thought it was 1!
+		imageIndex = 0
 		while(True):
 			foundFile = False
 			imagePath = "{0}{1}".format(self._capture_dir,self._capture_file_template) % imageIndex
@@ -204,61 +209,81 @@ class TimelapseRenderJob(object):
 				imageIndex += 1
 			else:
 				break
-		imageCount = imageIndex - 1
-		self._debug.LogRenderStart("Found {0} images.".format(imageCount))
-		self._imageCount = imageCount
+		# since we're starting at 0 and incrementing after a file is found, the index here will be our count.
+		self._debug.LogRenderStart("Found {0} images.".format(imageIndex))
+		self._imageCount = imageIndex
 
 	def _applyPrePostRoll(self, snapshotDirectory, snapshotFileNameTemplate, fps, imageCount):
-		# start with pre-roll, since it will require a bunch of renaming
-		preRollFrames = int(self._rendering.pre_roll_seconds * fps)
-		if(preRollFrames > 0):
+		try:
+			# start with pre-roll, since it will require a bunch of renaming
+			preRollFrames = int(self._rendering.pre_roll_seconds * fps)
+			if(preRollFrames > 0):
 
-			# create a variable to hold the new path of the first image
-			firstImagePath = ""
-			# rename all of the current files.  The snapshot number should be incremented by the number of pre-roll frames
-			# start with the last image and work backwards to avoid overwriting files we've already moved
-			for imageNumber in range(imageCount,0,-1):
-				currentImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageNumber
-				newImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageNumber+preRollFrames)
-				if(imageNumber == 1):
-					firstImagePath = newImagePath
-				shutil.move(currentImagePath,newImagePath)	
-			# get the path of the first image
-			# copy the first frame as many times as we need
-			for imageIndex in range(preRollFrames):
-				imageNumber = imageIndex + 1
-				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageNumber)
-				shutil.copy(firstImagePath,newImagePath)	
-		# finish with post roll since it's pretty easy
-		postRollFrames =  int(self._rendering.post_roll_seconds * fps)
-		if(postRollFrames > 0):
-			lastImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageCount + preRollFrames)
-			for imageIndex in range(postRollFrames):
-				imageNumber = (imageIndex +1) + imageCount + preRollFrames
-				newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageNumber)
-				shutil.copy(lastImagePath,newImagePath)
-
+				# create a variable to hold the new path of the first image
+				firstImagePath = ""
+				# rename all of the current files.  The snapshot number should be incremented by the number of pre-roll frames
+				# start with the last image and work backwards to avoid overwriting files we've already moved
+				for imageNumber in range(imageCount-1,-1,-1):
+					currentImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % imageNumber
+					newImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (imageNumber+preRollFrames)
+					if(imageNumber == 0):
+						firstImagePath = newImagePath
+					shutil.move(currentImagePath,newImagePath)	
+				# get the path of the first image
+				# copy the first frame as many times as we need
+				for imageIndex in range(preRollFrames):
+					#imageNumber = imageIndex + 1  I don't think we need this, because we're starting with 0
+					newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageIndex)
+					shutil.copy(firstImagePath,newImagePath)	
+			# finish with post roll since it's pretty easy
+			postRollFrames =  int(self._rendering.post_roll_seconds * fps)
+			if(postRollFrames > 0):
+				lastFrameIndex = imageCount + preRollFrames - 1
+				lastImagePath = "{0}{1}".format(snapshotDirectory, snapshotFileNameTemplate) % (lastFrameIndex)
+				for imageIndex in range(postRollFrames):
+					imageNumber = (imageIndex) + imageCount + preRollFrames
+					newImagePath = "{0}{1}".format(snapshotDirectory,snapshotFileNameTemplate) % (imageNumber)
+					shutil.copy(lastImagePath,newImagePath)
+			return True
+		except Exception as e:
+			self._debug.LogException(e)
+		return False
 	#####################
 	# Event Notification
 	#####################
+
+	def _createCallbackPayload(self, returnCode , reason):
+		return RenderingCallbackArgs(reason = reason
+								  , returnCode = returnCode
+								  , snapshotDirectory = self._capture_dir
+								  , renderingFullPath = self._output
+								  , renderingFileName = self._baseOutputFileName
+								  , synchronize = self._synchronize
+								  , snapshotCount = self._imageCount
+								  , secondsAddedToPrint = self._secondsAddedToPrint)
 	def _on_render_start(self):
-		self._notify_callback(self._render_start_callback, self._output, self._baseOutputFileName,self._synchronize, self._imageCount, self._timeAdded)
-	def _on_render_fail(self, message):
+		self._notify_callback(self._render_start_callback, self._output, self._baseOutputFileName,self._synchronize, self._imageCount, self._secondsAddedToPrint)
+	def _on_render_fail(self, returnCode, message):
 		# we've failed, inform the client
-		self._notify_callback(self._render_fail_callback, self._output, self._baseOutputFileName,0,message)
+		payload = self._createCallbackPayload(0,message)
+		self._notify_callback(self._render_fail_callback, payload)
 		# Time to end the rendering, inform the client.
 		self._on_complete(False)
 	def _on_render_success(self):
-		self._notify_callback(self._render_success_callback, self._output,self._baseOutputFileName)
+		payload = self._createCallbackPayload(0,"The rendering was successful.")
+		self._notify_callback(self._render_success_callback, payload)
 	def _on_render_complete(self):
-		self._notify_callback(self._render_complete_callback,self._output, self._baseOutputFileName,0,'unknown')
+		payload = self._createCallbackPayload(0,"The rendering process has completed.")
+		self._notify_callback(self._render_complete_callback,payload)
 	def _on_after_sync_success(self):
-	   self._notify_callback(self._after_sync_success_callback, self._output, self._baseOutputFileName)
+		payload = self._createCallbackPayload(0,"Synchronization was successful.")
+		self._notify_callback(self._after_sync_success_callback, payload)
 	def _on_after_sync_fail(self):
-	   self._notify_callback(self._after_sync_fail_callback, self._output, self._baseOutputFileName)
-	   self._on_complete(False)
+		payload = self._createCallbackPayload(0,"Synchronization has failed.")
+		self._notify_callback(self._after_sync_fail_callback, payload)
 	def _on_complete(self, success):
-		self._notify_callback(self._on_complete_callback,  self._output, self._baseOutputFileName,self._synchronize, success)
+		payload = self._createCallbackPayload(0,"Synchronization has failed.")
+		self._notify_callback(self._on_complete_callback,  payload, success)
 		
 
 	def _render(self):
@@ -269,9 +294,11 @@ class TimelapseRenderJob(object):
 			# I've had bad luck doing this inside of the thread
 			if(not self._pre_render()):
 				if(self._imageCount == 0):
-					self._on_render_fail("No frames were captured.")
+					self._on_render_fail(0,"No frames were captured.")
+				elif(self._imageCount == 1):
+					self._on_render_fail(0,"Only 1 frame was captured.  Cannot render a timelapse from a single image.")
 				else:
-					self._on_render_fail("Rendering failed during the pre-render phase.  Please check the logs (plugin_octolapse.log) for details.")
+					self._on_render_fail(-1,"Rendering failed during the pre-render phase.  Please check the logs (plugin_octolapse.log) for details.")
 				return
 
 			# notify any listeners that we are rendering.
@@ -280,12 +307,12 @@ class TimelapseRenderJob(object):
 			if self._ffmpeg is None:
 				message = "Cannot create movie, path to ffmpeg is unset.  Please configure the ffmpeg path within the 'Features->Webcam & Timelapse' settings tab."
 				self._debug.LogRenderFail(message)
-				self._on_render_fail(message)
+				self._on_render_fail(0, message)
 				return
 			elif self._rendering.bitrate is None:
 				message = "Cannot create movie, desired bitrate is unset.  Please set the bitrate within the Octolapse rendering profile."
 				self._debug.LogRenderFail(message)
-				self._on_render_fail( message)
+				self._on_render_fail(0, message)
 				return
 
 			# add the file extension
@@ -296,13 +323,13 @@ class TimelapseRenderJob(object):
 					os.makedirs(self._output_dir)
 			except Exception as e:
 				self._debug.LogException(e)
-				self._on_render_fail("Render - An exception was thrown when trying to create the rendering path at: {0}.  Please check the logs (plugin_octolapse.log) for details.".format(self._output_dir))
+				self._on_render_fail(-1,"Render - An exception was thrown when trying to create the rendering path at: {0}.  Please check the logs (plugin_octolapse.log) for details.".format(self._output_dir))
 				return
 			
-			if not os.path.exists(self._input % 1):
+			if not os.path.exists(self._input % 0):
 				message = 'Cannot create a movie, no frames captured.'
 				self._debug.LogRenderFail(message)
-				self._on_render_fail(message)
+				self._on_render_fail(0, message)
 				return
 
 			watermark = None
@@ -330,11 +357,11 @@ class TimelapseRenderJob(object):
 						stderr_text = p.stderr.text
 						message = "Could not render movie, got return code %r: %s" % (returncode, stderr_text)
 						self._debug.LogRenderFail(message)
-						self._on_render_fail(message)
+						self._on_render_fail(p.returncode, message)
 						return
 				except Exception as e:
 					self._debug.LogException(e)
-					self._on_render_fail( 'Could not render movie due to unknown error".  Please check plugin_octolapse.log for details.')
+					self._on_render_fail(-1, 'Could not render movie due to unknown error".  Please check plugin_octolapse.log for details.')
 					return
 				
 				self._on_render_complete()
@@ -360,7 +387,7 @@ class TimelapseRenderJob(object):
 				
 		except Exception as e:
 			self._debug.LogException(e)
-			self._on_render_fail( 'An unexpected exception occurred while rendering a timelapse.  Please check plugin_octolapse.log for details.')
+			self._on_render_fail(-1, 'An unexpected exception occurred while rendering a timelapse.  Please check plugin_octolapse.log for details.')
 			return
 		self._on_complete(True)
 
@@ -478,3 +505,13 @@ class TimelapseRenderJob(object):
 
 
 
+class RenderingCallbackArgs(object):
+	def __init__(self, snapshotDirectory = "", renderingFullPath = "", renderingFileName = "", returnCode = 0, reason = "", synchronize=False, snapshotCount = 0, secondsAddedToPrint = 0):
+		self.SnapshotDirectory = snapshotDirectory
+		self.RenderingFullPath = renderingFullPath
+		self.RenderingFileName = renderingFileName
+		self.ReturnCode = returnCode
+		self.Reason = reason
+		self.Synchronize = synchronize
+		self.SnapshotCount = snapshotCount
+		self.SecondsAddedToPrint = secondsAddedToPrint

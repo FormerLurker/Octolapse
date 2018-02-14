@@ -75,6 +75,7 @@ class Timelapse(object):
 	def StartTimelapse(self,octoprintPrinter, octoprintPrinterProfile, ffmpegPath,g90InfluencesExtruder):
 		self._reset()
 		self.HasSentInitialStatus = False
+		self.RequiresLocationDetectionAfterHome = False
 		self.OctoprintPrinter = octoprintPrinter
 		self.OctoprintPrinterProfile = octoprintPrinterProfile
 		self.FfMpegPath = ffmpegPath
@@ -211,14 +212,15 @@ class Timelapse(object):
 			# if there has been a position or extruder state change, inform any listener
 			isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
 			# check to see if we've just completed a home command
-			if(self.State == TimelapseState.WaitingForTrigger and self.Position.HasReceivedHomeCommand(1) and self.OctoprintPrinter.is_printing()):
-				if(self.Printer.auto_detect_origin):
-					self.State = TimelapseState.AcquiringHomeLocation
-					if(self.IsTestMode):
-						cmd = self.Commands.GetTestModeCommandString(cmd)
-					self.SavedCommand = cmd
-					cmd = None,
-					self._pausePrint()
+			if(self.State == TimelapseState.WaitingForTrigger and (self.Position.RequiresLocationDetection(1)) and self.OctoprintPrinter.is_printing()):
+				
+				self.State = TimelapseState.AcquiringLocation
+				if(self.IsTestMode):
+					cmd = self.Commands.GetTestModeCommandString(cmd)
+				self.SavedCommand = cmd
+				cmd = None,
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("A position altering requires that we acquire a location, pausing print")
+				self._pausePrint()
 			elif(self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing() and not self.Position.HasPositionError(0)):
 				self.Triggers.Update(self.Position,cmd)
 
@@ -250,10 +252,7 @@ class Timelapse(object):
 					# suppress the command
 					cmd = None,
 				
-			elif(
-				(self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.SendingReturnGcode)
-				or (self.State in [TimelapseState.AcquiringHomeLocation,TimelapseState.SendingSavedHomeLocationCommand])
-			):
+			elif(self.State > TimelapseState.WaitingForTrigger and self.State <= TimelapseState.SendingReturnGcode):
 				# Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.	
 				# suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
 				if(cmd in self.Commands.SuppressedSnapshotGcodeCommands):
@@ -305,7 +304,7 @@ class Timelapse(object):
 		y=payload["y"]
 		z=payload["z"]
 		e=payload["e"]
-		if(self.State == TimelapseState.AcquiringHomeLocation):
+		if(self.State == TimelapseState.AcquiringLocation):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Snapshot home position received by Octolapse.")
 			self._positionReceived_Home(x,y,z,e)
 		elif(self.State == TimelapseState.SendingSavedHomeLocationCommand):
@@ -394,15 +393,37 @@ class Timelapse(object):
 			self.Settings.CurrentDebugProfile().LogException(e)
 			# we need to abandon the snapshot completely, reset and resume
 		self.State = TimelapseState.SendingSavedHomeLocationCommand
-		self.OctoprintPrinter.commands(self.SavedCommand)
-		self.SavedCommand = "";
-		self.OctoprintPrinter.commands("M400")
-		self.OctoprintPrinter.commands("M114")
+		# if a saved command exists, execute it and get the current location
+		if(self.SavedCommand is not None):
+			if(self.Position.DoesCommandRequireLocationDetection(self.SavedCommand)):
+				self.RequiresLocationDetectionAfterHome = True
+				self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("The saved command requires position detection.  This will execute after the saved command is executed and the position will be updated if it changes.")
+			self.OctoprintPrinter.commands(self.SavedCommand)
+			self.SavedCommand = "";
+			self.OctoprintPrinter.commands("M400")
+			self.OctoprintPrinter.commands("M114; Octolapse - SavedCommandPause")
+		else:
+			# there is no saved command, we should be good!
+			self.State = TimelapseState.WaitingForTrigger
+			self._resumePrint()
 
 	def _positionReceived_HomeLocationSavedCommand(self,x,y,z,e):
 		# just sent so we can resume after the commands were sent.
 		# Todo:  do this in the gcode sent function instead of sending an m400/m114 combo
+		try:
+			if(self.RequiresLocationDetectionAfterHome):
+				if(not self.Position.IsAtCurrentPosition(x,y,None)):
+					self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("The position has changed after receiving the home location saved command.  Updating.  New Position: x:{0},y:{1},z:{2},e:{3}, Previous Position: x:{4},y:{5},z:{6}".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
+					self.Position.UpdatePosition(x=x,y=y,z=z,e=e,force=True,calculateChanges=True)
+				else:
+					self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint("The saved command required a position update, but the position has not changed more than the tolerance.".format(x,y,z,e,self.Position.X(),self.Position.Y(), self.Position.Z()))
+		except Exception as e:
+			self.Settings.CurrentDebugProfile().LogException(e)
+
+		
+
 		self.State = TimelapseState.WaitingForTrigger
+		self.RequiresLocationDetectionAfterHome = False
 		self._resumePrint()
 
 	def _positionReceived_Return(self, x,y,z,e):
@@ -536,7 +557,7 @@ class Timelapse(object):
 		self.SnapshotSuccess = True;
 	def _onSnapshotFail(self, *args, **kwargs):
 		reason = args[0]
-		message = "Failed to download the snapshot.  Reason:{0}".format(reason)
+		message = "Failed to download the snapshot.  Reason: {0}".format(reason)
 		self.Settings.CurrentDebugProfile().LogSnapshotDownload(message)
 		self.SnapshotSuccess = False
 		self.SnapshotError = message
@@ -599,90 +620,86 @@ class Timelapse(object):
 		return False
 	def _onRenderStart(self, *args, **kwargs):
 		self.Settings.CurrentDebugProfile().LogRenderStart("Started rendering/synchronizing the timelapse.")
-		finalFilename = args[0]
-		baseFileName = args[1]
-		willSync = args[2]
-		snapshotCount = args[3]
-		snapshotTimeSeconds = args[4]
-		
-		payload = dict(
-			FinalFileName = finalFilename
-			, WillSync = willSync
-			, SnapshotCount = snapshotCount
-			, SnapshotTimeSeconds = snapshotTimeSeconds)
+		payload = args[0]
 		# notify the caller
 		if(self.OnRenderStartCallback is not None):
 			self.OnRenderStartCallback(payload)
+
+		#payload = dict(
+		#	FinalFileName = finalFilename
+		#	, WillSync = willSync
+		#	, SnapshotCount = snapshotCount
+		#	, SnapshotTimeSeconds = snapshotTimeSeconds)
+		
 	def _onRenderFail(self, *args, **kwargs):
 		self.IsRendering = False
 		self.Settings.CurrentDebugProfile().LogRenderFail("The timelapse rendering failed.")
 		#Notify Octoprint
-		finalFilename = args[0]
-		baseFileName = args[1]
-		returnCode = args[2]
-		reason = args[3]
+		payload = args[0]
 		
-		payload = dict(gcode="unknown",
-				movie=finalFilename,
-				movie_basename=baseFileName ,
-				returncode=returnCode,
-				reason = reason)
-
 		if(self.OnRenderFailCallback is not None):
 			self.OnRenderFailCallback(payload)
 	def _onRenderSuccess(self, *args, **kwargs):
-		
-		finalFilename = args[0]
-		baseFileName = args[1]
-		#TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Rendering completed successfully.")
+		payload = args[0]
+		#TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
+		
 	def _onRenderComplete(self, *args, **kwargs):
-		self.IsRendering = False
-		finalFileName = args[0]
-		synchronize = args[1]
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering the timelapse.")
+		self.IsRendering = False
+		payload = args[0]
 		if(self.OnRenderCompleteCallback is not None):
-			self.OnRenderCompleteCallback();
+			self.OnRenderCompleteCallback(payload);
+
 	def _onSynchronizeRenderingFail(self, *args, **kwargs):
-		finalFilename = args[0]
-		baseFileName = args[1]
-		# Notify the user of success and refresh the default timelapse control
-		payload = dict(gcode="unknown",
-				movie=finalFilename,
-				movie_basename=baseFileName ,
-				reason="Error copying the rendering to the Octoprint timelapse folder.  If logging is enabled you can search for 'Synchronization Error' to find the error.  Your timelapse is likely within the octolapse data folder.")
+		self.Settings.CurrentDebugProfile().LogRenderSync("Synchronization with the default timelapse plugin failed.  Reason: {0}", payload.Reason)
+		payload = args[0]
 
 		if(self.OnRenderingSynchronizeFailCallback is not None):
 			self.OnRenderingSynchronizeFailCallback(payload)
-	def _onSynchronizeRenderingComplete(self, *args, **kwargs):
-		finalFilename = args[0]
-		baseFileName = args[1]
+
+		#finalFilename = args[0]
+		#baseFileName = args[1]
 		# Notify the user of success and refresh the default timelapse control
-		payload = dict(gcode="unknown",
-				movie=finalFilename,
-				movie_basename=baseFileName ,
-				movie_prefix="from Octolapse has been synchronized and is now available within the default timelapse plugin tab.  Octolapse ",
-				returncode=0,
-				reason="See the octolapse log for details.")
+		#payload = dict(gcode="unknown",
+		#		movie=finalFilename,
+		#		movie_basename=baseFileName ,
+		#		reason="Error copying the rendering to the Octoprint timelapse folder.  If logging is enabled you can search for 'Synchronization Error' to find the error.  Your timelapse is likely within the octolapse data folder.")
+	def _onSynchronizeRenderingComplete(self, *args, **kwargs):
+		self.Settings.CurrentDebugProfile().LogRenderSync("Synchronization with the default timelapse plugin was successful.")
+		payload = args[0]
 		if(self.OnRenderingSynchronizeCompleteCallback is not None):
 			self.OnRenderingSynchronizeCompleteCallback(payload)
+
+		#finalFilename = args[0]
+		#baseFileName = args[1]
+		# Notify the user of success and refresh the default timelapse control
+		#payload = dict(gcode="unknown",
+		#		movie=finalFilename,
+		#		movie_basename=baseFileName ,
+		#		movie_prefix="from Octolapse has been synchronized and is now available within the default timelapse plugin tab.  Octolapse ",
+		#		returncode=0,
+		#		reason="See the octolapse log for details.")
+		
 	def _onRenderEnd(self, *args, **kwargs):
 		self.IsRendering = False
-
-		finalFileName = args[0]
-		baseFileName = args[1]
-		synchronize = args[2]
-		success = args[3]
 		self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering.")
-		moviePrefix = "from Octolapse"
-		if(not synchronize):
-			moviePrefix = "from Octolapse.  Your timelapse was NOT synchronized (see advanced rendering settings for details), but can be found in octolapse's data directory.  A file browser will be added in a future release (hopefully)"
-		payload = dict(movie=finalFileName,
-				movie_basename=baseFileName ,
-				movie_prefix=moviePrefix,
-				success=success)
+		payload = args[0]
+		success = args[1]
+		#finalFileName = args[0]
+		#baseFileName = args[1]
+		#synchronize = args[2]
+		#success = args[3]
+		
+		#moviePrefix = "from Octolapse"
+		#if(not synchronize):
+		#	moviePrefix = "from Octolapse.  Your timelapse was NOT synchronized (see advanced rendering settings for details), but can be found in octolapse's data directory.  A file browser will be added in a future release (hopefully)"
+		#payload = dict(movie=finalFileName,
+		#		movie_basename=baseFileName ,
+		#		movie_prefix=moviePrefix,
+		#		success=success)
 		if(self.OnRenderEndCallback is not None):
-			self.OnRenderEndCallback(payload)
+			self.OnRenderEndCallback(payload, success)
 	def _onTimelapseStart(self):
 		if(self.OnTimelapseStartCallback is None):
 			return
@@ -719,7 +736,7 @@ class Timelapse(object):
 class TimelapseState(object):
 	Idle = 1
 	WaitingForTrigger = 2
-	AcquiringHomeLocation = 3
+	AcquiringLocation = 3
 	SendingSavedHomeLocationCommand = 4
 	RequestingReturnPosition = 5
 	SendingSnapshotGcode = 6

@@ -25,7 +25,7 @@
     "override_octoprint_print_volume": false,
     "z_hop_speed": 6000,
     "printer_position_confirmation_tolerance": 0.01,
-    "auto_detect_origin": true
+    "auto_detect_position": true
   },
   "current_rendering_profile_guid": "d4898ba7-8d27-4479-b7d8-34c063ae7a68",
   "snapshots": [
@@ -1642,7 +1642,7 @@
       "override_octoprint_print_volume": false,
       "z_hop_speed": 7200,
       "printer_position_confirmation_tolerance": 0.01,
-      "auto_detect_origin": true
+      "auto_detect_position": true
     },
     {
       "movement_speed": 6000,
@@ -1667,7 +1667,7 @@
       "override_octoprint_print_volume": false,
       "z_hop_speed": 6000,
       "printer_position_confirmation_tolerance": 0.01,
-      "auto_detect_origin": true
+      "auto_detect_position": true
     }
   ],
   "rendering_output_format_options": [

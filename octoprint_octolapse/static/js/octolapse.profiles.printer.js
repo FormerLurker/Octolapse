@@ -10,7 +10,8 @@ $(function() {
             min_y: { lessThanOrEqual: "#octolapse_printer_max_y" },
             max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
             min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
-            max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" }
+            max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
+            auto_position_detection_commands: { required: true/*, csvString: true */} // Todo: create the csv string validator
         },
         messages: {
             name: "Please enter a name for your profile",
@@ -36,7 +37,8 @@ $(function() {
         self.z_hop_speed = ko.observable(values.z_hop_speed);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
-        self.auto_detect_origin = ko.observable(values.auto_detect_origin);
+        self.auto_detect_position = ko.observable(values.auto_detect_position);
+        self.auto_position_detection_commands = ko.observable(values.auto_position_detection_commands);
         self.origin_x = ko.observable(values.origin_x);
         self.origin_y = ko.observable(values.origin_y);
         self.origin_z = ko.observable(values.origin_z);

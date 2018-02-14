@@ -31,7 +31,7 @@ class Printer(object):
 		self.retract_speed = 4000
 		self.snapshot_command = "snap"
 		self.printer_position_confirmation_tolerance = 0.01
-		self.auto_detect_origin = True
+		self.auto_detect_position = True
 		self.origin_x = None
 		self.origin_y = None
 		self.origin_z = None
@@ -43,7 +43,7 @@ class Printer(object):
 		self.max_y = 0.0
 		self.min_z = 0.0
 		self.max_z = 0.0
-
+		self.auto_position_detection_commands = "g28,g29"
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
@@ -57,7 +57,8 @@ class Printer(object):
 				self.z_hop_speed = printer.z_hop_speed
 				self.snapshot_command = printer.snapshot_command
 				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
-				self.auto_detect_origin = printer.auto_detect_origin
+				self.auto_detect_position = printer.auto_detect_position
+				self.auto_position_detection_commands = printer.auto_position_detection_commands
 				self.origin_x = printer.origin_x
 				self.origin_y = printer.origin_y
 				self.origin_z = printer.origin_z
@@ -69,6 +70,7 @@ class Printer(object):
 				self.max_y = printer.max_y
 				self.min_z = printer.min_z
 				self.max_z = printer.max_z
+				
 			else:
 				self.Update(printer)
 	def Update(self,changes):
@@ -94,8 +96,11 @@ class Printer(object):
 			self.z_hop_speed = utility.getint(changes["z_hop_speed"],self.z_hop_speed)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
-		if("auto_detect_origin" in changes.keys()):
-			self.auto_detect_origin = utility.getbool(changes["auto_detect_origin"],self.auto_detect_origin)
+
+		if("auto_position_detection_commands" in changes.keys()):
+			self.auto_position_detection_commands = utility.getstring(changes["auto_position_detection_commands"],self.auto_position_detection_commands)
+		if("auto_detect_position" in changes.keys()):
+			self.auto_detect_position = utility.getbool(changes["auto_detect_position"],self.auto_detect_position)
 		if("origin_x" in changes.keys()):
 			self.origin_x = utility.getnullablefloat(changes["origin_x"],self.origin_x)
 		if("origin_y" in changes.keys()):
@@ -119,6 +124,8 @@ class Printer(object):
 			self.min_z = utility.getfloat(changes["min_z"],self.min_z)
 		if("max_z" in changes.keys()):
 			self.max_z = utility.getfloat(changes["max_z"],self.max_z)
+
+			
 		
 	def ToDict(self):
 		return {
@@ -134,7 +141,8 @@ class Printer(object):
 			'z_hop_speed'		: self.z_hop_speed,
 			'snapshot_command'	: self.snapshot_command,
 			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance,
-			'auto_detect_origin' : self.auto_detect_origin,
+			'auto_detect_position' : self.auto_detect_position,
+			'auto_position_detection_commands' : self.auto_position_detection_commands,
 			'origin_x' : self.origin_x,
 			'origin_y' : self.origin_y,
 			'origin_z' : self.origin_z,

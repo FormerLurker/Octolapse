@@ -257,6 +257,18 @@ class Commands(object):
 					CommandParameter("Z","(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$",order=3),
 					CommandParameter("E","(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$",order=4),
 					CommandParameter("F","(?i)^f(?P<f>-?[0-9]{0,15}.?[0-9]{1,15})$",order=5)])
+	G28 = Command(name="Go To Origin"
+		,command="G28"
+		,displayTemplate="G28 - Go to Origin{Comment}"
+		,parameters = [CommandParameter("X","(?i)^(x)$",order=1),
+					CommandParameter("Y","(?i)^(y)$",order=2),
+					CommandParameter("Z","(?i)^(z)$",order=3),
+					CommandParameter("W","(?i)^(w)$",order=4)])
+	G29 = Command(name="Detailed Z-Probe"
+		,command="G29"
+		,displayTemplate="G29 - Detailed Z-Probe{Comment}"
+		,parameters = [CommandParameter("S","(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$",order=1)])
+
 	G92 = Command(name="Set Absolute Position"
 	,command="G92"
 	,displayTemplate="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{Comment}"
@@ -272,13 +284,11 @@ class Commands(object):
 		,command="M83"
 		,displayTemplate="M83 - Set Extruder Absolute Mode{Comment}"
 		,parameters = [])
-	G28 = Command(name="Go To Origin"
-		,command="G28"
-		,displayTemplate="G28 - Go to Origin{Comment}"
-		,parameters = [CommandParameter("X","(?i)^(x)$",order=1),
-					CommandParameter("Y","(?i)^(y)$",order=2),
-					CommandParameter("Z","(?i)^(z)$",order=3),
-					CommandParameter("W","(?i)^(w)$",order=4)])
+	
+	G80 = Command(name="Cancel Canned Cycle (firmware specific)"
+		,command="G80"
+		,displayTemplate="G80 - Cancel Canned Cycle (firmware specific){Comment}"
+		,parameters = [])
 	G90 = Command(name="Absolute Coordinates"
 		,command="G90"
 		,displayTemplate="G90 - Absolute Coordinates{Comment}"
@@ -339,25 +349,27 @@ class Commands(object):
 						CommandParameter("R","(?i)^p(?P<r>-?[0-9]{0,15})$",order=7),
 						CommandParameter("T","(?i)^p(?P<t>-?[0-9]{0,15})$",order=8),
 						])
+	
 	CommandsDictionary = {
 	    G0.Command:G0,
 		G1.Command:G1,
+		G28.Command:G28,
+		G29.Command:G29,
+		G80.Command:G80,
+		G90.Command:G90,
+        G91.Command:G91,
 		G92.Command:G92,
 		M82.Command:M82,
 		M83.Command:M83,
-	    G28.Command:G28,
-        G90.Command:G90,
-        G91.Command:G91,
+        M104.Command:M104,
+		M106.Command:M106,
+		M109.Command:M109,
 		M114.Command:M114,
-		M104.Command:M104,
+		M116.Command:M116,
 		M140.Command:M140,
 		M141.Command:M141,
-		M109.Command:M109,
 		M190.Command:M190,
-		M191.Command:M191,
-		M116.Command:M116,
-		M106.Command:M106
-
+		M191.Command:M191
     }
 
 	def AlterCommandForTestMode(self, cmd):
@@ -386,6 +398,7 @@ class Commands(object):
 		else:
 			return cmd
 
+	
 	def GetCommand(self, code):
 		gcodeCommand = GetGcodeFromString(code)
 		if (gcodeCommand in self.CommandsDictionary.keys()):
