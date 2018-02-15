@@ -283,7 +283,6 @@ class Position(object):
 	def Reset(self):
 		# todo:  This reset function doesn't seem to reset everything.
 		self.Positions = []
-		
 		self.SavedPosition = None
 	def UpdatePosition(self, x=None,y=None,z=None,e=None,f=None,force=False,calculateChanges=False):
 		numPositions = len(self.Positions)
@@ -415,6 +414,11 @@ class Position(object):
 		if(len(self.Positions)>0):
 			del self.Positions[0]
 		self.Extruder.UndoUpdate()
+
+	def GetPosition(self, index=0):
+		if(len(self.Positions) > index ):
+			return self.Positions[index]
+		return None
 	def Update(self,gcode):
 		cmd = self.Commands.GetCommand(gcode)
 		# a new position
