@@ -120,6 +120,28 @@ $(function () {
             var j = parseFloat($(param).val());
             return (i >= j) ? true : false;
         });
+    $.validator.addMethod('lessThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.size() == 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i < j) ? true : false;
+        });
+    $.validator.addMethod('greaterThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.size() == 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i > j) ? true : false;
+        });
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');

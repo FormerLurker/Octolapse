@@ -57,9 +57,9 @@ $(function () {
         self.new_position_restriction_type = ko.observable('rect')
         self.new_position_restriction_x = ko.observable(0)
         self.new_position_restriction_y = ko.observable(0)
-        self.new_position_restriction_x2 = ko.observable(0)
-        self.new_position_restriction_y2 = ko.observable(0)
-        self.new_position_restriction_r = ko.observable(0)
+        self.new_position_restriction_x2 = ko.observable(1)
+        self.new_position_restriction_y2 = ko.observable(1)
+        self.new_position_restriction_r = ko.observable(1)
 
         self.delay = ko.observable(values.delay);
         self.retract_before_move = ko.observable(values.retract_before_move);
@@ -91,10 +91,19 @@ $(function () {
     };
     Octolapse.SnapshotProfileValidationRules = {
         rules: {
+            new_position_restriction_x: { lessThan: "#octolapse_new_position_restriction_x2:visible" },
+            new_position_restriction_x2: { greaterThan: "#octolapse_new_position_restriction_x:visible" },
+            
+            new_position_restriction_y: { lessThan: "#octolapse_new_position_restriction_y2:visible" },
+            new_position_restriction_y2: { greaterThan: "#octolapse_new_position_restriction_y:visible" },
+            
         },
         messages: {
-            name: "Please enter a name for your profile"
-            
+            name: "Please enter a name for your profile",
+            new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
+            new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
+            new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
+            new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
         }
     };
 });
