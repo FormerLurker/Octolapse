@@ -13,6 +13,7 @@ import traceback
 import os
 import sys
 import uuid
+import math
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 class Printer(object):
@@ -369,7 +370,7 @@ class SnapshotPositionRestrictions(object):
 		if(self.Type == 'rect'):
 			return x >= self.X and x <= self.X2 and y >= self.Y and y <= self.Y2
 		if(self.Type == 'circle'):
-			return (x - self.X)^2 + (y - self.Y)^2 < self.R^2
+			return math.pow(x - self.X,2) + math.pow(y - self.Y,2) < math.pow(self.R,2)
 		raise TypeError("SnapshotPosition type must be 'rect' or 'circle' for IsInPosition");
 
 class Snapshot(object):
