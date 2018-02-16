@@ -5,6 +5,6 @@
     "\\octoprint_octolapse\\static",
     "\\octoprint_octolapse\\static\\js"
   ],
-  "SelectedNode": "\\octoprint_octolapse\\render.py",
+  "SelectedNode": "\\octoprint_octolapse\\position.py",
   "PreviewInSolutionExplorer": false
 }

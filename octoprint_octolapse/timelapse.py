@@ -292,8 +292,8 @@ class Timelapse(object):
 				self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")
 				# notify any callbacks
 				return True
-			elif (self._isTriggerWaiting(cmd)):
-				self.Settings.CurrentDebugProfile().LogTriggerWaitState("Trigger is Waiting On Extruder.")
+			#elif (self._isTriggerWaiting(cmd)):
+			#	self.Settings.CurrentDebugProfile().LogTriggerWaitState("Trigger is Waiting On Extruder.")
 		except Exception as e:
 			self.Settings.CurrentDebugProfile().LogException(e)
 			# no need to re-raise here, the trigger just won't happen

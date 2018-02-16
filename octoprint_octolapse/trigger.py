@@ -315,6 +315,7 @@ class LayerTriggerState(TriggerState):
 		self.IsLayerChangeWait = False if state is None else state.IsLayerChangeWait
 		self.IsHeightChange = False if state is None else state.IsHeightChange
 		self.IsHeightChangeWait = False if state is None else state.IsHeightChangeWait
+		self.IsInPosition = False if state is None else state.IsInPosition
 		self.Layer = 0 if state is None else state.Layer
 	def ToDict(self, trigger):
 		superDict = super(LayerTriggerState,self).ToDict(trigger)
@@ -323,6 +324,7 @@ class LayerTriggerState(TriggerState):
 				"IsLayerChangeWait": self.IsLayerChangeWait,
 				"IsHeightChange": self.IsHeightChange,
 				"IsHeightChangeWait": self.IsHeightChangeWait,
+				"IsInPosition": self.IsInPosition,
 				"HeightIncrement": trigger.HeightIncrement,
 				"Layer" : self.Layer
 			}
@@ -332,6 +334,7 @@ class LayerTriggerState(TriggerState):
 		super(LayerTriggerState,self).ResetState()
 		self.IsHeightChange = False
 		self.IsLayerChange = False
+		self.IsInPosition = False
 	def IsEqual(self,state):
 		if (super(LayerTriggerState,self).IsEqual(state)
 				and self.CurrentIncrement == state.CurrentIncrement 
@@ -364,6 +367,7 @@ class LayerTrigger(Trigger):
 		self.HeightIncrement = self.Snapshot.layer_trigger_height
 		if(self.HeightIncrement == 0):
 			self.HeightIncrement = None
+		self.HasRestrictedPosition = len(self.Snapshot.layer_trigger_position_restrictions)>0
 		# debug output
 		self.Settings.CurrentDebugProfile().LogTriggerCreate("Creating Layer Trigger - TriggerHeight:{0} (none = layer change), RequiresZHop:{1}".format(self.Snapshot.layer_trigger_height, self.Snapshot.layer_trigger_require_zhop))
 		self.Settings.CurrentDebugProfile().LogTriggerCreate("Extruder Triggers - OnExtrudingStart:{0}, OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} OnRetracting:{4}, OnPartiallyRetracted:{5}, OnRetracted:{6}, ONDetractingStart:{7}, OnDetracting:{8}, OnDetracted:{9}"
@@ -427,7 +431,14 @@ class LayerTrigger(Trigger):
 						state.IsLayerChange = True
 						state.IsWaiting = True
 
-		
+
+				# check to see if we are in the proper position to take a snapshot
+				if(self.HasRestrictedPosition):
+					for restriction in self.Snapshot.layer_trigger_position_restrictions:
+						# see if the PREVIOUS position was in position (we haven't sent the current command to the printer )
+						if( restriction.IsInPosition(position.X(1), position.Y(1)) ):
+							state.IsInPosition = True
+							break
 				# see if the extruder is triggering
 				isExtruderTriggering = position.Extruder.IsTriggered(1,self.ExtruderTriggers)
 
@@ -438,11 +449,13 @@ class LayerTrigger(Trigger):
 						if(state.IsHeightChangeWait):
 							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Height change triggering, waiting on extruder.")
 						elif (state.IsLayerChangeWait):
-							self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Layer change triggering, waiting on extruder.")
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Layer change triggering, waiting on extruder.")
 					else:
 						if(self.RequireZHop and not position.IsZHop(1)):
 							state.IsWaitingOnZHop = True
 							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Triggering - Waiting on ZHop.")
+						elif(self.HasRestrictedPosition and not state.IsInPosition):
+							self.Settings.CurrentDebugProfile().LogTriggerWaitState("LayerTrigger - Triggering - Waiting on Position.")
 						else:
 							if(state.IsHeightChangeWait):
 								self.Settings.CurrentDebugProfile().LogTriggering("LayerTrigger - Height change triggering.")
@@ -456,7 +469,7 @@ class LayerTrigger(Trigger):
 							state.IsWaiting = False
 							state.IsWaitingOnZHop = False
 							state.IsWaitingOnExtruder = False
-			
+							state.IsInPosition = False
 			# calculate changes and set the current state
 			state.HasChanged = not state.IsEqual(self.GetState(0))
 			# add the state to the history
