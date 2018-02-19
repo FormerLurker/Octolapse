@@ -44,7 +44,7 @@ class Printer(object):
 		self.max_y = 0.0
 		self.min_z = 0.0
 		self.max_z = 0.0
-		self.auto_position_detection_commands = "g28,g29"
+		self.auto_position_detection_commands = ""
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid

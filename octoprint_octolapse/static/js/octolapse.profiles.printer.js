@@ -11,7 +11,7 @@ $(function() {
             max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
             min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
             max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
-            auto_position_detection_commands: { required: true/*, csvString: true */} // Todo: create the csv string validator
+            auto_position_detection_commands: { /*, csvString: true */} // Todo: create the csv string validator
         },
         messages: {
             name: "Please enter a name for your profile",
