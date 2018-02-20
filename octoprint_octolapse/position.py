@@ -275,7 +275,11 @@ class Position(object):
 		self.CreateLocationDetectionCommands()
 
 	def CreateLocationDetectionCommands(self):
-		self.LocationDetectionCommands = [x.strip().upper() for x in self.Printer.auto_position_detection_commands.split(',')]
+		self.LocationDetectionCommands = [];
+		if(self.Printer.auto_position_detection_commands is not None):
+			trimmedCommands = self.Printer.auto_position_detection_commands.strip()
+			if(len(trimmedCommands)>0):
+				self.LocationDetectionCommands = [x.strip().upper() for x in self.Printer.auto_position_detection_commands.split(',')]
 		if("G28" not in self.LocationDetectionCommands):
 			self.LocationDetectionCommands.append("G28")
 		if("G29" not in self.LocationDetectionCommands):

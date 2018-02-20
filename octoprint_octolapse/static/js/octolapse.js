@@ -82,10 +82,24 @@ $(function () {
         $("#state_wrapper #job_pause span:nth-of-type(2)").text("Resume");
     }
     // Add custom validator for csv strings (no inner whitespace)
-    /*
+    const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
+    const csvStringComponentRegex = /[A-Z]\d+/gim;
     $.validator.addMethod('csvString', function (value) {
-        return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
-    }, 'Please enter a list of decimals separated by commas.');*/
+        console.log("Validating csvString: " + value)
+        // We will allow 0 length trimmed strings
+        if (value.length > 0) {
+            if (!value.match(csvStringRegex))
+                return false;
+            var values = value.split(",");
+            for (var index = 0; index < values.length; index++) {
+                if (!values[index].match(csvStringComponentRegex))
+                    return false;
+            }
+        }
+        return true;
+    }, 'Please enter a list of strings separated by commas.');
+
+
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);

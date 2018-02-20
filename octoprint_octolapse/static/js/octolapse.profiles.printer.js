@@ -11,7 +11,7 @@ $(function() {
             max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
             min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
             max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
-            auto_position_detection_commands: { /*, csvString: true */} // Todo: create the csv string validator
+            auto_position_detection_commands: { csvString: true }
         },
         messages: {
             name: "Please enter a name for your profile",
@@ -20,7 +20,8 @@ $(function() {
             min_y : { lessThanOrEqual: "Must be less than or equal to the 'Y - Width Max' field." },
             max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Y - Width Min'' field." },
             min_z : { lessThanOrEqual: "Must be less than or equal to the 'Z - Width Max' field." },
-            max_z : { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." }
+            max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." },
+            auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." }
         }
     };
 
