@@ -217,7 +217,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 		else:
 			return json.dumps({'success':False,'error':results[1]}), 200, {'ContentType':'application/json'}
 
-	
 	# blueprint helpers
 	def GetDownloadFileResponse(self, filePath, downloadFileName):
 		if(os.path.isfile(filePath)):
@@ -431,12 +430,20 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			return
 		try:
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Printer event received:{0}.".format(event))
+
 			# for printing events use Printer State Change, because it gets sent before Print_Started
+			# unfortunately, now we have to know that it 
+			if(event == Events.PRINTER_STATE_CHANGED
+				and payload["state_id"] == "PRINTING"):
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change to Printing")
+				self.OnPrintStart()
 			if(event == Events.PRINT_STARTED):
 				#eventId = self._printer.get_state_id()
-				self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change:{0}.".format(event))
-				origin=payload["origin"]
-				self.OnPrintStart(origin)
+				# if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
+				if(payload["origin"] != "local" and self.Timelapse is not None and self.Timelapse.IsTimelapseActive()):
+					self.Timelapse.EndTimelapse();
+					self.SendPopupMessage("Octolapse does not work when printing from SD the card.  The timelapse has been stopped.")
+					self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
 			elif(self.Timelapse == None):
 				self.Settings.CurrentDebugProfile().LogPrintStateChange("No timelapse object exists and this is not a print start event, exiting.")
 				return
@@ -466,7 +473,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 	def OnPrintPause(self):
 		self.Timelapse.PrintPaused()
 
-	def OnPrintStart(self,origin):
+	def OnPrintStart(self):
 		if(not self.Settings.is_octolapse_enabled):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse is disabled.")
 			return
@@ -475,11 +482,6 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse is not idling.  CurrentState:{0}".format(self.Timelapse.State))
 			return 
 
-		if(origin != "local"):
-			self.SendPopupMessage("Unable to start octolapse when printing from SD the card.")
-			self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
-			return
-		
 		result = self.StartTimelapse()
 		if(not result["success"]):
 			self.Settings.CurrentDebugProfile().LogPrintStateChange("Unable to start the timelapse. Error:{0}".format(result["error"]))
