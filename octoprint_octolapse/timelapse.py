@@ -219,13 +219,14 @@ class Timelapse(object):
 			isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
 			# check to see if we've just completed a home command
 			if(self.State == TimelapseState.WaitingForTrigger and (self.Position.RequiresLocationDetection(1)) and self.OctoprintPrinter.is_printing()):
-				
+				# Undo the last position update, we will be resending the command
+				self.Position.UndoUpdate()
 				self.State = TimelapseState.AcquiringLocation
 				if(self.IsTestMode):
 					cmd = self.Commands.GetTestModeCommandString(cmd)
 				self.SavedCommand = cmd
 				cmd = None,
-				self.Settings.CurrentDebugProfile().LogPrintStateChange("A position altering requires that we acquire a location, pausing print")
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("A position altering requires that we acquire a location, pausing print and undoing the last position update.  New Position: {0}".format(self.Position.GetPositionString()))
 				self._pausePrint()
 			elif(self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing() and not self.Position.HasPositionError(0)):
 				self.Triggers.Update(self.Position,cmd)

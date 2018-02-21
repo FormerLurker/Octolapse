@@ -433,10 +433,9 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
 
 			# for printing events use Printer State Change, because it gets sent before Print_Started
 			# unfortunately, now we have to know that it 
-			if(event == Events.PRINTER_STATE_CHANGED
-				and payload["state_id"] == "PRINTING"):
-				self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change to Printing")
+			if(event == Events.PRINTER_STATE_CHANGED and payload["state_id"] == "PRINTING"):
 				self.OnPrintStart()
+				self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change to Printing")
 			if(event == Events.PRINT_STARTED):
 				#eventId = self._printer.get_state_id()
 				# if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(

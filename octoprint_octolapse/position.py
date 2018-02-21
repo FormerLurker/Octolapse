@@ -719,3 +719,8 @@ class Position(object):
 		if(self.SavedPosition is None):
 			return False
 		return self.IsAtPosition( x,y,z,self.SavedPosition,self.Printer.printer_position_confirmation_tolerance,True)
+	def GetPositionString(self, index=0):
+		if(len(self.Positions)<1):
+			return GetFormattedCoordinates(None,None,None,None)
+		currentPosition = self.Positions[0]
+		return GetFormattedCoordinates(currentPosition.X,currentPosition.Y,currentPosition.Z,currentPosition.E)
