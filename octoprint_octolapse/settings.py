@@ -13,6 +13,7 @@ import traceback
 import os
 import sys
 import uuid
+import math
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 class Printer(object):
@@ -31,7 +32,7 @@ class Printer(object):
 		self.retract_speed = 4000
 		self.snapshot_command = "snap"
 		self.printer_position_confirmation_tolerance = 0.01
-		self.auto_detect_origin = True
+		self.auto_detect_position = True
 		self.origin_x = None
 		self.origin_y = None
 		self.origin_z = None
@@ -43,7 +44,7 @@ class Printer(object):
 		self.max_y = 0.0
 		self.min_z = 0.0
 		self.max_z = 0.0
-
+		self.auto_position_detection_commands = ""
 		if(printer is not None):
 			if(isinstance(printer,Printer)):
 				self.guid = printer.guid
@@ -57,7 +58,8 @@ class Printer(object):
 				self.z_hop_speed = printer.z_hop_speed
 				self.snapshot_command = printer.snapshot_command
 				self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
-				self.auto_detect_origin = printer.auto_detect_origin
+				self.auto_detect_position = printer.auto_detect_position
+				self.auto_position_detection_commands = printer.auto_position_detection_commands
 				self.origin_x = printer.origin_x
 				self.origin_y = printer.origin_y
 				self.origin_z = printer.origin_z
@@ -69,6 +71,7 @@ class Printer(object):
 				self.max_y = printer.max_y
 				self.min_z = printer.min_z
 				self.max_z = printer.max_z
+				
 			else:
 				self.Update(printer)
 	def Update(self,changes):
@@ -94,8 +97,11 @@ class Printer(object):
 			self.z_hop_speed = utility.getint(changes["z_hop_speed"],self.z_hop_speed)
 		if("printer_position_confirmation_tolerance" in changes.keys()):
 			self.printer_position_confirmation_tolerance = utility.getfloat(changes["printer_position_confirmation_tolerance"],self.printer_position_confirmation_tolerance)
-		if("auto_detect_origin" in changes.keys()):
-			self.auto_detect_origin = utility.getbool(changes["auto_detect_origin"],self.auto_detect_origin)
+
+		if("auto_position_detection_commands" in changes.keys()):
+			self.auto_position_detection_commands = utility.getstring(changes["auto_position_detection_commands"],self.auto_position_detection_commands)
+		if("auto_detect_position" in changes.keys()):
+			self.auto_detect_position = utility.getbool(changes["auto_detect_position"],self.auto_detect_position)
 		if("origin_x" in changes.keys()):
 			self.origin_x = utility.getnullablefloat(changes["origin_x"],self.origin_x)
 		if("origin_y" in changes.keys()):
@@ -119,6 +125,8 @@ class Printer(object):
 			self.min_z = utility.getfloat(changes["min_z"],self.min_z)
 		if("max_z" in changes.keys()):
 			self.max_z = utility.getfloat(changes["max_z"],self.max_z)
+
+			
 		
 	def ToDict(self):
 		return {
@@ -134,7 +142,8 @@ class Printer(object):
 			'z_hop_speed'		: self.z_hop_speed,
 			'snapshot_command'	: self.snapshot_command,
 			'printer_position_confirmation_tolerance' : self.printer_position_confirmation_tolerance,
-			'auto_detect_origin' : self.auto_detect_origin,
+			'auto_detect_position' : self.auto_detect_position,
+			'auto_position_detection_commands' : self.auto_position_detection_commands,
 			'origin_x' : self.origin_x,
 			'origin_y' : self.origin_y,
 			'origin_z' : self.origin_z,
@@ -323,7 +332,47 @@ class Stabilization(object):
 			if(len(item)>0):
 				path.append(float(item))
 		return path
+
+class SnapshotPositionRestrictions(object):
+	def __init__(self, type, x, y, x2=None,y2=None,r=None ):
 		
+		self.Type = type.lower()
+		if(self.Type not in ["rect","circle"]):
+			raise TypeError("SnapshotPosition type must be 'rect' or 'circle'");
+		if(x is None or y is None):
+			raise TypeError("SnapshotPosition requires that x and y are not None");
+		if(self.Type == 'rect' and (x2 is None or y2 is None )):
+			raise TypeError("SnapshotPosition type=rect requires that x2 and y2 are not None");
+		if(self.Type == 'circle' and r is None):
+			raise TypeError("SnapshotPosition type=circle requires that r is not None");
+
+		self.Type = type
+		self.X = float(x)
+		self.Y = float(y)
+		self.X2 = float(x2)
+		self.Y2 = float(y2)
+		self.R = float(r)
+
+	def ToDict(self):
+		return {
+			'Type':self.Type,
+			'X':self.X,
+			'Y':self.Y,
+			'X2':self.X2,
+			'Y2':self.Y2,
+			'R':self.R
+			}
+	def IsInPosition(self, x,y):
+		if(x is None or y is None):
+			return False
+		
+
+		if(self.Type == 'rect'):
+			return x >= self.X and x <= self.X2 and y >= self.Y and y <= self.Y2
+		if(self.Type == 'circle'):
+			return math.pow(x - self.X,2) + math.pow(y - self.Y,2) < math.pow(self.R,2)
+		raise TypeError("SnapshotPosition type must be 'rect' or 'circle' for IsInPosition");
+
 class Snapshot(object):
 	# globals
 	# Extruder Trigger Options
@@ -352,6 +401,7 @@ class Snapshot(object):
 		self.gcode_trigger_on_detracting_start = None
 		self.gcode_trigger_on_detracting = None
 		self.gcode_trigger_on_detracted = None
+		
 		#Timer Trigger
 		self.timer_trigger_enabled = False
 		self.timer_trigger_seconds = 30
@@ -380,6 +430,7 @@ class Snapshot(object):
 		self.layer_trigger_on_detracting_start = True
 		self.layer_trigger_on_detracting = False
 		self.layer_trigger_on_detracted = False
+		self.layer_trigger_position_restrictions = []
 		# other settings
 		self.delay = 125
 		self.retract_before_move = True
@@ -404,6 +455,7 @@ class Snapshot(object):
 				self.gcode_trigger_on_detracting_start = snapshot.gcode_trigger_on_detracting_start
 				self.gcode_trigger_on_detracting = snapshot.gcode_trigger_on_detracting
 				self.gcode_trigger_on_detracted = snapshot.gcode_trigger_on_detracted
+				self.layer_trigger_position_restrictions = snapshot.layer_trigger_position_restrictions
 				self.timer_trigger_enabled = snapshot.timer_trigger_enabled
 				self.timer_trigger_require_zhop = snapshot.timer_trigger_require_zhop
 				self.timer_trigger_seconds = snapshot.timer_trigger_seconds
@@ -521,6 +573,10 @@ class Snapshot(object):
 		if("layer_trigger_on_detracted" in changes.keys()):
 			self.layer_trigger_on_detracted = self.GetExtruderTriggerValue(changes["layer_trigger_on_detracted"])
 
+		if("layer_trigger_position_restrictions" in changes.keys()):
+			self.layer_trigger_position_restrictions = self.GetLayerTriggerPositionRestrictions(changes["layer_trigger_position_restrictions"])
+		
+			
 		# other settings
 		if("delay" in changes.keys()):
 			self.delay = utility.getint(changes["delay"],self.delay)
@@ -552,6 +608,16 @@ class Snapshot(object):
 			   return None
 		else:
 			return bool(value)
+	def GetLayerTriggerPositionRestrictions(self, value):
+		restrictions = []
+		for restriction in value:
+			restrictions.append(SnapshotPositionRestrictions(restriction["Type"], restriction["X"], restriction["Y"], restriction["X2"],restriction["Y2"], restriction["R"]))
+		return restrictions
+	def GetLayerTriggerPositionRestrictionsValueString(self, values):
+		restrictions = []
+		for restriction in values:
+			restrictions.append(restriction.ToDict())
+		return restrictions
 
 	def ToDict(self):
 		return {
@@ -599,6 +665,8 @@ class Snapshot(object):
 			'layer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting_start),
 			'layer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting),
 			'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
+			'layer_trigger_position_restrictions'	: self.GetLayerTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
+			
 			# Other Settings
 			'delay'									: self.delay,
 			'retract_before_move'					: self.retract_before_move,
@@ -1426,7 +1494,10 @@ class OctolapseSettings(object):
 				,dict(value='relative_path',name='List of Relative Coordinates')
 			
 			],
-		
+			'position_restriction_types' : [
+				dict(value="rect",name="Rectangle")
+				,dict(value="circle",name="Circle")
+			],
 			'snapshot_extruder_trigger_options' : Snapshot.ExtruderTriggerOptions,
 			'rendering_fps_calculation_options' : [
 					dict(value='static',name='Static FPS')

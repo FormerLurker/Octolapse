@@ -107,22 +107,35 @@
   <hr/>
   <div>
     <div>
-      <h4>Home Position</h4>
+      <h4>Home/Mesh Bed Leveling Position</h4>
       <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
     </div>
+    
     <div class="control-group">
-      <label class="control-label">Auto-Detect Home Position</label>
+      <label class="control-label">Auto-Detect Position</label>
       <div class="controls">
         <label class="checkbox">
-          <input name="auto_detect_origin" type="checkbox" data-bind="checked: auto_detect_origin" title="Auto-detect the current position after receiving a home command"/>Enabled
+          <input name="auto_detect_position" type="checkbox" data-bind="checked: auto_detect_position" title="Auto-detect the current position after receiving a home command"/>Enabled
           <span class="help-inline">
-            Setting this option to true causes Octolapse to pause the print after it receives a home command in order to aquire a location.  It will resume the print when complete.
+            Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
           </span>
         </label>
       </div>
     </div>
-    
-    <div data-bind="visible:!auto_detect_origin()">
+    <div data-bind="visible:auto_detect_position">
+    <div class="control-group">
+      <label class="control-label">Additional location detection commands</label>
+      <div class="controls">
+        <div class="input-append input-block-level">
+          <input name="auto_position_detection_commands" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: auto_position_detection_commands"/>
+          <span class="add-on">csv</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use M80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28 or G29 in the list.</span>
+      </div>
+    </div>
+    </div>
+    <div data-bind="visible:!auto_detect_position()">
       <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
       <div class="control-group">
         <label class="control-label">X Origin</label>
@@ -169,7 +182,7 @@
       <label class="control-label">Override Octoprint Printer Profile</label>
       <div class="controls">
         <label class="checkbox">
-          <input name="auto_detect_origin" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
+          <input name="auto_detect_position" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
           <span class="help-inline">
             When selected the print volume will be determined by the current Octoprint printer profile.
           </span>

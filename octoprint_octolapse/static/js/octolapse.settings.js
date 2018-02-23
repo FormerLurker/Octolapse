@@ -77,7 +77,7 @@ $(function () {
                     'current_profile_guid': settings.current_snapshot_profile_guid
                     , 'profiles': settings.snapshots
                     , 'default_profile': settings.default_snapshot_profile
-                    , 'profileOptions': { 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options }
+                    , 'profileOptions': { 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options, 'position_restriction_types': settings.position_restriction_types }
                     , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
                     , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
                     , 'bindingElementId': 'octolapse_snapshot_tab'

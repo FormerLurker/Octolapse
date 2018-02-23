@@ -81,6 +81,24 @@ $(function () {
         $("#state_wrapper #job_pause span:nth-of-type(1)").text("Pause");
         $("#state_wrapper #job_pause span:nth-of-type(2)").text("Resume");
     }
+    // Add custom validator for csv strings (no inner whitespace)
+    const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
+    const csvStringComponentRegex = /[A-Z]\d+/gim;
+    $.validator.addMethod('csvString', function (value) {
+        console.log("Validating csvString: " + value)
+        // We will allow 0 length trimmed strings
+        if (value.length > 0) {
+            if (!value.match(csvStringRegex))
+                return false;
+            var values = value.split(",");
+            for (var index = 0; index < values.length; index++) {
+                if (!values[index].match(csvStringComponentRegex))
+                    return false;
+            }
+        }
+        return true;
+    }, 'Please enter a list of strings separated by commas.');
+
 
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
@@ -115,6 +133,28 @@ $(function () {
             var i = parseFloat(value);
             var j = parseFloat($(param).val());
             return (i >= j) ? true : false;
+        });
+    $.validator.addMethod('lessThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.size() == 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i < j) ? true : false;
+        });
+    $.validator.addMethod('greaterThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.size() == 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i > j) ? true : false;
         });
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {

@@ -43,7 +43,7 @@ class CaptureSnapshot(object):
 		# set the file name.  It will be a guid + the file extension
 		snapshotGuid = str(uuid.uuid4())
 		info.FileName = "{0}.{1}".format(snapshotGuid,"jpg")
-		info.DirectoryName = utility.GetSnapshotTempDirectory(self.DataDirectory, printerFileName, self.PrintStartTime)
+		info.DirectoryName = utility.GetSnapshotTempDirectory(self.DataDirectory)
 		url = camera.FormatRequestTemplate(self.Camera.address, self.Camera.snapshot_request_template,"")
 		#TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
 		newSnapshotJob = SnapshotJob(self.Settings,self.DataDirectory, snapshotNumber, info, url, snapshotGuid, timeoutSeconds = 1, onComplete = onComplete, onSuccess=onSuccess, onFail = onFail)
@@ -56,11 +56,26 @@ class CaptureSnapshot(object):
 			self.Settings.CurrentDebugProfile().LogSnapshotDownload("Starting Snapshot Download Job in {0} seconds.".format(delaySeconds))
 			t = threading.Timer( delaySeconds, StartSnapshotJob, [newSnapshotJob])
 			t.start()
-
-	def CleanSnapshots(self, printerFileName):
+	def CleanSnapshots(self, snapshotDirectory):
 		
 		# get snapshot directory
-		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory, printerFileName,printStartTime)
+		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(snapshotDirectory))
+		
+		path = os.path.dirname(snapshotDirectory + os.sep)
+		if(os.path.isdir(path)):
+			try:
+				shutil.rmtree(path)
+				self._debug.LogSnapshotClean("Snapshots cleaned.")
+			except:
+				type = sys.exc_info()[0]
+				value = sys.exc_info()[1]
+				self._debug.LogSnapshotClean("Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path,type,value))
+		else:
+			self._debug.LogSnapshotClean("Snapshot - No need to clean snapshots: they have already been removed.")	
+	def CleanAllSnapshots(self, printerFileName):
+		
+		# get snapshot directory
+		snapshotDirectory = utility.GetSnapshotTempDirectory(self.DataDirectory)
 		self._debug.LogSnapshotClean("Cleaning snapshots from: {0}".format(snapshotDirectory))
 		
 
