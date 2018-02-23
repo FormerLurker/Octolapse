@@ -25,7 +25,7 @@ class GcodeParts(object):
 
 		# create a temp variable to hold the command without the comment or semicolon
 		commandAndParameters = None
-		
+
 		# find the first semicolon.  If it exists, split the string into two
 		commentIndex = gcode.find(";")
 
@@ -81,7 +81,7 @@ class CommandParameter(object):
 
 	def Parse(self,paramText):
 		"""parse the parameter text and store it in the Value member.  Return true if a match is found, false if not."""
-		
+
 		self.Value = None # We haven't found a value yet.
 
 		# if we have no compiled regex, we can't parse anything.
@@ -104,7 +104,7 @@ class CommandParameter(object):
 
 		# if we're here, things went well.  Return True!
 		return True
-		
+
 class CommandParameters(collections.MutableMapping):
 	def __init__(self, *args, **kwargs):
 		self.store = dict()
@@ -137,7 +137,7 @@ class CommandParameters(collections.MutableMapping):
 		for key,item in self.store.items():
 			item.Value = None;
 class Command(object):
-	CommentTemplate = "{comment}" 
+	CommentTemplate = "{comment}"
 	CommentTextTemplate = "{commenttext}"
 	CommentSeparator = ";"
 	def __init__(self,name=None, command=None, regex=None, displayTemplate=None,  parameters=None, gcode=None):
@@ -164,7 +164,7 @@ class Command(object):
 							order+=1
 						self.Parameters[parameter.Name] = parameter
 				else:
-					self.Parameters = parameters    
+					self.Parameters = parameters
 
 	def DisplayString(self):
 		if(self.DisplayTemplate is None):
@@ -179,7 +179,7 @@ class Command(object):
 
 			safeDict[key] = value
 			output = string.Formatter().vformat(output, (), safeDict)
-		
+
 		if(self.CommandParts.Comment is not None):
 			safeDict.clear()
 			safeDict["Comment"] = self.CommentSeparator + self.CommandParts.Comment
@@ -206,7 +206,7 @@ class Command(object):
 				commandString += " " + parameter.Name + str(parameter.Value)
 		# since there is no gcode, we can't have a comment.  Time to return the command string
 		return commandString
-	
+
 	def Parse(self):
 
 		# Clear any parameter values
@@ -284,7 +284,13 @@ class Commands(object):
 		,command="M83"
 		,displayTemplate="M83 - Set Extruder Absolute Mode{Comment}"
 		,parameters = [])
-	
+	G28 = Command(name="Go To Origin"
+		,command="G28"
+		,displayTemplate="G28 - Go to Origin{Comment}"
+		,parameters = [CommandParameter("X","(?i)^(x)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$",order=1),
+					CommandParameter("Y","(?i)^(y)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$",order=2),
+					CommandParameter("Z","(?i)^(z)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$",order=3),
+					CommandParameter("W","(?i)^(w)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$",order=4)])
 	G80 = Command(name="Cancel Canned Cycle (firmware specific)"
 		,command="G80"
 		,displayTemplate="G80 - Cancel Canned Cycle (firmware specific){Comment}"
