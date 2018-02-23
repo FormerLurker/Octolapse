@@ -6,7 +6,6 @@ $(function () {
     
     Octolapse.SnapshotProfileViewModel = function (values) {
         var self = this;
-
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
@@ -50,19 +49,61 @@ $(function () {
         self.layer_trigger_on_detracting_start = ko.observable(values.layer_trigger_on_detracting_start);
         self.layer_trigger_on_detracting = ko.observable(values.layer_trigger_on_detracting);
         self.layer_trigger_on_detracted = ko.observable(values.layer_trigger_on_detracted);
+        self.layer_trigger_position_restrictions = ko.observableArray([]);
+        for (var index = 0; index < values.layer_trigger_position_restrictions.length; index++) {
+            self.layer_trigger_position_restrictions.push(ko.observable(values.layer_trigger_position_restrictions[index]));
+        }
+
+        self.new_position_restriction_type = ko.observable('rect')
+        self.new_position_restriction_x = ko.observable(0)
+        self.new_position_restriction_y = ko.observable(0)
+        self.new_position_restriction_x2 = ko.observable(1)
+        self.new_position_restriction_y2 = ko.observable(1)
+        self.new_position_restriction_r = ko.observable(1)
 
         self.delay = ko.observable(values.delay);
         self.retract_before_move = ko.observable(values.retract_before_move);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
 
+
+        self.addPositionRestriction = function () {
+            //console.log("Adding Position Restriction to the following list:");
+            //console.log(self.layer_trigger_position_restrictions());
+            var restriction = ko.observable({
+                "Type": self.new_position_restriction_type(),
+                "X": self.new_position_restriction_x(),
+                "Y": self.new_position_restriction_y(),
+                "X2": self.new_position_restriction_x2(),
+                "Y2": self.new_position_restriction_y2(),
+                "R": self.new_position_restriction_r()
+            });
+            //console.log("Pushing a new restriction:");
+            //console.log(restriction());
+            self.layer_trigger_position_restrictions.push(restriction);
+            //console.log('Current Number of Restrictions: ' + self.layer_trigger_position_restrictions().length)
+        };
+        self.removePositionRestriction = function (index) {
+            console.log("Removing restriction at index: " + index());
+            self.layer_trigger_position_restrictions.splice(index(), 1);
+        }
+
     };
     Octolapse.SnapshotProfileValidationRules = {
         rules: {
+            new_position_restriction_x: { lessThan: "#octolapse_new_position_restriction_x2:visible" },
+            new_position_restriction_x2: { greaterThan: "#octolapse_new_position_restriction_x:visible" },
+            
+            new_position_restriction_y: { lessThan: "#octolapse_new_position_restriction_y2:visible" },
+            new_position_restriction_y2: { greaterThan: "#octolapse_new_position_restriction_y:visible" },
+            
         },
         messages: {
-            name: "Please enter a name for your profile"
-            
+            name: "Please enter a name for your profile",
+            new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
+            new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
+            new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
+            new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
         }
     };
 });

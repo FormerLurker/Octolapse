@@ -23,8 +23,8 @@
       </div>
     </div>
   </div>
-  
-  
+
+
   <hr/>
   <div>
     <div>
@@ -59,6 +59,145 @@
           <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
         </div>
       </div>
+      <div>
+        <div>
+          <h5>Position Restrictions</h5>
+        </div>
+        <!-- Add new position restriction -->
+        <div class="control-group">
+          <label class="control-label" >Position Restriction Type</label>
+          <div class="controls">
+            <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+
+                                   value: new_position_restriction_type"></select>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="controls">
+            <div class="row-fluid">
+              <div class="span6">
+                <div class="input-prepend input-append">
+                  <span class="add-on">X</span>
+                  <input id="octolapse_new_position_restriction_x" name="new_position_restriction_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_position_restriction_x" step="any" required="true" />
+                  <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" ></div>
+              </div>
+              <div class="span6">
+                <div class="input-prepend input-append">
+                  <span class="add-on">Y</span>
+                  <input id="octolapse_new_position_restriction_y" name="new_position_restriction_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_position_restriction_y" step="any" required="true" />
+                  <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="control-group" data-bind="visible: new_position_restriction_type() == 'rect'">
+          <div class="controls">
+            <div class="row-fluid">
+              <div class="span6">
+                <div class="input-prepend input-append">
+                  <span class="add-on">X2</span>
+                  <input id="octolapse_new_position_restriction_x2" name="new_position_restriction_x2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_position_restriction_x2" step="any" required="true" />
+                  <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" ></div>
+              </div>
+              <div class="span6">
+                <div class="input-prepend input-append">
+                  <span class="add-on">Y2</span>
+                  <input id="octolapse_new_position_restriction_y2" name="new_position_restriction_y2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_position_restriction_y2" step="any" required="true" />
+                  <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="control-group" data-bind="visible: new_position_restriction_type() == 'circle'">
+          <div class="controls">
+            <div class="row-fluid">
+              <div class="span12">
+                <div class="input-prepend input-append">
+                  <span class="add-on">Radius</span>
+                  <input id="octolapse_new_position_restriction_r" name="new_position_restriction_r" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_position_restriction_r" step="any" min="0" required="true" />
+                  <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="controls">
+            <small>
+              <a href="#" class="btn btn-default" data-bind="click: function(){$data.addPositionRestriction();}"> Add Position Restriction</a>
+            </small>
+          </div>
+        </div>
+        <div class="control-group" data-bind="visible: (layer_trigger_position_restrictions().length > 0)">
+          <div class="controls">
+            <div>
+              <div>
+                <h4>
+                  Current Position Restrictions
+                </h4>
+              </div>
+              <table class="table-striped table-hover table-condensed table-hover octolapse-profiles">
+                <thead>
+                  <tr>
+                    <th>
+                      Type
+                    </th>
+                    <th>
+                      X
+                    </th>
+                    <th>
+                      Y
+                    </th>
+                    <th>
+                      X2
+                    </th>
+                    <th>
+                      Y2
+                    </th>
+                    <th>
+                      R
+                    </th>
+                    <th>
+                      Action
+                    </th>
+                    <th>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: layer_trigger_position_restrictions">
+                  <tr>
+                    <td data-bind="text: Type"></td>
+                    <td data-bind="text: X"></td>
+                    <td data-bind="text: Y"></td>
+                    <td data-bind="text: X2"></td>
+                    <td data-bind="text: Y2"></td>
+                    <td data-bind="text: R"></td>
+                    <td>
+                      <a href="#" class="btn btn-default" data-bind="click: function() {$parent.removePositionRestriction($index);}">Remove</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+
+
+
       <div class="control-group">
         <div class="controls">
           <small>
@@ -366,7 +505,9 @@
       </div>
 
       <div id="trigger_gcode_advanced" class="hide">
-        <p>Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.</p>
+        <p>
+          Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.
+        </p>
         <div class="control-group">
           <label class="control-label" >Extrusion Starting</label>
           <div class="controls">
