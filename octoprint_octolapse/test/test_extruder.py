@@ -1,13 +1,13 @@
-
 import unittest
+from tempfile import NamedTemporaryFile
+
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.command import Command,Commands
 from octoprint_octolapse.extruder import Extruder, ExtruderTriggers
 
 class Test_Extruder(unittest.TestCase):
 	def setUp(self):
-		
-		self.Settings = OctolapseSettings("c:\\temp\\octolapse.log")
+		self.Settings = OctolapseSettings(NamedTemporaryFile().name)
 		self.Extruder = Extruder(self.Settings)
 
 	def tearDown(self):
