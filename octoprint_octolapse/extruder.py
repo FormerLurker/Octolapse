@@ -69,47 +69,83 @@ class Extruder(object):
 	def Reset(self):
 		self.StateHistory = []
 
+	def GetState(self, index=0):
+		if(len(self.StateHistory)>index):
+			return self.StateHistory[index]
+		return None
+
 	def AddState(self,state):
 		self.StateHistory.insert(0,state)
 		while (len(self.StateHistory)> 5):
 			del self.StateHistory[5]
 
-	def ToDict(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].ToDict()
+	def ToDict(self, index=0):
+		state = GetState(index)
+		if(state is not None):
+			return state.ToDict()
 		return None
-	def HasChanged(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].HasChanged
-		return False
-	def IsExtruding(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].IsExtruding
+
+	#######################################
+	# Access ExtruderStates and calculated 
+	# values from from StateHistory
+	#######################################
+	def HasChanged(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.HasChanged
 		return False
 
-	def IsExtrudingStart(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].IsExtrudingStart
+	def IsExtruding(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.IsExtruding
+		return False
+
+	def IsExtrudingStart(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.IsExtrudingStart
 		return False
 	
-	def IsRetractingStart(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].IsRetractingStart
+	def IsRetractingStart(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.IsRetractingStart
 		return False
-	def IsRetracted(self):
-		if(len(self.StateHistory)>0):
-			return self.StateHistory[0].IsRetracted
+
+	def IsRetracted(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.IsRetracted
 		return False
-	def LengthToRetract(self):
-		if(len(self.StateHistory)>0):
+
+	def ExtrusionLengthTotal(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.ExtrusionLengthTotal
+		return False
+
+	def ExtrusionLengthTotal(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
+			return state.ExtrusionLengthTotal
+		return False
+		
+
+	def LengthToRetract(self, index=0):
+		state = self.GetState(index)
+		if(state is not None):
 			retractLength =  utility.round_to(self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,self.PrinterTolerance)
 			if(retractLength <= 0):
 				retractLength = 0
 			return retractLength
 		return self.PrinterRetractionLength
+
 	def UndoUpdate(self):
-		if(len(self.StateHistory)>0):
+		state = self.GetState(0)
+		if(state is not None):
 			del self.StateHistory[0]
+
 	# Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
 	def Update(self,eRelative):
 		if(eRelative is None):
@@ -208,11 +244,10 @@ class Extruder(object):
 			return False
 		return None
 
-	def IsTriggered(self, index, options):
-
-		if(len(self.StateHistory)< index + 1):
+	def IsTriggered(self, options, index = 0):
+		state = self.GetState(index)
+		if(state is None):
 			return False
-		state = self.StateHistory[index]
 		
 		"""Matches the supplied extruder trigger options to the current extruder state.  Returns true if triggering, false if not."""
 		extrudingStartTriggered		= self._ExtruderStateTriggered(options.OnExtrudingStart ,state.IsExtrudingStart)

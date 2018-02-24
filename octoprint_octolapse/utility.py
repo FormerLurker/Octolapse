@@ -251,8 +251,8 @@ def CurrentlyPrintingFileName(octoprintPrinter):
 
 def IsInBounds(boundingBox, x=None, y=None, z=None):
 	"""Determines if the given X,Y,Z coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-	if x is None or y is None or z is None:
-		return False
+	#if x is None or y is None or z is None:
+	#	return False
 
 	minX = boundingBox['min_x']
 	maxX = boundingBox['max_x']
@@ -261,9 +261,9 @@ def IsInBounds(boundingBox, x=None, y=None, z=None):
 	minZ = boundingBox['min_z']
 	maxZ = boundingBox['max_z']
 
-	xIsInBounds = minX <= x <= maxX
-	yIsInBounds = minY <= y <= maxY
-	zIsInBounds = minZ <= z <= maxZ
+	xIsInBounds = x is None or minX <= x <= maxX
+	yIsInBounds = y is None or minY <= y <= maxY
+	zIsInBounds = z is None or minZ <= z <= maxZ
 
 	return xIsInBounds and yIsInBounds and zIsInBounds
 
@@ -278,7 +278,7 @@ def GetClosestInBoundsPosition(bounding_box, x=None, y=None, z=None):
 
 	def clamp(v, v_min, v_max):
 		"""Limits a value to lie between (or equal to) v_min and v_max."""
-		return min(max(v, v_min), v_max)
+		return None if v is None else min(max(v, v_min), v_max)
 
 	c_x = clamp(x, min_x, max_x)
 	c_y = clamp(y, min_y, max_y)

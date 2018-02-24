@@ -191,6 +191,9 @@ class Test_Utility(unittest.TestCase):
 			"min_z": 0,
 			"max_z": 200
 		}
+		self.assertEqual(utility.GetClosestInBoundsPosition(bounding_box, None, None, None),
+						 {'X': None, 'Y': None, 'Z': None},
+						 "Coordinates = 'None' should no closest position.")
 
 		self.assertEqual(utility.GetClosestInBoundsPosition(bounding_box, 175, 100, 100),
 						 {'X': 175, 'Y': 100, 'Z': 100},

@@ -3,7 +3,7 @@ from tempfile import NamedTemporaryFile
 
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.command import Command,Commands
-from octoprint_octolapse.extruder import Extruder, ExtruderTriggers
+from octoprint_octolapse.extruder import Extruder, ExtruderTriggers,ExtruderState
 
 class Test_Extruder(unittest.TestCase):
 	def setUp(self):
@@ -27,54 +27,89 @@ class Test_Extruder(unittest.TestCase):
 	def test_ResetInitialState(self):
 		"""Test the initial extruder state, change all values, reset and check again"""
 		# Check the initial state
-		self.assertTrue(self.Extruder.ExtrusionLengthTotal == 0.0)
-		self.assertTrue(self.Extruder.RetractionLength == 0.0)
-		self.assertTrue(self.Extruder.ExtrusionLength == 0.0)
-		self.assertTrue(self.Extruder.IsExtrudingStart == False)
-		self.assertTrue(self.Extruder.IsExtruding == False)
-		self.assertTrue(self.Extruder.IsPrimed == False)
-		self.assertTrue(self.Extruder.IsRetractingStart == False)
-		self.assertTrue(self.Extruder.IsRetracting == False)
-		self.assertTrue(self.Extruder.IsPartiallyRetracted == False)
-		self.assertTrue(self.Extruder.IsRetracted == False)
-		self.assertTrue(self.Extruder.IsDetractingStart == False)
-		self.assertTrue(self.Extruder.IsDetracting == False)
-		self.assertTrue(self.Extruder.IsDetracted == False)
-		self.assertTrue(self.Extruder.HasChanged == False)
+		self.assertEquals(len(self.Extruder.StateHistory), 0)
 
+		# add some states
+		state1 = ExtruderState()
+		self.Extruder.AddState(state1)
 
-		# reset all variables
-		self.Extruder.ExtrusionLengthTotal = -1
-		self.Extruder.RetractionLength = -1
-		self.Extruder.ExtrusionLength = -1
-		self.Extruder.IsExtrudingStart = True
-		self.Extruder.IsExtruding = True
-		self.Extruder.IsPrimed = True
-		self.Extruder.IsRetractingStart = True
-		self.Extruder.IsRetracting = True
-		self.Extruder.IsPartiallyRetracted = True
-		self.Extruder.IsRetracted = True
-		self.Extruder.IsDetractingStart = True
-		self.Extruder.IsDetracting = True
-		self.Extruder.IsDetracted = True
-		self.Extruder.HasChanged = True
+		state2 = ExtruderState()
+		self.Extruder.AddState(state2)
 
-		# reset the extruder and check to make sure the initial values are there again.
+		state3 = ExtruderState()
+		self.Extruder.AddState(state3)
+
+		# check the length of StateHistory
+		self.assertEquals(len(self.Extruder.StateHistory),3)
+
+		# reset the state and check again
 		self.Extruder.Reset()
-		self.assertTrue(self.Extruder.ExtrusionLengthTotal == 0.0)
-		self.assertTrue(self.Extruder.RetractionLength == 0.0)
-		self.assertTrue(self.Extruder.ExtrusionLength == 0.0)
-		self.assertTrue(self.Extruder.IsExtrudingStart == False)
-		self.assertTrue(self.Extruder.IsExtruding == False)
-		self.assertTrue(self.Extruder.IsPrimed == False)
-		self.assertTrue(self.Extruder.IsRetractingStart == False)
-		self.assertTrue(self.Extruder.IsRetracting == False)
-		self.assertTrue(self.Extruder.IsPartiallyRetracted == False)
-		self.assertTrue(self.Extruder.IsRetracted == False)
-		self.assertTrue(self.Extruder.IsDetractingStart == False)
-		self.assertTrue(self.Extruder.IsDetracting == False)
-		self.assertTrue(self.Extruder.IsDetracted == False)
-		self.assertTrue(self.Extruder.HasChanged == False)
+		self.assertEquals(len(self.Extruder.StateHistory),0)
+		
+	def testExtruderState_InitialValues(self):
+
+		# create a new state
+		state = ExtruderState()
+
+		# verify the initial values
+		self.assertEquals(state.E, 0)
+		self.assertEquals(state.ExtrusionLength, 0.0)
+		self.assertEquals(state.ExtrusionLengthTotal, 0.0)
+		self.assertEquals(state.RetractionLength, 0.0)
+		self.assertEquals(state.DetractionLength, 0.0)
+		self.assertTrue(state.IsExtrudingStart)
+		self.assertTrue(state.IsExtruding)
+		self.assertTrue(state.IsPrimed)
+		self.assertTrue(state.IsRetractingStart)
+		self.assertTrue(state.IsRetracting)
+		self.assertTrue(state.IsPartiallyRetracted)
+		self.assertTrue(state.IsRetracted)
+		self.assertTrue(state.IsDetractingStart)
+		self.assertTrue(state.IsDetracting)
+		self.assertTrue(state.IsDetracted)
+		self.assertTrue(state.HasChanged)
+		
+	def testExtruderStateCopy(self):
+		# create a new state
+		state = ExtruderState()
+		# change all the default values
+
+		state.E = 1
+		state.ExtrusionLength = 100
+		state.ExtrusionLengthTotal = 200
+		state.RetractionLength = 300
+		state.DetractionLength = 400
+		state.IsExtrudingStart = True
+		state.IsExtruding = True
+		state.IsPrimed = True
+		state.IsRetractingStart = True
+		state.IsRetracting = True
+		state.IsPartiallyRetracted = True
+		state.IsRetracted = True
+		state.IsDetractingStart = True
+		state.IsDetracting = True
+		state.IsDetracted = True
+		state.HasChanged = True
+
+		# copy to a new state
+		newState = ExtruderState(state)
+		# verify the state was copied correctly
+		self.assertEquals(newState.E, 1)
+		self.assertEquals(newState.ExtrusionLength, 100)
+		self.assertEquals(newState.ExtrusionLengthTotal, 200)
+		self.assertEquals(newState.RetractionLength, 300)
+		self.assertEquals(newState.DetractionLength, 400)
+		self.assertFalse(newState.IsExtrudingStart)
+		self.assertFalse(newState.IsExtruding)
+		self.assertFalse(newState.IsPrimed)
+		self.assertFalse(newState.IsRetractingStart)
+		self.assertFalse(newState.IsRetracting)
+		self.assertFalse(newState.IsPartiallyRetracted)
+		self.assertFalse(newState.IsRetracted)
+		self.assertFalse(newState.IsDetractingStart)
+		self.assertFalse(newState.IsDetracting)
+		self.assertFalse(newState.IsDetracted)
+		self.assertFalse(newState.HasChanged)
 
 	def test_HasChanged(self):
 		"""Test the HasChanged flag"""
@@ -1431,12 +1466,12 @@ class Test_Extruder(unittest.TestCase):
 		self.assertTrue(self.Extruder.IsDetracted == False)
 
 	def test_ExtruderStateTriggered(self):
-		self.assertTrue(self.Extruder.ExtruderStateTriggered(None,False) is None)
-		self.assertTrue(self.Extruder.ExtruderStateTriggered(None,True) is None)
-		self.assertTrue(self.Extruder.ExtruderStateTriggered(True,False) is None)
-		self.assertTrue(self.Extruder.ExtruderStateTriggered(True,True))
-		self.assertTrue(self.Extruder.ExtruderStateTriggered(False,False) is None)
-		self.assertTrue(not self.Extruder.ExtruderStateTriggered(False,True))
+		self.assertTrue(self.Extruder._ExtruderStateTriggered(None,False) is None)
+		self.assertTrue(self.Extruder._ExtruderStateTriggered(None,True) is None)
+		self.assertTrue(self.Extruder._ExtruderStateTriggered(True,False) is None)
+		self.assertTrue(self.Extruder._ExtruderStateTriggered(True,True))
+		self.assertTrue(self.Extruder._ExtruderStateTriggered(False,False) is None)
+		self.assertFalse(self.Extruder._ExtruderStateTriggered(False,True))
 	def test_extruderTriggers(self):
 		"""Test the extruder triggers"""
 

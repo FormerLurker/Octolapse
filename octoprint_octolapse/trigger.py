@@ -280,7 +280,7 @@ class GcodeTrigger(Trigger):
 				if (self.IsSnapshotCommand(commandName)):
 					state.IsWaiting = True
 				if(state.IsWaiting == True):
-					if(position.Extruder.IsTriggered(1, self.ExtruderTriggers)):
+					if(position.Extruder.IsTriggered(self.ExtruderTriggers, index=1)):
 						if(self.RequireZHop and not position.IsZHop(1)):
 							state.IsWaitingOnZHop = True
 							self.Settings.CurrentDebugProfile().LogTriggerWaitState("GcodeTrigger - Waiting on ZHop.")
@@ -440,7 +440,7 @@ class LayerTrigger(Trigger):
 							state.IsInPosition = True
 							break
 				# see if the extruder is triggering
-				isExtruderTriggering = position.Extruder.IsTriggered(1,self.ExtruderTriggers)
+				isExtruderTriggering = position.Extruder.IsTriggered(self.ExtruderTriggers, index=1)
 
 				if(state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting):
 					state.IsWaiting = True
@@ -610,7 +610,7 @@ class TimerTrigger(Trigger):
 				if(state.SecondsToTrigger <= 0):
 					state.IsWaiting = True
 					# see if the exturder is in the right position
-					if(position.Extruder.IsTriggered(1, self.ExtruderTriggers)):
+					if(position.Extruder.IsTriggered(self.ExtruderTriggers, index=1)):
 						if(self.RequireZHop and not position.IsZHop(1)):
 							self.Settings.CurrentDebugProfile().LogTriggerWaitState("TimerTrigger - Waiting on ZHop.")
 							state.IsWaitingOnZHop = True

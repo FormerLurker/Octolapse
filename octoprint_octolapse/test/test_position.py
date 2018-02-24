@@ -11,6 +11,16 @@ class Test_Position(unittest.TestCase):
 	def setUp(self):
 		self.Commands = Commands()
 		self.Settings = OctolapseSettings(NamedTemporaryFile().name)
+		# in the general test case we want auto_detect_position to be false
+		# else we'll have to simulate a position update (m114 return) after
+		# a home (g28) command
+		self.Settings.CurrentPrinter().auto_detect_position = False
+		# since we've set auto_detect_position to false, we need to set
+		# an origin, else X,Y and Z will still be None after a home command
+		self.Settings.CurrentPrinter().origin_x = 0
+		self.Settings.CurrentPrinter().origin_y = 0
+		self.Settings.CurrentPrinter().origin_z = 0
+
 		self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
 
 	def tearDown(self):
@@ -359,7 +369,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.E() == 30)
 
 	def test_Update(self):
-		"""Test the UpdatePosition function with the force option set to true."""
+		"""Test the Update() function, which accepts gcode and updates the current position state and extruder state."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 		# no homed axis
 		position.Update("G1 x100 y200 z300")
@@ -534,14 +544,12 @@ class Test_Position(unittest.TestCase):
 
 		# test initial state
 		self.assertIsNone(position.Height())
-		self.assertTrue(position.HeightPrevious == 0)
 		self.assertTrue(position.Layer() == 0)
 		self.assertFalse(position.IsLayerChange())
 
 		# check without homed axis
 		position.Update("G1 x0 y0 z0.20000 e1")
 		self.assertIsNone(position.Height())
-		self.assertIsNone(position.HeightPrevious)
 		self.assertTrue(position.Layer() == 0)
 		self.assertFalse(position.IsLayerChange())
 

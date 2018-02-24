@@ -321,9 +321,15 @@ class Position(object):
 			previousPos = self.Positions[0]
 			return previousPos.ToStateDict()
 		return None
-	def ZDelta(self,pos):
-		if(len(self.Positions)>0):
-			previousPos = self.Positions[0]
+
+	def GetPosition(self,index=0):
+		if(len(self.Positions)>index):
+			return self.Positions[index]
+		return None
+
+	def ZDelta(self,pos,index=0):
+		previousPos = self.GetPosition(index)
+		if(previousPos is not None):
 			# calculate ZDelta
 			if(pos.Height is not None):
 				if(previousPos.Height is None):
@@ -331,78 +337,133 @@ class Position(object):
 				else:
 					return pos.Height - previousPos.Height
 		return 0
-	def HasStateChanged(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].HasStateChanged
-		return None
-	def HasPositionChanged(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].HasPositionChanged
-		return None
-	def HasPositionError(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].HasPositionError
-		return None
+
 	def DistanceToZLift(self, index=0):
-		if(len(self.Positions)>index):
-			pos = self.Positions[index]
-			currentLift = utility.round_to(pos.Z - pos.Height,self.PrinterTolerance)
-			if(currentLift < self.Printer.z_hop):
-				return self.Printer.z_hop - currentLift
-			return 0
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		currentLift = utility.round_to(pos.Z - pos.Height,self.PrinterTolerance)
+		if(currentLift < self.Printer.z_hop):
+			return self.Printer.z_hop - currentLift
+		return 0
+
+	def HasStateChanged(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.HasStateChanged
+
+	def HasPositionChanged(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.HasPositionChanged
+
+	def HasPositionError(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.HasPositionError
+
 	def PositionError(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].PositionError
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.PositionError
+
 	def X(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].X
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.X
+	def XOffset(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.XOffset
+
 	def Y(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].Y
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.Y
+
+	def YOffset(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.YOffset
+
 	def Z(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].Z
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.Z
+	def ZOffset(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.ZOffset
+
 	def E(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].E
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.E
+
+	def EOffset(self, index=0):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.EOffset
+
 	def F(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].F
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.F
+
 	def IsZHop(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].IsZHop
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.IsZHop
+
 	def IsLayerChange(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].IsLayerChange
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.IsLayerChange
+
 	def Layer(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].Layer
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.Layer
+
 	def Height(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].Height
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.Height
+
 	def IsRelative(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].IsRelative
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.IsRelative
+
 	def IsExtruderRelative(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].IsExtruderRelative
-		return None
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return None
+		return pos.IsExtruderRelative
+
 	def HasReceivedHomeCommand(self, index=0):
-		if(len(self.Positions)>index):
-			return self.Positions[index].HasReceivedHomeCommand and self.HasHomedAxis(index)
-		return False
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return False
+		return pos.HasReceivedHomeCommand and self.HasHomedAxis(index)
 
 	def DoesCommandRequireLocationDetection(self,cmd):
 		if(self.Printer.auto_detect_position):
@@ -411,11 +472,16 @@ class Position(object):
 				return True
 		return False
 	def RequiresLocationDetection(self, index = 0):
-		if(len(self.Positions)>index and self.DoesCommandRequireLocationDetection(self.Positions[index].GCode)):
+		pos = self.GetPosition(index)
+		if(pos is None):
+			return False
+
+		if(self.DoesCommandRequireLocationDetection(pos.GCode)):
 			return True
 		return False
 	def UndoUpdate(self):
-		if(len(self.Positions)>0):
+		pos = self.GetPosition(0)
+		if(pos is not None):
 			del self.Positions[0]
 		self.Extruder.UndoUpdate()
 

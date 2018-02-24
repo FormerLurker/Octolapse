@@ -229,7 +229,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.Settings.CurrentStabilization().y_fixed_coordinate = 20
 		snapshotGcodeGenerator = SnapshotGcodeGenerator(self.Settings, self.CreateOctoprintPrinterProfile())
 		self.Extruder.IsRetracted = lambda: True
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(0, 0, 0, False, True, self.Extruder, "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch from absolute to relative for the ZHop
 		self.assertTrue(snapshotGcode.GcodeCommands[0] == "G91")
@@ -282,8 +282,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.Settings.CurrentSnapshot().retract_before_move = True
 		snapshotGcodeGenerator = SnapshotGcodeGenerator(self.Settings, self.CreateOctoprintPrinterProfile())
 
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch to absolute coordinates in prep for move
 
@@ -324,8 +323,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.ReturnZ == 10)
 
 		# test the second coordinate in the path
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10,3600, True, False, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch to absolute coordinates in prep for move
 
@@ -379,8 +377,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.Settings.CurrentSnapshot().retract_before_move = True
 		snapshotGcodeGenerator = SnapshotGcodeGenerator(self.Settings, self.CreateOctoprintPrinterProfile())
 		self.Extruder.IsRetracted = lambda: True
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(100, 50, 0, 0, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch to absolute coordinates in prep for move
 		self.assertTrue(snapshotGcode.GcodeCommands[0] == "G1 Z0.500 F7200")
@@ -412,8 +409,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.ReturnZ == 0)
 
 		# Get the next coordinate in the path
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(101, 51, 0, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(101, 51, 0, 3600,True, False, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch to absolute coordinates in prep for move
 		self.assertTrue(snapshotGcode.GcodeCommands[0] == "G1 Z0.500 F7200")
@@ -443,8 +439,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.assertTrue(snapshotGcode.ReturnY == 51)
 		self.assertTrue(snapshotGcode.ReturnZ == 0)
 		# test the second coordinate in the path
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 10, 3600,True, False, self.Extruder, 0.5, "SavedCommand")
 
 	def test_GetSnapshotGcode_Relative_RelativeCoordinates_AbsoluteExtruder_ZhopTooHigh(self):
 		"""Test snapshot gcode with relative stabilization, relative coordinates, absolute extruder, z is too high to hop, no retraction"""
@@ -458,8 +453,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 		self.Settings.CurrentSnapshot().retract_before_move = False
 		snapshotGcodeGenerator = SnapshotGcodeGenerator(self.Settings, self.CreateOctoprintPrinterProfile())
 		# create
-		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 200, True, False, self.Extruder,
-																   "SavedCommand")
+		snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(10, 10, 200, 3600,True, False, self.Extruder, 0.5, "SavedCommand")
 		# verify the created gcode
 		# this line should switch to absolute coordinates in prep for move
 		self.assertTrue(snapshotGcode.GcodeCommands[0] == "G90")
