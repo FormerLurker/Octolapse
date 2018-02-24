@@ -1,5 +1,5 @@
 import unittest
-from octoprint_octolapse.command import Command,Commands
+from octoprint_octolapse.command import Commands
 
 class Test_Command(unittest.TestCase):
 	def setUp(self):
@@ -29,7 +29,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G0 Command with only partial parameters and no comment"""
 
 		# gcode to test
-		gcode = "g0 y200.0 f7200" 
+		gcode = "g0 y200.0 f7200"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -119,7 +119,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G1 Command with only partial parameters and no comment"""
 
 		# gcode to test
-		gcode = "g1 x200.0 e7200" 
+		gcode = "g1 x200.0 e7200"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -224,7 +224,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G92 Command with only partial parameters and no comment"""
 
 		# gcode to test
-		gcode = "g92 x200.0 e7200" 
+		gcode = "g92 x200.0 e7200"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -291,7 +291,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M82 Command, parameters and comment.  """
 
 		# gcode to test
-		gcode = "M82" 
+		gcode = "M82"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -303,7 +303,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M82 Command with a comment and whitespace.  """
 
 		# gcode to test
-		gcode = " m82  ; With a comment" 
+		gcode = " m82  ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -316,7 +316,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M82 Command with some bogus parameters and a comment with whitespace.  """
 
 		# gcode to test
-		gcode = " m82 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment" 
+		gcode = " m82 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -330,7 +330,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M83 Command, parameters and comment.  """
 
 		# gcode to test
-		gcode = "M83" 
+		gcode = "M83"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -342,7 +342,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M83 Command with a comment and whitespace.  """
 
 		# gcode to test
-		gcode = " m83  ; With a comment" 
+		gcode = " m83  ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -355,7 +355,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M83 Command with some bogus parameters and a comment with whitespace.  """
 
 		# gcode to test
-		gcode = " m83 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment" 
+		gcode = " m83 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -368,7 +368,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G90 Command, parameters and comment.  """
 
 		# gcode to test
-		gcode = "G90" 
+		gcode = "G90"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -380,7 +380,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G90 Command with a comment and whitespace.  """
 
 		# gcode to test
-		gcode = " g90  ; With a comment" 
+		gcode = " g90  ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -393,7 +393,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G90 Command with some bogus parameters and a comment with whitespace.  """
 
 		# gcode to test
-		gcode = " g90 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment" 
+		gcode = " g90 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -406,7 +406,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G91 Command, parameters and comment.  """
 
 		# gcode to test
-		gcode = "G91" 
+		gcode = "G91"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -418,7 +418,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G91 Command with a comment and whitespace.  """
 
 		# gcode to test
-		gcode = " g91  ; With a comment" 
+		gcode = " g91  ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -431,7 +431,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G91 Command with some bogus parameters and a comment with whitespace.  """
 
 		# gcode to test
-		gcode = " g91 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment" 
+		gcode = " g91 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -777,7 +777,7 @@ class Test_Command(unittest.TestCase):
 		self.assertTrue(cmd.Parameters["R"].Value == "100")
 		self.assertTrue(cmd.CommandParts.Comment == " Here is a comment")
 
-		
+
 		# Test all parameters and no comment
 		gcode = "M191 s11 r200"
 		# get the command from the gcode
@@ -946,7 +946,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the G28 Command with only partial parameters and no comment"""
 
 		# gcode to test
-		gcode = "g28 x z" 
+		gcode = "g28 x z"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -1029,7 +1029,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M114 Command, parameters and comment.  """
 
 		# gcode to test
-		gcode = "M114" 
+		gcode = "M114"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -1041,7 +1041,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M114 Command with a comment and whitespace.  """
 
 		# gcode to test
-		gcode = " m114  ; With a comment" 
+		gcode = " m114  ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
@@ -1054,7 +1054,7 @@ class Test_Command(unittest.TestCase):
 		"""Try to parse the M114 Command with some bogus parameters and a comment with whitespace.  """
 
 		# gcode to test
-		gcode = " m114 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment" 
+		gcode = " m114 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
 		# get the command from the gcode
 		cmd = self.Commands.GetCommand(gcode)
