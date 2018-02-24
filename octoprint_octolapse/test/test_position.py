@@ -134,102 +134,92 @@ class Test_Position(unittest.TestCase):
 		"""Test init state."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 		# reset all initialized vars to something else
-		self.Positions = [Pos(self.OctoprintPrinterProfile)]
-		self.SavedPosition = Pos(self.OctoprintPrinterProfile)
+		position.Update("G28")
+		position.Update("G0 X1 Y1 Z1")
 
 		# reset
 		position.Reset()
 
 		# test initial state
-		self.assertTrue(self.Positions == [])
-		self.assertIsNone(self.SavedPosition)
+		self.assertEqual(len(position.Positions), 0)
+		self.assertIsNone(position.SavedPosition)
 
 	def test_Home(self):
 		"""Test the home command.  Make sure the position is set to 0,0,0 after the home."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 
 		position.Update("G28")
-		self.assertIsNone(position.X())
-		self.assertTrue(position.XHomed)
-		self.assertIsNone(position.Y())
-		self.assertTrue(position.YHomed)
-		self.assertTrue(position.ZHomed)
-		self.assertIsNone(position.Z())
-		self.assertFalse(position.HasHomedPosition())
+		self.assertEqual(position.X(), 0)
+		self.assertTrue(position.GetPosition().XHomed)
+		self.assertEqual(position.Y(), 0)
+		self.assertTrue(position.GetPosition().YHomed)
+		self.assertEqual(position.Z(), 0)
+		self.assertTrue(position.GetPosition().ZHomed)
+		self.assertTrue(position.HasHomedPosition())
 		position.Reset()
 		position.Update("G28 X")
-		self.assertIsNone(position.X())
-		self.assertTrue(position.XHomed)
+		self.assertEqual(position.X(), 0)
+		self.assertTrue(position.GetPosition().XHomed)
 		self.assertIsNone(position.Y())
-		self.assertFalse(position.YHomed)
+		self.assertFalse(position.GetPosition().YHomed)
 		self.assertIsNone(position.Z())
-		self.assertFalse(position.ZHomed)
+		self.assertFalse(position.GetPosition().ZHomed)
 		self.assertFalse(position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Y")
 		self.assertIsNone(position.X())
-		self.assertFalse(position.XHomed)
-		self.assertIsNone(position.Y())
-		self.assertTrue(position.YHomed)
+		self.assertFalse(position.GetPosition().XHomed)
+		self.assertEqual(position.Y(), 0)
+		self.assertTrue(position.GetPosition().YHomed)
 		self.assertIsNone(position.Z())
-		self.assertFalse(position.ZHomed)
+		self.assertFalse(position.GetPosition().ZHomed)
 		self.assertFalse(position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Z")
 		self.assertIsNone(position.X())
-		self.assertFalse(position.XHomed)
+		self.assertFalse(position.GetPosition().XHomed)
 		self.assertIsNone(position.Y())
-		self.assertFalse(position.YHomed)
-		self.assertIsNone(position.Z())
-		self.assertTrue(position.ZHomed)
+		self.assertFalse(position.GetPosition().YHomed)
+		self.assertEqual(position.Z(), 0)
+		self.assertTrue(position.GetPosition().ZHomed)
 		self.assertFalse(position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("G28 Z X Y")
-		self.assertIsNone(position.X())
-		self.assertTrue(position.XHomed)
-		self.assertIsNone(position.Y())
-		self.assertTrue(position.YHomed)
-		self.assertIsNone(position.Z())
-		self.assertTrue(position.ZHomed)
-		self.assertFalse(position.HasHomedPosition())
-
-		position.Reset()
-		position.Update("G28 W")
-		self.assertIsNone(position.X())
-		self.assertTrue(position.XHomed)
-		self.assertIsNone(position.Y())
-		self.assertTrue(position.YHomed)
-		self.assertIsNone(position.Z())
-		self.assertTrue(position.ZHomed)
-		self.assertFalse(position.HasHomedPosition())
+		self.assertEqual(position.X(), 0)
+		self.assertTrue(position.GetPosition().XHomed)
+		self.assertEqual(position.Y(), 0)
+		self.assertTrue(position.GetPosition().YHomed)
+		self.assertEqual(position.Z(), 0)
+		self.assertTrue(position.GetPosition().ZHomed)
+		self.assertTrue(position.HasHomedPosition())
 
 		position.Reset()
 		position.Update("g28")
 		position.Update("g1 x0 y0 z0")
 		# here we have seen the upded coordinates, but we do not know the position
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.XHomed)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.YHomed)
-		self.assertTrue(position.Z() == 0)
-		self.assertTrue(position.ZHomed)
-		self.assertFalse(position.HasHomedPosition())
+		self.assertEqual(position.X(), 0)
+		self.assertTrue(position.GetPosition().XHomed)
+		self.assertEqual(position.Y(), 0)
+		self.assertTrue(position.GetPosition().YHomed)
+		self.assertEqual(position.Z(), 0)
+		self.assertTrue(position.GetPosition().ZHomed)
 		# give it another position, now we have homed axis with a known position
 		position.Update("g1 x0 y0 z0")
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.XHomed)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.YHomed)
-		self.assertTrue(position.Z() == 0)
-		self.assertTrue(position.ZHomed)
+		self.assertEqual(position.X(), 0)
+		self.assertTrue(position.GetPosition().XHomed)
+		self.assertEqual(position.Y(), 0)
+		self.assertTrue(position.GetPosition().YHomed)
+		self.assertEqual(position.Z(), 0)
+		self.assertTrue(position.GetPosition().ZHomed)
 		self.assertTrue(position.HasHomedPosition())
 
 	def test_UpdatePosition_force(self):
 		"""Test the UpdatePosition function with the force option set to true."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, False)
+		position.Update("G28")
 		position.UpdatePosition(x=0, y=0, z=0, e=0, force=True)
 
 		self.assertEqual(position.X(), 0)
@@ -257,116 +247,110 @@ class Test_Position(unittest.TestCase):
 		self.assertIsNone(position.X())
 		self.assertIsNone(position.Y())
 		self.assertIsNone(position.Z())
-		self.assertEqual(position.E(), 0)
+		self.assertIsNone(position.E(), 0)
 
 		# set homed axis, test absolute position (default)
-		position.XHomed = True
-		position.YHomed = True
-		position.ZHomed = True
+		position.Update("G28")
 		position.UpdatePosition(x=0, y=0, z=0)
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.Z() == 0)
-		self.assertTrue(position.E() == 0)
+		self.assertEqual(position.X(), 0)
+		self.assertEqual(position.Y(), 0)
+		self.assertEqual(position.Z(), 0)
+		self.assertEqual(position.E(), 0)
 
 		# update absolute position
 		position.UpdatePosition(x=1, y=2, z=3)
-		self.assertTrue(position.X() == 1)
-		self.assertTrue(position.Y() == 2)
-		self.assertTrue(position.Z() == 3)
-		self.assertTrue(position.E() == 0)
+		self.assertEqual(position.X(), 1)
+		self.assertEqual(position.Y(), 2)
+		self.assertEqual(position.Z(), 3)
+		self.assertEqual(position.E(), 0)
 
 		# set relative position
-		position.IsRelative = True
+		position.Update("G91")
 		position.UpdatePosition(x=1, y=1, z=1)
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.Y() == 3)
-		self.assertTrue(position.Z() == 4)
-		self.assertTrue(position.E() == 0)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.Y(), 3)
+		self.assertEqual(position.Z(), 4)
+		self.assertEqual(position.E(), 0)
 
 		# set extruder absolute
-		position.IsExtruderRelative = False
+		position.Update("M82")
 		position.UpdatePosition(e=100)
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.Y() == 3)
-		self.assertTrue(position.Z() == 4)
-		self.assertTrue(position.E() == 100)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.Y(), 3)
+		self.assertEqual(position.Z(), 4)
+		self.assertEqual(position.E(), 100)
 		position.UpdatePosition(e=-10)
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.Y() == 3)
-		self.assertTrue(position.Z() == 4)
-		self.assertTrue(position.E() == -10)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.Y(), 3)
+		self.assertEqual(position.Z(), 4)
+		self.assertEqual(position.E(), -10)
 
 		# set extruder relative
-		position.IsExtruderRelative = True
+		position.Update("M83")
 		position.UpdatePosition(e=20)
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.Y() == 3)
-		self.assertTrue(position.Z() == 4)
-		self.assertTrue(position.E() == 10)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.Y(), 3)
+		self.assertEqual(position.Z(), 4)
+		self.assertEqual(position.E(), 10)
 		position.UpdatePosition(e=-1)
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.Y() == 3)
-		self.assertTrue(position.Z() == 4)
-		self.assertTrue(position.E() == 9)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.Y(), 3)
+		self.assertEqual(position.Z(), 4)
+		self.assertEqual(position.E(), 9)
 
 		position.UpdatePosition(x=1, y=2, z=3, e=4, force=True)
-		self.assertTrue(position.X() == 1)
-		self.assertTrue(position.Y() == 2)
-		self.assertTrue(position.Z() == 3)
-		self.assertTrue(position.E() == 4)
+		self.assertEqual(position.X(), 1)
+		self.assertEqual(position.Y(), 2)
+		self.assertEqual(position.Z(), 3)
+		self.assertEqual(position.E(), 4)
 
 		position.UpdatePosition(x=None, y=None, z=None, e=None, force=True)
-		self.assertTrue(position.X() == 1)
-		self.assertTrue(position.Y() == 2)
-		self.assertTrue(position.Z() == 3)
-		self.assertTrue(position.E() == 4)
+		self.assertEqual(position.X(), 1)
+		self.assertEqual(position.Y(), 2)
+		self.assertEqual(position.Z(), 3)
+		self.assertEqual(position.E(), 4)
 
 	def test_G90InfluencesExtruder_UpdatePosition(self):
 		"""Test G90 for machines where it influences the coordinate system of the extruder."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, True)
 		# Make sure the axis is homed
-		position.XHomed = True
-		position.YHomed = True
-		position.ZHomed = True
+		position.Update("G28")
 		# set absolute mode with G90
 		position.Update("g90")
 		# update the position to 10 (absolute)
 		position.UpdatePosition(e=10)
-		self.assertTrue(position.E() == 10)
+		self.assertEqual(position.E(), 10)
 		# update the position to 10 again (absolute) to make sure we are in absolute coordinates.
 		position.UpdatePosition(e=10)
-		self.assertTrue(position.E() == 10)
+		self.assertEqual(position.E(), 10)
 
 		# set relative mode with G90
 		position.Update("g91")
 		# update the position to 20 (relative)
 		position.UpdatePosition(e=20)
-		self.assertTrue(position.E() == 30)
+		self.assertEqual(position.E(), 30)
 
 	def test_G90InfluencesExtruder_Update(self):
 		"""Test G90 for machines where it influences the coordinate system of the extruder."""
 		position = Position(self.Settings, self.OctoprintPrinterProfile, True)
 		# Make sure the axis is homed
-		position.XHomed = True
-		position.YHomed = True
-		position.ZHomed = True
+		position.Update("G28")
 
 		# set absolute mode with G90
 		position.Update("g90")
 		# update the position to 10 (absolute)
 		position.Update("G1 E10.0")
-		self.assertTrue(position.E() == 10)
+		self.assertEqual(position.E(), 10)
 
 		# update the position to 10 again (absolute) to make sure we are in absolute coordinates.
 		position.Update("G1 E10.0")
-		self.assertTrue(position.E() == 10)
+		self.assertEqual(position.E(), 10)
 
 		# set relative mode with G90
 		position.Update("g91")
 		# update the position to 20 (relative)
 		position.Update("G1 E20.0")
-		self.assertTrue(position.E() == 30)
+		self.assertEqual(position.E(), 30)
 
 	def test_Update(self):
 		"""Test the Update() function, which accepts gcode and updates the current position state and extruder state."""
@@ -380,35 +364,35 @@ class Test_Position(unittest.TestCase):
 		# set homed axis and update absolute position
 		position.Update("G28")
 		position.Update("G1 x100 y200 z150")
-		self.assertTrue(position.X() == 100)
-		self.assertTrue(position.Y() == 200)
-		self.assertTrue(position.Z() == 150)
+		self.assertEqual(position.X(), 100)
+		self.assertEqual(position.Y(), 200)
+		self.assertEqual(position.Z(), 150)
 
 		# move again and retest
 		position.Update("G1 x101 y199 z151")
-		self.assertTrue(position.X() == 101)
-		self.assertTrue(position.Y() == 199)
-		self.assertTrue(position.Z() == 151)
+		self.assertEqual(position.X(), 101)
+		self.assertEqual(position.Y(), 199)
+		self.assertEqual(position.Z(), 151)
 
 		# switch to relative and update position
 		position.Update("G91")
 		position.Update("G1 x-1 y-1 z1.0")
-		self.assertTrue(position.X() == 100)
-		self.assertTrue(position.Y() == 198)
-		self.assertTrue(position.Z() == 152)
+		self.assertEqual(position.X(), 100)
+		self.assertEqual(position.Y(), 198)
+		self.assertEqual(position.Z(), 152)
 
 		# move again and retest
 		position.Update("G1 x-99 y-196 z-149.0")
-		self.assertTrue(position.X() == 1)
-		self.assertTrue(position.Y() == 2)
-		self.assertTrue(position.Z() == 3)
+		self.assertEqual(position.X(), 1)
+		self.assertEqual(position.Y(), 2)
+		self.assertEqual(position.Z(), 3)
 
 		# go back to absolute and move to origin
 		position.Update("G90")
 		position.Update("G1 x0 y0 z0.0")
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.Z() == 0)
+		self.assertEqual(position.X(), 0)
+		self.assertEqual(position.Y(), 0)
+		self.assertEqual(position.Z(), 0)
 
 	# G92 Test Set Position
 	def test_G92SetPosition(self):
@@ -425,39 +409,39 @@ class Test_Position(unittest.TestCase):
 		position.Update("G90")
 		position.Update("G1 x100 y200 z150")
 		position.Update("G92 x10 y20 z30")
-		self.assertTrue(position.X() == 100)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 200)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 150)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 100)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 200)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 150)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# Move to same position and retest
 		position.Update("G1 x0 y0 z0")
-		self.assertTrue(position.X() == 90)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 180)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 120)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 90)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 180)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 120)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# Move and retest
 		position.Update("G1 x-10 y10 z20")
-		self.assertTrue(position.X() == 80)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 190)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 140)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 80)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 190)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 140)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# G92 with no parameters
 		position.Update("G92")
-		self.assertTrue(position.X() == 80)
-		self.assertTrue(position.XOffset() == 80)
-		self.assertTrue(position.Y() == 190)
-		self.assertTrue(position.YOffset() == 190)
-		self.assertTrue(position.Z() == 140)
-		self.assertTrue(position.ZOffset() == 140)
+		self.assertEqual(position.X(), 80)
+		self.assertEqual(position.XOffset(), 80)
+		self.assertEqual(position.Y(), 190)
+		self.assertEqual(position.YOffset(), 190)
+		self.assertEqual(position.Z(), 140)
+		self.assertEqual(position.ZOffset(), 140)
 
 	# G92 Test Absolute Movement
 	def test_G92AbsoluteMovement(self):
@@ -469,30 +453,30 @@ class Test_Position(unittest.TestCase):
 		position.Update("G90")
 		position.Update("G1 x100 y200 z150")
 		position.Update("G92 x10 y20 z30")
-		self.assertTrue(position.X() == 100)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 200)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 150)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 100)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 200)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 150)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# move to origin
 		position.Update("G1 x-90 y-180 z-120")
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 0)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 0)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 0)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 0)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# move back
 		position.Update("G1 x0 y0 z0")
-		self.assertTrue(position.X() == 90)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 180)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 120)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 90)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 180)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 120)
+		self.assertEqual(position.ZOffset(), 120)
 
 	# G92 Test Relative Movement
 	def test_G92RelativeMovement(self):
@@ -504,39 +488,39 @@ class Test_Position(unittest.TestCase):
 		position.Update("G91")
 		position.Update("G1 x100 y200 z150")
 		position.Update("G92 x10 y20 z30")
-		self.assertIsNone(position.X())
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 200)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 150)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 100)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 200)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 150)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# move to origin
 		position.Update("G1 x-100 y-200 z-150")
-		self.assertTrue(position.X() == 0)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 0)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 0)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 0)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 0)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 0)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# advance each axis
 		position.Update("G1 x1 y2 z3")
-		self.assertTrue(position.X() == 1)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 2)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 3)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 1)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 2)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 3)
+		self.assertEqual(position.ZOffset(), 120)
 
 		# advance again
 		position.Update("G1 x1 y2 z3")
-		self.assertTrue(position.X() == 2)
-		self.assertTrue(position.XOffset() == 90)
-		self.assertTrue(position.Y() == 4)
-		self.assertTrue(position.YOffset() == 180)
-		self.assertTrue(position.Z() == 6)
-		self.assertTrue(position.ZOffset() == 120)
+		self.assertEqual(position.X(), 2)
+		self.assertEqual(position.XOffset(), 90)
+		self.assertEqual(position.Y(), 4)
+		self.assertEqual(position.YOffset(), 180)
+		self.assertEqual(position.Z(), 6)
+		self.assertEqual(position.ZOffset(), 120)
 
 	def test_HeightAndLayerChanges(self):
 		"""Test the height and layer changes."""
@@ -544,125 +528,110 @@ class Test_Position(unittest.TestCase):
 
 		# test initial state
 		self.assertIsNone(position.Height())
-		self.assertTrue(position.Layer() == 0)
+		self.assertIsNone(position.Layer(), None)
 		self.assertFalse(position.IsLayerChange())
 
 		# check without homed axis
 		position.Update("G1 x0 y0 z0.20000 e1")
-		self.assertIsNone(position.Height())
-		self.assertTrue(position.Layer() == 0)
+		self.assertEqual(position.Height(), 0)
+		self.assertEqual(position.Layer(), 0)
 		self.assertFalse(position.IsLayerChange())
 
 		# set homed axis, absolute coordinates, and check height and layer
 		position.Update("G28")
-		self.assertIsNone(position.Height())
-		self.assertIsNone(position.HeightPrevious)
-		self.assertTrue(position.Layer() == 0)
+		self.assertEqual(position.Height(), 0)
+		self.assertEqual(position.Layer(), 0)
 		self.assertFalse(position.IsLayerChange())
 
 		# move without extruding, height and layer should not change
 		position.Update("G1 x100 y200 z150")
-		self.assertIsNone(position.Height())
-		self.assertIsNone(position.HeightPrevious)
-		self.assertTrue(position.Layer() == 0)
+		self.assertEqual(position.Height(), 0)
+		self.assertEqual(position.Layer(), 0)
 		self.assertFalse(position.IsLayerChange())
 
 		# move to origin, height and layer stuff should stay the same
 		position.Update("G1 x0 y0 z0")
-		self.assertIsNone(position.Height())
-		self.assertIsNone(position.HeightPrevious)
-		self.assertTrue(position.Layer() == 0)
+		self.assertEqual(position.Height(), 0)
+		self.assertEqual(position.Layer(), 0)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude, height change!
 		position.Update("G1 x0 y0 z0 e1")
-		self.assertTrue(position.Height() == 0)
-		self.assertTrue(position.HeightPrevious == 0)
-		self.assertTrue(position.Layer() == 1)
+		self.assertEqual(position.Height(), 0)
+		self.assertEqual(position.Layer(), 1)
 		self.assertTrue(position.IsLayerChange())
 
 		# extrude higher, update layer., this will get rounded to 0.2
 		position.Update("G1 x0 y0 z0.1999 e1")
-		self.assertTrue(position.Height() == 0.2)
-		self.assertTrue(position.HeightPrevious == 0)
-		self.assertTrue(position.Layer() == 2)
+		self.assertEqual(position.Height(), 0.2)
+		self.assertEqual(position.Layer(), 2)
 		self.assertTrue(position.IsLayerChange())
 
 		# extrude just slightly higher, but with rounding on the same layer
 		position.Update("G1 x0 y0 z0.20000 e1")
-		self.assertTrue(position.Height() == .2)
-		self.assertTrue(position.HeightPrevious == 0.2)
-		self.assertTrue(position.Layer() == 2)
+		self.assertEqual(position.Height(), .2)
+		self.assertEqual(position.Layer(), 2)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude again on same layer - Height Previous should now be updated, and IsLayerChange should be false
 		position.Update("G1 x0 y0 z0.20000 e1")
-		self.assertTrue(position.Height() == .2)
-		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer() == 2)
+		self.assertEqual(position.Height(), .2)
+		self.assertEqual(position.Layer(), 2)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude again on same layer - No changes
 		position.Update("G1 x0 y0 z0.20000 e1")
-		self.assertTrue(position.Height() == .2)
-		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer() == 2)
+		self.assertEqual(position.Height(), .2)
+		self.assertEqual(position.Layer(), 2)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude below the current layer - No changes
 		position.Update("G1 x0 y0 z0.00000 e1")
-		self.assertTrue(position.Height() == .2)
-		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer() == 2)
+		self.assertEqual(position.Height(), .2)
+		self.assertEqual(position.Layer(), 2)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude up higher and change the height/layer.  Should never happen, but it's an interesting test case
 		position.Update("G1 x0 y0 z0.60000 e1")
-		self.assertTrue(position.Height() == .6)
-		self.assertTrue(position.HeightPrevious == .2)
-		self.assertTrue(position.Layer() == 3)
+		self.assertEqual(position.Height(), .6)
+		self.assertEqual(position.Layer(), 3)
 		self.assertTrue(position.IsLayerChange())
 
 		# extrude up again
 		position.Update("G1 x0 y0 z0.65000 e1")
-		self.assertTrue(position.Height() == .65)
-		self.assertTrue(position.HeightPrevious == .6)
-		self.assertTrue(position.Layer() == 4)
+		self.assertEqual(position.Height(), .65)
+		self.assertEqual(position.Layer(), 4)
 		self.assertTrue(position.IsLayerChange())
 
 		# extrude on previous layer
 		position.Update("G1 x0 y0 z0.60000 e1")
-		self.assertTrue(position.Height() == .65)
-		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer() == 4)
+		self.assertEqual(position.Height(), .65)
+		self.assertEqual(position.Layer(), 4)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude on previous layer again
 		position.Update("G1 x0 y0 z0.60000 e1")
-		self.assertTrue(position.Height() == .65)
-		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer() == 4)
+		self.assertEqual(position.Height(), .65)
+		self.assertEqual(position.Layer(), 4)
 		self.assertFalse(position.IsLayerChange())
 
 		# move up but do not extrude
 		position.Update("G1 x0 y0 z0.70000")
-		self.assertTrue(position.Height() == .65)
-		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer() == 4)
+		self.assertEqual(position.Height(), .65)
+		self.assertEqual(position.Layer(), 4)
 		self.assertFalse(position.IsLayerChange())
 
 		# move up but do not extrude a second time
 		position.Update("G1 x0 y0 z0.80000")
-		self.assertTrue(position.Height() == .65)
-		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer() == 4)
+		self.assertEqual(position.Height(), .65)
+		self.assertEqual(position.Layer(), 4)
 		self.assertFalse(position.IsLayerChange())
 
 		# extrude at a different height
-		position.Update("G1 x0 y0 z0.85000 e.001")
-		self.assertTrue(position.Height() == .85)
-		self.assertTrue(position.HeightPrevious == .65)
-		self.assertTrue(position.Layer() == 5)
+		position.Update("G1 x0 y0 z0.80000 e.1")
+		position.Update("G1 x0 y0 z0.85000 e.1")
+		self.assertEqual(.85, position.Height())
+		self.assertEqual(6, position.Layer())
 		self.assertTrue(position.IsLayerChange())
 
 	# M82 and M83 - Test extruder movement
@@ -678,49 +647,49 @@ class Test_Position(unittest.TestCase):
 		# test movement
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("G0 E100")
-		self.assertTrue(position.E() == 100)
+		self.assertEqual(position.E(), 100)
 		# this is somewhat reversed from what we do in the position.py module
 		# there we update the pos() object and compare to the current state, so comparing the current state to the
 		# previous will result in the opposite sign
-		self.assertTrue(position.ERelative(previousPos) == -100)
+		self.assertEqual(position.ERelative(previousPos), -100)
 
 		# switch to absolute movement
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("M82")
 		self.assertFalse(position.IsExtruderRelative())
-		self.assertTrue(position.E() == 100)
-		self.assertTrue(position.ERelative(previousPos) == 0)
+		self.assertEqual(position.E(), 100)
+		self.assertEqual(position.ERelative(previousPos), 0)
 
 		# move to -25
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("G0 E-25")
-		self.assertTrue(position.E() == -25)
-		self.assertTrue(position.ERelative(previousPos) == 125)
+		self.assertEqual(position.E(), -25)
+		self.assertEqual(position.ERelative(previousPos), 125)
 
 		# test movement to origin
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("G0 E0")
-		self.assertTrue(position.E() == 0)
-		self.assertTrue(position.ERelative(previousPos) == -25)
+		self.assertEqual(position.E(), 0)
+		self.assertEqual(position.ERelative(previousPos), -25)
 
 		# switch to relative position
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("M83")
 		position.Update("G0 e1.1")
-		self.assertTrue(position.E() == 1.1)
-		self.assertTrue(position.ERelative(previousPos) == -1.1)
+		self.assertEqual(position.E(), 1.1)
+		self.assertEqual(position.ERelative(previousPos), -1.1)
 
 		# move and test
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("G0 e1.1")
-		self.assertTrue(position.E() == 2.2)
-		self.assertTrue(position.ERelative(previousPos) == -1.1)
+		self.assertEqual(position.E(), 2.2)
+		self.assertEqual(position.ERelative(previousPos), -1.1)
 
 		# move and test
 		previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
 		position.Update("G0 e-2.2")
-		self.assertTrue(position.E() == 0)
-		self.assertTrue(position.ERelative(previousPos) == 2.2)
+		self.assertEqual(position.E(), 0)
+		self.assertEqual(position.ERelative(previousPos), 2.2)
 
 	def test_zHop(self):
 		"""Test zHop detection."""
@@ -754,7 +723,7 @@ class Test_Position(unittest.TestCase):
 		self.assertTrue(position.IsZHop())
 		# move below zhop threshold
 		position.Update("g0 z0.3")
-		self.assertTrue(position.IsZHop())
+		self.assertFalse(position.IsZHop())
 
 		# move right up to zhop without going over, we are within the rounding error
 		position.Update("g0 z0.4999")
@@ -762,17 +731,17 @@ class Test_Position(unittest.TestCase):
 
 		# Extrude on z5
 		position.Update("g0 z0.5 e1")
-		self.assertTrue(position.IsZHop())
+		self.assertFalse(position.IsZHop())
 
 		# partial z lift, , we are within the rounding error
 		position.Update("g0 z0.9999")
 		self.assertTrue(position.IsZHop())
-		# zhop to 1
+		# No zhop, we're already at z1
 		position.Update("g0 z1")
-		self.assertTrue(position.IsZHop())
+		self.assertFalse(position.IsZHop())
 		# test with extrusion start at 1.5
 		position.Update("g0 z1.5 e1")
-		self.assertTrue(position.IsZHop())
+		self.assertFalse(position.IsZHop())
 		# test with extrusion at 2
 		position.Update("g0 z2 e1")
 		self.assertFalse(position.IsZHop())
@@ -783,7 +752,7 @@ class Test_Position(unittest.TestCase):
 
 		# do not move extruder
 		position.Update("no-command")
-		self.assertTrue(position.IsZHop())
+		self.assertFalse(position.IsZHop())
 
 	# todo:  IsAtCurrent/PreviousPosition tests
 	def test_IsAtCurrentPosition(self):
