@@ -41,7 +41,6 @@ def TestCamera(cameraProfile, timeoutSeconds=2):
             type, value)
     return False, failReason
 
-
 class CameraControl(object):
     def __init__(self, camera, onSuccess=None, onFail=None, onComplete=None, timeoutSeconds=2.0):
         self.Camera = camera
@@ -50,61 +49,129 @@ class CameraControl(object):
         self.OnFail = onFail
         self.OnComplete = onComplete
 
+
     def ApplySettings(self):
-        cameraSettingRequests = []
-        cameraSettingRequests.append(
-            {'template': self.Camera.brightness_request_template, 'value': self.Camera.brightness, 'name': 'brightness'})
-        cameraSettingRequests.append(
-            {'template': self.Camera.contrast_request_template, 'value': self.Camera.contrast, 'name': 'contrast'})
-        cameraSettingRequests.append(
-            {'template': self.Camera.saturation_request_template, 'value': self.Camera.saturation, 'name': 'saturation'})
-        cameraSettingRequests.append({'template': self.Camera.white_balance_auto_request_template,
-                                      'value': 1 if self.Camera.white_balance_auto else 0, 'name': 'auto white balance'})
+        cameraSettingRequests = [
+            {
+                'template': self.Camera.brightness_request_template,
+                'value': self.Camera.brightness,
+                'name': 'brightness'
+            },
+            {
+                'template': self.Camera.contrast_request_template,
+                'value': self.Camera.contrast,
+                'name': 'contrast'
+            },
+            {
+                'template': self.Camera.saturation_request_template,
+                'value': self.Camera.saturation,
+                'name': 'saturation'
+            },
+            {
+                'template': self.Camera.white_balance_auto_request_template,
+                'value': 1 if self.Camera.white_balance_auto else 0,
+                'name': 'auto white balance'
+            },
+            {
+                'template': self.Camera.powerline_frequency_request_template,
+                'value': self.Camera.powerline_frequency,
+                'name': 'powerline frequency'
+            },
+            {
+                'template': self.Camera.sharpness_request_template,
+                'value': self.Camera.sharpness,
+                'name': 'sharpness'
+            },
+            {
+                'template': self.Camera.backlight_compensation_enabled_request_template,
+                'value': 1 if self.Camera.backlight_compensation_enabled else 0,
+                'name': 'set backlight compensation enabled'
+            },
+            {
+                'template': self.Camera.exposure_type_request_template,
+                'value': self.Camera.exposure_type,
+                'name': 'exposure type'
+            },
+            {
+                'template': self.Camera.pan_request_template,
+                'value': self.Camera.pan,
+                'name': 'pan'
+            },
+            {
+                'template': self.Camera.tilt_request_template,
+                'value': self.Camera.tilt,
+                'name': 'tilt'
+            },
+            {
+                'template': self.Camera.autofocus_enabled_request_template,
+                'value': 1 if self.Camera.autofocus_enabled else 0,
+                'name': 'set autofocus enabled'
+            },
+            {
+                'template': self.Camera.zoom_request_template,
+                'value': self.Camera.zoom,
+                'name': 'zoom'
+            },
+            {
+                'template': self.Camera.led1_mode_request_template,
+                'value': self.Camera.led1_mode,
+                'name': 'led 1 mode'
+            },
+            {
+                'template': self.Camera.led1_frequency_request_template,
+                'value': self.Camera.led1_frequency,
+                'name': 'led 1 frequency'
+            },
+            {
+                'template': self.Camera.jpeg_quality_request_template,
+                'value': self.Camera.jpeg_quality,
+                'name': 'jpeg quality'
+            }
+        ]
 
-        if(not self.Camera.white_balance_auto):
-            cameraSettingRequests.append({'template': self.Camera.white_balance_temperature_request_template,
-                                          'value': self.Camera.white_balance_temperature, 'name': 'white balance temperature'})
-
-        cameraSettingRequests.append({'template': self.Camera.powerline_frequency_request_template,
-                                      'value': self.Camera.powerline_frequency, 'name': 'powerline frequency'})
-        cameraSettingRequests.append(
-            {'template': self.Camera.sharpness_request_template, 'value': self.Camera.sharpness, 'name': 'sharpness'})
-        cameraSettingRequests.append({'template': self.Camera.backlight_compensation_enabled_request_template,
-                                      'value': 1 if self.Camera.backlight_compensation_enabled else 0, 'name': 'set backlight compensation enabled'})
-        cameraSettingRequests.append({'template': self.Camera.exposure_type_request_template,
-                                      'value': self.Camera.exposure_type, 'name': 'exposure type'})
+        if not self.Camera.white_balance_auto:
+            cameraSettingRequests.append({
+                'template': self.Camera.white_balance_temperature_request_template,
+                'value': self.Camera.white_balance_temperature,
+                'name': 'white balance temperature'
+            })
 
         # These settings only work when the exposure type is set to manual, I think.
         if(self.Camera.exposure_type == 1):
-            cameraSettingRequests.append(
-                {'template': self.Camera.exposure_request_template, 'value': self.Camera.exposure, 'name': 'exposure'})
-            cameraSettingRequests.append({'template': self.Camera.exposure_auto_priority_enabled_request_template,
-                                          'value': 1 if self.Camera.exposure_auto_priority_enabled else 0, 'name': 'set auto priority enabled'})
-            cameraSettingRequests.append(
-                {'template': self.Camera.gain_request_template, 'value': self.Camera.gain, 'name': 'gain'})
+            cameraSettingRequests.extend([
+                {
+                    'template': self.Camera.exposure_request_template,
+                    'value': self.Camera.exposure,
+                    'name': 'exposure'
+                },
+                {
+                    'template': self.Camera.exposure_auto_priority_enabled_request_template,
+                    'value': 1 if self.Camera.exposure_auto_priority_enabled else 0,
+                    'name': 'set auto priority enabled'
+                },
+                {
+                    'template': self.Camera.gain_request_template,
+                    'value': self.Camera.gain,
+                    'name': 'gain'
+                }
+            ])
 
-        cameraSettingRequests.append(
-            {'template': self.Camera.pan_request_template, 'value': self.Camera.pan, 'name': 'pan'})
-        cameraSettingRequests.append(
-            {'template': self.Camera.tilt_request_template, 'value': self.Camera.tilt, 'name': 'tilt'})
-        cameraSettingRequests.append({'template': self.Camera.autofocus_enabled_request_template,
-                                      'value': 1 if self.Camera.autofocus_enabled else 0, 'name': 'set autofocus enabled'})
         if(not self.Camera.autofocus_enabled):
-            cameraSettingRequests.append(
-                {'template': self.Camera.focus_request_template, 'value': self.Camera.focus, 'name': 'focus'})
+            cameraSettingRequests.append({
+                'template': self.Camera.focus_request_template,
+                'value': self.Camera.focus,
+                'name': 'focus'
+            })
 
-        cameraSettingRequests.append(
-            {'template': self.Camera.zoom_request_template, 'value': self.Camera.zoom, 'name': 'zoom'})
-        cameraSettingRequests.append(
-            {'template': self.Camera.led1_mode_request_template, 'value': self.Camera.led1_mode, 'name': 'led 1 mode'})
-        cameraSettingRequests.append({'template': self.Camera.led1_frequency_request_template,
-                                      'value': self.Camera.led1_frequency, 'name': 'led 1 frequency'})
-        cameraSettingRequests.append({'template': self.Camera.jpeg_quality_request_template,
-                                      'value': self.Camera.jpeg_quality, 'name': 'jpeg quality'})
         # TODO:  Move the static timeout value to settings
         for request in cameraSettingRequests:
-            CameraSettingJob(self.Camera, request, self.TimeoutSeconds, onSuccess=self.OnSuccess,
-                             onFail=self.OnFail, onComplete=self.OnComplete).ProcessAsync()
+            CameraSettingJob(
+                self.Camera, request,
+                self.TimeoutSeconds,
+                onSuccess=self.OnSuccess,
+                onFail=self.OnFail,
+                onComplete=self.OnComplete
+            ).ProcessAsync()
 
 
 class CameraSettingJob(object):
