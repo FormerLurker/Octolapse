@@ -51,7 +51,7 @@ class CaptureSnapshot(object):
         newSnapshotJob = SnapshotJob(self.Settings, self.DataDirectory, snapshotNumber, info, url,
                                      snapshotGuid, timeoutSeconds=1, onComplete=onComplete, onSuccess=onSuccess, onFail=onFail)
 
-        if(self.Snapshot.delay == 0):
+        if self.Snapshot.delay == 0:
             self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                 "Starting Snapshot Download Job Immediately.")
             newSnapshotJob.Process()
@@ -70,7 +70,7 @@ class CaptureSnapshot(object):
             "Cleaning snapshots from: {0}".format(snapshotDirectory))
 
         path = os.path.dirname(snapshotDirectory + os.sep)
-        if(os.path.isdir(path)):
+        if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
                 self._debug.LogSnapshotClean("Snapshots cleaned.")
@@ -92,7 +92,7 @@ class CaptureSnapshot(object):
             "Cleaning snapshots from: {0}".format(snapshotDirectory))
 
         path = os.path.dirname(snapshotDirectory + os.sep)
-        if(os.path.isdir(path)):
+        if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
                 self._debug.LogSnapshotClean("Snapshots cleaned.")
@@ -142,7 +142,7 @@ class SnapshotJob(object):
                 self.SnapshotInfo.DirectoryName, os.sep, self.SnapshotInfo.FileName)
             r = None
             try:
-                if(len(self.Username) > 0):
+                if len(self.Username) > 0:
                     self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                         "Snapshot Download - Authenticating and downloading from {0:s} to {1:s}.".format(self.Url, dir))
                     r = requests.get(self.Url, auth=HTTPBasicAuth(
@@ -158,7 +158,7 @@ class SnapshotJob(object):
                 failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
                 error = True
 
-            if(not error):
+            if not error:
                 if r.status_code == requests.codes.ok:
                     try:
                         # make the directory
@@ -176,7 +176,7 @@ class SnapshotJob(object):
                         r.status_code)
                     error = True
 
-            if(not error):
+            if not error:
                 try:
                     with iopen(dir, 'wb') as file:
                         for chunk in r.iter_content(1024):
@@ -189,12 +189,12 @@ class SnapshotJob(object):
                     self.Settings.CurrentDebugProfile().LogException(e)
                     failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
                     error = True
-            if(not error):
+            if not error:
                 # this call renames the snapshot so that it is sequential (prob could just sort by create date instead, todo).
                 # returns true on success.
                 error = not self._moveAndRenameSnapshotSequential()
 
-            if(not error):
+            if not error:
                 self._notify_callback("success", self.SnapshotInfo)
             else:
                 self._notify_callback("fail", failReason)
@@ -203,7 +203,7 @@ class SnapshotJob(object):
             # do this after we notify of success.  It will likely complete before the client
             # is notified of snapshot changes and if it doesn't, no big deal.  It is better
             # if we start the print back up sooner and fail to deliver a new thumbnail than to not.
-            if(not error):
+            if not error:
                 self._saveLatestSnapshotAndThumbnail()
 
     def _moveAndRenameSnapshotSequential(self):
@@ -274,3 +274,4 @@ class SnapshotInfo(object):
 
     def GetFullPath(self, snapshotNumber):
         return "{0}{1}".format(self.DirectoryName, utility.GetSnapshotFilename(self._printerFileName, self._printStartTime, snapshotNumber))
+

@@ -30,10 +30,10 @@ class SnapshotGcode(object):
     def Append(self, command):
         self.__OriginalGcodeCommands.append(command)
 
-        if (self.IsTestMode):
+        if self.IsTestMode:
             command = self.CommandsDictionary.GetTestModeCommandString(command)
         command = command.upper().strip()
-        if(command != ""):
+        if command != "":
             self.GcodeCommands.append(command)
 
     def EndIndex(self):
@@ -43,17 +43,17 @@ class SnapshotGcode(object):
         self.SnapshotIndex = self.EndIndex()
 
     def GetOriginalReturnCommands(self):
-        if(len(self.__OriginalGcodeCommands) > self.SnapshotIndex+1):
+        if len(self.__OriginalGcodeCommands) > self.SnapshotIndex+1:
             return self.__OriginalGcodeCommands[self.SnapshotIndex+1:]
         return []
 
     def SnapshotCommands(self):
-        if(len(self.GcodeCommands) > 0):
+        if len(self.GcodeCommands) > 0:
             return self.GcodeCommands[0:self.SnapshotIndex+1]
         return []
 
     def ReturnCommands(self):
-        if(len(self.GcodeCommands) > self.SnapshotIndex+1):
+        if len(self.GcodeCommands) > self.SnapshotIndex+1:
             return self.GcodeCommands[self.SnapshotIndex+1:]
         return []
 
@@ -95,14 +95,14 @@ class SnapshotGcodeGenerator(object):
         coords = dict(X=self.GetSnapshotCoordinate(xPath),
                       Y=self.GetSnapshotCoordinate(yPath))
 
-        if(not utility.IsInBounds(self.BoundingBox, x=coords["X"])):
+        if not utility.IsInBounds(self.BoundingBox, x=coords["X"]:
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coords["X"])
             self.HasSnapshotPositionErrors = True
             self.Settings.CurrentDebugProfile().LogError(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
-            if(self.Printer.abort_out_of_bounds):
+            if self.Printer.abort_out_of_bounds:
                 coords["X"] = None
             else:
                 coords["X"] = utility.GetClosestInBoundsPosition(
@@ -110,26 +110,26 @@ class SnapshotGcodeGenerator(object):
                 message += "  Using nearest in-bound position ({0}).".format(
                     coords["X"])
             self.SnapshotPositionErrors += message
-        if(not utility.IsInBounds(self.BoundingBox, y=coords["Y"])):
+        if not utility.IsInBounds(self.BoundingBox, y=coords["Y"]:
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coords["Y"])
             self.HasSnapshotPositionErrors = True
             self.Settings.CurrentDebugProfile().LogError(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
-            if(self.Printer.abort_out_of_bounds):
+            if self.Printer.abort_out_of_bounds:
                 coords["Y"] = None
             else:
                 coords["Y"] = utility.GetClosestInBoundsPosition(
                     self.BoundingBox, y=coords["Y"])["Y"]
                 message += "  Using nearest in-bound position ({0}).".format(
                     coords["Y"])
-            if(len(self.SnapshotPositionErrors) > 0):
+            if len(self.SnapshotPositionErrors) > 0:
                 self.SnapshotPositionErrors += "  "
             self.SnapshotPositionErrors += message
         return coords
 
     def GetSnapshotCoordinate(self, path):
-        if(path.Type == 'disabled'):
+        if path.Type == 'disabled':
             return path.CurrentPosition
 
         # Get the current coordinate from the path
@@ -137,10 +137,10 @@ class SnapshotGcodeGenerator(object):
         # move our index forward or backward
         path.Index += path.Increment
 
-        if(path.Index >= len(path.Path)):
-            if(path.Loop):
-                if(path.InvertLoop):
-                    if(len(path.Path) > 1):
+        if path.Index >= len(path.Path:
+            if path.Loop:
+                if path.InvertLoop:
+                    if len(path.Path) > 1:
                         path.Index = len(path.Path)-2
                     else:
                         path.Index = 0
@@ -149,10 +149,10 @@ class SnapshotGcodeGenerator(object):
                     path.Index = 0
             else:
                 path.Index = len(path.Path)-1
-        elif(path.Index < 0):
-            if(path.Loop):
-                if(path.InvertLoop):
-                    if(len(path.Path) > 1):
+        elif path.Index < 0:
+            if path.Loop:
+                if path.InvertLoop:
+                    if len(path.Path) > 1:
                         path.Index = 1
                     else:
                         path.Index = 0
@@ -162,21 +162,21 @@ class SnapshotGcodeGenerator(object):
             else:
                 path.Index = 0
 
-        if(path.CoordinateSystem == "absolute"):
+        if path.CoordinateSystem == "absolute":
             return coord
-        elif(path.CoordinateSystem == "bed_relative"):
-            if(self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle"):
+        elif path.CoordinateSystem == "bed_relative":
+            ifself.OctoprintPrinterProfile["volume"]["formFactor"] == "circle":
                 raise ValueError(
                     'Cannot calculate relative coordinates within a circular bed (yet...), sorry')
             return self.GetBedRelativeCoordinate(path.Axis, coord)
 
     def GetBedRelativeCoordinate(self, axis, coord):
         relCoord = None
-        if(axis == "X"):
+        if axis == "X":
             relCoord = self.GetBedRelativeX(coord)
-        elif(axis == "Y"):
+        elif axis == "Y":
             relCoord = self.GetBedRelativeY(coord)
-        elif(axis == "Z"):
+        elif axis == "Z":
             relCoord = self.GetBedRelativeZ(coord)
 
         return relCoord
@@ -194,13 +194,13 @@ class SnapshotGcodeGenerator(object):
         return ((float(max)-float(min))*(percent/100.0))+float(min)
 
     def AppendFeedrateGcode(self, snapshotGcode, desiredSpeed):
-        if(desiredSpeed > 0):
+        if desiredSpeed > 0:
             snapshotGcode.Append(self.GetFeedrateSetGcode(desiredSpeed))
             self.FCurrent = desiredSpeed
 
     def CreateSnapshotGcode(self, x, y, z, f, isRelative, isExtruderRelative, extruder, zLift, savedCommand=None):
         self.Reset()
-        if(x is None or y is None or z is None):
+        if x is None or y is None or z is None:
 
             self.HasSnapshotPositionErrors = True
             message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(
@@ -224,15 +224,15 @@ class SnapshotGcodeGenerator(object):
         newSnapshotGcode = SnapshotGcode(self.IsTestMode)
         # retract if necessary
         # Note that if IsRetractedStart is true, that means the printer is now retracted.  IsRetracted will be false because we've undone the previous position update.
-        if(self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart())):
-            if(not self.IsExtruderRelativeCurrent):
+        if self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart()):
+            if not self.IsExtruderRelativeCurrent:
                 newSnapshotGcode.Append(
                     self.GetSetExtruderRelativePositionGcode())
                 self.IsExtruderRelativeCurrent = True
             self.AppendFeedrateGcode(
                 newSnapshotGcode, self.Printer.retract_speed)
             retractedLength = extruder.LengthToRetract()
-            if(retractedLength > 0):
+            if retractedLength > 0:
                 newSnapshotGcode.Append(self.GetRetractGcode(retractedLength))
                 self.RetractedLength = retractedLength
                 self.RetractedBySnapshotStartGcode = True
@@ -242,8 +242,8 @@ class SnapshotGcodeGenerator(object):
         canZHop = self.Printer.z_hop > 0 and utility.IsInBounds(
             self.BoundingBox, z=z + self.Printer.z_hop)
         # if we can ZHop, do
-        if(canZHop and self.ZLift > 0):
-            if(not self.IsRelativeCurrent):  # must be in relative mode
+        if canZHop and self.ZLift > 0:
+            if not self.IsRelativeCurrent:  # must be in relative mode
                 newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
                 self.IsRelativeCurrent = True
             self.AppendFeedrateGcode(
@@ -268,12 +268,12 @@ class SnapshotGcodeGenerator(object):
         newSnapshotGcode.X = snapshotPosition["X"]
         newSnapshotGcode.Y = snapshotPosition["Y"]
 
-        if (newSnapshotGcode.X is None or newSnapshotGcode.Y is None):
+        if newSnapshotGcode.X is None or newSnapshotGcode.Y is None:
             # either x or y is out of bounds.
             return None
 
         # Move back to the snapshot position - make sure we're in absolute mode for this
-        if(self.IsRelativeCurrent):  # must be in absolute mode
+        if self.IsRelativeCurrent:  # must be in absolute mode
             newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
             self.IsRelativeCurrent = False
 
@@ -300,16 +300,16 @@ class SnapshotGcodeGenerator(object):
         newSnapshotGcode.ReturnZ = z
 
         # Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-        # if(self.IsRelativeCurrent):
+        # if self.IsRelativeCurrent:
         #	newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
         #	self.IsRelativeCurrent = False
 
-        if(x is not None and y is not None):
+        if x is not None and y is not None:
             newSnapshotGcode.Append(self.GetMoveGcode(x, y))
 
         # If we zhopped in the beginning, lower z
-        if(self.ZhopBySnapshotStartGcode):
-            if(not self.IsRelativeCurrent):
+        if self.ZhopBySnapshotStartGcode:
+            if not self.IsRelativeCurrent:
                 newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
                 self.IsRelativeCurrent = True
             self.AppendFeedrateGcode(
@@ -317,26 +317,26 @@ class SnapshotGcodeGenerator(object):
             newSnapshotGcode.Append(self.GetRelativeZLowerGcode(self.ZLift))
 
         # detract
-        if(self.RetractedBySnapshotStartGcode):
-            if(not self.IsExtruderRelativeCurrent):
+        if self.RetractedBySnapshotStartGcode:
+            if not self.IsExtruderRelativeCurrent:
                 newSnapshotGcode.Append.GetSetExtruderRelativePositionGcode()
                 self.IsExtruderRelativeCurrent = True
             self.AppendFeedrateGcode(
                 newSnapshotGcode, self.Printer.detract_speed)
-            if(self.RetractedLength > 0):
+            if self.RetractedLength > 0:
                 newSnapshotGcode.Append(
                     self.GetDetractGcode(self.RetractedLength))
 
         # reset the coordinate systems for the extruder and axis
-        if(self.IsRelativeOriginal != self.IsRelativeCurrent):
-            if(self.IsRelativeCurrent):
+        if self.IsRelativeOriginal != self.IsRelativeCurrent:
+            if self.IsRelativeCurrent:
                 newSnapshotGcode.Append(self.GetSetAbsolutePositionGcode())
             else:
                 newSnapshotGcode.Append(self.GetSetRelativePositionGcode())
             self.IsRelativeCurrent = self.IsRelativeOriginal
 
-        if(self.IsExtruderRelativeOriginal != self.IsExtruderRelativeCurrent):
-            if(self.IsExtruderRelativeOriginal):
+        if self.IsExtruderRelativeOriginal != self.IsExtruderRelativeCurrent:
+            if self.IsExtruderRelativeOriginal:
                 newSnapshotGcode.Append(
                     self.GetSetExtruderRelativePositionGcode())
             else:
@@ -348,7 +348,7 @@ class SnapshotGcodeGenerator(object):
         # What the hell was this for?!
         #newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
         # add the saved command, if there is one
-        if(savedCommand is not None):
+        if savedCommand is not None:
             newSnapshotGcode.Append(savedCommand)
 
         # Wait for current moves to finish before requesting the save command position
@@ -411,3 +411,4 @@ class SnapshotGcodeGenerator(object):
 
     def GetFeedrateSetGcode(self, f):
         return "G1 F{0}".format(int(f))
+

@@ -18,16 +18,16 @@ def TestCamera(cameraProfile, timeoutSeconds=2):
     url = FormatRequestTemplate(
         cameraProfile.address, cameraProfile.snapshot_request_template, "")
     try:
-        if(len(cameraProfile.username) > 0):
+        if len(cameraProfile.username) > 0:
             r = requests.get(url, auth=HTTPBasicAuth(cameraProfile.username, cameraProfile.password),
                              verify=not cameraProfile.ignore_ssl_error, timeout=float(timeoutSeconds))
         else:
             r = requests.get(
                 url, verify=not cameraProfile.ignore_ssl_error, timeout=float(timeoutSeconds))
-        if (r.status_code == requests.codes.ok):
-            if('content-length' in r.headers and r.headers["content-length"] == 0):
+        if r.status_code == requests.codes.ok:
+            if 'content-length' in r.headers and r.headers["content-length"] == 0:
                 failReason = "Camera Test failed - The request contained no data"
-            elif("image/jpeg" not in r.headers["content-type"].lower()):
+            elif "image/jpeg" not in r.headers["content-type"].lower():
                 failReason = "Camera test failed - The returned data was not an image"
             else:
                 return True, ""
@@ -137,7 +137,7 @@ class CameraControl(object):
             })
 
         # These settings only work when the exposure type is set to manual, I think.
-        if(self.Camera.exposure_type == 1):
+        if self.Camera.exposure_type == 1:
             cameraSettingRequests.extend([
                 {
                     'template': self.Camera.exposure_request_template,
@@ -156,7 +156,7 @@ class CameraControl(object):
                 }
             ])
 
-        if(not self.Camera.autofocus_enabled):
+        if not self.Camera.autofocus_enabled:
             cameraSettingRequests.append({
                 'template': self.Camera.focus_request_template,
                 'value': self.Camera.focus,
@@ -206,7 +206,7 @@ class CameraSettingJob(object):
         settingName = self.Request['name']
         url = FormatRequestTemplate(self.Address, template, value)
         try:
-            if(len(self.Username) > 0):
+            if len(self.Username) > 0:
                 r = requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),
                                  verify=not self.IgnoreSslError, timeout=float(self.TimeoutSeconds))
             else:
@@ -224,10 +224,10 @@ class CameraSettingJob(object):
             errorMessages.append(
                 "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
 
-        if(success != False):
+        if success != False:
             success = True
 
-        if(success):
+        if success:
             self._notify_callback("success", value, settingName, template)
         else:
             self._notify_callback(
@@ -241,3 +241,4 @@ class CameraSettingJob(object):
         method = getattr(self, name, None)
         if method is not None and callable(method):
             method(*args, **kwargs)
+

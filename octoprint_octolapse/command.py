@@ -23,7 +23,7 @@ class GcodeParts(object):
         self.Comment = None  # Any text after the first semicolon, untrimmed and unaltered
 
         # if there is no gcode there is nothing to do.
-        if(gcode is None):
+        if gcode is None:
             return
 
         # create a temp variable to hold the command without the comment or semicolon
@@ -33,11 +33,11 @@ class GcodeParts(object):
         commentIndex = gcode.find(";")
 
         # handle splitting comment from command and parameters
-        if(commentIndex > -1):
+        if commentIndex > -1:
             # if we've found a semicolon
-            if(commentIndex > 0):
+            if commentIndex > 0:
                 commandAndParameters = gcode[0:commentIndex].strip()
-            if(len(gcode) >= commentIndex+1):
+            if len(gcode) >= commentIndex+1:
                 # If there is anything after the semicolon
                 self.Comment = gcode[commentIndex+1:]
             else:
@@ -48,7 +48,7 @@ class GcodeParts(object):
         # now we should have a stripped commandAndParameters string and either a stripped comment, or no comment
 
         # If there are no commands or parameters, there is nothing more to do.  We have extracted any comment that might exist on the line
-        if(commandAndParameters is None or len(commandAndParameters) == 0):
+        if commandAndParameters is None or len(commandAndParameters) == 0:
             return
 
         # split the commandAndParameters array, stripping any redundant whitespace
@@ -57,14 +57,14 @@ class GcodeParts(object):
         # We will need to know how many elements are in this array later
         numParts = len(commandArray)
 
-        if(numParts == 0):
+        if numParts == 0:
             return  # Our string contained only whitespace, time to go, leaving the Command = None and Parameters = []
 
         # we for sure have a command at this point, so set it now!
         self.Command = commandArray[0]
 
         # If we have anything extra in our commandArray, it must contain parameters.
-        if(numParts > 1):
+        if numParts > 1:
             # everything but the first element
             self.Parameters = commandArray[1:]
 
@@ -72,7 +72,7 @@ class GcodeParts(object):
 def GetGcodeFromString(commandString):
     command = commandString.strip().split(' ', 1)[0].upper()
     ix = command.find(";")
-    if(ix > -1):
+    if ix > -1:
         command = command[0:ix]
     return command
 
@@ -80,7 +80,7 @@ def GetGcodeFromString(commandString):
 class CommandParameter(object):
     def __init__(self, name, regex=None, value=None, order=None):
         self.Name = name
-        if(regex is not None):
+        if regex is not None:
             self.__compiled = re.compile(regex, re.IGNORECASE)
         else:
             self.__complied = None
@@ -93,20 +93,20 @@ class CommandParameter(object):
         self.Value = None  # We haven't found a value yet.
 
         # if we have no compiled regex, we can't parse anything.
-        if(self.__compiled is None):
+        if self.__compiled is None:
             return False
 
         # get any matches
         matches = self.__compiled.match(paramText)
-        if(matches is None):
+        if matches is None:
             # No matches, time to go
             return False
 
         # How many capture groups did we find?
         numGroups = len(matches.groups())
-        if(numGroups > 0):
+        if numGroups > 0:
             self.Value = matches.group(1)
-            if(numGroups > 1):
+            if numGroups > 1:
                 # if there were any extra matches, return false
                 return False
 
@@ -120,13 +120,13 @@ class CommandParameters(collections.MutableMapping):
         self.update(dict(*args, **kwargs))  # use the free update to set keys
 
     def __getitem__(self, key):
-        if(self.__keytransform__(key) in self.store.keys()):
+        if self.__keytransform__(key) in self.store.keys():
             return self.store[self.__keytransform__(key)]
         return None
 
     def __setitem__(self, key, value):
         order = len(self.store) + 1
-        if(value.Order is None):
+        if value.Order is None:
             value.Order = order
         self.store[self.__keytransform__(key)] = value
 
@@ -153,7 +153,7 @@ class Command(object):
     CommentSeparator = ";"
 
     def __init__(self, name=None, command=None, regex=None, displayTemplate=None,  parameters=None, gcode=None):
-        if(type(command) is Command):
+        if type(command) is Command:
             self.Name = command.Name
             self.Command = command.Command
             self.DisplayTemplate = command.DisplayTemplate
@@ -165,13 +165,13 @@ class Command(object):
             self.DisplayTemplate = displayTemplate
             self.Parameters = CommandParameters()
             self.CommandParts = GcodeParts(gcode)
-            if(parameters is not None):
-                if(type(parameters) is CommandParameter):
+            if parameters is not None:
+                if type(parameters) is CommandParameter:
                     self.Parameters[parameters.Name] = parameters
-                elif(isinstance(parameters, list)):
+                elif isinstance(parameters, list):
                     order = 1
                     for parameter in parameters:
-                        if(parameter.Order is None):
+                        if parameter.Order is None:
                             parameter.Order = order
                             order += 1
                         self.Parameters[parameter.Name] = parameter
@@ -179,20 +179,20 @@ class Command(object):
                     self.Parameters = parameters
 
     def DisplayString(self):
-        if(self.DisplayTemplate is None):
+        if self.DisplayTemplate is None:
             return self.Gcode()
         output = self.DisplayTemplate
         safeDict = utility.SafeDict()
         for key in self.Parameters:
             value = self.Parameters[key].Value
             safeDict.clear()
-            if(value is None):
+            if value is None:
                 value = "None"
 
             safeDict[key] = value
             output = string.Formatter().vformat(output, (), safeDict)
 
-        if(self.CommandParts.Comment is not None):
+        if self.CommandParts.Comment is not None:
             safeDict.clear()
             safeDict["Comment"] = self.CommentSeparator + \
                 self.CommandParts.Comment
@@ -207,7 +207,7 @@ class Command(object):
 
     def ToString(self, reform=False):
         # if we have gcode, just return it (duh...)
-        if(not reform and self.CommandParts.Gcode is not None):
+        if not reform and self.CommandParts.Gcode is not None:
             return self.CommandParts.Gcode
 
         # if we do not have gcode, construct from the command and parameters
@@ -215,7 +215,7 @@ class Command(object):
 
         # loop through each parameter and add the parameter name and value to the command string
         for parameter in (sorted(self.Parameters.values(), key=operator.attrgetter('Order'))):
-            if(parameter.Value is not None):
+            if parameter.Value is not None:
                 commandString += " " + parameter.Name + str(parameter.Value)
         # since there is no gcode, we can't have a comment.  Time to return the command string
         return commandString
@@ -226,7 +226,7 @@ class Command(object):
         self.Parameters.ClearValues()
 
         # Validate the gcode command
-        if(self.CommandParts.Command.upper() != self.Command.upper()):
+        if self.CommandParts.Command.upper() != self.Command.upper():
             return False  # we're parsing the wrong command, fail
 
         # create a flag to hold any match errors
@@ -237,14 +237,14 @@ class Command(object):
             # Loop through the parameters
             for key, parameter in self.Parameters.items():
                 # if this parameter already has a value, skip it
-                if(parameter.Value is not None):
+                if parameter.Value is not None:
                     continue
                 # test for regex match
-                if(parameter.Parse(paramText)):
+                if parameter.Parse(paramText):
                     # it worked, break to the next parameter
                     matched = True
                     break
-            if(not matched):
+            if not matched:
                 errors = True
         # if there were no errors, there was success!
         return not errors
@@ -358,34 +358,34 @@ class Commands(object):
     }
 
     def AlterCommandForTestMode(self, cmd):
-        if(cmd is None):
+        if cmd is None:
             return None
         gcodeCommand = self.GetCommand(cmd)
-        if(gcodeCommand is None):
+        if gcodeCommand is None:
             return None
-        elif(gcodeCommand.Command in [self.G0.Command, self.G1.Command]):
+        elif gcodeCommand.Command in [self.G0.Command, self.G1.Command]:
             gcodeCommand.Parameters["E"].Value = None
             return gcodeCommand.ToString(reform=True),
-        elif(gcodeCommand.Command in [self.M104.Command, self.M140.Command, self.M141.Command, self.M109.Command, self.M190.Command, self.M191.Command, self.M116.Command, self.M106.Command]):
+        elif gcodeCommand.Command in [self.M104.Command, self.M140.Command, self.M141.Command, self.M109.Command, self.M190.Command, self.M191.Command, self.M116.Command, self.M106.Command]:
             return (None,)
         else:
             return None
 
     def GetTestModeCommandString(self, cmd):
         gcodeCommand = self.GetCommand(cmd)
-        if(gcodeCommand is None):
+        if gcodeCommand is None:
             return cmd
-        elif(gcodeCommand.Command in [self.G0.Command, self.G1.Command]):
+        elif gcodeCommand.Command in [self.G0.Command, self.G1.Command]:
             gcodeCommand.Parameters["E"].Value = None
             return gcodeCommand.ToString(reform=True)
-        elif(gcodeCommand.Command in [self.M104.Command, self.M140.Command, self.M141.Command, self.M109.Command, self.M190.Command, self.M191.Command, self.M116.Command, self.M106.Command]):
+        elif gcodeCommand.Command in [self.M104.Command, self.M140.Command, self.M141.Command, self.M109.Command, self.M190.Command, self.M191.Command, self.M116.Command, self.M106.Command]:
             return ""
         else:
             return cmd
 
     def GetCommand(self, code):
         gcodeCommand = GetGcodeFromString(code)
-        if (gcodeCommand in self.CommandsDictionary.keys()):
+        if gcodeCommand in self.CommandsDictionary.keys():
             # get the gcodeCommand from our dictionary
             cmd = self.CommandsDictionary[gcodeCommand]
             # set the gcode parts
@@ -405,3 +405,4 @@ class Responses(object):
                                                                                                   CommandParameter(
                                                                                                       "Z", "(?i)^z:(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
                                                                                                   CommandParameter("E", "(?i)^e:(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4)])
+

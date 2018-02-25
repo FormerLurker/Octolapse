@@ -13,7 +13,7 @@ FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 
 def getfloat(value, default):
-    if (value is None):
+    if value is None:
         return default
     try:
         return float(value)
@@ -22,18 +22,18 @@ def getfloat(value, default):
 
 
 def getnullablefloat(value, default):
-    if (value is None):
+    if value is None:
         return None
     try:
         return float(value)
     except ValueError:
-        if (default is None):
+        if default is None:
             return None
         return float(default)
 
 
 def getint(value, default):
-    if (value is None):
+    if value is None:
         return default
     try:
         return int(value)
@@ -42,18 +42,18 @@ def getint(value, default):
 
 
 def getnullablebool(value, default):
-    if (value is None):
+    if value is None:
         return None
     try:
         return bool(value)
     except ValueError:
-        if (default is None):
+        if default is None:
             return None
         return default
 
 
 def getbool(value, default):
-    if (value is None):
+    if value is None:
         return default
     try:
         return bool(value)
@@ -68,15 +68,15 @@ def getstring(value, default):
 
 
 def getbitrate(value, default):
-    if (value is None):
+    if value is None:
         return default
     # add a global for the regex so we can use a pre-complied version
-    if ('octoprint_ffmpeg_bitrate_regex' not in globals() or octoprint_ffmpeg_bitrate_regex is None):
+    if 'octoprint_ffmpeg_bitrate_regex' not in globals() or octoprint_ffmpeg_bitrate_regex is None:
         octoprint_ffmpeg_bitrate_regex = re.compile(
             "^\d+[KkMm]$", re.IGNORECASE)
     # get any matches
     matches = octoprint_ffmpeg_bitrate_regex.match(value)
-    if (matches is None):
+    if matches is None:
         return default
     return value
 
@@ -174,7 +174,7 @@ def GetRenderingBaseFilename(printName, printStartTime, printEndTime=None):
         "{DATETIMESTAMP}", "{0:d}".format(math.trunc(round(time.time(), 2) * 100)))
     fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}", "{0:d}".format(
         math.trunc(round(printStartTime, 2) * 100)))
-    if (printEndTime is not None):
+    if printEndTime is not None:
         fileTemplate = fileTemplate.replace(
             "{PRINTENDTIME}", "{0:d}".format(math.trunc(round(printEndTime, 2) * 100)))
     return fileTemplate
@@ -196,7 +196,7 @@ SnapshotNumberFormat = "%06d"
 
 def FormatSnapshotNumber(number):
     # we may get a templated field here for the snapshot number, so check to make sure it is an int first
-    if (isinstance(number, int)):
+    if isinstance(number, int):
         return SnapshotNumberFormat % number
     # not an int, return the original field
     return number
@@ -218,7 +218,7 @@ def GetRenderingDirectory(dataDirectory, printName, printStartTime, outputExtens
         "{OUTPUTFILEEXTENSION}", getstring(outputExtension, ""))
     directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}",
                                                   "{0:d}".format(math.trunc(round(printStartTime, 2) * 100)))
-    if (printEndTime is not None):
+    if printEndTime is not None:
         directoryTemplate = directoryTemplate.replace("{PRINTENDTIME}",
                                                       "{0:d}".format(math.trunc(round(printEndTime, 2) * 100)))
     directoryTemplate = directoryTemplate.replace(
@@ -249,7 +249,7 @@ class SafeDict(dict):
 
 
 def CurrentlyPrintingFileName(octoprintPrinter):
-    if (octoprintPrinter is not None):
+    if octoprintPrinter is not None:
         current_job = octoprintPrinter.get_current_job()
         if current_job is not None and "file" in current_job:
             current_job_file = current_job["file"]
@@ -299,7 +299,7 @@ def GetClosestInBoundsPosition(bounding_box, x=None, y=None, z=None):
 
 def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
     # get octolapse min and max
-    if (octolapsePrinterProfile.override_octoprint_print_volume):
+    if octolapsePrinterProfile.override_octoprint_print_volume:
         minX = octolapsePrinterProfile.min_x
         maxX = octolapsePrinterProfile.max_x
         minY = octolapsePrinterProfile.min_y
@@ -310,7 +310,7 @@ def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
         volume = octoprintPrinterProfile["volume"]
         customBox = volume["custom_box"]
         # see if we have a custom bounding box
-        if (customBox != False):
+        if customBox != False:
             minX = customBox["x_min"]
             maxX = customBox["x_max"]
             minY = customBox["y_min"]
@@ -333,3 +333,4 @@ def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
         "min_z": minZ,
         "max_z": maxZ
     }
+

@@ -126,17 +126,17 @@ class TimelapseRenderJob(object):
 
         try:
             self._countImages()
-            if(self._imageCount == 0):
+            if self._imageCount == 0:
                 self._debug.LogRenderFail(
                     "No images were captured, or they have been removed.")
                 return False
-            if(self._imageCount == 1):
+            if self._imageCount == 1:
                 self._debug.LogRenderFail(
                     "Only 1 frame was captured, cannot make a timelapse with a single frame.")
                 return False
             # calculate the FPS
             self._calculateFps()
-            if(self._fps < 1):
+            if self._fps < 1:
                 self._debug.LogError(
                     "The calculated FPS is below 1, which is not allowed.  Please check the rendering settings for Min and Max FPS as well as the number of snapshots captured.")
                 return False
@@ -151,13 +151,13 @@ class TimelapseRenderJob(object):
     def _calculateFps(self):
         self._fps = self._rendering.fps
 
-        if(self._rendering.fps_calculation_type == 'duration'):
+        if self._rendering.fps_calculation_type == 'duration':
 
             self._fps = utility.round_to(
                 float(self._imageCount)/float(self._rendering.run_length_seconds), 1)
-            if(self._fps > self._rendering.max_fps):
+            if self._fps > self._rendering.max_fps:
                 self._fps = self._rendering.max_fps
-            elif(self._fps < self._rendering.min_fps):
+            elif self._fps < self._rendering.min_fps:
                 self._fps = self._rendering.min_fps
             self._debug.LogRenderStart("FPS Calculation Type:{0}, Fps:{1}, NumFrames:{2}, DurationSeconds:{3}, Max FPS:{4}, Min FPS:{5}".format(
                 self._rendering.fps_calculation_type, self._fps, self._imageCount, self._rendering.run_length_seconds, self._rendering.max_fps, self._rendering.min_fps))
@@ -175,7 +175,7 @@ class TimelapseRenderJob(object):
             imagePath = "{0}{1}".format(
                 self._capture_dir, self._capture_file_template) % imageIndex
 
-            if(os.path.isfile(imagePath)):
+            if os.path.isfile(imagePath):
                 imageIndex += 1
             else:
                 break
@@ -187,7 +187,7 @@ class TimelapseRenderJob(object):
         try:
             # start with pre-roll, since it will require a bunch of renaming
             preRollFrames = int(self._rendering.pre_roll_seconds * fps)
-            if(preRollFrames > 0):
+            if preRollFrames > 0:
 
                 # create a variable to hold the new path of the first image
                 firstImagePath = ""
@@ -198,7 +198,7 @@ class TimelapseRenderJob(object):
                         snapshotDirectory, snapshotFileNameTemplate) % imageNumber
                     newImagePath = "{0}{1}".format(
                         snapshotDirectory, snapshotFileNameTemplate) % (imageNumber+preRollFrames)
-                    if(imageNumber == 0):
+                    if imageNumber == 0:
                         firstImagePath = newImagePath
                     shutil.move(currentImagePath, newImagePath)
                 # get the path of the first image
@@ -210,7 +210,7 @@ class TimelapseRenderJob(object):
                     shutil.copy(firstImagePath, newImagePath)
             # finish with post roll since it's pretty easy
             postRollFrames = int(self._rendering.post_roll_seconds * fps)
-            if(postRollFrames > 0):
+            if postRollFrames > 0:
                 lastFrameIndex = imageCount + preRollFrames - 1
                 lastImagePath = "{0}{1}".format(
                     snapshotDirectory, snapshotFileNameTemplate) % (lastFrameIndex)
@@ -270,10 +270,10 @@ class TimelapseRenderJob(object):
 
         try:
             # I've had bad luck doing this inside of the thread
-            if(not self._pre_render()):
-                if(self._imageCount == 0):
+            if not self._pre_render():
+                if self._imageCount == 0:
                     self._on_render_fail(0, "No frames were captured.")
-                elif(self._imageCount == 1):
+                elif self._imageCount == 1:
                     self._on_render_fail(
                         0, "Only 1 frame was captured.  Cannot render a timelapse from a single image.")
                 else:
@@ -300,7 +300,7 @@ class TimelapseRenderJob(object):
             try:
                 self._debug.LogRenderStart(
                     "Creating the directory at {0}".format(self._output_dir))
-                if not os.path.exists(self._output_dir):
+                if not os.path.exists(self._output_dir:
                     os.makedirs(self._output_dir)
             except Exception as e:
                 self._debug.LogException(e)
@@ -308,7 +308,7 @@ class TimelapseRenderJob(object):
                     -1, "Render - An exception was thrown when trying to create the rendering path at: {0}.  Please check the logs (plugin_octolapse.log) for details.".format(self._output_dir))
                 return
 
-            if not os.path.exists(self._input % 0):
+            if not os.path.exists(self._input % 0:
                 message = 'Cannot create a movie, no frames captured.'
                 self._debug.LogRenderFail(message)
                 self._on_render_fail(0, message)
@@ -355,11 +355,11 @@ class TimelapseRenderJob(object):
                 self._on_render_complete()
                 cleanSnapshots = (
                     success and self.cleanAfterSuccess) or self.cleanAfterFail
-                if(cleanSnapshots):
+                if cleanSnapshots:
                     self._CleanSnapshots()
 
                 finalFileName = self._baseOutputFileName
-                if(self._synchronize):
+                if self._synchronize:
                     finalFileName = "{0}{1}{2}".format(
                         self._octoprintTimelapseFolder,  os.sep, self._baseOutputFileName + "." + self._rendering.output_format)
                     # Move the timelapse to the Octoprint timelapse folder.
@@ -390,7 +390,7 @@ class TimelapseRenderJob(object):
             "Cleaning snapshots from: {0}".format(self._capture_dir))
 
         path = os.path.dirname(self._capture_dir + os.sep)
-        if(os.path.isdir(path)):
+        if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
                 self._debug.LogSnapshotClean("Snapshots cleaned.")
@@ -426,7 +426,7 @@ class TimelapseRenderJob(object):
         logger = logging.getLogger(__name__)
         ffmpeg = ffmpeg.strip()
 
-        if (sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"'))):
+        if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"'):
             ffmpeg = "\"{0}\"".format(ffmpeg)
         command = [
             ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(
@@ -497,7 +497,7 @@ class TimelapseRenderJob(object):
 
     def _notify_callback(self, callback, *args, **kwargs):
         """Notifies registered callbacks of type `callback`."""
-        if callback is not None and callable(callback):
+        if callback is not None and callable(callback:
             callback(*args, **kwargs)
 
 
@@ -511,3 +511,4 @@ class RenderingCallbackArgs(object):
         self.Synchronize = synchronize
         self.SnapshotCount = snapshotCount
         self.SecondsAddedToPrint = secondsAddedToPrint
+
