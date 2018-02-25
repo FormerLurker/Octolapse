@@ -148,7 +148,7 @@ class Extruder(object):
 	def UndoUpdate(self):
 		state = self.GetState(0)
 		if (state is not None):
-			del self.StateHistory[0]
+			self.StateHistory.popleft()
 
 	# Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
 	def Update(self, eRelative):
