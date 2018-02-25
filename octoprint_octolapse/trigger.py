@@ -269,7 +269,7 @@ class GcodeTrigger(Trigger):
 
         # Logging
         message = "Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}"
-		message = message.format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop)
+        message = message.format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop)
         self.Settings.CurrentDebugProfile().LogTriggerCreate(message)
 
         message = (
