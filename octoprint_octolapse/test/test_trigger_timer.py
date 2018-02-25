@@ -11,6 +11,10 @@ from octoprint_octolapse.trigger import TimerTrigger
 class Test_TimerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.Settings.CurrentPrinter().auto_detect_position = False
+        self.Settings.CurrentPrinter().origin_x = 0
+        self.Settings.CurrentPrinter().origin_y = 0
+        self.Settings.CurrentPrinter().origin_z = 0
         self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
 
     def tearDown(self):
