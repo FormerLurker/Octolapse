@@ -592,7 +592,10 @@ class Position(object):
 						yHomed = True
 					if (z is not None):
 						zHomed = True
-					if (x is None and y is None and z is None and w is None):
+					# removing the test for the W param.  I think it can be safely ignored here.
+					# Todo:  Create issue to monitor and get feedback regarding the W param
+					#if (x is None and y is None and z is None and w is None):
+					if (x is None and y is None and z is None):
 						xHomed = True
 						yHomed = True
 						zHomed = True

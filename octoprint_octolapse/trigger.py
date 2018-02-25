@@ -269,7 +269,7 @@ class GcodeTrigger(Trigger):
 
         # Logging
         message = "Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}"
-        message.format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop))
+		message = message.format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop)
         self.Settings.CurrentDebugProfile().LogTriggerCreate(message)
 
         message = (
@@ -479,7 +479,7 @@ class LayerTrigger(Trigger):
 
                     message = (
                         "Layer Trigger - Height Increment:{0}, Current Increment"
-                    ).format(self.HeightIncrement, state.CurrentIncrement))
+                    ).format(self.HeightIncrement, state.CurrentIncrement)
                     self.Settings.CurrentDebugProfile().LogTriggerHeightChange(message)
 
                 # see if we've encountered a layer or height change

@@ -367,7 +367,7 @@ class TimelapseRenderJob(object):
             try:
                 self._debug.LogRenderStart(
                     "Creating the directory at {0}".format(self._output_dir))
-                if not os.path.exists(self._output_dir:
+                if not os.path.exists(self._output_dir):
                     os.makedirs(self._output_dir)
             except Exception as e:
                 self._debug.LogException(e)
@@ -379,7 +379,7 @@ class TimelapseRenderJob(object):
                 self._on_render_fail(-1, message)
                 return
 
-            if not os.path.exists(self._input % 0:
+            if not os.path.exists(self._input % 0):
                 message = 'Cannot create a movie, no frames captured.'
                 self._debug.LogRenderFail(message)
                 self._on_render_fail(0, message)
@@ -456,7 +456,7 @@ class TimelapseRenderJob(object):
                             "Syncronizing timelapse with the built in "
                             "timelapse plugin, copying {0} to {1}"
                         ).format(self._output, finalFileName)
-                        self._debug.LogRenderSync()
+                        self._debug.LogRenderSync(message)
                         shutil.move(self._output, finalFileName)
                         # we've renamed the output due to a sync, update the member
                         self._output = finalFileName
@@ -523,7 +523,7 @@ class TimelapseRenderJob(object):
         logger = logging.getLogger(__name__)
         ffmpeg = ffmpeg.strip()
 
-        if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"'):
+        if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
             ffmpeg = "\"{0}\"".format(ffmpeg)
         command = [
             ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(
@@ -595,7 +595,7 @@ class TimelapseRenderJob(object):
 
     def _notify_callback(self, callback, *args, **kwargs):
         """Notifies registered callbacks of type `callback`."""
-        if callback is not None and callable(callback:
+        if callback is not None and callable(callback) :
             callback(*args, **kwargs)
 
 
