@@ -1745,4 +1745,4 @@ class Test_Extruder(unittest.TestCase):
 
 if __name__ == '__main__':
 	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Extruder)
-	unittest.TextTestRunner(verbosity=3).run(suite)
+  unittest.TextTestRunner(verbosity=3).run(suite)
