@@ -11,22 +11,24 @@ from octoprint_octolapse.test.test_timelapse import Test_Timelapse
 from octoprint_octolapse.test.test_octolapseplugin import Test_OctolapsePlugin
 import unittest
 
+
 def TestAll():
-	# removed Test_Timelapse from the list for the time being.  This test class is very messed up.
-	testClasses= [Test_Command, Test_Extruder, Test_GcodeParts, Test_Position, Test_SnapshotGcode, Test_GcodeTrigger, Test_LayerTrigger, Test_TimerTrigger, Test_Utility, Test_OctolapsePlugin]
-	
+    # removed Test_Timelapse from the list for the time being.  This test class is very messed up.
+    testClasses = [Test_Command, Test_Extruder, Test_GcodeParts, Test_Position, Test_SnapshotGcode,
+                   Test_GcodeTrigger, Test_LayerTrigger, Test_TimerTrigger, Test_Utility, Test_OctolapsePlugin]
 
-	loader = unittest.TestLoader()
+    loader = unittest.TestLoader()
 
-	suites_list = []
-	for test_class in testClasses:
-		suite = loader.loadTestsFromTestCase(test_class)
-		suites_list.append(suite)
+    suites_list = []
+    for test_class in testClasses:
+        suite = loader.loadTestsFromTestCase(test_class)
+        suites_list.append(suite)
 
-	big_suite = unittest.TestSuite(suites_list)
+    big_suite = unittest.TestSuite(suites_list)
 
-	runner = unittest.TextTestRunner()
-	results = runner.run(big_suite)
+    runner = unittest.TextTestRunner()
+    results = runner.run(big_suite)
+
 
 if __name__ == '__main__':
-	TestAll()
+    TestAll()
