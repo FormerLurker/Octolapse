@@ -19,7 +19,11 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 class Printer(object):
 
-    def __init__(self, printer=None, name="New Printer", guid=None, retract_length=2.0, retract_speed=4000, detract_speed=3000, movement_speed=6000, z_hop=0.5, z_hop_speed=6000, snapshot_command="snap"):
+    def __init__(
+            self, printer=None, name="New Printer",
+            guid=None, retract_length=2.0, retract_speed=4000,
+            detract_speed=3000, movement_speed=6000, z_hop=0.5,
+            z_hop_speed=6000, snapshot_command="snap"):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
@@ -420,7 +424,10 @@ class Snapshot(object):
     ExtruderTriggerRequiredValue = "trigger_on"
     ExtruderTriggerForbiddenValue = "forbidden"
     ExtruderTriggerOptions = [
-        dict(value=ExtruderTriggerIgnoreValue, name='Ignore', visible=True), dict(value=ExtruderTriggerRequiredValue, name='Trigger', visible=True), dict(value=ExtruderTriggerForbiddenValue, name='Forbidden', visible=True)]
+        dict(value=ExtruderTriggerIgnoreValue, name='Ignore', visible=True),
+        dict(value=ExtruderTriggerRequiredValue, name='Trigger', visible=True),
+        dict(value=ExtruderTriggerForbiddenValue, name='Forbidden', visible=True)
+    ]
 
     def __init__(self, snapshot=None, guid=None, name="Default Snapshot"):
         self.guid = guid if guid else str(uuid.uuid4())
@@ -693,8 +700,13 @@ class Snapshot(object):
     def GetLayerTriggerPositionRestrictions(self, value):
         restrictions = []
         for restriction in value:
-            restrictions.append(SnapshotPositionRestrictions(
-                restriction["Type"], restriction["X"], restriction["Y"], restriction["X2"], restriction["Y2"], restriction["R"]))
+            restrictions.append(
+                SnapshotPositionRestrictions(
+                    restriction["Type"], restriction["X"],
+                    restriction["Y"], restriction["X2"],
+                    restriction["Y2"], restriction["R"]
+                )
+            )
         return restrictions
 
     def GetLayerTriggerPositionRestrictionsValueString(self, values):
@@ -704,58 +716,60 @@ class Snapshot(object):
         return restrictions
 
     def ToDict(self):
+        GETVR = self.GetExtruderTriggerValueString
         return {
-            'guid'									: self.guid,
-            'name'									: self.name,
-            'description'							: self.description,
+            'guid'				    : self.guid,
+            'name'				    : self.name,
+            'description'			    : self.description,
             # Gcode Trigger
-            'gcode_trigger_enabled'					: self.gcode_trigger_enabled,
-            'gcode_trigger_require_zhop'			: self.gcode_trigger_require_zhop,
-            'gcode_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_extruding_start),
-            'gcode_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_extruding),
-            'gcode_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.gcode_trigger_on_primed),
-            'gcode_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracting_start),
-            'gcode_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracting),
-            'gcode_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.gcode_trigger_on_partially_retracted),
-            'gcode_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_retracted),
-            'gcode_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting_start),
-            'gcode_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting),
-            'gcode_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracted),
+            'gcode_trigger_enabled'		    : self.gcode_trigger_enabled,
+            'gcode_trigger_require_zhop'	    : self.gcode_trigger_require_zhop,
+            'gcode_trigger_on_extruding_start'	    : GETVR(self.gcode_trigger_on_extruding_start),
+            'gcode_trigger_on_extruding'	    : GETVR(self.gcode_trigger_on_extruding),
+            'gcode_trigger_on_primed'		    : GETVR(self.gcode_trigger_on_primed),
+            'gcode_trigger_on_retracting_start'	    : GETVR(self.gcode_trigger_on_retracting_start),
+            'gcode_trigger_on_retracting'	    : GETVR(self.gcode_trigger_on_retracting),
+            'gcode_trigger_on_partially_retracted'  : GETVR(self.gcode_trigger_on_partially_retracted),
+            'gcode_trigger_on_retracted'	    : GETVR(self.gcode_trigger_on_retracted),
+            'gcode_trigger_on_detracting_start'	    : GETVR(self.gcode_trigger_on_detracting_start),
+            'gcode_trigger_on_detracting'	    : GETVR(self.gcode_trigger_on_detracting),
+            'gcode_trigger_on_detracted'	    : GETVR(self.gcode_trigger_on_detracted),
             # Timer Trigger
-            'timer_trigger_enabled'					: self.timer_trigger_enabled,
-            'timer_trigger_require_zhop'			: self.timer_trigger_require_zhop,
-            'timer_trigger_seconds'					: self.timer_trigger_seconds,
-            'timer_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_extruding_start),
-            'timer_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_extruding),
-            'timer_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.timer_trigger_on_primed),
-            'timer_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracting_start),
-            'timer_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracting),
-            'timer_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.timer_trigger_on_partially_retracted),
-            'timer_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_retracted),
-            'timer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting_start),
-            'timer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting),
-            'timer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracted),
+            'timer_trigger_enabled'		    : self.timer_trigger_enabled,
+            'timer_trigger_require_zhop'	    : self.timer_trigger_require_zhop,
+            'timer_trigger_seconds'		    : self.timer_trigger_seconds,
+            'timer_trigger_on_extruding_start'	    : GETVR(self.timer_trigger_on_extruding_start),
+            'timer_trigger_on_extruding'	    : GETVR(self.timer_trigger_on_extruding),
+            'timer_trigger_on_primed'		    : GETVR(self.timer_trigger_on_primed),
+            'timer_trigger_on_retracting_start'	    : GETVR(self.timer_trigger_on_retracting_start),
+            'timer_trigger_on_retracting'	    : GETVR(self.timer_trigger_on_retracting),
+            'timer_trigger_on_partially_retracted'  : GETVR(self.timer_trigger_on_partially_retracted),
+            'timer_trigger_on_retracted'	    : GETVR(self.timer_trigger_on_retracted),
+            'timer_trigger_on_detracting_start'	    : GETVR(self.timer_trigger_on_detracting_start),
+            'timer_trigger_on_detracting'	    : GETVR(self.timer_trigger_on_detracting),
+            'timer_trigger_on_detracted'	    : GETVR(self.timer_trigger_on_detracted),
             # Layer Trigger
-            'layer_trigger_enabled'					: self.layer_trigger_enabled,
-            'layer_trigger_height'					: self.layer_trigger_height,
-            'layer_trigger_require_zhop'			: self.layer_trigger_require_zhop,
-            'layer_trigger_on_extruding_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_extruding_start),
-            'layer_trigger_on_extruding'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_extruding),
-            'layer_trigger_on_primed'				: self.GetExtruderTriggerValueString(self.layer_trigger_on_primed),
-            'layer_trigger_on_retracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracting_start),
-            'layer_trigger_on_retracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracting),
-            'layer_trigger_on_partially_retracted'	: self.GetExtruderTriggerValueString(self.layer_trigger_on_partially_retracted),
-            'layer_trigger_on_retracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_retracted),
-            'layer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting_start),
-            'layer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting),
-            'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions'	: self.GetLayerTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
+            'layer_trigger_enabled'		    : self.layer_trigger_enabled,
+            'layer_trigger_height'		    : self.layer_trigger_height,
+            'layer_trigger_require_zhop'    	    : self.layer_trigger_require_zhop,
+            'layer_trigger_on_extruding_start'	    : GETVR(self.layer_trigger_on_extruding_start),
+            'layer_trigger_on_extruding'	    : GETVR(self.layer_trigger_on_extruding),
+            'layer_trigger_on_primed'		    : GETVR(self.layer_trigger_on_primed),
+            'layer_trigger_on_retracting_start'	    : GETVR(self.layer_trigger_on_retracting_start),
+            'layer_trigger_on_retracting'	    : GETVR(self.layer_trigger_on_retracting),
+            'layer_trigger_on_partially_retracted'  : GETVR(self.layer_trigger_on_partially_retracted),
+            'layer_trigger_on_retracted'	    : GETVR(self.layer_trigger_on_retracted),
+            'layer_trigger_on_detracting_start'	    : GETVR(self.layer_trigger_on_detracting_start),
+            'layer_trigger_on_detracting'	    : GETVR(self.layer_trigger_on_detracting),
+            'layer_trigger_on_detracted'	    : GETVR(self.layer_trigger_on_detracted),
+            'layer_trigger_position_restrictions'   :
+            self.GetLayerTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
 
             # Other Settings
-            'delay'									: self.delay,
-            'retract_before_move'					: self.retract_before_move,
-            'cleanup_after_render_complete'			: self.cleanup_after_render_complete,
-            'cleanup_after_render_fail'				: self.cleanup_after_render_fail,
+            'delay'				    : self.delay,
+            'retract_before_move'		    : self.retract_before_move,
+            'cleanup_after_render_complete'	    : self.cleanup_after_render_complete,
+            'cleanup_after_render_fail'		    : self.cleanup_after_render_fail,
         }
 
 
@@ -886,48 +900,58 @@ class Camera(object):
         self.username = ""
         self.password = ""
         self.brightness = 128
-        self.brightness_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963776&group=1&value={value}"
+        self.brightness_request_template = self.TemplateToString(0, 0, 9963776, 1)
         self.contrast = 128
-        self.contrast_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963777&group=1&value={value}"
+        self.contrast_request_template = self.TemplateToString(0, 0, 9963777, 1)
         self.saturation = 128
-        self.saturation_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963778&group=1&value={value}"
+        self.saturation_request_template = self.TemplateToString(0, 0, 9963778, 1)
         self.white_balance_auto = True
-        self.white_balance_auto_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963788&group=1&value={value}"
+        self.white_balance_auto_request_template = self.TemplateToString(0, 0, 9963788, 1)
         self.gain = 100
-        self.gain_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963795&group=1&value={value}"
+        self.gain_request_template = self.TemplateToString(0, 0, 9963795, 1)
         self.powerline_frequency = 60
-        self.powerline_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963800&group=1&value={value}"
+        self.powerline_frequency_request_template = self.TemplateToString(0, 0, 9963800, 1)
         self.white_balance_temperature = 4000
-        self.white_balance_temperature_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963802&group=1&value={value}"
+        self.white_balance_temperature_request_template = self.TemplateToString(0, 0, 9963802, 1)
         self.sharpness = 128
-        self.sharpness_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963803&group=1&value={value}"
+        self.sharpness_request_template = self.TemplateToString(0, 0, 9963803, 1)
         self.backlight_compensation_enabled = False
-        self.backlight_compensation_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=9963804&group=1&value={value}"
+        self.backlight_compensation_enabled_request_template = self.TemplateToString(0, 0, 9963804, 1)
         self.exposure_type = 1
-        self.exposure_type_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094849&group=1&value={value}"
+        self.exposure_type_request_template = self.TemplateToString(0, 0, 10094849, 1)
         self.exposure = 250
-        self.exposure_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094850&group=1&value={value}"
+        self.exposure_request_template = self.TemplateToString(0, 0, 10094850, 1)
         self.exposure_auto_priority_enabled = True
-        self.exposure_auto_priority_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094851&group=1&value={value}"
+        self.exposure_auto_priority_enabled_request_template = self.TemplateToString(0, 0, 10094851, 1)
         self.pan = 0
-        self.pan_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094856&group=1&value={value}"
+        self.pan_request_template = self.TemplateToString(0, 0, 10094856, 1)
         self.tilt = 0
-        self.tilt_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094857&group=1&value={value}"
+        self.tilt_request_template = self.TemplateToString(0, 0, 10094857, 1)
         self.autofocus_enabled = True
-        self.autofocus_enabled_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094860&group=1&value={value}"
+        self.autofocus_enabled_request_template = self.TemplateToString(0, 0, 10094860, 1)
         self.focus = 28
-        self.focus_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094858&group=1&value={value}"
+        self.focus_request_template = self.TemplateToString(0, 0, 10094858, 1)
         self.zoom = 100
-        self.zoom_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=10094861&group=1&value={value}"
+        self.zoom_request_template = self.TemplateToString(0, 0, 10094861, 1)
         self.led1_mode = 'auto'
-        self.led1_mode_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062213&group=1&value={value}"
+        self.led1_mode_request_template = self.TemplateToString(0, 0, 168062213, 1)
         self.led1_frequency = 0
-        self.led1_frequency_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=168062214&group=1&value={value}"
+        self.led1_frequency_request_template = self.TemplateToString(0, 0, 168062214, 1)
         self.jpeg_quality = 90
-        self.jpeg_quality_request_template = "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}"
+        self.jpeg_quality_request_template = self.TemplateToString(0, 0, 1, 3)
 
         if not camera is None:
             self.Update(camera)
+
+    def TemplateToString(self, dest, plugin, id, group):
+        return (
+            "{camera_address}?action=command&"
+            + "dest=" + str(dest)
+            + "&plugin=" + str(plugin)
+            + "&id=" + str(id)
+            + "&group=" + str(group)
+            + "&value={value}"
+        )
 
     def Update(self, changes):
         if "guid" in changes.keys():
@@ -1034,7 +1058,9 @@ class Camera(object):
                 changes["sharpness_request_template"], self.sharpness_request_template)
         if "backlight_compensation_enabled_request_template" in changes.keys():
             self.backlight_compensation_enabled_request_template = utility.getstring(
-                changes["backlight_compensation_enabled_request_template"], self.backlight_compensation_enabled_request_template)
+                changes["backlight_compensation_enabled_request_template"],
+                self.backlight_compensation_enabled_request_template
+            )
         if "exposure_type_request_template" in changes.keys():
             self.exposure_type_request_template = utility.getstring(
                 changes["exposure_type_request_template"], self.exposure_type_request_template)
@@ -1043,7 +1069,9 @@ class Camera(object):
                 changes["exposure_request_template"], self.exposure_request_template)
         if "exposure_auto_priority_enabled_request_template" in changes.keys():
             self.exposure_auto_priority_enabled_request_template = utility.getstring(
-                changes["exposure_auto_priority_enabled_request_template"], self.exposure_auto_priority_enabled_request_template)
+                changes["exposure_auto_priority_enabled_request_template"],
+                self.exposure_auto_priority_enabled_request_template
+            )
         if "pan_request_template" in changes.keys():
             self.pan_request_template = utility.getstring(
                 changes["pan_request_template"], self.pan_request_template)
@@ -1737,60 +1765,97 @@ class OctolapseSettings(object):
         defaults = OctolapseSettings(self.LogFilePath)
 
         settingsDict = {
-            'version':  utility.getstring(self.version, defaults.version),
-            "is_octolapse_enabled": utility.getbool(self.is_octolapse_enabled, defaults.is_octolapse_enabled),
-            "auto_reload_latest_snapshot": utility.getbool(self.auto_reload_latest_snapshot, defaults.auto_reload_latest_snapshot),
-            "auto_reload_frames": utility.getint(self.auto_reload_frames, defaults.auto_reload_frames),
-            "show_navbar_icon": utility.getbool(self.show_navbar_icon, defaults.show_navbar_icon),
-            "show_navbar_when_not_printing": utility.getbool(self.show_navbar_when_not_printing, defaults.show_navbar_when_not_printing),
-            "show_position_changes": utility.getbool(self.show_position_changes, defaults.show_position_changes),
-            "show_position_state_changes": utility.getbool(self.show_position_state_changes, defaults.show_position_state_changes),
-            "show_extruder_state_changes": utility.getbool(self.show_extruder_state_changes, defaults.show_extruder_state_changes),
-            "show_trigger_state_changes": utility.getbool(self.show_trigger_state_changes, defaults.show_trigger_state_changes),
+            'version':  utility.getstring(
+                self.version, defaults.version
+            ),
+            "is_octolapse_enabled": utility.getbool(
+                self.is_octolapse_enabled, defaults.is_octolapse_enabled
+            ),
+            "auto_reload_latest_snapshot": utility.getbool(
+                self.auto_reload_latest_snapshot, defaults.auto_reload_latest_snapshot
+            ),
+            "auto_reload_frames": utility.getint(
+                self.auto_reload_frames, defaults.auto_reload_frames
+            ),
+            "show_navbar_icon": utility.getbool(
+                self.show_navbar_icon, defaults.show_navbar_icon
+            ),
+            "show_navbar_when_not_printing": utility.getbool(
+                self.show_navbar_when_not_printing, defaults.show_navbar_when_not_printing
+            ),
+            "show_position_changes": utility.getbool(
+                self.show_position_changes, defaults.show_position_changes
+            ),
+            "show_position_state_changes": utility.getbool(
+                self.show_position_state_changes, defaults.show_position_state_changes
+            ),
+            "show_extruder_state_changes": utility.getbool(
+                self.show_extruder_state_changes, defaults.show_extruder_state_changes
+            ),
+            "show_trigger_state_changes": utility.getbool(
+                self.show_trigger_state_changes, defaults.show_trigger_state_changes
+            ),
             "platform": sys.platform,
-            'stabilization_type_options':
-                [
-                    dict(value='disabled', name='Disabled'), dict(value='fixed_coordinate', name='Fixed Coordinate'), dict(value='fixed_path', name='List of Fixed Coordinates'), dict(
-                        value='relative', name='Relative Coordinates (0-100)'), dict(value='relative_path', name='List of Relative Coordinates')
-
+            'stabilization_type_options': [
+                dict(value='disabled', name='Disabled'),
+                dict(value='fixed_coordinate', name='Fixed Coordinate'),
+                dict(value='fixed_path', name='List of Fixed Coordinates'),
+                dict(value='relative', name='Relative Coordinates (0-100)'),
+                dict(value='relative_path', name='List of Relative Coordinates')
             ],
             'position_restriction_types': [
-                    dict(value="rect", name="Rectangle"), dict(
-                        value="circle", name="Circle")
+                dict(value="rect", name="Rectangle"),
+                dict(value="circle", name="Circle")
             ],
             'snapshot_extruder_trigger_options': Snapshot.ExtruderTriggerOptions,
             'rendering_fps_calculation_options': [
-                    dict(value='static', name='Static FPS'), dict(
-                        value='duration', name='Fixed Run Length')
+                dict(value='static', name='Static FPS'),
+                dict(value='duration', name='Fixed Run Length')
             ],
             'rendering_output_format_options': [
-                    dict(value='vob', name='VOB'), dict(value='mp4',
-                                                        name='MP4'), dict(value='mpeg', name='MPEG')
+                    dict(value='vob', name='VOB'),
+                    dict(value='mp4', name='MP4'),
+                    dict(value='mpeg', name='MPEG')
             ],
             'camera_powerline_frequency_options': [
-                    dict(value='50', name='50 HZ (Europe, China, India, etc)'), dict(
-                        value='60', name='60 HZ (North/South America, Japan, etc')
+                    dict(value='50', name='50 HZ (Europe, China, India, etc)'),
+                    dict(value='60', name='60 HZ (North/South America, Japan, etc')
             ],
             'camera_exposure_type_options': [
-                    dict(value='0', name='Unknown - Let me know if you know what this option does.'), dict(value='1', name='Manual'), dict(
-                        value='2', name='Unknown - Let me know if you know what this option does.'), dict(value='3', name='Auto - Aperture Priority Mode')
-
+                dict(value='0', name='Unknown - Let me know if you know what this option does.'),
+                dict(value='1', name='Manual'),
+                dict(value='2', name='Unknown - Let me know if you know what this option does.'),
+                dict(value='3', name='Auto - Aperture Priority Mode')
             ],
             'camera_led_1_mode_options': [
-                    dict(value='on', name='On'), dict(value='off', name='Off'), dict(
-                        value='blink', name='Blink'), dict(value='auto', name='Auto')
+                dict(value='on', name='On'),
+                dict(value='off', name='Off'),
+                dict(value='blink', name='Blink'),
+                dict(value='auto', name='Auto')
             ],
-            'current_printer_profile_guid': utility.getstring(self.current_printer_profile_guid, defaults.current_printer_profile_guid),
+            'current_printer_profile_guid': utility.getstring(
+                self.current_printer_profile_guid, defaults.current_printer_profile_guid
+            ),
             'printers': [],
-            'current_stabilization_profile_guid': utility.getstring(self.current_stabilization_profile_guid, defaults.current_stabilization_profile_guid),
+            'current_stabilization_profile_guid': utility.getstring(
+                self.current_stabilization_profile_guid, defaults.current_stabilization_profile_guid
+            ),
             'stabilizations': [],
-            'current_snapshot_profile_guid': utility.getstring(self.current_snapshot_profile_guid, defaults.current_snapshot_profile_guid),
+            'current_snapshot_profile_guid': utility.getstring(
+                self.current_snapshot_profile_guid, defaults.current_snapshot_profile_guid
+            ),
             'snapshots': [],
-            'current_rendering_profile_guid': utility.getstring(self.current_rendering_profile_guid, defaults.current_rendering_profile_guid),
+            'current_rendering_profile_guid': utility.getstring(
+                self.current_rendering_profile_guid, defaults.current_rendering_profile_guid
+            ),
             'renderings': [],
-            'current_camera_profile_guid': utility.getstring(self.current_camera_profile_guid, defaults.current_camera_profile_guid),
+            'current_camera_profile_guid': utility.getstring(
+                self.current_camera_profile_guid, defaults.current_camera_profile_guid
+            ),
             'cameras'	: [],
-            'current_debug_profile_guid': utility.getstring(self.current_debug_profile_guid, defaults.current_debug_profile_guid),
+            'current_debug_profile_guid': utility.getstring(
+                self.current_debug_profile_guid, defaults.current_debug_profile_guid
+            ),
             'debug_profiles'	: []
         }
 
@@ -1822,7 +1887,15 @@ class OctolapseSettings(object):
 
     def GetMainSettingsDict(self):
         return {
-            'is_octolapse_enabled': self.is_octolapse_enabled, 'auto_reload_latest_snapshot': self.auto_reload_latest_snapshot, 'auto_reload_frames': int(self.auto_reload_frames), 'show_navbar_icon': self.show_navbar_icon, 'show_navbar_when_not_printing': self.show_navbar_when_not_printing, 'show_position_state_changes': self.show_position_state_changes, 'show_position_changes': self.show_position_changes, 'show_extruder_state_changes': self.show_extruder_state_changes, 'show_trigger_state_changes': self.show_trigger_state_changes
+            'is_octolapse_enabled': self.is_octolapse_enabled,
+            'auto_reload_latest_snapshot': self.auto_reload_latest_snapshot,
+            'auto_reload_frames': int(self.auto_reload_frames),
+            'show_navbar_icon': self.show_navbar_icon,
+            'show_navbar_when_not_printing': self.show_navbar_when_not_printing,
+            'show_position_state_changes': self.show_position_state_changes,
+            'show_position_changes': self.show_position_changes,
+            'show_extruder_state_changes': self.show_extruder_state_changes,
+            'show_trigger_state_changes': self.show_trigger_state_changes
         }
     # Add/Update/Remove/set current profile
 
