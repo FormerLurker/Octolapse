@@ -260,7 +260,10 @@ def CurrentlyPrintingFileName(octoprintPrinter):
 
 
 def IsInBounds(boundingBox, x=None, y=None, z=None):
-    """Determines if the given X,Y,Z coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
+    # Determines if the given X,Y,Z coordinate is within
+    # the bounding box of the printer, as determined by
+    # the octoprint configuration
+
     # if x is None or y is None or z is None:
     #	return False
 
