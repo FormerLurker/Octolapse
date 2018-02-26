@@ -26,16 +26,15 @@ class ExtruderState(object):
         self.HasChanged = False if state is None else state.HasChanged
 
     def IsStateEqual(self, extruder):
-        if (
-                self.IsExtrudingStart != extruder.IsExtrudingStart
-                or self.IsExtruding != extruder.IsExtruding
-                or self.IsPrimed != extruder.IsPrimed
-                or self.IsRetractingStart != extruder.IsRetractingStart
-                or self.IsRetracting != extruder.IsRetracting
-                or self.IsRetracted != extruder.IsRetracted
-                or self.IsPartiallyRetracted != extruder.IsPartiallyRetracted
-                or self.IsDetractingStart != extruder.IsDetractingStart
-                or self.IsDetracting != extruder.IsDetracting
+        if (self.IsExtrudingStart != extruder.IsExtrudingStart
+            or self.IsExtruding != extruder.IsExtruding
+            or self.IsPrimed != extruder.IsPrimed
+            or self.IsRetractingStart != extruder.IsRetractingStart
+            or self.IsRetracting != extruder.IsRetracting
+            or self.IsRetracted != extruder.IsRetracted
+            or self.IsPartiallyRetracted != extruder.IsPartiallyRetracted
+            or self.IsDetractingStart != extruder.IsDetractingStart
+            or self.IsDetracting != extruder.IsDetracting
                 or self.IsDetracted != extruder.IsDetracted):
             return False
         return True
@@ -86,7 +85,7 @@ class Extruder(object):
 
     def ToDict(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.ToDict()
         return None
 
@@ -96,51 +95,88 @@ class Extruder(object):
     #######################################
     def HasChanged(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.HasChanged
+        return False
+
+    def IsPrimed(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsPrimed
         return False
 
     def IsExtruding(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.IsExtruding
         return False
 
     def IsExtrudingStart(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.IsExtrudingStart
         return False
 
     def IsRetractingStart(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.IsRetractingStart
+        return False
+
+    def IsRetracting(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsRetracting
+        return False
+
+    def IsPartiallyRetracted(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsPartiallyRetracted
         return False
 
     def IsRetracted(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.IsRetracted
         return False
 
+    def IsDetractingStart(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsDetractingStart
+        return False
+
+    def IsDetracting(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsDetracting
+        return False
+
+    def IsDetracted(self, index=0):
+        state = self.GetState(index)
+        if state is not None:
+            return state.IsDetracted
+        return False
     def ExtrusionLengthTotal(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.ExtrusionLengthTotal
         return False
 
     def ExtrusionLengthTotal(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
+        if state is not None:
             return state.ExtrusionLengthTotal
         return False
 
     def LengthToRetract(self, index=0):
         state = self.GetState(index)
-        if (state is not None):
-            retractLength = utility.round_to(self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
-                                             self.PrinterTolerance)
+        if state is not None:
+            retractLength = utility.round_to(
+                self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
+                self.PrinterTolerance
+            )
             if (retractLength <= 0):
                 retractLength = 0
             return retractLength
@@ -148,7 +184,7 @@ class Extruder(object):
 
     def UndoUpdate(self):
         state = self.GetState(0)
-        if (state is not None):
+        if state is not None:
             self.StateHistory.popleft()
 
     # Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
@@ -172,7 +208,8 @@ class Extruder(object):
         # Update RetractionLength and ExtrusionLength
         state.RetractionLength -= e
         state.RetractionLength = utility.round_to(
-            state.RetractionLength, self.PrinterTolerance)
+            state.RetractionLength, self.PrinterTolerance
+        )
         if (state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE):
             # we can use the negative retraction length to calculate our extrusion length!
             state.ExtrusionLength = abs(state.RetractionLength)
@@ -185,8 +222,10 @@ class Extruder(object):
 
         # calculate detraction length
         if (previousState.RetractionLength > state.RetractionLength):
-            state.DetractionLength = utility.round_to(previousState.RetractionLength - state.RetractionLength,
-                                                      self.PrinterTolerance)
+            state.DetractionLength = utility.round_to(
+                previousState.RetractionLength - state.RetractionLength,
+                self.PrinterTolerance
+            )
         else:
             state.DetractionLength = 0
         # round our lengths to the nearest .05mm to avoid some floating point math errors
@@ -202,8 +241,7 @@ class Extruder(object):
         state.IsPrimed = True if state.ExtrusionLength == 0 and state.RetractionLength == 0 else False
         state.IsRetractingStart = True if statePrevious.RetractionLength == 0 and state.RetractionLength > 0 else False
         state.IsRetracting = True if state.RetractionLength > statePrevious.RetractionLength else False
-        state.IsPartiallyRetracted = True if (
-            0 < state.RetractionLength < self.PrinterRetractionLength) else False
+        state.IsPartiallyRetracted = True if (0 < state.RetractionLength < self.PrinterRetractionLength) else False
         state.IsRetracted = True if state.RetractionLength >= self.PrinterRetractionLength else False
         state.IsDetractingStart = True if state.DetractionLength > 0 and statePrevious.DetractionLength == 0 else False
         state.IsDetracting = True if state.DetractionLength > statePrevious.DetractionLength else False
