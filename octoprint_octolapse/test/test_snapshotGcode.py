@@ -241,48 +241,30 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
-        # this line should switch from absolute to relative for the ZHop
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "G91")
-        # this line should zhop by 0.500 mm
-        self.assertTrue(snapshotGcode.GcodeCommands[1] == "G1 Z0.500 F7200")
-        # this line should switch to absolute coordinates in prep for move
-        self.assertTrue(snapshotGcode.GcodeCommands[2] == "G90")
-        # this line should switch back to absolute coordinates
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[3] == "G1 X10.000 Y20.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[4] == "G1 X0.000 Y0.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[5] == "G91")
-        # this line should zhop by -0.500 mm
-        self.assertTrue(snapshotGcode.GcodeCommands[6] == "G1 Z-0.500 F7200")
-        # change back to the original coordinate system (absolute)
-        self.assertTrue(snapshotGcode.GcodeCommands[7] == "G90")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[8] == "SavedCommand")
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X0.000 Y0.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()
-                        [2] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[3] == "G90")
-        self.assertTrue(snapshotGcode.ReturnCommands()[4] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()[0] == "G91")
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [1] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[2] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        3] == "G1 X10.000 Y20.000 F7200")
+        self.assertEqual(snapshotGcode.GcodeCommands[0], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[1], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[2], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[3], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[4], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[5], "G1 X10.000 Y20.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[6], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[7], "M114")
+        self.assertEqual(snapshotGcode.GcodeCommands[8], "G1 X0.000 Y0.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[9], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[10], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[11], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[12], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[13], "G1 F3600")
+        self.assertEqual(snapshotGcode.GcodeCommands[14], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.GcodeCommands[15], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[16], "M114")
         # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 3)
-        self.assertTrue(snapshotGcode.EndIndex() == 8)
+        self.assertEqual(snapshotGcode.SnapshotIndex, 7)
+        self.assertEqual(snapshotGcode.EndIndex(), 16)
         # verify the return coordinates
-        self.assertTrue(snapshotGcode.ReturnX == 0)
-        self.assertTrue(snapshotGcode.ReturnY == 0)
-        self.assertTrue(snapshotGcode.ReturnZ == 0)
+        self.assertEqual(snapshotGcode.ReturnX, 0)
+        self.assertEqual(snapshotGcode.ReturnY, 0)
+        self.assertEqual(snapshotGcode.ReturnZ, 0)
 
     def test_GetSnapshotGcode_RelativePath_RelativeCoordinates_ExtruderAbsolute_ZHop_Retraction(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
@@ -302,95 +284,31 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             10, 10, 10, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
-        # this line should switch to absolute coordinates in prep for move
+        self.assertEqual(snapshotGcode.GcodeCommands[0], "M83")
+        self.assertEqual(snapshotGcode.GcodeCommands[1], "G1 F4000")
+        self.assertEqual(snapshotGcode.GcodeCommands[2], "G1 E-2.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[3], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[4], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[5], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[6], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[7], "G1 X125.000 Y100.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[8], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[9], "M114")
+        self.assertEqual(snapshotGcode.GcodeCommands[10], "G1 X10.000 Y10.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[11], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[12], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[13], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[14], "G1 F3000")
+        self.assertEqual(snapshotGcode.GcodeCommands[15], "G1 E2.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[16], "M82")
+        self.assertEqual(snapshotGcode.GcodeCommands[17], "G1 F3600")
+        self.assertEqual(snapshotGcode.GcodeCommands[18], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.GcodeCommands[19], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[20], "M114")
 
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "M83")
-        self.assertTrue(snapshotGcode.GcodeCommands[1] == "G1 E-4.000 F4800")
-        self.assertTrue(snapshotGcode.GcodeCommands[2] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[3] == "G90")
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[4] == "G1 X125.000 Y100.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[5] == "G1 X10.000 Y10.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[6] == "G91")
-        self.assertTrue(snapshotGcode.GcodeCommands[7] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[8] == "G1 E4.000 F4800")
-        self.assertTrue(snapshotGcode.GcodeCommands[9] == "M82")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[10] == "SavedCommand")
-
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X10.000 Y10.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()
-                        [2] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[3] == "G1 E4.000 F4800")
-        self.assertTrue(snapshotGcode.ReturnCommands()[4] == "M82")
-        self.assertTrue(snapshotGcode.ReturnCommands()[5] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()[0] == "M83")
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [1] == "G1 E-4.000 F4800")
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [2] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[3] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        4] == "G1 X125.000 Y100.000 F7200")
         # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 4)
-        self.assertTrue(snapshotGcode.EndIndex() == 10)
-        # verify the return coordinates
-        self.assertTrue(snapshotGcode.ReturnX == 10)
-        self.assertTrue(snapshotGcode.ReturnY == 10)
-        self.assertTrue(snapshotGcode.ReturnZ == 10)
-
-        # test the second coordinate in the path
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
-            10, 10, 10, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
-        # verify the created gcode
-        # this line should switch to absolute coordinates in prep for move
-
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "M83")
-        self.assertTrue(snapshotGcode.GcodeCommands[1] == "G1 E-4.000 F4800")
-        self.assertTrue(snapshotGcode.GcodeCommands[2] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[3] == "G90")
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[4] == "G1 X250.000 Y200.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[5] == "G1 X10.000 Y10.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[6] == "G91")
-        self.assertTrue(snapshotGcode.GcodeCommands[7] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[8] == "G1 E4.000 F4800")
-        self.assertTrue(snapshotGcode.GcodeCommands[9] == "M82")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[10] == "SavedCommand")
-
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X10.000 Y10.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()
-                        [2] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[3] == "G1 E4.000 F4800")
-        self.assertTrue(snapshotGcode.ReturnCommands()[4] == "M82")
-        self.assertTrue(snapshotGcode.ReturnCommands()[5] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()[0] == "M83")
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [1] == "G1 E-4.000 F4800")
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [2] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[3] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        4] == "G1 X250.000 Y200.000 F7200")
-        # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 4)
-        self.assertTrue(snapshotGcode.EndIndex() == 10)
+        self.assertTrue(snapshotGcode.SnapshotIndex == 9)
+        self.assertTrue(snapshotGcode.EndIndex() == 20)
         # verify the return coordinates
         self.assertTrue(snapshotGcode.ReturnX == 10)
         self.assertTrue(snapshotGcode.ReturnY == 10)
@@ -414,81 +332,57 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
-        # this line should switch to absolute coordinates in prep for move
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[1] == "G90")
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[2] == "G1 X50.000 Y50.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[3] == "G1 X100.000 Y50.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[4] == "G91")
-        self.assertTrue(snapshotGcode.GcodeCommands[5] == "G1 Z-0.500 F7200")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[6] == "SavedCommand")
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X100.000 Y50.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()
-                        [2] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[3] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [0] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[1] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        2] == "G1 X50.000 Y50.000 F7200")
+        self.assertEqual(snapshotGcode.GcodeCommands[0], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[1], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[2], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[3], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[4], "G1 X50.000 Y50.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[5], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[6], "M114")
+        self.assertEqual(snapshotGcode.GcodeCommands[7], "G1 X100.000 Y50.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[8], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[9], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[10], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[11], "G1 F3600")
+        self.assertEqual(snapshotGcode.GcodeCommands[12], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.GcodeCommands[13], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[14], "M114")
 
         # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 2)
-        self.assertTrue(snapshotGcode.EndIndex() == 6)
+        self.assertEqual(snapshotGcode.SnapshotIndex, 6)
+        self.assertEqual(snapshotGcode.EndIndex(), 14)
         # verify the return coordinates
-        self.assertTrue(snapshotGcode.ReturnX == 100)
-        self.assertTrue(snapshotGcode.ReturnY == 50)
-        self.assertTrue(snapshotGcode.ReturnZ == 0)
+        self.assertEqual(snapshotGcode.ReturnX, 100)
+        self.assertEqual(snapshotGcode.ReturnY, 50)
+        self.assertEqual(snapshotGcode.ReturnZ, 0)
 
         # Get the next coordinate in the path
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             101, 51, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
-        # this line should switch to absolute coordinates in prep for move
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.GcodeCommands[1] == "G90")
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[2] == "G1 X100.000 Y100.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[3] == "G1 X101.000 Y51.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[4] == "G91")
-        self.assertTrue(snapshotGcode.GcodeCommands[5] == "G1 Z-0.500 F7200")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[6] == "SavedCommand")
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X101.000 Y51.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()
-                        [2] == "G1 Z-0.500 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[3] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()
-                        [0] == "G1 Z0.500 F7200")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[1] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        2] == "G1 X100.000 Y100.000 F7200")
+        self.assertEqual(snapshotGcode.GcodeCommands[0], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[1], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[2], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[3], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[4], "G1 X100.000 Y100.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[5], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[6], "M114")
+        self.assertEqual(snapshotGcode.GcodeCommands[7], "G1 X101.000 Y51.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[8], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[9], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[10], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.GcodeCommands[11], "G1 F3600")
+        self.assertEqual(snapshotGcode.GcodeCommands[12], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.GcodeCommands[13], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[14], "M114")
+
         # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 2)
-        self.assertTrue(snapshotGcode.EndIndex() == 6)
+        self.assertEqual(snapshotGcode.SnapshotIndex, 6)
+        self.assertEqual(snapshotGcode.EndIndex(), 14)
         # verify the return coordinates
-        self.assertTrue(snapshotGcode.ReturnX == 101)
-        self.assertTrue(snapshotGcode.ReturnY == 51)
-        self.assertTrue(snapshotGcode.ReturnZ == 0)
-        # test the second coordinate in the path
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
-            10, 10, 10, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
+        self.assertEqual(snapshotGcode.ReturnX, 101)
+        self.assertEqual(snapshotGcode.ReturnY, 51)
+        self.assertEqual(snapshotGcode.ReturnZ, 0)
 
     def test_GetSnapshotGcode_Relative_RelativeCoordinates_AbsoluteExtruder_ZhopTooHigh(self):
         """Test snapshot gcode with relative stabilization, relative coordinates, absolute extruder, z is too high to hop, no retraction"""
@@ -506,34 +400,80 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             10, 10, 200, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
-        # this line should switch to absolute coordinates in prep for move
-        self.assertTrue(snapshotGcode.GcodeCommands[0] == "G90")
-        # this line should switch back to absolute coordinates
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[1] == "G1 X125.000 Y200.000 F7200")
-        # move back to the return position
-        self.assertTrue(
-            snapshotGcode.GcodeCommands[2] == "G1 X10.000 Y10.000 F7200")
-        # change to relative coordinates
-        self.assertTrue(snapshotGcode.GcodeCommands[3] == "G91")
-        # the saved command
-        self.assertTrue(snapshotGcode.GcodeCommands[4] == "SavedCommand")
-        # verify the return commands
-        self.assertTrue(snapshotGcode.ReturnCommands()[
-                        0] == "G1 X10.000 Y10.000 F7200")
-        self.assertTrue(snapshotGcode.ReturnCommands()[1] == "G91")
-        self.assertTrue(snapshotGcode.ReturnCommands()[2] == "SavedCommand")
-        # verify the snapshot commands
-        self.assertTrue(snapshotGcode.SnapshotCommands()[0] == "G90")
-        self.assertTrue(snapshotGcode.SnapshotCommands()[
-                        1] == "G1 X125.000 Y200.000 F7200")
+        self.assertEqual(snapshotGcode.GcodeCommands[0], "G90")
+        self.assertEqual(snapshotGcode.GcodeCommands[1], "G1 F6000")
+        self.assertEqual(snapshotGcode.GcodeCommands[2], "G1 X125.000 Y200.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[3], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[4], "M114")
+        self.assertEqual(snapshotGcode.GcodeCommands[5], "G1 X10.000 Y10.000")
+        self.assertEqual(snapshotGcode.GcodeCommands[6], "G91")
+        self.assertEqual(snapshotGcode.GcodeCommands[7], "G1 F3600")
+        self.assertEqual(snapshotGcode.GcodeCommands[8], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.GcodeCommands[9], "M400")
+        self.assertEqual(snapshotGcode.GcodeCommands[10], "M114")
+
         # verify the indexes of the generated gcode
-        self.assertTrue(snapshotGcode.SnapshotIndex == 1)
-        self.assertTrue(snapshotGcode.EndIndex() == 4)
+        self.assertTrue(snapshotGcode.SnapshotIndex == 4)
+        self.assertTrue(snapshotGcode.EndIndex() == 10)
         # verify the return coordinates
         self.assertTrue(snapshotGcode.ReturnX == 10)
         self.assertTrue(snapshotGcode.ReturnY == 10)
         self.assertTrue(snapshotGcode.ReturnZ == 200)
+
+    def test_GetSnapshotGcode_SnapshotCommands(self):
+        # test with relative paths, absolute extruder coordinates, retract and z hop
+        # use relative coordinates for stabilizations
+        self.Settings.CurrentStabilization().x_type = "fixed_path"
+        self.Settings.CurrentStabilization().x_fixed_path = "50,100"  # 125,250
+        self.Settings.CurrentStabilization().x_fixed_path_loop = False
+        self.Settings.CurrentStabilization().x_fixed_path_invert_loop = False
+        self.Settings.CurrentStabilization().y_type = "fixed_path"
+        self.Settings.CurrentStabilization().y_fixed_path = "50,100"  # 100,200
+        self.Settings.CurrentStabilization().y_fixed_path_loop = False
+        self.Settings.CurrentStabilization().y_fixed_path_invert_loop = False
+        self.Settings.CurrentSnapshot().retract_before_move = True
+        snapshotGcodeGenerator = SnapshotGcodeGenerator(
+            self.Settings, self.CreateOctoprintPrinterProfile())
+        self.Extruder.IsRetracted = lambda: True
+        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+            100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
+
+        # verify the snapshot commands
+        self.assertEqual(snapshotGcode.SnapshotCommands()[0], "G1 F6000")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[1], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[2], "G90")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[3], "G1 F6000")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[4], "G1 X50.000 Y50.000")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[5], "M400")
+        self.assertEqual(snapshotGcode.SnapshotCommands()[6], "M114")
+
+    def test_GetSnapshotGcode_ReturnCommands(self):
+        # test with relative paths, absolute extruder coordinates, retract and z hop
+        # use relative coordinates for stabilizations
+        self.Settings.CurrentStabilization().x_type = "fixed_path"
+        self.Settings.CurrentStabilization().x_fixed_path = "50,100"  # 125,250
+        self.Settings.CurrentStabilization().x_fixed_path_loop = False
+        self.Settings.CurrentStabilization().x_fixed_path_invert_loop = False
+        self.Settings.CurrentStabilization().y_type = "fixed_path"
+        self.Settings.CurrentStabilization().y_fixed_path = "50,100"  # 100,200
+        self.Settings.CurrentStabilization().y_fixed_path_loop = False
+        self.Settings.CurrentStabilization().y_fixed_path_invert_loop = False
+        self.Settings.CurrentSnapshot().retract_before_move = True
+        snapshotGcodeGenerator = SnapshotGcodeGenerator(
+            self.Settings, self.CreateOctoprintPrinterProfile())
+        self.Extruder.IsRetracted = lambda: True
+        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+            100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
+        
+        # verify the return commands
+        self.assertEqual(snapshotGcode.ReturnCommands()[0], "G1 X100.000 Y50.000")
+        self.assertEqual(snapshotGcode.ReturnCommands()[1], "G91")
+        self.assertEqual(snapshotGcode.ReturnCommands()[2], "G1 F6000")
+        self.assertEqual(snapshotGcode.ReturnCommands()[3], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.ReturnCommands()[4], "G1 F3600")
+        self.assertEqual(snapshotGcode.ReturnCommands()[5], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.ReturnCommands()[6], "M400")
+        self.assertEqual(snapshotGcode.ReturnCommands()[7], "M114")
 
 
 if __name__ == '__main__':

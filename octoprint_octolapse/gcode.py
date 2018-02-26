@@ -95,7 +95,7 @@ class SnapshotGcodeGenerator(object):
         coords = dict(X=self.GetSnapshotCoordinate(xPath),
                       Y=self.GetSnapshotCoordinate(yPath))
 
-        if not utility.IsInBounds(self.BoundingBox, x=coords["X"]:
+        if not utility.IsInBounds(self.BoundingBox, x=coords["X"]):
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coords["X"])
@@ -110,7 +110,7 @@ class SnapshotGcodeGenerator(object):
                 message += "  Using nearest in-bound position ({0}).".format(
                     coords["X"])
             self.SnapshotPositionErrors += message
-        if not utility.IsInBounds(self.BoundingBox, y=coords["Y"]:
+        if not utility.IsInBounds(self.BoundingBox, y=coords["Y"]):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coords["Y"])
             self.HasSnapshotPositionErrors = True
@@ -137,7 +137,7 @@ class SnapshotGcodeGenerator(object):
         # move our index forward or backward
         path.Index += path.Increment
 
-        if path.Index >= len(path.Path:
+        if path.Index >= len(path.Path):
             if path.Loop:
                 if path.InvertLoop:
                     if len(path.Path) > 1:
@@ -165,7 +165,7 @@ class SnapshotGcodeGenerator(object):
         if path.CoordinateSystem == "absolute":
             return coord
         elif path.CoordinateSystem == "bed_relative":
-            ifself.OctoprintPrinterProfile["volume"]["formFactor"] == "circle":
+            if self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle":
                 raise ValueError(
                     'Cannot calculate relative coordinates within a circular bed (yet...), sorry')
             return self.GetBedRelativeCoordinate(path.Axis, coord)

@@ -272,7 +272,7 @@ class Timelapse(object):
                 positionChangeDict, positionStateChangeDict, extruderChangeDict, triggerChangeList)
             self.HasSentInitialStatus = True
 
-            if cmd != None,:
+            if cmd != None:
                 return self._returnGcodeCommandToOctoprint(cmd)
             # if we are here we need to suppress the command
         except Exception as e:
