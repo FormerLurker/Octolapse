@@ -786,7 +786,7 @@ class Snapshot(object):
             'layer_trigger_on_detracting_start'	    : GETVR(self.layer_trigger_on_detracting_start),
             'layer_trigger_on_detracting'	    : GETVR(self.layer_trigger_on_detracting),
             'layer_trigger_on_detracted'	    : GETVR(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions'   :  self.GetLayerTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
+            'layer_trigger_position_restrictions'   :  self.GetTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
 
             # Other Settings
             'delay'				    : self.delay,

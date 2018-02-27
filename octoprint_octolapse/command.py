@@ -256,12 +256,6 @@ class Commands(object):
     SuppressedSnapshotGcodeCommands = ["M105"]
     G0 = Command(
         name="Rapid Linear Move", command="G0",
-        # (?i)^(?:\s+)?G0{1,}
-        #,regex=(
-            # "(?i)^\s+?G0{1,1}(?:\s+x(?P<x>-?[0-9.]{1,15})"
-            # "|\s+y(?P<y>-?[0-9.]{1,15})|\s+z(?P<z>-?[0-9.]{1,15})|"
-            # "\s+e(?P<e>-?[0-9.]{1,15})|\s+f?(?P<f>-?[0-9.]{1,15}))*"
-        # ),
         displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentText}",
         parameters=[
             CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
@@ -296,17 +290,17 @@ class Commands(object):
         name="Detailed Z-Probe", command="G29",
         displayTemplate="G29 - Detailed Z-Probe{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
         ]
     )
     G92 = Command(
         name="Set Absolute Position", command="G92",
         displayTemplate="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{Comment}",
         parameters=[
-            ("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
-            ("Z", "(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
-            ("E", "(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4)
+            CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
+            CommandParameter("Z", "(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
+            CommandParameter("E", "(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4)
         ]
     )
     M82 = Command(
@@ -323,10 +317,10 @@ class Commands(object):
         name="Go To Origin", command="G28",
         displayTemplate="G28 - Go to Origin{Comment}",
         parameters=[
-            ("X", "(?i)^(x)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=1),
-            ("Y", "(?i)^(y)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=2),
-            ("Z", "(?i)^(z)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=3),
-            ("W", "(?i)^(w)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=4)
+            CommandParameter("X", "(?i)^(x)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=1),
+            CommandParameter("Y", "(?i)^(y)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=2),
+            CommandParameter("Z", "(?i)^(z)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=3),
+            CommandParameter("W", "(?i)^(w)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=4)
         ]
     )
     G80 = Command(
@@ -353,70 +347,70 @@ class Commands(object):
         name="Set Extruder Temperature", command="M104",
         displayTemplate="M104 - Set Extruder Temperature{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
         ]
     )
     M140 = Command(
         name="Set Bed Temperature", command="M140",
         displayTemplate="M140 - Set Bed Temperature{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
         ]
     )
     M141 = Command(
         name="Set Chamber Temperature", command="M141",
         displayTemplate="M141 - Set Chamber Temperature{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
         ]
     )
     M109 = Command(
         name="Set Extruder Temperature and Wait", command="M109",
         displayTemplate="M109 - Extruder Bed Temperature and Wait{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
         ]
     )
     M190 = Command(
         name="Set Bed Temperature and Wait", command="M190",
         displayTemplate="M190 - Set Bed Temperature and Wait{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
         ]
     )
     M191 = Command(
         name="Set Chamber Temperature and Wait", command="M191",
         displayTemplate="M191 - Set Bed Temperature and Wait{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
         ]
     )
     M116 = Command(
         name="Wait for Temperature", command="M116",
         displayTemplate="M116 - Wait for Temperature{Comment}",
         parameters=[
-            ("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=1),
-            ("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2),
-            ("C", "(?i)^c(?P<c>-?[0-9]{0,15})$", order=3)
+            CommandParameter("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=1),
+            CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2),
+            CommandParameter("C", "(?i)^c(?P<c>-?[0-9]{0,15})$", order=3)
         ]
     )
     M106 = Command(
         name="Set Part Fan Speed", command="M106",
         displayTemplate="M106 - Set Part Fan Speed{Comment}",
         parameters=[
-            ("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            ("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=2),
-            ("I", "(?i)^(i)$", order=3),
-            ("F", "(?i)^p(?P<f>-?[0-9]{0,15})$", order=4),
-            ("L", "(?i)^s(?P<l>-?[0-9]{0,15}.?[0-9]{1,15})$", order=5),
-            ("B", "(?i)^p(?P<b>-?[0-9]{0,15})$", order=6),
-            ("R", "(?i)^p(?P<r>-?[0-9]{0,15})$", order=7),
-            ("T", "(?i)^p(?P<t>-?[0-9]{0,15})$", order=8),
+            CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=2),
+            CommandParameter("I", "(?i)^(i)$", order=3),
+            CommandParameter("F", "(?i)^p(?P<f>-?[0-9]{0,15})$", order=4),
+            CommandParameter("L", "(?i)^s(?P<l>-?[0-9]{0,15}.?[0-9]{1,15})$", order=5),
+            CommandParameter("B", "(?i)^p(?P<b>-?[0-9]{0,15})$", order=6),
+            CommandParameter("R", "(?i)^p(?P<r>-?[0-9]{0,15})$", order=7),
+            CommandParameter("T", "(?i)^p(?P<t>-?[0-9]{0,15})$", order=8),
         ]
     )
 
