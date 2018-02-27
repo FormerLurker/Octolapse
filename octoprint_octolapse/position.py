@@ -104,7 +104,12 @@ class Pos(object):
         return False
 
     def IsPositionEqual(self, pos, tolerance):
-        if (pos.X is not None and self.X is not None and utility.round_to(
+        if tolerance == 0:
+            return (pos.X is not None and self.X is not None and pos.X == self.X
+                    and pos.Y is not None and self.Y is not None and pos.Y == self.Y
+                    and pos.Z is not None and self.Z is not None and pos.Z == self.Z)
+            
+        elif (pos.X is not None and self.X is not None and utility.round_to(
                 pos.X, tolerance) == utility.round_to(self.X, tolerance)
                 and pos.Y is not None and self.Y is not None
                 and utility.round_to(pos.Y, tolerance) == utility.round_to(
@@ -792,67 +797,67 @@ class Position(object):
                         "Position - Unable to parse the Gcode:{0}".format(
                             gcode))
 
-            ########################################
-            # Update the extruder monitor.
-            self.Extruder.Update(self.ERelative(pos))
-            ########################################
-            # If we have a homed axis, detect changes.
-            ########################################
-            hasExtruderChanged = self.Extruder.HasChanged()
+        ########################################
+        # Update the extruder monitor.
+        self.Extruder.Update(self.ERelative(pos))
+        ########################################
+        # If we have a homed axis, detect changes.
+        ########################################
+        hasExtruderChanged = self.Extruder.HasChanged()
 
-            pos.HasPositionChanged = not pos.IsPositionEqual(
-                previousPos, self.PrinterTolerance)
-            pos.HasStateChanged = not pos.IsStateEqual(previousPos,
-                                                       self.PrinterTolerance)
+        pos.HasPositionChanged = not pos.IsPositionEqual(
+            previousPos, 0)
+        pos.HasStateChanged = not pos.IsStateEqual(previousPos,
+                                                    self.PrinterTolerance)
 
-            if (pos.HasHomedPosition() and previousPos.HasHomedPosition()):
+        if (pos.HasHomedPosition() and previousPos.HasHomedPosition()):
 
-                if (hasExtruderChanged or pos.HasPositionChanged):
+            #if (hasExtruderChanged or pos.HasPositionChanged):
 
-                    # calculate LastExtrusionHeight and Height
-                    if (self.Extruder.IsExtruding()):
-                        pos.LastExtrusionHeight = pos.Z
-                        if (pos.Height is None or
-                                utility.round_to(pos.Z, self.PrinterTolerance)
-                                > previousPos.Height):
-                            pos.Height = utility.round_to(
-                                pos.Z, self.PrinterTolerance)
-                            self.Settings.CurrentDebugProfile(
-                            ).LogPositionHeightChange(
-                                "Position - Reached New Height:{0}.".format(
-                                    pos.Height))
+            # calculate LastExtrusionHeight and Height
+            if (self.Extruder.IsExtruding()):
+                pos.LastExtrusionHeight = pos.Z
+                if (pos.Height is None or
+                        utility.round_to(pos.Z, self.PrinterTolerance)
+                        > previousPos.Height):
+                    pos.Height = utility.round_to(
+                        pos.Z, self.PrinterTolerance)
+                    self.Settings.CurrentDebugProfile(
+                    ).LogPositionHeightChange(
+                        "Position - Reached New Height:{0}.".format(
+                            pos.Height))
 
-                        # calculate layer change
-                        if (utility.round_to(
-                                self.ZDelta(pos), self.PrinterTolerance) > 0
-                                or pos.Layer == 0):
-                            pos.IsLayerChange = True
-                            pos.Layer += 1
-                            self.Settings.CurrentDebugProfile(
-                            ).LogPositionLayerChange(
-                                "Position - Layer:{0}.".format(pos.Layer))
-                        else:
-                            pos.IsLayerChange = False
+                # calculate layer change
+                if (utility.round_to(
+                        self.ZDelta(pos), self.PrinterTolerance) > 0
+                        or pos.Layer == 0):
+                    pos.IsLayerChange = True
+                    pos.Layer += 1
+                    self.Settings.CurrentDebugProfile(
+                    ).LogPositionLayerChange(
+                        "Position - Layer:{0}.".format(pos.Layer))
+                else:
+                    pos.IsLayerChange = False
 
-                    # Calculate ZHop based on last extrusion height
-                    if (pos.LastExtrusionHeight is not None):
-                        # calculate lift, taking into account floating point
-                        # rounding
-                        lift = utility.round_to(
-                            pos.Z - pos.LastExtrusionHeight,
-                            self.PrinterTolerance)
-                        if (lift >= self.Printer.z_hop):
-                            lift = self.Printer.z_hop
-                        isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (
-                            not self.Extruder.IsExtruding()
-                            or self.Extruder.IsExtrudingStart())
+            # Calculate ZHop based on last extrusion height
+            if (pos.LastExtrusionHeight is not None):
+                # calculate lift, taking into account floating point
+                # rounding
+                lift = utility.round_to(
+                    pos.Z - pos.LastExtrusionHeight,
+                    self.PrinterTolerance)
+                if (lift >= self.Printer.z_hop):
+                    lift = self.Printer.z_hop
+                isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (
+                    not self.Extruder.IsExtruding()
+                    or self.Extruder.IsExtrudingStart())
 
-                        if (isLifted):
-                            pos.IsZHop = True
+                if (isLifted):
+                    pos.IsZHop = True
 
-                    if (pos.IsZHop):
-                        self.Settings.CurrentDebugProfile().LogPositionZHop(
-                            "Position - Zhop:{0}".format(self.Printer.z_hop))
+            if (pos.IsZHop):
+                self.Settings.CurrentDebugProfile().LogPositionZHop(
+                    "Position - Zhop:{0}".format(self.Printer.z_hop))
 
         self.Positions.appendleft(pos)
 

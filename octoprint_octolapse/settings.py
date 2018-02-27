@@ -9,7 +9,6 @@ from datetime import datetime
 import octoprint_octolapse.utility as utility
 from pprint import pprint
 import logging
-import traceback
 import os
 import sys
 import uuid
@@ -369,22 +368,28 @@ class Stabilization(object):
 
 
 class SnapshotPositionRestrictions(object):
-    def __init__(self, type, x, y, x2=None, y2=None, r=None):
+    def __init__(self, type, shape, x, y, x2=None, y2=None, r=None):
 
         self.Type = type.lower()
-        if self.Type not in ["rect", "circle"]:
-            raise TypeError("SnapshotPosition type must be 'rect' or 'circle'")
+        if self.Type not in ["forbidden", "required"]:
+            raise TypeError("SnapshotPosition type must be 'forbidden' or 'required'")
+
+        self.Shape = shape.lower()
+        
+        if self.Shape not in ["rect", "circle"]:
+            raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'")
         if x is None or y is None:
             raise TypeError(
                 "SnapshotPosition requires that x and y are not None")
-        if self.Type == 'rect' and (x2 is None or y2 is None):
+        if self.Shape == 'rect' and (x2 is None or y2 is None):
             raise TypeError(
-                "SnapshotPosition type=rect requires that x2 and y2 are not None")
-        if self.Type == 'circle' and r is None:
+                "SnapshotPosition shape=rect requires that x2 and y2 are not None")
+        if self.Shape == 'circle' and r is None:
             raise TypeError(
-                "SnapshotPosition type=circle requires that r is not None")
+                "SnapshotPosition shape=circle requires that r is not None")
 
         self.Type = type
+        self.Shape = shape
         self.X = float(x)
         self.Y = float(y)
         self.X2 = float(x2)
@@ -394,6 +399,7 @@ class SnapshotPositionRestrictions(object):
     def ToDict(self):
         return {
             'Type': self.Type,
+            'Shape': self.Shape,
             'X': self.X,
             'Y': self.Y,
             'X2': self.X2,
@@ -404,14 +410,15 @@ class SnapshotPositionRestrictions(object):
     def IsInPosition(self, x, y):
         if x is None or y is None:
             return False
+        isInPosition = None
+        if self.Shape == 'rect':
+            isInPosition = x >= self.X and x <= self.X2 and y >= self.Y and y <= self.Y2
+        elif self.Shape == 'circle':
+            isInPosition = math.pow(x - self.X, 2) + math.pow(y - self.Y, 2) <= math.pow(self.R, 2)
+        else:
+            raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
-        if self.Type == 'rect':
-            return x >= self.X and x <= self.X2 and y >= self.Y and y <= self.Y2
-        if self.Type == 'circle':
-            return math.pow(x - self.X, 2) + math.pow(y - self.Y, 2) < math.pow(self.R, 2)
-        raise TypeError(
-            "SnapshotPosition type must be 'rect' or 'circle' for IsInPosition")
-
+        return isInPosition
 
 class Snapshot(object):
     # globals
@@ -440,7 +447,7 @@ class Snapshot(object):
         self.gcode_trigger_on_detracting_start = None
         self.gcode_trigger_on_detracting = None
         self.gcode_trigger_on_detracted = None
-
+        self.gcode_trigger_position_restrictions = []
         # Timer Trigger
         self.timer_trigger_enabled = False
         self.timer_trigger_seconds = 30
@@ -455,6 +462,7 @@ class Snapshot(object):
         self.timer_trigger_on_detracting_start = True
         self.timer_trigger_on_detracting = False
         self.timer_trigger_on_detracted = False
+        self.timer_trigger_position_restrictions = []
         # Layer Trigger
         self.layer_trigger_enabled = True
         self.layer_trigger_height = 0.0
@@ -482,6 +490,7 @@ class Snapshot(object):
                 self.name = snapshot.name
                 self.description = snapshot.description
                 self.guid = snapshot.guid
+                # gcode trigger members
                 self.gcode_trigger_enabled = snapshot.gcode_trigger_enabled
                 self.gcode_trigger_require_zhop = snapshot.gcode_trigger_require_zhop
                 self.gcode_trigger_on_extruding_start = snapshot.gcode_trigger_on_extruding_start
@@ -494,7 +503,8 @@ class Snapshot(object):
                 self.gcode_trigger_on_detracting_start = snapshot.gcode_trigger_on_detracting_start
                 self.gcode_trigger_on_detracting = snapshot.gcode_trigger_on_detracting
                 self.gcode_trigger_on_detracted = snapshot.gcode_trigger_on_detracted
-                self.layer_trigger_position_restrictions = snapshot.layer_trigger_position_restrictions
+                self.gcode_trigger_position_restrictions = snapshot.gcode_trigger_position_restrictions
+                # timer trigger members
                 self.timer_trigger_enabled = snapshot.timer_trigger_enabled
                 self.timer_trigger_require_zhop = snapshot.timer_trigger_require_zhop
                 self.timer_trigger_seconds = snapshot.timer_trigger_seconds
@@ -507,6 +517,8 @@ class Snapshot(object):
                 self.timer_trigger_on_detracting_start = snapshot.timer_trigger_on_detracting_start
                 self.timer_trigger_on_detracting = snapshot.timer_trigger_on_detracting
                 self.timer_trigger_on_detracted = snapshot.timer_trigger_on_detracted
+                self.timer_trigger_position_restrictions = snapshot.timer_trigger_position_restrictions
+                #layer trigger members
                 self.layer_trigger_enabled = snapshot.layer_trigger_enabled
                 self.layer_trigger_height = snapshot.layer_trigger_height
                 self.layer_trigger_require_zhop = snapshot.layer_trigger_require_zhop
@@ -520,6 +532,8 @@ class Snapshot(object):
                 self.layer_trigger_on_detracting_start = snapshot.layer_trigger_on_detracting_start
                 self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
                 self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
+                self.layer_trigger_position_restrictions = snapshot.layer_trigger_position_restrictions
+
                 self.delay = snapshot.delay
                 self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
                 self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
@@ -537,6 +551,7 @@ class Snapshot(object):
         if "description" in changes.keys():
             self.description = utility.getstring(
                 changes["description"], self.description)
+        # gcode trigger members
         if "gcode_trigger_enabled" in changes.keys():
             self.gcode_trigger_enabled = utility.getbool(
                 changes["gcode_trigger_enabled"], self.gcode_trigger_enabled)
@@ -573,6 +588,10 @@ class Snapshot(object):
         if "gcode_trigger_on_detracted" in changes.keys():
             self.gcode_trigger_on_detracted = self.GetExtruderTriggerValue(
                 changes["gcode_trigger_on_detracted"])
+        if "gcode_trigger_position_restrictions" in changes.keys():
+            self.gcode_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
+                changes["gcode_trigger_position_restrictions"])
+        # timer trigger members
         if "timer_trigger_enabled" in changes.keys():
             self.timer_trigger_enabled = utility.getbool(
                 changes["timer_trigger_enabled"], self.timer_trigger_enabled)
@@ -612,6 +631,10 @@ class Snapshot(object):
         if "timer_trigger_on_detracted" in changes.keys():
             self.timer_trigger_on_detracted = self.GetExtruderTriggerValue(
                 changes["timer_trigger_on_detracted"])
+        if "timer_trigger_position_restrictions" in changes.keys():
+            self.timer_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
+                changes["timer_trigger_position_restrictions"])
+        # layer trigger members
         if "layer_trigger_enabled" in changes.keys():
             self.layer_trigger_enabled = utility.getbool(
                 changes["layer_trigger_enabled"], self.layer_trigger_enabled)
@@ -651,11 +674,9 @@ class Snapshot(object):
         if "layer_trigger_on_detracted" in changes.keys():
             self.layer_trigger_on_detracted = self.GetExtruderTriggerValue(
                 changes["layer_trigger_on_detracted"])
-
         if "layer_trigger_position_restrictions" in changes.keys():
-            self.layer_trigger_position_restrictions = self.GetLayerTriggerPositionRestrictions(
+            self.layer_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
                 changes["layer_trigger_position_restrictions"])
-
         # other settings
         if "delay" in changes.keys():
             self.delay = utility.getint(changes["delay"], self.delay)
@@ -690,14 +711,14 @@ class Snapshot(object):
         else:
             return bool(value)
 
-    def GetLayerTriggerPositionRestrictions(self, value):
+    def GetTriggerPositionRestrictions(self, value):
         restrictions = []
         for restriction in value:
             restrictions.append(SnapshotPositionRestrictions(
-                restriction["Type"], restriction["X"], restriction["Y"], restriction["X2"], restriction["Y2"], restriction["R"]))
+                restriction["Type"], restriction["Shape"], restriction["X"], restriction["Y"], restriction["X2"], restriction["Y2"], restriction["R"]))
         return restrictions
 
-    def GetLayerTriggerPositionRestrictionsValueString(self, values):
+    def GetTriggerPositionRestrictionsValueString(self, values):
         restrictions = []
         for restriction in values:
             restrictions.append(restriction.ToDict())
@@ -721,6 +742,7 @@ class Snapshot(object):
             'gcode_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting_start),
             'gcode_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracting),
             'gcode_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.gcode_trigger_on_detracted),
+            'gcode_trigger_position_restrictions'	: self.GetTriggerPositionRestrictionsValueString(self.gcode_trigger_position_restrictions),
             # Timer Trigger
             'timer_trigger_enabled'					: self.timer_trigger_enabled,
             'timer_trigger_require_zhop'			: self.timer_trigger_require_zhop,
@@ -735,6 +757,7 @@ class Snapshot(object):
             'timer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting_start),
             'timer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracting),
             'timer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.timer_trigger_on_detracted),
+            'timer_trigger_position_restrictions'	: self.GetTriggerPositionRestrictionsValueString(self.timer_trigger_position_restrictions),
             # Layer Trigger
             'layer_trigger_enabled'					: self.layer_trigger_enabled,
             'layer_trigger_height'					: self.layer_trigger_height,
@@ -749,8 +772,7 @@ class Snapshot(object):
             'layer_trigger_on_detracting_start'		: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting_start),
             'layer_trigger_on_detracting'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracting),
             'layer_trigger_on_detracted'			: self.GetExtruderTriggerValueString(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions'	: self.GetLayerTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
-
+            'layer_trigger_position_restrictions'	: self.GetTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
             # Other Settings
             'delay'									: self.delay,
             'retract_before_move'					: self.retract_before_move,
@@ -1366,15 +1388,10 @@ class DebugProfile(object):
                     'error', "Error logging warining: message:{0}".format(message), force=True)
                 return
 
-    def _exceptionToString(self, e):
-        traceBack = sys.exc_info()[2]
-        if traceBack is None:
-            return str(e)
-        tb_lines = traceback.format_exception(e.__class__, e, traceBack)
-        return ''.join(tb_lines)
+    
 
     def LogException(self, exception):
-        message = self._exceptionToString(exception)
+        message = utility.ExceptionToString(exception)
         try:
             self.Logger.error(message)
             self.LogToConsole('error', message)
@@ -1754,9 +1771,13 @@ class OctolapseSettings(object):
                         value='relative', name='Relative Coordinates (0-100)'), dict(value='relative_path', name='List of Relative Coordinates')
 
             ],
-            'position_restriction_types': [
+            'position_restriction_shapes': [
                     dict(value="rect", name="Rectangle"), dict(
                         value="circle", name="Circle")
+            ],
+            'position_restriction_types': [
+                    dict(value="required", name="Must be inside"), dict(
+                        value="forbidden", name="Cannot be inside")
             ],
             'snapshot_extruder_trigger_options': Snapshot.ExtruderTriggerOptions,
             'rendering_fps_calculation_options': [

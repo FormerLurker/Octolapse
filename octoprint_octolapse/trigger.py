@@ -12,6 +12,36 @@ import octoprint_octolapse.utility
 import time
 import sys
 
+def IsInPosition(restrictions,x,y):
+
+    # we need to know if there is at least one required position
+    hasRequiredPosition = False
+    # isInPosition will be used to determine if we return 
+    # true where we have at least one required type
+    isInPosition = False
+
+    # loop through each restriction
+    for restriction in restrictions:
+        if(restriction.Type == "required"):
+            # we have at least on required position, so at least one point must be in
+            # position for us to return true
+            hasRequiredPosition = True
+        if(restriction.IsInPosition(x, y)):
+            if(restriction.Type == "forbidden"):
+                # if we're in a forbidden position, return false now
+                return False
+            else:
+                # we're in position in at least one required position restriction
+                isInPosition = True
+    
+    if(hasRequiredPosition):
+        # if at least one position restriction is required
+        return isInPosition
+
+    # if we're here then we only have forbidden restrictions, but the point
+    # was not within the restricted area(s)
+    return True
+        
 
 class Triggers(object):
     def __init__(self, settings):
@@ -89,7 +119,7 @@ class Triggers(object):
         return None
 
     def GetFirstTriggering(self, index):
-        if index + 1 > len(self._triggers):
+        if len(self._triggers)<1:
             return False
         try:
             # Loop through all of the active currentTriggers
@@ -98,7 +128,7 @@ class Triggers(object):
                     return currentTrigger
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
-
+            return False
     def GetFirstWaiting(self):
         try:
             # Loop through all of the active currentTriggers
@@ -149,15 +179,16 @@ class TriggerState(object):
         self.IsWaiting = False if state is None else state.IsWaiting
         self.IsWaitingOnZHop = False if state is None else state.IsWaitingOnZHop
         self.IsWaitingOnExtruder = False if state is None else state.IsWaitingOnExtruder
+        self.IsInPosition = False if state is None else state.IsInPosition
         self.HasChanged = False if state is None else state.HasChanged
         self.IsHomed = False if state is None else state.IsHomed
-
     def ToDict(self, trigger):
         return {
             "IsTriggered": self.IsTriggered,
             "IsWaiting": self.IsWaiting,
             "IsWaitingOnZHop": self.IsWaitingOnZHop,
             "IsWaitingOnExtruder": self.IsWaitingOnExtruder,
+            "IsInPosition": self.IsInPosition,
             "HasChanged": self.HasChanged,
             "RequireZHop": trigger.RequireZHop,
             "IsHomed": self.IsHomed,
@@ -167,7 +198,7 @@ class TriggerState(object):
     def ResetState(self):
         self.IsTriggered = False
         self.HasChanged = False
-
+        self.IsInPosition = False
     def IsEqual(self, state):
         if(state is not None
                 and self.IsTriggered == state.IsTriggered
@@ -190,6 +221,7 @@ class Trigger(object):
         self._maxStates = maxStates
         self.ExtruderTriggers = None
         self.TriggeredCount = 0
+        self.HasRestrictedPosition = False
 
     def Name(self):
         return self.Snapshot.name + " Trigger"
@@ -212,6 +244,12 @@ class Trigger(object):
         if state is None:
             return False
         return state.IsTriggered
+
+    def IsInPosition(self, index):
+        state = self.GetState(index)
+        if state is None:
+            return False
+        return state.IsInPosition
 
     def IsWaiting(self, index):
         state = self.GetState(index)
@@ -254,6 +292,9 @@ class GcodeTrigger(Trigger):
             self.Printer.snapshot_command)
         self.Type = "gcode"
         self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
+        self.HasRestrictedPosition = len(
+            self.Snapshot.gcode_trigger_position_restrictions) > 0
+
         self.ExtruderTriggers = ExtruderTriggers(
            self.Snapshot.gcode_trigger_on_extruding_start,
            self.Snapshot.gcode_trigger_on_extruding,
@@ -308,26 +349,36 @@ class GcodeTrigger(Trigger):
             state.ResetState()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.HasHomedPosition(1):
+            if not position.HasHomedPosition(0):
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
                 state.IsHomed = True
+                # check to see if we are in the proper position to take a snapshot
+                if self.HasRestrictedPosition:
+                    state.IsInPosition = IsInPosition(self.Snapshot.gcode_trigger_position_restrictions, position.X(0), position.Y(0))
+                else:
+                    state.IsInPosition = True
+
                 if self.IsSnapshotCommand(commandName):
                     state.IsWaiting = True
                 if state.IsWaiting == True:
-                    if position.Extruder.IsTriggered(self.ExtruderTriggers, index=1):
-                        if self.RequireZHop and not position.IsZHop(1):
+                    if position.Extruder.IsTriggered(self.ExtruderTriggers, index=0):
+                        if self.RequireZHop and not position.IsZHop(0):
                             state.IsWaitingOnZHop = True
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "GcodeTrigger - Waiting on ZHop.")
+                        elif not self.IsInPosition(0):
+                            # Make sure the previous X,Y is in position
+                            self.Settings.CurrentDebugProfile().LogTriggerWaitState(
+                                "GcodeTrigger - Waiting on Position.")
                         else:
                             state.IsTriggered = True
                             state.IsWaiting = False
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
                             self.TriggeredCount += 1
-
+                            
                             self.Settings.CurrentDebugProfile().LogTriggering(
                                 "GcodeTrigger - Waiting for extruder to trigger.")
                     else:
@@ -356,7 +407,6 @@ class LayerTriggerState(TriggerState):
         self.IsLayerChangeWait = False if state is None else state.IsLayerChangeWait
         self.IsHeightChange = False if state is None else state.IsHeightChange
         self.IsHeightChangeWait = False if state is None else state.IsHeightChangeWait
-        self.IsInPosition = False if state is None else state.IsInPosition
         self.Layer = 0 if state is None else state.Layer
 
     def ToDict(self, trigger):
@@ -366,7 +416,6 @@ class LayerTriggerState(TriggerState):
             "IsLayerChangeWait": self.IsLayerChangeWait,
             "IsHeightChange": self.IsHeightChange,
             "IsHeightChangeWait": self.IsHeightChangeWait,
-            "IsInPosition": self.IsInPosition,
             "HeightIncrement": trigger.HeightIncrement,
             "Layer": self.Layer
         }
@@ -377,7 +426,6 @@ class LayerTriggerState(TriggerState):
         super(LayerTriggerState, self).ResetState()
         self.IsHeightChange = False
         self.IsLayerChange = False
-        self.IsInPosition = False
 
     def IsEqual(self, state):
         if (super(LayerTriggerState, self).IsEqual(state)
@@ -462,7 +510,7 @@ class LayerTrigger(Trigger):
             state.ResetState()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.HasHomedPosition(1):
+            if not position.HasHomedPosition(0):
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
@@ -472,8 +520,8 @@ class LayerTrigger(Trigger):
 
                 if (self.HeightIncrement is not None
                     and self.HeightIncrement > 0
-                    and position.IsLayerChange(1)
-                    and state.CurrentIncrement * self.HeightIncrement <= position.Height(1)):
+                    and position.IsLayerChange(0)
+                    and state.CurrentIncrement * self.HeightIncrement <= position.Height(0)):
                     state.CurrentIncrement += 1
                     state.IsHeightChange = True
 
@@ -489,23 +537,21 @@ class LayerTrigger(Trigger):
                         state.IsWaiting = True
 
                 else:
-                    if position.IsLayerChange(1):
-                        state.Layer = position.Layer(1)
+                    if position.IsLayerChange(0):
+                        state.Layer = position.Layer(0)
                         state.IsLayerChangeWait = True
                         state.IsLayerChange = True
                         state.IsWaiting = True
 
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    for restriction in self.Snapshot.layer_trigger_position_restrictions:
-                        # see if the PREVIOUS position was in position
-                        # (we haven't sent the current command to the printer)
-                        if restriction.IsInPosition(position.X(1), position.Y(1)):
-                            state.IsInPosition = True
-                            break
+                    state.IsInPosition = IsInPosition(self.Snapshot.layer_trigger_position_restrictions, position.X(0), position.Y(0))
+                else:
+                    state.IsInPosition = True
+                    
                 # see if the extruder is triggering
                 isExtruderTriggering = position.Extruder.IsTriggered(
-                    self.ExtruderTriggers, index=1)
+                    self.ExtruderTriggers, index=0)
 
                 if state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting:
                     state.IsWaiting = True
@@ -518,13 +564,14 @@ class LayerTrigger(Trigger):
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if self.RequireZHop and not position.IsZHop(1):
+                        if self.RequireZHop and not position.IsZHop(0):
                             state.IsWaitingOnZHop = True
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
-                        elif self.HasRestrictedPosition and not state.IsInPosition:
+                        elif not self.IsInPosition(0):
+                            # Make sure the previous X,Y is in position
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
-                                "LayerTrigger - Triggering - Waiting on Position.")
+                                "LayerTrigger - Waiting on Position.")
                         else:
                             if state.IsHeightChangeWait:
                                 self.Settings.CurrentDebugProfile().LogTriggering(
@@ -540,7 +587,6 @@ class LayerTrigger(Trigger):
                             state.IsWaiting = False
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
-                            state.IsInPosition = False
             # calculate changes and set the current state
             state.HasChanged = not state.IsEqual(self.GetState(0))
             # add the state to the history
@@ -596,6 +642,8 @@ class TimerTrigger(Trigger):
         )
         self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
         self.RequireZHop = self.Snapshot.timer_trigger_require_zhop
+        self.HasRestrictedPosition = len(
+            self.Snapshot.timer_trigger_position_restrictions) > 0
 
         # Log output
         message = (
@@ -688,7 +736,7 @@ class TimerTrigger(Trigger):
 
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.HasHomedPosition(1):
+            if not position.HasHomedPosition(0):
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
@@ -715,19 +763,32 @@ class TimerTrigger(Trigger):
                 secondsToTrigger = self.IntervalSeconds - \
                     (currentTime - state.TriggerStartTime)
                 state.SecondsToTrigger = utility.round_to(secondsToTrigger, 1)
+
+                # check to see if the X/Y axes are in the proper position to take a snapshot
+                if self.HasRestrictedPosition:
+                    state.IsInPosition = IsInPosition(self.Snapshot.timer_trigger_position_restrictions, position.X(0), position.Y(0))
+                else:
+                    state.IsInPosition = True
+
                 # see if enough time has elapsed since the last trigger
                 if state.SecondsToTrigger <= 0:
                     state.IsWaiting = True
+
                     # see if the exturder is in the right position
-                    if position.Extruder.IsTriggered(self.ExtruderTriggers, index=1):
-                        if self.RequireZHop and not position.IsZHop(1):
+                    if position.Extruder.IsTriggered(self.ExtruderTriggers, index=0):
+                        if self.RequireZHop and not position.IsZHop(0):
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True
+                        elif not self.IsInPosition(0):
+                            # Make sure the previous X,Y is in position
+                            self.Settings.CurrentDebugProfile().LogTriggerWaitState(
+                                "TimerTrigger - Waiting on Position.")
                         else:
                             # Is Triggering
                             self.TriggeredCount += 1
                             state.IsTriggered = True
+                            state.IsWaiting = False
                             state.TriggerStartTime = None
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False

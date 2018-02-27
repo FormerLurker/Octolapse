@@ -8,7 +8,8 @@ import ntpath
 import os
 import re
 import time
-
+import traceback
+import sys
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 
@@ -261,8 +262,9 @@ def CurrentlyPrintingFileName(octoprintPrinter):
 
 def IsInBounds(boundingBox, x=None, y=None, z=None):
     """Determines if the given X,Y,Z coordinate is within the bounding box of the printer, as determined by the octoprint configuration"""
-    # if x is None or y is None or z is None:
-    #	return False
+    # if no coordinates are give, return false
+    if x is None and y is None and z is None:
+      return False
 
     minX = boundingBox['min_x']
     maxX = boundingBox['max_x']
@@ -334,3 +336,9 @@ def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
         "max_z": maxZ
     }
 
+def ExceptionToString(e):
+        traceBack = sys.exc_info()[2]
+        if traceBack is None:
+            return str(e)
+        tb_lines = traceback.format_exception(e.__class__, e, traceBack)
+        return ''.join(tb_lines)
