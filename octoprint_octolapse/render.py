@@ -595,7 +595,7 @@ class TimelapseRenderJob(object):
 
     def _notify_callback(self, callback, *args, **kwargs):
         """Notifies registered callbacks of type `callback`."""
-        if callback is not None and callable(callback) :
+        if callback is not None and callable(callback):
             callback(*args, **kwargs)
 
 

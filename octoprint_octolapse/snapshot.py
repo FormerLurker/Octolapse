@@ -48,8 +48,10 @@ class CaptureSnapshot(object):
         url = camera.FormatRequestTemplate(
             self.Camera.address, self.Camera.snapshot_request_template, "")
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
-        newSnapshotJob = SnapshotJob(self.Settings, self.DataDirectory, snapshotNumber, info, url,
-                                     snapshotGuid, timeoutSeconds=1, onComplete=onComplete, onSuccess=onSuccess, onFail=onFail)
+        newSnapshotJob = SnapshotJob(
+            self.Settings, self.DataDirectory, snapshotNumber, info, url,
+            snapshotGuid, timeoutSeconds=1, onComplete=onComplete, onSuccess=onSuccess, onFail=onFail
+        )
 
         if self.Snapshot.delay == 0:
             self.Settings.CurrentDebugProfile().LogSnapshotDownload(
@@ -77,11 +79,16 @@ class CaptureSnapshot(object):
             except:
                 type = sys.exc_info()[0]
                 value = sys.exc_info()[1]
-                self._debug.LogSnapshotClean(
-                    "Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path, type, value))
+                message = (
+                    "Snapshot - Clean - Unable to clean the snapshot "
+                    "path at {0}.  It may already have been cleaned.  "
+                    "Info:  ExceptionType:{1}, Exception Value:{2}"
+                ).format(path, type, value)
+                self._debug.LogSnapshotClean(message)
         else:
             self._debug.LogSnapshotClean(
-                "Snapshot - No need to clean snapshots: they have already been removed.")
+                "Snapshot - No need to clean snapshots: they have already been removed."
+            )
 
     def CleanAllSnapshots(self, printerFileName):
 
@@ -99,17 +106,25 @@ class CaptureSnapshot(object):
             except:
                 type = sys.exc_info()[0]
                 value = sys.exc_info()[1]
-                self._debug.LogSnapshotClean(
-                    "Snapshot - Clean - Unable to clean the snapshot path at {0}.  It may already have been cleaned.  Info:  ExceptionType:{1}, Exception Value:{2}".format(path, type, value))
+                message = (
+                    "Snapshot - Clean - Unable to clean the snapshot "
+                    "path at {0}.  It may already have been cleaned.  "
+                    "Info:  ExceptionType:{1}, Exception Value:{2}"
+                ).format(path, type, value)
+                self._debug.LogSnapshotClean(message)
         else:
             self._debug.LogSnapshotClean(
-                "Snapshot - No need to clean snapshots: they have already been removed.")
+                "Snapshot - No need to clean snapshots: they have already been removed."
+            )
 
 
 class SnapshotJob(object):
     snapshot_job_lock = threading.RLock()
 
-    def __init__(self, settings, dataDirectory, snapshotNumber, snapshotInfo, url,  snapshotGuid, timeoutSeconds=5, onComplete=None, onSuccess=None, onFail=None):
+    def __init__(
+            self, settings, dataDirectory, snapshotNumber,
+            snapshotInfo, url,  snapshotGuid, timeoutSeconds=5,
+            onComplete=None, onSuccess=None, onFail=None):
         cameraSettings = settings.CurrentCamera()
         self.SnapshotNumber = snapshotNumber
         self.DataDirectory = dataDirectory
@@ -143,19 +158,31 @@ class SnapshotJob(object):
             r = None
             try:
                 if len(self.Username) > 0:
-                    self.Settings.CurrentDebugProfile().LogSnapshotDownload(
-                        "Snapshot Download - Authenticating and downloading from {0:s} to {1:s}.".format(self.Url, dir))
-                    r = requests.get(self.Url, auth=HTTPBasicAuth(
-                        self.Username, self.Password), verify=not self.IgnoreSslError, timeout=float(self.TimeoutSeconds))
+                    message = (
+                        "Snapshot Download - Authenticating and "
+                        "downloading from {0:s} to {1:s}."
+                    ).format(self.Url, dir)
+                    self.Settings.CurrentDebugProfile().LogSnapshotDownload(message)
+                    r = requests.get(
+                        self.Url,
+                        auth=HTTPBasicAuth(self.Username, self.Password),
+                        verify=not self.IgnoreSslError,
+                        timeout=float(self.TimeoutSeconds)
+                    )
                 else:
                     self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                         "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, dir))
                     r = requests.get(
-                        self.Url, verify=not self.IgnoreSslError, timeout=float(self.TimeoutSeconds))
+                        self.Url, verify=not self.IgnoreSslError,
+                        timeout=float(self.TimeoutSeconds)
+                    )
             except Exception as e:
                 # If we can't create the thumbnail, just log
                 self.Settings.CurrentDebugProfile().LogException(e)
-                failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
+                failReason = (
+                    "Snapshot Download - An unexpected exception occurred.  "
+                    "Check the log file (plugin_octolapse.log) for details."
+                )
                 error = True
 
             if not error:
@@ -169,7 +196,10 @@ class SnapshotJob(object):
                     except Exception as e:
                         # If we can't create the thumbnail, just log
                         self.Settings.CurrentDebugProfile().LogException(e)
-                        failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
+                        failReason = (
+                            "Snapshot Download - An unexpected exception occurred.  "
+                            "Check the log file (plugin_octolapse.log) for details."
+                        )
                         error = True
                 else:
                     failReason = "Snapshot Download - failed with status code:{0}".format(
@@ -187,11 +217,15 @@ class SnapshotJob(object):
                 except Exception as e:
                     # If we can't create the thumbnail, just log
                     self.Settings.CurrentDebugProfile().LogException(e)
-                    failReason = "Snapshot Download - An unexpected exception occurred.  Check the log file (plugin_octolapse.log) for details."
+                    failReason = (
+                        "Snapshot Download - An unexpected exception occurred.  "
+                        "Check the log file (plugin_octolapse.log) for details."
+                    )
                     error = True
             if not error:
-                # this call renames the snapshot so that it is sequential (prob could just sort by create date instead, todo).
-                # returns true on success.
+                # this call renames the snapshot so that it is
+                # sequential (prob could just sort by create date
+                # instead, todo). returns true on success.
                 error = not self._moveAndRenameSnapshotSequential()
 
             if not error:
@@ -273,5 +307,12 @@ class SnapshotInfo(object):
         return "{0}{1}{2}".format(self.DirectoryName, os.sep, self.FileName)
 
     def GetFullPath(self, snapshotNumber):
-        return "{0}{1}".format(self.DirectoryName, utility.GetSnapshotFilename(self._printerFileName, self._printStartTime, snapshotNumber))
+        return "{0}{1}".format(
+            self.DirectoryName,
+            utility.GetSnapshotFilename(
+                self._printerFileName,
+                self._printStartTime,
+                snapshotNumber
+            )
+        )
 

@@ -10,7 +10,8 @@ import threading
 
 from octoprint_octolapse.trigger import GcodeTrigger, TimerTrigger, LayerTrigger, Triggers
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotInfo
-from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, DebugProfile
+from octoprint_octolapse.settings import (OctolapseSettings, Printer, Stabilization,
+        Camera, Rendering, Snapshot, DebugProfile)
 from octoprint_octolapse.render import Render
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.command import *
@@ -20,7 +21,15 @@ import octoprint_octolapse.utility as utility
 
 class Timelapse(object):
 
-    def __init__(self, dataFolder, timelapseFolder, onSnapshotStart=None, onSnapshotEnd=None, onRenderStart=None, onRenderComplete=None, onRenderFail=None, onRenderSynchronizeFail=None, onRenderSynchronizeComplete=None, onRenderEnd=None, onTimelapseStopping=None, onTimelapseStopped=None, onStateChanged=None, onTimelapseStart=None, onSnapshotPositionError=None, onPositionError=None):
+    def __init__(
+            self, dataFolder, timelapseFolder,
+            onSnapshotStart=None, onSnapshotEnd=None,
+            onRenderStart=None, onRenderComplete=None,
+            onRenderFail=None, onRenderSynchronizeFail=None,
+            onRenderSynchronizeComplete=None, onRenderEnd=None,
+            onTimelapseStopping=None, onTimelapseStopped=None,
+            onStateChanged=None, onTimelapseStart=None,
+            onSnapshotPositionError=None, onPositionError=None):
         # config variables - These don't change even after a reset
         self.Settings = None
         self.DataFolder = dataFolder
@@ -123,7 +132,9 @@ class Timelapse(object):
         }
 
     def StopSnapshots(self):
-        """Stops octolapse from taking any further snapshots.  Any existing snapshots will render after the print is ends."""
+        # Stops octolapse from taking any further snapshots.
+        # Any existing snapshots will render after the print is ends.
+
         # we don't need to end the timelapse if it hasn't started
         if self.State == TimelapseState.WaitingForTrigger or self.TimelapseStopRequested:
             self.State = TimelapseState.WaitingToRender
@@ -203,17 +214,21 @@ class Timelapse(object):
                 self._onPositionError()
             # capture any changes, if neccessary, to the position, position state and extruder state
             # Note:  We'll get the trigger state later
-            if self.Settings.show_position_changes and (self.Position.HasPositionChanged() or not self.HasSentInitialStatus):
+            if (self.Settings.show_position_changes
+                and (self.Position.HasPositionChanged() or not self.HasSentInitialStatus)):
                 positionChangeDict = self.Position.ToPositionDict()
-            if self.Settings.show_position_state_changes and (self.Position.HasStateChanged()or not self.HasSentInitialStatus):
+            if (self.Settings.show_position_state_changes
+                and (self.Position.HasStateChanged()or not self.HasSentInitialStatus)):
                 positionStateChangeDict = self.Position.ToStateDict()
-            if self.Settings.show_extruder_state_changes and (self.Position.Extruder.HasChanged()or not self.HasSentInitialStatus):
+            if (self.Settings.show_extruder_state_changes
+                and (self.Position.Extruder.HasChanged()or not self.HasSentInitialStatus)):
                 extruderChangeDict = self.Position.Extruder.ToDict()
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
             isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
             # check to see if we've just completed a home command
-            if self.State == TimelapseState.WaitingForTrigger and (self.Position.RequiresLocationDetection(1)) and self.OctoprintPrinter.is_printing():
+            if (self.State == TimelapseState.WaitingForTrigger
+                and (self.Position.RequiresLocationDetection(1)) and self.OctoprintPrinter.is_printing()):
                 # Undo the last position update, we will be resending the command
                 self.Position.UndoUpdate()
                 self.State = TimelapseState.AcquiringLocation
@@ -221,10 +236,16 @@ class Timelapse(object):
                     cmd = self.Commands.GetTestModeCommandString(cmd)
                 self.SavedCommand = cmd
                 cmd = None,
-                self.Settings.CurrentDebugProfile().LogPrintStateChange(
-                    "A position altering requires that we acquire a location, pausing print and undoing the last position update.  New Position: {0}".format(self.Position.GetPositionString()))
+                message = (
+                    "A position altering requires that we acquire a "
+                    "location, pausing print and undoing the last "
+                    "position update.  New Position: {0}"
+                ).format(self.Position.GetPositionString())
+                self.Settings.CurrentDebugProfile().LogPrintStateChange(message)
                 self._pausePrint()
-            elif self.State == TimelapseState.WaitingForTrigger and self.OctoprintPrinter.is_printing() and not self.Position.HasPositionError(0):
+            elif (self.State == TimelapseState.WaitingForTrigger
+                    and self.OctoprintPrinter.is_printing()
+                    and not self.Position.HasPositionError(0)):
                 self.Triggers.Update(self.Position, cmd)
 
                 # If our triggers have changed, update our dict
@@ -237,7 +258,8 @@ class Timelapse(object):
                     # Store the current position (our previous position), since this will be our snapshot position
                     self.Position.SavePosition()
                     # we don't want to execute the current command.  We have saved it for later.
-                    # but we don't want to send the snapshot command to the printer, or any of the SupporessedSavedCommands (gcode.py)
+                    # but we don't want to send the snapshot command to the printer, or any of
+                    # the SupporessedSavedCommands (gcode.py)
                     if isSnapshotGcodeCommand or cmd in self.Commands.SuppressedSavedCommands:
                         # this will suppress the command since it won't be added to our snapshot commands list
                         self.SavedCommand = None
@@ -258,13 +280,17 @@ class Timelapse(object):
                     cmd = None,
 
             elif self.State > TimelapseState.WaitingForTrigger and self.State <= TimelapseState.SendingReturnGcode:
-                # Don't do anything further to any commands unless we are taking a timelapse , or if octolapse paused the print.
-                # suppress any commands we don't, under any cirumstances, to execute while we're taking a snapshot
+                # Don't do anything further to any commands unless we are
+                # taking a timelapse , or if octolapse paused the print.
+                # suppress any commands we don't, under any cirumstances,
+                # to execute while we're taking a snapshot
+
                 if cmd in self.Commands.SuppressedSnapshotGcodeCommands:
                     cmd = None,  # suppress the command
 
             if isSnapshotGcodeCommand:
-                # in all cases do not return the snapshot command to the printer.  It is NOT a real gcode and could cause errors.
+                # in all cases do not return the snapshot command to the printer.
+                # It is NOT a real gcode and could cause errors.
                 cmd = None,
 
             # notify any callbacks
@@ -419,7 +445,10 @@ class Timelapse(object):
             if self.Position.DoesCommandRequireLocationDetection(self.SavedCommand):
                 self.RequiresLocationDetectionAfterHome = True
                 self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(
-                    "The saved command requires position detection.  This will execute after the saved command is executed and the position will be updated if it changes.")
+                    "The saved command requires position detection.  "
+                    "This will execute after the saved command is executed "
+                    "and the position will be updated if it changes."
+                )
             self.OctoprintPrinter.commands(self.SavedCommand)
             self.SavedCommand = ""
             self.OctoprintPrinter.commands("M400")
@@ -436,13 +465,21 @@ class Timelapse(object):
         try:
             if self.RequiresLocationDetectionAfterHome:
                 if not self.Position.IsAtCurrentPosition(x, y, None):
-                    self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(
-                        "The position has changed after receiving the home location saved command.  Updating.  New Position: x:{0},y:{1},z:{2},e:{3}, Previous Position: x:{4},y:{5},z:{6}".format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                    message = (
+                        "The position has changed after receiving "
+                        "the home location saved command.  Updating.  "
+                        "New Position: x:{0},y:{1},z:{2},e:{3}, "
+                        "Previous Position: x:{4},y:{5},z:{6}"
+                    ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                    self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
                     self.Position.UpdatePosition(
                         x=x, y=y, z=z, e=e, force=True, calculateChanges=True)
                 else:
-                    self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(
-                        "The saved command required a position update, but the position has not changed more than the tolerance.".format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                    message = (
+                        "The saved command required a position update, "
+                        "but the position has not changed more than the tolerance."
+                    ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                    self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
@@ -458,8 +495,13 @@ class Timelapse(object):
             # If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
             # Because of this we need to compare the position we received to the previous position, not the current one.
             if not self.Position.IsAtSavedPosition(x, y, z):
-                self.Settings.CurrentDebugProfile().LogWarning("The snapshot return position recieved from the printer does not match the position expected by Octolapse.  received (x:{0},y:{1},z:{2}), Expected (x:{3},y:{4},z:{5})".format(
-                    x, y, z, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                message = (
+                    "The snapshot return position recieved from the "
+                    "printer does not match the position expected by "
+                    "Octolapse.  received (x:{0},y:{1},z:{2}), Expected"
+                    " (x:{3},y:{4},z:{5})"
+                ).format(x, y, z, self.Position.X(), self.Position.Y(), self.Position.Z())
+                self.Settings.CurrentDebugProfile().LogWarning(message)
                 self.Position.UpdatePosition(x=x, y=y, z=z, force=True)
             else:
                 # return position information received
@@ -473,8 +515,11 @@ class Timelapse(object):
             isRelative = self.Position.IsRelative()
             isExtruderRelative = self.Position.IsExtruderRelative()
 
-            self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(x, y, z, self.Position.F(), self.Position.IsRelative(
-            ), self.Position.IsExtruderRelative(), self.Position.Extruder, self.Position.DistanceToZLift(), savedCommand=self.SavedCommand)
+            self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(
+                x, y, z, self.Position.F(), self.Position.IsRelative(),
+                self.Position.IsExtruderRelative(), self.Position.Extruder,
+                self.Position.DistanceToZLift(), savedCommand=self.SavedCommand
+            )
             # make sure we acutally received gcode
             if self.SnapshotGcodes is None:
                 self._resetSnapshot()
@@ -501,18 +546,28 @@ class Timelapse(object):
     def _positionReceived_Snapshot(self, x, y, z, e):
         try:
             # snapshot position information received
-            self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn("Snapshot position received, checking position:  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(
-                x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+            message = (
+                "Snapshot position received, checking position:  "
+                "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
+            ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+            self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(message)
             printerTolerance = self.Printer.printer_position_confirmation_tolerance
             # see if the CURRENT position is the same as the position we received from the printer
             # AND that it is equal to the snapshot position
             if not self.Position.IsAtCurrentPosition(x, y, None):
-                self.Settings.CurrentDebugProfile().LogWarning("The snapshot position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(
-                    x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                message = (
+                    "The snapshot position is incorrect.  "
+                    "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
+                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                self.Settings.CurrentDebugProfile().LogWarning(message)
             # our snapshot gcode will NOT be offset
-            elif not self.Position.IsAtCurrentPosition(self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None, applyOffset=False):
-                self.Settings.CurrentDebugProfile().LogError("The snapshot gcode position is incorrect.  x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(
-                    x, y, z, e, self.SnapshotGcodes.X, self.SnapshotGcodes.Y, self.Position.Z()))
+            elif not self.Position.IsAtCurrentPosition(
+                    self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None, applyOffset=False):
+                message = (
+                    "The snapshot gcode position is incorrect.  "
+                    "x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
+                ).format(x, y, z, e, self.SnapshotGcodes.X, self.SnapshotGcodes.Y, self.Position.Z())
+                self.Settings.CurrentDebugProfile().LogError(message)
 
             self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(
                 "The snapshot position is correct, taking snapshot.")
@@ -543,11 +598,17 @@ class Timelapse(object):
     def _positionReceived_ResumePrint(self, x, y, z, e):
         try:
             if not self.Position.IsAtCurrentPosition(x, y, None):
-                self.Settings.CurrentDebugProfile().LogError("Save Command Position is incorrect.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(
-                    x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                message = (
+                    "Save Command Position is incorrect.  "
+                    "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
+                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                self.Settings.CurrentDebugProfile().LogError(message)
             else:
-                self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(
-                    "Save Command Position is correct.  Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}".format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z()))
+                message = (
+                    "Save Command Position is correct.  "
+                    "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
+                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
 
             self.SecondsAddedByOctolapse += time.time() - self.ReturnPositionReceivedTime
 
@@ -587,8 +648,10 @@ class Timelapse(object):
     def _takeSnapshot(self):
         self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
         try:
-            self.CaptureSnapshot.Snap(utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.SnapshotCount,
-                                      onComplete=self._onSnapshotComplete, onSuccess=self._onSnapshotSuccess, onFail=self._onSnapshotFail)
+            self.CaptureSnapshot.Snap(
+                utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.SnapshotCount,
+                onComplete=self._onSnapshotComplete, onSuccess=self._onSnapshotSuccess, onFail=self._onSnapshotFail
+            )
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
             # try to recover by sending the return command
@@ -628,7 +691,8 @@ class Timelapse(object):
                 self.Settings.CurrentDebugProfile().LogError(
                     "No return commands were generated!")
                 # How do we handle this?  we probably need to cancel the print or something....
-                # Todo:  What to do if no return commands are generated?  We should never let this happen.  Make sure this is true.
+                # Todo:  What to do if no return commands are generated?  We should never let this happen.
+                # Make sure this is true.
                 self.EndTimelapse(force=True)
                 return
 
@@ -649,8 +713,14 @@ class Timelapse(object):
             # we are rendering, set the state before starting the rendering job.
 
             self.IsRendering = True
-            timelapseRenderJob = Render(self.Settings, self.Snapshot, self.Rendering, self.DataFolder, self.DefaultTimelapseDirectory, self.FfMpegPath, 1, timeAdded=self.SecondsAddedByOctolapse, onRenderStart=self._onRenderStart, onRenderFail=self._onRenderFail,
-                                        onRenderSuccess=self._onRenderSuccess, onRenderComplete=self._onRenderComplete, onAfterSyncFail=self._onSynchronizeRenderingFail, onAfterSycnSuccess=self._onSynchronizeRenderingComplete, onComplete=self._onRenderEnd)
+            timelapseRenderJob = Render(
+                self.Settings, self.Snapshot, self.Rendering, self.DataFolder,
+                self.DefaultTimelapseDirectory, self.FfMpegPath, 1,
+                timeAdded=self.SecondsAddedByOctolapse, onRenderStart=self._onRenderStart,
+                onRenderFail=self._onRenderFail, onRenderSuccess=self._onRenderSuccess,
+                onRenderComplete=self._onRenderComplete, onAfterSyncFail=self._onSynchronizeRenderingFail,
+                onAfterSycnSuccess=self._onSynchronizeRenderingComplete, onComplete=self._onRenderEnd
+            )
             timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(
                 self.OctoprintPrinter), self.PrintStartTime, time.time())
 
@@ -706,10 +776,17 @@ class Timelapse(object):
         #finalFilename = args[0]
         #baseFileName = args[1]
         # Notify the user of success and refresh the default timelapse control
-        # payload = dict(gcode="unknown",
-        #		movie=finalFilename,
-        #		movie_basename=baseFileName ,
-        #		reason="Error copying the rendering to the Octoprint timelapse folder.  If logging is enabled you can search for 'Synchronization Error' to find the error.  Your timelapse is likely within the octolapse data folder.")
+        # payload = dict(
+        #   gcode="unknown",
+        #   movie=finalFilename,
+        #   movie_basename=baseFileName ,
+        #   reason=(
+                # "Error copying the rendering to the Octoprint "
+                # "timelapse folder.  If logging is enabled you can "
+                # "search for 'Synchronization Error' to find the "
+                # "error.  Your timelapse is likely within the octolapse "
+                # "data folder."
+            # )
     def _onSynchronizeRenderingComplete(self, *args, **kwargs):
         self.Settings.CurrentDebugProfile().LogRenderSync(
             "Synchronization with the default timelapse plugin was successful.")
@@ -720,10 +797,15 @@ class Timelapse(object):
         #finalFilename = args[0]
         #baseFileName = args[1]
         # Notify the user of success and refresh the default timelapse control
-        # payload = dict(gcode="unknown",
-        #		movie=finalFilename,
-        #		movie_basename=baseFileName ,
-        #		movie_prefix="from Octolapse has been synchronized and is now available within the default timelapse plugin tab.  Octolapse ",
+        # payload = dict(
+        #   gcode="unknown",
+        #   movie=finalFilename,
+        #   movie_basename=baseFileName ,
+        #   movie_prefix=(
+                # "from Octolapse has been synchronized and "
+                # "is now available within the default timelapse "
+                # "plugin tab.  Octolapse "
+            # ),
         #		returncode=0,
         #		reason="See the octolapse log for details.")
 
@@ -739,7 +821,12 @@ class Timelapse(object):
 
         #moviePrefix = "from Octolapse"
         # if not synchronize:
-        #	moviePrefix = "from Octolapse.  Your timelapse was NOT synchronized (see advanced rendering settings for details), but can be found in octolapse's data directory.  A file browser will be added in a future release (hopefully)"
+        #   moviePrefix = (
+                # "from Octolapse.  Your timelapse was NOT synchronized"
+                # " (see advanced rendering settings for details), but "
+                # "can be found in octolapse's data directory.  A file "
+                # "browser will be added in a future release (hopefully)"
+            # )
         # payload = dict(movie=finalFileName,
         #		movie_basename=baseFileName ,
         #		movie_prefix=moviePrefix,
