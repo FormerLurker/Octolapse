@@ -328,7 +328,9 @@ $(function () {
             self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
             self.waiting_to_render(settings.waiting_to_render);
         };
-
+        self.onTimelapseStart = function () {
+            self.TriggerState.removeAll();
+        }
         self.onTimelapseStop = function () {
             self.is_timelapse_active(false);
             self.is_taking_snapshot(false);
@@ -657,7 +659,6 @@ $(function () {
             self.Triggers.removeAll();
         }
         self.update = function (states) {
-
             self.Name(states.Name)
             triggers = states.Triggers
             for (var sI = 0; sI < triggers.length; sI++) {
@@ -689,6 +690,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
+        self.IsInPosition = ko.observable(state.IsInPosition);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -699,6 +701,7 @@ $(function () {
             self.RequireZHop(state.RequireZHop);
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
+            self.IsInPosition(state.IsInPosition);
         }
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -721,13 +724,17 @@ $(function () {
                 waitText = "Waiting"
                 waitList = [];
                 if (self.IsWaitingOnZHop())
-                    waitList.push("zhop")
+                    waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
-                    waitList.push("extruder")
-                if (waitList.length > 1)
-                    waitText += " for " + waitList.join(" and ")
+                    waitList.push("extruder");
+                if (!self.IsInPosition())
+                    waitList.push("position");
+                if (waitList.length > 1) {
+                    waitText += " for " + waitList.join(" and ");
+                    waitText += " to trigger";
+                }
                 else if (waitList.length == 1)
-                    waitText += " for " + waitList[0] + " to trigger";
+                    waitText += " for " + waitList[0] + " to trigger";;
                 return waitText;
             }
 
@@ -769,7 +776,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
-
+        self.IsInPosition = ko.observable(state.IsInPosition);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -781,6 +788,7 @@ $(function () {
             self.RequireZHop(state.RequireZHop);
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
+            self.IsInPosition(state.IsInPosition);
         }
 
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
@@ -808,8 +816,12 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 1)
-                    waitText += " for " + waitList.join(" and ")
+                if (!self.IsInPosition())
+                    waitList.push("position");
+                if (waitList.length > 1) {
+                    waitText += " for " + waitList.join(" and ");
+                    waitText += " to trigger";
+                }
                 else if (waitList.length == 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
@@ -862,6 +874,7 @@ $(function () {
         self.TriggeredCount = ko.observable(state.TriggeredCount).extend({ compactint: 1 });
         self.IsHomed = ko.observable(state.IsHomed);
         self.Layer = ko.observable(state.Layer);
+        self.IsInPosition = ko.observable(state.IsInPosition);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -879,6 +892,7 @@ $(function () {
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
             self.Layer(state.Layer);
+            self.IsInPosition(state.IsInPosition);
         }
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -904,8 +918,15 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 1)
-                    waitText += " for " + waitList.join(" and ")
+                if (!self.IsInPosition()) {
+                    waitList.push("position");
+                    console.log("Waiting on position.");
+                }
+                if (waitList.length > 1) {
+                    waitText += " for " + waitList.join(" and ");
+                    waitText += " to trigger";
+                }
+                    
                 else if (waitList.length == 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
@@ -969,7 +990,7 @@ $(function () {
         self.RequireZHop = ko.observable(state.RequireZHop);
         self.TriggeredCount = ko.observable(state.TriggeredCount);
         self.IsHomed = ko.observable(state.IsHomed);
-
+        self.IsInPosition = ko.observable(state.IsInPosition);
         self.update = function (state) {
             self.Type(state.Type);
             self.Name(state.Name);
@@ -984,6 +1005,7 @@ $(function () {
             self.IntervalSeconds(state.IntervalSeconds);
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
+            self.IsInPosition(state.IsInPosition);
         }
 
 
@@ -1003,8 +1025,12 @@ $(function () {
                     waitList.push("zhop")
                 if (self.IsWaitingOnExtruder())
                     waitList.push("extruder")
-                if (waitList.length > 1)
-                    waitText += " for " + waitList.join(" and ")
+                if (!self.IsInPosition())
+                    waitList.push("position");
+                if (waitList.length > 1) {
+                    waitText += " for " + waitList.join(" and ");
+                    waitText += " to trigger";
+                }
                 else if (waitList.length == 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;

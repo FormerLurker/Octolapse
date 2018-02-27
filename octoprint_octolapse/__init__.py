@@ -185,12 +185,19 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
     def restoreDefaults(self):
         requestValues = flask.request.get_json()
         client_id = requestValues["client_id"]
-        self.LoadSettings(forceDefaults=True)
-        data = {'success': True}
-        data.update(self.Settings.ToDict())
-        self.SendSettingsChangedMessage(client_id)
+        try:
+            self.LoadSettings(forceDefaults=True)
+            data = {'success': True}
+            data.update(self.Settings.ToDict())
+            self.SendSettingsChangedMessage(client_id)
 
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+            return json.dumps(data), 200, {'ContentType': 'application/json'}
+        except Exception, e:
+            if self.Settings is not None:
+                self.Settings.CurrentDebugProfile().LogException(e)
+            else:
+                self._logger.critical(utility.ExceptionToString(e))
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/loadSettings", methods=["POST"])
     @restricted_access
@@ -262,49 +269,45 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
         return self._settings.get_plugin_logfile_path()
 
     def LoadSettings(self, forceDefaults=False):
-        try:
-            # if the settings file does not exist, create one from the default settings
-            createNewSettings = False
-            if not os.path.isfile(self.SettingsFilePath()) or forceDefaults:
-                # create new settings from default setting file
-                with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:
-                    data = json.load(defaultSettingsJson)
-                    # if a settings file does not exist, create one ??
-                    self.Settings = OctolapseSettings(self.LogFilePath(), data)
+        # if the settings file does not exist, create one from the default settings
+        createNewSettings = False
+        if not os.path.isfile(self.SettingsFilePath()) or forceDefaults:
+            # create new settings from default setting file
+            with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:
+                data = json.load(defaultSettingsJson)
+                # if a settings file does not exist, create one ??
+                self.Settings = OctolapseSettings(self.LogFilePath(), data)
+            self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                "Creating new settings file from defaults.")
+            createNewSettings = True
+        else:
+            # Load settings from file
+            if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogSettingsLoad(
-                    "Creating new settings file from defaults.")
-                createNewSettings = True
+                    "Loading existings settings file from: {0}.".format(self.SettingsFilePath()))
             else:
-                # Load settings from file
-                if self.Settings is not None:
-                    self.Settings.CurrentDebugProfile().LogSettingsLoad(
-                        "Loading existings settings file from: {0}.".format(self.SettingsFilePath()))
-                else:
-                    self._logger.info("Loading existing settings file from: {0}.".format(
-                        self.SettingsFilePath()))
-                with open(self.SettingsFilePath()) as settingsJson:
-                    data = json.load(settingsJson)
-                if self.Settings == None:
-                    #  create a new settings object
-                    self.Settings = OctolapseSettings(self.LogFilePath(), data)
-                    self.Settings.CurrentDebugProfile().LogSettingsLoad(
-                        "Settings loaded.  Created new settings object: {0}.".format(data))
-                else:
-                    # update an existing settings object
-                    self.Settings.CurrentDebugProfile().LogSettingsLoad(
-                        "Settings loaded.  Updating existing settings object: {0}.".format(data))
-                    self.Settings.Update(data)
-            # Extract any settings from octoprint that would be useful to our users.
-            self.CopyOctoprintDefaultSettings(
-                applyToCurrentProfiles=createNewSettings)
+                self._logger.info("Loading existing settings file from: {0}.".format(
+                    self.SettingsFilePath()))
+            with open(self.SettingsFilePath()) as settingsJson:
+                data = json.load(settingsJson)
+            if self.Settings == None:
+                #  create a new settings object
+                self.Settings = OctolapseSettings(self.LogFilePath(), data)
+                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                    "Settings loaded.  Created new settings object: {0}.".format(data))
+            else:
+                # update an existing settings object
+                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                    "Settings loaded.  Updating existing settings object: {0}.".format(data))
+                self.Settings.Update(data)
+        # Extract any settings from octoprint that would be useful to our users.
+        self.CopyOctoprintDefaultSettings(
+            applyToCurrentProfiles=createNewSettings)
 
-            if createNewSettings:
-                # No file existed, so we must have created default settings.  Save them!
-                self.SaveSettings()
-            return self.Settings.ToDict()
-        except TypeError, e:
-            self._logger.exception(
-                "Could not load octolapse settings.  Details: {0}".format(e))
+        if createNewSettings:
+            # No file existed, so we must have created default settings.  Save them!
+            self.SaveSettings()
+        return self.Settings.ToDict()
 
     def CopyOctoprintDefaultSettings(self, applyToCurrentProfiles=False):
         try:
@@ -343,7 +346,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
     def SaveSettings(self):
         # Save setting from file
@@ -376,7 +379,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
         return settingsDict
 
@@ -410,7 +413,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
         return None
 
     def get_template_configs(self):
@@ -433,8 +436,8 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
-
+                self._logger.critical(utility.ExceptionToString(e))
+            raise
     # Event Mixin Handler
 
     def on_event(self, event, payload):
@@ -482,7 +485,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
     def OnPrintResumed(self):
         self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
@@ -528,7 +531,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
             return {'success': False, 'error': "An exception occurred while trying to acquire the ffmpeg path from Octoprint.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.", 'warning': False}
         if not os.path.isfile(ffmpegPath):
             # todo:  throw some kind of exception
@@ -542,7 +545,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
         octoprintPrinterProfile = self._printer_profile_manager.get_current()
         # check for circular bed.  If it exists, we can't continue:
@@ -721,7 +724,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
     def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
@@ -732,7 +735,7 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             if self.Settings is not None:
                 self.Settings.CurrentDebugProfile().LogException(e)
             else:
-                self._logger.exception(e)
+                self._logger.critical(utility.ExceptionToString(e))
 
     def OnTimelapseStateChanged(self, *args, **kwargs):
         stateChangeDict = args[0]

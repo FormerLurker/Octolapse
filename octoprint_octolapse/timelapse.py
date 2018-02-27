@@ -312,8 +312,9 @@ class Timelapse(object):
             # make sure we're in a state that could want to check for triggers
             if not self.State == TimelapseState.WaitingForTrigger:
                 return None
-
-            currentTrigger = self.Triggers.GetFirstTriggering(0)
+            # see if the PREVIOUS command triggered (that means current gcode gets sent if the trigger[0]
+            # is triggering
+            currentTrigger = self.Triggers.GetFirstTriggering(1)
 
             if currentTrigger is not None:  # We're triggering
                 self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")

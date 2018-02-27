@@ -183,10 +183,10 @@
       <div class="controls">
         <label class="checkbox">
           <input name="auto_detect_position" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
-          <span class="help-inline">
-            When selected the print volume will be determined by the current Octoprint printer profile.
-          </span>
         </label>
+        <span class="help-inline">
+          When enabled the print volume within your current Octoprint Printer Profile will be overridden.  This does not affect the function of Octoprint, only the Octolapse plugin.
+        </span>
       </div>
     </div>
     <div class="control-group" data-bind="visible:override_octoprint_print_volume">

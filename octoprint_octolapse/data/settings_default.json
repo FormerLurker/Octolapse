@@ -1668,6 +1668,31 @@
       "z_hop_speed": 6000,
       "printer_position_confirmation_tolerance": 0.01,
       "auto_detect_position": true
+    },
+    {
+      "movement_speed": 10320,
+      "guid": "6b3df448-eaee-4077-970d-0cdf276a6063",
+      "min_x": 0.0,
+      "min_y": 0.0,
+      "min_z": 0.0,
+      "detract_speed": 2100,
+      "z_hop": 0.6,
+      "max_z": 0.0,
+      "max_x": 0.0,
+      "max_y": 0.0,
+      "description": "Genuine Prusa Mk3",
+      "origin_z": null,
+      "origin_y": null,
+      "origin_x": null,
+      "abort_out_of_bounds": true,
+      "retract_speed": 2100,
+      "name": "Prusa I3 MK3",
+      "retract_length": 0.8,
+      "snapshot_command": "snap",
+      "override_octoprint_print_volume": false,
+      "z_hop_speed": 6000,
+      "printer_position_confirmation_tolerance": 0.01,
+      "auto_detect_origin": true
     }
   ],
   "rendering_output_format_options": [

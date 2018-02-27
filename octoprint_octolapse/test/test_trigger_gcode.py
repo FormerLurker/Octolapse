@@ -49,16 +49,22 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-        # home the axis and resend the snap command - will be false because the PREVEIOUS state must be homed
+        # home the axis and resend the snap command, should trigger now
         position.Update("G28")
         trigger.Update(position, "snap")
         self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertTrue(trigger.IsWaiting(0))
 
-        # try again, should now work
+        # try again, Snap is encountered, but it must be the previous command to trigger
         position.Update("G0 X0 Y0 Z0 E1 F0")
         trigger.Update(position, "snap")
         position.Update("Snap")
+        trigger.Update(position, "snap")
+        self.assertFalse(trigger.IsTriggered(0))
+        self.assertTrue(trigger.IsWaiting(0))
+
+        # send any old command, should now trigger!
+        position.Update("m114")
         trigger.Update(position, "snap")
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
@@ -84,31 +90,30 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.IsWaiting(0))
 
         # change the snapshot triggers and make sure they are working
-        self.Settings.CurrentSnapshot().gcode_trigger_require_zhop = False
+        self.Settings.CurrentSnapshot().gcode_trigger_require_zhop = None
         self.Settings.CurrentSnapshot().gcode_trigger_on_extruding = True
-        self.Settings.CurrentSnapshot().gcode_trigger_on_extruding_start = False
-        self.Settings.CurrentSnapshot().gcode_trigger_on_primed = False
-        self.Settings.CurrentSnapshot().gcode_trigger_on_retracting = False
-        self.Settings.CurrentSnapshot().gcode_trigger_on_retracted = False
-        self.Settings.CurrentSnapshot().gcode_trigger_on_detracting = False
+        self.Settings.CurrentSnapshot().gcode_trigger_on_extruding_start = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_primed = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_retracting = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_partially_retracted = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_retracted = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_detracting_start = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_detracting = None
+        self.Settings.CurrentSnapshot().gcode_trigger_on_detracted = None
         trigger = GcodeTrigger(self.Settings)
-        position.Extruder.IsExtruding = lambda: False
-        position.Extruder.IsExtrudingStart = lambda: False
-        position.Extruder.IsPrimed = lambda: False
-        position.Extruder.IsRetracting = lambda: False
-        position.Extruder.IsRetracted = lambda: False
-        position.Extruder.IsDetracting = lambda: False
+
+        
         # send a command that is the snapshot command using the defaults
         trigger.Update(position, "snap")
         self.assertFalse(trigger.IsTriggered(0))
         self.assertTrue(trigger.IsWaiting(0))
         # change the extruder state and test
-        position.Extruder.Update(1.0)
-        position.Extruder.Update(1.0)
+        # should not trigger because trigger tests the previous command
+        position.Update("G0 X0 Y0 Z0 E10 F0")
         trigger.Update(position, "NotTheSnapshotCommand")
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
-
+        
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(Test_GcodeTrigger)

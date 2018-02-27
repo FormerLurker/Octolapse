@@ -743,9 +743,9 @@ class Test_Position(unittest.TestCase):
         # partial z lift, , we are within the rounding error
         position.Update("g0 z0.9999")
         self.assertTrue(position.IsZHop())
-        # No zhop, we're already at z1
+        # Still hopped!
         position.Update("g0 z1")
-        self.assertFalse(position.IsZHop())
+        self.assertTrue(position.IsZHop())
         # test with extrusion start at 1.5
         position.Update("g0 z1.5 e1")
         self.assertFalse(position.IsZHop())
@@ -756,10 +756,9 @@ class Test_Position(unittest.TestCase):
         # zhop
         position.Update("g0 z2.5 e0")
         self.assertTrue(position.IsZHop())
-
-        # do not move extruder
+        
         position.Update("no-command")
-        self.assertFalse(position.IsZHop())
+        self.assertTrue(position.IsZHop())
 
     # todo: IsAtCurrent/PreviousPosition tests
     def test_IsAtCurrentPosition(self):
