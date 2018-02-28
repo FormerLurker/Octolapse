@@ -35,7 +35,7 @@ def GetFormattedCoordinate(coord):
 
 
 class Pos(object):
-    def __init__(self, octoprintPrinterProfile, pos=None):
+    def __init__(self, printer, octoprintPrinterProfile, pos=None):
         self.OctoprintPrinterProfile = octoprintPrinterProfile
         # GCode
         self.GCode = None if pos is None else pos.GCode
@@ -56,8 +56,22 @@ class Pos(object):
         # E
         self.E = 0 if pos is None else pos.E
         self.EOffset = 0 if pos is None else pos.EOffset
-        self.IsRelative = False if pos is None else pos.IsRelative
-        self.IsExtruderRelative = False if pos is None else pos.IsExtruderRelative
+
+        if pos is not None:
+            self.IsRelative = pos.IsRelative
+            self.IsExtruderRelative = pos.IsExtruderRelative
+        else:
+            if printer.e_axis_default_mode in ['absolute','relative']:
+                self.IsExtruderRelative = True if printer.e_axis_default_mode == 'relative' else False
+            else:
+                self.IsExtruderRelative = None
+            if printer.xyz_axes_default_mode in ['absolute','relative']:
+               self.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
+            else:
+                self.IsRelative = None
+            
+            
+            
         self.LastExtrusionHeight = None if pos is None else pos.LastExtrusionHeight
         # Layer and Height Tracking
         self.Layer = 0 if pos is None else pos.Layer
@@ -197,6 +211,7 @@ class Pos(object):
                        e=None,
                        f=None,
                        force=False):
+
         if (f is not None):
             self.F = float(f)
         if (force):
@@ -288,7 +303,10 @@ class Position(object):
         self.Reset()
 
         self.Extruder = Extruder(octolapseSettings)
-        self.G90InfluencesExtruder = g90InfluencesExtruder
+        if self.Printer.g90_influences_extruder in ['true','false']:
+            self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False
+        else:
+            self.G90InfluencesExtruder = g90InfluencesExtruder
 
         if (self.Printer.z_hop is None):
             self.Printer.z_hop = 0
@@ -341,7 +359,7 @@ class Position(object):
                      force=False):
         if (len(self.Positions) == 0):
             return
-        self.SavedPosition = Pos(self.Positions[0])
+        self.SavedPosition = Pos(self.Printer, self.OctoprintPrinterProfile, self.Positions[0])
 
     def ToDict(self):
         positionDict = None
@@ -545,12 +563,12 @@ class Position(object):
         previousPos = None
         numPositions = len(self.Positions)
         if (numPositions > 0):
-            pos = Pos(self.OctoprintPrinterProfile, self.Positions[0])
-            previousPos = Pos(self.OctoprintPrinterProfile, self.Positions[0])
+            pos = Pos(self.Printer, self.OctoprintPrinterProfile, self.Positions[0])
+            previousPos = Pos(self.Printer, self.OctoprintPrinterProfile, self.Positions[0])
         if (pos is None):
-            pos = Pos(self.OctoprintPrinterProfile)
+            pos = Pos(self.Printer, self.OctoprintPrinterProfile)
         if (previousPos is None):
-            previousPos = Pos(self.OctoprintPrinterProfile)
+            previousPos = Pos(self.Printer, self.OctoprintPrinterProfile)
 
         # reset the current position state (copied from the previous position,
         # or a
@@ -577,13 +595,16 @@ class Position(object):
 
                     if (x is not None or y is not None or z is not None
                             or f is not None):
-
-                        if (pos.HasPositionError and not pos.IsRelative):
-                            pos.HasPositionError = False
-                            pos.PositionError = ""
-                        pos.UpdatePosition(
-                            self.BoundingBox, x, y, z, e=None, f=f)
-
+                        if pos.IsRelative is not None:
+                            if (pos.HasPositionError and not pos.IsRelative):
+                                pos.HasPositionError = False
+                                pos.PositionError = ""
+                            pos.UpdatePosition(
+                                self.BoundingBox, x, y, z, e=None, f=f)
+                        else:
+                            self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                                "Position - Unable to update the X/Y/Z axis position, the axis mode (relative/absolute) has not been explicitly set via G90/G91."
+                            )
                     if (e is not None):
                         if (pos.IsExtruderRelative is not None):
                             if (pos.HasPositionError
@@ -599,7 +620,7 @@ class Position(object):
                                 f=None)
                         else:
                             self.Settings.CurrentDebugProfile().LogError(
-                                "Position - Unable to update the extruder position, no extruder coordinate system has been selected (absolute/relative)."
+                                "Position - Unable to update the extruder position, the extruder mode (relative/absolute) has been selected (absolute/relative)."
                             )
                     message = "Position Change - {0} - {1} Move From(X:{2},Y:{3},Z:{4},E:{5}) - To(X:{6},Y:{7},Z:{8},E:{9})"
                     if (previousPos is None):
@@ -684,15 +705,15 @@ class Position(object):
                     pos.PositionError = None
                     # we must do this in case we have more than one home
                     # command
-                    previousPos = Pos(pos)
+                    previousPos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
                 else:
                     self.Settings.CurrentDebugProfile().LogError(
                         "Position - Unable to parse the Gcode:{0}".format(
                             gcode))
 
-            elif (cmd.Command == "G90"):
+            elif cmd.Command == "G90":
                 # change x,y,z to absolute
-                if (pos.IsRelative):
+                if pos.IsRelative is None or pos.IsRelative:
                     self.Settings.CurrentDebugProfile(
                     ).LogPositionCommandReceived(
                         "Received G90 - Switching to absolute x,y,z coordinates."
@@ -708,8 +729,8 @@ class Position(object):
                 # absolute
                 # coordinates
                 # as well
-                if (self.G90InfluencesExtruder):
-                    if (pos.IsExtruderRelative):
+                if self.G90InfluencesExtruder:
+                    if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
                         self.Settings.CurrentDebugProfile(
                         ).LogPositionCommandReceived(
                             "Received G90 - Switching to absolute extruder coordinates"
@@ -722,7 +743,7 @@ class Position(object):
                         )
             elif (cmd.Command == "G91"):
                 # change x,y,z to relative
-                if (not pos.IsRelative):
+                if (pos.IsRelative is None or not pos.IsRelative):
                     self.Settings.CurrentDebugProfile(
                     ).LogPositionCommandReceived(
                         "Received G91 - Switching to relative x,y,z coordinates"
@@ -739,7 +760,7 @@ class Position(object):
                 # coordinates
                 # as well
                 if (self.G90InfluencesExtruder):
-                    if (not pos.IsExtruderRelative):
+                    if (pos.IsExtruderRelative is None or not pos.IsExtruderRelative):
                         self.Settings.CurrentDebugProfile(
                         ).LogPositionCommandReceived(
                             "Received G91 - Switching to relative extruder coordinates"

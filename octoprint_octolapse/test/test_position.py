@@ -50,8 +50,10 @@ class Test_Position(unittest.TestCase):
         self.assertIsNone(position.PositionError())
 
         # X axis tests
-        # reset, home the axis and test again
+        # reset, set relative extruder and absolute xyz, home the axis and test again
         position.Reset()
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         self.assertFalse(position.HasPositionError())
         self.assertIsNone(position.PositionError())
@@ -77,8 +79,10 @@ class Test_Position(unittest.TestCase):
         self.assertTrue(position.PositionError() is not None)
 
         # Y axis tests
-        # reset, home the axis and test again
+        # reset, set relative extruder and absolute xyz, home the axis and test again
         position.Reset()
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         self.assertFalse(position.HasPositionError())
         self.assertIsNone(position.PositionError())
@@ -105,7 +109,10 @@ class Test_Position(unittest.TestCase):
 
         # Z axis tests
         # reset, home the axis and test again
+        # reset, set relative extruder and absolute xyz, home the axis and test again
         position.Reset()
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         self.assertFalse(position.HasPositionError())
         self.assertIsNone(position.PositionError())
@@ -363,7 +370,9 @@ class Test_Position(unittest.TestCase):
         self.assertIsNone(position.Y())
         self.assertIsNone(position.Z())
 
-        # set homed axis and update absolute position
+        # set relative extruder and absolute xyz, home axis and update absolute position
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         position.Update("G1 x100 y200 z150")
         self.assertEqual(position.X(), 100)
@@ -539,7 +548,9 @@ class Test_Position(unittest.TestCase):
         self.assertEqual(position.Layer(), 0)
         self.assertFalse(position.IsLayerChange())
 
-        # set homed axis, absolute coordinates, and check height and layer
+        # set homed axis, absolute xyz coordinates, relative extruder coordinates and check height and layer
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         self.assertEqual(position.Height(), 0)
         self.assertEqual(position.Layer(), 0)
@@ -642,14 +653,17 @@ class Test_Position(unittest.TestCase):
     def test_ExtruderMovement(self):
         """Test the M82 and M83 command."""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        previousPos = Pos(self.OctoprintPrinterProfile)
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile)
         # test initial position
         self.assertIsNone(position.E())
         self.assertIsNone(position.IsExtruderRelative())
         self.assertIsNone(position.ERelative(previousPos))
 
+        # set extruder to relative coordinates
+        position.Update("M83")
+
         # test movement
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("G0 E100")
         self.assertEqual(position.E(), 100)
         # this is somewhat reversed from what we do in the position.py module
@@ -659,39 +673,39 @@ class Test_Position(unittest.TestCase):
         self.assertEqual(position.ERelative(previousPos), -100)
 
         # switch to absolute movement
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("M82")
         self.assertFalse(position.IsExtruderRelative())
         self.assertEqual(position.E(), 100)
         self.assertEqual(position.ERelative(previousPos), 0)
 
         # move to -25
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("G0 E-25")
         self.assertEqual(position.E(), -25)
         self.assertEqual(position.ERelative(previousPos), 125)
 
         # test movement to origin
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("G0 E0")
         self.assertEqual(position.E(), 0)
         self.assertEqual(position.ERelative(previousPos), -25)
 
         # switch to relative position
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("M83")
         position.Update("G0 e1.1")
         self.assertEqual(position.E(), 1.1)
         self.assertEqual(position.ERelative(previousPos), -1.1)
 
         # move and test
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("G0 e1.1")
         self.assertEqual(position.E(), 2.2)
         self.assertEqual(position.ERelative(previousPos), -1.1)
 
         # move and test
-        previousPos = Pos(self.OctoprintPrinterProfile, position.GetPosition())
+        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.GetPosition())
         position.Update("G0 e-2.2")
         self.assertEqual(position.E(), 0)
         self.assertEqual(position.ERelative(previousPos), 2.2)
@@ -711,7 +725,9 @@ class Test_Position(unittest.TestCase):
         position.Update("G1 x0 y0 z0.5")
         self.assertFalse(position.IsZHop())
 
-        # Home axis, check again
+        # set relative extruder, absolute xyz, home axis, check again
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         self.assertFalse(position.IsZHop())
         # Position reports as NotHomed (misnomer, need to replace), needs to get
@@ -767,13 +783,58 @@ class Test_Position(unittest.TestCase):
         # G1 X119.915 Y113.338 F7200
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         position.Printer.printer_position_confirmation_tolerance = .0051
-        position.Update("g28")
+        position.Update("M83")
+        position.Update("G90")
+        position.Update("G28")
         position.Update("G1 X119.915 Y113.338 Z2.1 F7200")
         self.assertTrue(position.IsAtCurrentPosition(119.91, 113.34, 2.1))
         position.Update("g0 x120 y121 z2.1")
         self.assertTrue(position.IsAtPreviousPosition(119.91, 113.34, 2.1))
 
 
+    def test_extruder_axis_default_mode_relative(self):
+        # test e_axis_default_mode = 'relative' 
+        raise NotImplementedError
+
+    def test_extruder_axis_default_mode_absolute(self):
+        # test e_axis_default_mode = 'absolute' 
+        raise NotImplementedError
+
+    def test_extruder_axis_default_mode_require_explicit(self):
+        # test e_axis_default_mode = 'require-explicit' 
+        raise NotImplementedError
+
+    def test_xyz_axis_default_mode_relative(self):
+        # test xyz_axes_default_mode = 'relative' 
+        raise NotImplementedError
+
+    def test_xyz_axis_default_mode_absolute(self):
+        # test xyz_axes_default_mode = 'absolute' 
+        raise NotImplementedError
+
+    def test_xyz_axis_default_mode_require_explicit(self):
+        # test xyz_axes_default_mode = 'require-explicit' 
+        raise NotImplementedError
+
+    def test_g90_influences_extruder_use_octoprint_settings(self):
+        # test g90_influences_extruder = 'use-octoprint-settings' 
+        raise NotImplementedError
+
+    def test_g90_influences_extruder_true(self):
+        # test g90_influences_extruder = 'true' 
+        raise NotImplementedError
+
+    def test_g90_influences_extruder_false(self):
+        # test g90_influences_extruder = 'false' 
+        raise NotImplementedError
+
+    def test_priming_height(self):
+        # test the priming height > 0
+        raise NotImplementedError
+
+    def test_priming_height_0(self):
+        # test the priming height = 0
+        raise NotImplementedError
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(Test_Position)
     unittest.TextTestRunner(verbosity=3).run(suite)

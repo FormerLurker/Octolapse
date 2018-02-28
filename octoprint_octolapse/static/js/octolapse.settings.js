@@ -39,7 +39,11 @@ $(function () {
                     'current_profile_guid': settings.current_printer_profile_guid
                     , 'profiles': settings.printers
                     , 'default_profile': settings.default_printer_profile
-                    , 'profileOptions': null
+                    , 'profileOptions': {
+                        'e_axis_default_mode_options': settings.e_axis_default_mode_options,
+                        'g90_influences_extruder_options': settings.g90_influences_extruder_options,
+                        'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,
+                    }
                     , 'profileViewModelCreateFunction': Octolapse.PrinterProfileViewModel
                     , 'profileValidationRules': Octolapse.PrinterProfileValidationRules
                     , 'bindingElementId': 'octolapse_printer_tab'

@@ -12,6 +12,8 @@ from octoprint_octolapse.trigger import TimerTrigger
 class Test_TimerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.Settings.CurrentPrinter().e_axis_default_mode = 'relative'
+        self.Settings.CurrentPrinter().xyz_axes_default_mode = 'absolute'
         self.Settings.CurrentPrinter().auto_detect_position = False
         self.Settings.CurrentPrinter().origin_x = 0
         self.Settings.CurrentPrinter().origin_y = 0
@@ -285,7 +287,6 @@ class Test_TimerTrigger(unittest.TestCase):
 
         # try zhop
         position.Update("g0 x0 y0 z.7 ")
-
         trigger.Update(position)
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))

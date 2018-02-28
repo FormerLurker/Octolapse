@@ -49,7 +49,10 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-        # home the axis and resend the snap command, should trigger now
+        # reset, set relative extruder and absolute xyz, home the axis, and resend the snap command, should wait since we require
+        # the home command to complete (sent to printer) before triggering
+        position.Update("M83")
+        position.Update("G90")
         position.Update("G28")
         trigger.Update(position, "snap")
         self.assertFalse(trigger.IsTriggered(0))
@@ -57,15 +60,7 @@ class Test_GcodeTrigger(unittest.TestCase):
 
         # try again, Snap is encountered, but it must be the previous command to trigger
         position.Update("G0 X0 Y0 Z0 E1 F0")
-        trigger.Update(position, "snap")
-        position.Update("Snap")
-        trigger.Update(position, "snap")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
-
-        # send any old command, should now trigger!
-        position.Update("m114")
-        trigger.Update(position, "snap")
+        trigger.Update(position, "G0 X0 Y0 Z0 E1 F0")
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 

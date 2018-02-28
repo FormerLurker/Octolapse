@@ -381,8 +381,8 @@ $(function () {
         self.IsLayerChange = ko.observable(false);
         self.IsHeightChange = ko.observable(false);
         self.IsZHop = ko.observable(false);
-        self.IsRelative = ko.observable(false);
-        self.IsExtruderRelative = ko.observable(false);
+        self.IsRelative = ko.observable(null);
+        self.IsExtruderRelative = ko.observable(null);
         self.Layer = ko.observable(0);
         self.Height = ko.observable(0).extend({ numeric: 2 });
         self.LastExtrusionHeight = ko.observable(0).extend({ numeric: 2 });
@@ -405,10 +405,12 @@ $(function () {
             this.PositionError(state.PositionError);
         };
 
-        self.getCheckedIconClass = function (isHomed) {
+        self.getCheckedIconClass = function (value) {
             return ko.computed({
                 read: function () {
-                    if (isHomed)
+                    if (value == null)
+                        return "fa-question";
+                    else if (value)
                         return "fa-check";
                     else
                         return "fa-times-circle";
@@ -448,13 +450,18 @@ $(function () {
                 return "Not a zhop";
         }, self);
         self.getIsExtruderRelativeStateText = ko.pureComputed(function () {
-            if (self.IsExtruderRelative())
+            if (self.IsExtruderRelative() == null)
+                return "Not Set";
+            else if (self.IsExtruderRelative())
                 return "Relative";
             else
                 return "Absolute";
         }, self);
+
         self.getIsRelativeStateText = ko.pureComputed(function () {
-            if (self.IsRelative())
+            if (self.IsRelative() == null)
+                return "Not Set";
+            else if (self.IsRelative())
                 return "Relative";
             else
                 return "Absolute";

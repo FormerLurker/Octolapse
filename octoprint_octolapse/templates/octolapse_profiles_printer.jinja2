@@ -52,56 +52,101 @@
   <hr/>
   <div>
     <div>
-      <h4>Axis Speed Settings</h4>
-      <p>Control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
+      <h4>Axis Settings</h4>
+      <p>Set the default axis mode, control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
     </div>
-    <div class="control-group">
-      <label class="control-label">Movement Speed</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
-          <span class="add-on">mm</span>
-          <span class="add-on">min</span>
+    <div>
+      <div>
+        <h5>Axis Speeds</h5>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Movement Speed</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
+            <span class="add-on">mm</span>
+            <span class="add-on">min</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
         </div>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Retraction Speed</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
+            <span class="add-on">mm</span>
+            <span class="add-on">min</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Detraction Speed</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+            <span class="add-on">mm</span>
+            <span class="add-on">min</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Z Movement Speed</label>
+        <div class="controls">
+          <div class="input-append form-inline">
+            <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+            <span class="add-on">mm</span>
+            <span class="add-on">min</span>
+          </div>
+          <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Retraction Speed</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
-          <span class="add-on">mm</span>
-          <span class="add-on">min</span>
-        </div>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+    <div>
+      <div>
+        <h5>Axis Mode</h5>
+        <p>
+          Set the default axis relative/absolute mode.  It is highly recommended that you require explicit commands to set the axis modes, but some slicers do not do this by default.  Use caution when settings a default mode.
+        </p>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Detraction Speed</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
-          <span class="add-on">mm</span>
-          <span class="add-on">min</span>
+      
+      <div class="control-group">
+        <label class="control-label" >X/Y/Z Axis Mode</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: xyz_axes_default_mode"></select>
+          <div class="error_label_container text-error" ></div>
         </div>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Z Movement Speed</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
-          <span class="add-on">mm</span>
-          <span class="add-on">min</span>
+      <div class="control-group">
+        <label class="control-label" >E Axis Mode</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: e_axis_default_mode"></select>
+          <div class="error_label_container text-error" ></div>
         </div>
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
       </div>
+      <div class="control-group">
+        <label class="control-label" >G90/G91 Influences Extruder</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: g90_influences_extruder"></select>
+          <div class="error_label_container text-error" ></div>
+        </div>
+      </div>
+    
     </div>
   </div>
   <hr/>

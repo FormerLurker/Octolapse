@@ -10,6 +10,8 @@ from octoprint_octolapse.trigger import LayerTrigger
 class Test_LayerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.Settings.CurrentPrinter().e_axis_default_mode = 'relative'
+        self.Settings.CurrentPrinter().xyz_axes_default_mode = 'absolute'
         self.Settings.CurrentPrinter().auto_detect_position = False
         self.Settings.CurrentPrinter().origin_x = 0
         self.Settings.CurrentPrinter().origin_y = 0

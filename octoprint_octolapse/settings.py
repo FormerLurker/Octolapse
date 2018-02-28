@@ -49,6 +49,10 @@ class Printer(object):
         self.max_z = 0.0
         self.auto_position_detection_commands = ""
         self.priming_height = 0
+        self.e_axis_default_mode = 'require-explicit' # other values are 'relative' and 'absolute'
+        self.g90_influences_extruder = 'use-octoprint-settings' #other values are 'true' and 'false'
+        self.xyz_axes_default_mode = 'require-explicit' # other values are 'relative' and 'absolute'
+        
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -76,6 +80,9 @@ class Printer(object):
                 self.min_z = printer.min_z
                 self.max_z = printer.max_z
                 self.priming_height = printer.priming_height
+                self.e_axis_default_mode = printer.e_axis_default_mode
+                self.g90_influences_extruder = printer.g90_influences_extruder
+                self.xyz_axes_default_mode = printer.xyz_axes_default_mode
             else:
                 self.Update(printer)
 
@@ -147,7 +154,16 @@ class Printer(object):
             self.max_z = utility.getfloat(changes["max_z"], self.max_z)
         if "priming_height" in changes.keys():
             self.priming_height = utility.getfloat(changes["priming_height"], self.priming_height)
-        
+        if "e_axis_default_mode" in changes.keys():
+            self.e_axis_default_mode = utility.getstring(
+                changes["e_axis_default_mode"], self.e_axis_default_mode)
+        if "g90_influences_extruder" in changes.keys():
+            self.g90_influences_extruder = utility.getstring(
+                changes["g90_influences_extruder"], self.g90_influences_extruder)
+        if "xyz_axes_default_mode" in changes.keys():
+            self.xyz_axes_default_mode = utility.getstring(
+                changes["xyz_axes_default_mode"], self.xyz_axes_default_mode)
+
     def ToDict(self):
         return {
             'name'				: self.name,
@@ -174,7 +190,10 @@ class Printer(object):
             'max_y': self.max_y,
             'min_z': self.min_z,
             'max_z': self.max_z,
-            'priming_height' : self.priming_height
+            'priming_height' : self.priming_height,
+            'e_axis_default_mode' : self.e_axis_default_mode,
+            'g90_influences_extruder' : self.g90_influences_extruder,
+            'xyz_axes_default_mode' : self.xyz_axes_default_mode
         }
 
 
@@ -1817,6 +1836,22 @@ class OctolapseSettings(object):
                 self.show_trigger_state_changes, defaults.show_trigger_state_changes
             ),
             "platform": sys.platform,
+            'e_axis_default_mode_options': [
+                dict(value='require-explicit', name='Require Explicit M82/M83'),
+                dict(value='relative', name='Default To Relative'),
+                dict(value='absolute', name='Default To Absolute')
+            ],
+            
+            'g90_influences_extruder_options': [
+                dict(value='use-octoprint-settings', name='Use Octoprint Settings'),
+                dict(value='true', name='True'),
+                dict(value='false', name='False'),
+            ],
+            'xyz_axes_default_mode_options': [
+                dict(value='require-explicit', name='Require Explicit G90/G91'),
+                dict(value='relative', name='Default To Relative'),
+                dict(value='absolute', name='Default To Absolute')
+            ],
             'stabilization_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
