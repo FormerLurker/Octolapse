@@ -481,7 +481,7 @@ $(function () {
         self.Y = ko.observable(0).extend({ numeric: 2 });
         self.YOffset = ko.observable(0).extend({ numeric: 2 });
         self.Z = ko.observable(0).extend({ numeric: 2 });
-        self.ZOffset = ko.observable(0);
+        self.ZOffset = ko.observable(0).extend({ numeric: 2 });
         self.E = ko.observable(0).extend({ numeric: 2 });
         self.EOffset = ko.observable(0).extend({ numeric: 2 });
         self.update = function (state) {

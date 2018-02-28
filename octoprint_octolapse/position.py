@@ -57,11 +57,12 @@ class Pos(object):
         self.E = 0 if pos is None else pos.E
         self.EOffset = 0 if pos is None else pos.EOffset
         self.IsRelative = False if pos is None else pos.IsRelative
-        self.IsExtruderRelative = True if pos is None else pos.IsExtruderRelative
+        self.IsExtruderRelative = False if pos is None else pos.IsExtruderRelative
         self.LastExtrusionHeight = None if pos is None else pos.LastExtrusionHeight
         # Layer and Height Tracking
         self.Layer = 0 if pos is None else pos.Layer
         self.Height = 0 if pos is None else pos.Height
+        self.IsPrimed = False if pos is None else pos.IsPrimed
 
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
@@ -814,30 +815,42 @@ class Position(object):
 
             #if (hasExtruderChanged or pos.HasPositionChanged):
 
+            
             # calculate LastExtrusionHeight and Height
-            if (self.Extruder.IsExtruding()):
+            if self.Extruder.IsExtruding():
                 pos.LastExtrusionHeight = pos.Z
-                if (pos.Height is None or
-                        utility.round_to(pos.Z, self.PrinterTolerance)
-                        > previousPos.Height):
-                    pos.Height = utility.round_to(
-                        pos.Z, self.PrinterTolerance)
-                    self.Settings.CurrentDebugProfile(
-                    ).LogPositionHeightChange(
-                        "Position - Reached New Height:{0}.".format(
-                            pos.Height))
 
-                # calculate layer change
-                if (utility.round_to(
-                        self.ZDelta(pos), self.PrinterTolerance) > 0
-                        or pos.Layer == 0):
-                    pos.IsLayerChange = True
-                    pos.Layer += 1
-                    self.Settings.CurrentDebugProfile(
-                    ).LogPositionLayerChange(
-                        "Position - Layer:{0}.".format(pos.Layer))
+                # see if we have primed yet
+                if self.Printer.priming_height > 0:
+                    if(not pos.IsPrimed and pos.LastExtrusionHeight < self.Printer.priming_height):
+                        pos.IsPrimed = True
                 else:
-                    pos.IsLayerChange = False
+                    # if we have no priming height set, just set IsPrimed = true.
+                    pos.IsPrimed = True
+
+                # make sure we are primed before calculating height/layers
+                if(pos.IsPrimed):
+                    if (pos.Height is None or
+                            utility.round_to(pos.Z, self.PrinterTolerance)
+                            > previousPos.Height):
+                        pos.Height = utility.round_to(
+                            pos.Z, self.PrinterTolerance)
+                        self.Settings.CurrentDebugProfile(
+                        ).LogPositionHeightChange(
+                            "Position - Reached New Height:{0}.".format(
+                                pos.Height))
+
+                    # calculate layer change
+                    if (utility.round_to(
+                            self.ZDelta(pos), self.PrinterTolerance) > 0
+                            or pos.Layer == 0):
+                        pos.IsLayerChange = True
+                        pos.Layer += 1
+                        self.Settings.CurrentDebugProfile(
+                        ).LogPositionLayerChange(
+                            "Position - Layer:{0}.".format(pos.Layer))
+                    else:
+                        pos.IsLayerChange = False
 
             # Calculate ZHop based on last extrusion height
             if (pos.LastExtrusionHeight is not None):
@@ -848,14 +861,14 @@ class Position(object):
                     self.PrinterTolerance)
                 if (lift >= self.Printer.z_hop):
                     lift = self.Printer.z_hop
-                isLifted = self.Printer.z_hop > 0.0 and lift >= self.Printer.z_hop and (
-                    not self.Extruder.IsExtruding()
-                    or self.Extruder.IsExtrudingStart())
+                isLifted = lift >= self.Printer.z_hop and (
+                        not self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart()
+                    )
 
-                if (isLifted):
+                if isLifted or self.Printer.z_hop == 0:
                     pos.IsZHop = True
 
-            if (pos.IsZHop):
+            if pos.IsZHop and self.Printer.z_hop > 0:
                 self.Settings.CurrentDebugProfile().LogPositionZHop(
                     "Position - Zhop:{0}".format(self.Printer.z_hop))
 

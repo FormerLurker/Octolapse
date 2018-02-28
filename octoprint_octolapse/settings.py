@@ -48,6 +48,7 @@ class Printer(object):
         self.min_z = 0.0
         self.max_z = 0.0
         self.auto_position_detection_commands = ""
+        self.priming_height = 0
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -74,7 +75,7 @@ class Printer(object):
                 self.max_y = printer.max_y
                 self.min_z = printer.min_z
                 self.max_z = printer.max_z
-
+                self.priming_height = printer.priming_height
             else:
                 self.Update(printer)
 
@@ -144,10 +145,11 @@ class Printer(object):
             self.min_z = utility.getfloat(changes["min_z"], self.min_z)
         if "max_z" in changes.keys():
             self.max_z = utility.getfloat(changes["max_z"], self.max_z)
-
+        if "priming_height" in changes.keys():
+            self.priming_height = utility.getfloat(changes["priming_height"], self.priming_height)
+        
     def ToDict(self):
         return {
-
             'name'				: self.name,
             'description'		: self.description,
             'guid'				: self.guid,
@@ -171,7 +173,8 @@ class Printer(object):
             'min_y': self.min_y,
             'max_y': self.max_y,
             'min_z': self.min_z,
-            'max_z': self.max_z
+            'max_z': self.max_z,
+            'priming_height' : self.priming_height
         }
 
 

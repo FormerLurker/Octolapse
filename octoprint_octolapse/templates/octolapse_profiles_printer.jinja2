@@ -42,7 +42,7 @@
       <label class="control-label">Z-Hop Height</label>
       <div class="controls">
         <div class="input-append form-inline">
-          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".05" max="100.0" required="true" />
+          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".00" max="100.0" required="true" />
           <span class="add-on">mm</span>
         </div>
         <div class="error_label_container text-error" ></div>
@@ -289,9 +289,20 @@
       <div class="controls">
         <input name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
         <div class="error_label_container text-error" ></div>
-
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label">Priming Height</label>
+      <div class="controls">
+        <div class="input-append form-inline">
+          <input name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required="true" min="0.0" step="0.01" />
+          <span class="add-on">mm</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <span class="help-inline">Some slicers prime quite far from the printer bed.  This can adversly affect layer/height tracking.  This setting will prevent layer detection if extrusion has not happend BELOW the selected height.  Set to 0 to turn off.</span>
+      </div>
+    </div>
+    
   </div>
 
 </script>

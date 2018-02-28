@@ -51,6 +51,6 @@ $(function() {
         self.max_y = ko.observable(values.max_y);
         self.min_z = ko.observable(values.min_z);
         self.max_z = ko.observable(values.max_z);
-
+        self.priming_height = ko.observable(values.priming_height);
     };
 });

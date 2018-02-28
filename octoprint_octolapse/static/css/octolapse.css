@@ -102,24 +102,28 @@ table.octolapse-profiles td.profile_action {
     }
 
 
-
+#octolapse_add_edit_profile_dialog.modal,
+#octolapse_edit_settings_main_dialog.modal {
+    width: 700px;
+    margin-left: -350px;
+}
 
 form.octolapse_form {
     margin: 0;
 }
 
-    form.octolapse_form .alert {
-        margin: 5px 0px;
-        padding: 5px;
-    }
+form.octolapse_form .alert {
+    margin: 5px 0px;
+    padding: 5px;
+}
 
-    form.octolapse_form .modal-footer {
-        padding: 9px 10px 10px;
-    }
+form.octolapse_form .modal-footer {
+    padding: 9px 10px 10px;
+}
 
-    form.octolapse_form .modal-body, {
-        padding: 5px 15px;
-    }
+form.octolapse_form .modal-body, {
+    padding: 5px 15px;
+}
 
 .ol-compact-row.row-fluid [class*="span"] {
     min-height: unset;
