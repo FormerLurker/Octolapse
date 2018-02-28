@@ -276,7 +276,11 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
             with open(self.DefaultSettingsFilePath()) as defaultSettingsJson:
                 data = json.load(defaultSettingsJson)
                 # if a settings file does not exist, create one ??
-                self.Settings = OctolapseSettings(self.LogFilePath(), data)
+                newSettings = OctolapseSettings(self.LogFilePath(), data)
+                if(self.Settings is not None):
+                    self.Settings.Update(newSettings.ToDict())
+                else:
+                    self.Settings = createNewSettings
             self.Settings.CurrentDebugProfile().LogSettingsLoad(
                 "Creating new settings file from defaults.")
             createNewSettings = True
@@ -334,7 +338,12 @@ class OctolapsePlugin(	octoprint.plugin.SettingsPlugin,
                     for profile in self.Settings.cameras.values():
                         profile.address = cameraAddress
                         profile.snapshot_request_template = snapshotRequestTemplate
-            except TypeError, e:
+            except Exception, e:
+                # cannot send a popup yet,because no clients will be connected.  We should write a routine that checks 
+                # to make sure Octolapse is correctly configured if it is enabled and send some kind of message on client
+                # connect.
+                #self.SendPopupMessage("Octolapse was unable to extract the default camera address from Octoprint.  Please configure your camera address and snapshot template before using Octolapse.")
+
                 self.Settings.CurrentDebugProfile().LogException(e)
 
             bitrate = self._settings.settings.get(["webcam", "bitrate"])

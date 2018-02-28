@@ -218,7 +218,9 @@ $(function () {
                     contentType: "application/json",
                     dataType: "json",
                     success: function (newSettings) {
+
                         self.updateSettings(newSettings);
+                        Octolapse.Globals.update(newSettings);
                         alert("The default settings have been restored.  You must reboot octoprint before the settings take effect.");
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {

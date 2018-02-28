@@ -1748,16 +1748,14 @@ class OctolapseSettings(object):
             for printer in printers:
                 if printer["guid"] == "":
                     printer["guid"] = str(uuid.uuid4())
-                self.printers[printer["guid"]] = Printer(printer=printer)
-
+                self.printers.update({ printer["guid"] : Printer(printer=printer)})
         if HasKey(changes, "stabilizations"):
             self.stabilizations = {}
             stabilizations = GetValue(changes, "stabilizations", None)
             for stabilization in stabilizations:
                 if stabilization["guid"] == "":
                     stabilization["guid"] = str(uuid.uuid4())
-                self.stabilizations[stabilization["guid"]] = Stabilization(
-                    stabilization=stabilization)
+                self.stabilizations.update({ stabilization["guid"] : Stabilization(stabilization=stabilization)})
 
         if HasKey(changes, "snapshots"):
             self.snapshots = {}
@@ -1765,24 +1763,15 @@ class OctolapseSettings(object):
             for snapshot in snapshots:
                 if snapshot["guid"] == "":
                     snapshot["guid"] = str(uuid.uuid4())
-                self.snapshots[snapshot["guid"]] = Snapshot(snapshot=snapshot)
-
+                self.snapshots.update({ snapshot["guid"] : Snapshot(snapshot=snapshot)})
         if HasKey(changes, "renderings"):
+            self.renderings = {}
             renderings = GetValue(changes, "renderings", None)
             for rendering in renderings:
-                originalRenderingGuid = rendering["guid"]
-                if rendering["guid"].startswith("NewRenderingGuid_"):
+                if rendering["guid"] == "":
                     rendering["guid"] = str(uuid.uuid4())
-                    if originalRenderingGuid == self.current_rendering_profile_guid:
-                        self.current_rendering_profile_guid = rendering["guid"]
-                if rendering["guid"] in self.renderings:
-                    if originalRenderingGuid != rendering["guid"]:
-                        self.renderings[rendering["guid"]] = self.renderings.pop(
-                            originalRenderingGuid)
-                    self.renderings[rendering["guid"]].Update(rendering)
-                else:
-                    self.renderings[rendering["guid"]] = Rendering(
-                        rendering=rendering)
+                self.renderings.update({ rendering["guid"] : Rendering(
+                        rendering=rendering)})
 
         if HasKey(changes, "cameras"):
             self.cameras = {}
@@ -1790,7 +1779,7 @@ class OctolapseSettings(object):
             for camera in cameras:
                 if camera["guid"] == "":
                     camera["guid"] = str(uuid.uuid4())
-                self.cameras[camera["guid"]] = Camera(camera=camera)
+                self.cameras.update({ camera["guid"] : Camera(camera=camera)})
 
         if HasKey(changes, "debug_profiles"):
             self.debug_profiles = {}
@@ -1798,8 +1787,8 @@ class OctolapseSettings(object):
             for debugProfile in debugProfiles:
                 if debugProfile["guid"] == "":
                     debugProfile["guid"] = str(uuid.uuid4())
-                self.debug_profiles[debugProfile["guid"]] = DebugProfile(
-                    self.LogFilePath, debugProfile=debugProfile)
+                self.debug_profiles.update({ debugProfile["guid"] : DebugProfile(self.LogFilePath, debugProfile=debugProfile)})
+                
 
     def ToDict(self, ):
         defaults = OctolapseSettings(self.LogFilePath)
