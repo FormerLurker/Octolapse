@@ -73,10 +73,10 @@
   <div>
     <div>
       <h4>Custom Image Preferences</h4>
-      <p>Here you can define a snapshot delay, adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
+      <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
       <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
     </div>
- 
+
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -306,13 +306,13 @@
       </div>
     </div>
   </div>
-    <hr/>
+  <hr/>
+  <div>
     <div class="control-group">
       <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
         <i class="fa fa-caret-right"></i> {{ _('Advanced Camera Options') }}
       </a>
     </div>
-
     <div id="camera-advanced" class="control-group hide">
       <div>
         <div>
@@ -356,172 +356,169 @@
         </div>
       </div>
       <div>
-      <div>
-        <h4>Camera Settings Request Templates</h4>
-        <p>I'm pretty sure the defaults will not work for all cameras, but hopefully these templates will allow image control on a wider group of cameras.  I used Firebug to inspect the request URL while changing webcam settings from the /webcam/control.html page to determine what templates to use for my camera.</p>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Brightness Request Template</label>
-        <div class="controls">
-          <textarea name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div>
+          <h4>Camera Settings Request Templates</h4>
+          <p>I'm pretty sure the defaults will not work for all cameras, but hopefully these templates will allow image control on a wider group of cameras.  I used Firebug to inspect the request URL while changing webcam settings from the /webcam/control.html page to determine what templates to use for my camera.</p>
         </div>
-      </div>
+        <div class="control-group">
+          <label class="control-label">Brightness Request Template</label>
+          <div class="controls">
+            <textarea name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
+        </div>
 
-      <div class="control-group">
-        <label class="control-label">Contrast Request Template</label>
-        <div class="controls">
-          <textarea name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Contrast Request Template</label>
+          <div class="controls">
+            <textarea name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Saturation Request Template</label>
-        <div class="controls">
-          <textarea name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Saturation Request Template</label>
+          <div class="controls">
+            <textarea name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">White Balance Request Template</label>
-        <div class="controls">
-          <textarea name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">White Balance Request Template</label>
+          <div class="controls">
+            <textarea name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Gain Request Template</label>
-        <div class="controls">
-          <textarea name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Gain Request Template</label>
+          <div class="controls">
+            <textarea name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Powerline Frequency Request Template</label>
-        <div class="controls">
-          <textarea name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Powerline Frequency Request Template</label>
+          <div class="controls">
+            <textarea name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">White Balance Temperature Request Template</label>
-        <div class="controls">
-          <textarea name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">White Balance Temperature Request Template</label>
+          <div class="controls">
+            <textarea name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Sharpness Request Template</label>
-        <div class="controls">
-          <textarea name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Sharpness Request Template</label>
+          <div class="controls">
+            <textarea name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Backlight Compensation Enabled Request Template</label>
-        <div class="controls">
-          <textarea name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Backlight Compensation Enabled Request Template</label>
+          <div class="controls">
+            <textarea name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Exposure Type Request Template</label>
-        <div class="controls">
-          <textarea name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Exposure Type Request Template</label>
+          <div class="controls">
+            <textarea name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Exposure Request Template</label>
-        <div class="controls">
-          <textarea name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Exposure Request Template</label>
+          <div class="controls">
+            <textarea name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Auto Priority Enabled Request Template</label>
-        <div class="controls">
-          <textarea name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Auto Priority Enabled Request Template</label>
+          <div class="controls">
+            <textarea name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Pan Request Template</label>
-        <div class="controls">
-          <textarea name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Pan Request Template</label>
+          <div class="controls">
+            <textarea name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Tilt Request Template</label>
-        <div class="controls">
-          <textarea name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Tilt Request Template</label>
+          <div class="controls">
+            <textarea name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Autofocus Enabled Request Template</label>
-        <div class="controls">
-          <textarea name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Autofocus Enabled Request Template</label>
+          <div class="controls">
+            <textarea name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Focus Request Template</label>
-        <div class="controls">
-          <textarea name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Focus Request Template</label>
+          <div class="controls">
+            <textarea name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Zoom Request Template</label>
-        <div class="controls">
-          <textarea name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">Zoom Request Template</label>
+          <div class="controls">
+            <textarea name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">LED 1 Mode Request Template</label>
-        <div class="controls">
-          <textarea name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">LED 1 Mode Request Template</label>
+          <div class="controls">
+            <textarea name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">LED 1 Frequency Request Template</label>
-        <div class="controls">
-          <textarea name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
-          <div class="error_label_container text-error" ></div>
+        <div class="control-group">
+          <label class="control-label">LED 1 Frequency Request Template</label>
+          <div class="controls">
+            <textarea name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template"/>
+            <div class="error_label_container text-error" ></div>
+          </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">JPEG Quality Request Template</label>
-        <div class="controls">
-          <textarea name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
-          <div class="error_label_container text-error" ></div>
-          <span class="help-inline">This setting does not appear to work with my camera.  If anyone knows how to solve this, please let me know!</span>
+        <div class="control-group">
+          <label class="control-label">JPEG Quality Request Template</label>
+          <div class="controls">
+            <textarea name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template"/>
+            <div class="error_label_container text-error" ></div>
+            <span class="help-inline">This setting does not appear to work with my camera.  If anyone knows how to solve this, please let me know!</span>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </script>
-
-
-
