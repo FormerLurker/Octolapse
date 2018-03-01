@@ -53,12 +53,12 @@ class CaptureSnapshot(object):
             snapshotGuid, timeoutSeconds=1, onComplete=onComplete, onSuccess=onSuccess, onFail=onFail
         )
 
-        if self.Snapshot.delay == 0:
+        if self.Camera.delay == 0:
             self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                 "Starting Snapshot Download Job Immediately.")
             newSnapshotJob.Process()
         else:
-            delaySeconds = self.Snapshot.delay/1000.0
+            delaySeconds = self.Camera.delay/1000.0
             self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                 "Starting Snapshot Download Job in {0} seconds.".format(delaySeconds))
             t = threading.Timer(

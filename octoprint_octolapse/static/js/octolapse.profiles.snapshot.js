@@ -96,7 +96,7 @@ $(function () {
         self.new_layer_position_restriction_y2 = ko.observable(1)
         self.new_layer_position_restriction_r = ko.observable(1)
 
-        self.delay = ko.observable(values.delay);
+        
         self.retract_before_move = ko.observable(values.retract_before_move);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);

@@ -9,6 +9,7 @@ $(function() {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
+        self.delay = ko.observable(values.delay);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.address = ko.observable(values.address);
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);

@@ -508,7 +508,7 @@ class Snapshot(object):
         self.layer_trigger_on_detracted = False
         self.layer_trigger_position_restrictions = []
         # other settings
-        self.delay = 125
+        
         self.retract_before_move = True
 
         self.cleanup_after_render_complete = True
@@ -563,7 +563,6 @@ class Snapshot(object):
                 self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
                 self.layer_trigger_position_restrictions = snapshot.layer_trigger_position_restrictions
 
-                self.delay = snapshot.delay
                 self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
                 self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
                 self.retract_before_move = snapshot.retract_before_move
@@ -707,8 +706,6 @@ class Snapshot(object):
             self.layer_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
                 changes["layer_trigger_position_restrictions"])
         # other settings
-        if "delay" in changes.keys():
-            self.delay = utility.getint(changes["delay"], self.delay)
         if "retract_before_move" in changes.keys():
             self.retract_before_move = utility.getbool(
                 changes["retract_before_move"], self.retract_before_move)
@@ -811,7 +808,6 @@ class Snapshot(object):
             'layer_trigger_position_restrictions'   :  self.GetTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
 
             # Other Settings
-            'delay'				    : self.delay,
             'retract_before_move'		    : self.retract_before_move,
             'cleanup_after_render_complete'	    : self.cleanup_after_render_complete,
             'cleanup_after_render_fail'		    : self.cleanup_after_render_fail,
@@ -938,6 +934,7 @@ class Camera(object):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
+        self.delay = 125
         self.apply_settings_before_print = False
         self.address = "http://127.0.0.1/webcam/"
         self.snapshot_request_template = "{camera_address}?action=snapshot"
@@ -1006,6 +1003,9 @@ class Camera(object):
         if "description" in changes.keys():
             self.description = utility.getstring(
                 changes["description"], self.description)
+        if "delay" in changes.keys():
+            self.delay = utility.getint(
+                changes["delay"], self.delay)
         if "address" in changes.keys():
             self.address = utility.getstring(changes["address"], self.address)
         if "apply_settings_before_print" in changes.keys():
@@ -1147,6 +1147,7 @@ class Camera(object):
             'guid'												: self.guid,
             'name'												: self.name,
             'description'										: self.description,
+            'delay'                                             : self.delay,
             'address'											: self.address,
             'snapshot_request_template'							: self.snapshot_request_template,
             'apply_settings_before_print'						: self.apply_settings_before_print,

@@ -55,30 +55,40 @@
         </span>
       </div>
     </div>
+
+    <div class="control-group">
+      <label class="control-label">Snapshot Delay</label>
+      <div class="controls">
+        <div class="input-append">
+          <input name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
+          <span class="add-on">MS</span>
+        </div>
+        <div class="error_label_container text-error" ></div>
+        <br/>
+        <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
+      </div>
+    </div>
   </div>
   <hr/>
   <div>
     <div>
-      <h4>Image Preferences</h4>
-      <p>Here you can define brightness, contrast, focus, pan, tilt, etc. for your webcam.  These preferences can be applied at the start of each print.</p>
+      <h4>Custom Image Preferences</h4>
+      <p>Here you can define a snapshot delay, adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
+      <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
     </div>
+ 
     <div class="control-group">
-      <label class="control-label">Auto Apply Custom Webcam Settings</label>
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-apply camera settings before print"/>Enabled
         </label>
-        <span class="help-inline">
-          Check to apply all camera settings at the start of a print when Octolapse is enabled.
-        </span>
+
       </div>
     </div>
     <div data-bind="visible: apply_settings_before_print">
-      
-      
       <div>
         <div>
-          <h5>General</h5>
+          <h5>General Image Preferences</h5>
         </div>
         <div class="control-group">
           <label class="control-label">Apply Camera Settings</label>
@@ -295,7 +305,7 @@
         </div>
       </div>
     </div>
-
+  </div>
     <hr/>
     <div class="control-group">
       <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
