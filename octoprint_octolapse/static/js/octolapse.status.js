@@ -30,38 +30,46 @@ $(function () {
         self.IsLatestSnapshotDialogShowing = false;
 
         self.showLatestSnapshotDialog = function () {
-
-            self.IsLatestSnapshotDialogShowing = true;
-            self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
-            self.$SnapshotDialog.modal();
-
-        };
-        // cancel button click handler
-        self.cancelLatestSnapshotDialog = function () {
-            self.IsLatestSnapshotDialogShowing = false;
-            self.$SnapshotDialog.modal("hide");
-        };
-
-        self.onAfterBinding = function () {
-            self.$SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
+            
+            $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
-            self.$SnapshotDialog.on("hidden.bs.modal", function () {
+            $SnapshotDialog.on("hidden.bs.modal", function () {
                 //console.log("Snapshot dialog hidden.");
                 self.IsLatestSnapshotDialogShowing = false;
             });
             // configure the dialog shown event
 
-            self.$SnapshotDialog.on("shown.bs.modal", function () {
-                //console.log("Snapshot dialog shown.");
+            $SnapshotDialog.on("shown.bs.modal", function () {
+                console.log("Snapshot dialog shown.");
                 self.IsLatestSnapshotDialogShowing = true;
                 self.updateLatestSnapshotImage(force = true);
             });
 
             // configure the dialog show event
-            self.$SnapshotDialog.on("show.bs.modal", function () {
-                //console.log("Snapshot dialog showing.");
+            $SnapshotDialog.on("show.bs.modal", function () {
+                console.log("Snapshot dialog showing.");
                 self.IsLatestSnapshotDialogShowing = true;
+
             });
+
+            // cancel button click handler
+            $SnapshotDialog.find('.cancel').one('click', function () {
+                console.log("Hiding snapshot dialog.");
+                self.IsLatestSnapshotDialogShowing = false;
+                $SnapshotDialog.modal("hide");
+            });
+            
+            
+
+            self.IsLatestSnapshotDialogShowing = true;
+            self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
+            $SnapshotDialog.modal();
+
+        };
+        
+
+        self.onAfterBinding = function () {
+            
 
 
         }
@@ -91,6 +99,7 @@ $(function () {
             else
                 self.updateLatestSnapshotImage(force = true);
         }
+
         self.startSnapshotAnimation = function (targetId, fadeButton = false) {
 
             //console.log("Refreshing Snapshot Thumbnail");
@@ -134,7 +143,6 @@ $(function () {
 
         }
 
-
         self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage = false) {
             if (eraseCurrentImage) {
                 $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function (index, element) {
@@ -145,6 +153,7 @@ $(function () {
                 $(this).remove();
             });
         }
+
         // takes the list of images, update the frames in the target accordingly and starts any animations
         self.IsAnimating = false;
         self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
@@ -262,7 +271,6 @@ $(function () {
             $newSnapshot.attr('src', newSnapshotAddress)
         }
 
-
         self.updateLatestSnapshotImage = function (force = false) {
             //console.log("Trying to update the latest snapshot image.");
             if (!force) {
@@ -278,6 +286,7 @@ $(function () {
             self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
 
         }
+
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
                 case "gcode":
@@ -290,6 +299,7 @@ $(function () {
                     return "trigger-status-template"
             }
         };
+
         self.getStatusText = ko.pureComputed(function () {
             if (self.is_timelapse_active())
                 return 'Octolapse - Running';
@@ -302,15 +312,16 @@ $(function () {
             return 'Octolapse - Disabled';
         }, self);
 
-
         self.updatePositionState = function (state) {
             // State variables
             self.PositionState.update(state);
         };
+
         self.updatePosition = function (state) {
             // State variables
             self.Position.update(state);
         };
+
         self.updateExtruderState = function (state) {
             // State variables
             self.ExtruderState.update(state);
@@ -328,15 +339,16 @@ $(function () {
             self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
             self.waiting_to_render(settings.waiting_to_render);
         };
+
         self.onTimelapseStart = function () {
             self.TriggerState.removeAll();
         }
+
         self.onTimelapseStop = function () {
             self.is_timelapse_active(false);
             self.is_taking_snapshot(false);
             self.waiting_to_render(true);
         }
-
 
         self.stopTimelapse = function () {
             if (Octolapse.Globals.is_admin()) {
@@ -363,6 +375,7 @@ $(function () {
             var result = date.toISOString().substr(11, 8);
             return result;
         }
+
         self.navbarClicked = function () {
             $("#tab_plugin_octolapse_link a").click();
         }

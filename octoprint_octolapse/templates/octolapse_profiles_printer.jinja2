@@ -161,10 +161,10 @@
       <div class="controls">
         <label class="checkbox">
           <input name="auto_detect_position" type="checkbox" data-bind="checked: auto_detect_position" title="Auto-detect the current position after receiving a home command"/>Enabled
-          <span class="help-inline">
-            Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
-          </span>
         </label>
+        <span class="help-inline">
+          Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
+        </span>
       </div>
     </div>
     <div data-bind="visible:auto_detect_position">

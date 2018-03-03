@@ -172,12 +172,13 @@ def GetRenderingBaseFilename(printName, printStartTime, printEndTime=None):
     dateStamp = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
     fileTemplate = fileTemplate.replace("{FILENAME}", getstring(printName, ""))
     fileTemplate = fileTemplate.replace(
-        "{DATETIMESTAMP}", "{0:d}".format(math.trunc(round(time.time(), 2) * 100)))
-    fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}", "{0:d}".format(
-        math.trunc(round(printStartTime, 2) * 100)))
+        "{DATETIMESTAMP}", time.strftime("%Y%m%d%H%M%S",time.localtime(time.time())))
+    fileTemplate = fileTemplate.replace(
+        "{PRINTSTARTTIME}", time.strftime("%Y%m%d%H%M%S",time.localtime(printStartTime)))
     if printEndTime is not None:
         fileTemplate = fileTemplate.replace(
-            "{PRINTENDTIME}", "{0:d}".format(math.trunc(round(printEndTime, 2) * 100)))
+            "{PRINTENDTIME}",  time.strftime("%Y%m%d%H%M%S",time.localtime(printEndTime)))
+
     return fileTemplate
 
 

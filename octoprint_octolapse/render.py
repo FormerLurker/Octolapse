@@ -148,7 +148,7 @@ class TimelapseRenderJob(object):
         self._baseOutputFileName = utility.GetFilenameFromFullPath(
             self._output)
         self._synchronize = (
-            self._rendering.sync_with_timelapse and self._rendering.output_format == "mp4")
+            self._rendering.sync_with_timelapse and self._rendering.output_format in ["mp4"])
 
         self._thread = threading.Thread(target=self._render,
                                         name="TimelapseRenderJob_{name}".format(name=self._printFileName))
@@ -395,6 +395,7 @@ class TimelapseRenderJob(object):
                     watermark = watermark.replace(
                         "\\", "/").replace(":", "\\\\:")
 
+            vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
             # prepare ffmpeg command
             command_str = self._create_ffmpeg_command_string(
                 self._ffmpeg,
@@ -407,7 +408,8 @@ class TimelapseRenderJob(object):
                 hflip=self._rendering.flip_h,
                 vflip=self._rendering.flip_v,
                 rotate=self._rendering.rotate_90,
-                watermark=watermark
+                watermark=watermark,
+                vcodec=vcodec
             )
             self._debug.LogRenderStart(
                 "Running ffmpeg with command string: {0}".format(command_str))
@@ -477,6 +479,18 @@ class TimelapseRenderJob(object):
             return
         self._on_complete(True)
 
+    def _get_vcodec_from_extension(self, extension):
+        defaultCodec = "mpeg2video"
+
+        if(extension in ["mpeg","vob"]):
+            return "mpeg2video"
+        elif(extension in ["mp4","avi"]):
+            return "mpeg4"
+        elif(extension == "flv"):
+            return "flv1"
+        else:
+            return defaultCodec
+
     def _CleanSnapshots(self):
 
         # get snapshot directory
@@ -499,7 +513,8 @@ class TimelapseRenderJob(object):
             cls, ffmpeg, fps, bitrate, threads,
             input, output, outputFormat='vob',
             hflip=False, vflip=False,
-            rotate=False, watermark=None, pixfmt="yuv420p"):
+            rotate=False, watermark=None, pixfmt="yuv420p",
+            vcodec="mpeg2video"):
         """
         Create ffmpeg command string based on input parameters.
         Arguments:
@@ -517,7 +532,7 @@ class TimelapseRenderJob(object):
         Returns:
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
-
+        
         # See unit tests in test/timelapse/test_timelapse_renderjob.py
 
         logger = logging.getLogger(__name__)
@@ -527,7 +542,7 @@ class TimelapseRenderJob(object):
             ffmpeg = "\"{0}\"".format(ffmpeg)
         command = [
             ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(
-                input), '-vcodec', 'mpeg2video',
+                input), '-vcodec', vcodec,
             '-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate),
             '-f', str(outputFormat)]
 

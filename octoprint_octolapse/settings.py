@@ -1864,6 +1864,8 @@ class OctolapseSettings(object):
                 dict(value='duration', name='Fixed Run Length')
             ],
             'rendering_output_format_options': [
+                dict(value='avi', name='AVI'),
+                dict(value='flv', name='FLV'),
                     dict(value='vob', name='VOB'),
                     dict(value='mp4', name='MP4'),
                     dict(value='mpeg', name='MPEG')
