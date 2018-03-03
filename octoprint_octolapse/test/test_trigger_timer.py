@@ -2,8 +2,8 @@ import time
 import unittest
 from tempfile import NamedTemporaryFile
 
-from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.extruder import ExtruderState
+from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.trigger import TimerTrigger
@@ -92,7 +92,7 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.IntervalSeconds = 1
         trigger.RequireZHop = False  # no zhop required
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # Try on extruding start - previous position not homed, do not trigger
@@ -103,7 +103,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertFalse(trigger.IsTriggered(0))
         self.assertTrue(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # send another command, now the previous state has been homed, should trigger
@@ -114,7 +114,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # try out on extruding
@@ -150,7 +150,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # try out on retracting
@@ -174,7 +174,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # try out on retracted
@@ -186,7 +186,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # try out on detracting Start
@@ -210,7 +210,7 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-         # Reset the extruder
+        # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # try out on detracting Start
@@ -231,7 +231,6 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.RequireZHop = False  # no zhop required
         trigger.IntervalSeconds = 1
 
-        
         # Use on extruding start for this test.
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
@@ -239,7 +238,7 @@ class Test_TimerTrigger(unittest.TestCase):
         # set the extruder trigger
         position.Extruder.GetState(0).IsExtrudingStart = True
         # will not wait or trigger because not enough time has elapsed
-        trigger.Update(position) 
+        trigger.Update(position)
         self.assertFalse(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
@@ -253,7 +252,6 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.Update(position)
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
-
 
     def test_TimerTrigger_LayerChange_ZHop(self):
         """Test the layer trigger for layer changes triggers"""
