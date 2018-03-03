@@ -1,16 +1,17 @@
+import unittest
+
 from octoprint_octolapse.test.test_command import Test_Command
 from octoprint_octolapse.test.test_extruder import Test_Extruder
 from octoprint_octolapse.test.test_gcodeparts import Test_GcodeParts
+from octoprint_octolapse.test.test_octolapseplugin import Test_OctolapsePlugin
 from octoprint_octolapse.test.test_position import Test_Position
 from octoprint_octolapse.test.test_snapshotGcode import Test_SnapshotGcode
+from octoprint_octolapse.test.test_timelapse import Test_Timelapse
 from octoprint_octolapse.test.test_trigger import Test_Trigger
 from octoprint_octolapse.test.test_trigger_gcode import Test_GcodeTrigger
 from octoprint_octolapse.test.test_trigger_layer import Test_LayerTrigger
 from octoprint_octolapse.test.test_trigger_timer import Test_TimerTrigger
 from octoprint_octolapse.test.test_utility import Test_Utility
-from octoprint_octolapse.test.test_timelapse import Test_Timelapse
-from octoprint_octolapse.test.test_octolapseplugin import Test_OctolapsePlugin
-import unittest
 
 
 def TestAll():

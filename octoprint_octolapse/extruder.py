@@ -35,7 +35,7 @@ class ExtruderState(object):
             or self.IsPartiallyRetracted != extruder.IsPartiallyRetracted
             or self.IsDetractingStart != extruder.IsDetractingStart
             or self.IsDetracting != extruder.IsDetracting
-                or self.IsDetracted != extruder.IsDetracted):
+            or self.IsDetracted != extruder.IsDetracted):
             return False
         return True
 
@@ -158,11 +158,6 @@ class Extruder(object):
         if state is not None:
             return state.IsDetracted
         return False
-    def ExtrusionLengthTotal(self, index=0):
-        state = self.GetState(index)
-        if state is not None:
-            return state.ExtrusionLengthTotal
-        return False
 
     def ExtrusionLengthTotal(self, index=0):
         state = self.GetState(index)
@@ -174,10 +169,10 @@ class Extruder(object):
         state = self.GetState(index)
         if state is not None:
 
-            #retractLength = utility.round_to(
-            #    self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
-            #    self.PrinterTolerance
-            #)
+            # retractLength = utility.round_to(
+            #     self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
+            #     self.PrinterTolerance
+            # )
             # Don't round this, it causes blobs!
             retractLength = self.PrinterRetractionLength - self.StateHistory[0].RetractionLength
 
@@ -396,9 +391,9 @@ class Extruder(object):
 
 class ExtruderTriggers(object):
     def __init__(
-            self, OnExtrudingStart, onExtruding, OnPrimed,
-            OnRetractingStart, OnRetracting, OnPartiallyRetracted,
-            OnRetracted, OnDetractingStart, OnDetracting, OnDetracted):
+        self, OnExtrudingStart, onExtruding, OnPrimed,
+        OnRetractingStart, OnRetracting, OnPartiallyRetracted,
+        OnRetracted, OnDetractingStart, OnDetracting, OnDetracted):
         # To trigger on an extruder state, set to True.
         # To prevent triggering on an extruder state, set to False.
         # To ignore the extruder state, set to None
@@ -423,6 +418,6 @@ class ExtruderTriggers(object):
             and self.OnRetracted is None
             and self.OnDetractingStart is None
             and self.OnDetracting is None
-                and self.OnDetracted is None):
+            and self.OnDetracted is None):
             return True
         return False

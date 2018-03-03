@@ -1,9 +1,10 @@
+import time
 import unittest
+
+from octoprint_octolapse.gcode import SnapshotGcode
+from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
-from octoprint_octolapse.position import Position
-from octoprint_octolapse.gcode import SnapshotGcode
-import time
 
 
 class OctoprintTestPrinter(object):
@@ -22,11 +23,11 @@ class OctoprintTestPrinter(object):
         return self.IsPaused
 
     def commands(self, commands):
-        if(isinstance(commands, basestring)):
+        if (isinstance(commands, basestring)):
             self.GcodeCommands.append(commands)
-        elif(isinstance(commands, list)):
+        elif (isinstance(commands, list)):
             self.GcodeCommands.extend(commands)
-        elif(isinstance(obj, tuple)):
+        elif (isinstance(obj, tuple)):
             self.GcodeCommands.extend(list(commands))
 
 
@@ -39,6 +40,7 @@ class GcodeTest(object):
 
     def CreateSnapshotGcode(self, *args, **kwargs):
         return self.GcodeCommands
+
 
 # used to replace commands within the Timelapse class that we don't want to execute
 
@@ -65,11 +67,15 @@ class Test_Timelapse(unittest.TestCase):
         currentSnapshot.timer_trigger_require_zhop = False
         currentSnapshot.timer_trigger_seconds = 1
         self.Timelapse_GcodeTrigger = Timelapse(self.Settings,
-                                                "c:\\temp\\octolapse\\data\\", "c:\\temp\\octolapse\\data\\timelapse\\", onMovieRendering=self.OnMovieRendering, onMovieDone=self.OnMovieDone, onMovieFailed=self.OnMovieFailed)
+                                                "c:\\temp\\octolapse\\data\\", "c:\\temp\\octolapse\\data\\timelapse\\",
+                                                onMovieRendering=self.OnMovieRendering, onMovieDone=self.OnMovieDone,
+                                                onMovieFailed=self.OnMovieFailed)
         currentSnapshot.gcode_trigger_enabled = False
         currentSnapshot.timer_trigger_enabled = True
         self.Timelapse_TimerTrigger = Timelapse(self.Settings,
-                                                "c:\\temp\\octolapse\\data\\", "c:\\temp\\octolapse\\data\\timelapse\\", onMovieRendering=self.OnMovieRendering, onMovieDone=self.OnMovieDone, onMovieFailed=self.OnMovieFailed)
+                                                "c:\\temp\\octolapse\\data\\", "c:\\temp\\octolapse\\data\\timelapse\\",
+                                                onMovieRendering=self.OnMovieRendering, onMovieDone=self.OnMovieDone,
+                                                onMovieFailed=self.OnMovieFailed)
         self.MovieRendering = False
         self.MovieDone = False
         self.MovieFailed = False
@@ -480,7 +486,8 @@ class Test_Timelapse(unittest.TestCase):
         # Test suppressing gcodes that aren't in the Snapshot Gcode commands
         snapshotGcodes = SnapshotGcode(False)
         snapshotGcodes.GcodeCommands.extend(
-            ["TestCommand1	", "	TestCommand2	", "	m114     ", "	TestCommand4	", "	TestCommand4	"])
+            ["TestCommand1	", "	TestCommand2	", "	m114     ", "	TestCommand4	",
+             "	TestCommand4	"])
         snapshotGcodes.SnapshotIndex = 2
         self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
         self.Timelapse_GcodeTrigger.CommandIndex = 0
@@ -538,7 +545,6 @@ class Test_Timelapse(unittest.TestCase):
             self.Timelapse_GcodeTrigger.PositionRequestAttempts == 0)
 
     def test_GcodeQueuing_Triggering_SuppressedSavedCommand(self):
-
         suppressedSavedCommand = "  m105  "
         self.Settings.CurrentSnapshot().gcode_trigger_enabled = True
         self.Settings.CurrentSnapshot().layer_trigger_enabled = False
@@ -570,7 +576,6 @@ class Test_Timelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_GcodeTrigger.OctoprintPrinter.IsPaused)
 
     def test_GcodeQueuing_Triggering_SnapshotCommand(self):
-
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
         self.Settings.CurrentSnapshot().gcode_trigger_enabled = True
@@ -1097,7 +1102,7 @@ class Test_Timelapse(unittest.TestCase):
     def test_ResendSnapshotPositionRequest(self):
         """Test the ResendSnapshotPositionRequest function"""
         # start the timelapse
-        #self.Timelapse_GcodeTrigger.OctoprintPrinter = self.OctoprintTestPrinter
+        # self.Timelapse_GcodeTrigger.OctoprintPrinter = self.OctoprintTestPrinter
         self.Timelapse_GcodeTrigger.SendDelayedSnapshotPositionRequest = ReturnNone
         self.Timelapse_GcodeTrigger.SendSnapshotReturnCommands = ReturnNone
         self.Timelapse_GcodeTrigger.Snapshot = self.Settings.CurrentSnapshot()

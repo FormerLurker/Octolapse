@@ -61,17 +61,15 @@ class Pos(object):
             self.IsRelative = pos.IsRelative
             self.IsExtruderRelative = pos.IsExtruderRelative
         else:
-            if printer.e_axis_default_mode in ['absolute','relative']:
+            if printer.e_axis_default_mode in ['absolute', 'relative']:
                 self.IsExtruderRelative = True if printer.e_axis_default_mode == 'relative' else False
             else:
                 self.IsExtruderRelative = None
-            if printer.xyz_axes_default_mode in ['absolute','relative']:
-               self.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
+            if printer.xyz_axes_default_mode in ['absolute', 'relative']:
+                self.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
             else:
                 self.IsRelative = None
-            
-            
-            
+
         self.LastExtrusionHeight = None if pos is None else pos.LastExtrusionHeight
         # Layer and Height Tracking
         self.Layer = 0 if pos is None else pos.Layer
@@ -99,21 +97,21 @@ class Pos(object):
 
     def IsStateEqual(self, pos, tolerance):
         if (self.XHomed == pos.XHomed and self.YHomed == pos.YHomed
-                and self.ZHomed == pos.ZHomed
-                and self.IsLayerChange == pos.IsLayerChange
-                and self.IsHeightChange == pos.IsHeightChange
-                and self.IsZHop == pos.IsZHop
-                and self.IsRelative == pos.IsRelative
-                and self.IsExtruderRelative == pos.IsExtruderRelative
-                and utility.round_to(pos.Layer, tolerance) != utility.round_to(
-                    self.Layer, tolerance)
-                and utility.round_to(pos.Height, tolerance) !=
-                utility.round_to(self.Height, tolerance)
-                and utility.round_to(pos.LastExtrusionHeight, tolerance) !=
-                utility.round_to(self.LastExtrusionHeight, tolerance)
-                and self.HasPositionError == pos.HasPositionError
-                and self.PositionError == pos.PositionError
-                and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand):
+            and self.ZHomed == pos.ZHomed
+            and self.IsLayerChange == pos.IsLayerChange
+            and self.IsHeightChange == pos.IsHeightChange
+            and self.IsZHop == pos.IsZHop
+            and self.IsRelative == pos.IsRelative
+            and self.IsExtruderRelative == pos.IsExtruderRelative
+            and utility.round_to(pos.Layer, tolerance) != utility.round_to(
+                self.Layer, tolerance)
+            and utility.round_to(pos.Height, tolerance) !=
+            utility.round_to(self.Height, tolerance)
+            and utility.round_to(pos.LastExtrusionHeight, tolerance) !=
+            utility.round_to(self.LastExtrusionHeight, tolerance)
+            and self.HasPositionError == pos.HasPositionError
+            and self.PositionError == pos.PositionError
+            and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand):
             return True
 
         return False
@@ -123,14 +121,14 @@ class Pos(object):
             return (pos.X is not None and self.X is not None and pos.X == self.X
                     and pos.Y is not None and self.Y is not None and pos.Y == self.Y
                     and pos.Z is not None and self.Z is not None and pos.Z == self.Z)
-            
+
         elif (pos.X is not None and self.X is not None and utility.round_to(
-                pos.X, tolerance) == utility.round_to(self.X, tolerance)
-                and pos.Y is not None and self.Y is not None
-                and utility.round_to(pos.Y, tolerance) == utility.round_to(
-                    self.Y, tolerance) and pos.Z is not None
-                and self.Z is not None and utility.round_to(
-                    pos.Z, tolerance) == utility.round_to(self.Z, tolerance)):
+            pos.X, tolerance) == utility.round_to(self.X, tolerance)
+              and pos.Y is not None and self.Y is not None
+              and utility.round_to(pos.Y, tolerance) == utility.round_to(
+                self.Y, tolerance) and pos.Z is not None
+              and self.Z is not None and utility.round_to(
+                pos.Z, tolerance) == utility.round_to(self.Z, tolerance)):
             return True
         return False
 
@@ -275,7 +273,7 @@ class Pos(object):
                     self.E = e + self.EOffset
 
             if (not utility.IsInBounds(
-                    boundingBox, x=self.X, y=self.Y, z=self.Z)):
+                boundingBox, x=self.X, y=self.Y, z=self.Z)):
                 self.HasPositionError = True
                 self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(
                     GetFormattedCoordinates(self.X, self.Y, self.Z, self.E))
@@ -303,7 +301,7 @@ class Position(object):
         self.Reset()
 
         self.Extruder = Extruder(octolapseSettings)
-        if self.Printer.g90_influences_extruder in ['true','false']:
+        if self.Printer.g90_influences_extruder in ['true', 'false']:
             self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False
         else:
             self.G90InfluencesExtruder = g90InfluencesExtruder
@@ -594,7 +592,7 @@ class Position(object):
                     f = cmd.Parameters["F"].Value
 
                     if (x is not None or y is not None or z is not None
-                            or f is not None):
+                        or f is not None):
                         if pos.IsRelative is not None:
                             if (pos.HasPositionError and not pos.IsRelative):
                                 pos.HasPositionError = False
@@ -608,7 +606,7 @@ class Position(object):
                     if (e is not None):
                         if (pos.IsExtruderRelative is not None):
                             if (pos.HasPositionError
-                                    and not pos.IsExtruderRelative):
+                                and not pos.IsExtruderRelative):
                                 pos.HasPositionError = False
                                 pos.PositionError = ""
                             pos.UpdatePosition(
@@ -640,7 +638,7 @@ class Position(object):
                 else:
                     self.Settings.CurrentDebugProfile().LogError(
                         "Position - Unable to parse the gcode command: {0}".
-                        format(gcode))
+                            format(gcode))
             elif (cmd.Command == "G28"):
                 # Home
                 if (cmd.Parse()):
@@ -663,7 +661,7 @@ class Position(object):
                     # here.
                     # Todo: Create issue to monitor and get feedback regarding
                     # the W param
-                    #if (x is None and y is None and z is None and w is None):
+                    # if (x is None and y is None and z is None and w is None):
                     if (x is None and y is None and z is None):
                         xHomed = True
                         yHomed = True
@@ -774,7 +772,7 @@ class Position(object):
             elif (cmd.Command == "M83"):
                 # Extruder - Set Relative
                 if (pos.IsExtruderRelative is None
-                        or not pos.IsExtruderRelative):
+                    or not pos.IsExtruderRelative):
                     self.Settings.CurrentDebugProfile(
                     ).LogPositionCommandReceived(
                         "Received M83 - Switching Extruder to Relative Coordinates"
@@ -812,8 +810,8 @@ class Position(object):
                     self.Settings.CurrentDebugProfile(
                     ).LogPositionCommandReceived(
                         "Received G92 - Set Position.  Command:{0}, XOffset:{1}, YOffset:{2}, ZOffset:{3}, EOffset:{4}".
-                        format(gcode, pos.XOffset, pos.YOffset, pos.ZOffset,
-                               pos.EOffset))
+                            format(gcode, pos.XOffset, pos.YOffset, pos.ZOffset,
+                                   pos.EOffset))
                 else:
                     self.Settings.CurrentDebugProfile().LogError(
                         "Position - Unable to parse the Gcode:{0}".format(
@@ -830,30 +828,29 @@ class Position(object):
         pos.HasPositionChanged = not pos.IsPositionEqual(
             previousPos, 0)
         pos.HasStateChanged = not pos.IsStateEqual(previousPos,
-                                                    self.PrinterTolerance)
+                                                   self.PrinterTolerance)
 
         if (pos.HasHomedPosition() and previousPos.HasHomedPosition()):
 
-            #if (hasExtruderChanged or pos.HasPositionChanged):
+            # if (hasExtruderChanged or pos.HasPositionChanged):
 
-            
             # calculate LastExtrusionHeight and Height
             if self.Extruder.IsExtruding():
                 pos.LastExtrusionHeight = pos.Z
 
                 # see if we have primed yet
                 if self.Printer.priming_height > 0:
-                    if(not pos.IsPrimed and pos.LastExtrusionHeight < self.Printer.priming_height):
+                    if (not pos.IsPrimed and pos.LastExtrusionHeight < self.Printer.priming_height):
                         pos.IsPrimed = True
                 else:
                     # if we have no priming height set, just set IsPrimed = true.
                     pos.IsPrimed = True
 
                 # make sure we are primed before calculating height/layers
-                if(pos.IsPrimed):
+                if (pos.IsPrimed):
                     if (pos.Height is None or
-                            utility.round_to(pos.Z, self.PrinterTolerance)
-                            > previousPos.Height):
+                        utility.round_to(pos.Z, self.PrinterTolerance)
+                        > previousPos.Height):
                         pos.Height = utility.round_to(
                             pos.Z, self.PrinterTolerance)
                         self.Settings.CurrentDebugProfile(
@@ -863,8 +860,8 @@ class Position(object):
 
                     # calculate layer change
                     if (utility.round_to(
-                            self.ZDelta(pos), self.PrinterTolerance) > 0
-                            or pos.Layer == 0):
+                        self.ZDelta(pos), self.PrinterTolerance) > 0
+                        or pos.Layer == 0):
                         pos.IsLayerChange = True
                         pos.Layer += 1
                         self.Settings.CurrentDebugProfile(
@@ -883,8 +880,8 @@ class Position(object):
                 if (lift >= self.Printer.z_hop):
                     lift = self.Printer.z_hop
                 isLifted = lift >= self.Printer.z_hop and (
-                        not self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart()
-                    )
+                    not self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart()
+                )
 
                 if isLifted or self.Printer.z_hop == 0:
                     pos.IsZHop = True
@@ -922,8 +919,8 @@ class Position(object):
 
         if ((pos.X is None or utility.isclose(pos.X, x, abs_tol=tolerance)) and
             (pos.Y is None or utility.isclose(pos.Y, y, abs_tol=tolerance))
-                and (z is None or pos.Z is None
-                     or utility.isclose(pos.Z, z, abs_tol=tolerance))):
+            and (z is None or pos.Z is None
+                 or utility.isclose(pos.Z, z, abs_tol=tolerance))):
             return True
         return False
 

@@ -3,33 +3,33 @@
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 
-import time
-import shutil
 import os
+import shutil
 import threading
+import time
 
-from octoprint_octolapse.trigger import GcodeTrigger, TimerTrigger, LayerTrigger, Triggers
-from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotInfo
-from octoprint_octolapse.settings import (OctolapseSettings, Printer, Stabilization,
-        Camera, Rendering, Snapshot, DebugProfile)
-from octoprint_octolapse.render import Render
-from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
-from octoprint_octolapse.command import *
-from octoprint_octolapse.position import Position
 import octoprint_octolapse.utility as utility
+from octoprint_octolapse.command import *
+from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
+from octoprint_octolapse.position import Position
+from octoprint_octolapse.render import Render
+from octoprint_octolapse.settings import (OctolapseSettings, Printer, Stabilization,
+                                          Camera, Rendering, Snapshot, DebugProfile)
+from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotInfo
+from octoprint_octolapse.trigger import GcodeTrigger, TimerTrigger, LayerTrigger, Triggers
 
 
 class Timelapse(object):
 
     def __init__(
-            self, dataFolder, timelapseFolder,
-            onSnapshotStart=None, onSnapshotEnd=None,
-            onRenderStart=None, onRenderComplete=None,
-            onRenderFail=None, onRenderSynchronizeFail=None,
-            onRenderSynchronizeComplete=None, onRenderEnd=None,
-            onTimelapseStopping=None, onTimelapseStopped=None,
-            onStateChanged=None, onTimelapseStart=None,
-            onSnapshotPositionError=None, onPositionError=None):
+        self, dataFolder, timelapseFolder,
+        onSnapshotStart=None, onSnapshotEnd=None,
+        onRenderStart=None, onRenderComplete=None,
+        onRenderFail=None, onRenderSynchronizeFail=None,
+        onRenderSynchronizeComplete=None, onRenderEnd=None,
+        onTimelapseStopping=None, onTimelapseStopped=None,
+        onStateChanged=None, onTimelapseStart=None,
+        onSnapshotPositionError=None, onPositionError=None):
         # config variables - These don't change even after a reset
         self.Settings = None
         self.DataFolder = dataFolder
@@ -84,7 +84,7 @@ class Timelapse(object):
         self.Printer = Printer(self.Settings.CurrentPrinter())
         self.Rendering = Rendering(self.Settings.CurrentRendering())
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings,  self.DataFolder, printStartTime=self.PrintStartTime)
+            self.Settings, self.DataFolder, printStartTime=self.PrintStartTime)
         self.Position = Position(
             self.Settings, octoprintPrinterProfile, g90InfluencesExtruder)
         self.State = TimelapseState.WaitingForTrigger
@@ -184,11 +184,11 @@ class Timelapse(object):
 
     def IsTimelapseActive(self):
         try:
-            if(
-                    self.Settings is None
-                    or self.State == TimelapseState.Idle
-                    or self.State == TimelapseState.WaitingToRender
-                    or self.Triggers.Count() < 1
+            if (
+                self.Settings is None
+                or self.State == TimelapseState.Idle
+                or self.State == TimelapseState.WaitingToRender
+                or self.Triggers.Count() < 1
             ):
                 return False
             return True
@@ -218,10 +218,10 @@ class Timelapse(object):
                 and (self.Position.HasPositionChanged() or not self.HasSentInitialStatus)):
                 positionChangeDict = self.Position.ToPositionDict()
             if (self.Settings.show_position_state_changes
-                and (self.Position.HasStateChanged()or not self.HasSentInitialStatus)):
+                and (self.Position.HasStateChanged() or not self.HasSentInitialStatus)):
                 positionStateChangeDict = self.Position.ToStateDict()
             if (self.Settings.show_extruder_state_changes
-                and (self.Position.Extruder.HasChanged()or not self.HasSentInitialStatus)):
+                and (self.Position.Extruder.HasChanged() or not self.HasSentInitialStatus)):
                 extruderChangeDict = self.Position.Extruder.ToDict()
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
@@ -244,8 +244,8 @@ class Timelapse(object):
                 self.Settings.CurrentDebugProfile().LogPrintStateChange(message)
                 self._pausePrint()
             elif (self.State == TimelapseState.WaitingForTrigger
-                    and self.OctoprintPrinter.is_printing()
-                    and not self.Position.HasPositionError(0)):
+                  and self.OctoprintPrinter.is_printing()
+                  and not self.Position.HasPositionError(0)):
                 self.Triggers.Update(self.Position, cmd)
 
                 # If our triggers have changed, update our dict
@@ -387,14 +387,14 @@ class Timelapse(object):
         try:
 
             # Notify any callbacks
-            if(self.OnStateChangedCallback is not None
-                    and
-                    (
-                        positionChangeDict is not None
-                        or positionStateChangeDict is not None
-                        or extruderChangeDict is not None
-                        or triggerChangeList is not None
-                    )):
+            if (self.OnStateChangedCallback is not None
+                and
+                (
+                    positionChangeDict is not None
+                    or positionStateChangeDict is not None
+                    or extruderChangeDict is not None
+                    or triggerChangeList is not None
+                )):
                 if triggerChangeList is not None and len(triggerChangeList) > 0:
                     triggerChangesDict = {
                         "Name": self.Triggers.Name,
@@ -407,10 +407,10 @@ class Timelapse(object):
                     "TriggerState": triggerChangesDict
                 }
 
-                if(changeDict["Extruder"] is not None
-                        or changeDict["Position"] is not None
-                        or changeDict["PositionState"] is not None
-                        or changeDict["TriggerState"] is not None):
+                if (changeDict["Extruder"] is not None
+                    or changeDict["Position"] is not None
+                    or changeDict["PositionState"] is not None
+                    or changeDict["TriggerState"] is not None):
                     self.OnStateChangedCallback(changeDict)
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
@@ -562,7 +562,7 @@ class Timelapse(object):
                 self.Settings.CurrentDebugProfile().LogWarning(message)
             # our snapshot gcode will NOT be offset
             elif not self.Position.IsAtCurrentPosition(
-                    self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None, applyOffset=False):
+                self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None, applyOffset=False):
                 message = (
                     "The snapshot gcode position is incorrect.  "
                     "x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
@@ -773,20 +773,21 @@ class Timelapse(object):
         if self.OnRenderingSynchronizeFailCallback is not None:
             self.OnRenderingSynchronizeFailCallback(payload)
 
-        #finalFilename = args[0]
-        #baseFileName = args[1]
+        # finalFilename = args[0]
+        # baseFileName = args[1]
         # Notify the user of success and refresh the default timelapse control
         # payload = dict(
         #   gcode="unknown",
         #   movie=finalFilename,
         #   movie_basename=baseFileName ,
         #   reason=(
-                # "Error copying the rendering to the Octoprint "
-                # "timelapse folder.  If logging is enabled you can "
-                # "search for 'Synchronization Error' to find the "
-                # "error.  Your timelapse is likely within the octolapse "
-                # "data folder."
-            # )
+        #       "Error copying the rendering to the Octoprint "
+        #       "timelapse folder.  If logging is enabled you can "
+        #       "search for 'Synchronization Error' to find the "
+        #       "error.  Your timelapse is likely within the octolapse "
+        #       "data folder."
+        #   )
+
     def _onSynchronizeRenderingComplete(self, *args, **kwargs):
         self.Settings.CurrentDebugProfile().LogRenderSync(
             "Synchronization with the default timelapse plugin was successful.")
@@ -794,18 +795,18 @@ class Timelapse(object):
         if self.OnRenderingSynchronizeCompleteCallback is not None:
             self.OnRenderingSynchronizeCompleteCallback(payload)
 
-        #finalFilename = args[0]
-        #baseFileName = args[1]
+        # finalFilename = args[0]
+        # baseFileName = args[1]
         # Notify the user of success and refresh the default timelapse control
         # payload = dict(
         #   gcode="unknown",
         #   movie=finalFilename,
         #   movie_basename=baseFileName ,
         #   movie_prefix=(
-                # "from Octolapse has been synchronized and "
-                # "is now available within the default timelapse "
-                # "plugin tab.  Octolapse "
-            # ),
+        #       "from Octolapse has been synchronized and "
+        #       "is now available within the default timelapse "
+        #       "plugin tab.  Octolapse "
+        #   ),
         #		returncode=0,
         #		reason="See the octolapse log for details.")
 
@@ -814,19 +815,19 @@ class Timelapse(object):
         self.Settings.CurrentDebugProfile().LogRenderComplete("Completed rendering.")
         payload = args[0]
         success = args[1]
-        #finalFileName = args[0]
-        #baseFileName = args[1]
-        #synchronize = args[2]
-        #success = args[3]
+        # finalFileName = args[0]
+        # baseFileName = args[1]
+        # synchronize = args[2]
+        # success = args[3]
 
-        #moviePrefix = "from Octolapse"
+        # moviePrefix = "from Octolapse"
         # if not synchronize:
         #   moviePrefix = (
-                # "from Octolapse.  Your timelapse was NOT synchronized"
-                # " (see advanced rendering settings for details), but "
-                # "can be found in octolapse's data directory.  A file "
-                # "browser will be added in a future release (hopefully)"
-            # )
+        #       "from Octolapse.  Your timelapse was NOT synchronized"
+        #       " (see advanced rendering settings for details), but "
+        #       "can be found in octolapse's data directory.  A file "
+        #       "browser will be added in a future release (hopefully)"
+        #  )
         # payload = dict(movie=finalFileName,
         #		movie_basename=baseFileName ,
         #		movie_prefix=moviePrefix,
@@ -881,4 +882,3 @@ class TimelapseState(object):
     TakingSnapshot = 7
     SendingReturnGcode = 8
     WaitingToRender = 9
-

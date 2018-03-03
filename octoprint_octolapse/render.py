@@ -4,27 +4,28 @@
 # file called 'LICENSE', which is part of this source code package.
 
 
+import datetime
+import fnmatch
 import logging
 import os
+import sarge
+import shutil
+import sys
 import threading
 import time
-import fnmatch
-import datetime
-import sys
-import shutil
+
 import octoprint_octolapse.utility as utility
-import sarge
 from octoprint_octolapse.settings import Rendering
 
 
 class Render(object):
 
     def __init__(
-            self, settings, snapshot, rendering, dataDirectory,
-            octoprintTimelapseFolder, ffmpegPath, threadCount,
-            timeAdded=0, onRenderStart=None, onRenderFail=None,
-            onRenderSuccess=None, onRenderComplete=None, onAfterSyncFail=None,
-            onAfterSycnSuccess=None, onComplete=None):
+        self, settings, snapshot, rendering, dataDirectory,
+        octoprintTimelapseFolder, ffmpegPath, threadCount,
+        timeAdded=0, onRenderStart=None, onRenderFail=None,
+        onRenderSuccess=None, onRenderComplete=None, onAfterSyncFail=None,
+        onAfterSycnSuccess=None, onComplete=None):
         self.Settings = settings
         self.DataDirectory = dataDirectory
         self.OctoprintTimelapseFolder = octoprintTimelapseFolder
@@ -90,20 +91,20 @@ class RenderInfo(object):
 
 
 class TimelapseRenderJob(object):
-
     render_job_lock = threading.RLock()
-#, capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
+
+    # , capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 
     def __init__(
-            self, rendering, debug, printFileName,
-            capture_dir, capture_template, output_dir,
-            output_name, octoprintTimelapseFolder,
-            ffmpegPath, threads, timeAdded=0,
-            on_render_start=None, on_render_fail=None,
-            on_render_success=None, on_render_complete=None,
-            on_after_sync_success=None, on_after_sync_fail=None,
-            on_complete=None, cleanAfterSuccess=False,
-            cleanAfterFail=False):
+        self, rendering, debug, printFileName,
+        capture_dir, capture_template, output_dir,
+        output_name, octoprintTimelapseFolder,
+        ffmpegPath, threads, timeAdded=0,
+        on_render_start=None, on_render_fail=None,
+        on_render_success=None, on_render_complete=None,
+        on_after_sync_success=None, on_after_sync_fail=None,
+        on_complete=None, cleanAfterSuccess=False,
+        cleanAfterFail=False):
         self._rendering = Rendering(rendering)
         self._debug = debug
         self._printFileName = printFileName
@@ -190,7 +191,7 @@ class TimelapseRenderJob(object):
         if self._rendering.fps_calculation_type == 'duration':
 
             self._fps = utility.round_to(
-                float(self._imageCount)/float(self._rendering.run_length_seconds), 1)
+                float(self._imageCount) / float(self._rendering.run_length_seconds), 1)
             if self._fps > self._rendering.max_fps:
                 self._fps = self._rendering.max_fps
             elif self._fps < self._rendering.min_fps:
@@ -217,7 +218,7 @@ class TimelapseRenderJob(object):
 
         # we need to start with index 0, apparently.  Before I thought it was 1!
         imageIndex = 0
-        while(True):
+        while (True):
             foundFile = False
             imagePath = "{0}{1}".format(
                 self._capture_dir, self._capture_file_template) % imageIndex
@@ -241,11 +242,11 @@ class TimelapseRenderJob(object):
                 # rename all of the current files. The snapshot number should be
                 # incremented by the number of pre-roll frames. Start with the last
                 # image and work backwards to avoid overwriting files we've already moved
-                for imageNumber in range(imageCount-1, -1, -1):
+                for imageNumber in range(imageCount - 1, -1, -1):
                     currentImagePath = "{0}{1}".format(
                         snapshotDirectory, snapshotFileNameTemplate) % imageNumber
                     newImagePath = "{0}{1}".format(
-                        snapshotDirectory, snapshotFileNameTemplate) % (imageNumber+preRollFrames)
+                        snapshotDirectory, snapshotFileNameTemplate) % (imageNumber + preRollFrames)
                     if imageNumber == 0:
                         firstImagePath = newImagePath
                     shutil.move(currentImagePath, newImagePath)
@@ -271,6 +272,7 @@ class TimelapseRenderJob(object):
         except Exception as e:
             self._debug.LogException(e)
         return False
+
     #####################
     # Event Notification
     #####################
@@ -319,7 +321,7 @@ class TimelapseRenderJob(object):
 
     def _on_complete(self, success):
         payload = self._createCallbackPayload(0, "Synchronization has failed.")
-        self._notify_callback(self._on_complete_callback,  payload, success)
+        self._notify_callback(self._on_complete_callback, payload, success)
 
     def _render(self):
         """Rendering runnable."""
@@ -440,8 +442,7 @@ class TimelapseRenderJob(object):
                     return
 
                 self._on_render_complete()
-                cleanSnapshots = (
-                    success and self.cleanAfterSuccess) or self.cleanAfterFail
+                cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
                 if cleanSnapshots:
                     self._CleanSnapshots()
 
@@ -482,11 +483,11 @@ class TimelapseRenderJob(object):
     def _get_vcodec_from_extension(self, extension):
         defaultCodec = "mpeg2video"
 
-        if(extension in ["mpeg","vob"]):
+        if (extension in ["mpeg", "vob"]):
             return "mpeg2video"
-        elif(extension in ["mp4","avi"]):
+        elif (extension in ["mp4", "avi"]):
             return "mpeg4"
-        elif(extension == "flv"):
+        elif (extension == "flv"):
             return "flv1"
         else:
             return defaultCodec
@@ -510,11 +511,11 @@ class TimelapseRenderJob(object):
 
     @classmethod
     def _create_ffmpeg_command_string(
-            cls, ffmpeg, fps, bitrate, threads,
-            input, output, outputFormat='vob',
-            hflip=False, vflip=False,
-            rotate=False, watermark=None, pixfmt="yuv420p",
-            vcodec="mpeg2video"):
+        cls, ffmpeg, fps, bitrate, threads,
+        input, output, outputFormat='vob',
+        hflip=False, vflip=False,
+        rotate=False, watermark=None, pixfmt="yuv420p",
+        vcodec="mpeg2video"):
         """
         Create ffmpeg command string based on input parameters.
         Arguments:
@@ -532,7 +533,7 @@ class TimelapseRenderJob(object):
         Returns:
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
-        
+
         # See unit tests in test/timelapse/test_timelapse_renderjob.py
 
         logger = logging.getLogger(__name__)
@@ -616,9 +617,9 @@ class TimelapseRenderJob(object):
 
 class RenderingCallbackArgs(object):
     def __init__(
-            self, snapshotDirectory="", renderingFullPath="",
-            renderingFileName="", returnCode=0, reason="",
-            synchronize=False, snapshotCount=0, secondsAddedToPrint=0):
+        self, snapshotDirectory="", renderingFullPath="",
+        renderingFileName="", returnCode=0, reason="",
+        synchronize=False, snapshotCount=0, secondsAddedToPrint=0):
         self.SnapshotDirectory = snapshotDirectory
         self.RenderingFullPath = renderingFullPath
         self.RenderingFileName = renderingFileName
@@ -627,4 +628,3 @@ class RenderingCallbackArgs(object):
         self.Synchronize = synchronize
         self.SnapshotCount = snapshotCount
         self.SecondsAddedToPrint = secondsAddedToPrint
-

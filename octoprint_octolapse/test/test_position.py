@@ -772,7 +772,7 @@ class Test_Position(unittest.TestCase):
         # zhop
         position.Update("g0 z2.5 e0")
         self.assertTrue(position.IsZHop())
-        
+
         position.Update("no-command")
         self.assertTrue(position.IsZHop())
 
@@ -791,41 +791,40 @@ class Test_Position(unittest.TestCase):
         position.Update("g0 x120 y121 z2.1")
         self.assertTrue(position.IsAtPreviousPosition(119.91, 113.34, 2.1))
 
-
     def test_extruder_axis_default_mode_relative(self):
-        # test e_axis_default_mode = 'relative' 
+        # test e_axis_default_mode = 'relative'
         raise NotImplementedError
 
     def test_extruder_axis_default_mode_absolute(self):
-        # test e_axis_default_mode = 'absolute' 
+        # test e_axis_default_mode = 'absolute'
         raise NotImplementedError
 
     def test_extruder_axis_default_mode_require_explicit(self):
-        # test e_axis_default_mode = 'require-explicit' 
+        # test e_axis_default_mode = 'require-explicit'
         raise NotImplementedError
 
     def test_xyz_axis_default_mode_relative(self):
-        # test xyz_axes_default_mode = 'relative' 
+        # test xyz_axes_default_mode = 'relative'
         raise NotImplementedError
 
     def test_xyz_axis_default_mode_absolute(self):
-        # test xyz_axes_default_mode = 'absolute' 
+        # test xyz_axes_default_mode = 'absolute'
         raise NotImplementedError
 
     def test_xyz_axis_default_mode_require_explicit(self):
-        # test xyz_axes_default_mode = 'require-explicit' 
+        # test xyz_axes_default_mode = 'require-explicit'
         raise NotImplementedError
 
     def test_g90_influences_extruder_use_octoprint_settings(self):
-        # test g90_influences_extruder = 'use-octoprint-settings' 
+        # test g90_influences_extruder = 'use-octoprint-settings'
         raise NotImplementedError
 
     def test_g90_influences_extruder_true(self):
-        # test g90_influences_extruder = 'true' 
+        # test g90_influences_extruder = 'true'
         raise NotImplementedError
 
     def test_g90_influences_extruder_false(self):
-        # test g90_influences_extruder = 'false' 
+        # test g90_influences_extruder = 'false'
         raise NotImplementedError
 
     def test_priming_height(self):
@@ -835,6 +834,8 @@ class Test_Position(unittest.TestCase):
     def test_priming_height_0(self):
         # test the priming height = 0
         raise NotImplementedError
+
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(Test_Position)
     unittest.TextTestRunner(verbosity=3).run(suite)

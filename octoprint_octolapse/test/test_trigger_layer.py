@@ -311,7 +311,6 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.RequireZHop = False  # no zhop required
         trigger.HeightIncrement = .25  # Trigger every .25
 
-
         # test initial state
         self.assertFalse(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
@@ -515,12 +514,11 @@ class Test_LayerTrigger(unittest.TestCase):
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         state.IsPrimed = False
-        
+
         # try out on extruding
         state.IsExtruding = True
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
-        
 
         trigger.Update(position)
         self.assertTrue(trigger.IsTriggered(0))
@@ -577,7 +575,7 @@ class Test_LayerTrigger(unittest.TestCase):
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
 
-       # Reset the previous extruder state
+        # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         state.IsPrimed = False
@@ -627,14 +625,14 @@ class Test_LayerTrigger(unittest.TestCase):
     def test_LayerTrigger_ExtruderTriggerWait(self):
         """Test wait on extruder"""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        
+
         trigger = LayerTrigger(self.Settings)
         trigger.RequireZHop = False  # no zhop required
         trigger.HeightIncrement = 0  # Trigger on every layer change
 
         # home the axis
         position.Update("G28")
-        
+
         # add the current state
         pos = position.GetPosition(0)
         state = position.Extruder.GetState(0)

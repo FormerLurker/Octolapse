@@ -464,7 +464,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Extruder.IsRetracted = lambda: True
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
-        
+
         # verify the return commands
         self.assertEqual(snapshotGcode.ReturnCommands()[0], "G1 X100.000 Y50.000")
         self.assertEqual(snapshotGcode.ReturnCommands()[1], "G91")

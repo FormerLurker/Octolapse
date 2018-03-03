@@ -97,7 +97,6 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.Settings.CurrentSnapshot().gcode_trigger_on_detracted = None
         trigger = GcodeTrigger(self.Settings)
 
-        
         # send a command that is the snapshot command using the defaults
         trigger.Update(position, "snap")
         self.assertFalse(trigger.IsTriggered(0))
@@ -108,7 +107,7 @@ class Test_GcodeTrigger(unittest.TestCase):
         trigger.Update(position, "NotTheSnapshotCommand")
         self.assertTrue(trigger.IsTriggered(0))
         self.assertFalse(trigger.IsWaiting(0))
-        
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(Test_GcodeTrigger)

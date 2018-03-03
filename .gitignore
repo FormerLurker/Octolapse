@@ -7,9 +7,4 @@ dist
 *.egg*
 .DS_Store
 .vs/
-<<<<<<< HEAD
 *.zip
-
-=======
->>>>>>> 1fd85989255ba831729bf3403a0d98ccde14d6f7
-

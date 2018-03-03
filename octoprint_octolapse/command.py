@@ -4,11 +4,12 @@
 # file called 'LICENSE', which is part of this source code package.
 
 
-import re
 import collections
-import string
 import operator
+import re
+import string
 import sys
+
 import octoprint_octolapse.utility as utility
 
 
@@ -37,9 +38,9 @@ class GcodeParts(object):
             # if we've found a semicolon
             if commentIndex > 0:
                 commandAndParameters = gcode[0:commentIndex].strip()
-            if len(gcode) >= commentIndex+1:
+            if len(gcode) >= commentIndex + 1:
                 # If there is anything after the semicolon
-                self.Comment = gcode[commentIndex+1:]
+                self.Comment = gcode[commentIndex + 1:]
             else:
                 # If there is nothing after the semicolon
                 self.Comment = ""
@@ -153,7 +154,7 @@ class Command(object):
     CommentTextTemplate = "{commenttext}"
     CommentSeparator = ";"
 
-    def __init__(self, name=None, command=None, regex=None, displayTemplate=None,  parameters=None, gcode=None):
+    def __init__(self, name=None, command=None, regex=None, displayTemplate=None, parameters=None, gcode=None):
         if type(command) is Command:
             self.Name = command.Name
             self.Command = command.Command
@@ -196,7 +197,7 @@ class Command(object):
         if self.CommandParts.Comment is not None:
             safeDict.clear()
             safeDict["Comment"] = self.CommentSeparator + \
-                self.CommandParts.Comment
+                                  self.CommandParts.Comment
             safeDict["CommentText"] = self.CommandParts.Comment
             output = string.Formatter().vformat(output, (), safeDict)
         else:
@@ -485,7 +486,7 @@ class Responses(object):
     def __init__(self):
         self.M114 = Command(
             name="Get Position", command="M114",
-            #regex="(?i).*?X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+).*?,"
+            # regex="(?i).*?X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+).*?,"
             displayTemplate="Position: X={0}, Y={1}, Z={2}, E={3}",
             parameters=[
                 CommandParameter("X", "(?i)^x:(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
@@ -494,4 +495,3 @@ class Responses(object):
                 CommandParameter("E", "(?i)^e:(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4)
             ]
         )
-

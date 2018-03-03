@@ -11,6 +11,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder = Extruder(self.Settings)
         # set the retraction distance
         self.Extruder.PrinterRetractionLength = 4
+
     def CreateOctoprintPrinterProfile(self):
         return {
             "volume": {
@@ -373,7 +374,7 @@ class Test_Extruder(unittest.TestCase):
         self.assertFalse(self.Extruder.IsDetractingStart())
         self.assertFalse(self.Extruder.IsDetracting())
         self.assertFalse(self.Extruder.IsDetracted())
-        
+
         # -2,-1 - retract from partially retracted to partially retracted
         self.Extruder.Reset()
         self.Extruder.Update(-2)
@@ -479,7 +480,7 @@ class Test_Extruder(unittest.TestCase):
         self.assertFalse(self.Extruder.IsDetractingStart())
         self.assertFalse(self.Extruder.IsDetracting())
         self.assertFalse(self.Extruder.IsDetracted())
-        
+
         # -4,-1 - Fully Retracted, Continue Retracting
         self.Extruder.Reset()
         self.Extruder.Update(-4)
@@ -586,8 +587,6 @@ class Test_Extruder(unittest.TestCase):
         self.assertFalse(self.Extruder.IsDetracting())
         self.assertFalse(self.Extruder.IsDetracted())
 
-        
-
     def test_ExtruderStateTriggered(self):
         self.assertTrue(self.Extruder._ExtruderStateTriggered(None, False) is None)
         self.assertTrue(self.Extruder._ExtruderStateTriggered(None, True) is None)
@@ -649,7 +648,7 @@ class Test_Extruder(unittest.TestCase):
         self.assertFalse(self.Extruder.IsTriggered(triggers))
         # test False with False filter
         state.IsExtruding = False
-        self.assertFalse( self.Extruder.IsTriggered(triggers))
+        self.assertFalse(self.Extruder.IsTriggered(triggers))
 
     def test_extruderTriggers_OnPrimed(self):
         self.Extruder.Reset()
