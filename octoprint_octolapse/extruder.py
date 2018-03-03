@@ -173,10 +173,14 @@ class Extruder(object):
     def LengthToRetract(self, index=0):
         state = self.GetState(index)
         if state is not None:
-            retractLength = utility.round_to(
-                self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
-                self.PrinterTolerance
-            )
+
+            #retractLength = utility.round_to(
+            #    self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
+            #    self.PrinterTolerance
+            #)
+            # Don't round this, it causes blobs!
+            retractLength = self.PrinterRetractionLength - self.StateHistory[0].RetractionLength
+
             if (retractLength <= 0):
                 retractLength = 0
             return retractLength
