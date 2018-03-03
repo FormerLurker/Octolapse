@@ -2,12 +2,12 @@
 
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
-import requests
-import threading
 import logging
+import requests
+import sys
+import threading
 import uuid
 from requests.auth import HTTPBasicAuth
-import sys
 
 
 def FormatRequestTemplate(cameraAddress, template, value):
@@ -41,6 +41,7 @@ def TestCamera(cameraProfile, timeoutSeconds=2):
             type, value)
     return False, failReason
 
+
 class CameraControl(object):
     def __init__(self, camera, onSuccess=None, onFail=None, onComplete=None, timeoutSeconds=2.0):
         self.Camera = camera
@@ -48,7 +49,6 @@ class CameraControl(object):
         self.OnSuccess = onSuccess
         self.OnFail = onFail
         self.OnComplete = onComplete
-
 
     def ApplySettings(self):
         cameraSettingRequests = [
@@ -175,7 +175,7 @@ class CameraControl(object):
 
 
 class CameraSettingJob(object):
-    #camera_job_lock = threading.RLock()
+    # camera_job_lock = threading.RLock()
 
     def __init__(self, camera, cameraSettingRequest, timeout, onSuccess=None, onFail=None, onComplete=None):
         camera = camera
@@ -216,13 +216,15 @@ class CameraSettingJob(object):
             if r.status_code != requests.codes.ok:
                 success = False
                 errorMessages.append(
-                    "Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(settingName, value))
+                    "Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(
+                        settingName, value))
         except:
             type = sys.exc_info()[0]
             value = sys.exc_info()[1]
             success = False
             errorMessages.append(
-                "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(type, settingName, url, value))
+                "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(
+                    type, settingName, url, value))
 
         if success != False:
             success = True
@@ -241,4 +243,3 @@ class CameraSettingJob(object):
         method = getattr(self, name, None)
         if method is not None and callable(method):
             method(*args, **kwargs)
-

@@ -4,23 +4,22 @@
 # file called 'LICENSE', which is part of this source code package.
 
 import os
-import sys
-import time
-from PIL import Image
-
 import requests
-import threading
-from requests.auth import HTTPBasicAuth
-from io import open as iopen
-from urlparse import urlsplit
-from math import trunc
-from octoprint_octolapse.settings import *
-import traceback
 import shutil
-
+import sys
+import threading
+import time
+import traceback
 import uuid
-import octoprint_octolapse.utility as utility
+from PIL import Image
+from io import open as iopen
+from math import trunc
+from requests.auth import HTTPBasicAuth
+from urlparse import urlsplit
+
 import octoprint_octolapse.camera as camera
+import octoprint_octolapse.utility as utility
+from octoprint_octolapse.settings import *
 
 
 def StartSnapshotJob(job):
@@ -58,7 +57,7 @@ class CaptureSnapshot(object):
                 "Starting Snapshot Download Job Immediately.")
             newSnapshotJob.Process()
         else:
-            delaySeconds = self.Camera.delay/1000.0
+            delaySeconds = self.Camera.delay / 1000.0
             self.Settings.CurrentDebugProfile().LogSnapshotDownload(
                 "Starting Snapshot Download Job in {0} seconds.".format(delaySeconds))
             t = threading.Timer(
@@ -122,9 +121,9 @@ class SnapshotJob(object):
     snapshot_job_lock = threading.RLock()
 
     def __init__(
-            self, settings, dataDirectory, snapshotNumber,
-            snapshotInfo, url,  snapshotGuid, timeoutSeconds=5,
-            onComplete=None, onSuccess=None, onFail=None):
+        self, settings, dataDirectory, snapshotNumber,
+        snapshotInfo, url, snapshotGuid, timeoutSeconds=5,
+        onComplete=None, onSuccess=None, onFail=None):
         cameraSettings = settings.CurrentCamera()
         self.SnapshotNumber = snapshotNumber
         self.DataDirectory = dataDirectory
@@ -279,8 +278,8 @@ class SnapshotJob(object):
 
             basewidth = 300
             img = Image.open(latestSnapshotPath)
-            wpercent = (basewidth/float(img.size[0]))
-            hsize = int((float(img.size[1])*float(wpercent)))
+            wpercent = (basewidth / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
             img = img.resize((basewidth, hsize), Image.ANTIALIAS)
             img.save(utility.GetLatestSnapshotThumbnailDownloadPath(
                 self.DataDirectory), "JPEG")
@@ -315,4 +314,3 @@ class SnapshotInfo(object):
                 snapshotNumber
             )
         )
-

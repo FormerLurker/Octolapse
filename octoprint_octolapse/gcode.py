@@ -1,15 +1,16 @@
 # coding=utf-8
 
+import collections
+import operator
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import re
-import collections
 import string
-import operator
-from octoprint_octolapse.settings import *
-import octoprint_octolapse.utility as utility
 import sys
+
+import octoprint_octolapse.utility as utility
 from octoprint_octolapse.command import Commands
+from octoprint_octolapse.settings import *
 
 
 class SnapshotGcode(object):
@@ -37,24 +38,24 @@ class SnapshotGcode(object):
             self.GcodeCommands.append(command)
 
     def EndIndex(self):
-        return len(self.GcodeCommands)-1
+        return len(self.GcodeCommands) - 1
 
     def SetSnapshotIndex(self):
         self.SnapshotIndex = self.EndIndex()
 
     def GetOriginalReturnCommands(self):
-        if len(self.__OriginalGcodeCommands) > self.SnapshotIndex+1:
-            return self.__OriginalGcodeCommands[self.SnapshotIndex+1:]
+        if len(self.__OriginalGcodeCommands) > self.SnapshotIndex + 1:
+            return self.__OriginalGcodeCommands[self.SnapshotIndex + 1:]
         return []
 
     def SnapshotCommands(self):
         if len(self.GcodeCommands) > 0:
-            return self.GcodeCommands[0:self.SnapshotIndex+1]
+            return self.GcodeCommands[0:self.SnapshotIndex + 1]
         return []
 
     def ReturnCommands(self):
-        if len(self.GcodeCommands) > self.SnapshotIndex+1:
-            return self.GcodeCommands[self.SnapshotIndex+1:]
+        if len(self.GcodeCommands) > self.SnapshotIndex + 1:
+            return self.GcodeCommands[self.SnapshotIndex + 1:]
         return []
 
 
@@ -141,14 +142,14 @@ class SnapshotGcodeGenerator(object):
             if path.Loop:
                 if path.InvertLoop:
                     if len(path.Path) > 1:
-                        path.Index = len(path.Path)-2
+                        path.Index = len(path.Path) - 2
                     else:
                         path.Index = 0
                     path.Increment = -1
                 else:
                     path.Index = 0
             else:
-                path.Index = len(path.Path)-1
+                path.Index = len(path.Path) - 1
         elif path.Index < 0:
             if path.Loop:
                 if path.InvertLoop:
@@ -158,7 +159,7 @@ class SnapshotGcodeGenerator(object):
                         path.Index = 0
                     path.Increment = 1
                 else:
-                    path.Index = len(path.Path)-1
+                    path.Index = len(path.Path) - 1
             else:
                 path.Index = 0
 
@@ -191,7 +192,7 @@ class SnapshotGcodeGenerator(object):
         return self.GetRelativeCoordinate(percent, self.BoundingBox["min_z"], self.BoundingBox["max_z"])
 
     def GetRelativeCoordinate(self, percent, min, max):
-        return ((float(max)-float(min))*(percent/100.0))+float(min)
+        return ((float(max) - float(min)) * (percent / 100.0)) + float(min)
 
     def AppendFeedrateGcode(self, snapshotGcode, desiredSpeed):
         if desiredSpeed > 0:
@@ -201,7 +202,6 @@ class SnapshotGcodeGenerator(object):
     def CreateSnapshotGcode(self, x, y, z, f, isRelative, isExtruderRelative, extruder, zLift, savedCommand=None):
         self.Reset()
         if x is None or y is None or z is None:
-
             self.HasSnapshotPositionErrors = True
             message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(
                 x, y, z)
@@ -257,7 +257,7 @@ class SnapshotGcodeGenerator(object):
         # Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
         # newSnapshotGcode.Append(self.GetPositionGcode())
         # Log the commands
-        #self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Start Gcode")
+        # self.Settings.CurrentDebugProfile().LogSnapshotGcode("Snapshot Start Gcode")
         # for str in newSnapshotGcode.GcodeCommands:
         #	self.Settings.CurrentDebugProfile().LogSnapshotGcode("    {0}".format(str))
 
@@ -346,7 +346,7 @@ class SnapshotGcodeGenerator(object):
         # Make sure we return to the original feedrate
         self.AppendFeedrateGcode(newSnapshotGcode, self.FOriginal)
         # What the hell was this for?!
-        #newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
+        # newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
         # add the saved command, if there is one
         if savedCommand is not None:
             newSnapshotGcode.Append(savedCommand)
@@ -358,7 +358,8 @@ class SnapshotGcodeGenerator(object):
         newSnapshotGcode.Append(self.GetPositionGcode())
 
         self.Settings.CurrentDebugProfile().LogSnapshotGcode(
-            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex, newSnapshotGcode.EndIndex()))
+            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex,
+                                                                                    newSnapshotGcode.EndIndex()))
         for str in newSnapshotGcode.GcodeCommands:
             self.Settings.CurrentDebugProfile(
             ).LogSnapshotGcode("    {0}".format(str))
@@ -392,10 +393,10 @@ class SnapshotGcodeGenerator(object):
         return "G1 Z{0:.3f}".format(distance)
 
     def GetRelativeZLowerGcode(self, distance):
-        return "G1 Z{0:.3f}".format(-1.0*distance)
+        return "G1 Z{0:.3f}".format(-1.0 * distance)
 
     def GetRetractGcode(self, distance):
-        return "G1 E{0:.3f}".format(-1*distance)
+        return "G1 E{0:.3f}".format(-1 * distance)
 
     def GetDetractGcode(self, distance):
         return "G1 E{0:.3f}".format(distance)
@@ -411,4 +412,3 @@ class SnapshotGcodeGenerator(object):
 
     def GetFeedrateSetGcode(self, f):
         return "G1 F{0}".format(int(f))
-

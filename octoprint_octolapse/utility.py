@@ -7,9 +7,10 @@ import math
 import ntpath
 import os
 import re
+import sys
 import time
 import traceback
-import sys
+
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 
@@ -172,12 +173,12 @@ def GetRenderingBaseFilename(printName, printStartTime, printEndTime=None):
     dateStamp = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
     fileTemplate = fileTemplate.replace("{FILENAME}", getstring(printName, ""))
     fileTemplate = fileTemplate.replace(
-        "{DATETIMESTAMP}", time.strftime("%Y%m%d%H%M%S",time.localtime(time.time())))
+        "{DATETIMESTAMP}", time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
     fileTemplate = fileTemplate.replace(
-        "{PRINTSTARTTIME}", time.strftime("%Y%m%d%H%M%S",time.localtime(printStartTime)))
+        "{PRINTSTARTTIME}", time.strftime("%Y%m%d%H%M%S", time.localtime(printStartTime)))
     if printEndTime is not None:
         fileTemplate = fileTemplate.replace(
-            "{PRINTENDTIME}",  time.strftime("%Y%m%d%H%M%S",time.localtime(printEndTime)))
+            "{PRINTENDTIME}", time.strftime("%Y%m%d%H%M%S", time.localtime(printEndTime)))
 
     return fileTemplate
 
@@ -265,10 +266,9 @@ def IsInBounds(boundingBox, x=None, y=None, z=None):
     # Determines if the given X,Y,Z coordinate is within
     # the bounding box of the printer, as determined by
     # the octoprint configuration
-    
     # if no coordinates are give, return false
     if x is None and y is None and z is None:
-      return False
+        return False
 
     minX = boundingBox['min_x']
     maxX = boundingBox['max_x']
@@ -340,9 +340,10 @@ def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
         "max_z": maxZ
     }
 
+
 def ExceptionToString(e):
-        traceBack = sys.exc_info()[2]
-        if traceBack is None:
-            return str(e)
-        tb_lines = traceback.format_exception(e.__class__, e, traceBack)
-        return ''.join(tb_lines)
+    traceBack = sys.exc_info()[2]
+    if traceBack is None:
+        return str(e)
+    tb_lines = traceback.format_exception(e.__class__, e, traceBack)
+    return ''.join(tb_lines)

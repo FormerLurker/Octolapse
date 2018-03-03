@@ -3,45 +3,46 @@
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 
-from octoprint_octolapse.position import *
+import sys
+import time
+
+import octoprint_octolapse.utility
+from octoprint_octolapse.command import *
 from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.gcode import *
-from octoprint_octolapse.command import *
+from octoprint_octolapse.position import *
 from octoprint_octolapse.settings import *
-import octoprint_octolapse.utility
-import time
-import sys
 
-def IsInPosition(restrictions,x,y):
 
+def IsInPosition(restrictions, x, y):
     # we need to know if there is at least one required position
     hasRequiredPosition = False
-    # isInPosition will be used to determine if we return 
+    # isInPosition will be used to determine if we return
     # true where we have at least one required type
     isInPosition = False
 
     # loop through each restriction
     for restriction in restrictions:
-        if(restriction.Type == "required"):
+        if (restriction.Type == "required"):
             # we have at least on required position, so at least one point must be in
             # position for us to return true
             hasRequiredPosition = True
-        if(restriction.IsInPosition(x, y)):
-            if(restriction.Type == "forbidden"):
+        if (restriction.IsInPosition(x, y)):
+            if (restriction.Type == "forbidden"):
                 # if we're in a forbidden position, return false now
                 return False
             else:
                 # we're in position in at least one required position restriction
                 isInPosition = True
-    
-    if(hasRequiredPosition):
+
+    if (hasRequiredPosition):
         # if at least one position restriction is required
         return isInPosition
 
     # if we're here then we only have forbidden restrictions, but the point
     # was not within the restricted area(s)
     return True
-        
+
 
 class Triggers(object):
     def __init__(self, settings):
@@ -119,7 +120,7 @@ class Triggers(object):
         return None
 
     def GetFirstTriggering(self, index):
-        if len(self._triggers)<1:
+        if len(self._triggers) < 1:
             return False
         try:
             # Loop through all of the active currentTriggers
@@ -129,6 +130,7 @@ class Triggers(object):
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
             return False
+
     def GetFirstWaiting(self):
         try:
             # Loop through all of the active currentTriggers
@@ -182,6 +184,7 @@ class TriggerState(object):
         self.IsInPosition = False if state is None else state.IsInPosition
         self.HasChanged = False if state is None else state.HasChanged
         self.IsHomed = False if state is None else state.IsHomed
+
     def ToDict(self, trigger):
         return {
             "IsTriggered": self.IsTriggered,
@@ -199,13 +202,14 @@ class TriggerState(object):
         self.IsTriggered = False
         self.HasChanged = False
         self.IsInPosition = False
+
     def IsEqual(self, state):
-        if(state is not None
-                and self.IsTriggered == state.IsTriggered
-                and self.IsWaiting == state.IsWaiting
-                and self.IsWaitingOnZHop == state.IsWaitingOnZHop
-                and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder
-                and self.IsHomed == state.IsHomed):
+        if (state is not None
+            and self.IsTriggered == state.IsTriggered
+            and self.IsWaiting == state.IsWaiting
+            and self.IsWaitingOnZHop == state.IsWaitingOnZHop
+            and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder
+            and self.IsHomed == state.IsHomed):
             return True
         return False
 
@@ -229,7 +233,7 @@ class Trigger(object):
     def AddState(self, state):
         self._stateHistory.insert(0, state)
         while (len(self._stateHistory) > self._maxStates):
-            del self._stateHistory[self._maxStates-1]
+            del self._stateHistory[self._maxStates - 1]
 
     def Count(self):
         return len(self._stateHistory)
@@ -296,16 +300,16 @@ class GcodeTrigger(Trigger):
             self.Snapshot.gcode_trigger_position_restrictions) > 0
 
         self.ExtruderTriggers = ExtruderTriggers(
-           self.Snapshot.gcode_trigger_on_extruding_start,
-           self.Snapshot.gcode_trigger_on_extruding,
-           self.Snapshot.gcode_trigger_on_primed,
-           self.Snapshot.gcode_trigger_on_retracting_start,
-           self.Snapshot.gcode_trigger_on_retracting,
-           self.Snapshot.gcode_trigger_on_partially_retracted,
-           self.Snapshot.gcode_trigger_on_retracted,
-           self.Snapshot.gcode_trigger_on_detracting_start,
-           self.Snapshot.gcode_trigger_on_detracting,
-           self.Snapshot.gcode_trigger_on_detracted
+            self.Snapshot.gcode_trigger_on_extruding_start,
+            self.Snapshot.gcode_trigger_on_extruding,
+            self.Snapshot.gcode_trigger_on_primed,
+            self.Snapshot.gcode_trigger_on_retracting_start,
+            self.Snapshot.gcode_trigger_on_retracting,
+            self.Snapshot.gcode_trigger_on_partially_retracted,
+            self.Snapshot.gcode_trigger_on_retracted,
+            self.Snapshot.gcode_trigger_on_detracting_start,
+            self.Snapshot.gcode_trigger_on_detracting,
+            self.Snapshot.gcode_trigger_on_detracted
         )
 
         # Logging
@@ -356,7 +360,8 @@ class GcodeTrigger(Trigger):
                 state.IsHomed = True
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.gcode_trigger_position_restrictions, position.X(0), position.Y(0))
+                    state.IsInPosition = IsInPosition(self.Snapshot.gcode_trigger_position_restrictions, position.X(0),
+                                                      position.Y(0))
                 else:
                     state.IsInPosition = True
 
@@ -378,7 +383,7 @@ class GcodeTrigger(Trigger):
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
                             self.TriggeredCount += 1
-                            
+
                             self.Settings.CurrentDebugProfile().LogTriggering(
                                 "GcodeTrigger - Waiting for extruder to trigger.")
                     else:
@@ -429,12 +434,12 @@ class LayerTriggerState(TriggerState):
 
     def IsEqual(self, state):
         if (super(LayerTriggerState, self).IsEqual(state)
-                    and self.CurrentIncrement == state.CurrentIncrement
-                    and self.IsLayerChangeWait == state.IsLayerChangeWait
-                    and self.IsHeightChange == state.IsHeightChange
-                    and self.IsHeightChangeWait == state.IsHeightChangeWait
-                    and self.Layer == state.Layer
-                ):
+            and self.CurrentIncrement == state.CurrentIncrement
+            and self.IsLayerChangeWait == state.IsLayerChangeWait
+            and self.IsHeightChange == state.IsHeightChange
+            and self.IsHeightChangeWait == state.IsHeightChangeWait
+            and self.Layer == state.Layer
+        ):
             return True
         return False
 
@@ -545,10 +550,11 @@ class LayerTrigger(Trigger):
 
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.layer_trigger_position_restrictions, position.X(0), position.Y(0))
+                    state.IsInPosition = IsInPosition(self.Snapshot.layer_trigger_position_restrictions, position.X(0),
+                                                      position.Y(0))
                 else:
                     state.IsInPosition = True
-                    
+
                 # see if the extruder is triggering
                 isExtruderTriggering = position.Extruder.IsTriggered(
                     self.ExtruderTriggers, index=0)
@@ -695,7 +701,7 @@ class TimerTrigger(Trigger):
             if state.PauseTime is not None and state.TriggerStartTime is not None:
                 currentTime = time.time()
                 newLastTriggerTime = currentTime - \
-                    (state.PauseTime - state.TriggerStartTime)
+                                     (state.PauseTime - state.TriggerStartTime)
                 message = (
                     "Time Trigger - Unpausing.  LastTriggerTime:{0}, "
                     "PauseTime:{1}, CurrentTime:{2}, NewTriggerTime:{3}"
@@ -748,7 +754,7 @@ class TimerTrigger(Trigger):
                 # if the trigger start time is null, set it now.
                 if state.TriggerStartTime is None:
                     state.TriggerStartTime = currentTime
-            
+
                 message = (
                     "TimerTrigger - {0} second interval, "
                     "{1} seconds elapsed, {2} seconds to trigger"
@@ -761,12 +767,13 @@ class TimerTrigger(Trigger):
 
                 # how many seconds to trigger
                 secondsToTrigger = self.IntervalSeconds - \
-                    (currentTime - state.TriggerStartTime)
+                                   (currentTime - state.TriggerStartTime)
                 state.SecondsToTrigger = utility.round_to(secondsToTrigger, 1)
 
                 # check to see if the X/Y axes are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.timer_trigger_position_restrictions, position.X(0), position.Y(0))
+                    state.IsInPosition = IsInPosition(self.Snapshot.timer_trigger_position_restrictions, position.X(0),
+                                                      position.Y(0))
                 else:
                     state.IsInPosition = True
 
@@ -805,4 +812,3 @@ class TimerTrigger(Trigger):
             self.AddState(state)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
-

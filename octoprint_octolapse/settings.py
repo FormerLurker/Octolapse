@@ -3,26 +3,28 @@
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 
-from octoprint.plugin import PluginSettings
-import time
-from datetime import datetime
-import octoprint_octolapse.utility as utility
-from pprint import pprint
 import logging
+import math
 import os
 import sys
+import time
 import uuid
-import math
+from datetime import datetime
+from octoprint.plugin import PluginSettings
+from pprint import pprint
+
+import octoprint_octolapse.utility as utility
+
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
 class Printer(object):
 
     def __init__(
-            self, printer=None, name="New Printer",
-            guid=None, retract_length=2.0, retract_speed=4000,
-            detract_speed=3000, movement_speed=6000, z_hop=0.5,
-            z_hop_speed=6000, snapshot_command="snap"):
+        self, printer=None, name="New Printer",
+        guid=None, retract_length=2.0, retract_speed=4000,
+        detract_speed=3000, movement_speed=6000, z_hop=0.5,
+        z_hop_speed=6000, snapshot_command="snap"):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
@@ -49,10 +51,10 @@ class Printer(object):
         self.max_z = 0.0
         self.auto_position_detection_commands = ""
         self.priming_height = 0
-        self.e_axis_default_mode = 'require-explicit' # other values are 'relative' and 'absolute'
-        self.g90_influences_extruder = 'use-octoprint-settings' #other values are 'true' and 'false'
-        self.xyz_axes_default_mode = 'require-explicit' # other values are 'relative' and 'absolute'
-        
+        self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
+        self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
+        self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
+
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -166,16 +168,16 @@ class Printer(object):
 
     def ToDict(self):
         return {
-            'name'				: self.name,
-            'description'		: self.description,
-            'guid'				: self.guid,
-            'retract_length'	: self.retract_length,
-            'retract_speed'		: self.retract_speed,
-            'detract_speed'		: self.detract_speed,
-            'movement_speed'	: self.movement_speed,
-            'z_hop'				: self.z_hop,
-            'z_hop_speed'		: self.z_hop_speed,
-            'snapshot_command'	: self.snapshot_command,
+            'name': self.name,
+            'description': self.description,
+            'guid': self.guid,
+            'retract_length': self.retract_length,
+            'retract_speed': self.retract_speed,
+            'detract_speed': self.detract_speed,
+            'movement_speed': self.movement_speed,
+            'z_hop': self.z_hop,
+            'z_hop_speed': self.z_hop_speed,
+            'snapshot_command': self.snapshot_command,
             'printer_position_confirmation_tolerance': self.printer_position_confirmation_tolerance,
             'auto_detect_position': self.auto_detect_position,
             'auto_position_detection_commands': self.auto_position_detection_commands,
@@ -190,10 +192,10 @@ class Printer(object):
             'max_y': self.max_y,
             'min_z': self.min_z,
             'max_z': self.max_z,
-            'priming_height' : self.priming_height,
-            'e_axis_default_mode' : self.e_axis_default_mode,
-            'g90_influences_extruder' : self.g90_influences_extruder,
-            'xyz_axes_default_mode' : self.xyz_axes_default_mode
+            'priming_height': self.priming_height,
+            'e_axis_default_mode': self.e_axis_default_mode,
+            'g90_influences_extruder': self.g90_influences_extruder,
+            'xyz_axes_default_mode': self.xyz_axes_default_mode
         }
 
 
@@ -311,29 +313,29 @@ class Stabilization(object):
 
     def ToDict(self):
         return {
-            'guid'							: self.guid,
-            'name'							: self.name,
-            'description'					: self.description,
-            'x_type'						: self.x_type,
-            'x_fixed_coordinate'			: self.x_fixed_coordinate,
-            'x_fixed_path'					: self.x_fixed_path,
-            'x_fixed_path_loop'				: self.x_fixed_path_loop,
-            'x_fixed_path_invert_loop'		: self.x_fixed_path_invert_loop,
-            'x_relative'					: self.x_relative,
-            'x_relative_print'				: self.x_relative_print,
-            'x_relative_path'				: self.x_relative_path,
-            'x_relative_path_loop'			: self.x_relative_path_loop,
-            'x_relative_path_invert_loop'	: self.x_relative_path_invert_loop,
-            'y_type'						: self.y_type,
-            'y_fixed_coordinate'			: self.y_fixed_coordinate,
-            'y_fixed_path'					: self.y_fixed_path,
-            'y_fixed_path_loop'				: self.y_fixed_path_loop,
-            'y_fixed_path_invert_loop'		: self.y_fixed_path_invert_loop,
-            'y_relative'					: self.y_relative,
-            'y_relative_print'				: self.y_relative_print,
-            'y_relative_path'				: self.y_relative_path,
-            'y_relative_path_loop'			: self.y_relative_path_loop,
-            'y_relative_path_invert_loop'	: self.y_relative_path_invert_loop
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
+            'x_type': self.x_type,
+            'x_fixed_coordinate': self.x_fixed_coordinate,
+            'x_fixed_path': self.x_fixed_path,
+            'x_fixed_path_loop': self.x_fixed_path_loop,
+            'x_fixed_path_invert_loop': self.x_fixed_path_invert_loop,
+            'x_relative': self.x_relative,
+            'x_relative_print': self.x_relative_print,
+            'x_relative_path': self.x_relative_path,
+            'x_relative_path_loop': self.x_relative_path_loop,
+            'x_relative_path_invert_loop': self.x_relative_path_invert_loop,
+            'y_type': self.y_type,
+            'y_fixed_coordinate': self.y_fixed_coordinate,
+            'y_fixed_path': self.y_fixed_path,
+            'y_fixed_path_loop': self.y_fixed_path_loop,
+            'y_fixed_path_invert_loop': self.y_fixed_path_invert_loop,
+            'y_relative': self.y_relative,
+            'y_relative_print': self.y_relative_print,
+            'y_relative_path': self.y_relative_path,
+            'y_relative_path_loop': self.y_relative_path_loop,
+            'y_relative_path_invert_loop': self.y_relative_path_invert_loop
         }
 
     def GetStabilizationPaths(self):
@@ -401,7 +403,7 @@ class SnapshotPositionRestrictions(object):
             raise TypeError("SnapshotPosition type must be 'forbidden' or 'required'")
 
         self.Shape = shape.lower()
-        
+
         if self.Shape not in ["rect", "circle"]:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'")
         if x is None or y is None:
@@ -445,6 +447,7 @@ class SnapshotPositionRestrictions(object):
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
         return isInPosition
+
 
 class Snapshot(object):
     # globals
@@ -508,7 +511,7 @@ class Snapshot(object):
         self.layer_trigger_on_detracted = False
         self.layer_trigger_position_restrictions = []
         # other settings
-        
+
         self.retract_before_move = True
 
         self.cleanup_after_render_complete = True
@@ -547,7 +550,7 @@ class Snapshot(object):
                 self.timer_trigger_on_detracting = snapshot.timer_trigger_on_detracting
                 self.timer_trigger_on_detracted = snapshot.timer_trigger_on_detracted
                 self.timer_trigger_position_restrictions = snapshot.timer_trigger_position_restrictions
-                #layer trigger members
+                # layer trigger members
                 self.layer_trigger_enabled = snapshot.layer_trigger_enabled
                 self.layer_trigger_height = snapshot.layer_trigger_height
                 self.layer_trigger_require_zhop = snapshot.layer_trigger_require_zhop
@@ -742,10 +745,10 @@ class Snapshot(object):
         for restriction in value:
             restrictions.append(
                 SnapshotPositionRestrictions(
-                  restriction["Type"], restriction["Shape"],
-                  restriction["X"], restriction["Y"],
-                  restriction["X2"], restriction["Y2"],
-                  restriction["R"]
+                    restriction["Type"], restriction["Shape"],
+                    restriction["X"], restriction["Y"],
+                    restriction["X2"], restriction["Y2"],
+                    restriction["R"]
                 )
             )
         return restrictions
@@ -759,58 +762,61 @@ class Snapshot(object):
     def ToDict(self):
         GETVR = self.GetExtruderTriggerValueString
         return {
-            'guid'				    : self.guid,
-            'name'				    : self.name,
-            'description'			    : self.description,
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
             # Gcode Trigger
-            'gcode_trigger_enabled'		    : self.gcode_trigger_enabled,
-            'gcode_trigger_require_zhop'	    : self.gcode_trigger_require_zhop,
-            'gcode_trigger_on_extruding_start'	    : GETVR(self.gcode_trigger_on_extruding_start),
-            'gcode_trigger_on_extruding'	    : GETVR(self.gcode_trigger_on_extruding),
-            'gcode_trigger_on_primed'		    : GETVR(self.gcode_trigger_on_primed),
-            'gcode_trigger_on_retracting_start'	    : GETVR(self.gcode_trigger_on_retracting_start),
-            'gcode_trigger_on_retracting'	    : GETVR(self.gcode_trigger_on_retracting),
-            'gcode_trigger_on_partially_retracted'  : GETVR(self.gcode_trigger_on_partially_retracted),
-            'gcode_trigger_on_retracted'	    : GETVR(self.gcode_trigger_on_retracted),
-            'gcode_trigger_on_detracting_start'	    : GETVR(self.gcode_trigger_on_detracting_start),
-            'gcode_trigger_on_detracting'	    : GETVR(self.gcode_trigger_on_detracting),
-            'gcode_trigger_on_detracted'	    : GETVR(self.gcode_trigger_on_detracted),
-            'gcode_trigger_position_restrictions'	: self.GetTriggerPositionRestrictionsValueString(self.gcode_trigger_position_restrictions),
+            'gcode_trigger_enabled': self.gcode_trigger_enabled,
+            'gcode_trigger_require_zhop': self.gcode_trigger_require_zhop,
+            'gcode_trigger_on_extruding_start': GETVR(self.gcode_trigger_on_extruding_start),
+            'gcode_trigger_on_extruding': GETVR(self.gcode_trigger_on_extruding),
+            'gcode_trigger_on_primed': GETVR(self.gcode_trigger_on_primed),
+            'gcode_trigger_on_retracting_start': GETVR(self.gcode_trigger_on_retracting_start),
+            'gcode_trigger_on_retracting': GETVR(self.gcode_trigger_on_retracting),
+            'gcode_trigger_on_partially_retracted': GETVR(self.gcode_trigger_on_partially_retracted),
+            'gcode_trigger_on_retracted': GETVR(self.gcode_trigger_on_retracted),
+            'gcode_trigger_on_detracting_start': GETVR(self.gcode_trigger_on_detracting_start),
+            'gcode_trigger_on_detracting': GETVR(self.gcode_trigger_on_detracting),
+            'gcode_trigger_on_detracted': GETVR(self.gcode_trigger_on_detracted),
+            'gcode_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+                self.gcode_trigger_position_restrictions),
             # Timer Trigger
-            'timer_trigger_enabled'		    : self.timer_trigger_enabled,
-            'timer_trigger_require_zhop'	    : self.timer_trigger_require_zhop,
-            'timer_trigger_seconds'		    : self.timer_trigger_seconds,
-            'timer_trigger_on_extruding_start'	    : GETVR(self.timer_trigger_on_extruding_start),
-            'timer_trigger_on_extruding'	    : GETVR(self.timer_trigger_on_extruding),
-            'timer_trigger_on_primed'		    : GETVR(self.timer_trigger_on_primed),
-            'timer_trigger_on_retracting_start'	    : GETVR(self.timer_trigger_on_retracting_start),
-            'timer_trigger_on_retracting'	    : GETVR(self.timer_trigger_on_retracting),
-            'timer_trigger_on_partially_retracted'  : GETVR(self.timer_trigger_on_partially_retracted),
-            'timer_trigger_on_retracted'	    : GETVR(self.timer_trigger_on_retracted),
-            'timer_trigger_on_detracting_start'	    : GETVR(self.timer_trigger_on_detracting_start),
-            'timer_trigger_on_detracting'	    : GETVR(self.timer_trigger_on_detracting),
-            'timer_trigger_on_detracted'	    : GETVR(self.timer_trigger_on_detracted),
-            'timer_trigger_position_restrictions'	: self.GetTriggerPositionRestrictionsValueString(self.timer_trigger_position_restrictions),
+            'timer_trigger_enabled': self.timer_trigger_enabled,
+            'timer_trigger_require_zhop': self.timer_trigger_require_zhop,
+            'timer_trigger_seconds': self.timer_trigger_seconds,
+            'timer_trigger_on_extruding_start': GETVR(self.timer_trigger_on_extruding_start),
+            'timer_trigger_on_extruding': GETVR(self.timer_trigger_on_extruding),
+            'timer_trigger_on_primed': GETVR(self.timer_trigger_on_primed),
+            'timer_trigger_on_retracting_start': GETVR(self.timer_trigger_on_retracting_start),
+            'timer_trigger_on_retracting': GETVR(self.timer_trigger_on_retracting),
+            'timer_trigger_on_partially_retracted': GETVR(self.timer_trigger_on_partially_retracted),
+            'timer_trigger_on_retracted': GETVR(self.timer_trigger_on_retracted),
+            'timer_trigger_on_detracting_start': GETVR(self.timer_trigger_on_detracting_start),
+            'timer_trigger_on_detracting': GETVR(self.timer_trigger_on_detracting),
+            'timer_trigger_on_detracted': GETVR(self.timer_trigger_on_detracted),
+            'timer_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+                self.timer_trigger_position_restrictions),
             # Layer Trigger
-            'layer_trigger_enabled'		    : self.layer_trigger_enabled,
-            'layer_trigger_height'		    : self.layer_trigger_height,
-            'layer_trigger_require_zhop'    	    : self.layer_trigger_require_zhop,
-            'layer_trigger_on_extruding_start'	    : GETVR(self.layer_trigger_on_extruding_start),
-            'layer_trigger_on_extruding'	    : GETVR(self.layer_trigger_on_extruding),
-            'layer_trigger_on_primed'		    : GETVR(self.layer_trigger_on_primed),
-            'layer_trigger_on_retracting_start'	    : GETVR(self.layer_trigger_on_retracting_start),
-            'layer_trigger_on_retracting'	    : GETVR(self.layer_trigger_on_retracting),
-            'layer_trigger_on_partially_retracted'  : GETVR(self.layer_trigger_on_partially_retracted),
-            'layer_trigger_on_retracted'	    : GETVR(self.layer_trigger_on_retracted),
-            'layer_trigger_on_detracting_start'	    : GETVR(self.layer_trigger_on_detracting_start),
-            'layer_trigger_on_detracting'	    : GETVR(self.layer_trigger_on_detracting),
-            'layer_trigger_on_detracted'	    : GETVR(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions'   :  self.GetTriggerPositionRestrictionsValueString(self.layer_trigger_position_restrictions),
+            'layer_trigger_enabled': self.layer_trigger_enabled,
+            'layer_trigger_height': self.layer_trigger_height,
+            'layer_trigger_require_zhop': self.layer_trigger_require_zhop,
+            'layer_trigger_on_extruding_start': GETVR(self.layer_trigger_on_extruding_start),
+            'layer_trigger_on_extruding': GETVR(self.layer_trigger_on_extruding),
+            'layer_trigger_on_primed': GETVR(self.layer_trigger_on_primed),
+            'layer_trigger_on_retracting_start': GETVR(self.layer_trigger_on_retracting_start),
+            'layer_trigger_on_retracting': GETVR(self.layer_trigger_on_retracting),
+            'layer_trigger_on_partially_retracted': GETVR(self.layer_trigger_on_partially_retracted),
+            'layer_trigger_on_retracted': GETVR(self.layer_trigger_on_retracted),
+            'layer_trigger_on_detracting_start': GETVR(self.layer_trigger_on_detracting_start),
+            'layer_trigger_on_detracting': GETVR(self.layer_trigger_on_detracting),
+            'layer_trigger_on_detracted': GETVR(self.layer_trigger_on_detracted),
+            'layer_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+                self.layer_trigger_position_restrictions),
 
             # Other Settings
-            'retract_before_move'		    : self.retract_before_move,
-            'cleanup_after_render_complete'	    : self.cleanup_after_render_complete,
-            'cleanup_after_render_fail'		    : self.cleanup_after_render_fail,
+            'retract_before_move': self.retract_before_move,
+            'cleanup_after_render_complete': self.cleanup_after_render_complete,
+            'cleanup_after_render_fail': self.cleanup_after_render_fail,
         }
 
 
@@ -907,24 +913,24 @@ class Rendering(object):
 
     def ToDict(self):
         return {
-            'guid'								: self.guid,
-            'name'								: self.name,
-            'description'						: self.description,
-            'enabled'							: self.enabled,
-            'fps_calculation_type'				: self.fps_calculation_type,
-            'run_length_seconds'				: self.run_length_seconds,
-            'fps'								: self.fps,
-            'max_fps'							: self.max_fps,
-            'min_fps'							: self.min_fps,
-            'output_format'						: self.output_format,
-            'sync_with_timelapse'				: self.sync_with_timelapse,
-            'bitrate'							: self.bitrate,
-            'flip_h'							: self.flip_h,
-            'flip_v'							: self.flip_v,
-            'rotate_90'							: self.rotate_90,
-            'watermark'							: self.watermark,
-            'post_roll_seconds'					: self.post_roll_seconds,
-            'pre_roll_seconds'					: self.pre_roll_seconds
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
+            'enabled': self.enabled,
+            'fps_calculation_type': self.fps_calculation_type,
+            'run_length_seconds': self.run_length_seconds,
+            'fps': self.fps,
+            'max_fps': self.max_fps,
+            'min_fps': self.min_fps,
+            'output_format': self.output_format,
+            'sync_with_timelapse': self.sync_with_timelapse,
+            'bitrate': self.bitrate,
+            'flip_h': self.flip_h,
+            'flip_v': self.flip_v,
+            'rotate_90': self.rotate_90,
+            'watermark': self.watermark,
+            'post_roll_seconds': self.post_roll_seconds,
+            'pre_roll_seconds': self.pre_roll_seconds
         }
 
 
@@ -1144,56 +1150,56 @@ class Camera(object):
 
     def ToDict(self):
         return {
-            'guid'												: self.guid,
-            'name'												: self.name,
-            'description'										: self.description,
-            'delay'                                             : self.delay,
-            'address'											: self.address,
-            'snapshot_request_template'							: self.snapshot_request_template,
-            'apply_settings_before_print'						: self.apply_settings_before_print,
-            'ignore_ssl_error'									: self.ignore_ssl_error,
-            'password'											: self.password,
-            'username'											: self.username,
-            'brightness'										: self.brightness,
-            'contrast'											: self.contrast,
-            'saturation'										: self.saturation,
-            'white_balance_auto'								: self.white_balance_auto,
-            'gain'												: self.gain,
-            'powerline_frequency'								: self.powerline_frequency,
-            'white_balance_temperature'							: self.white_balance_temperature,
-            'sharpness'											: self.sharpness,
-            'backlight_compensation_enabled'					: self.backlight_compensation_enabled,
-            'exposure_type'										: self.exposure_type,
-            'exposure'											: self.exposure,
-            'exposure_auto_priority_enabled'					: self.exposure_auto_priority_enabled,
-            'pan'												: self.pan,
-            'tilt'												: self.tilt,
-            'autofocus_enabled'									: self.autofocus_enabled,
-            'focus'												: self.focus,
-            'zoom'												: self.zoom,
-            'led1_mode'											: self.led1_mode,
-            'led1_frequency'									: self.led1_frequency,
-            'jpeg_quality'										: self.jpeg_quality,
-            'brightness_request_template'						: self.brightness_request_template,
-            'contrast_request_template'							: self.contrast_request_template,
-            'saturation_request_template'						: self.saturation_request_template,
-            'white_balance_auto_request_template'				: self.white_balance_auto_request_template,
-            'gain_request_template'								: self.gain_request_template,
-            'powerline_frequency_request_template'				: self.powerline_frequency_request_template,
-            'white_balance_temperature_request_template'		: self.white_balance_temperature_request_template,
-            'sharpness_request_template'						: self.sharpness_request_template,
-            'backlight_compensation_enabled_request_template'	: self.backlight_compensation_enabled_request_template,
-            'exposure_type_request_template'					: self.exposure_type_request_template,
-            'exposure_request_template'							: self.exposure_request_template,
-            'exposure_auto_priority_enabled_request_template'	: self.exposure_auto_priority_enabled_request_template,
-            'pan_request_template'								: self.pan_request_template,
-            'tilt_request_template'								: self.tilt_request_template,
-            'autofocus_enabled_request_template'				: self.autofocus_enabled_request_template,
-            'focus_request_template'							: self.focus_request_template,
-            'zoom_request_template'								: self.zoom_request_template,
-            'led1_mode_request_template'						: self.led1_mode_request_template,
-            'led1_frequency_request_template'					: self.led1_frequency_request_template,
-            'jpeg_quality_request_template'						: self.jpeg_quality_request_template,
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
+            'delay': self.delay,
+            'address': self.address,
+            'snapshot_request_template': self.snapshot_request_template,
+            'apply_settings_before_print': self.apply_settings_before_print,
+            'ignore_ssl_error': self.ignore_ssl_error,
+            'password': self.password,
+            'username': self.username,
+            'brightness': self.brightness,
+            'contrast': self.contrast,
+            'saturation': self.saturation,
+            'white_balance_auto': self.white_balance_auto,
+            'gain': self.gain,
+            'powerline_frequency': self.powerline_frequency,
+            'white_balance_temperature': self.white_balance_temperature,
+            'sharpness': self.sharpness,
+            'backlight_compensation_enabled': self.backlight_compensation_enabled,
+            'exposure_type': self.exposure_type,
+            'exposure': self.exposure,
+            'exposure_auto_priority_enabled': self.exposure_auto_priority_enabled,
+            'pan': self.pan,
+            'tilt': self.tilt,
+            'autofocus_enabled': self.autofocus_enabled,
+            'focus': self.focus,
+            'zoom': self.zoom,
+            'led1_mode': self.led1_mode,
+            'led1_frequency': self.led1_frequency,
+            'jpeg_quality': self.jpeg_quality,
+            'brightness_request_template': self.brightness_request_template,
+            'contrast_request_template': self.contrast_request_template,
+            'saturation_request_template': self.saturation_request_template,
+            'white_balance_auto_request_template': self.white_balance_auto_request_template,
+            'gain_request_template': self.gain_request_template,
+            'powerline_frequency_request_template': self.powerline_frequency_request_template,
+            'white_balance_temperature_request_template': self.white_balance_temperature_request_template,
+            'sharpness_request_template': self.sharpness_request_template,
+            'backlight_compensation_enabled_request_template': self.backlight_compensation_enabled_request_template,
+            'exposure_type_request_template': self.exposure_type_request_template,
+            'exposure_request_template': self.exposure_request_template,
+            'exposure_auto_priority_enabled_request_template': self.exposure_auto_priority_enabled_request_template,
+            'pan_request_template': self.pan_request_template,
+            'tilt_request_template': self.tilt_request_template,
+            'autofocus_enabled_request_template': self.autofocus_enabled_request_template,
+            'focus_request_template': self.focus_request_template,
+            'zoom_request_template': self.zoom_request_template,
+            'led1_mode_request_template': self.led1_mode_request_template,
+            'led1_frequency_request_template': self.led1_frequency_request_template,
+            'jpeg_quality_request_template': self.jpeg_quality_request_template,
         }
 
 
@@ -1373,43 +1379,43 @@ class DebugProfile(object):
 
     def ToDict(self):
         return {
-            'guid'						: self.guid,
-            'name'						: self.name,
-            'description'				: self.description,
-            'enabled'					: self.enabled,
-            'is_test_mode'				: self.is_test_mode,
-            'log_to_console'			: self.log_to_console,
-            'position_change'			: self.position_change,
-            'position_command_received'	: self.position_command_received,
-            'extruder_change'			: self.extruder_change,
-            'extruder_triggered'		: self.extruder_triggered,
-            'trigger_create'			: self.trigger_create,
-            'trigger_wait_state'		: self.trigger_wait_state,
-            'trigger_triggering'		: self.trigger_triggering,
-            'trigger_triggering_state'	: self.trigger_triggering_state,
-            'trigger_layer_change'		: self.trigger_layer_change,
-            'trigger_height_change'		: self.trigger_height_change,
-            'trigger_time_remaining'	: self.trigger_time_remaining,
-            'trigger_time_unpaused'		: self.trigger_time_unpaused,
-            'trigger_zhop'				: self.trigger_zhop,
-            'snapshot_gcode'			: self.snapshot_gcode,
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
+            'enabled': self.enabled,
+            'is_test_mode': self.is_test_mode,
+            'log_to_console': self.log_to_console,
+            'position_change': self.position_change,
+            'position_command_received': self.position_command_received,
+            'extruder_change': self.extruder_change,
+            'extruder_triggered': self.extruder_triggered,
+            'trigger_create': self.trigger_create,
+            'trigger_wait_state': self.trigger_wait_state,
+            'trigger_triggering': self.trigger_triggering,
+            'trigger_triggering_state': self.trigger_triggering_state,
+            'trigger_layer_change': self.trigger_layer_change,
+            'trigger_height_change': self.trigger_height_change,
+            'trigger_time_remaining': self.trigger_time_remaining,
+            'trigger_time_unpaused': self.trigger_time_unpaused,
+            'trigger_zhop': self.trigger_zhop,
+            'snapshot_gcode': self.snapshot_gcode,
             'snapshot_gcode_endcommand': self.snapshot_gcode_endcommand,
-            'snapshot_position'			: self.snapshot_position,
-            'snapshot_position_return'	: self.snapshot_position_return,
-            'snapshot_position_resume_print'	: self.snapshot_position_resume_print,
-            'snapshot_save'				: self.snapshot_save,
-            'snapshot_download'			: self.snapshot_download,
-            'render_start'				: self.render_start,
-            'render_complete'			: self.render_complete,
-            'render_fail'				: self.render_fail,
-            'render_sync'				: self.render_sync,
-            'snapshot_clean'			: self.snapshot_clean,
-            'settings_save'				: self.settings_save,
-            'settings_load'				: self.settings_load,
-            'print_state_changed'		: self.print_state_changed,
-            'camera_settings_apply'		: self.camera_settings_apply,
-            'gcode_sent_all'			: self.gcode_sent_all,
-            'gcode_queuing_all'			: self.gcode_queuing_all
+            'snapshot_position': self.snapshot_position,
+            'snapshot_position_return': self.snapshot_position_return,
+            'snapshot_position_resume_print': self.snapshot_position_resume_print,
+            'snapshot_save': self.snapshot_save,
+            'snapshot_download': self.snapshot_download,
+            'render_start': self.render_start,
+            'render_complete': self.render_complete,
+            'render_fail': self.render_fail,
+            'render_sync': self.render_sync,
+            'snapshot_clean': self.snapshot_clean,
+            'settings_save': self.settings_save,
+            'settings_load': self.settings_load,
+            'print_state_changed': self.print_state_changed,
+            'camera_settings_apply': self.camera_settings_apply,
+            'gcode_sent_all': self.gcode_sent_all,
+            'gcode_queuing_all': self.gcode_queuing_all
         }
 
     def LogToConsole(self, levelName, message, force=False):
@@ -1439,8 +1445,6 @@ class DebugProfile(object):
                 self.LogToConsole(
                     'error', "Error logging warining: message:{0}".format(message), force=True)
                 return
-
-    
 
     def LogException(self, exception):
         message = utility.ExceptionToString(exception)
@@ -1598,9 +1602,10 @@ class DebugProfile(object):
 class OctolapseSettings(object):
     DefaultDebugProfile = None
     Logger = None
+
     # constants
 
-    def __init__(self, logFilePath,  settings=None):
+    def __init__(self, logFilePath, settings=None):
 
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
@@ -1749,14 +1754,14 @@ class OctolapseSettings(object):
             for printer in printers:
                 if printer["guid"] == "":
                     printer["guid"] = str(uuid.uuid4())
-                self.printers.update({ printer["guid"] : Printer(printer=printer)})
+                self.printers.update({printer["guid"]: Printer(printer=printer)})
         if HasKey(changes, "stabilizations"):
             self.stabilizations = {}
             stabilizations = GetValue(changes, "stabilizations", None)
             for stabilization in stabilizations:
                 if stabilization["guid"] == "":
                     stabilization["guid"] = str(uuid.uuid4())
-                self.stabilizations.update({ stabilization["guid"] : Stabilization(stabilization=stabilization)})
+                self.stabilizations.update({stabilization["guid"]: Stabilization(stabilization=stabilization)})
 
         if HasKey(changes, "snapshots"):
             self.snapshots = {}
@@ -1764,15 +1769,15 @@ class OctolapseSettings(object):
             for snapshot in snapshots:
                 if snapshot["guid"] == "":
                     snapshot["guid"] = str(uuid.uuid4())
-                self.snapshots.update({ snapshot["guid"] : Snapshot(snapshot=snapshot)})
+                self.snapshots.update({snapshot["guid"]: Snapshot(snapshot=snapshot)})
         if HasKey(changes, "renderings"):
             self.renderings = {}
             renderings = GetValue(changes, "renderings", None)
             for rendering in renderings:
                 if rendering["guid"] == "":
                     rendering["guid"] = str(uuid.uuid4())
-                self.renderings.update({ rendering["guid"] : Rendering(
-                        rendering=rendering)})
+                self.renderings.update({rendering["guid"]: Rendering(
+                    rendering=rendering)})
 
         if HasKey(changes, "cameras"):
             self.cameras = {}
@@ -1780,7 +1785,7 @@ class OctolapseSettings(object):
             for camera in cameras:
                 if camera["guid"] == "":
                     camera["guid"] = str(uuid.uuid4())
-                self.cameras.update({ camera["guid"] : Camera(camera=camera)})
+                self.cameras.update({camera["guid"]: Camera(camera=camera)})
 
         if HasKey(changes, "debug_profiles"):
             self.debug_profiles = {}
@@ -1788,14 +1793,14 @@ class OctolapseSettings(object):
             for debugProfile in debugProfiles:
                 if debugProfile["guid"] == "":
                     debugProfile["guid"] = str(uuid.uuid4())
-                self.debug_profiles.update({ debugProfile["guid"] : DebugProfile(self.LogFilePath, debugProfile=debugProfile)})
-                
+                self.debug_profiles.update(
+                    {debugProfile["guid"]: DebugProfile(self.LogFilePath, debugProfile=debugProfile)})
 
     def ToDict(self, ):
         defaults = OctolapseSettings(self.LogFilePath)
 
         settingsDict = {
-            'version':  utility.getstring(
+            'version': utility.getstring(
                 self.version, defaults.version
             ),
             "is_octolapse_enabled": utility.getbool(
@@ -1831,7 +1836,7 @@ class OctolapseSettings(object):
                 dict(value='relative', name='Default To Relative'),
                 dict(value='absolute', name='Default To Absolute')
             ],
-            
+
             'g90_influences_extruder_options': [
                 dict(value='use-octoprint-settings', name='Use Octoprint Settings'),
                 dict(value='true', name='True'),
@@ -1866,13 +1871,13 @@ class OctolapseSettings(object):
             'rendering_output_format_options': [
                 dict(value='avi', name='AVI'),
                 dict(value='flv', name='FLV'),
-                    dict(value='vob', name='VOB'),
-                    dict(value='mp4', name='MP4'),
-                    dict(value='mpeg', name='MPEG')
+                dict(value='vob', name='VOB'),
+                dict(value='mp4', name='MP4'),
+                dict(value='mpeg', name='MPEG')
             ],
             'camera_powerline_frequency_options': [
-                    dict(value='50', name='50 HZ (Europe, China, India, etc)'),
-                    dict(value='60', name='60 HZ (North/South America, Japan, etc')
+                dict(value='50', name='50 HZ (Europe, China, India, etc)'),
+                dict(value='60', name='60 HZ (North/South America, Japan, etc')
             ],
             'camera_exposure_type_options': [
                 dict(value='0', name='Unknown - Let me know if you know what this option does.'),
@@ -1905,11 +1910,11 @@ class OctolapseSettings(object):
             'current_camera_profile_guid': utility.getstring(
                 self.current_camera_profile_guid, defaults.current_camera_profile_guid
             ),
-            'cameras'	: [],
+            'cameras': [],
             'current_debug_profile_guid': utility.getstring(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
             ),
-            'debug_profiles'	: []
+            'debug_profiles': []
         }
 
         for key, printer in self.printers.items():
@@ -1950,6 +1955,7 @@ class OctolapseSettings(object):
             'show_extruder_state_changes': self.show_extruder_state_changes,
             'show_trigger_state_changes': self.show_trigger_state_changes
         }
+
     # Add/Update/Remove/set current profile
 
     def addUpdateProfile(self, profileType, profile):
@@ -2035,4 +2041,3 @@ def GetValue(object, key, default=None):
         return object.get([key])
     else:
         return default
-
