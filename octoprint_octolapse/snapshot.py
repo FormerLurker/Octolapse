@@ -36,6 +36,7 @@ class CaptureSnapshot(object):
         self.PrintStartTime = printStartTime
         self.PrintEndTime = printEndTime
         self.DataDirectory = dataDirectory
+        self._debug = self.Settings.CurrentDebugProfile()
 
     def Snap(self, printerFileName, snapshotNumber, onComplete=None, onSuccess=None, onFail=None):
         info = SnapshotInfo(printerFileName, self.PrintStartTime)
