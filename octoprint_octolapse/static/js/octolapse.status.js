@@ -31,7 +31,7 @@ $(function () {
 
         self.showLatestSnapshotDialog = function () {
 
-            $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
+            var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             $SnapshotDialog.on("hidden.bs.modal", function () {
                 //console.log("Snapshot dialog hidden.");
@@ -923,7 +923,7 @@ $(function () {
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "The trigger is paused";
+                return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 //console.log("Generating wait state text for LayerTrigger");

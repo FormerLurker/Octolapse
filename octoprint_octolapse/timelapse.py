@@ -84,7 +84,7 @@ class Timelapse(object):
         self.Printer = Printer(self.Settings.CurrentPrinter())
         self.Rendering = Rendering(self.Settings.CurrentRendering())
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, printStartTime=self.PrintStartTime)
+            self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
         self.Position = Position(
             self.Settings, octoprintPrinterProfile, g90InfluencesExtruder)
         self.State = TimelapseState.WaitingForTrigger
@@ -648,9 +648,9 @@ class Timelapse(object):
     def _takeSnapshot(self):
         self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
         try:
-            self.CaptureSnapshot.Snap(
+            self.CaptureSnapshot.snap(
                 utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                onComplete=self._onSnapshotComplete, onSuccess=self._onSnapshotSuccess, onFail=self._onSnapshotFail
+                on_complete=self._onSnapshotComplete, on_success=self._onSnapshotSuccess, on_fail=self._onSnapshotFail
             )
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
