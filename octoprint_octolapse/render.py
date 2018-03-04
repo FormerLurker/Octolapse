@@ -25,7 +25,7 @@ class Render(object):
         octoprintTimelapseFolder, ffmpegPath, threadCount,
         timeAdded=0, onRenderStart=None, onRenderFail=None,
         onRenderSuccess=None, onRenderComplete=None, onAfterSyncFail=None,
-        onAfterSycnSuccess=None, onComplete=None, printStartTime=None):
+        onAfterSycnSuccess=None, onComplete=None):
         self.Settings = settings
         self.DataDirectory = dataDirectory
         self.OctoprintTimelapseFolder = octoprintTimelapseFolder
