@@ -7,7 +7,7 @@ $(function () {
 
     Octolapse.StatusViewModel = function (parameters) {
         // Create a reference to this object
-        var self = this
+        var self = this;
         // Add this object to our Octolapse namespace
         Octolapse.Status = this;
         // Assign the Octoprint settings to our namespace
@@ -30,7 +30,7 @@ $(function () {
         self.IsLatestSnapshotDialogShowing = false;
 
         self.showLatestSnapshotDialog = function () {
-            
+
             $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             $SnapshotDialog.on("hidden.bs.modal", function () {
@@ -58,34 +58,34 @@ $(function () {
                 self.IsLatestSnapshotDialogShowing = false;
                 $SnapshotDialog.modal("hide");
             });
-            
-            
+
+
 
             self.IsLatestSnapshotDialogShowing = true;
             self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
             $SnapshotDialog.modal();
 
         };
-        
+
 
         self.onAfterBinding = function () {
-            
 
 
-        }
+
+        };
 
         self.onTabChange = function (current, previous) {
-            if (current != null && current == "#tab_plugin_octolapse") {
+            if (current != null && current === "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is showing");
                 self.IsTabShowing = true;
                 self.updateLatestSnapshotThumbnail(true);
 
             }
-            else if (previous != null && previous == "#tab_plugin_octolapse") {
+            else if (previous != null && previous === "#tab_plugin_octolapse") {
                 //console.log("Octolapse Tab is not showing");
                 self.IsTabShowing = false;
             }
-        }
+        };
         /*
             Snapshot client animation preview functions
         */
@@ -93,12 +93,12 @@ $(function () {
             //console.log("Refreshing Snapshot Thumbnail");
             var $target = $('#' + targetId + ' .snapshot_refresh_container a.refresh');
 
-            
+
             if (isThumbnail)
                 self.updateLatestSnapshotThumbnail(force = true);
             else
                 self.updateLatestSnapshotImage(force = true);
-        }
+        };
 
         self.startSnapshotAnimation = function (targetId, fadeButton = false) {
 
@@ -125,7 +125,7 @@ $(function () {
                 });
             }, 1)
 
-        }
+        };
 
         self.updateLatestSnapshotThumbnail = function (force = false) {
             //console.log("Trying to update the latest snapshot thumbnail.");
@@ -141,7 +141,7 @@ $(function () {
             }
             self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
 
-        }
+        };
 
         self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage = false) {
             if (eraseCurrentImage) {
@@ -152,7 +152,7 @@ $(function () {
             $('#' + targetId + ' .snapshot_container .previous-snapshots img').each(function (index, element) {
                 $(this).remove();
             });
-        }
+        };
 
         // takes the list of images, update the frames in the target accordingly and starts any animations
         self.IsAnimating = false;
@@ -169,7 +169,7 @@ $(function () {
 
                 // Add the latest image to the previous snapshots list
                 if ($latestSnapshot.length > 0) {
-                    srcAttr = $latestSnapshot.attr('src')
+                    srcAttr = $latestSnapshot.attr('src');
                     // If the image has a src, and that src is not empty
                     if (typeof srcAttr !== typeof undefined && srcAttr !== false && srcAttr.length > 0) {
                         //console.log("Moving the latest image into the previous image container");
@@ -194,17 +194,17 @@ $(function () {
                 }
 
                 // Set the total animation duration based on the number of snapshots
-                $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots)
+                $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots);
 
                 // TODO: Do we need to do this??  Find out
                 $previousSnapshots = $previousSnapshotContainer.find("img");
-                numPreviousSnapshots = $previousSnapshots.length
-                var newestImageIndex = numPreviousSnapshots - 1
+                numPreviousSnapshots = $previousSnapshots.length;
+                var newestImageIndex = numPreviousSnapshots - 1;
                 //console.log("Updating classes for previous " + numPreviousSnapshots + " images.");
                 for (var previousImageIndex = 0; previousImageIndex < numPreviousSnapshots; previousImageIndex++) {
                     $element = $($previousSnapshots.eq(previousImageIndex));
-                    $element.removeClass()
-                    if (previousImageIndex == newestImageIndex) {
+                    $element.removeClass();
+                    if (previousImageIndex === newestImageIndex) {
                         //console.log("Updating classes for the newest image.");
                         $element.addClass("newest");
                     }
@@ -219,7 +219,7 @@ $(function () {
                 }
 
             }
-            
+
 
             // create the newest image
             var $newSnapshot = $(document.createElement('img'));
@@ -235,10 +235,10 @@ $(function () {
                     self.startSnapshotAnimation(targetId);
                 });
                 // create an error handler for the newest image
-                
+
             }
             else {
-                
+
                 $newSnapshot.one('load', function () {
                     // Hide the latest image
                     $latestSnapshot.fadeOut(250, function () {
@@ -252,7 +252,7 @@ $(function () {
                         $newSnapshot.fadeIn(250);
                     });
                 });
-                
+
 
             }
             $newSnapshot.one('error', function () {
@@ -260,16 +260,16 @@ $(function () {
                 // move the latest preview image back into the newest image section
                 self.IsAnimating = false;
                 $latestSnapshot.removeClass();
-                $newSnapshot.addClass('latest')
+                $newSnapshot.addClass('latest');
                 $latestSnapshot.appendTo($latestSnapshotContainer)
 
             });
 
             // set the class
-            $newSnapshot.addClass('latest')
+            $newSnapshot.addClass('latest');
             // set the src and start to load
             $newSnapshot.attr('src', newSnapshotAddress)
-        }
+        };
 
         self.updateLatestSnapshotImage = function (force = false) {
             //console.log("Trying to update the latest snapshot image.");
@@ -285,7 +285,7 @@ $(function () {
             }
             self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
 
-        }
+        };
 
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
@@ -294,7 +294,7 @@ $(function () {
                 case "layer":
                     return "layer-trigger-status-template";
                 case "timer":
-                    return "timer-trigger-status-template"
+                    return "timer-trigger-status-template";
                 default:
                     return "trigger-status-template"
             }
@@ -342,13 +342,13 @@ $(function () {
 
         self.onTimelapseStart = function () {
             self.TriggerState.removeAll();
-        }
+        };
 
         self.onTimelapseStop = function () {
             self.is_timelapse_active(false);
             self.is_taking_snapshot(false);
             self.waiting_to_render(true);
-        }
+        };
 
         self.stopTimelapse = function () {
             if (Octolapse.Globals.is_admin()) {
@@ -372,15 +372,14 @@ $(function () {
         self.snapshotTime = function () {
             var date = new Date(null);
             date.setSeconds(this.seconds_added_by_octolapse());
-            var result = date.toISOString().substr(11, 8);
-            return result;
-        }
+            return date.toISOString().substr(11, 8);
+        };
 
         self.navbarClicked = function () {
-            $("#tab_plugin_octolapse_link a").click();
+            $("#tab_plugin_octolapse_link").find("a").click();
         }
 
-    }
+    };
 
     /*
         Status Tab viewmodels
@@ -526,7 +525,7 @@ $(function () {
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillRect(x + 2, x - 2,4, 4);
-            
+
         }*/
     };
     Octolapse.extruderStateViewModel = function () {
@@ -658,7 +657,7 @@ $(function () {
         self.Triggers = ko.observableArray();
         self.HasBeenCreated = false;
         self.create = function (trigger) {
-            var newTrigger = null
+            var newTrigger = null;
             switch (state.Type) {
                 case "gcode":
                     newTrigger = new Octolapse.gcodeTriggerStateViewModel(trigger);
@@ -672,21 +671,21 @@ $(function () {
                 default:
                     newTrigger = new Octolapse.genericTriggerStateViewModel(trigger);
                     break;
-            };
+            }
             self.Triggers.push(newTrigger);
         };
         self.removeAll = function () {
             self.Triggers.removeAll();
-        }
+        };
         self.update = function (states) {
-            self.Name(states.Name)
-            triggers = states.Triggers
+            self.Name(states.Name);
+            triggers = states.Triggers;
             for (var sI = 0; sI < triggers.length; sI++) {
                 state = triggers[sI];
                 var foundState = false;
                 for (var i = 0; i < self.Triggers().length; i++) {
                     currentTrigger = self.Triggers()[i];
-                    if (state.Type == currentTrigger.Type()) {
+                    if (state.Type === currentTrigger.Type()) {
                         currentTrigger.update(state);
                         foundState = true;
                         break;
@@ -698,7 +697,7 @@ $(function () {
             }
         };
 
-    }
+    };
     Octolapse.genericTriggerStateViewModel = function (state) {
         var self = this;
         self.Type = ko.observable(state.Type);
@@ -722,7 +721,7 @@ $(function () {
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
             self.IsInPosition(state.IsInPosition);
-        }
+        };
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
                 return "bg-not-homed";
@@ -734,14 +733,14 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed"
+                return "Idle until axis are homed";
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
                 return "The trigger is paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting"
+                waitText = "Waiting";
                 waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop");
@@ -753,16 +752,14 @@ $(function () {
                     waitText += " for " + waitList.join(" and ");
                     waitText += " to trigger";
                 }
-                else if (waitList.length == 1)
-                    waitText += " for " + waitList[0] + " to trigger";;
+                else if (waitList.length === 1)
+                    waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
 
             else
                 return "Waiting to trigger";
 
-
-            return classes;
         }, self);
         self.triggerIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -783,7 +780,7 @@ $(function () {
         self.getInfoIconText = ko.pureComputed(function () {
             return "";
         }, self);
-    }
+    };
     Octolapse.gcodeTriggerStateViewModel = function (state) {
         var self = this;
         self.Type = ko.observable(state.Type);
@@ -809,7 +806,7 @@ $(function () {
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
             self.IsInPosition(state.IsInPosition);
-        }
+        };
 
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -823,26 +820,26 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed"
+                return "Idle until axis are homed";
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
                 return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting"
+                waitText = "Waiting";
                 waitList = [];
                 if (self.IsWaitingOnZHop())
-                    waitList.push("zhop")
+                    waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
-                    waitList.push("extruder")
+                    waitList.push("extruder");
                 if (!self.IsInPosition())
                     waitList.push("position");
                 if (waitList.length > 1) {
                     waitText += " for " + waitList.join(" and ");
                     waitText += " to trigger";
                 }
-                else if (waitList.length == 1)
+                else if (waitList.length === 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
@@ -850,8 +847,6 @@ $(function () {
             else
                 return "Looking for snapshot gcode";
 
-
-            return classes;
         }, self);
         self.triggerIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -875,7 +870,7 @@ $(function () {
             return self.SnapshotCommand()
         }, self);
 
-    }
+    };
     Octolapse.layerTriggerStateViewModel = function (state) {
         var self = this;
         self.Type = ko.observable(state.Type);
@@ -907,13 +902,13 @@ $(function () {
             self.IsLayerChangeWait(state.IsLayerChangeWait);
             self.IsHeightChange(state.IsHeightChange);
             self.IsHeightChangeWait(state.IsHeightChangeWait);
-            self.HeightIncrement(state.HeightIncrement)
-            self.RequireZHop(state.RequireZHop)
+            self.HeightIncrement(state.HeightIncrement);
+            self.RequireZHop(state.RequireZHop);
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
             self.Layer(state.Layer);
             self.IsInPosition(state.IsInPosition);
-        }
+        };
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
                 return "bg-not-homed";
@@ -924,7 +919,7 @@ $(function () {
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed"
+                return "Idle until axis are homed";
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
@@ -932,12 +927,12 @@ $(function () {
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 //console.log("Generating wait state text for LayerTrigger");
-                waitText = "Waiting"
+                waitText = "Waiting";
                 waitList = [];
                 if (self.IsWaitingOnZHop())
-                    waitList.push("zhop")
+                    waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
-                    waitList.push("extruder")
+                    waitList.push("extruder");
                 if (!self.IsInPosition()) {
                     waitList.push("position");
                     console.log("Waiting on position.");
@@ -946,8 +941,8 @@ $(function () {
                     waitText += " for " + waitList.join(" and ");
                     waitText += " to trigger";
                 }
-                    
-                else if (waitList.length == 1)
+
+                else if (waitList.length === 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
@@ -980,7 +975,7 @@ $(function () {
                 val = self.HeightIncrement() + " mm";
 
             else
-                val = "layer"
+                val = "layer";
             return "Triggering every " + Octolapse.ToCompactInt(val);
 
 
@@ -994,7 +989,7 @@ $(function () {
             return Octolapse.ToCompactInt(val);
         }, self);
 
-    }
+    };
     Octolapse.timerTriggerStateViewModel = function (state) {
         var self = this;
         self.Type = ko.observable(state.Type);
@@ -1026,32 +1021,32 @@ $(function () {
             self.TriggeredCount(state.TriggeredCount);
             self.IsHomed(state.IsHomed);
             self.IsInPosition(state.IsInPosition);
-        }
+        };
 
 
         /* style related computed functions */
         self.triggerStateText = ko.pureComputed(function () {
             if (!self.IsHomed())
-                return "Idle until axis are homed"
+                return "Idle until axis are homed";
             else if (self.IsTriggered())
                 return "Triggering a snapshot";
             else if (Octolapse.PrinterStatus.isPaused())
-                return "Paused"
+                return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting"
+                waitText = "Waiting";
                 waitList = [];
                 if (self.IsWaitingOnZHop())
-                    waitList.push("zhop")
+                    waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
-                    waitList.push("extruder")
+                    waitList.push("extruder");
                 if (!self.IsInPosition())
                     waitList.push("position");
                 if (waitList.length > 1) {
                     waitText += " for " + waitList.join(" and ");
                     waitText += " to trigger";
                 }
-                else if (waitList.length == 1)
+                else if (waitList.length === 1)
                     waitText += " for " + waitList[0] + " to trigger";
                 return waitText;
             }
@@ -1059,7 +1054,6 @@ $(function () {
             else
                 return "Triggering in " + self.SecondsToTrigger() + " seconds";
 
-            return classes;
         }, self);
         self.triggerBackgroundIconClass = ko.pureComputed(function () {
             if (!self.IsHomed())
@@ -1085,7 +1079,7 @@ $(function () {
         self.getInfoIconText = ko.pureComputed(function () {
             return "Triggering every " + Octolapse.ToTimer(self.IntervalSeconds());
         }, self);
-    }
+    };
 
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
