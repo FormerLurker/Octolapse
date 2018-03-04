@@ -3,41 +3,35 @@
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 
-import sys
-import time
-
-import octoprint_octolapse.utility
 from octoprint_octolapse.command import *
 from octoprint_octolapse.extruder import ExtruderTriggers
-from octoprint_octolapse.gcode import *
-from octoprint_octolapse.position import *
 from octoprint_octolapse.settings import *
 
 
-def IsInPosition(restrictions, x, y):
+def is_in_position(restrictions, x, y):
     # we need to know if there is at least one required position
-    hasRequiredPosition = False
+    has_required_position = False
     # isInPosition will be used to determine if we return
     # true where we have at least one required type
-    isInPosition = False
+    in_position = False
 
     # loop through each restriction
     for restriction in restrictions:
-        if (restriction.Type == "required"):
+        if restriction.Type == "required":
             # we have at least on required position, so at least one point must be in
             # position for us to return true
-            hasRequiredPosition = True
-        if (restriction.IsInPosition(x, y)):
-            if (restriction.Type == "forbidden"):
+            has_required_position = True
+        if restriction.IsInPosition(x, y):
+            if restriction.Type == "forbidden":
                 # if we're in a forbidden position, return false now
                 return False
             else:
                 # we're in position in at least one required position restriction
-                isInPosition = True
+                in_position = True
 
-    if (hasRequiredPosition):
+    if has_required_position:
         # if at least one position restriction is required
-        return isInPosition
+        return in_position
 
     # if we're here then we only have forbidden restrictions, but the point
     # was not within the restricted area(s)
@@ -46,23 +40,26 @@ def IsInPosition(restrictions, x, y):
 
 class Triggers(object):
     def __init__(self, settings):
-        self.Reset()
+        self.Snapshot = None
+        self._triggers = []
+        self.reset()
         self.Settings = settings
         self.Name = "Unknown"
+        self.Printer = None
 
-    def Count(self):
+    def count(self):
         try:
             return len(self._triggers)
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def Reset(self):
-        self._triggers = []
+    def reset(self):
         self.Snapshot = None
+        self._triggers = []
 
-    def Create(self):
+    def create(self):
         try:
-            self.Reset()
+            self.reset()
             self.Printer = self.Settings.CurrentPrinter()
             self.Snapshot = self.Settings.CurrentSnapshot()
             self.Name = self.Snapshot.name
@@ -80,34 +77,34 @@ class Triggers(object):
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def Resume(self):
+    def resume(self):
         try:
             for trigger in self._triggers:
                 if type(trigger) == TimerTrigger:
-                    trigger.Resume()
+                    trigger.resume()
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def Pause(self):
+    def pause(self):
         try:
             for trigger in self._triggers:
                 if type(trigger) == TimerTrigger:
-                    trigger.Pause()
+                    trigger.pause()
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def Update(self, position, cmd):
+    def update(self, position, cmd):
         """Update all triggers and return any that are triggering"""
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
                 # determine what type the current trigger is and update appropriately
                 if isinstance(currentTrigger, GcodeTrigger):
-                    currentTrigger.Update(position, cmd)
+                    currentTrigger.update(position, cmd)
                 elif isinstance(currentTrigger, TimerTrigger):
-                    currentTrigger.Update(position)
+                    currentTrigger.update(position)
                 elif isinstance(currentTrigger, LayerTrigger):
-                    currentTrigger.Update(position)
+                    currentTrigger.update(position)
 
                 # Make sure there are no position errors (unknown position, out of bounds, etc)
                 if position.HasPositionError(0):
@@ -119,60 +116,60 @@ class Triggers(object):
 
         return None
 
-    def GetFirstTriggering(self, index):
+    def get_first_triggering(self, index):
         if len(self._triggers) < 1:
             return False
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                if currentTrigger.IsTriggered(index):
+                if currentTrigger.is_triggered(index):
                     return currentTrigger
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
             return False
 
-    def GetFirstWaiting(self):
+    def get_first_waiting(self):
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                if currentTrigger.IsWaiting(0):
+                if currentTrigger.is_waiting(0):
                     return currentTrigger
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def HasChanged(self):
+    def has_changed(self):
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                if currentTrigger.HasChanged(0):
+                if currentTrigger.has_changed(0):
                     return True
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
             return None
         return False
 
-    def StateToList(self):
-        stateList = []
+    def state_to_list(self):
+        state_list = []
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                stateList.append(currentTrigger.ToDict(0))
+                state_list.append(currentTrigger.to_dict(0))
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
             return None
-        return stateList
+        return state_list
 
-    def ChangesToList(self):
-        changeList = []
+    def changes_to_list(self):
+        change_list = []
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                if currentTrigger.HasChanged(0):
-                    changeList.append(currentTrigger.ToDict(0))
+                if currentTrigger.has_changed(0):
+                    change_list.append(currentTrigger.to_dict(0))
         except Exception, e:
             self.Settings.CurrentDebugProfile().LogException(e)
             return None
-        return changeList
+        return change_list
 
 
 class TriggerState(object):
@@ -185,7 +182,7 @@ class TriggerState(object):
         self.HasChanged = False if state is None else state.HasChanged
         self.IsHomed = False if state is None else state.IsHomed
 
-    def ToDict(self, trigger):
+    def to_dict(self, trigger):
         return {
             "IsTriggered": self.IsTriggered,
             "IsWaiting": self.IsWaiting,
@@ -198,100 +195,100 @@ class TriggerState(object):
             "TriggeredCount": trigger.TriggeredCount
         }
 
-    def ResetState(self):
+    def reset_state(self):
         self.IsTriggered = False
         self.HasChanged = False
         self.IsInPosition = False
 
-    def IsEqual(self, state):
+    def is_equal(self, state):
         if (state is not None
-            and self.IsTriggered == state.IsTriggered
-            and self.IsWaiting == state.IsWaiting
-            and self.IsWaitingOnZHop == state.IsWaitingOnZHop
-            and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder
-            and self.IsHomed == state.IsHomed):
+                and self.IsTriggered == state.IsTriggered
+                and self.IsWaiting == state.IsWaiting
+                and self.IsWaitingOnZHop == state.IsWaitingOnZHop
+                and self.IsWaitingOnExtruder == state.IsWaitingOnExtruder
+                and self.IsHomed == state.IsHomed):
             return True
         return False
 
 
 class Trigger(object):
-    def __init__(self, octolapseSettings, maxStates=5):
-        self.Settings = octolapseSettings
+    def __init__(self, octolapse_settings, max_states=5):
+        self.Settings = octolapse_settings
         self.Printer = Printer(self.Settings.CurrentPrinter())
         self.Snapshot = Snapshot(self.Settings.CurrentSnapshot())
 
         self.Type = 'Trigger'
         self._stateHistory = []
-        self._maxStates = maxStates
+        self._maxStates = max_states
         self.ExtruderTriggers = None
         self.TriggeredCount = 0
         self.HasRestrictedPosition = False
 
-    def Name(self):
+    def name(self):
         return self.Snapshot.name + " Trigger"
 
-    def AddState(self, state):
+    def add_state(self, state):
         self._stateHistory.insert(0, state)
-        while (len(self._stateHistory) > self._maxStates):
+        while len(self._stateHistory) > self._maxStates:
             del self._stateHistory[self._maxStates - 1]
 
-    def Count(self):
+    def count(self):
         return len(self._stateHistory)
 
-    def GetState(self, index):
-        if self.Count() > index:
+    def get_state(self, index):
+        if self.count() > index:
             return self._stateHistory[index]
         return None
 
-    def IsTriggered(self, index):
-        state = self.GetState(index)
+    def is_triggered(self, index):
+        state = self.get_state(index)
         if state is None:
             return False
         return state.IsTriggered
 
-    def IsInPosition(self, index):
-        state = self.GetState(index)
+    def is_in_position(self, index):
+        state = self.get_state(index)
         if state is None:
             return False
         return state.IsInPosition
 
-    def IsWaiting(self, index):
-        state = self.GetState(index)
+    def is_waiting(self, index):
+        state = self.get_state(index)
         if state is None:
             return
         return state.IsWaiting
 
-    def HasChanged(self, index):
-        state = self.GetState(index)
+    def has_changed(self, index):
+        state = self.get_state(index)
         if state is None:
             return
         return state.HasChanged
 
-    def ToDict(self, index):
-        state = self.GetState(index)
+    def to_dict(self, index):
+        state = self.get_state(index)
         if state is None:
             return None
-        stateDict = state.ToDict(self)
-        stateDict.update({"Name": self.Name(), "Type": self.Type})
-        return stateDict
+        state_dict = state.to_dict(self)
+        state_dict.update({"Name": self.name(), "Type": self.Type})
+        return state_dict
 
 
 class GcodeTriggerState(TriggerState):
-    def ToDict(self, trigger):
-        superDict = super(GcodeTriggerState, self).ToDict(trigger)
-        currentDict = {
+    def to_dict(self, trigger):
+        super_dict = super(GcodeTriggerState, self).to_dict(trigger)
+        current_dict = {
             "SnapshotCommand": trigger.SnapshotCommand
         }
-        currentDict.update(superDict)
-        return currentDict
+        current_dict.update(super_dict)
+        return current_dict
 
 
 class GcodeTrigger(Trigger):
     """Used to monitor gcode for a specified command."""
 
-    def __init__(self, octolapseSettings):
+    def __init__(self, octolapse_settings):
         # call parent constructor
-        super(GcodeTrigger, self).__init__(octolapseSettings)
+        super(GcodeTrigger, self).__init__(octolapse_settings)
         self.SnapshotCommand = GetGcodeFromString(
             self.Printer.snapshot_command)
         self.Type = "gcode"
@@ -335,14 +332,14 @@ class GcodeTrigger(Trigger):
         )
         self.Settings.CurrentDebugProfile().LogTriggerCreate(message)
         # add an initial state
-        self.AddState(GcodeTriggerState())
+        self.add_state(GcodeTriggerState())
 
-    def Update(self, position, commandName):
+    def update(self, position, command_name):
         """If the provided command matches the trigger command, sets IsTriggered to true, else false"""
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
-            state = self.GetState(0)
+            state = self.get_state(0)
             if state is None:
                 # create a new object, it's our first state!
                 state = GcodeTriggerState()
@@ -350,7 +347,7 @@ class GcodeTrigger(Trigger):
                 # create a copy so we aren't working on the original
                 state = GcodeTriggerState(state)
             # reset any variables that must be reset each update
-            state.ResetState()
+            state.reset_state()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
             if not position.HasHomedPosition(0):
@@ -360,20 +357,21 @@ class GcodeTrigger(Trigger):
                 state.IsHomed = True
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.gcode_trigger_position_restrictions, position.X(0),
-                                                      position.Y(0))
+                    state.IsInPosition = is_in_position(self.Snapshot.gcode_trigger_position_restrictions,
+                                                        position.X(0),
+                                                        position.Y(0))
                 else:
                     state.IsInPosition = True
 
-                if self.IsSnapshotCommand(commandName):
+                if self.is_snapshot_command(command_name):
                     state.IsWaiting = True
-                if state.IsWaiting == True:
+                if state.IsWaiting:
                     if position.Extruder.IsTriggered(self.ExtruderTriggers, index=0):
                         if self.RequireZHop and not position.IsZHop(0):
                             state.IsWaitingOnZHop = True
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "GcodeTrigger - Waiting on ZHop.")
-                        elif not self.IsInPosition(0):
+                        elif not self.is_in_position(0):
                             # Make sure the previous X,Y is in position
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "GcodeTrigger - Waiting on Position.")
@@ -392,16 +390,16 @@ class GcodeTrigger(Trigger):
                             "GcodeTrigger - Waiting for extruder to trigger.")
 
             # calculate changes and set the current state
-            state.HasChanged = not state.IsEqual(self.GetState(0))
+            state.HasChanged = not state.is_equal(self.get_state(0))
 
             # add the state to the history
-            self.AddState(state)
+            self.add_state(state)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def IsSnapshotCommand(self, command):
-        commandName = GetGcodeFromString(command)
-        return commandName == self.SnapshotCommand
+    def is_snapshot_command(self, command):
+        command_name = GetGcodeFromString(command)
+        return command_name == self.SnapshotCommand
 
 
 class LayerTriggerState(TriggerState):
@@ -413,10 +411,11 @@ class LayerTriggerState(TriggerState):
         self.IsHeightChange = False if state is None else state.IsHeightChange
         self.IsHeightChangeWait = False if state is None else state.IsHeightChangeWait
         self.Layer = 0 if state is None else state.Layer
+        self.IsLayerChange = False
 
-    def ToDict(self, trigger):
-        superDict = super(LayerTriggerState, self).ToDict(trigger)
-        currentDict = {
+    def to_dict(self, trigger):
+        super_dict = super(LayerTriggerState, self).to_dict(trigger)
+        current_dict = {
             "CurrentIncrement": self.CurrentIncrement,
             "IsLayerChangeWait": self.IsLayerChangeWait,
             "IsHeightChange": self.IsHeightChange,
@@ -424,30 +423,29 @@ class LayerTriggerState(TriggerState):
             "HeightIncrement": trigger.HeightIncrement,
             "Layer": self.Layer
         }
-        currentDict.update(superDict)
-        return currentDict
+        current_dict.update(super_dict)
+        return current_dict
 
-    def ResetState(self):
-        super(LayerTriggerState, self).ResetState()
+    def reset_state(self):
+        super(LayerTriggerState, self).reset_state()
         self.IsHeightChange = False
         self.IsLayerChange = False
 
-    def IsEqual(self, state):
-        if (super(LayerTriggerState, self).IsEqual(state)
-            and self.CurrentIncrement == state.CurrentIncrement
-            and self.IsLayerChangeWait == state.IsLayerChangeWait
-            and self.IsHeightChange == state.IsHeightChange
-            and self.IsHeightChangeWait == state.IsHeightChangeWait
-            and self.Layer == state.Layer
-        ):
+    def is_equal(self, state):
+        if (super(LayerTriggerState, self).is_equal(state)
+                and self.CurrentIncrement == state.CurrentIncrement
+                and self.IsLayerChangeWait == state.IsLayerChangeWait
+                and self.IsHeightChange == state.IsHeightChange
+                and self.IsHeightChangeWait == state.IsHeightChangeWait
+                and self.Layer == state.Layer):
             return True
         return False
 
 
 class LayerTrigger(Trigger):
 
-    def __init__(self, octolapseSettings):
-        super(LayerTrigger, self).__init__(octolapseSettings)
+    def __init__(self, octolapse_settings):
+        super(LayerTrigger, self).__init__(octolapse_settings)
         self.Type = "layer"
         self.ExtruderTriggers = ExtruderTriggers(
             self.Snapshot.layer_trigger_on_extruding_start,
@@ -496,14 +494,14 @@ class LayerTrigger(Trigger):
             self.Snapshot.layer_trigger_on_detracted
         )
         self.Settings.CurrentDebugProfile().LogTriggerCreate(message)
-        self.AddState(LayerTriggerState())
+        self.add_state(LayerTriggerState())
 
-    def Update(self, position):
+    def update(self, position):
         """Updates the layer monitor position.  x, y and z may be absolute, but e must always be relative"""
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
-            state = self.GetState(0)
+            state = self.get_state(0)
             if state is None:
                 # create a new object, it's our first state!
                 state = LayerTriggerState()
@@ -512,7 +510,7 @@ class LayerTrigger(Trigger):
                 state = LayerTriggerState(state)
 
             # reset any variables that must be reset each update
-            state.ResetState()
+            state.reset_state()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
             if not position.HasHomedPosition(0):
@@ -524,9 +522,9 @@ class LayerTrigger(Trigger):
                 # calculate height increment changed
 
                 if (self.HeightIncrement is not None
-                    and self.HeightIncrement > 0
-                    and position.IsLayerChange(0)
-                    and state.CurrentIncrement * self.HeightIncrement <= position.Height(0)):
+                        and self.HeightIncrement > 0
+                        and position.IsLayerChange(0)
+                        and state.CurrentIncrement * self.HeightIncrement <= position.Height(0)):
                     state.CurrentIncrement += 1
                     state.IsHeightChange = True
 
@@ -550,18 +548,19 @@ class LayerTrigger(Trigger):
 
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.layer_trigger_position_restrictions, position.X(0),
-                                                      position.Y(0))
+                    state.IsInPosition = is_in_position(self.Snapshot.layer_trigger_position_restrictions,
+                                                        position.X(0),
+                                                        position.Y(0))
                 else:
                     state.IsInPosition = True
 
                 # see if the extruder is triggering
-                isExtruderTriggering = position.Extruder.IsTriggered(
+                is_extruder_triggering = position.Extruder.IsTriggered(
                     self.ExtruderTriggers, index=0)
 
                 if state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting:
                     state.IsWaiting = True
-                    if not isExtruderTriggering:
+                    if not is_extruder_triggering:
                         state.IsWaitingOnExtruder = True
                         if state.IsHeightChangeWait:
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
@@ -574,7 +573,7 @@ class LayerTrigger(Trigger):
                             state.IsWaitingOnZHop = True
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
-                        elif not self.IsInPosition(0):
+                        elif not self.is_in_position(0):
                             # Make sure the previous X,Y is in position
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "LayerTrigger - Waiting on Position.")
@@ -594,9 +593,9 @@ class LayerTrigger(Trigger):
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
             # calculate changes and set the current state
-            state.HasChanged = not state.IsEqual(self.GetState(0))
+            state.HasChanged = not state.is_equal(self.get_state(0))
             # add the state to the history
-            self.AddState(state)
+            self.add_state(state)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
@@ -609,30 +608,30 @@ class TimerTriggerState(TriggerState):
         self.TriggerStartTime = None if state is None else state.TriggerStartTime
         self.PauseTime = None if state is None else state.PauseTime
 
-    def ToDict(self, trigger):
-        superDict = super(TimerTriggerState, self).ToDict(trigger)
-        currentDict = {
+    def to_dict(self, trigger):
+        super_dict = super(TimerTriggerState, self).to_dict(trigger)
+        current_dict = {
             "SecondsToTrigger": self.SecondsToTrigger,
             "TriggerStartTime": self.TriggerStartTime,
             "PauseTime": self.PauseTime,
             "IntervalSeconds": trigger.IntervalSeconds
         }
-        currentDict.update(superDict)
-        return currentDict
+        current_dict.update(super_dict)
+        return current_dict
 
-    def IsEqual(self, state):
-        if (super(TimerTriggerState, self).IsEqual(state)
-            and self.SecondsToTrigger == state.SecondsToTrigger
-            and self.TriggerStartTime == state.TriggerStartTime
-            and self.PauseTime == state.PauseTime):
+    def is_equal(self, state):
+        if (super(TimerTriggerState, self).is_equal(state)
+                and self.SecondsToTrigger == state.SecondsToTrigger
+                and self.TriggerStartTime == state.TriggerStartTime
+                and self.PauseTime == state.PauseTime):
             return True
         return False
 
 
 class TimerTrigger(Trigger):
 
-    def __init__(self, octolapseSettings):
-        super(TimerTrigger, self).__init__(octolapseSettings)
+    def __init__(self, octolapse_settings):
+        super(TimerTrigger, self).__init__(octolapse_settings)
         self.Type = "timer"
         self.ExtruderTriggers = ExtruderTriggers(
             self.Snapshot.timer_trigger_on_extruding_start,
@@ -681,55 +680,47 @@ class TimerTrigger(Trigger):
 
         self.Settings.CurrentDebugProfile().LogTriggerCreate(message)
         # add initial state
-        initialState = TimerTriggerState()
-        self.AddState(initialState)
+        initial_state = TimerTriggerState()
+        self.add_state(initial_state)
 
-    def Pause(self):
+    def pause(self):
         try:
-            state = self.GetState(0)
+            state = self.get_state(0)
             if state is None:
                 return
             state.PauseTime = time.time()
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def Resume(self):
+    def resume(self):
         try:
-            state = self.GetState(0)
+            state = self.get_state(0)
             if state is None:
                 return
             if state.PauseTime is not None and state.TriggerStartTime is not None:
-                currentTime = time.time()
-                newLastTriggerTime = currentTime - \
-                                     (state.PauseTime - state.TriggerStartTime)
+                current_time = time.time()
+                new_last_trigger_time = current_time - \
+                    (state.PauseTime - state.TriggerStartTime)
                 message = (
                     "Time Trigger - Unpausing.  LastTriggerTime:{0}, "
                     "PauseTime:{1}, CurrentTime:{2}, NewTriggerTime:{3}"
                 ).format(
                     state.TriggerStartTime,
-                    state.PauseTime, currentTime,
-                    newLastTriggerTime
+                    state.PauseTime, current_time,
+                    new_last_trigger_time
                 )
                 self.Settings.CurrentDebugProfile().LogTimerTriggerUnpaused(message)
                 # Keep the proper interval if the print is paused
-                state.TriggerStartTime = newLastTriggerTime
+                state.TriggerStartTime = new_last_trigger_time
                 state.PauseTime = None
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
-    def PrintStarted(self):
-        state = self.TriggerState(self.GetState(0))
-        state.PrintStartTime = time.time()
-        # the state has definitely changed if we are here.
-        state.HasChanged = True
-        # add the state to the history
-        self.AddState(state)
-
-    def Update(self, position):
+    def update(self, position):
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
-            state = self.GetState(0)
+            state = self.get_state(0)
             if state is None:
                 # create a new object, it's our first state!
                 state = TimerTriggerState()
@@ -737,7 +728,7 @@ class TimerTrigger(Trigger):
                 # create a copy so we aren't working on the original
                 state = TimerTriggerState(state)
             # reset any variables that must be reset each update
-            state.ResetState()
+            state.reset_state()
             state.IsTriggered = False
 
             # Don't update the trigger if we don't have a homed axis
@@ -749,31 +740,32 @@ class TimerTrigger(Trigger):
                 state.IsHomed = True
 
                 # record the current time to keep things consistant
-                currentTime = time.time()
+                current_time = time.time()
 
                 # if the trigger start time is null, set it now.
                 if state.TriggerStartTime is None:
-                    state.TriggerStartTime = currentTime
+                    state.TriggerStartTime = current_time
 
                 message = (
                     "TimerTrigger - {0} second interval, "
                     "{1} seconds elapsed, {2} seconds to trigger"
                 ).format(
                     self.IntervalSeconds,
-                    int(currentTime - state.TriggerStartTime),
-                    int(self.IntervalSeconds - (currentTime - state.TriggerStartTime))
+                    int(current_time - state.TriggerStartTime),
+                    int(self.IntervalSeconds - (current_time - state.TriggerStartTime))
                 )
                 self.Settings.CurrentDebugProfile().LogTriggerTimeRemaining(message)
 
                 # how many seconds to trigger
-                secondsToTrigger = self.IntervalSeconds - \
-                                   (currentTime - state.TriggerStartTime)
-                state.SecondsToTrigger = utility.round_to(secondsToTrigger, 1)
+                seconds_to_trigger = self.IntervalSeconds - \
+                    (current_time - state.TriggerStartTime)
+                state.SecondsToTrigger = utility.round_to(seconds_to_trigger, 1)
 
                 # check to see if the X/Y axes are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = IsInPosition(self.Snapshot.timer_trigger_position_restrictions, position.X(0),
-                                                      position.Y(0))
+                    state.IsInPosition = is_in_position(self.Snapshot.timer_trigger_position_restrictions,
+                                                        position.X(0),
+                                                        position.Y(0))
                 else:
                     state.IsInPosition = True
 
@@ -787,7 +779,7 @@ class TimerTrigger(Trigger):
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True
-                        elif not self.IsInPosition(0):
+                        elif not self.is_in_position(0):
                             # Make sure the previous X,Y is in position
                             self.Settings.CurrentDebugProfile().LogTriggerWaitState(
                                 "TimerTrigger - Waiting on Position.")
@@ -807,8 +799,8 @@ class TimerTrigger(Trigger):
                             'TimerTrigger - Triggering, waiting for extruder')
                         state.IsWaitingOnExtruder = True
             # calculate changes and set the current state
-            state.HasChanged = not state.IsEqual(self.GetState(0))
+            state.HasChanged = not state.is_equal(self.get_state(0))
             # add the state to the history
-            self.AddState(state)
+            self.add_state(state)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)

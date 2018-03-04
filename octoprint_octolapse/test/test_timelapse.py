@@ -562,7 +562,7 @@ class Test_Timelapse(unittest.TestCase):
         # home the axis
         self.Timelapse_GcodeTrigger.Position.Update("G28")
         # set the trigger to waiting
-        self.Timelapse_GcodeTrigger.Triggers[0].IsWaiting = True
+        self.Timelapse_GcodeTrigger.Triggers[0].is_waiting = True
         # set the snapshot state to WaitingForTrigger
         self.Timelapse_GcodeTrigger.State = TimelapseState.WaitingForTrigger
         self.Timelapse_GcodeTrigger.OctoprintPrinter.Commands = []
@@ -623,7 +623,7 @@ class Test_Timelapse(unittest.TestCase):
         # home the axis
         self.Timelapse_GcodeTrigger.Position.Update("G28")
         # set the trigger to is waiting so we trigger
-        self.Timelapse_GcodeTrigger.Triggers[0].IsWaiting = True
+        self.Timelapse_GcodeTrigger.Triggers[0].is_waiting = True
         # set the snapshot state to WaitingForTrigger
         self.Timelapse_GcodeTrigger.State = TimelapseState.WaitingForTrigger
         self.Timelapse_GcodeTrigger.OctoprintPrinter.Commands = []

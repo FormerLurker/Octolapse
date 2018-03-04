@@ -3,7 +3,7 @@
     a file called 'LICENSE', which is part of this source code package.
 */
 $(function () {
-    
+
     Octolapse.SnapshotProfileViewModel = function (values) {
         var self = this;
         self.guid = ko.observable(values.guid);
@@ -30,13 +30,13 @@ $(function () {
             self.gcode_trigger_position_restrictions.push(ko.observable(values.gcode_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new gcode position restrictions
-        self.new_gcode_position_restriction_type = ko.observable('required')
-        self.new_gcode_position_restriction_shape = ko.observable('rect')
-        self.new_gcode_position_restriction_x = ko.observable(0)
-        self.new_gcode_position_restriction_y = ko.observable(0)
-        self.new_gcode_position_restriction_x2 = ko.observable(1)
-        self.new_gcode_position_restriction_y2 = ko.observable(1)
-        self.new_gcode_position_restriction_r = ko.observable(1)
+        self.new_gcode_position_restriction_type = ko.observable('required');
+        self.new_gcode_position_restriction_shape = ko.observable('rect');
+        self.new_gcode_position_restriction_x = ko.observable(0);
+        self.new_gcode_position_restriction_y = ko.observable(0);
+        self.new_gcode_position_restriction_x2 = ko.observable(1);
+        self.new_gcode_position_restriction_y2 = ko.observable(1);
+        self.new_gcode_position_restriction_r = ko.observable(1);
 
         /*
             Timer Trigger Settings
@@ -59,13 +59,13 @@ $(function () {
             self.timer_trigger_position_restrictions.push(ko.observable(values.timer_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new timer position restrictions
-        self.new_timer_position_restriction_type = ko.observable('required')
-        self.new_timer_position_restriction_shape = ko.observable('rect')
-        self.new_timer_position_restriction_x = ko.observable(0)
-        self.new_timer_position_restriction_y = ko.observable(0)
-        self.new_timer_position_restriction_x2 = ko.observable(1)
-        self.new_timer_position_restriction_y2 = ko.observable(1)
-        self.new_timer_position_restriction_r = ko.observable(1)
+        self.new_timer_position_restriction_type = ko.observable('required');
+        self.new_timer_position_restriction_shape = ko.observable('rect');
+        self.new_timer_position_restriction_x = ko.observable(0);
+        self.new_timer_position_restriction_y = ko.observable(0);
+        self.new_timer_position_restriction_x2 = ko.observable(1);
+        self.new_timer_position_restriction_y2 = ko.observable(1);
+        self.new_timer_position_restriction_r = ko.observable(1);
 
         /*
             Layer/Height Trigger Settings
@@ -88,15 +88,15 @@ $(function () {
             self.layer_trigger_position_restrictions.push(ko.observable(values.layer_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new layer position restrictions
-        self.new_layer_position_restriction_type = ko.observable('required')
-        self.new_layer_position_restriction_shape = ko.observable('rect')
-        self.new_layer_position_restriction_x = ko.observable(0)
-        self.new_layer_position_restriction_y = ko.observable(0)
-        self.new_layer_position_restriction_x2 = ko.observable(1)
-        self.new_layer_position_restriction_y2 = ko.observable(1)
-        self.new_layer_position_restriction_r = ko.observable(1)
+        self.new_layer_position_restriction_type = ko.observable('required');
+        self.new_layer_position_restriction_shape = ko.observable('rect');
+        self.new_layer_position_restriction_x = ko.observable(0);
+        self.new_layer_position_restriction_y = ko.observable(0);
+        self.new_layer_position_restriction_x2 = ko.observable(1);
+        self.new_layer_position_restriction_y2 = ko.observable(1);
+        self.new_layer_position_restriction_r = ko.observable(1);
 
-        
+
         self.retract_before_move = ko.observable(values.retract_before_move);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
@@ -151,8 +151,8 @@ $(function () {
                 default:
                     console.log("Unknown position restriction type");
             }
-            
-            
+
+
         };
         self.removePositionRestriction = function (type, index) {
             console.log("Removing " + type + " restriction at index: " + index());
@@ -177,7 +177,7 @@ $(function () {
                     console.log("Unknown position restriction type");
             }
 
-            
+
         }
 
     };
