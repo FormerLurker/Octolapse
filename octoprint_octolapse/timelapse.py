@@ -104,9 +104,9 @@ class Timelapse(object):
             if self.Settings is not None:
 
                 if self.Settings.show_position_changes and self.Position is not None:
-                    positionDict = self.Position.ToPositionDict()
+                    positionDict = self.Position.to_position_dict()
                 if self.Settings.show_position_state_changes and self.Position is not None:
-                    positionStateDict = self.Position.ToStateDict()
+                    positionStateDict = self.Position.to_state_dict()
                 if self.Settings.show_extruder_state_changes and self.Position is not None:
                     extruderDict = self.Position.Extruder.ToDict()
                 if self.Settings.show_trigger_state_changes and self.Triggers is not None:
@@ -209,17 +209,17 @@ class Timelapse(object):
             positionStateChangeDict = None
             extruderChangeDict = None
             triggerChangeList = None
-            self.Position.Update(cmd)
-            if self.Position.HasPositionError(0):
+            self.Position.update(cmd)
+            if self.Position.has_position_error(0):
                 self._onPositionError()
             # capture any changes, if neccessary, to the position, position state and extruder state
             # Note:  We'll get the trigger state later
             if (self.Settings.show_position_changes
-                and (self.Position.HasPositionChanged() or not self.HasSentInitialStatus)):
-                positionChangeDict = self.Position.ToPositionDict()
+                and (self.Position.has_position_changed() or not self.HasSentInitialStatus)):
+                positionChangeDict = self.Position.to_position_dict()
             if (self.Settings.show_position_state_changes
-                and (self.Position.HasStateChanged() or not self.HasSentInitialStatus)):
-                positionStateChangeDict = self.Position.ToStateDict()
+                and (self.Position.has_state_changed() or not self.HasSentInitialStatus)):
+                positionStateChangeDict = self.Position.to_state_dict()
             if (self.Settings.show_extruder_state_changes
                 and (self.Position.Extruder.HasChanged() or not self.HasSentInitialStatus)):
                 extruderChangeDict = self.Position.Extruder.ToDict()
@@ -228,9 +228,9 @@ class Timelapse(object):
             isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
             # check to see if we've just completed a home command
             if (self.State == TimelapseState.WaitingForTrigger
-                and (self.Position.RequiresLocationDetection(1)) and self.OctoprintPrinter.is_printing()):
+                and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
                 # Undo the last position update, we will be resending the command
-                self.Position.UndoUpdate()
+                self.Position.undo_update()
                 self.State = TimelapseState.AcquiringLocation
                 if self.IsTestMode:
                     cmd = self.Commands.GetTestModeCommandString(cmd)
@@ -240,12 +240,12 @@ class Timelapse(object):
                     "A position altering requires that we acquire a "
                     "location, pausing print and undoing the last "
                     "position update.  New Position: {0}"
-                ).format(self.Position.GetPositionString())
+                ).format(self.Position.get_position_string())
                 self.Settings.CurrentDebugProfile().LogPrintStateChange(message)
                 self._pausePrint()
             elif (self.State == TimelapseState.WaitingForTrigger
                   and self.OctoprintPrinter.is_printing()
-                  and not self.Position.HasPositionError(0)):
+                  and not self.Position.has_position_error(0)):
                 self.Triggers.update(self.Position, cmd)
 
                 # If our triggers have changed, update our dict
@@ -254,9 +254,9 @@ class Timelapse(object):
 
                 if self.GcodeQueuing_IsTriggering(cmd, isSnapshotGcodeCommand):
                     # Undo the last position update, we're not going to be using it!
-                    self.Position.UndoUpdate()
+                    self.Position.undo_update()
                     # Store the current position (our previous position), since this will be our snapshot position
-                    self.Position.SavePosition()
+                    self.Position.save_position()
                     # we don't want to execute the current command.  We have saved it for later.
                     # but we don't want to send the snapshot command to the printer, or any of
                     # the SupporessedSavedCommands (gcode.py)
@@ -434,15 +434,15 @@ class Timelapse(object):
 
     def _positionReceived_Home(self, x, y, z, e):
         try:
-            self.Position.UpdatePosition(
-                x=x, y=y, z=z, e=e, force=True, calculateChanges=True)
+            self.Position.update_position(
+                x=x, y=y, z=z, e=e, force=True, calculate_changes=True)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
             # we need to abandon the snapshot completely, reset and resume
         self.State = TimelapseState.SendingSavedHomeLocationCommand
         # if a saved command exists, execute it and get the current location
         if self.SavedCommand is not None:
-            if self.Position.DoesCommandRequireLocationDetection(self.SavedCommand):
+            if self.Position.command_requires_location_detection(self.SavedCommand):
                 self.RequiresLocationDetectionAfterHome = True
                 self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(
                     "The saved command requires position detection.  "
@@ -464,21 +464,21 @@ class Timelapse(object):
         # Todo:  do this in the gcode sent function instead of sending an m400/m114 combo
         try:
             if self.RequiresLocationDetectionAfterHome:
-                if not self.Position.IsAtCurrentPosition(x, y, None):
+                if not self.Position.is_at_current_position(x, y, None):
                     message = (
                         "The position has changed after receiving "
                         "the home location saved command.  Updating.  "
                         "New Position: x:{0},y:{1},z:{2},e:{3}, "
                         "Previous Position: x:{4},y:{5},z:{6}"
-                    ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                    ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                     self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
-                    self.Position.UpdatePosition(
-                        x=x, y=y, z=z, e=e, force=True, calculateChanges=True)
+                    self.Position.update_position(
+                        x=x, y=y, z=z, e=e, force=True, calculate_changes=True)
                 else:
                     message = (
                         "The saved command required a position update, "
                         "but the position has not changed more than the tolerance."
-                    ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                    ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                     self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
@@ -494,15 +494,15 @@ class Timelapse(object):
             printerTolerance = self.Printer.printer_position_confirmation_tolerance
             # If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
             # Because of this we need to compare the position we received to the previous position, not the current one.
-            if not self.Position.IsAtSavedPosition(x, y, z):
+            if not self.Position.is_at_saved_position(x, y, z):
                 message = (
                     "The snapshot return position recieved from the "
                     "printer does not match the position expected by "
                     "Octolapse.  received (x:{0},y:{1},z:{2}), Expected"
                     " (x:{3},y:{4},z:{5})"
-                ).format(x, y, z, self.Position.X(), self.Position.Y(), self.Position.Z())
+                ).format(x, y, z, self.Position.x(), self.Position.y(), self.Position.z())
                 self.Settings.CurrentDebugProfile().LogWarning(message)
-                self.Position.UpdatePosition(x=x, y=y, z=z, force=True)
+                self.Position.update_position(x=x, y=y, z=z, force=True)
             else:
                 # return position information received
                 self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(
@@ -512,13 +512,13 @@ class Timelapse(object):
             self.CommandIndex = 0
 
             # create the GCode for the timelapse and store it
-            isRelative = self.Position.IsRelative()
-            isExtruderRelative = self.Position.IsExtruderRelative()
+            isRelative = self.Position.is_relative()
+            isExtruderRelative = self.Position.is_extruder_relative()
 
             self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(
-                x, y, z, self.Position.F(), self.Position.IsRelative(),
-                self.Position.IsExtruderRelative(), self.Position.Extruder,
-                self.Position.DistanceToZLift(), savedCommand=self.SavedCommand
+                x, y, z, self.Position.f(), self.Position.is_relative(),
+                self.Position.is_extruder_relative(), self.Position.Extruder,
+                self.Position.distance_to_zlift(), savedCommand=self.SavedCommand
             )
             # make sure we acutally received gcode
             if self.SnapshotGcodes is None:
@@ -549,24 +549,24 @@ class Timelapse(object):
             message = (
                 "Snapshot position received, checking position:  "
                 "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
-            ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+            ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
             self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(message)
             printerTolerance = self.Printer.printer_position_confirmation_tolerance
             # see if the CURRENT position is the same as the position we received from the printer
             # AND that it is equal to the snapshot position
-            if not self.Position.IsAtCurrentPosition(x, y, None):
+            if not self.Position.is_at_current_position(x, y, None):
                 message = (
                     "The snapshot position is incorrect.  "
                     "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
-                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                 self.Settings.CurrentDebugProfile().LogWarning(message)
             # our snapshot gcode will NOT be offset
-            elif not self.Position.IsAtCurrentPosition(
-                self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None, applyOffset=False):
+            elif not self.Position.is_at_current_position(
+                self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None):
                 message = (
                     "The snapshot gcode position is incorrect.  "
                     "x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
-                ).format(x, y, z, e, self.SnapshotGcodes.X, self.SnapshotGcodes.Y, self.Position.Z())
+                ).format(x, y, z, e, self.SnapshotGcodes.X, self.SnapshotGcodes.Y, self.Position.z())
                 self.Settings.CurrentDebugProfile().LogError(message)
 
             self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(
@@ -579,7 +579,7 @@ class Timelapse(object):
             self._sendReturnCommands()
 
     def _onPositionError(self):
-        message = self.Position.PositionError(0)
+        message = self.Position.position_error(0)
         self.Settings.CurrentDebugProfile().LogError(message)
         if self.OnPositionErrorCallback is not None:
             self.OnPositionErrorCallback(message)
@@ -597,17 +597,17 @@ class Timelapse(object):
 
     def _positionReceived_ResumePrint(self, x, y, z, e):
         try:
-            if not self.Position.IsAtCurrentPosition(x, y, None):
+            if not self.Position.is_at_current_position(x, y, None):
                 message = (
                     "Save Command Position is incorrect.  "
                     "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
-                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                 self.Settings.CurrentDebugProfile().LogError(message)
             else:
                 message = (
                     "Save Command Position is correct.  "
                     "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
-                ).format(x, y, z, e, self.Position.X(), self.Position.Y(), self.Position.Z())
+                ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                 self.Settings.CurrentDebugProfile().LogSnapshotPositionResumePrint(message)
 
             self.SecondsAddedByOctolapse += time.time() - self.ReturnPositionReceivedTime

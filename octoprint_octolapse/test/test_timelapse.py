@@ -290,18 +290,18 @@ class Test_Timelapse(unittest.TestCase):
             snapshotCommand) is None)
 
         # home the position, retest
-        self.Timelapse_GcodeTrigger.Position.Update("G28")
+        self.Timelapse_GcodeTrigger.Position.update("G28")
         self.assertTrue(self.Timelapse_GcodeTrigger.IsTriggering(
             notSnapshotCommand) is None)
         # send snapshot gcode
-        self.Timelapse_GcodeTrigger.Position.Update("snapshotCommand")
+        self.Timelapse_GcodeTrigger.Position.update("snapshotCommand")
         triggeringTrigger = self.Timelapse_GcodeTrigger.IsTriggering(
             snapshotCommand)
         self.assertTrue(triggeringTrigger ==
                         self.Timelapse_GcodeTrigger.Triggers[0])
 
         # test with position error
-        self.Timelapse_GcodeTrigger.Position.HasPositionError = True
+        self.Timelapse_GcodeTrigger.Position.get_position(0).HasPositionError = True
         self.assertTrue(self.Timelapse_GcodeTrigger.IsTriggering(
             snapshotCommand) is None)
 
@@ -322,8 +322,8 @@ class Test_Timelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_TimerTrigger.IsTriggering("") is None)
 
         # home the position, retest
-        self.Timelapse_TimerTrigger.Position.Update("G28")
-        self.Timelapse_TimerTrigger.Position.Update("AnotherCommandAfterG28")
+        self.Timelapse_TimerTrigger.Position.update("G28")
+        self.Timelapse_TimerTrigger.Position.update("AnotherCommandAfterG28")
         self.Timelapse_TimerTrigger.Triggers[0].TriggerStartTime = time.time(
         ) - 1.01
         self.assertTrue(self.Timelapse_TimerTrigger.IsTriggering(
@@ -560,7 +560,7 @@ class Test_Timelapse(unittest.TestCase):
         self.Timelapse_GcodeTrigger.StartTimelapse(
             self.OctoprintTestPrinter, self.OctoprintPrinterProfile, self.FfMpegPath, False)
         # home the axis
-        self.Timelapse_GcodeTrigger.Position.Update("G28")
+        self.Timelapse_GcodeTrigger.Position.update("G28")
         # set the trigger to waiting
         self.Timelapse_GcodeTrigger.Triggers[0].is_waiting = True
         # set the snapshot state to WaitingForTrigger
@@ -592,7 +592,7 @@ class Test_Timelapse(unittest.TestCase):
         self.Timelapse_GcodeTrigger.StartTimelapse(
             self.OctoprintTestPrinter, self.OctoprintPrinterProfile, self.FfMpegPath, False)
         # home the axis
-        self.Timelapse_GcodeTrigger.Position.Update("G28")
+        self.Timelapse_GcodeTrigger.Position.update("G28")
         # set the snapshot state to WaitingForTrigger
         self.Timelapse_GcodeTrigger.State = TimelapseState.WaitingForTrigger
         self.Timelapse_GcodeTrigger.OctoprintPrinter.Commands = []
@@ -621,7 +621,7 @@ class Test_Timelapse(unittest.TestCase):
         self.Timelapse_GcodeTrigger.StartTimelapse(
             self.OctoprintTestPrinter, self.OctoprintPrinterProfile, self.FfMpegPath, False)
         # home the axis
-        self.Timelapse_GcodeTrigger.Position.Update("G28")
+        self.Timelapse_GcodeTrigger.Position.update("G28")
         # set the trigger to is waiting so we trigger
         self.Timelapse_GcodeTrigger.Triggers[0].is_waiting = True
         # set the snapshot state to WaitingForTrigger
@@ -941,9 +941,9 @@ class Test_Timelapse(unittest.TestCase):
             self.Timelapse_GcodeTrigger.OctoprintPrinter.GcodeCommands[1] == "TestCommand2")
         self.assertTrue(
             self.Timelapse_GcodeTrigger.OctoprintPrinter.GcodeCommands[2] == "m105")
-        self.assertTrue(self.Timelapse_GcodeTrigger.Position.X == 0)
-        self.assertTrue(self.Timelapse_GcodeTrigger.Position.Y == 0)
-        self.assertTrue(self.Timelapse_GcodeTrigger.Position.Z == 0)
+        self.assertTrue(self.Timelapse_GcodeTrigger.Position.x() == 0)
+        self.assertTrue(self.Timelapse_GcodeTrigger.Position.y() == 0)
+        self.assertTrue(self.Timelapse_GcodeTrigger.Position.z() == 0)
 
     def test_PositionReceived_SnapshotPosition_Received(self):
         """Test the PositionReceived function"""
@@ -968,9 +968,9 @@ class Test_Timelapse(unittest.TestCase):
             "e": 0,
             "reason": reason
         }
-        self.Timelapse_GcodeTrigger.Position.X = 0
-        self.Timelapse_GcodeTrigger.Position.Y = 0
-        self.Timelapse_GcodeTrigger.Position.Z = 0
+        self.Timelapse_GcodeTrigger.Position.x = 0
+        self.Timelapse_GcodeTrigger.Position.y = 0
+        self.Timelapse_GcodeTrigger.Position.z = 0
         snapshotGcodes = SnapshotGcode(False)
         snapshotGcodes.X = 0
         snapshotGcodes.Y = 0
@@ -1015,9 +1015,9 @@ class Test_Timelapse(unittest.TestCase):
         snapshotGcodes.Z = 0
         self.Timelapse_GcodeTrigger.SnapshotGcodes = snapshotGcodes
         # Over Tolerance +
-        self.Timelapse_GcodeTrigger.Position.X = 0.00500001
-        self.Timelapse_GcodeTrigger.Position.Y = 0.00500001
-        self.Timelapse_GcodeTrigger.Position.Z = 0.00500001
+        self.Timelapse_GcodeTrigger.Position.x = 0.00500001
+        self.Timelapse_GcodeTrigger.Position.y = 0.00500001
+        self.Timelapse_GcodeTrigger.Position.z = 0.00500001
         success, message = self.Timelapse_GcodeTrigger.PositionReceived(
             payload)
         self.assertTrue(not success)
@@ -1025,9 +1025,9 @@ class Test_Timelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.RequestingSnapshotPosition)
         # At Tolerance +
-        self.Timelapse_GcodeTrigger.Position.X = 0.005
-        self.Timelapse_GcodeTrigger.Position.Y = 0.005
-        self.Timelapse_GcodeTrigger.Position.Z = 0.005
+        self.Timelapse_GcodeTrigger.Position.x = 0.005
+        self.Timelapse_GcodeTrigger.Position.y = 0.005
+        self.Timelapse_GcodeTrigger.Position.z = 0.005
         success, message = self.Timelapse_GcodeTrigger.PositionReceived(
             payload)
         self.assertTrue(success)
@@ -1037,9 +1037,9 @@ class Test_Timelapse(unittest.TestCase):
         # reset state
         self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingSnapshotPosition
         # Over Tolerance -
-        self.Timelapse_GcodeTrigger.Position.X = -0.00500001
-        self.Timelapse_GcodeTrigger.Position.Y = -0.00500001
-        self.Timelapse_GcodeTrigger.Position.Z = -0.00500001
+        self.Timelapse_GcodeTrigger.Position.x = -0.00500001
+        self.Timelapse_GcodeTrigger.Position.y = -0.00500001
+        self.Timelapse_GcodeTrigger.Position.z = -0.00500001
         success, message = self.Timelapse_GcodeTrigger.PositionReceived(
             payload)
         self.assertTrue(not success)
@@ -1047,9 +1047,9 @@ class Test_Timelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.RequestingSnapshotPosition)
         # At Tolerance -
-        self.Timelapse_GcodeTrigger.Position.X = -0.005
-        self.Timelapse_GcodeTrigger.Position.Y = -0.005
-        self.Timelapse_GcodeTrigger.Position.Z = -0.005
+        self.Timelapse_GcodeTrigger.Position.x = -0.005
+        self.Timelapse_GcodeTrigger.Position.y = -0.005
+        self.Timelapse_GcodeTrigger.Position.z = -0.005
         success, message = self.Timelapse_GcodeTrigger.PositionReceived(
             payload)
         self.assertTrue(success)
@@ -1082,9 +1082,9 @@ class Test_Timelapse(unittest.TestCase):
             "e": 0,
             "reason": reason
         }
-        self.Timelapse_GcodeTrigger.Position.X = 1
-        self.Timelapse_GcodeTrigger.Position.Y = 1
-        self.Timelapse_GcodeTrigger.Position.Z = 1
+        self.Timelapse_GcodeTrigger.Position.x = 1
+        self.Timelapse_GcodeTrigger.Position.y = 1
+        self.Timelapse_GcodeTrigger.Position.z = 1
 
         snapshotGcodes = SnapshotGcode(False)
         snapshotGcodes.ReturnX = 0

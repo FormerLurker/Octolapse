@@ -51,15 +51,15 @@ class Test_GcodeTrigger(unittest.TestCase):
 
         # reset, set relative extruder and absolute xyz, home the axis, and resend the snap command, should wait since we require
         # the home command to complete (sent to printer) before triggering
-        position.Update("M83")
-        position.Update("G90")
-        position.Update("G28")
+        position.update("M83")
+        position.update("G90")
+        position.update("G28")
         trigger.update(position, "snap")
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # try again, Snap is encountered, but it must be the previous command to trigger
-        position.Update("G0 X0 Y0 Z0 E1 F0")
+        position.update("G0 X0 Y0 Z0 E1 F0")
         trigger.update(position, "G0 X0 Y0 Z0 E1 F0")
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -74,7 +74,7 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
         # fake a zhop
-        position.IsZHop = lambda x: True
+        position.is_zhop = lambda x: True
         trigger.update(position, "NotTheSnapshotCommand")
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -103,7 +103,7 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertTrue(trigger.is_waiting(0))
         # change the extruder state and test
         # should not trigger because trigger tests the previous command
-        position.Update("G0 X0 Y0 Z0 E10 F0")
+        position.update("G0 X0 Y0 Z0 E10 F0")
         trigger.update(position, "NotTheSnapshotCommand")
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

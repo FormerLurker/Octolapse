@@ -51,34 +51,34 @@ class Test_TimerTrigger(unittest.TestCase):
 
         # set interval time to 0, send another command and test again (should not trigger, no homed axis)
         trigger.IntervalSeconds = 0
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again with interval seconds 1 - should not trigger since the timer will start after the home command
         trigger.IntervalSeconds = 2
-        position.Update("g28")
+        position.update("g28")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # send another command and try again, should not trigger cause we haven't waited 2 seconds yet
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should not trigger
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should trigger
         trigger.TriggerStartTime = time.time() - 2.01
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -87,7 +87,7 @@ class Test_TimerTrigger(unittest.TestCase):
         """Test All Extruder Triggers"""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         # home the axis
-        position.Update("G28")
+        position.update("G28")
         trigger = TimerTrigger(self.Settings)
         trigger.IntervalSeconds = 1
         trigger.RequireZHop = False  # no zhop required
@@ -107,7 +107,7 @@ class Test_TimerTrigger(unittest.TestCase):
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         # send another command, now the previous state has been homed, should trigger
-        position.Update("AnotherCommandNowPreviousHomed")
+        position.update("AnotherCommandNowPreviousHomed")
         # set is extruding start, wont be set by the above command!
         position.Extruder.StateHistory[0].IsExtrudingStart = True
         trigger.update(position)
@@ -226,7 +226,7 @@ class Test_TimerTrigger(unittest.TestCase):
         """Test wait on extruder"""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         # home the axis
-        position.Update("G28")
+        position.update("G28")
         trigger = TimerTrigger(self.Settings)
         trigger.RequireZHop = False  # no zhop required
         trigger.IntervalSeconds = 1
@@ -246,7 +246,7 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
 
         # send another command and try again
-        position.Update("PreviousPositionIsNowHomed")
+        position.update("PreviousPositionIsNowHomed")
         # set the extruder trigger
         position.Extruder.GetState(0).IsExtrudingStart = True
         trigger.update(position)
@@ -267,74 +267,74 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_waiting(0))
 
         # send commands that normally would trigger a layer change, but without all axis homed.
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again, wait on zhop
-        position.Update("g28")
+        position.update("g28")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
-        position.Update("g0 x0 y0 z.2 e1")
+        position.update("g0 x0 y0 z.2 e1")
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # try zhop
-        position.Update("g0 x0 y0 z.7 ")
+        position.update("g0 x0 y0 z.7 ")
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # extrude on current layer, no trigger (wait on zhop)
-        position.Update("g0 x0 y0 z.7 e1")
+        position.update("g0 x0 y0 z.7 e1")
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # do not extrude on current layer, still waiting
-        position.Update("g0 x0 y0 z.7 ")
+        position.update("g0 x0 y0 z.7 ")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # partial hop, but close enough based on our printer measurement tolerance (0.005)
-        position.Update("g0 x0 y0 z1.1999")
+        position.update("g0 x0 y0 z1.1999")
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
         # creat wait state
-        position.Update("g0 x0 y0 z1.3 e1")
+        position.update("g0 x0 y0 z1.3 e1")
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # move down (should never happen, should behave properly anyway)
-        position.Update("g0 x0 y0 z.8")
+        position.update("g0 x0 y0 z.8")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # move back up to current layer (should NOT trigger zhop)
-        position.Update("g0 x0 y0 z1.3")
+        position.update("g0 x0 y0 z1.3")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, not enough to trigger zhop
-        position.Update("g0 x0 y0 z1.795")
+        position.update("g0 x0 y0 z1.795")
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, just enough to trigger zhop
-        position.Update("g0 x0 y0 z1.7951")
+        position.update("g0 x0 y0 z1.7951")
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

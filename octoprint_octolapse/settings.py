@@ -20,11 +20,7 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 class Printer(object):
 
-    def __init__(
-        self, printer=None, name="New Printer",
-        guid=None, retract_length=2.0, retract_speed=4000,
-        detract_speed=3000, movement_speed=6000, z_hop=0.5,
-        z_hop_speed=6000, snapshot_command="snap"):
+    def __init__(self, printer=None, name="New Printer", guid=None):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
