@@ -4,7 +4,7 @@
 */
 $(function () {
 
-    
+
     // Settings View Model
     Octolapse.SettingsViewModel = function (parameters) {
         // Create a reference to this object
@@ -332,7 +332,7 @@ $(function () {
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
                     numErrors = dialog.validator.numberOfInvalids();
-                    if (numErrors == 1)
+                    if (numErrors === 1)
                         dialog.$errorCount.text("1 field is invalid");
                     else
                         dialog.$errorCount.text(numErrors + " fields are invalid");
@@ -442,7 +442,7 @@ $(function () {
         , ["#octolapse_plugin_settings"]
     ]);
 
-    
+
 });
 
 

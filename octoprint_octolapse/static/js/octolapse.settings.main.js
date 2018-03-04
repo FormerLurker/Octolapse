@@ -19,7 +19,7 @@ $(function () {
         self.auto_reload_frames = ko.observable();
         self.show_navbar_icon = ko.observable();
         self.show_navbar_when_not_printing = ko.observable();
-        
+
         self.show_position_state_changes = ko.observable();
         self.show_position_changes = ko.observable();
         self.show_extruder_state_changes = ko.observable();
@@ -41,31 +41,34 @@ $(function () {
             self.auto_reload_frames(settings.auto_reload_frames());
             self.show_navbar_icon(settings.show_navbar_icon());
             self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
-            
+
             self.show_position_state_changes(settings.show_position_state_changes());
             self.show_position_changes(settings.show_position_changes());
             self.show_extruder_state_changes(settings.show_extruder_state_changes());
             self.show_trigger_state_changes(settings.show_trigger_state_changes());
             self.platform(settings.platform());
 
-            
+
         };
         /*
             Show and hide the settings tabs based on the enabled parameter
         */
         self.setSettingsVisibility = function (isVisible) {
+
+            var octolapseSettings = $('#octolapse_settings');
+
             if (isVisible) {
                 //console.log("Showing Settings")
             }
 
             else {
                 //console.log("Hiding settings")
-                $('#octolapse_settings div.tab-content .hide-disabled').each(function (index, element) {
+                octolapseSettings.find('div.tab-content .hide-disabled').each(function (index, element) {
                     // Clear any active tabs
                     $(element).removeClass('active');
                 });
             }
-            $('#octolapse_settings ul.nav .hide-disabled').each(function (index, element) {
+            octolapseSettings.find('ul.nav .hide-disabled').each(function (index, element) {
                 if (isVisible)
                     $(element).show();
                 else
@@ -138,7 +141,7 @@ $(function () {
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
                     numErrors = dialog.validator.numberOfInvalids();
-                    if (numErrors == 1)
+                    if (numErrors === 1)
                         dialog.$errorCount.text("1 field is invalid");
                     else
                         dialog.$errorCount.text(numErrors + " fields are invalid");
@@ -168,7 +171,7 @@ $(function () {
             });
             dialog.$editDialog.on("shown.bs.modal", function () {
                 // Create all of the validation rules
-                
+
                 dialog.validator = dialog.$editForm.validate(dialog.rules);
 
                 // Remove any click event bindings from the cancel button
@@ -259,12 +262,12 @@ $(function () {
 
                 });
             });
-                
-            
+
+
 
             dialog.$editDialog.modal();
         };
-        
+
         Octolapse.MainSettingsValidationRules = {
             rules: {
 

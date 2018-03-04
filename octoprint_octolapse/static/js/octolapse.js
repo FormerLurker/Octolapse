@@ -13,7 +13,7 @@ $(function () {
             }
         }
         return -1;
-    }
+    };
     // Creates a pseudo-guid
     Octolapse.guid = function () {
         function s4() {
@@ -23,7 +23,7 @@ $(function () {
         }
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
-    }
+    };
     Octolapse.HasTakenFirstSnapshot = false;
     // Retruns an observable sorted by name(), case insensitive
     Octolapse.nameSort = function (observable) {
@@ -31,7 +31,7 @@ $(function () {
             function (left, right) {
                 leftName = left.name().toLowerCase();
                 rightName = right.name().toLowerCase();
-                return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
+                return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
             });
     };
     // Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
@@ -58,34 +58,36 @@ $(function () {
         octolapsePopup = new PNotify(options);
     };
 
-    Octolapse.Popups = {}
+    Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, key) {
         if (key in Octolapse.Popups) {
             Octolapse.Popups[key].remove();
         }
         Octolapse.Popups[key] = new PNotify(options);
     };
-    
+
     Octolapse.ToggleElement = function (element) {
         var args = $(this).attr("data-toggle");
         Octolapse.toggle(this, JSON.parse(args));
     };
-    
+
     Octolapse.DisableResumeButton = function(){
-        $("#state_wrapper #job_pause").attr("disabled", "disabled");
-        $("#state_wrapper #job_pause span:nth-of-type(1)").text("Snapshot");
-        $("#state_wrapper #job_pause span:nth-of-type(2)").text("Snapshot");
-    }
+        var stateWrapper = $("#state_wrapper");
+        stateWrapper.find("#job_pause").attr("disabled", "disabled");
+        stateWrapper.find("#job_pause span:nth-of-type(1)").text("Snapshot");
+        stateWrapper.find("#job_pause span:nth-of-type(2)").text("Snapshot");
+    };
     Octolapse.EnableResumeButton = function () {
-        $("#state_wrapper #job_pause").attr("disabled", "");
-        $("#state_wrapper #job_pause span:nth-of-type(1)").text("Pause");
-        $("#state_wrapper #job_pause span:nth-of-type(2)").text("Resume");
-    }
+        var stateWrapper = $("#state_wrapper");
+        stateWrapper.find("#job_pause").attr("disabled", "");
+        stateWrapper.find("#job_pause span:nth-of-type(1)").text("Pause");
+        stateWrapper.find("#job_pause span:nth-of-type(2)").text("Resume");
+    };
     // Add custom validator for csv strings (no inner whitespace)
     const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
     const csvStringComponentRegex = /[A-Z]\d+/gim;
     $.validator.addMethod('csvString', function (value) {
-        console.log("Validating csvString: " + value)
+        console.log("Validating csvString: " + value);
         // We will allow 0 length trimmed strings
         if (value.length > 0) {
             if (!value.match(csvStringRegex))
@@ -126,13 +128,13 @@ $(function () {
         function (value, element, param) {
             var i = parseFloat(value);
             var j = parseFloat($(param).val());
-            return (i <= j) ? true : false;
+            return (i <= j);
         });
     $.validator.addMethod('greaterThanOrEqual',
         function (value, element, param) {
             var i = parseFloat(value);
             var j = parseFloat($(param).val());
-            return (i >= j) ? true : false;
+            return (i >= j);
         });
     $.validator.addMethod('lessThan',
         function (value, element, param) {
@@ -140,10 +142,10 @@ $(function () {
             var $target = $(param);
 
             // I we didn't find a target, return true
-            if ($target.size() == 0)
+            if ($target.size() === 0)
                 return true;
             var j = parseFloat($target.val());
-            return (i < j) ? true : false;
+            return (i < j);
         });
     $.validator.addMethod('greaterThan',
         function (value, element, param) {
@@ -151,10 +153,10 @@ $(function () {
             var $target = $(param);
 
             // I we didn't find a target, return true
-            if ($target.size() == 0)
+            if ($target.size() === 0)
                 return true;
             var j = parseFloat($target.val());
-            return (i > j) ? true : false;
+            return (i > j);
         });
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {
@@ -187,9 +189,9 @@ $(function () {
     ko.extenders.numeric = function (target, precision) {
         var result = ko.dependentObservable({
             read: function () {
-                val = target()
+                val = target();
                 if (val == null)
-                    return Octolapse.NullNumericText
+                    return Octolapse.NullNumericText;
                 return val.toFixed(precision);
             },
             write: target
@@ -200,15 +202,14 @@ $(function () {
     };
     Octolapse.ToTime = function (seconds) {
         if (val == null)
-            return Octolapse.NullTimeText
+            return Octolapse.NullTimeText;
         var utcSeconds = seconds;
         var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
         d.setUTCSeconds(utcSeconds);
-        var time = d.getHours() + ":"
+        return d.getHours() + ":"
             + d.getMinutes() + ":"
             + d.getSeconds();
-        return time;
-    }
+    };
 
     Octolapse.ToTimer = function (seconds) {
         if (seconds == null)
@@ -220,13 +221,12 @@ $(function () {
         if (hours > 0) {
             return ("" + hours).slice(-2) + " Hrs"
         }
-        
+
         seconds %= 3600;
         minutes = Math.floor(seconds / 60);
         seconds = seconds % 60;
-        return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);;
-        
-    }
+        return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
+    };
 
     Octolapse.ToCompactInt = function (value) {
         var newValue = value;
@@ -235,22 +235,22 @@ $(function () {
             var suffixNum = Math.floor(("" + value).length / 3);
             var shortValue = '';
             for (var precision = 2; precision >= 1; precision--) {
-                shortValue = parseFloat((suffixNum != 0 ? (value / Math.pow(1000, suffixNum)) : value).toPrecision(precision));
+                shortValue = parseFloat((suffixNum !== 0 ? (value / Math.pow(1000, suffixNum)) : value).toPrecision(precision));
                 var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g, '');
                 if (dotLessShortValue.length <= 2) { break; }
             }
-            if (shortValue % 1 != 0) shortNum = shortValue.toFixed(1);
+            if (shortValue % 1 !== 0) shortNum = shortValue.toFixed(1);
             newValue = shortValue + suffixes[suffixNum];
         }
         return newValue;
-    }
+    };
 
 
     Octolapse.NullTimeText = "none";
     ko.extenders.time = function (target, options) {
         var result = ko.dependentObservable({
             read: function () {
-                val = target()
+                val = target();
                 return Octolapse.ToTime(val)
             },
             write: target
@@ -264,30 +264,30 @@ $(function () {
         Octolapse.Globals = self;
 
         self.loginState = parameters[0];
-        Octolapse.PrinterStatus = parameters[1]
+        Octolapse.PrinterStatus = parameters[1];
         // Global Values
-        self.show_position_state_changes = ko.observable(false)
-        self.show_position_changes = ko.observable(false)
-        self.show_extruder_state_changes = ko.observable(false)
-        self.show_trigger_state_changes = ko.observable(false)
-        self.auto_reload_latest_snapshot = ko.observable(false)
+        self.show_position_state_changes = ko.observable(false);
+        self.show_position_changes = ko.observable(false);
+        self.show_extruder_state_changes = ko.observable(false);
+        self.show_trigger_state_changes = ko.observable(false);
+        self.auto_reload_latest_snapshot = ko.observable(false);
         self.auto_reload_frames = ko.observable(5);
-        self.is_admin = ko.observable(false)
+        self.is_admin = ko.observable(false);
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
         self.show_navbar_when_not_printing = ko.observable(false);
         // Create a guid to uniquely identify this client.
-        self.client_id = Octolapse.guid()
+        self.client_id = Octolapse.guid();
         // Have we loaded the state yet?
         self.HasLoadedState = false;
-        
+
 
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
         };
         self.onAfterBinding = function () {
             self.loadState();
-            
+
         };
 
         self.loadState = function () {
@@ -301,10 +301,10 @@ $(function () {
                 dataType: "json",
                 success: function (result) {
                     //console.log("Main Settings have been loaded.  Waiting for message");
-                    
+
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    
+
                     alert("Octolapse could not load the current state.  Please try again in a few minutes, or check plugin_octolapse.log in the 'Logs' menu for exceptions.");
                 }
             });
@@ -312,25 +312,25 @@ $(function () {
         self.onUserLoggedIn = function (user) {
             //console.log("octolapse.status.js - User Logged In.  User: " + user)
             self.is_admin(self.loginState.isAdmin());
-        }
+        };
         self.onUserLoggedOut = function () {
             //console.log("octolapse.status.js - User Logged Out")
             self.is_admin(false);
-        }
+        };
         self.onEventPrintResumed = function (payload) {
             Octolapse.EnableResumeButton()
-        }
+        };
         self.onEventPrintCancelled = function (payload) {
             Octolapse.EnableResumeButton()
-        }
+        };
         self.onEventPrintFailed = function (payload) {
             Octolapse.EnableResumeButton()
-        }
+        };
         self.onEventPrintDone = function (payload) {
             Octolapse.EnableResumeButton()
-        }
+        };
         self.updateState = function (state) {
-            
+
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
@@ -346,7 +346,7 @@ $(function () {
             if (state.TriggerState != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');
                 Octolapse.Status.updateTriggerStates(state.TriggerState);
-                
+
             }
             if (state.MainSettings != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');
@@ -355,7 +355,7 @@ $(function () {
                 // detect changes to auto_reload_latest_snapshot
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
                 Octolapse.Globals.update(state.MainSettings);
-                if (cur_auto_reload_latest_snapshot != Octolapse.Globals.auto_reload_latest_snapshot()) {
+                if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
@@ -370,68 +370,68 @@ $(function () {
                 Octolapse.Status.updateLatestSnapshotImage(true);
                 Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
-            
+
             self.HasLoadedState = true;
         };
         self.update = function (settings) {
             // enabled
             if (ko.isObservable(settings.is_octolapse_enabled))
-                self.enabled(settings.is_octolapse_enabled())
+                self.enabled(settings.is_octolapse_enabled());
             else
-                self.enabled(settings.is_octolapse_enabled)
+                self.enabled(settings.is_octolapse_enabled);
             // self.auto_reload_latest_snapshot
             if (ko.isObservable(settings.auto_reload_latest_snapshot))
-                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot())
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
             else
-                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot)
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
             //auto_reload_frames
             if (ko.isObservable(settings.auto_reload_frames))
-                self.auto_reload_frames(settings.auto_reload_frames())
+                self.auto_reload_frames(settings.auto_reload_frames());
             else
-                self.auto_reload_frames(settings.auto_reload_frames)
+                self.auto_reload_frames(settings.auto_reload_frames);
             // navbar_enabled
             if (ko.isObservable(settings.show_navbar_icon))
-                self.navbar_enabled(settings.show_navbar_icon())
+                self.navbar_enabled(settings.show_navbar_icon());
             else
-                self.navbar_enabled(settings.show_navbar_icon)
+                self.navbar_enabled(settings.show_navbar_icon);
 
             if (ko.isObservable(settings.show_navbar_when_not_printing))
-                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing())
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
             else
-                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing)
-            
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
+
 
             if (ko.isObservable(settings.show_position_state_changes))
-                self.show_position_state_changes(settings.show_position_state_changes())
+                self.show_position_state_changes(settings.show_position_state_changes());
             else
-                self.show_position_state_changes(settings.show_position_state_changes)
+                self.show_position_state_changes(settings.show_position_state_changes);
 
             if (ko.isObservable(settings.show_position_changes))
-                self.show_position_changes(settings.show_position_changes())
+                self.show_position_changes(settings.show_position_changes());
             else
-                self.show_position_changes(settings.show_position_changes)
+                self.show_position_changes(settings.show_position_changes);
 
             if (ko.isObservable(settings.show_extruder_state_changes))
-                self.show_extruder_state_changes(settings.show_extruder_state_changes())
+                self.show_extruder_state_changes(settings.show_extruder_state_changes());
             else
-                self.show_extruder_state_changes(settings.show_extruder_state_changes)
+                self.show_extruder_state_changes(settings.show_extruder_state_changes);
 
             if (ko.isObservable(settings.show_trigger_state_changes))
-                self.show_trigger_state_changes(settings.show_trigger_state_changes())
+                self.show_trigger_state_changes(settings.show_trigger_state_changes());
             else
                 self.show_trigger_state_changes(settings.show_trigger_state_changes)
 
         };
         // Handle Plugin Messages from Server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if (plugin != "octolapse") {
+            if (plugin !== "octolapse") {
                 return;
             }
             switch (data.type) {
                 case "settings-changed":
                     {
                         // Was this from us?
-                        if (self.client_id != data.client_id && self.is_admin())
+                        if (self.client_id !== data.client_id && self.is_admin())
                         {
                             if (!Octolapse.IsShowingSettingsChangedPopup)
                             {
@@ -505,7 +505,7 @@ $(function () {
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);
                         if (!Octolapse.HasTakenFirstSnapshot) {
-                            Octolapse.HasTakenFirstSnapshot = true
+                            Octolapse.HasTakenFirstSnapshot = true;
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container', true);
                             Octolapse.Status.updateLatestSnapshotThumbnail(true);
@@ -575,7 +575,7 @@ $(function () {
                                 Octolapse.displayPopup(options);
                             }
                         }
-                        
+
                     }
                     break;
                 case "synchronize-failed":
@@ -612,7 +612,7 @@ $(function () {
                 case "timelapse-stopped":
                     {
                         //console.log('octolapse.js - timelapse-stopped');
-                        Octolapse.Status.onTimelapseStop()
+                        Octolapse.Status.onTimelapseStop();
 
                         var options = {
                             title: 'Octolapse Timelapse Stopped',
@@ -649,16 +649,16 @@ $(function () {
                         };
                         Octolapse.displayPopupForKey(options, "position-error");
                     }
+                    break;
                 default:
                     {
                         //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
                     }
-                    break;
             }
         };
 
-        
-    }
+
+    };
     OCTOPRINT_VIEWMODELS.push([
         OctolapseViewModel
         , ["loginStateViewModel", "printerStateViewModel"]
