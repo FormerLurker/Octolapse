@@ -228,7 +228,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         requestValues = flask.request.get_json()
         profile = requestValues["profile"]
         cameraProfile = Camera(profile)
-        results = camera.TestCamera(cameraProfile)
+        results = camera.test_camera(cameraProfile)
         if results[0]:
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
         else:
@@ -257,7 +257,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def ApplyCameraSettings(self, cameraProfile):
         cameraControl = camera.CameraControl(
             cameraProfile, self.OnCameraSettingsSuccess, self.OnCameraSettingsFail, self.OnCameraSettingsCompelted)
-        cameraControl.ApplySettings()
+        cameraControl.apply_settings()
 
     def TimelapseFolderPath(self):
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())

@@ -44,7 +44,7 @@ class CaptureSnapshot(object):
         info.FileName = "{0}.{1}".format(snapshotGuid, "jpg")
         info.DirectoryName = utility.get_snapshot_temp_directory(
             self.DataDirectory)
-        url = camera.FormatRequestTemplate(
+        url = camera.format_request_template(
             self.Camera.address, self.Camera.snapshot_request_template, "")
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
         newSnapshotJob = SnapshotJob(
