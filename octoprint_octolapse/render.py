@@ -41,7 +41,6 @@ class Render(object):
         self.OnAfterSyncFail = onAfterSyncFail
         self.OnAfterSycnSuccess = onAfterSycnSuccess
         self.OnComplete = onComplete
-
         self.TimelapseRenderJobs = []
 
     def Process(self, printName, printStartTime, printEndTime):
@@ -442,11 +441,8 @@ class TimelapseRenderJob(object):
                     return
 
                 self._on_render_complete()
-                cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
-                if cleanSnapshots:
-                    self._CleanSnapshots()
-
                 finalFileName = self._baseOutputFileName
+
                 if self._synchronize:
                     finalFileName = "{0}{1}{2}".format(
                         self._octoprintTimelapseFolder, os.sep,
@@ -491,23 +487,6 @@ class TimelapseRenderJob(object):
             return "flv1"
         else:
             return defaultCodec
-
-    def _CleanSnapshots(self):
-
-        # get snapshot directory
-        self._debug.LogSnapshotClean(
-            "Cleaning snapshots from: {0}".format(self._capture_dir))
-
-        path = os.path.dirname(self._capture_dir + os.sep)
-        if os.path.isdir(path):
-            try:
-                shutil.rmtree(path)
-                self._debug.LogSnapshotClean("Snapshots cleaned.")
-            except Exception as e:
-                self._debug.LogException(e)
-        else:
-            self._debug.LogSnapshotClean(
-                "Snapshot - No need to clean snapshots: they have already been removed.")
 
     @classmethod
     def _create_ffmpeg_command_string(
