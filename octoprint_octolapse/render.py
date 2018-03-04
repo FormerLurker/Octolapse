@@ -42,13 +42,13 @@ class Render(object):
         self.OnAfterSyncFail = onAfterSyncFail
         self.OnAfterSycnSuccess = onAfterSycnSuccess
         self.OnComplete = onComplete
+        self.CaptureSnapshot = CaptureSnapshot(self.Settings, self.DataDirectory, printStartTime)
 
 
         self.TimelapseRenderJobs = []
 
     def Process(self, printName, printStartTime, printEndTime):
         self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
-        self.CaptureSnapshot = CaptureSnapshot(self.Settings, self.DataDirectory, printStartTime)
         # Get the capture file and directory info
         snapshotDirectory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
@@ -449,7 +449,7 @@ class TimelapseRenderJob(object):
                 self._on_render_complete()
                 cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
                 if cleanSnapshots:
-                    self._captureSnapshot.CleanSnapshots(self._capture_dir)
+                    self._captureSnapshot.clean_snapshots(self._capture_dir)
 
                 finalFileName = self._baseOutputFileName
                 if self._synchronize:
