@@ -15,9 +15,9 @@ $(function() {
         self.addEditTemplateName = settings.addEditTemplateName;
         self.profileValidationRules = settings.profileValidationRules;
         self.bindingElementId = settings.bindingElementId;
-        self.addUpdatePath = settings.addUpdatePath
-        self.removeProfilePath = settings.removeProfilePath
-        self.setCurrentProfilePath = settings.setCurrentProfilePath
+        self.addUpdatePath = settings.addUpdatePath;
+        self.removeProfilePath = settings.removeProfilePath;
+        self.setCurrentProfilePath = settings.setCurrentProfilePath;
         self.profileTypeName = settings.profileTypeName;
         // Created a sorted observable
         self.profiles_sorted = ko.computed(function() { return Octolapse.nameSort(self.profiles) });
@@ -29,8 +29,8 @@ $(function() {
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            isNewProfile = profile().guid() == "";
-            var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName }
+            isNewProfile = profile().guid() === "";
+            var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName };
             $.ajax({
                 url: "/plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
@@ -61,11 +61,11 @@ $(function() {
                     alert("Unable to add/update the " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
-        }
+        };
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
             if (confirm("Are you sure you want to permanently erase the profile:'" + settings.profileTypeName + "'?")) {
-                var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
+                var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
                 $.ajax({
                     url: "/plugin/octolapse/" + self.removeProfilePath,
                     type: "POST",
@@ -82,10 +82,10 @@ $(function() {
                     }
                 });
             }
-        }
+        };
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
-            var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName }
+            var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
             $.ajax({
                 url: "/plugin/octolapse/" + self.setCurrentProfilePath,
                 type: "POST",
@@ -102,7 +102,7 @@ $(function() {
             });
         };
         /*
-            Profile Create/Retrieve 
+            Profile Create/Retrieve
         */
         // Creates a copy of an existing profile from the supplied guid.  If no guid is supplied (null or empty), it returns a new profile based on the default_profile settings
         self.getNewProfile = function(guid) {
@@ -114,15 +114,14 @@ $(function() {
                 newProfile = new self.profileViewModelCreate(ko.toJS(self.getProfileByGuid(guid))); // Create our profile viewmodel
             }
             return newProfile;
-        }
+        };
         // retrieves a profile fome the profiles array by GUID.
         // This isn't a particularly fast thing, so don't do it too often.
         self.getProfileByGuid = function(guid) {
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
                     itemGuid = item.guid();
-                    var matchFound = itemGuid == guid;
-                    return matchFound
+                    return itemGuid === guid
                 }
             );
             if (index < 0) {
@@ -130,14 +129,14 @@ $(function() {
                 return null;
             }
             return self.profiles()[index];
-        }
+        };
         // Returns the current profile (the one with current_profile_guid = guid)
         self.currentProfile = function() {
             var guid = self.current_profile_guid();
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
                     itemGuid = item.guid();
-                    var matchFound = itemGuid == guid;
+                    var matchFound = itemGuid === guid;
                     if (matchFound)
                         return matchFound
                 }
@@ -147,10 +146,10 @@ $(function() {
                 return null;
             }
             return self.profiles()[index];
-        }
+        };
         // TODO:  This is not yet implemented in the new settings.  Well, it's implemented, but there's no button yet.  Add that button, test and (hopefully) remember to remove this comment
         self.getResetProfile = function(currentProfile) {
-            defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile))
+            defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile));
             defaultProfileClone.name(currentProfile.name());
             defaultProfileClone.guid(currentProfile.guid());
             return defaultProfileClone;
@@ -167,13 +166,13 @@ $(function() {
             if (guid == null) {
                 isNew = true;
                 title = "Add New " + settings.profileTypeName +" Profile";
-                addEditObservable(self.getNewProfile())
+                addEditObservable(self.getNewProfile());
                 addEditObservable().name("New " + settings.profileTypeName);
                 addEditObservable().guid("");
             }
             else {
                 newProfile = self.getNewProfile(guid);
-                if (isCopy == true)
+                if (isCopy === true)
                 {
                     newProfile.guid("");
                     newProfile.name(newProfile.name() + " - Copy");
@@ -184,8 +183,8 @@ $(function() {
                     title = _.sprintf("Edit " + settings.profileTypeName + " \"%(name)s\"", { name: newProfile.name() });
                 }
                 addEditObservable(newProfile);
-                
-                
+
+
             }
             // Open the modal
             Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)) },this);

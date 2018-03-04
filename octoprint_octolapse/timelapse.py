@@ -84,13 +84,13 @@ class Timelapse(object):
         self.Printer = Printer(self.Settings.CurrentPrinter())
         self.Rendering = Rendering(self.Settings.CurrentRendering())
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, printStartTime=self.PrintStartTime)
+            self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
         self.Position = Position(
             self.Settings, octoprintPrinterProfile, g90InfluencesExtruder)
         self.State = TimelapseState.WaitingForTrigger
         self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
         self.Triggers = Triggers(settings)
-        self.Triggers.Create()
+        self.Triggers.create()
         # send an initial state message
         self._onTimelapseStart()
 
@@ -112,7 +112,7 @@ class Timelapse(object):
                 if self.Settings.show_trigger_state_changes and self.Triggers is not None:
                     triggerState = {
                         "Name": self.Triggers.Name,
-                        "Triggers": self.Triggers.StateToList()
+                        "Triggers": self.Triggers.state_to_list()
                     }
             stateDict = {
                 "Extruder": extruderDict,
@@ -169,7 +169,7 @@ class Timelapse(object):
                 return
             elif self.State < TimelapseState.WaitingToRender:
                 self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Paused.")
-                self.Triggers.Pause()
+                self.Triggers.pause()
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
@@ -178,7 +178,7 @@ class Timelapse(object):
             if self.State == TimelapseState.Idle:
                 return
             elif self.State < TimelapseState.WaitingToRender:
-                self.Triggers.Resume()
+                self.Triggers.resume()
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
 
@@ -188,7 +188,7 @@ class Timelapse(object):
                 self.Settings is None
                 or self.State == TimelapseState.Idle
                 or self.State == TimelapseState.WaitingToRender
-                or self.Triggers.Count() < 1
+                or self.Triggers.count() < 1
             ):
                 return False
             return True
@@ -246,11 +246,11 @@ class Timelapse(object):
             elif (self.State == TimelapseState.WaitingForTrigger
                   and self.OctoprintPrinter.is_printing()
                   and not self.Position.HasPositionError(0)):
-                self.Triggers.Update(self.Position, cmd)
+                self.Triggers.update(self.Position, cmd)
 
                 # If our triggers have changed, update our dict
-                if self.Settings.show_trigger_state_changes and self.Triggers.HasChanged():
-                    triggerChangeList = self.Triggers.ChangesToList()
+                if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
+                    triggerChangeList = self.Triggers.changes_to_list()
 
                 if self.GcodeQueuing_IsTriggering(cmd, isSnapshotGcodeCommand):
                     # Undo the last position update, we're not going to be using it!
@@ -314,7 +314,7 @@ class Timelapse(object):
                 return None
             # see if the PREVIOUS command triggered (that means current gcode gets sent if the trigger[0]
             # is triggering
-            currentTrigger = self.Triggers.GetFirstTriggering(1)
+            currentTrigger = self.Triggers.get_first_triggering(1)
 
             if currentTrigger is not None:  # We're triggering
                 self.Settings.CurrentDebugProfile().LogTriggering("A snapshot is triggering")
@@ -427,7 +427,7 @@ class Timelapse(object):
             return None
         isWaiting = False
         # Loop through all of the active currentTriggers
-        waitingTrigger = self.Triggers.GetFirstWaiting()
+        waitingTrigger = self.Triggers.get_first_waiting()
         if waitingTrigger is not None:
             return True
         return False
@@ -648,9 +648,9 @@ class Timelapse(object):
     def _takeSnapshot(self):
         self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
         try:
-            self.CaptureSnapshot.Snap(
-                utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.SnapshotCount,
-                onComplete=self._onSnapshotComplete, onSuccess=self._onSnapshotSuccess, onFail=self._onSnapshotFail
+            self.CaptureSnapshot.snap(
+                utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
+                on_complete=self._onSnapshotComplete, on_success=self._onSnapshotSuccess, on_fail=self._onSnapshotFail
             )
         except Exception as e:
             self.Settings.CurrentDebugProfile().LogException(e)
@@ -721,7 +721,7 @@ class Timelapse(object):
                 onRenderComplete=self._onRenderComplete, onAfterSyncFail=self._onSynchronizeRenderingFail,
                 onAfterSycnSuccess=self._onSynchronizeRenderingComplete, onComplete=self._onRenderEnd
             )
-            timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(
+            timelapseRenderJob.Process(utility.get_currently_printing_filename(
                 self.OctoprintPrinter), self.PrintStartTime, time.time())
 
             return True
@@ -844,7 +844,7 @@ class Timelapse(object):
         self.State = TimelapseState.Idle
         self.HasSentInitialStatus = False
         if self.Triggers is not None:
-            self.Triggers.Reset()
+            self.Triggers.reset()
         self.CommandIndex = -1
         self.SnapshotCount = 0
         self.PrintStartTime = None

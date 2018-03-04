@@ -180,32 +180,32 @@ class Command(object):
                 else:
                     self.Parameters = parameters
 
-    def DisplayString(self):
-        if self.DisplayTemplate is None:
-            return self.Gcode()
-        output = self.DisplayTemplate
-        safeDict = utility.SafeDict()
-        for key in self.Parameters:
-            value = self.Parameters[key].Value
-            safeDict.clear()
-            if value is None:
-                value = "None"
-
-            safeDict[key] = value
-            output = string.Formatter().vformat(output, (), safeDict)
-
-        if self.CommandParts.Comment is not None:
-            safeDict.clear()
-            safeDict["Comment"] = self.CommentSeparator + \
-                                  self.CommandParts.Comment
-            safeDict["CommentText"] = self.CommandParts.Comment
-            output = string.Formatter().vformat(output, (), safeDict)
-        else:
-            safeDict["Comment"] = ""
-            safeDict["CommentText"] = ""
-            output = string.Formatter().vformat(output, (), safeDict)
-
-        return output
+    # def DisplayString(self):
+    #     if self.DisplayTemplate is None:
+    #         return self.Gcode()
+    #     output = self.DisplayTemplate
+    #     safeDict = utility.SafeDict()
+    #     for key in self.Parameters:
+    #         value = self.Parameters[key].Value
+    #         safeDict.clear()
+    #         if value is None:
+    #             value = "None"
+    #
+    #         safeDict[key] = value
+    #         output = string.Formatter().vformat(output, (), safeDict)
+    #
+    #     if self.CommandParts.Comment is not None:
+    #         safeDict.clear()
+    #         safeDict["Comment"] = self.CommentSeparator + \
+    #                               self.CommandParts.Comment
+    #         safeDict["CommentText"] = self.CommandParts.Comment
+    #         output = string.Formatter().vformat(output, (), safeDict)
+    #     else:
+    #         safeDict["Comment"] = ""
+    #         safeDict["CommentText"] = ""
+    #         output = string.Formatter().vformat(output, (), safeDict)
+    #
+    #     return output
 
     def ToString(self, reform=False):
         # if we have gcode, just return it (duh...)

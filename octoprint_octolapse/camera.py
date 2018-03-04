@@ -1,57 +1,60 @@
 # coding=utf-8
 
-# This file is subject to the terms and conditions defined in
-# file called 'LICENSE', which is part of this source code package.
-import logging
-import requests
 import sys
 import threading
 import uuid
+
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+import requests
+# Todo:  Do we need to add this to setup.py?
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import SSLError
 
 
-def FormatRequestTemplate(cameraAddress, template, value):
-    return template.format(camera_address=cameraAddress, value=value)
+def format_request_template(camera_address, template, value):
+    return template.format(camera_address=camera_address, value=value)
 
 
-def TestCamera(cameraProfile, timeoutSeconds=2):
-    url = FormatRequestTemplate(
-        cameraProfile.address, cameraProfile.snapshot_request_template, "")
+def test_camera(camera_profile, timeout_seconds=2):
+    url = format_request_template(
+        camera_profile.address, camera_profile.snapshot_request_template, "")
     try:
-        if len(cameraProfile.username) > 0:
-            r = requests.get(url, auth=HTTPBasicAuth(cameraProfile.username, cameraProfile.password),
-                             verify=not cameraProfile.ignore_ssl_error, timeout=float(timeoutSeconds))
+        if len(camera_profile.username) > 0:
+            r = requests.get(url, auth=HTTPBasicAuth(camera_profile.username, camera_profile.password),
+                             verify=not camera_profile.ignore_ssl_error, timeout=float(timeout_seconds))
         else:
             r = requests.get(
-                url, verify=not cameraProfile.ignore_ssl_error, timeout=float(timeoutSeconds))
+                url, verify=not camera_profile.ignore_ssl_error, timeout=float(timeout_seconds))
         if r.status_code == requests.codes.ok:
             if 'content-length' in r.headers and r.headers["content-length"] == 0:
-                failReason = "Camera Test failed - The request contained no data"
+                fail_reason = "Camera Test failed - The request contained no data"
             elif "image/jpeg" not in r.headers["content-type"].lower():
-                failReason = "Camera test failed - The returned data was not an image"
+                fail_reason = "Camera test failed - The returned data was not an image"
             else:
                 return True, ""
         else:
-            failReason = "Camera Test Failed - An invalid status code was returned from the camera:{0}".format(
+            fail_reason = "Camera Test Failed - An invalid status code was returned from the camera:{0}".format(
                 r.status_code)
-    except:
-        type = sys.exc_info()[0]
+    except (SSLError, Exception):
+        # ToDo:  catch only expected exceptions.  Needs testing to figure out which ones these are.
+        exception_type = sys.exc_info()[0]
         value = sys.exc_info()[1]
-        failReason = "Camera Test Failed - An exception of type:{0} was raised during the test!  Error:{1}".format(
-            type, value)
-    return False, failReason
+        fail_reason = "Camera Test Failed - An exception of type:{0} was raised during the test!  Error:{1}".format(
+            exception_type, value)
+    return False, fail_reason
 
 
 class CameraControl(object):
-    def __init__(self, camera, onSuccess=None, onFail=None, onComplete=None, timeoutSeconds=2.0):
+    def __init__(self, camera, on_success=None, on_fail=None, on_complete=None, timeout_seconds=2.0):
         self.Camera = camera
-        self.TimeoutSeconds = timeoutSeconds
-        self.OnSuccess = onSuccess
-        self.OnFail = onFail
-        self.OnComplete = onComplete
+        self.TimeoutSeconds = timeout_seconds
+        self.OnSuccess = on_success
+        self.OnFail = on_fail
+        self.OnComplete = on_complete
 
-    def ApplySettings(self):
-        cameraSettingRequests = [
+    def apply_settings(self):
+        camera_settings_requests = [
             {
                 'template': self.Camera.brightness_request_template,
                 'value': self.Camera.brightness,
@@ -130,7 +133,7 @@ class CameraControl(object):
         ]
 
         if not self.Camera.white_balance_auto:
-            cameraSettingRequests.append({
+            camera_settings_requests.append({
                 'template': self.Camera.white_balance_temperature_request_template,
                 'value': self.Camera.white_balance_temperature,
                 'name': 'white balance temperature'
@@ -138,7 +141,7 @@ class CameraControl(object):
 
         # These settings only work when the exposure type is set to manual, I think.
         if self.Camera.exposure_type == 1:
-            cameraSettingRequests.extend([
+            camera_settings_requests.extend([
                 {
                     'template': self.Camera.exposure_request_template,
                     'value': self.Camera.exposure,
@@ -157,39 +160,40 @@ class CameraControl(object):
             ])
 
         if not self.Camera.autofocus_enabled:
-            cameraSettingRequests.append({
+            camera_settings_requests.append({
                 'template': self.Camera.focus_request_template,
                 'value': self.Camera.focus,
                 'name': 'focus'
             })
 
         # TODO:  Move the static timeout value to settings
-        for request in cameraSettingRequests:
+        for request in camera_settings_requests:
             CameraSettingJob(
                 self.Camera, request,
                 self.TimeoutSeconds,
-                onSuccess=self.OnSuccess,
-                onFail=self.OnFail,
-                onComplete=self.OnComplete
-            ).ProcessAsync()
+                on_success=self.OnSuccess,
+                on_fail=self.OnFail,
+                on_complete=self.OnComplete
+            ).process_async()
 
 
 class CameraSettingJob(object):
     # camera_job_lock = threading.RLock()
 
-    def __init__(self, camera, cameraSettingRequest, timeout, onSuccess=None, onFail=None, onComplete=None):
+    def __init__(self, camera, camera_settings_request, timeout, on_success=None, on_fail=None, on_complete=None):
         camera = camera
-        self.Request = cameraSettingRequest
+        self.Request = camera_settings_request
         self.Address = camera.address
         self.Username = camera.username
         self.Password = camera.password
         self.IgnoreSslError = camera.ignore_ssl_error
         self.TimeoutSeconds = timeout
-        self._on_success = onSuccess
-        self._on_fail = onFail
-        self._on_complete = onComplete
+        self._on_success = on_success
+        self._on_fail = on_fail
+        self._on_complete = on_complete
+        self._thread = None
 
-    def ProcessAsync(self):
+    def process_async(self):
         self._thread = threading.Thread(
             target=self._process, name="CameraSettingChangeJob_{name}".format(name=str(uuid.uuid4())))
         self._thread.daemon = True
@@ -198,13 +202,13 @@ class CameraSettingJob(object):
     def _process(self):
         # with self.camera_job_lock:
 
-        errorMessages = []
-        success = None
+        error_messages = []
+        success = False
 
         template = self.Request['template']
         value = self.Request['value']
-        settingName = self.Request['name']
-        url = FormatRequestTemplate(self.Address, template, value)
+        setting_name = self.Request['name']
+        url = format_request_template(self.Address, template, value)
         try:
             if len(self.Username) > 0:
                 r = requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),
@@ -213,27 +217,27 @@ class CameraSettingJob(object):
                 r = requests.get(url, verify=not self.IgnoreSslError,
                                  timeout=float(self.TimeoutSeconds))
 
-            if r.status_code != requests.codes.ok:
-                success = False
-                errorMessages.append(
-                    "Camera - Updated Settings - {0}:{1}, status code received was not OK.  StatusCode:{1}, URL:{2}".format(
-                        settingName, value))
-        except:
-            type = sys.exc_info()[0]
+            if r.status_code == requests.codes.ok:
+                success = True
+            else:
+                error_messages.append(
+                    "Camera - Updated Settings - {0}:{1}, status code received was not OK.  "
+                    "StatusCode:{2}, URL:{3}".format(
+                        setting_name, value, r.status_code, url))
+        except (SSLError, Exception):
+            # Todo:  Figure out which exceptions to catch here
+            exception_type = sys.exc_info()[0]
             value = sys.exc_info()[1]
-            success = False
-            errorMessages.append(
-                "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the following URL:{2}, Error:{3}".format(
-                    type, settingName, url, value))
-
-        if success != False:
-            success = True
+            error_messages.append(
+                "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the "
+                "following URL:{2}, Error:{3}".format(
+                    exception_type, setting_name, url, value))
 
         if success:
-            self._notify_callback("success", value, settingName, template)
+            self._notify_callback("success", value, setting_name, template)
         else:
             self._notify_callback(
-                "fail", value, settingName, template, errorMessages)
+                "fail", value, setting_name, template, error_messages)
 
         self._notify_callback("complete")
 

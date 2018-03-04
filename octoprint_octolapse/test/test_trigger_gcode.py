@@ -36,53 +36,53 @@ class Test_GcodeTrigger(unittest.TestCase):
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = GcodeTrigger(self.Settings)
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send a command that is NOT the snapshot command using the defaults
-        trigger.Update(position, "NotTheSnapshotCommand")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "NotTheSnapshotCommand")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send a command that is the snapshot command without the axis being homes
-        trigger.Update(position, "snap")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "snap")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # reset, set relative extruder and absolute xyz, home the axis, and resend the snap command, should wait since we require
         # the home command to complete (sent to printer) before triggering
         position.Update("M83")
         position.Update("G90")
         position.Update("G28")
-        trigger.Update(position, "snap")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position, "snap")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # try again, Snap is encountered, but it must be the previous command to trigger
         position.Update("G0 X0 Y0 Z0 E1 F0")
-        trigger.Update(position, "G0 X0 Y0 Z0 E1 F0")
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "G0 X0 Y0 Z0 E1 F0")
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try again, but this time set RequireZHop to true
         trigger.RequireZHop = True
-        trigger.Update(position, "snap")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position, "snap")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
         # send another command to see if we are still waiting
-        trigger.Update(position, "NotTheSnapshotCommand")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position, "NotTheSnapshotCommand")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
         # fake a zhop
         position.IsZHop = lambda x: True
-        trigger.Update(position, "NotTheSnapshotCommand")
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "NotTheSnapshotCommand")
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send a command that is NOT the snapshot command using the defaults
-        trigger.Update(position, "NotTheSnapshotCommand")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "NotTheSnapshotCommand")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # change the snapshot triggers and make sure they are working
         self.Settings.CurrentSnapshot().gcode_trigger_require_zhop = None
@@ -98,15 +98,15 @@ class Test_GcodeTrigger(unittest.TestCase):
         trigger = GcodeTrigger(self.Settings)
 
         # send a command that is the snapshot command using the defaults
-        trigger.Update(position, "snap")
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position, "snap")
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
         # change the extruder state and test
         # should not trigger because trigger tests the previous command
         position.Update("G0 X0 Y0 Z0 E10 F0")
-        trigger.Update(position, "NotTheSnapshotCommand")
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position, "NotTheSnapshotCommand")
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
 
 if __name__ == '__main__':
