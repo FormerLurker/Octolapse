@@ -69,7 +69,7 @@ class SnapshotGcodeGenerator(object):
         self.Snapshot = Snapshot(self.Settings.CurrentSnapshot())
         self.Printer = Printer(self.Settings.CurrentPrinter())
         self.OctoprintPrinterProfile = octoprintPrinterProfile
-        self.BoundingBox = utility.GetBoundingBox(
+        self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprintPrinterProfile)
         self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
         self.HasSnapshotPositionErrors = False
@@ -96,7 +96,7 @@ class SnapshotGcodeGenerator(object):
         coords = dict(X=self.GetSnapshotCoordinate(xPath),
                       Y=self.GetSnapshotCoordinate(yPath))
 
-        if not utility.IsInBounds(self.BoundingBox, x=coords["X"]):
+        if not utility.is_in_bounds(self.BoundingBox, x=coords["X"]):
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coords["X"])
@@ -106,12 +106,12 @@ class SnapshotGcodeGenerator(object):
             if self.Printer.abort_out_of_bounds:
                 coords["X"] = None
             else:
-                coords["X"] = utility.GetClosestInBoundsPosition(
+                coords["X"] = utility.get_closest_in_bounds_position(
                     self.BoundingBox, x=coords["X"])["X"]
                 message += "  Using nearest in-bound position ({0}).".format(
                     coords["X"])
             self.SnapshotPositionErrors += message
-        if not utility.IsInBounds(self.BoundingBox, y=coords["Y"]):
+        if not utility.is_in_bounds(self.BoundingBox, y=coords["Y"]):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coords["Y"])
             self.HasSnapshotPositionErrors = True
@@ -120,7 +120,7 @@ class SnapshotGcodeGenerator(object):
             if self.Printer.abort_out_of_bounds:
                 coords["Y"] = None
             else:
-                coords["Y"] = utility.GetClosestInBoundsPosition(
+                coords["Y"] = utility.get_closest_in_bounds_position(
                     self.BoundingBox, y=coords["Y"])["Y"]
                 message += "  Using nearest in-bound position ({0}).".format(
                     coords["Y"])
@@ -239,7 +239,7 @@ class SnapshotGcodeGenerator(object):
         # Can we hop or is the print too tall?
 
         # todo: detect zhop and only zhop if we are not currently hopping.
-        canZHop = self.Printer.z_hop > 0 and utility.IsInBounds(
+        canZHop = self.Printer.z_hop > 0 and utility.is_in_bounds(
             self.BoundingBox, z=z + self.Printer.z_hop)
         # if we can ZHop, do
         if canZHop and self.ZLift > 0:

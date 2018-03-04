@@ -47,15 +47,15 @@ class Render(object):
     def Process(self, printName, printStartTime, printEndTime):
         self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
         # Get the capture file and directory info
-        snapshotDirectory = utility.GetSnapshotTempDirectory(
+        snapshotDirectory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
-        snapshotFileNameTemplate = utility.GetSnapshotFilename(
+        snapshotFileNameTemplate = utility.get_snapshot_filename(
             printName, printStartTime, utility.SnapshotNumberFormat)
         # get the output file and directory info
-        outputDirectory = utility.GetRenderingDirectory(
+        outputDirectory = utility.get_rendering_directory(
             self.DataDirectory, printName, printStartTime, self.Rendering.output_format, printEndTime)
 
-        outputFilename = utility.GetRenderingBaseFilename(
+        outputFilename = utility.get_rendering_base_filename(
             printName, printStartTime, printEndTime)
 
         job = TimelapseRenderJob(
@@ -146,7 +146,7 @@ class TimelapseRenderJob(object):
         self._output = os.path.join(self._output_dir,
                                     self._output_file_name)
 
-        self._baseOutputFileName = utility.GetFilenameFromFullPath(
+        self._baseOutputFileName = utility.get_filename_from_full_path(
             self._output)
         self._synchronize = (
             self._rendering.sync_with_timelapse and self._rendering.output_format in ["mp4"])

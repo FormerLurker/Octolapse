@@ -90,80 +90,80 @@ class Printer(object):
 
     def Update(self, changes):
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
         if "retract_length" in changes.keys():
-            self.retract_length = utility.getfloat(
+            self.retract_length = utility.get_float(
                 changes["retract_length"], self.retract_length)
         if "retract_speed" in changes.keys():
-            self.retract_speed = utility.getint(
+            self.retract_speed = utility.get_int(
                 changes["retract_speed"], self.retract_speed)
         if "detract_speed" in changes.keys():
-            self.detract_speed = utility.getint(
+            self.detract_speed = utility.get_int(
                 changes["detract_speed"], self.detract_speed)
         if "movement_speed" in changes.keys():
-            self.movement_speed = utility.getint(
+            self.movement_speed = utility.get_int(
                 changes["movement_speed"], self.movement_speed)
         if "snapshot_command" in changes.keys():
-            self.snapshot_command = utility.getstring(
+            self.snapshot_command = utility.get_string(
                 changes["snapshot_command"], self.snapshot_command)
         if "z_hop" in changes.keys():
-            self.z_hop = utility.getfloat(changes["z_hop"], self.z_hop)
+            self.z_hop = utility.get_float(changes["z_hop"], self.z_hop)
         if "z_hop_speed" in changes.keys():
-            self.z_hop_speed = utility.getint(
+            self.z_hop_speed = utility.get_int(
                 changes["z_hop_speed"], self.z_hop_speed)
         if "printer_position_confirmation_tolerance" in changes.keys():
-            self.printer_position_confirmation_tolerance = utility.getfloat(
+            self.printer_position_confirmation_tolerance = utility.get_float(
                 changes["printer_position_confirmation_tolerance"], self.printer_position_confirmation_tolerance)
 
         if "auto_position_detection_commands" in changes.keys():
-            self.auto_position_detection_commands = utility.getstring(
+            self.auto_position_detection_commands = utility.get_string(
                 changes["auto_position_detection_commands"], self.auto_position_detection_commands)
         if "auto_detect_position" in changes.keys():
-            self.auto_detect_position = utility.getbool(
+            self.auto_detect_position = utility.get_bool(
                 changes["auto_detect_position"], self.auto_detect_position)
         if "origin_x" in changes.keys():
-            self.origin_x = utility.getnullablefloat(
+            self.origin_x = utility.get_nullable_float(
                 changes["origin_x"], self.origin_x)
         if "origin_y" in changes.keys():
-            self.origin_y = utility.getnullablefloat(
+            self.origin_y = utility.get_nullable_float(
                 changes["origin_y"], self.origin_y)
         if "origin_z" in changes.keys():
-            self.origin_z = utility.getnullablefloat(
+            self.origin_z = utility.get_nullable_float(
                 changes["origin_z"], self.origin_z)
         if "abort_out_of_bounds" in changes.keys():
-            self.abort_out_of_bounds = utility.getbool(
+            self.abort_out_of_bounds = utility.get_bool(
                 changes["abort_out_of_bounds"], self.abort_out_of_bounds)
         if "override_octoprint_print_volume" in changes.keys():
-            self.override_octoprint_print_volume = utility.getbool(
+            self.override_octoprint_print_volume = utility.get_bool(
                 changes["override_octoprint_print_volume"], self.override_octoprint_print_volume)
 
         if "min_x" in changes.keys():
-            self.min_x = utility.getfloat(changes["min_x"], self.min_x)
+            self.min_x = utility.get_float(changes["min_x"], self.min_x)
         if "max_x" in changes.keys():
-            self.max_x = utility.getfloat(changes["max_x"], self.max_x)
+            self.max_x = utility.get_float(changes["max_x"], self.max_x)
         if "min_y" in changes.keys():
-            self.min_y = utility.getfloat(changes["min_y"], self.min_y)
+            self.min_y = utility.get_float(changes["min_y"], self.min_y)
         if "max_y" in changes.keys():
-            self.max_y = utility.getfloat(changes["max_y"], self.max_y)
+            self.max_y = utility.get_float(changes["max_y"], self.max_y)
         if "min_z" in changes.keys():
-            self.min_z = utility.getfloat(changes["min_z"], self.min_z)
+            self.min_z = utility.get_float(changes["min_z"], self.min_z)
         if "max_z" in changes.keys():
-            self.max_z = utility.getfloat(changes["max_z"], self.max_z)
+            self.max_z = utility.get_float(changes["max_z"], self.max_z)
         if "priming_height" in changes.keys():
-            self.priming_height = utility.getfloat(changes["priming_height"], self.priming_height)
+            self.priming_height = utility.get_float(changes["priming_height"], self.priming_height)
         if "e_axis_default_mode" in changes.keys():
-            self.e_axis_default_mode = utility.getstring(
+            self.e_axis_default_mode = utility.get_string(
                 changes["e_axis_default_mode"], self.e_axis_default_mode)
         if "g90_influences_extruder" in changes.keys():
-            self.g90_influences_extruder = utility.getstring(
+            self.g90_influences_extruder = utility.get_string(
                 changes["g90_influences_extruder"], self.g90_influences_extruder)
         if "xyz_axes_default_mode" in changes.keys():
-            self.xyz_axes_default_mode = utility.getstring(
+            self.xyz_axes_default_mode = utility.get_string(
                 changes["xyz_axes_default_mode"], self.xyz_axes_default_mode)
 
     def ToDict(self):
@@ -245,70 +245,70 @@ class Stabilization(object):
 
     def Update(self, changes):
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
 
         if "x_type" in changes.keys():
-            self.x_type = utility.getstring(changes["x_type"], self.x_type)
+            self.x_type = utility.get_string(changes["x_type"], self.x_type)
         if "x_fixed_coordinate" in changes.keys():
-            self.x_fixed_coordinate = utility.getfloat(
+            self.x_fixed_coordinate = utility.get_float(
                 changes["x_fixed_coordinate"], self.x_fixed_coordinate)
         if "x_fixed_path" in changes.keys():
-            self.x_fixed_path = utility.getstring(
+            self.x_fixed_path = utility.get_string(
                 changes["x_fixed_path"], self.x_fixed_path)
         if "x_fixed_path_loop" in changes.keys():
-            self.x_fixed_path_loop = utility.getbool(
+            self.x_fixed_path_loop = utility.get_bool(
                 changes["x_fixed_path_loop"], self.x_fixed_path_loop)
         if "x_fixed_path_invert_loop" in changes.keys():
-            self.x_fixed_path_invert_loop = utility.getbool(
+            self.x_fixed_path_invert_loop = utility.get_bool(
                 changes["x_fixed_path_invert_loop"], self.x_fixed_path_invert_loop)
         if "x_relative" in changes.keys():
-            self.x_relative = utility.getfloat(
+            self.x_relative = utility.get_float(
                 changes["x_relative"], self.x_relative)
         if "x_relative_print" in changes.keys():
-            self.x_relative_print = utility.getfloat(
+            self.x_relative_print = utility.get_float(
                 changes["x_relative_print"], self.x_relative_print)
         if "x_relative_path" in changes.keys():
-            self.x_relative_path = utility.getstring(
+            self.x_relative_path = utility.get_string(
                 changes["x_relative_path"], self.x_relative_path)
         if "x_relative_path_loop" in changes.keys():
-            self.x_relative_path_loop = utility.getbool(
+            self.x_relative_path_loop = utility.get_bool(
                 changes["x_relative_path_loop"], self.x_relative_path_loop)
         if "x_relative_path_invert_loop" in changes.keys():
-            self.x_relative_path_invert_loop = utility.getbool(
+            self.x_relative_path_invert_loop = utility.get_bool(
                 changes["x_relative_path_invert_loop"], self.x_relative_path_invert_loop)
         if "y_type" in changes.keys():
-            self.y_type = utility.getstring(changes["y_type"], self.y_type)
+            self.y_type = utility.get_string(changes["y_type"], self.y_type)
         if "y_fixed_coordinate" in changes.keys():
-            self.y_fixed_coordinate = utility.getfloat(
+            self.y_fixed_coordinate = utility.get_float(
                 changes["y_fixed_coordinate"], self.y_fixed_coordinate)
         if "y_fixed_path" in changes.keys():
-            self.y_fixed_path = utility.getstring(
+            self.y_fixed_path = utility.get_string(
                 changes["y_fixed_path"], self.y_fixed_path)
         if "y_fixed_path_loop" in changes.keys():
-            self.y_fixed_path_loop = utility.getbool(
+            self.y_fixed_path_loop = utility.get_bool(
                 changes["y_fixed_path_loop"], self.y_fixed_path_loop)
         if "y_fixed_path_invert_loop" in changes.keys():
-            self.y_fixed_path_invert_loop = utility.getbool(
+            self.y_fixed_path_invert_loop = utility.get_bool(
                 changes["y_fixed_path_invert_loop"], self.y_fixed_path_invert_loop)
         if "y_relative" in changes.keys():
-            self.y_relative = utility.getfloat(
+            self.y_relative = utility.get_float(
                 changes["y_relative"], self.y_relative)
         if "y_relative_print" in changes.keys():
-            self.y_relative_print = utility.getfloat(
+            self.y_relative_print = utility.get_float(
                 changes["y_relative_print"], self.y_relative_print)
         if "y_relative_path" in changes.keys():
-            self.y_relative_path = utility.getstring(
+            self.y_relative_path = utility.get_string(
                 changes["y_relative_path"], self.y_relative_path)
         if "y_relative_path_loop" in changes.keys():
-            self.y_relative_path_loop = utility.getbool(
+            self.y_relative_path_loop = utility.get_bool(
                 changes["y_relative_path_loop"], self.y_relative_path_loop)
         if "y_relative_path_invert_loop" in changes.keys():
-            self.y_relative_path_invert_loop = utility.getbool(
+            self.y_relative_path_invert_loop = utility.get_bool(
                 changes["y_relative_path_invert_loop"], self.y_relative_path_invert_loop)
 
     def ToDict(self):
@@ -576,18 +576,18 @@ class Snapshot(object):
         # Initialize all values according to the provided changes, use defaults if
         # the values are null or incorrectly formatted
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
         # gcode trigger members
         if "gcode_trigger_enabled" in changes.keys():
-            self.gcode_trigger_enabled = utility.getbool(
+            self.gcode_trigger_enabled = utility.get_bool(
                 changes["gcode_trigger_enabled"], self.gcode_trigger_enabled)
         if "gcode_trigger_require_zhop" in changes.keys():
-            self.gcode_trigger_require_zhop = utility.getbool(
+            self.gcode_trigger_require_zhop = utility.get_bool(
                 changes["gcode_trigger_require_zhop"], self.gcode_trigger_require_zhop)
         if "gcode_trigger_on_extruding_start" in changes.keys():
             self.gcode_trigger_on_extruding_start = self.GetExtruderTriggerValue(
@@ -624,13 +624,13 @@ class Snapshot(object):
                 changes["gcode_trigger_position_restrictions"])
         # timer trigger members
         if "timer_trigger_enabled" in changes.keys():
-            self.timer_trigger_enabled = utility.getbool(
+            self.timer_trigger_enabled = utility.get_bool(
                 changes["timer_trigger_enabled"], self.timer_trigger_enabled)
         if "timer_trigger_require_zhop" in changes.keys():
-            self.timer_trigger_require_zhop = utility.getbool(
+            self.timer_trigger_require_zhop = utility.get_bool(
                 changes["timer_trigger_require_zhop"], self.timer_trigger_require_zhop)
         if "timer_trigger_seconds" in changes.keys():
-            self.timer_trigger_seconds = utility.getint(
+            self.timer_trigger_seconds = utility.get_int(
                 changes["timer_trigger_seconds"], self.timer_trigger_seconds)
         if "timer_trigger_on_extruding_start" in changes.keys():
             self.timer_trigger_on_extruding_start = self.GetExtruderTriggerValue(
@@ -667,13 +667,13 @@ class Snapshot(object):
                 changes["timer_trigger_position_restrictions"])
         # layer trigger members
         if "layer_trigger_enabled" in changes.keys():
-            self.layer_trigger_enabled = utility.getbool(
+            self.layer_trigger_enabled = utility.get_bool(
                 changes["layer_trigger_enabled"], self.layer_trigger_enabled)
         if "layer_trigger_height" in changes.keys():
-            self.layer_trigger_height = utility.getfloat(
+            self.layer_trigger_height = utility.get_float(
                 changes["layer_trigger_height"], self.layer_trigger_height)
         if "layer_trigger_require_zhop" in changes.keys():
-            self.layer_trigger_require_zhop = utility.getbool(
+            self.layer_trigger_require_zhop = utility.get_bool(
                 changes["layer_trigger_require_zhop"], self.layer_trigger_require_zhop)
         if "layer_trigger_on_extruding_start" in changes.keys():
             self.layer_trigger_on_extruding_start = self.GetExtruderTriggerValue(
@@ -710,13 +710,13 @@ class Snapshot(object):
                 changes["layer_trigger_position_restrictions"])
         # other settings
         if "retract_before_move" in changes.keys():
-            self.retract_before_move = utility.getbool(
+            self.retract_before_move = utility.get_bool(
                 changes["retract_before_move"], self.retract_before_move)
         if "cleanup_after_render_complete" in changes.keys():
-            self.cleanup_after_render_complete = utility.getbool(
+            self.cleanup_after_render_complete = utility.get_bool(
                 changes["cleanup_after_render_complete"], self.cleanup_after_render_complete)
         if "cleanup_after_render_fail" in changes.keys():
-            self.cleanup_after_render_fail = utility.getbool(
+            self.cleanup_after_render_fail = utility.get_bool(
                 changes["cleanup_after_render_fail"], self.cleanup_after_render_fail)
 
     def GetExtruderTriggerValueString(self, value):
@@ -865,50 +865,50 @@ class Rendering(object):
 
     def Update(self, changes):
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
         if "enabled" in changes.keys():
-            self.enabled = utility.getbool(changes["enabled"], self.enabled)
+            self.enabled = utility.get_bool(changes["enabled"], self.enabled)
         if "fps_calculation_type" in changes.keys():
             self.fps_calculation_type = changes["fps_calculation_type"]
         if "run_length_seconds" in changes.keys():
-            self.run_length_seconds = utility.getfloat(
+            self.run_length_seconds = utility.get_float(
                 changes["run_length_seconds"], self.run_length_seconds)
         if "fps" in changes.keys():
-            self.fps = utility.getfloat(changes["fps"], self.fps)
+            self.fps = utility.get_float(changes["fps"], self.fps)
         if "max_fps" in changes.keys():
-            self.max_fps = utility.getfloat(changes["max_fps"], self.max_fps)
+            self.max_fps = utility.get_float(changes["max_fps"], self.max_fps)
         if "min_fps" in changes.keys():
-            self.min_fps = utility.getfloat(changes["min_fps"], self.min_fps)
+            self.min_fps = utility.get_float(changes["min_fps"], self.min_fps)
         if "output_format" in changes.keys():
-            self.output_format = utility.getstring(
+            self.output_format = utility.get_string(
                 changes["output_format"], self.output_format)
 
         if "sync_with_timelapse" in changes.keys():
-            self.sync_with_timelapse = utility.getbool(
+            self.sync_with_timelapse = utility.get_bool(
                 changes["sync_with_timelapse"], self.sync_with_timelapse)
         if "bitrate" in changes.keys():
-            self.bitrate = utility.getbitrate(changes["bitrate"], self.bitrate)
+            self.bitrate = utility.get_bitrate(changes["bitrate"], self.bitrate)
         if "flip_h" in changes.keys():
-            self.flip_h = utility.getbool(changes["flip_h"], self.flip_h)
+            self.flip_h = utility.get_bool(changes["flip_h"], self.flip_h)
         if "flip_v" in changes.keys():
-            self.flip_v = utility.getbool(changes["flip_v"], self.flip_v)
+            self.flip_v = utility.get_bool(changes["flip_v"], self.flip_v)
         if "rotate_90" in changes.keys():
-            self.rotate_90 = utility.getbool(
+            self.rotate_90 = utility.get_bool(
                 changes["rotate_90"], self.rotate_90)
         if "watermark" in changes.keys():
-            self.watermark = utility.getbool(
+            self.watermark = utility.get_bool(
                 changes["watermark"], self.watermark)
 
         if "post_roll_seconds" in changes.keys():
-            self.post_roll_seconds = utility.getfloat(
+            self.post_roll_seconds = utility.get_float(
                 changes["post_roll_seconds"], self.post_roll_seconds)
         if "pre_roll_seconds" in changes.keys():
-            self.pre_roll_seconds = utility.getfloat(
+            self.pre_roll_seconds = utility.get_float(
                 changes["pre_roll_seconds"], self.pre_roll_seconds)
 
     def ToDict(self):
@@ -1003,149 +1003,149 @@ class Camera(object):
 
     def Update(self, changes):
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
         if "delay" in changes.keys():
-            self.delay = utility.getint(
+            self.delay = utility.get_int(
                 changes["delay"], self.delay)
         if "address" in changes.keys():
-            self.address = utility.getstring(changes["address"], self.address)
+            self.address = utility.get_string(changes["address"], self.address)
         if "apply_settings_before_print" in changes.keys():
-            self.apply_settings_before_print = utility.getbool(
+            self.apply_settings_before_print = utility.get_bool(
                 changes["apply_settings_before_print"], self.apply_settings_before_print)
         if "ignore_ssl_error" in changes.keys():
-            self.ignore_ssl_error = utility.getbool(
+            self.ignore_ssl_error = utility.get_bool(
                 changes["ignore_ssl_error"], self.ignore_ssl_error)
         if "username" in changes.keys():
-            self.username = utility.getstring(
+            self.username = utility.get_string(
                 changes["username"], self.username)
         if "password" in changes.keys():
-            self.password = utility.getstring(
+            self.password = utility.get_string(
                 changes["password"], self.password)
 
         if "brightness" in changes.keys():
-            self.brightness = utility.getint(
+            self.brightness = utility.get_int(
                 changes["brightness"], self.brightness)
         if "contrast" in changes.keys():
-            self.contrast = utility.getint(changes["contrast"], self.contrast)
+            self.contrast = utility.get_int(changes["contrast"], self.contrast)
         if "saturation" in changes.keys():
-            self.saturation = utility.getint(
+            self.saturation = utility.get_int(
                 changes["saturation"], self.saturation)
         if "white_balance_auto" in changes.keys():
-            self.white_balance_auto = utility.getbool(
+            self.white_balance_auto = utility.get_bool(
                 changes["white_balance_auto"], self.white_balance_auto)
         if "gain" in changes.keys():
-            self.gain = utility.getint(changes["gain"], self.gain)
+            self.gain = utility.get_int(changes["gain"], self.gain)
         if "powerline_frequency" in changes.keys():
-            self.powerline_frequency = utility.getint(
+            self.powerline_frequency = utility.get_int(
                 changes["powerline_frequency"], self.powerline_frequency)
         if "white_balance_temperature" in changes.keys():
-            self.white_balance_temperature = utility.getint(
+            self.white_balance_temperature = utility.get_int(
                 changes["white_balance_temperature"], self.white_balance_temperature)
         if "sharpness" in changes.keys():
-            self.sharpness = utility.getint(
+            self.sharpness = utility.get_int(
                 changes["sharpness"], self.sharpness)
         if "backlight_compensation_enabled" in changes.keys():
-            self.backlight_compensation_enabled = utility.getbool(
+            self.backlight_compensation_enabled = utility.get_bool(
                 changes["backlight_compensation_enabled"], self.backlight_compensation_enabled)
         if "exposure_type" in changes.keys():
-            self.exposure_type = utility.getint(
+            self.exposure_type = utility.get_int(
                 changes["exposure_type"], self.exposure_type)
         if "exposure" in changes.keys():
-            self.exposure = utility.getint(changes["exposure"], self.exposure)
+            self.exposure = utility.get_int(changes["exposure"], self.exposure)
         if "exposure_auto_priority_enabled" in changes.keys():
-            self.exposure_auto_priority_enabled = utility.getbool(
+            self.exposure_auto_priority_enabled = utility.get_bool(
                 changes["exposure_auto_priority_enabled"], self.exposure_auto_priority_enabled)
         if "pan" in changes.keys():
-            self.pan = utility.getint(changes["pan"], self.pan)
+            self.pan = utility.get_int(changes["pan"], self.pan)
         if "tilt" in changes.keys():
-            self.tilt = utility.getint(changes["tilt"], self.tilt)
+            self.tilt = utility.get_int(changes["tilt"], self.tilt)
         if "autofocus_enabled" in changes.keys():
-            self.autofocus_enabled = utility.getbool(
+            self.autofocus_enabled = utility.get_bool(
                 changes["autofocus_enabled"], self.autofocus_enabled)
         if "focus" in changes.keys():
-            self.focus = utility.getint(changes["focus"], self.focus)
+            self.focus = utility.get_int(changes["focus"], self.focus)
         if "zoom" in changes.keys():
-            self.zoom = utility.getint(changes["zoom"], self.zoom)
+            self.zoom = utility.get_int(changes["zoom"], self.zoom)
         if "led1_mode" in changes.keys():
-            self.led1_mode = utility.getstring(
+            self.led1_mode = utility.get_string(
                 changes["led1_mode"], self.led1_frequency)
         if "led1_frequency" in changes.keys():
-            self.led1_frequency = utility.getint(
+            self.led1_frequency = utility.get_int(
                 changes["led1_frequency"], self.led1_frequency)
         if "jpeg_quality" in changes.keys():
-            self.jpeg_quality = utility.getint(
+            self.jpeg_quality = utility.get_int(
                 changes["jpeg_quality"], self.jpeg_quality)
         if "snapshot_request_template" in changes.keys():
-            self.snapshot_request_template = utility.getstring(
+            self.snapshot_request_template = utility.get_string(
                 changes["snapshot_request_template"], self.snapshot_request_template)
         if "brightness_request_template" in changes.keys():
-            self.brightness_request_template = utility.getstring(
+            self.brightness_request_template = utility.get_string(
                 changes["brightness_request_template"], self.brightness_request_template)
         if "contrast_request_template" in changes.keys():
-            self.contrast_request_template = utility.getstring(
+            self.contrast_request_template = utility.get_string(
                 changes["contrast_request_template"], self.contrast_request_template)
         if "saturation_request_template" in changes.keys():
-            self.saturation_request_template = utility.getstring(
+            self.saturation_request_template = utility.get_string(
                 changes["saturation_request_template"], self.saturation_request_template)
         if "white_balance_auto_request_template" in changes.keys():
-            self.white_balance_auto_request_template = utility.getstring(
+            self.white_balance_auto_request_template = utility.get_string(
                 changes["white_balance_auto_request_template"], self.white_balance_auto_request_template)
         if "gain_request_template" in changes.keys():
-            self.gain_request_template = utility.getstring(
+            self.gain_request_template = utility.get_string(
                 changes["gain_request_template"], self.gain_request_template)
         if "powerline_frequency_request_template" in changes.keys():
-            self.powerline_frequency_request_template = utility.getstring(
+            self.powerline_frequency_request_template = utility.get_string(
                 changes["powerline_frequency_request_template"], self.powerline_frequency_request_template)
         if "white_balance_temperature_request_template" in changes.keys():
-            self.white_balance_temperature_request_template = utility.getstring(
+            self.white_balance_temperature_request_template = utility.get_string(
                 changes["white_balance_temperature_request_template"], self.white_balance_temperature_request_template)
         if "sharpness_request_template" in changes.keys():
-            self.sharpness_request_template = utility.getstring(
+            self.sharpness_request_template = utility.get_string(
                 changes["sharpness_request_template"], self.sharpness_request_template)
         if "backlight_compensation_enabled_request_template" in changes.keys():
-            self.backlight_compensation_enabled_request_template = utility.getstring(
+            self.backlight_compensation_enabled_request_template = utility.get_string(
                 changes["backlight_compensation_enabled_request_template"],
                 self.backlight_compensation_enabled_request_template
             )
         if "exposure_type_request_template" in changes.keys():
-            self.exposure_type_request_template = utility.getstring(
+            self.exposure_type_request_template = utility.get_string(
                 changes["exposure_type_request_template"], self.exposure_type_request_template)
         if "exposure_request_template" in changes.keys():
-            self.exposure_request_template = utility.getstring(
+            self.exposure_request_template = utility.get_string(
                 changes["exposure_request_template"], self.exposure_request_template)
         if "exposure_auto_priority_enabled_request_template" in changes.keys():
-            self.exposure_auto_priority_enabled_request_template = utility.getstring(
+            self.exposure_auto_priority_enabled_request_template = utility.get_string(
                 changes["exposure_auto_priority_enabled_request_template"],
                 self.exposure_auto_priority_enabled_request_template
             )
         if "pan_request_template" in changes.keys():
-            self.pan_request_template = utility.getstring(
+            self.pan_request_template = utility.get_string(
                 changes["pan_request_template"], self.pan_request_template)
         if "tilt_request_template" in changes.keys():
-            self.tilt_request_template = utility.getstring(
+            self.tilt_request_template = utility.get_string(
                 changes["tilt_request_template"], self.tilt_request_template)
         if "autofocus_enabled_request_template" in changes.keys():
-            self.autofocus_enabled_request_template = utility.getstring(
+            self.autofocus_enabled_request_template = utility.get_string(
                 changes["autofocus_enabled_request_template"], self.autofocus_enabled_request_template)
         if "focus_request_template" in changes.keys():
-            self.focus_request_template = utility.getstring(
+            self.focus_request_template = utility.get_string(
                 changes["focus_request_template"], self.focus_request_template)
         if "led1_mode_request_template" in changes.keys():
-            self.led1_mode_request_template = utility.getstring(
+            self.led1_mode_request_template = utility.get_string(
                 changes["led1_mode_request_template"], self.led1_mode_request_template)
         if "led1_frequency_request_template" in changes.keys():
-            self.led1_frequency_request_template = utility.getstring(
+            self.led1_frequency_request_template = utility.get_string(
                 changes["led1_frequency_request_template"], self.led1_frequency_request_template)
         if "jpeg_quality_request_template" in changes.keys():
-            self.jpeg_quality_request_template = utility.getstring(
+            self.jpeg_quality_request_template = utility.get_string(
                 changes["jpeg_quality_request_template"], self.jpeg_quality_request_template)
         if "zoom_request_template" in changes.keys():
-            self.zoom_request_template = utility.getstring(
+            self.zoom_request_template = utility.get_string(
                 changes["zoom_request_template"], self.zoom_request_template)
 
     def ToDict(self):
@@ -1269,112 +1269,112 @@ class DebugProfile(object):
 
     def Update(self, changes):
         if "guid" in changes.keys():
-            self.guid = utility.getstring(changes["guid"], self.guid)
+            self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
-            self.name = utility.getstring(changes["name"], self.name)
+            self.name = utility.get_string(changes["name"], self.name)
         if "description" in changes.keys():
-            self.description = utility.getstring(
+            self.description = utility.get_string(
                 changes["description"], self.description)
         if "enabled" in changes.keys():
-            self.enabled = utility.getbool(changes["enabled"], self.enabled)
+            self.enabled = utility.get_bool(changes["enabled"], self.enabled)
         if "is_test_mode" in changes.keys():
-            self.is_test_mode = utility.getbool(
+            self.is_test_mode = utility.get_bool(
                 changes["is_test_mode"], self.enabled)
         if "log_to_console" in changes.keys():
-            self.log_to_console = utility.getbool(
+            self.log_to_console = utility.get_bool(
                 changes["log_to_console"], self.log_to_console)
         if "position_change" in changes.keys():
-            self.position_change = utility.getbool(
+            self.position_change = utility.get_bool(
                 changes["position_change"], self.position_change)
         if "position_command_received" in changes.keys():
-            self.position_command_received = utility.getbool(
+            self.position_command_received = utility.get_bool(
                 changes["position_command_received"], self.position_command_received)
         if "extruder_change" in changes.keys():
-            self.extruder_change = utility.getbool(
+            self.extruder_change = utility.get_bool(
                 changes["extruder_change"], self.extruder_change)
         if "extruder_triggered" in changes.keys():
-            self.extruder_triggered = utility.getbool(
+            self.extruder_triggered = utility.get_bool(
                 changes["extruder_triggered"], self.extruder_triggered)
         if "trigger_create" in changes.keys():
-            self.trigger_create = utility.getbool(
+            self.trigger_create = utility.get_bool(
                 changes["trigger_create"], self.trigger_create)
         if "trigger_wait_state" in changes.keys():
-            self.trigger_wait_state = utility.getbool(
+            self.trigger_wait_state = utility.get_bool(
                 changes["trigger_wait_state"], self.trigger_wait_state)
         if "trigger_triggering" in changes.keys():
-            self.trigger_triggering = utility.getbool(
+            self.trigger_triggering = utility.get_bool(
                 changes["trigger_triggering"], self.trigger_triggering)
         if "trigger_triggering_state" in changes.keys():
-            self.trigger_triggering_state = utility.getbool(
+            self.trigger_triggering_state = utility.get_bool(
                 changes["trigger_triggering_state"], self.trigger_triggering_state)
         if "trigger_layer_change" in changes.keys():
-            self.trigger_layer_change = utility.getbool(
+            self.trigger_layer_change = utility.get_bool(
                 changes["trigger_layer_change"], self.trigger_layer_change)
         if "trigger_height_change" in changes.keys():
-            self.trigger_height_change = utility.getbool(
+            self.trigger_height_change = utility.get_bool(
                 changes["trigger_height_change"], self.trigger_height_change)
         if "trigger_time_remaining" in changes.keys():
-            self.trigger_time_remaining = utility.getbool(
+            self.trigger_time_remaining = utility.get_bool(
                 changes["trigger_time_remaining"], self.trigger_time_remaining)
         if "trigger_time_unpaused" in changes.keys():
-            self.trigger_time_unpaused = utility.getbool(
+            self.trigger_time_unpaused = utility.get_bool(
                 changes["trigger_time_unpaused"], self.trigger_time_unpaused)
         if "trigger_zhop" in changes.keys():
-            self.trigger_zhop = utility.getbool(
+            self.trigger_zhop = utility.get_bool(
                 changes["trigger_zhop"], self.trigger_zhop)
         if "snapshot_gcode" in changes.keys():
-            self.snapshot_gcode = utility.getbool(
+            self.snapshot_gcode = utility.get_bool(
                 changes["snapshot_gcode"], self.snapshot_gcode)
         if "snapshot_gcode_endcommand" in changes.keys():
-            self.snapshot_gcode_endcommand = utility.getbool(
+            self.snapshot_gcode_endcommand = utility.get_bool(
                 changes["snapshot_gcode_endcommand"], self.snapshot_gcode_endcommand)
         if "snapshot_position" in changes.keys():
-            self.snapshot_position = utility.getbool(
+            self.snapshot_position = utility.get_bool(
                 changes["snapshot_position"], self.snapshot_position)
         if "snapshot_position_return" in changes.keys():
-            self.snapshot_position_return = utility.getbool(
+            self.snapshot_position_return = utility.get_bool(
                 changes["snapshot_position_return"], self.snapshot_position_return)
         if "snapshot_position_resume_print" in changes.keys():
-            self.snapshot_position_resume_print = utility.getbool(
+            self.snapshot_position_resume_print = utility.get_bool(
                 changes["snapshot_position_resume_print"], self.snapshot_position_resume_print)
         if "snapshot_save" in changes.keys():
-            self.snapshot_save = utility.getbool(
+            self.snapshot_save = utility.get_bool(
                 changes["snapshot_save"], self.snapshot_save)
         if "snapshot_download" in changes.keys():
-            self.snapshot_download = utility.getbool(
+            self.snapshot_download = utility.get_bool(
                 changes["snapshot_download"], self.snapshot_download)
         if "render_start" in changes.keys():
-            self.render_start = utility.getbool(
+            self.render_start = utility.get_bool(
                 changes["render_start"], self.snapshot_download)
         if "render_complete" in changes.keys():
-            self.render_complete = utility.getbool(
+            self.render_complete = utility.get_bool(
                 changes["render_complete"], self.render_complete)
         if "render_fail" in changes.keys():
-            self.render_fail = utility.getbool(
+            self.render_fail = utility.get_bool(
                 changes["render_fail"], self.snapshot_download)
         if "render_sync" in changes.keys():
-            self.render_sync = utility.getbool(
+            self.render_sync = utility.get_bool(
                 changes["render_sync"], self.snapshot_download)
         if "snapshot_clean" in changes.keys():
-            self.snapshot_clean = utility.getbool(
+            self.snapshot_clean = utility.get_bool(
                 changes["snapshot_clean"], self.snapshot_clean)
         if "settings_save" in changes.keys():
-            self.settings_save = utility.getbool(
+            self.settings_save = utility.get_bool(
                 changes["settings_save"], self.settings_save)
         if "settings_load" in changes.keys():
-            self.settings_load = utility.getbool(
+            self.settings_load = utility.get_bool(
                 changes["settings_load"], self.settings_load)
         if "print_state_changed" in changes.keys():
-            self.print_state_changed = utility.getbool(
+            self.print_state_changed = utility.get_bool(
                 changes["print_state_changed"], self.print_state_changed)
         if "camera_settings_apply" in changes.keys():
-            self.camera_settings_apply = utility.getbool(
+            self.camera_settings_apply = utility.get_bool(
                 changes["camera_settings_apply"], self.camera_settings_apply)
         if "gcode_sent_all" in changes.keys():
-            self.gcode_sent_all = utility.getbool(
+            self.gcode_sent_all = utility.get_bool(
                 changes["gcode_sent_all"], self.gcode_sent_all)
         if "gcode_queuing_all" in changes.keys():
-            self.gcode_queuing_all = utility.getbool(
+            self.gcode_queuing_all = utility.get_bool(
                 changes["gcode_queuing_all"], self.gcode_queuing_all)
 
     def ToDict(self):
@@ -1447,7 +1447,7 @@ class DebugProfile(object):
                 return
 
     def LogException(self, exception):
-        message = utility.ExceptionToString(exception)
+        message = utility.exception_to_string(exception)
         try:
             self.Logger.error(message)
             self.LogToConsole('error', message)
@@ -1800,34 +1800,34 @@ class OctolapseSettings(object):
         defaults = OctolapseSettings(self.LogFilePath)
 
         settingsDict = {
-            'version': utility.getstring(
+            'version': utility.get_string(
                 self.version, defaults.version
             ),
-            "is_octolapse_enabled": utility.getbool(
+            "is_octolapse_enabled": utility.get_bool(
                 self.is_octolapse_enabled, defaults.is_octolapse_enabled
             ),
-            "auto_reload_latest_snapshot": utility.getbool(
+            "auto_reload_latest_snapshot": utility.get_bool(
                 self.auto_reload_latest_snapshot, defaults.auto_reload_latest_snapshot
             ),
-            "auto_reload_frames": utility.getint(
+            "auto_reload_frames": utility.get_int(
                 self.auto_reload_frames, defaults.auto_reload_frames
             ),
-            "show_navbar_icon": utility.getbool(
+            "show_navbar_icon": utility.get_bool(
                 self.show_navbar_icon, defaults.show_navbar_icon
             ),
-            "show_navbar_when_not_printing": utility.getbool(
+            "show_navbar_when_not_printing": utility.get_bool(
                 self.show_navbar_when_not_printing, defaults.show_navbar_when_not_printing
             ),
-            "show_position_changes": utility.getbool(
+            "show_position_changes": utility.get_bool(
                 self.show_position_changes, defaults.show_position_changes
             ),
-            "show_position_state_changes": utility.getbool(
+            "show_position_state_changes": utility.get_bool(
                 self.show_position_state_changes, defaults.show_position_state_changes
             ),
-            "show_extruder_state_changes": utility.getbool(
+            "show_extruder_state_changes": utility.get_bool(
                 self.show_extruder_state_changes, defaults.show_extruder_state_changes
             ),
-            "show_trigger_state_changes": utility.getbool(
+            "show_trigger_state_changes": utility.get_bool(
                 self.show_trigger_state_changes, defaults.show_trigger_state_changes
             ),
             "platform": sys.platform,
@@ -1891,27 +1891,27 @@ class OctolapseSettings(object):
                 dict(value='blink', name='Blink'),
                 dict(value='auto', name='Auto')
             ],
-            'current_printer_profile_guid': utility.getstring(
+            'current_printer_profile_guid': utility.get_string(
                 self.current_printer_profile_guid, defaults.current_printer_profile_guid
             ),
             'printers': [],
-            'current_stabilization_profile_guid': utility.getstring(
+            'current_stabilization_profile_guid': utility.get_string(
                 self.current_stabilization_profile_guid, defaults.current_stabilization_profile_guid
             ),
             'stabilizations': [],
-            'current_snapshot_profile_guid': utility.getstring(
+            'current_snapshot_profile_guid': utility.get_string(
                 self.current_snapshot_profile_guid, defaults.current_snapshot_profile_guid
             ),
             'snapshots': [],
-            'current_rendering_profile_guid': utility.getstring(
+            'current_rendering_profile_guid': utility.get_string(
                 self.current_rendering_profile_guid, defaults.current_rendering_profile_guid
             ),
             'renderings': [],
-            'current_camera_profile_guid': utility.getstring(
+            'current_camera_profile_guid': utility.get_string(
                 self.current_camera_profile_guid, defaults.current_camera_profile_guid
             ),
             'cameras': [],
-            'current_debug_profile_guid': utility.getstring(
+            'current_debug_profile_guid': utility.get_string(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
             ),
             'debug_profiles': []

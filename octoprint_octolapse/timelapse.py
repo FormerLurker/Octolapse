@@ -649,7 +649,7 @@ class Timelapse(object):
         self.Settings.CurrentDebugProfile().LogSnapshotDownload("Taking Snapshot.")
         try:
             self.CaptureSnapshot.Snap(
-                utility.CurrentlyPrintingFileName(self.OctoprintPrinter), self.SnapshotCount,
+                utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
                 onComplete=self._onSnapshotComplete, onSuccess=self._onSnapshotSuccess, onFail=self._onSnapshotFail
             )
         except Exception as e:
@@ -721,7 +721,7 @@ class Timelapse(object):
                 onRenderComplete=self._onRenderComplete, onAfterSyncFail=self._onSynchronizeRenderingFail,
                 onAfterSycnSuccess=self._onSynchronizeRenderingComplete, onComplete=self._onRenderEnd
             )
-            timelapseRenderJob.Process(utility.CurrentlyPrintingFileName(
+            timelapseRenderJob.Process(utility.get_currently_printing_filename(
                 self.OctoprintPrinter), self.PrintStartTime, time.time())
 
             return True

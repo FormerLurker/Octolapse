@@ -14,7 +14,7 @@ import traceback
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
 
-def getfloat(value, default):
+def get_float(value, default):
     if value is None:
         return default
     try:
@@ -23,7 +23,7 @@ def getfloat(value, default):
         return float(default)
 
 
-def getnullablefloat(value, default):
+def get_nullable_float(value, default):
     if value is None:
         return None
     try:
@@ -34,7 +34,7 @@ def getnullablefloat(value, default):
         return float(default)
 
 
-def getint(value, default):
+def get_int(value, default):
     if value is None:
         return default
     try:
@@ -43,33 +43,33 @@ def getint(value, default):
         return default
 
 
-def getnullablebool(value, default):
+# def getnullablebool(value, default):
+#     if value is None:
+#         return None
+#     try:
+#         return bool(value)
+#     except ValueError:
+#         if default is None:
+#             return None
+#         return default
+
+
+def get_bool(value, default):
     if value is None:
-        return None
+        return default
     try:
         return bool(value)
     except ValueError:
-        if default is None:
-            return None
         return default
 
 
-def getbool(value, default):
-    if value is None:
-        return default
-    try:
-        return bool(value)
-    except ValueError:
-        return default
-
-
-def getstring(value, default):
+def get_string(value, default):
     if value is not None and len(value) > 0:
         return value
     return default
 
 
-def getbitrate(value, default):
+def get_bitrate(value, default):
     if value is None:
         return default
     # add a global for the regex so we can use a pre-complied version
@@ -83,10 +83,10 @@ def getbitrate(value, default):
     return value
 
 
-def getobject(value, default):
-    if value is None:
-        return default
-    return value
+# def getobject(value, default):
+#     if value is None:
+#         return default
+#     return value
 
 
 def is_sequence(arg):
@@ -95,19 +95,19 @@ def is_sequence(arg):
             hasattr(arg, "__iter__"))
 
 
-def GetFilenameFromFullPath(path):
+def get_filename_from_full_path(path):
     baseName = ntpath.basename(path)
     head, tail = ntpath.split(baseName)
     fileName = tail or ntpath.basename(head)
     return os.path.splitext(fileName)[0]
 
 
-def GetExtensionFromFileName(fileName):
-    extension = os.path.splitext(filename)[1]
-    return extension
+# def GetExtensionFromFileName(filename):
+#     extension = os.path.splitext(filename)[1]
+#     return extension
 
 
-def isclose(a, b, abs_tol=0.01000):
+def is_close(a, b, abs_tol=0.01000):
     return abs(a - b) <= abs_tol
 
 
@@ -116,62 +116,57 @@ def round_to(n, precision):
     return int(n / precision + correction) * precision
 
 
-def GetTempSnapshotDirectoryTemplate():
+def get_temp_snapshot_driectory_template():
     return "{0}{1}{2}{3}".format("{DATADIRECTORY}", os.sep, "tempsnapshots", os.sep)
 
 
-def GetSnapshotDirectory(dataDirectory):
+def get_snapshot_directory(dataDirectory):
     return "{0}{1}{2}{3}".format(dataDirectory, os.sep, "snapshots", os.sep)
 
 
-def GetSnapshotFilenameTemplate():
+def get_snapshot_filename_template():
     return "{0}{1}{2}".format("{FILENAME}_{PRINTSTARTTIME}", os.sep, "{FILENAME}")
 
 
-def GetRenderingDirectoryFromDataDirectory(dataDirectory):
-    return GetRenderingDirectoryTemplate().replace("{DATADIRECTORY}", dataDirectory)
+def get_rendering_directory_from_data_directory(dataDirectory):
+    return get_rendering_directory_template().replace("{DATADIRECTORY}", dataDirectory)
 
 
-def GetSnapshotDownloadPath(dataDirectory, fileName):
-    return "{0}{1}{2}{3}{4}".format(dataDirectory, os.sep, "snapshots", os.sep, fileName)
+# def GetSnapshotDownloadPath(dataDirectory, fileName):
+#     return "{0}{1}{2}{3}{4}".format(dataDirectory, os.sep, "snapshots", os.sep, fileName)
 
 
-def GetLatestSnapshotDownloadPath(dataDirectory):
-    return "{0}{1}".format(GetSnapshotDirectory(dataDirectory), "latest_snapshot.jpeg")
+def get_latest_snapshot_download_path(dataDirectory):
+    return "{0}{1}".format(get_snapshot_directory(dataDirectory), "latest_snapshot.jpeg")
 
 
-def GetLatestSnapshotThumbnailDownloadPath(dataDirectory):
-    return "{0}{1}".format(GetSnapshotDirectory(dataDirectory), "latest_snapshot_thumbnail_300px.jpeg")
+def get_latest_snapshot_thumbnail_download_path(dataDirectory):
+    return "{0}{1}".format(get_snapshot_directory(dataDirectory), "latest_snapshot_thumbnail_300px.jpeg")
 
 
-def GetImagesDownloadPath(baseFolder, fileName):
+def get_images_download_path(baseFolder, fileName):
     return "{0}{1}data{2}{3}{4}{5}".format(baseFolder, os.sep, os.sep, "Images", os.sep, fileName)
 
 
-def GetErrorImageDownloadPath(baseFolder):
-    return GetImagesDownloadPath(baseFolder, "no-image-available.png")
+def get_error_image_download_path(baseFolder):
+    return get_images_download_path(baseFolder, "no-image-available.png")
 
 
-def GetNoSnapshotImagesDownloadPath(baseFolder):
-    return GetImagesDownloadPath(baseFolder, "no_snapshot.png")
+def get_no_snapshot_image_download_path(baseFolder):
+    return get_images_download_path(baseFolder, "no_snapshot.png")
 
-
-def GetErrorImageDownloadPath(baseFolder):
-    return GetImagesDownloadPath(baseFolder, "no-image-available.png")
-
-
-def GetRenderingDirectoryTemplate():
+def get_rendering_directory_template():
     return "{0}{1}{2}{3}".format("{DATADIRECTORY}", os.sep, "timelapses", os.sep)
 
 
-def GetRenderingBaseFilenameTemplate():
+def get_rendering_base_filename_template():
     return "{FILENAME}_{DATETIMESTAMP}"
 
 
-def GetRenderingBaseFilename(printName, printStartTime, printEndTime=None):
-    fileTemplate = GetRenderingBaseFilenameTemplate()
+def get_rendering_base_filename(printName, printStartTime, printEndTime=None):
+    fileTemplate = get_rendering_base_filename_template()
     dateStamp = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-    fileTemplate = fileTemplate.replace("{FILENAME}", getstring(printName, ""))
+    fileTemplate = fileTemplate.replace("{FILENAME}", get_string(printName, ""))
     fileTemplate = fileTemplate.replace(
         "{DATETIMESTAMP}", time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
     fileTemplate = fileTemplate.replace(
@@ -183,21 +178,21 @@ def GetRenderingBaseFilename(printName, printStartTime, printEndTime=None):
     return fileTemplate
 
 
-def GetSnapshotFilename(printName, printStartTime, snapshotNumber):
-    fileTemplate = GetSnapshotFilenameTemplate()
+def get_snapshot_filename(printName, printStartTime, snapshotNumber):
+    fileTemplate = get_snapshot_filename_template()
     dateStamp = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-    fileTemplate = fileTemplate.replace("{FILENAME}", getstring(printName, ""))
+    fileTemplate = fileTemplate.replace("{FILENAME}", get_string(printName, ""))
     fileTemplate = fileTemplate.replace(
         "{DATETIMESTAMP}", "{0:d}".format(math.trunc(round(time.time(), 2) * 100)))
     fileTemplate = fileTemplate.replace("{PRINTSTARTTIME}", "{0:d}".format(
         math.trunc(round(printStartTime, 2) * 100)))
-    return "{0}{1}.{2}".format(fileTemplate, FormatSnapshotNumber(snapshotNumber), "jpg")
+    return "{0}{1}.{2}".format(fileTemplate, format_snapshot_number(snapshotNumber), "jpg")
 
 
 SnapshotNumberFormat = "%06d"
 
 
-def FormatSnapshotNumber(number):
+def format_snapshot_number(number):
     # we may get a templated field here for the snapshot number, so check to make sure it is an int first
     if isinstance(number, int):
         return SnapshotNumberFormat % number
@@ -205,20 +200,20 @@ def FormatSnapshotNumber(number):
     return number
 
 
-def GetSnapshotTempDirectory(dataDirectory):
-    directoryTemplate = GetTempSnapshotDirectoryTemplate()
+def get_snapshot_temp_directory(dataDirectory):
+    directoryTemplate = get_temp_snapshot_driectory_template()
     directoryTemplate = directoryTemplate.replace(
         "{DATADIRECTORY}", dataDirectory)
 
     return directoryTemplate
 
 
-def GetRenderingDirectory(dataDirectory, printName, printStartTime, outputExtension, printEndTime=None):
-    directoryTemplate = GetRenderingDirectoryTemplate()
+def get_rendering_directory(dataDirectory, printName, printStartTime, outputExtension, printEndTime=None):
+    directoryTemplate = get_rendering_directory_template()
     directoryTemplate = directoryTemplate.replace(
-        "{FILENAME}", getstring(printName, ""))
+        "{FILENAME}", get_string(printName, ""))
     directoryTemplate = directoryTemplate.replace(
-        "{OUTPUTFILEEXTENSION}", getstring(outputExtension, ""))
+        "{OUTPUTFILEEXTENSION}", get_string(outputExtension, ""))
     directoryTemplate = directoryTemplate.replace("{PRINTSTARTTIME}",
                                                   "{0:d}".format(math.trunc(round(printStartTime, 2) * 100)))
     if printEndTime is not None:
@@ -230,7 +225,7 @@ def GetRenderingDirectory(dataDirectory, printName, printStartTime, outputExtens
     return directoryTemplate
 
 
-def SecondsToHHMMSS(seconds):
+def seconds_to_hhmmss(seconds):
     hours = seconds // (60 * 60)
     seconds %= (60 * 60)
     minutes = seconds // 60
@@ -251,18 +246,18 @@ class SafeDict(dict):
         return '{' + key + '}'
 
 
-def CurrentlyPrintingFileName(octoprintPrinter):
+def get_currently_printing_filename(octoprintPrinter):
     if octoprintPrinter is not None:
         current_job = octoprintPrinter.get_current_job()
         if current_job is not None and "file" in current_job:
             current_job_file = current_job["file"]
             if "path" in current_job_file and "origin" in current_job_file:
                 current_file_path = current_job_file["path"]
-                return GetFilenameFromFullPath(current_file_path)
+                return get_filename_from_full_path(current_file_path)
     return ""
 
 
-def IsInBounds(boundingBox, x=None, y=None, z=None):
+def is_in_bounds(boundingBox, x=None, y=None, z=None):
     # Determines if the given X,Y,Z coordinate is within
     # the bounding box of the printer, as determined by
     # the octoprint configuration
@@ -284,7 +279,7 @@ def IsInBounds(boundingBox, x=None, y=None, z=None):
     return xIsInBounds and yIsInBounds and zIsInBounds
 
 
-def GetClosestInBoundsPosition(bounding_box, x=None, y=None, z=None):
+def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
     min_x = bounding_box['min_x']
     max_x = bounding_box['max_x']
     min_y = bounding_box['min_y']
@@ -303,7 +298,7 @@ def GetClosestInBoundsPosition(bounding_box, x=None, y=None, z=None):
     return {'X': c_x, 'Y': c_y, 'Z': c_z}
 
 
-def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
+def get_bounding_box(octolapsePrinterProfile, octoprintPrinterProfile):
     # get octolapse min and max
     if octolapsePrinterProfile.override_octoprint_print_volume:
         minX = octolapsePrinterProfile.min_x
@@ -341,7 +336,7 @@ def GetBoundingBox(octolapsePrinterProfile, octoprintPrinterProfile):
     }
 
 
-def ExceptionToString(e):
+def exception_to_string(e):
     traceBack = sys.exc_info()[2]
     if traceBack is None:
         return str(e)

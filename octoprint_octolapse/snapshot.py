@@ -42,7 +42,7 @@ class CaptureSnapshot(object):
         # set the file name.  It will be a guid + the file extension
         snapshotGuid = str(uuid.uuid4())
         info.FileName = "{0}.{1}".format(snapshotGuid, "jpg")
-        info.DirectoryName = utility.GetSnapshotTempDirectory(
+        info.DirectoryName = utility.get_snapshot_temp_directory(
             self.DataDirectory)
         url = camera.FormatRequestTemplate(
             self.Camera.address, self.Camera.snapshot_request_template, "")
@@ -92,7 +92,7 @@ class CaptureSnapshot(object):
     def CleanAllSnapshots(self, printerFileName):
 
         # get snapshot directory
-        snapshotDirectory = utility.GetSnapshotTempDirectory(
+        snapshotDirectory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
         self._debug.LogSnapshotClean(
             "Cleaning snapshots from: {0}".format(snapshotDirectory))
@@ -248,7 +248,7 @@ class SnapshotJob(object):
         # create the output directory if it does not exist
         try:
             tempSnapshotPath = os.path.dirname(newSnapshotName)
-            latestSnapshotPath = utility.GetSnapshotDirectory(
+            latestSnapshotPath = utility.get_snapshot_directory(
                 self.DataDirectory)
             if not os.path.exists(tempSnapshotPath):
                 os.makedirs(tempSnapshotPath)
@@ -265,7 +265,7 @@ class SnapshotJob(object):
 
     def _saveLatestSnapshotAndThumbnail(self):
         # create a copy to be used for the full sized latest snapshot image.
-        latestSnapshotPath = utility.GetLatestSnapshotDownloadPath(
+        latestSnapshotPath = utility.get_latest_snapshot_download_path(
             self.DataDirectory)
         shutil.copy(self.SnapshotInfo.GetFullPath(
             self.SnapshotNumber), latestSnapshotPath)
@@ -281,7 +281,7 @@ class SnapshotJob(object):
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))
             img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-            img.save(utility.GetLatestSnapshotThumbnailDownloadPath(
+            img.save(utility.get_latest_snapshot_thumbnail_download_path(
                 self.DataDirectory), "JPEG")
         except Exception as e:
             # If we can't create the thumbnail, just log
@@ -308,7 +308,7 @@ class SnapshotInfo(object):
     def GetFullPath(self, snapshotNumber):
         return "{0}{1}".format(
             self.DirectoryName,
-            utility.GetSnapshotFilename(
+            utility.get_snapshot_filename(
                 self._printerFileName,
                 self._printStartTime,
                 snapshotNumber

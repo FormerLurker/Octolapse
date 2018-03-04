@@ -272,7 +272,7 @@ class Pos(object):
                     self.EPrevious = self.E
                     self.E = e + self.EOffset
 
-            if (not utility.IsInBounds(
+            if (not utility.is_in_bounds(
                 boundingBox, x=self.X, y=self.Y, z=self.Z)):
                 self.HasPositionError = True
                 self.PositionError = "Position - Coordinates {0} are out of the printer area!  Cannot resume position tracking until the axis is homed, or until absolute coordinates are received.".format(
@@ -294,8 +294,8 @@ class Position(object):
             "Z": self.Printer.origin_z
         }
 
-        self.BoundingBox = utility.GetBoundingBox(self.Printer,
-                                                  octoprintPrinterProfile)
+        self.BoundingBox = utility.get_bounding_box(self.Printer,
+                                                    octoprintPrinterProfile)
         self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
         self.Positions = deque(maxlen=5)
         self.Reset()
@@ -800,13 +800,13 @@ class Position(object):
                         pos.EOffset = pos.E
                     # set the offsets if they are provided
                     if (x is not None and pos.X is not None and pos.XHomed):
-                        pos.XOffset = pos.X - utility.getfloat(x, 0)
+                        pos.XOffset = pos.X - utility.get_float(x, 0)
                     if (y is not None and pos.Y is not None and pos.YHomed):
-                        pos.YOffset = pos.Y - utility.getfloat(y, 0)
+                        pos.YOffset = pos.Y - utility.get_float(y, 0)
                     if (z is not None and pos.Z is not None and pos.ZHomed):
-                        pos.ZOffset = pos.Z - utility.getfloat(z, 0)
+                        pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     if (e is not None and pos.E is not None):
-                        pos.EOffset = pos.E - utility.getfloat(e, 0)
+                        pos.EOffset = pos.E - utility.get_float(e, 0)
                     self.Settings.CurrentDebugProfile(
                     ).LogPositionCommandReceived(
                         "Received G92 - Set Position.  Command:{0}, XOffset:{1}, YOffset:{2}, ZOffset:{3}, EOffset:{4}".
@@ -917,10 +917,10 @@ class Position(object):
             if (z is not None):
                 z = z + pos.ZOffset
 
-        if ((pos.X is None or utility.isclose(pos.X, x, abs_tol=tolerance)) and
-            (pos.Y is None or utility.isclose(pos.Y, y, abs_tol=tolerance))
+        if ((pos.X is None or utility.is_close(pos.X, x, abs_tol=tolerance)) and
+            (pos.Y is None or utility.is_close(pos.Y, y, abs_tol=tolerance))
             and (z is None or pos.Z is None
-                 or utility.isclose(pos.Z, z, abs_tol=tolerance))):
+                 or utility.is_close(pos.Z, z, abs_tol=tolerance))):
             return True
         return False
 
