@@ -224,14 +224,14 @@ class SnapshotGcodeGenerator(object):
         newSnapshotGcode = SnapshotGcode(self.IsTestMode)
         # retract if necessary
         # Note that if IsRetractedStart is true, that means the printer is now retracted.  IsRetracted will be false because we've undone the previous position update.
-        if self.Snapshot.retract_before_move and not (extruder.IsRetracted() or extruder.IsRetractingStart()):
+        if self.Snapshot.retract_before_move and not (extruder.is_retracted() or extruder.is_retracting_start()):
             if not self.IsExtruderRelativeCurrent:
                 newSnapshotGcode.Append(
                     self.GetSetExtruderRelativePositionGcode())
                 self.IsExtruderRelativeCurrent = True
             self.AppendFeedrateGcode(
                 newSnapshotGcode, self.Printer.retract_speed)
-            retractedLength = extruder.LengthToRetract()
+            retractedLength = extruder.length_to_retract()
             if retractedLength > 0:
                 newSnapshotGcode.Append(self.GetRetractGcode(retractedLength))
                 self.RetractedLength = retractedLength

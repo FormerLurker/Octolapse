@@ -237,7 +237,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.CurrentStabilization().y_fixed_coordinate = 20
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        self.Extruder.IsRetracted = lambda: True
+        self.Extruder.is_retracted = lambda: True
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
@@ -328,7 +328,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.CurrentSnapshot().retract_before_move = True
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        self.Extruder.IsRetracted = lambda: True
+        self.Extruder.is_retracted = lambda: True
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
@@ -434,7 +434,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.CurrentSnapshot().retract_before_move = True
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        self.Extruder.IsRetracted = lambda: True
+        self.Extruder.is_retracted = lambda: True
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 
@@ -461,7 +461,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.CurrentSnapshot().retract_before_move = True
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        self.Extruder.IsRetracted = lambda: True
+        self.Extruder.is_retracted = lambda: True
         snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 

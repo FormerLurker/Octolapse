@@ -536,7 +536,7 @@ class Position(object):
         pos = self.get_position(0)
         if pos is not None:
             self.Positions.popleft()
-        self.Extruder.UndoUpdate()
+        self.Extruder.undo_update()
 
     def get_position(self, index=0):
         if len(self.Positions) > index:
@@ -792,7 +792,7 @@ class Position(object):
 
         ########################################
         # Update the extruder monitor.
-        self.Extruder.Update(self.e_relative(pos))
+        self.Extruder.update(self.e_relative(pos))
 
         ########################################
         # If we have a homed axis, detect changes.
@@ -808,7 +808,7 @@ class Position(object):
             # if (hasExtruderChanged or pos.HasPositionChanged):
 
             # calculate LastExtrusionHeight and Height
-            if self.Extruder.IsExtruding():
+            if self.Extruder.is_extruding():
                 pos.LastExtrusionHeight = pos.Z
 
                 # see if we have primed yet
@@ -849,7 +849,7 @@ class Position(object):
                 if lift >= self.Printer.z_hop:
                     lift = self.Printer.z_hop
                 is_lifted = lift >= self.Printer.z_hop and (
-                    not self.Extruder.IsExtruding() or self.Extruder.IsExtrudingStart()
+                    not self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
                 )
 
                 if is_lifted or self.Printer.z_hop == 0:

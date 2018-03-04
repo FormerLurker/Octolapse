@@ -108,7 +108,7 @@ class Timelapse(object):
                 if self.Settings.show_position_state_changes and self.Position is not None:
                     positionStateDict = self.Position.to_state_dict()
                 if self.Settings.show_extruder_state_changes and self.Position is not None:
-                    extruderDict = self.Position.Extruder.ToDict()
+                    extruderDict = self.Position.Extruder.to_dict()
                 if self.Settings.show_trigger_state_changes and self.Triggers is not None:
                     triggerState = {
                         "Name": self.Triggers.Name,
@@ -221,8 +221,8 @@ class Timelapse(object):
                 and (self.Position.has_state_changed() or not self.HasSentInitialStatus)):
                 positionStateChangeDict = self.Position.to_state_dict()
             if (self.Settings.show_extruder_state_changes
-                and (self.Position.Extruder.HasChanged() or not self.HasSentInitialStatus)):
-                extruderChangeDict = self.Position.Extruder.ToDict()
+                and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)):
+                extruderChangeDict = self.Position.Extruder.to_dict()
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
             isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)

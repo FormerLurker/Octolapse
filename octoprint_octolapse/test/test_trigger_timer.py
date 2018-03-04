@@ -236,7 +236,7 @@ class Test_TimerTrigger(unittest.TestCase):
             True, None, None, None, None, None, None, None, None, None)
 
         # set the extruder trigger
-        position.Extruder.GetState(0).IsExtrudingStart = True
+        position.Extruder.get_state(0).IsExtrudingStart = True
         # will not wait or trigger because not enough time has elapsed
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
@@ -248,7 +248,7 @@ class Test_TimerTrigger(unittest.TestCase):
         # send another command and try again
         position.update("PreviousPositionIsNowHomed")
         # set the extruder trigger
-        position.Extruder.GetState(0).IsExtrudingStart = True
+        position.Extruder.get_state(0).IsExtrudingStart = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
