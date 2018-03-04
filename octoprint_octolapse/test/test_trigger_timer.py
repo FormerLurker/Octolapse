@@ -46,42 +46,42 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.RequireZHop = False  # no zhop required
         trigger.HeightIncrement = 0  # Trigger on any height change
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # set interval time to 0, send another command and test again (should not trigger, no homed axis)
         trigger.IntervalSeconds = 0
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again with interval seconds 1 - should not trigger since the timer will start after the home command
         trigger.IntervalSeconds = 2
         position.Update("g28")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send another command and try again, should not trigger cause we haven't waited 2 seconds yet
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should not trigger
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should trigger
         trigger.TriggerStartTime = time.time() - 2.01
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_TimerTrigger_ExtruderTriggers(self):
         """Test All Extruder Triggers"""
@@ -98,10 +98,10 @@ class Test_TimerTrigger(unittest.TestCase):
         # Try on extruding start - previous position not homed, do not trigger
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -110,9 +110,9 @@ class Test_TimerTrigger(unittest.TestCase):
         position.Update("AnotherCommandNowPreviousHomed")
         # set is extruding start, wont be set by the above command!
         position.Extruder.StateHistory[0].IsExtrudingStart = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -121,10 +121,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
         state.IsExtruding = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -133,10 +133,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, True, None, None, None, None, None, None, None)
         state.IsPrimed = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -145,10 +145,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, True, None, None, None, None, None, None)
         state.IsRetractingStart = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -157,10 +157,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, True, None, None, None, None, None)
         state.IsRetracting = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -169,10 +169,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, True, None, None, None, None)
         state.IsPartiallyRetracted = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -181,10 +181,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
         state.IsRetracted = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -193,10 +193,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
         state.IsDetractingStart = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -205,10 +205,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
         state.IsDetracting = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the extruder
         state = ExtruderState()
@@ -217,10 +217,10 @@ class Test_TimerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
         state.IsDetracted = True
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_TimerTrigger_ExtruderTriggerWait(self):
         """Test wait on extruder"""
@@ -238,20 +238,20 @@ class Test_TimerTrigger(unittest.TestCase):
         # set the extruder trigger
         position.Extruder.GetState(0).IsExtrudingStart = True
         # will not wait or trigger because not enough time has elapsed
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # add 1 second to the state and try again
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
 
         # send another command and try again
         position.Update("PreviousPositionIsNowHomed")
         # set the extruder trigger
         position.Extruder.GetState(0).IsExtrudingStart = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_TimerTrigger_LayerChange_ZHop(self):
         """Test the layer trigger for layer changes triggers"""
@@ -263,81 +263,81 @@ class Test_TimerTrigger(unittest.TestCase):
                                                     None)  # Ignore extruder
         trigger.IntervalSeconds = 1
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send commands that normally would trigger a layer change, but without all axis homed.
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again, wait on zhop
         position.Update("g28")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # try zhop
         position.Update("g0 x0 y0 z.7 ")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # extrude on current layer, no trigger (wait on zhop)
         position.Update("g0 x0 y0 z.7 e1")
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # do not extrude on current layer, still waiting
         position.Update("g0 x0 y0 z.7 ")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # partial hop, but close enough based on our printer measurement tolerance (0.005)
         position.Update("g0 x0 y0 z1.1999")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # creat wait state
         position.Update("g0 x0 y0 z1.3 e1")
-        trigger.GetState(0).TriggerStartTime = time.time() - 1.01
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.get_state(0).TriggerStartTime = time.time() - 1.01
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move down (should never happen, should behave properly anyway)
         position.Update("g0 x0 y0 z.8")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move back up to current layer (should NOT trigger zhop)
         position.Update("g0 x0 y0 z1.3")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, not enough to trigger zhop
         position.Update("g0 x0 y0 z1.795")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, just enough to trigger zhop
         position.Update("g0 x0 y0 z1.7951")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
 
 if __name__ == '__main__':

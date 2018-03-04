@@ -38,18 +38,18 @@ class Test_LayerTrigger(unittest.TestCase):
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = LayerTrigger(self.Settings)
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # set the flags to different valuse
-        trigger.IsTriggered = True
-        trigger.IsWaiting = True
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.is_triggered = True
+        trigger.is_waiting = True
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # test the reset state
         trigger.Reset()
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_LayerChange(self):
         """Test the layer trigger for layer changes triggers"""
@@ -61,85 +61,85 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.RequireZHop = False  # no zhop required
         trigger.HeightIncrement = 0  # Trigger on any height change
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send commands that normally would trigger a layer change, but without all axis homed.
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again
         position.Update("g28")
-        trigger.Update(position)
+        trigger.update(position)
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # extrude again on the same layer and make sure it does NOT trigger
         position.Update("g0 x1 y1 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # move to higher layer, but do not extrude (no layer change)
         position.Update("g0 x1 y1 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # return to previous layer, do not extrude
         position.Update("g0 x2 y2 z.2")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x4 y4 z.2")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # extrude again on current layer
         position.Update("g0 x2 y2 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # move up two times, down and extrude (this should trigger after the final command
         position.Update("g0 x2 y2 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.6")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.4 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # This should never happen in a print, but test extruding on previous layers
         # move down to previous layer, extrude,
         position.Update("g0 x2 y2 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # move back to current layer (.4), extrude (no trigger)
         position.Update("g0 x2 y2 z.4 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # move up one more layer and extrude (trigger)
         position.Update("g0 x2 y2 z.6 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_LayerChange_DefaultExtruderTriggers(self):
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
@@ -275,8 +275,8 @@ class Test_LayerTrigger(unittest.TestCase):
             shouldTrigger = command[1]
             comment = command[2]
             position.Update(gcodeCommand)
-            trigger.Update(position)
-            self.assertTrue(trigger.IsTriggered(0) == shouldTrigger,
+            trigger.update(position)
+            self.assertTrue(trigger.is_triggered(0) == shouldTrigger,
                             "Should have triggered on {0} command.  Command comment:".format(gcodeCommand, comment))
 
     def GetPrintStartGcode(self):
@@ -312,106 +312,106 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.HeightIncrement = .25  # Trigger every .25
 
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send commands that normally would trigger a layer change, but without all axis homed.
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.25
         position.Update("g28")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # extrude at height 0.2, should trigger
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.25
         # move to higher layer, but do not extrude (no layer change)
         position.Update("g0 x1 y1 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.25
         # return to previous layer, do not extrude
         position.Update("g0 x2 y2 z.2")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x4 y4 z.2")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.25
         # extrude again on current layer
         position.Update("g0 x2 y2 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.25
         # move up two times, down and extrude (this should trigger after the final command
         position.Update("g0 x2 y2 z.4")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.6")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         position.Update("g0 x2 y2 z.4 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # cur increment 0.5
         # This should never happen in a print, but test extruding on previous layers
         # move down to previous layer, extrude,
         position.Update("g0 x2 y2 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # move back to current layer (.4), extrude (no trigger)
         position.Update("g0 x2 y2 z.4 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # move up one more layer and extrude (trigger)
         position.Update("g0 x2 y2 z.6 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # test very close to height increment (.74)
         # move up one more layer and extrude (trigger)
         position.Update("g0 x2 y2 z0.74  e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
         # now it should trigger
         position.Update("m114")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Test at the increment (.75)
         position.Update("g0 x2 y2 z0.7500 e1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_ExtruderTriggers_NotHomed(self):
         """Make sure nothing triggers when the axis aren't homed"""
@@ -425,65 +425,65 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on extruding
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
         position.Update("g0 x0 y0 z.3 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on primed
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, True, None, None, None, None, None, None, None)
         position.Update("g0 x0 y0 z.4 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on retracting start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, True, None, None, None, None, None, None)
         position.Update("g0 x0 y0 z.5 e-1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on retracting
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, True, None, None, None, None, None)
         position.Update("g0 x0 y0 z.5 e-1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on partially retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, True, None, None, None, None)
         position.Update("g0 x0 y0 z.5 e-1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
         position.Update("g0 x0 y0 z.5 e-1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # try out on detracting
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
         position.Update("g0 x0 y0 z.5 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_ExtruderTriggers(self):
         """Test All Extruder Triggers"""
@@ -500,15 +500,15 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
         state.IsExtrudingStart = True
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Try again, should trigger after the extrusion
         position.Update("G1 E1")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -520,9 +520,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
 
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -533,9 +533,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, True, None, None, None, None, None, None, None)
         state.IsPrimed = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -546,9 +546,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, True, None, None, None, None, None, None)
         state.IsRetractingStart = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -559,9 +559,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, True, None, None, None, None, None)
         state.IsRetracting = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -571,9 +571,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, True, None, None, None, None)
         state.IsPartiallyRetracted = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -583,9 +583,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
         state.IsRetracted = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -595,9 +595,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
         state.IsDetractingStart = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -607,9 +607,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
         state.IsDetracting = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Reset the previous extruder state
         state = ExtruderState()
@@ -618,9 +618,9 @@ class Test_LayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
         state.IsDetracted = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_ExtruderTriggerWait(self):
         """Test wait on extruder"""
@@ -643,19 +643,19 @@ class Test_LayerTrigger(unittest.TestCase):
         state.IsExtrudingStart = False
         pos.IsLayerChange = True
 
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # update again with no change
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
         # set the trigger and try again
         state.IsExtrudingStart = True
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_LayerChange_ZHop(self):
         """Test the layer trigger for layer changes triggers"""
@@ -667,79 +667,79 @@ class Test_LayerTrigger(unittest.TestCase):
                                                     None)  # Ignore extruder
         trigger.HeightIncrement = 0  # Trigger on any height change
         # test initial state
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # send commands that normally would trigger a layer change, but without all axis homed.
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Home all axis and try again, will not trigger or wait, previous axis not homed
         position.Update("g28")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # Waiting on ZHop
         position.Update("g0 x0 y0 z.2 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
         # try zhop
         position.Update("g0 x0 y0 z.7 ")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # extrude on current layer, no trigger (wait on zhop)
         position.Update("g0 x0 y0 z.7 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # do not extrude on current layer, still waiting
         position.Update("g0 x0 y0 z.7 ")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # partial hop, but close enough based on our printer measurement tolerance (0.005)
         position.Update("g0 x0 y0 z1.1999")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
         # creat wait state
         position.Update("g0 x0 y0 z1.3 e1")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move down (should never happen, should behave properly anyway)
         position.Update("g0 x0 y0 z.8")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move back up to current layer (should NOT trigger zhop)
         position.Update("g0 x0 y0 z1.3")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, not enough to trigger zhop
         position.Update("g0 x0 y0 z1.795")
-        trigger.Update(position)
-        self.assertFalse(trigger.IsTriggered(0))
-        self.assertTrue(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertFalse(trigger.is_triggered(0))
+        self.assertTrue(trigger.is_waiting(0))
 
         # move up a bit, just enough to trigger zhop
         position.Update("g0 x0 y0 z1.7951")
-        trigger.Update(position)
-        self.assertTrue(trigger.IsTriggered(0))
-        self.assertFalse(trigger.IsWaiting(0))
+        trigger.update(position)
+        self.assertTrue(trigger.is_triggered(0))
+        self.assertFalse(trigger.is_waiting(0))
 
 
 if __name__ == '__main__':
