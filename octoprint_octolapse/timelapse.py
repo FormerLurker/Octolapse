@@ -745,6 +745,10 @@ class Timelapse(object):
         self.IsRendering = False
         self.Settings.CurrentDebugProfile().LogRenderFail(
             "The timelapse rendering failed.")
+
+        if self.Snapshot.cleanup_after_render_fail:
+            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+
         # Notify Octoprint
         payload = args[0]
 
@@ -761,6 +765,10 @@ class Timelapse(object):
         self.Settings.CurrentDebugProfile().LogRenderComplete(
             "Completed rendering the timelapse.")
         self.IsRendering = False
+
+        if self.Snapshot.cleanup_after_render_complete:
+            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+
         payload = args[0]
         if self.OnRenderCompleteCallback is not None:
             self.OnRenderCompleteCallback(payload)
