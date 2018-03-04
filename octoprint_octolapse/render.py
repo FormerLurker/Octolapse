@@ -15,7 +15,6 @@ import threading
 import time
 
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.settings import Rendering
 
 
@@ -42,9 +41,6 @@ class Render(object):
         self.OnAfterSyncFail = onAfterSyncFail
         self.OnAfterSycnSuccess = onAfterSycnSuccess
         self.OnComplete = onComplete
-        self.CaptureSnapshot = CaptureSnapshot(self.Settings, self.DataDirectory, printStartTime)
-
-
         self.TimelapseRenderJobs = []
 
     def Process(self, printName, printStartTime, printEndTime):
@@ -64,7 +60,6 @@ class Render(object):
         job = TimelapseRenderJob(
             self.Rendering,
             self.Settings.CurrentDebugProfile(),
-            self.CaptureSnapshot,
             printName,
             snapshotDirectory,
             snapshotFileNameTemplate,
@@ -100,7 +95,7 @@ class TimelapseRenderJob(object):
     # , capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 
     def __init__(
-        self, rendering, debug, captureSnapshot, printFileName,
+        self, rendering, debug, printFileName,
         capture_dir, capture_template, output_dir,
         output_name, octoprintTimelapseFolder,
         ffmpegPath, threads, timeAdded=0,
@@ -111,7 +106,6 @@ class TimelapseRenderJob(object):
         cleanAfterFail=False):
         self._rendering = Rendering(rendering)
         self._debug = debug
-        self._captureSnapshot = captureSnapshot
         self._printFileName = printFileName
         self._capture_dir = capture_dir
         self._capture_file_template = capture_template
@@ -447,11 +441,8 @@ class TimelapseRenderJob(object):
                     return
 
                 self._on_render_complete()
-                cleanSnapshots = (success and self.cleanAfterSuccess) or self.cleanAfterFail
-                if cleanSnapshots:
-                    self._captureSnapshot.clean_snapshots(self._capture_dir)
-
                 finalFileName = self._baseOutputFileName
+
                 if self._synchronize:
                     finalFileName = "{0}{1}{2}".format(
                         self._octoprintTimelapseFolder, os.sep,
