@@ -13,7 +13,7 @@ import octoprint.plugin
 # used to send messages to the web client for notifying it of new timelapses
 from octoprint.events import eventManager, Events
 from octoprint.server import admin_permission
-from octoprint.server.util.flask import restricted_access
+from octoprint.server.util.flask import restricted_access, check_lastmodified, check_etag
 
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.utility as utility

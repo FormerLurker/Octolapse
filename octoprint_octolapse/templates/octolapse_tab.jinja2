@@ -6,13 +6,13 @@
 </div>
 <div id="octolapse_tab">
   <script>
-    var getLatestSnapshotUrl = function()
+    getLatestSnapshotUrl = function()
     {
-    return "{{ url_for('plugin.octolapse.snapshot',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
+        return "{{ url_for('plugin.octolapse.snapshot_request',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
     }
-    var getLatestSnapshotThumbnailUrl = function()
+    getLatestSnapshotThumbnailUrl = function()
     {
-    return "{{ url_for('plugin.octolapse.snapshot',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
+        return "{{ url_for('plugin.octolapse.snapshot_request',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
     }
   </script>
   <div data-bind="visible:snapshot_error" class="text-danger">
@@ -69,10 +69,10 @@
                 </span>
               </a>
             </div>
-            
+
             <div class="snapshot_refresh_container ">
               <a class="start-animation" data-bind="click:startSnapshotAnimation('octolapse_snapshot_thumbnail_container',true),visible:Octolapse.Globals.auto_reload_latest_snapshot" href="#">
-                <span class="fa-stack" style="position:inline;">
+                <span class="fa-stack" style="position: inline;">
                   <i class="fa fa-square fa-stack-2x" ></i>
                   <i class="fa fa-play-circle fa-stack-1x"></i>
                 </span>
@@ -84,7 +84,7 @@
                 </span>
               </a>
             </div>
-            
+
           </div>
         </div>
       </div>

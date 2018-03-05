@@ -1,7 +1,8 @@
 <!--
   This file is subject to the terms and conditions defined in
   file called 'LICENSE', which is part of this source code package.
---><div>
+-->
+<div>
   <div class="text-center">
     <h3>Octolapse Settings</h3>
   </div>
@@ -85,7 +86,7 @@
     <input type="hidden" id="platform" data-bind="value:platform"/>
     <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
     <div class="row-fluid">
-      <a class="btn btn-default span6" data-bind="attr: {href: '{{ url_for('plugin.octolapse.downloadSettings', apikey='') }}' + UI_API_KEY}" download="">
+      <a class="btn btn-default span6" data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_settings_request', apikey='') }}' + UI_API_KEY}" download="">
         <i class="fa fa-download"></i> Download Settings
       </a>
       <a href="#" class="span6 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
