@@ -534,7 +534,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "Unable to start the timelapse. Error:{0}".format(result["error"]))
             return
 
-        if not result["warning"]:
+        if result["warning"]:
             self.send_popup_message(result["warning"])
 
         self.Settings.current_debug_profile().log_print_state_change(
