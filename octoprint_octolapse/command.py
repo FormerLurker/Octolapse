@@ -7,10 +7,6 @@
 import collections
 import operator
 import re
-import string
-import sys
-
-import octoprint_octolapse.utility as utility
 
 
 class GcodeParts(object):
@@ -28,51 +24,51 @@ class GcodeParts(object):
             return
 
         # create a temp variable to hold the command without the comment or semicolon
-        commandAndParameters = None
+        command_and_parameters = None
 
         # find the first semicolon.  If it exists, split the string into two
-        commentIndex = gcode.find(";")
+        comment_index = gcode.find(";")
 
         # handle splitting comment from command and parameters
-        if commentIndex > -1:
+        if comment_index > -1:
             # if we've found a semicolon
-            if commentIndex > 0:
-                commandAndParameters = gcode[0:commentIndex].strip()
-            if len(gcode) >= commentIndex + 1:
+            if comment_index > 0:
+                command_and_parameters = gcode[0:comment_index].strip()
+            if len(gcode) >= comment_index + 1:
                 # If there is anything after the semicolon
-                self.Comment = gcode[commentIndex + 1:]
+                self.Comment = gcode[comment_index + 1:]
             else:
                 # If there is nothing after the semicolon
                 self.Comment = ""
         else:
-            commandAndParameters = gcode.strip()
+            command_and_parameters = gcode.strip()
         # now we should have a stripped commandAndParameters string and either a stripped comment, or no comment
 
         # If there are no commands or parameters, there is nothing more to do.
         # We have extracted any comment that might exist on the line
-        if commandAndParameters is None or len(commandAndParameters) == 0:
+        if command_and_parameters is None or len(command_and_parameters) == 0:
             return
 
         # split the commandAndParameters array, stripping any redundant whitespace
         # This split command rocks!  How fun that the defaults work for my case!
-        commandArray = commandAndParameters.split()
+        command_array = command_and_parameters.split()
         # We will need to know how many elements are in this array later
-        numParts = len(commandArray)
+        num_parts = len(command_array)
 
-        if numParts == 0:
+        if num_parts == 0:
             return  # Our string contained only whitespace, time to go, leaving the Command = None and Parameters = []
 
         # we for sure have a command at this point, so set it now!
-        self.Command = commandArray[0]
+        self.Command = command_array[0]
 
         # If we have anything extra in our commandArray, it must contain parameters.
-        if numParts > 1:
+        if num_parts > 1:
             # everything but the first element
-            self.Parameters = commandArray[1:]
+            self.Parameters = command_array[1:]
 
 
-def GetGcodeFromString(commandString):
-    command = commandString.strip().split(' ', 1)[0].upper()
+def get_gcode_from_string(command_string):
+    command = command_string.strip().split(' ', 1)[0].upper()
     ix = command.find(";")
     if ix > -1:
         command = command[0:ix]
@@ -89,7 +85,7 @@ class CommandParameter(object):
         self.Value = value
         self.Order = order
 
-    def Parse(self, paramText):
+    def parse(self, parameter_text):
         """parse the parameter text and store it in the Value member.  Return true if a match is found, false if not."""
 
         self.Value = None  # We haven't found a value yet.
@@ -99,16 +95,16 @@ class CommandParameter(object):
             return False
 
         # get any matches
-        matches = self.__compiled.match(paramText)
+        matches = self.__compiled.match(parameter_text)
         if matches is None:
             # No matches, time to go
             return False
 
         # How many capture groups did we find?
-        numGroups = len(matches.groups())
-        if numGroups > 0:
+        num_groups = len(matches.groups())
+        if num_groups > 0:
             self.Value = matches.group(1)
-            if numGroups > 1:
+            if num_groups > 1:
                 # if there were any extra matches, return false
                 return False
 
@@ -144,7 +140,7 @@ class CommandParameters(collections.MutableMapping):
     def __keytransform__(self, key):
         return key
 
-    def ClearValues(self):
+    def clear_values(self):
         for key, item in self.store.items():
             item.Value = None
 
@@ -154,7 +150,7 @@ class Command(object):
     CommentTextTemplate = "{commenttext}"
     CommentSeparator = ";"
 
-    def __init__(self, name=None, command=None, regex=None, displayTemplate=None, parameters=None, gcode=None):
+    def __init__(self, name=None, command=None, display_template=None, parameters=None, gcode=None):
         if type(command) is Command:
             self.Name = command.Name
             self.Command = command.Command
@@ -164,7 +160,7 @@ class Command(object):
         else:
             self.Name = name
             self.Command = command
-            self.DisplayTemplate = displayTemplate
+            self.DisplayTemplate = display_template
             self.Parameters = CommandParameters()
             self.CommandParts = GcodeParts(gcode)
             if parameters is not None:
@@ -180,52 +176,25 @@ class Command(object):
                 else:
                     self.Parameters = parameters
 
-    # def DisplayString(self):
-    #     if self.DisplayTemplate is None:
-    #         return self.Gcode()
-    #     output = self.DisplayTemplate
-    #     safeDict = utility.SafeDict()
-    #     for key in self.Parameters:
-    #         value = self.Parameters[key].Value
-    #         safeDict.clear()
-    #         if value is None:
-    #             value = "None"
-    #
-    #         safeDict[key] = value
-    #         output = string.Formatter().vformat(output, (), safeDict)
-    #
-    #     if self.CommandParts.Comment is not None:
-    #         safeDict.clear()
-    #         safeDict["Comment"] = self.CommentSeparator + \
-    #                               self.CommandParts.Comment
-    #         safeDict["CommentText"] = self.CommandParts.Comment
-    #         output = string.Formatter().vformat(output, (), safeDict)
-    #     else:
-    #         safeDict["Comment"] = ""
-    #         safeDict["CommentText"] = ""
-    #         output = string.Formatter().vformat(output, (), safeDict)
-    #
-    #     return output
-
-    def ToString(self, reform=False):
+    def to_string(self, reform=False):
         # if we have gcode, just return it (duh...)
         if not reform and self.CommandParts.Gcode is not None:
             return self.CommandParts.Gcode
 
         # if we do not have gcode, construct from the command and parameters
-        commandString = self.Command
+        command_string = self.Command
 
         # loop through each parameter and add the parameter name and value to the command string
         for parameter in (sorted(self.Parameters.values(), key=operator.attrgetter('Order'))):
             if parameter.Value is not None:
-                commandString += " " + parameter.Name + str(parameter.Value)
+                command_string += " " + parameter.Name + str(parameter.Value)
         # since there is no gcode, we can't have a comment.  Time to return the command string
-        return commandString
+        return command_string
 
-    def Parse(self):
+    def parse(self):
 
         # Clear any parameter values
-        self.Parameters.ClearValues()
+        self.Parameters.clear_values()
 
         # Validate the gcode command
         if self.CommandParts.Command.upper() != self.Command.upper():
@@ -242,7 +211,7 @@ class Command(object):
                 if parameter.Value is not None:
                     continue
                 # test for regex match
-                if parameter.Parse(paramText):
+                if parameter.parse(paramText):
                     # it worked, break to the next parameter
                     matched = True
                     break
@@ -257,7 +226,7 @@ class Commands(object):
     SuppressedSnapshotGcodeCommands = ["M105"]
     G0 = Command(
         name="Rapid Linear Move", command="G0",
-        displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentText}",
+        display_template="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentText}",
         parameters=[
             CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
@@ -268,7 +237,7 @@ class Commands(object):
     )
     G1 = Command(
         name="Linear Move", command="G1",
-        displayTemplate="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{Comment}",
+        display_template="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{Comment}",
         parameters=[
             CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
@@ -277,26 +246,16 @@ class Commands(object):
             CommandParameter("F", "(?i)^f(?P<f>-?[0-9]{0,15}.?[0-9]{1,15})$", order=5)
         ]
     )
-    G28 = Command(
-        name="Go To Origin", command="G28",
-        displayTemplate="G28 - Go to Origin{Comment}",
-        parameters=[
-            CommandParameter("X", "(?i)^(x)$", order=1),
-            CommandParameter("Y", "(?i)^(y)$", order=2),
-            CommandParameter("Z", "(?i)^(z)$", order=3),
-            CommandParameter("W", "(?i)^(w)$", order=4)
-        ]
-    )
     G29 = Command(
         name="Detailed Z-Probe", command="G29",
-        displayTemplate="G29 - Detailed Z-Probe{Comment}",
+        display_template="G29 - Detailed Z-Probe{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
         ]
     )
     G92 = Command(
         name="Set Absolute Position", command="G92",
-        displayTemplate="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{Comment}",
+        display_template="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{Comment}",
         parameters=[
             CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
@@ -306,17 +265,17 @@ class Commands(object):
     )
     M82 = Command(
         name="Set Extruder Relative Mode", command="M82",
-        displayTemplate="M82 - Set Extruder Relative Mode{Comment}",
+        display_template="M82 - Set Extruder Relative Mode{Comment}",
         parameters=[]
     )
     M83 = Command(
         name="Set Extruder Absolute Mode", command="M83",
-        displayTemplate="M83 - Set Extruder Absolute Mode{Comment}",
+        display_template="M83 - Set Extruder Absolute Mode{Comment}",
         parameters=[]
     )
     G28 = Command(
         name="Go To Origin", command="G28",
-        displayTemplate="G28 - Go to Origin{Comment}",
+        display_template="G28 - Go to Origin{Comment}",
         parameters=[
             CommandParameter("X", "(?i)^(x)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=1),
             CommandParameter("Y", "(?i)^(y)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=2),
@@ -326,34 +285,34 @@ class Commands(object):
     )
     G80 = Command(
         name="Cancel Canned Cycle (firmware specific)", command="G80",
-        displayTemplate="G80 - Cancel Canned Cycle (firmware specific){Comment}",
+        display_template="G80 - Cancel Canned Cycle (firmware specific){Comment}",
         parameters=[]
     )
     G90 = Command(
         name="Absolute Coordinates", command="G90",
-        displayTemplate="G90 - Absolute Coordinates{Comment}",
+        display_template="G90 - Absolute Coordinates{Comment}",
         parameters=[]
     )
     G91 = Command(
         name="Relative Coordinates", command="G91",
-        displayTemplate="G91 - Relative Coordinates{Comment}",
+        display_template="G91 - Relative Coordinates{Comment}",
         parameters=[]
     )
     M114 = Command(
         name="Get Position", command="M114",
-        displayTemplate="M114 - Get Current Position{Comment}",
+        display_template="M114 - Get Current Position{Comment}",
         parameters=[]
     )
     M104 = Command(
         name="Set Extruder Temperature", command="M104",
-        displayTemplate="M104 - Set Extruder Temperature{Comment}",
+        display_template="M104 - Set Extruder Temperature{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1)
         ]
     )
     M140 = Command(
         name="Set Bed Temperature", command="M140",
-        displayTemplate="M140 - Set Bed Temperature{Comment}",
+        display_template="M140 - Set Bed Temperature{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
@@ -361,7 +320,7 @@ class Commands(object):
     )
     M141 = Command(
         name="Set Chamber Temperature", command="M141",
-        displayTemplate="M141 - Set Chamber Temperature{Comment}",
+        display_template="M141 - Set Chamber Temperature{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2)
@@ -369,7 +328,7 @@ class Commands(object):
     )
     M109 = Command(
         name="Set Extruder Temperature and Wait", command="M109",
-        displayTemplate="M109 - Extruder Bed Temperature and Wait{Comment}",
+        display_template="M109 - Extruder Bed Temperature and Wait{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
@@ -377,7 +336,7 @@ class Commands(object):
     )
     M190 = Command(
         name="Set Bed Temperature and Wait", command="M190",
-        displayTemplate="M190 - Set Bed Temperature and Wait{Comment}",
+        display_template="M190 - Set Bed Temperature and Wait{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
@@ -385,7 +344,7 @@ class Commands(object):
     )
     M191 = Command(
         name="Set Chamber Temperature and Wait", command="M191",
-        displayTemplate="M191 - Set Bed Temperature and Wait{Comment}",
+        display_template="M191 - Set Bed Temperature and Wait{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("R", "(?i)^r(?P<r>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2)
@@ -393,7 +352,7 @@ class Commands(object):
     )
     M116 = Command(
         name="Wait for Temperature", command="M116",
-        displayTemplate="M116 - Wait for Temperature{Comment}",
+        display_template="M116 - Wait for Temperature{Comment}",
         parameters=[
             CommandParameter("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=1),
             CommandParameter("H", "(?i)^h(?P<h>-?[0-9]{0,15})$", order=2),
@@ -402,7 +361,7 @@ class Commands(object):
     )
     M106 = Command(
         name="Set Part Fan Speed", command="M106",
-        displayTemplate="M106 - Set Part Fan Speed{Comment}",
+        display_template="M106 - Set Part Fan Speed{Comment}",
         parameters=[
             CommandParameter("S", "(?i)^s(?P<s>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
             CommandParameter("P", "(?i)^p(?P<p>-?[0-9]{0,15})$", order=2),
@@ -437,47 +396,47 @@ class Commands(object):
         M191.Command: M191
     }
 
-    def AlterCommandForTestMode(self, cmd):
+    def alter_for_test_mode(self, cmd):
         if cmd is None:
             return None
-        gcodeCommand = self.GetCommand(cmd)
-        if gcodeCommand is None:
+        gcode_command = self.get_command(cmd)
+        if gcode_command is None:
             return None
-        elif gcodeCommand.Command in [self.G0.Command, self.G1.Command]:
-            gcodeCommand.Parameters["E"].Value = None
-            return gcodeCommand.ToString(reform=True),
-        elif gcodeCommand.Command in [
-            self.M104.Command, self.M140.Command, self.M141.Command,
-            self.M109.Command, self.M190.Command, self.M191.Command,
-            self.M116.Command, self.M106.Command]:
-            return (None,)
+        elif gcode_command.Command in [self.G0.Command, self.G1.Command]:
+            gcode_command.Parameters["E"].Value = None
+            return gcode_command.to_string(reform=True),
+        elif gcode_command.Command in [
+                self.M104.Command, self.M140.Command, self.M141.Command,
+                self.M109.Command, self.M190.Command, self.M191.Command,
+                self.M116.Command, self.M106.Command]:
+            return None,
         else:
             return None
 
-    def GetTestModeCommandString(self, cmd):
-        gcodeCommand = self.GetCommand(cmd)
-        if gcodeCommand is None:
+    def get_test_mode_command_string(self, cmd):
+        gcode_command = self.get_command(cmd)
+        if gcode_command is None:
             return cmd
-        elif gcodeCommand.Command in [self.G0.Command, self.G1.Command]:
-            gcodeCommand.Parameters["E"].Value = None
-            return gcodeCommand.ToString(reform=True)
-        elif gcodeCommand.Command in [
-            self.M104.Command, self.M140.Command, self.M141.Command,
-            self.M109.Command, self.M190.Command, self.M191.Command,
-            self.M116.Command, self.M106.Command]:
+        elif gcode_command.Command in [self.G0.Command, self.G1.Command]:
+            gcode_command.Parameters["E"].Value = None
+            return gcode_command.to_string(reform=True)
+        elif gcode_command.Command in [
+                self.M104.Command, self.M140.Command, self.M141.Command,
+                self.M109.Command, self.M190.Command, self.M191.Command,
+                self.M116.Command, self.M106.Command]:
             return ""
         else:
             return cmd
 
-    def GetCommand(self, code):
-        gcodeCommand = GetGcodeFromString(code)
-        if gcodeCommand in self.CommandsDictionary.keys():
+    def get_command(self, code):
+        gcode_command = get_gcode_from_string(code)
+        if gcode_command in self.CommandsDictionary.keys():
             # get the gcodeCommand from our dictionary
-            cmd = self.CommandsDictionary[gcodeCommand]
+            cmd = self.CommandsDictionary[gcode_command]
             # set the gcode parts
             cmd.CommandParts = GcodeParts(code)
             # parse the gcodeCommand
-            cmd.Parse()
+            cmd.parse()
             return cmd
         return None
 
@@ -486,8 +445,7 @@ class Responses(object):
     def __init__(self):
         self.M114 = Command(
             name="Get Position", command="M114",
-            # regex="(?i).*?X:([-0-9.]+) Y:([-0-9.]+) Z:([-0-9.]+) E:([-0-9.]+).*?,"
-            displayTemplate="Position: X={0}, Y={1}, Z={2}, E={3}",
+            display_template="Position: X={0}, Y={1}, Z={2}, E={3}",
             parameters=[
                 CommandParameter("X", "(?i)^x:(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
                 CommandParameter("Y", "(?i)^y:(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),

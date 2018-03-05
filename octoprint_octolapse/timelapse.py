@@ -233,7 +233,7 @@ class Timelapse(object):
                 self.Position.undo_update()
                 self.State = TimelapseState.AcquiringLocation
                 if self.IsTestMode:
-                    cmd = self.Commands.GetTestModeCommandString(cmd)
+                    cmd = self.Commands.get_test_mode_command_string(cmd)
                 self.SavedCommand = cmd
                 cmd = None,
                 message = (
@@ -265,7 +265,7 @@ class Timelapse(object):
                         self.SavedCommand = None
                     else:
                         if self.IsTestMode:
-                            cmd = self.Commands.GetTestModeCommandString(cmd)
+                            cmd = self.Commands.get_test_mode_command_string(cmd)
                         # this will cause the command to be added to the end of our snapshot commands
                         self.SavedCommand = cmd
                     # pause the printer to start the snapshot
@@ -372,7 +372,7 @@ class Timelapse(object):
             return cmd
 
         if self.IsTestMode and self.State >= TimelapseState.WaitingForTrigger:
-            return self.Commands.AlterCommandForTestMode(cmd)
+            return self.Commands.alter_for_test_mode(cmd)
         # if we were given a list, return it.
         if isinstance(cmd, list):
             return cmd
@@ -417,8 +417,8 @@ class Timelapse(object):
             self.Settings.current_debug_profile().log_exception(e)
 
     def _isSnapshotCommand(self, command):
-        commandName = GetGcodeFromString(command)
-        snapshotCommandName = GetGcodeFromString(self.Printer.snapshot_command)
+        commandName = get_gcode_from_string(command)
+        snapshotCommandName = get_gcode_from_string(self.Printer.snapshot_command)
         return commandName == snapshotCommandName
 
     def _isTriggerWaiting(self, cmd):

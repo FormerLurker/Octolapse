@@ -289,7 +289,7 @@ class GcodeTrigger(Trigger):
     def __init__(self, octolapse_settings):
         # call parent constructor
         super(GcodeTrigger, self).__init__(octolapse_settings)
-        self.SnapshotCommand = GetGcodeFromString(
+        self.SnapshotCommand = get_gcode_from_string(
             self.Printer.snapshot_command)
         self.Type = "gcode"
         self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
@@ -398,7 +398,7 @@ class GcodeTrigger(Trigger):
             self.Settings.current_debug_profile().log_exception(e)
 
     def is_snapshot_command(self, command):
-        command_name = GetGcodeFromString(command)
+        command_name = get_gcode_from_string(command)
         return command_name == self.SnapshotCommand
 
 

@@ -18,7 +18,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g0 x100 y200.0 z3.0001 e1.1 f7200.000; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
@@ -36,7 +36,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g0 y200.0 f7200"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
@@ -54,7 +54,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g0 f7200 y200.0 X100.0 "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
@@ -72,7 +72,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g0   z100     X200.0 X100.0 ; This is a comment  "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
@@ -91,7 +91,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g0 x. yA z 1 e. f-; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
@@ -110,7 +110,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g1 x+0 y-0.0 z-.0001 e. f; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G1")
@@ -128,7 +128,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g1 x200.0 e7200"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G1")
@@ -146,7 +146,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g1 e0 z.0 X1 "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G1")
@@ -163,7 +163,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g1   y1 z2 y3 z4 z5 x6 y7 x8 x9 z10        ; This is a comment  "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G1")
@@ -182,7 +182,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g1 x. yA z 1 e. f-; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G1")
@@ -200,7 +200,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92"  # test a lowercase g92 command with all parameters and a comment
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -218,7 +218,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92 x+0 y-0.0 z-.0001 e. ; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -235,7 +235,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92 x200.0 e7200"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -252,7 +252,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92 e0 z.0 X1 "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -268,7 +268,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92   y1 z2 y3 z4 z5 x6 y7 x8 x9 z10        ; This is a comment  "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -285,7 +285,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g92 x. yA z 1 e. f-; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G92")
@@ -302,7 +302,7 @@ class Test_Command(unittest.TestCase):
         gcode = "M82"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M82")
@@ -314,7 +314,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m82  ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M82")
@@ -327,7 +327,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m82 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M82")
@@ -340,7 +340,7 @@ class Test_Command(unittest.TestCase):
         gcode = "M83"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M83")
@@ -352,7 +352,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m83  ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M83")
@@ -365,7 +365,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m83 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M83")
@@ -378,7 +378,7 @@ class Test_Command(unittest.TestCase):
         gcode = "G90"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G90")
@@ -390,7 +390,7 @@ class Test_Command(unittest.TestCase):
         gcode = " g90  ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G90")
@@ -403,7 +403,7 @@ class Test_Command(unittest.TestCase):
         gcode = " g90 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G90")
@@ -416,7 +416,7 @@ class Test_Command(unittest.TestCase):
         gcode = "G91"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G91")
@@ -428,7 +428,7 @@ class Test_Command(unittest.TestCase):
         gcode = " g91  ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G91")
@@ -441,7 +441,7 @@ class Test_Command(unittest.TestCase):
         gcode = " g91 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G91")
@@ -453,7 +453,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m104 s11.223; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -462,7 +462,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M104 s11"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -471,7 +471,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M104; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -480,7 +480,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M104  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -489,7 +489,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M104  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -498,7 +498,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M104  unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M104")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -509,7 +509,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m140 s11.223 h100; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -519,7 +519,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters with invalid (no decimal allowed in H param)
         gcode = "m140 s11.223 h100.00; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -529,7 +529,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M140 s11 h200"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -539,7 +539,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M140; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -549,7 +549,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M140  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -559,7 +559,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M140  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -569,7 +569,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M140 h332 unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M140")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -581,7 +581,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m141 s11.223 h100; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -591,7 +591,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters with invalid (no decimal allowed in H param)
         gcode = "m141 s11.223 h100.00; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -601,7 +601,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M141 s11 h200"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -611,7 +611,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M141; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -621,7 +621,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M141  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -631,7 +631,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M141  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -641,7 +641,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M141 h332 unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M141")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -653,7 +653,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m109 s11.223 r100; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -663,7 +663,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M109 s11 r200"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -673,7 +673,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M109; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -683,7 +683,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M109  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -693,7 +693,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M109  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -703,7 +703,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M109 r332 unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M109")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -715,7 +715,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m190 s11.223 r100; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -725,7 +725,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M190 s11 r200"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -735,7 +735,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M190; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -745,7 +745,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M190  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -755,7 +755,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M190  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -765,7 +765,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M190 r332 unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M190")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -777,7 +777,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m191 s11.223 r100; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value == "11.223")
@@ -787,7 +787,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "M191 s11 r200"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value == "11")
@@ -797,7 +797,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M191; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -807,7 +807,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   m191  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -817,7 +817,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M191  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value is None)
@@ -827,7 +827,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M191 r332 unknownparam s100; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M191")
         self.assertTrue(cmd.Parameters["S"].Value == "100")
@@ -839,7 +839,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and comment
         gcode = "m116 P11 H22 C33; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value == "11")
@@ -850,7 +850,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters with invalid (no decimal allowed in H param)
         gcode = "m116 p11.1 h22.2 c33.33; Here is a comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value is None)
@@ -861,7 +861,7 @@ class Test_Command(unittest.TestCase):
         # Test all parameters and no comment
         gcode = "m116 P11 H22 C33"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value == "11")
@@ -872,7 +872,7 @@ class Test_Command(unittest.TestCase):
         # Test no parameters and a comment
         gcode = "M116; Here is another comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value is None)
@@ -883,7 +883,7 @@ class Test_Command(unittest.TestCase):
         # Test with no comment and no parameters
         gcode = "   M116  "
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value is None)
@@ -894,7 +894,7 @@ class Test_Command(unittest.TestCase):
         # Test with only bad parameters
         gcode = "   M116  unknownparam"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value is None)
@@ -905,7 +905,7 @@ class Test_Command(unittest.TestCase):
         # Test with bad parameter and good parameter and comment
         gcode = "   M116 p11 unknownparam h22 c33; comment"
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M116")
         self.assertTrue(cmd.Parameters["P"].Value == "11")
@@ -920,7 +920,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28"  # test a lowercase g28 command with all parameters and a comment
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -938,7 +938,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28 x y z w; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -955,7 +955,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28 x z"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -972,7 +972,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28 z x y"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -988,7 +988,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28  x y z x y z z y x    ; This is a comment  "
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -1005,7 +1005,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28 x a b c d ; Here is a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -1022,7 +1022,7 @@ class Test_Command(unittest.TestCase):
         gcode = "g28 w"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G28")
@@ -1038,7 +1038,7 @@ class Test_Command(unittest.TestCase):
         gcode = "M114"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M114")
@@ -1050,7 +1050,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m114  ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M114")
@@ -1063,7 +1063,7 @@ class Test_Command(unittest.TestCase):
         gcode = " m114 bogusParam1	bogusParam2    BogusParam3:ff ; With a comment"
 
         # get the command from the gcode
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "M114")
@@ -1072,137 +1072,137 @@ class Test_Command(unittest.TestCase):
     def test_(self):
         # test extrusion removal
         # Send a G0 command without parameters
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g0   ; test") == ("G0",))
         # Send a G0 command without extrusion
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g0 x100.0 y100.0 z100.0 f7200;no extrusion") == ("G0 X100.0 Y100.0 Z100.0 F7200",))
         # send the same command, but with out of order parameters
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g0 f7200   x100.0  y100.0 z100.0;no extrusion") == ("G0 X100.0 Y100.0 Z100.0 F7200",))
         # test without comments
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g0 f7200   x100.0  y100.0 z100.0") == ("G0 X100.0 Y100.0 Z100.0 F7200",))
         # Send a G0 command without parameters
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g1   ; test") == ("G1",))
         # Send a G1 command with extrusion
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g1 x100.0 y100.0 z100.0 e-1.0 f7200;extrusion") == ("G1 X100.0 Y100.0 Z100.0 F7200",))
         # send the same command, but with out of order parameters
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g1 e-1.0 f7200    x100.0 y100.0 z100.0 ;extrusion") == ("G1 X100.0 Y100.0 Z100.0 F7200",))
         # test without comments
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "g1 e-1.0 f7200    x100.0 y100.0 z100.0") == ("G1 X100.0 Y100.0 Z100.0 F7200",))
 
         # test temp suppression
         # Test M104 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M104"))
+            (None,) == self.Commands.alter_for_test_mode("M104"))
         # Test M104 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M104 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M104 ; Whatsis"))
         # Test M104 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M104  s100.2 ;no extrusion"))
         # Test M104 with all parameters and no comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M104 S100"))
+            (None,) == self.Commands.alter_for_test_mode("M104 S100"))
 
         # Test M140 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M140"))
+            (None,) == self.Commands.alter_for_test_mode("M140"))
         # Test M140 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M140 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M140 ; Whatsis"))
         # Test M140 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M140  s100.2 h111;no extrusion"))
         # Test M140 with all parameters and no comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "m140 s100.2 h111 S100"))
 
         # Test M141 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode(" M141		"))
+            (None,) == self.Commands.alter_for_test_mode(" M141		"))
         # Test M141 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M141 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M141 ; Whatsis"))
         # Test M141 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M141  s100.2 H331;no extrusion"))
         # Test M141 with all parameters and no comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M141  H331 S100"))
+            (None,) == self.Commands.alter_for_test_mode("M141  H331 S100"))
 
         # Test M109 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M109"))
+            (None,) == self.Commands.alter_for_test_mode("M109"))
         # Test M109 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M109 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M109 ; Whatsis"))
         # Test M109 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M109  r2221.333 s100.2 ;no extrusion"))
         # Test M109 with all parameters and no comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M109 S100 r2221.333 "))
 
         # Test M190 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M190"))
+            (None,) == self.Commands.alter_for_test_mode("M190"))
         # Test M190 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M190 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M190 ; Whatsis"))
         # Test M190 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M190  r2221.333  s100.2 ;no extrusion"))
         # Test M190 with all parameters and no comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M190 S100 R2221.333 "))
 
         # Test M191 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M191"))
+            (None,) == self.Commands.alter_for_test_mode("M191"))
         # Test M191 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M191 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M191 ; Whatsis"))
         # Test M191 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M191  s100.2   r2221.333  ;no extrusion"))
         # Test M191 with all parameters and no comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M191 r2221.333 S100"))
 
         # Test M116 with no parameters
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M116"))
+            (None,) == self.Commands.alter_for_test_mode("M116"))
         # Test M116 with no parameters and a comment
         self.assertTrue(
-            (None,) == self.Commands.AlterCommandForTestMode("M116 ; Whatsis"))
+            (None,) == self.Commands.alter_for_test_mode("M116 ; Whatsis"))
         # Test M116 with all parameters and comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M116 p1 h3232 c122 ;no extrusion"))
         # Test M116 with all parameters and no comment
-        self.assertTrue((None,) == self.Commands.AlterCommandForTestMode(
+        self.assertTrue((None,) == self.Commands.alter_for_test_mode(
             "M116 c233 h112 p3332"))
 
         # test all gcodes that are in our CommandsDictionary, but not G0,G1 or temp commands
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G2") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G92") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G82") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G28") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G90") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("G91") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode("M114") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G2") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G92") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G82") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G28") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G90") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("G91") is None)
+        self.assertTrue(self.Commands.alter_for_test_mode("M114") is None)
 
         # test some gcodes that are NOT in our CommandsDictionary
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "NotInOurCommandsCommand1") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "NotInOurCommandsCommands ; with a comment") is None)
-        self.assertTrue(self.Commands.AlterCommandForTestMode(
+        self.assertTrue(self.Commands.alter_for_test_mode(
             "A random series of letters") is None)
 
 

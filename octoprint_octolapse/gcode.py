@@ -26,7 +26,7 @@ class SnapshotGcode(object):
         self.__OriginalGcodeCommands.append(command)
 
         if self.IsTestMode:
-            command = self.CommandsDictionary.GetTestModeCommandString(command)
+            command = self.CommandsDictionary.get_test_mode_command_string(command)
         command = command.upper().strip()
         if command != "":
             self.GcodeCommands.append(command)

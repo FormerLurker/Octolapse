@@ -518,7 +518,7 @@ class Position(object):
 
     def command_requires_location_detection(self, cmd):
         if self.Printer.auto_detect_position:
-            gcode = command.GetGcodeFromString(cmd)
+            gcode = command.get_gcode_from_string(cmd)
             if gcode in self.LocationDetectionCommands:
                 return True
         return False
@@ -544,7 +544,7 @@ class Position(object):
         return None
 
     def update(self, gcode):
-        cmd = self.Commands.GetCommand(gcode)
+        cmd = self.Commands.get_command(gcode)
         # a new position
 
         pos = None
@@ -571,7 +571,7 @@ class Position(object):
             # TODO: Make DRY
             if cmd.Command in ["G0", "G1"]:
                 # Movement
-                if cmd.Parse():
+                if cmd.parse():
                     self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd.Name))
                     x = cmd.Parameters["X"].Value
                     y = cmd.Parameters["Y"].Value
@@ -628,7 +628,7 @@ class Position(object):
                         "Position - Unable to parse the gcode command: {0}".format(gcode))
             elif cmd.Command == "G28":
                 # Home
-                if cmd.Parse():
+                if cmd.parse():
                     pos.HasReceivedHomeCommand = True
                     x = cmd.Parameters["X"].Value
                     y = cmd.Parameters["Y"].Value
@@ -762,7 +762,7 @@ class Position(object):
                     pos.IsExtruderRelative = False
             elif cmd.Command == "G92":
                 # Set Position (offset)
-                if cmd.Parse():
+                if cmd.parse():
                     x = cmd.Parameters["X"].Value
                     y = cmd.Parameters["Y"].Value
                     z = cmd.Parameters["Z"].Value
