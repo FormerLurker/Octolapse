@@ -3,55 +3,54 @@
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 
-import os
-import shutil
-import threading
 import time
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.command import *
-from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
+from octoprint_octolapse.gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import Render
-from octoprint_octolapse.settings import (OctolapseSettings, Printer, Stabilization,
-                                          Camera, Rendering, Snapshot, DebugProfile)
-from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotInfo
-from octoprint_octolapse.trigger import GcodeTrigger, TimerTrigger, LayerTrigger, Triggers
+from octoprint_octolapse.settings import (Printer, Rendering, Snapshot)
+from octoprint_octolapse.snapshot import CaptureSnapshot
+from octoprint_octolapse.trigger import Triggers
 
 
 class Timelapse(object):
 
     def __init__(
-        self, dataFolder, timelapseFolder,
-        onSnapshotStart=None, onSnapshotEnd=None,
-        onRenderStart=None, onRenderComplete=None,
-        onRenderFail=None, onRenderSynchronizeFail=None,
-        onRenderSynchronizeComplete=None, onRenderEnd=None,
-        onTimelapseStopping=None, onTimelapseStopped=None,
-        onStateChanged=None, onTimelapseStart=None,
-        onSnapshotPositionError=None, onPositionError=None):
+            self, data_folder, timelapse_folder,
+            on_snapshot_start=None, on_snapshot_end=None,
+            on_render_start=None, on_render_complete=None,
+            on_render_fail=None, on_render_synchronize_fail=None,
+            on_render_synchronize_complete=None, on_render_end=None,
+            on_timelapse_stopping=None, on_timelapse_stopped=None,
+            on_state_changed=None, on_timelapse_start=None,
+            on_snapshot_position_error=None, on_position_error=None):
         # config variables - These don't change even after a reset
         self.Settings = None
-        self.DataFolder = dataFolder
-        self.DefaultTimelapseDirectory = timelapseFolder
-        self.OnRenderStartCallback = onRenderStart
-        self.OnRenderCompleteCallback = onRenderComplete
-        self.OnRenderFailCallback = onRenderFail
-        self.OnRenderingSynchronizeFailCallback = onRenderSynchronizeFail
-        self.OnRenderingSynchronizeCompleteCallback = onRenderSynchronizeComplete
-        self.OnRenderEndCallback = onRenderEnd
-        self.OnSnapshotStartCallback = onSnapshotStart
-        self.OnSnapshotCompleteCallback = onSnapshotEnd
-        self.TimelapseStoppingCallback = onTimelapseStopping
-        self.TimelapseStoppedCallback = onTimelapseStopped
-        self.OnStateChangedCallback = onStateChanged
-        self.OnTimelapseStartCallback = onTimelapseStart
-        self.OnSnapshotPositionErrorCallback = onSnapshotPositionError
-        self.OnPositionErrorCallback = onPositionError
+        self.DataFolder = data_folder
+        self.DefaultTimelapseDirectory = timelapse_folder
+        self.OnRenderStartCallback = on_render_start
+        self.OnRenderCompleteCallback = on_render_complete
+        self.OnRenderFailCallback = on_render_fail
+        self.OnRenderingSynchronizeFailCallback = on_render_synchronize_fail
+        self.OnRenderingSynchronizeCompleteCallback = on_render_synchronize_complete
+        self.OnRenderEndCallback = on_render_end
+        self.OnSnapshotStartCallback = on_snapshot_start
+        self.OnSnapshotCompleteCallback = on_snapshot_end
+        self.TimelapseStoppingCallback = on_timelapse_stopping
+        self.TimelapseStoppedCallback = on_timelapse_stopped
+        self.OnStateChangedCallback = on_state_changed
+        self.OnTimelapseStartCallback = on_timelapse_start
+        self.OnSnapshotPositionErrorCallback = on_snapshot_position_error
+        self.OnPositionErrorCallback = on_position_error
         self.Responses = Responses()  # Used to decode responses from the 3d printer
         self.Commands = Commands()  # used to parse and generate gcode
         self.Triggers = None
         # Settings that may be different after StartTimelapse is called
+        self.OctoprintPrinter = None
+        self.OctoprintPrinterProfile = None
+        self.PrintStartTime = None
         self.FfMpegPath = None
         self.Snapshot = None
         self.Gcode = None
@@ -59,68 +58,76 @@ class Timelapse(object):
         self.CaptureSnapshot = None
         self.Position = None
         self.HasSentInitialStatus = False
+        self.Rendering = None
+        self.State = TimelapseState.Idle
+        self.IsTestMode = False
         # State Tracking that should only be reset when starting a timelapse
         self.IsRendering = False
         self.HasBeenCancelled = False
         self.HasBeenStopped = False
+        self.TimelapseStopRequested = False
+        self.SavedCommand = None
         # State tracking variables
+        self.RequiresLocationDetectionAfterHome = False
+
         self._reset()
 
     # public functions
-    def StartTimelapse(self, settings, octoprintPrinter, octoprintPrinterProfile, ffmpegPath, g90InfluencesExtruder):
+    def start_timelapse(
+            self, settings, octoprint_printer, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
         # we must supply the settings first!  Else reset won't work properly.
         self.Settings = settings
 
         self._reset()
         self.HasSentInitialStatus = False
         self.RequiresLocationDetectionAfterHome = False
-        self.OctoprintPrinter = octoprintPrinter
-        self.OctoprintPrinterProfile = octoprintPrinterProfile
-        self.FfMpegPath = ffmpegPath
+        self.OctoprintPrinter = octoprint_printer
+        self.OctoprintPrinterProfile = octoprint_printer_profile
+        self.FfMpegPath = ffmpeg_path
         self.PrintStartTime = time.time()
         self.Snapshot = Snapshot(self.Settings.current_snapshot())
         self.Gcode = SnapshotGcodeGenerator(
-            self.Settings, octoprintPrinterProfile)
+            self.Settings, octoprint_printer_profile)
         self.Printer = Printer(self.Settings.current_printer())
         self.Rendering = Rendering(self.Settings.current_rendering())
         self.CaptureSnapshot = CaptureSnapshot(
             self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
         self.Position = Position(
-            self.Settings, octoprintPrinterProfile, g90InfluencesExtruder)
+            self.Settings, octoprint_printer_profile, g90_influences_extruder)
         self.State = TimelapseState.WaitingForTrigger
         self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
         self.Triggers = Triggers(settings)
         self.Triggers.create()
         # send an initial state message
-        self._onTimelapseStart()
+        self._on_timelapse_start()
 
-    def GetStateDict(self):
+    def to_state_dict(self):
         try:
 
-            positionDict = None
-            positionStateDict = None
-            extruderDict = None
-            triggerState = None
+            position_dict = None
+            position_state_dict = None
+            extruder_dict = None
+            trigger_state = None
             if self.Settings is not None:
 
                 if self.Settings.show_position_changes and self.Position is not None:
-                    positionDict = self.Position.to_position_dict()
+                    position_dict = self.Position.to_position_dict()
                 if self.Settings.show_position_state_changes and self.Position is not None:
-                    positionStateDict = self.Position.to_state_dict()
+                    position_state_dict = self.Position.to_state_dict()
                 if self.Settings.show_extruder_state_changes and self.Position is not None:
-                    extruderDict = self.Position.Extruder.to_dict()
+                    extruder_dict = self.Position.Extruder.to_dict()
                 if self.Settings.show_trigger_state_changes and self.Triggers is not None:
-                    triggerState = {
+                    trigger_state = {
                         "Name": self.Triggers.Name,
                         "Triggers": self.Triggers.state_to_list()
                     }
-            stateDict = {
-                "Extruder": extruderDict,
-                "Position": positionDict,
-                "PositionState": positionStateDict,
-                "TriggerState": triggerState
+            state_dict = {
+                "Extruder": extruder_dict,
+                "Position": position_dict,
+                "PositionState": position_state_dict,
+                "TriggerState": trigger_state
             }
-            return stateDict
+            return state_dict
         except Exception as e:
             self.Settings.CurrentDebugProfile().log_exception(e)
         # if we're here, we've reached and logged an error.
@@ -131,7 +138,7 @@ class Timelapse(object):
             "TriggerState": None
         }
 
-    def StopSnapshots(self):
+    def stop_snapshots(self):
         # Stops octolapse from taking any further snapshots.
         # Any existing snapshots will render after the print is ends.
 
@@ -148,22 +155,22 @@ class Timelapse(object):
         if self.TimelapseStoppingCallback is not None:
             self.TimelapseStoppingCallback()
 
-    def EndTimelapse(self, cancelled=False, force=False):
+    def end_timelapse(self, cancelled=False, force=False):
         try:
             if not self.State == TimelapseState.Idle:
                 if not force:
-                    if self.State > TimelapseState.WaitingForTrigger and self.State < TimelapseState.WaitingToRender:
+                    if TimelapseState.WaitingForTrigger < self.State < TimelapseState.WaitingToRender:
                         if cancelled:
                             self.HasBeenCancelled = True
                         else:
                             self.HasBeenStopped = True
                         return
-                self._renderTimelapse()
+                self._render_timelapse()
                 self._reset()
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
 
-    def PrintPaused(self):
+    def on_print_paused(self):
         try:
             if self.State == TimelapseState.Idle:
                 return
@@ -173,7 +180,7 @@ class Timelapse(object):
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
 
-    def PrintResumed(self):
+    def on_print_resumed(self):
         try:
             if self.State == TimelapseState.Idle:
                 return
@@ -182,7 +189,7 @@ class Timelapse(object):
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
 
-    def IsTimelapseActive(self):
+    def is_timelapse_active(self):
         try:
             if (
                 self.Settings is None
@@ -196,7 +203,7 @@ class Timelapse(object):
             self.Settings.CurrentDebugProfile().log_exception(e)
         return False
 
-    def GcodeQueuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+    def on_gcode_queuing(self, cmd, cmd_type, gcode):
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
                 "Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
@@ -205,30 +212,30 @@ class Timelapse(object):
             # position
             cmd = cmd.upper().strip()
             # create our state change dictionaries
-            positionChangeDict = None
-            positionStateChangeDict = None
-            extruderChangeDict = None
-            triggerChangeList = None
+            position_change_dict = None
+            position_state_change_dict = None
+            extruder_change_dict = None
+            trigger_change_list = None
             self.Position.update(cmd)
             if self.Position.has_position_error(0):
-                self._onPositionError()
+                self._on_position_error()
             # capture any changes, if neccessary, to the position, position state and extruder state
             # Note:  We'll get the trigger state later
             if (self.Settings.show_position_changes
-                and (self.Position.has_position_changed() or not self.HasSentInitialStatus)):
-                positionChangeDict = self.Position.to_position_dict()
+                    and (self.Position.has_position_changed() or not self.HasSentInitialStatus)):
+                position_change_dict = self.Position.to_position_dict()
             if (self.Settings.show_position_state_changes
-                and (self.Position.has_state_changed() or not self.HasSentInitialStatus)):
-                positionStateChangeDict = self.Position.to_state_dict()
+                    and (self.Position.has_state_changed() or not self.HasSentInitialStatus)):
+                position_state_change_dict = self.Position.to_state_dict()
             if (self.Settings.show_extruder_state_changes
-                and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)):
-                extruderChangeDict = self.Position.Extruder.to_dict()
+                    and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)):
+                extruder_change_dict = self.Position.Extruder.to_dict()
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
-            isSnapshotGcodeCommand = self._isSnapshotCommand(cmd)
+            is_snapshot_gcode_command = self._is_snapshot_command(cmd)
             # check to see if we've just completed a home command
             if (self.State == TimelapseState.WaitingForTrigger
-                and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
+                    and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
                 # Undo the last position update, we will be resending the command
                 self.Position.undo_update()
                 self.State = TimelapseState.AcquiringLocation
@@ -242,7 +249,7 @@ class Timelapse(object):
                     "position update.  New Position: {0}"
                 ).format(self.Position.get_position_string())
                 self.Settings.current_debug_profile().log_print_state_change(message)
-                self._pausePrint()
+                self._pause_print()
             elif (self.State == TimelapseState.WaitingForTrigger
                   and self.OctoprintPrinter.is_printing()
                   and not self.Position.has_position_error(0)):
@@ -250,9 +257,9 @@ class Timelapse(object):
 
                 # If our triggers have changed, update our dict
                 if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
-                    triggerChangeList = self.Triggers.changes_to_list()
+                    trigger_change_list = self.Triggers.changes_to_list()
 
-                if self.GcodeQueuing_IsTriggering(cmd, isSnapshotGcodeCommand):
+                if self.is_triggering():
                     # Undo the last position update, we're not going to be using it!
                     self.Position.undo_update()
                     # Store the current position (our previous position), since this will be our snapshot position
@@ -260,7 +267,7 @@ class Timelapse(object):
                     # we don't want to execute the current command.  We have saved it for later.
                     # but we don't want to send the snapshot command to the printer, or any of
                     # the SupporessedSavedCommands (gcode.py)
-                    if isSnapshotGcodeCommand or cmd in self.Commands.SuppressedSavedCommands:
+                    if is_snapshot_gcode_command or cmd in self.Commands.SuppressedSavedCommands:
                         # this will suppress the command since it won't be added to our snapshot commands list
                         self.SavedCommand = None
                     else:
@@ -272,14 +279,14 @@ class Timelapse(object):
                     self.State = TimelapseState.RequestingReturnPosition
 
                     # Pausing the print here will immediately trigger an M400 and a location request
-                    self._pausePrint()  # send M400 and position request
+                    self._pause_print()  # send M400 and position request
                     # send a notification to the client that the snapshot is starting
                     if self.OnSnapshotStartCallback is not None:
                         self.OnSnapshotStartCallback()
                     # suppress the command
                     cmd = None,
 
-            elif self.State > TimelapseState.WaitingForTrigger and self.State <= TimelapseState.SendingReturnGcode:
+            elif TimelapseState.WaitingForTrigger < self.State <= TimelapseState.SendingReturnGcode:
                 # Don't do anything further to any commands unless we are
                 # taking a timelapse , or if octolapse paused the print.
                 # suppress any commands we don't, under any cirumstances,
@@ -288,18 +295,18 @@ class Timelapse(object):
                 if cmd in self.Commands.SuppressedSnapshotGcodeCommands:
                     cmd = None,  # suppress the command
 
-            if isSnapshotGcodeCommand:
+            if is_snapshot_gcode_command:
                 # in all cases do not return the snapshot command to the printer.
                 # It is NOT a real gcode and could cause errors.
                 cmd = None,
 
             # notify any callbacks
-            self._onStateChanged(
-                positionChangeDict, positionStateChangeDict, extruderChangeDict, triggerChangeList)
+            self._on_state_changed(
+                position_change_dict, position_state_change_dict, extruder_change_dict, trigger_change_list)
             self.HasSentInitialStatus = True
 
             if cmd != (None,):
-                return self._returnGcodeCommandToOctoprint(cmd)
+                return self._get_command_for_octoprint(cmd)
             # if we are here we need to suppress the command
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
@@ -307,34 +314,32 @@ class Timelapse(object):
 
         return cmd
 
-    def GcodeQueuing_IsTriggering(self, cmd, isSnapshotGcodeCommand):
+    def is_triggering(self):
         try:
             # make sure we're in a state that could want to check for triggers
             if not self.State == TimelapseState.WaitingForTrigger:
                 return None
             # see if the PREVIOUS command triggered (that means current gcode gets sent if the trigger[0]
             # is triggering
-            currentTrigger = self.Triggers.get_first_triggering(1)
+            current_trigger = self.Triggers.get_first_triggering(1)
 
-            if currentTrigger is not None:  # We're triggering
+            if current_trigger is not None:  # We're triggering
                 self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
                 # notify any callbacks
                 return True
-            # elif self._isTriggerWaiting(cmd):
-            #	self.Settings.CurrentDebugProfile().LogTriggerWaitState("Trigger is Waiting On Extruder.")
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # no need to re-raise here, the trigger just won't happen
         return False
 
-    def GcodeSent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+    def on_gcode_sent(self, cmd, cmd_type, gcode):
         self.Settings.current_debug_profile().log_gcode_sent(
             "Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
 
-    def PositionReceived(self, payload):
+    def on_position_received(self, payload):
         # if we cancelled the print, we don't want to do anything.
         if self.HasBeenCancelled:
-            self.EndTimelapse(force=True)
+            self.end_timelapse(force=True)
             return
 
         x = payload["x"]
@@ -344,21 +349,21 @@ class Timelapse(object):
         if self.State == TimelapseState.AcquiringLocation:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Snapshot home position received by Octolapse.")
-            self._positionReceived_Home(x, y, z, e)
+            self._on_home_position_received(x, y, z, e)
         elif self.State == TimelapseState.SendingSavedHomeLocationCommand:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Snapshot home saved command position received by Octolapse.")
-            self._positionReceived_HomeLocationSavedCommand(x, y, z, e)
+            self._on_home_saved_command_position_received(x, y, z, e)
         elif self.State == TimelapseState.RequestingReturnPosition:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Snapshot return position received by Octolapse.")
-            self._positionReceived_Return(x, y, z, e)
+            self._on_return_position_received(x, y, z, e)
         elif self.State == TimelapseState.SendingSnapshotGcode:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Snapshot position received by Octolapse.")
-            self._positionReceived_Snapshot(x, y, z, e)
+            self._on_snapshot_position_received(x, y, z, e)
         elif self.State == TimelapseState.SendingReturnGcode:
-            self._positionReceived_ResumePrint(x, y, z, e)
+            self._on_resume_print_position_received(x, y, z, e)
         else:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Position received by Octolapse while paused, but was declined.")
@@ -366,7 +371,7 @@ class Timelapse(object):
 
     # internal functions
     ####################
-    def _returnGcodeCommandToOctoprint(self, cmd):
+    def _get_command_for_octoprint(self, cmd):
 
         if cmd is None or cmd == (None,):
             return cmd
@@ -379,60 +384,58 @@ class Timelapse(object):
         # if we were given a command return None (don't change the command at all)
         return None
 
-    def _onStateChanged(self, positionChangeDict, positionStateChangeDict, extruderChangeDict, triggerChangeList):
+    def _on_state_changed(
+            self, position_change_dict, position_state_change_dict, extruder_change_dict, trigger_change_list):
         """Notifies any callbacks about any changes contained in the dictionaries.
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
-        triggerChangesDict = None
+        trigger_changes_dict = None
         try:
 
             # Notify any callbacks
             if (self.OnStateChangedCallback is not None
-                and
-                (
-                    positionChangeDict is not None
-                    or positionStateChangeDict is not None
-                    or extruderChangeDict is not None
-                    or triggerChangeList is not None
-                )):
-                if triggerChangeList is not None and len(triggerChangeList) > 0:
-                    triggerChangesDict = {
+                and (position_change_dict is not None
+                     or position_state_change_dict is not None
+                     or extruder_change_dict is not None
+                     or trigger_change_list is not None)):
+
+                if trigger_change_list is not None and len(trigger_change_list) > 0:
+                    trigger_changes_dict = {
                         "Name": self.Triggers.Name,
-                        "Triggers": triggerChangeList
+                        "Triggers": trigger_change_list
                     }
-                changeDict = {
-                    "Extruder": extruderChangeDict,
-                    "Position": positionChangeDict,
-                    "PositionState": positionStateChangeDict,
-                    "TriggerState": triggerChangesDict
+                change_dict = {
+                    "Extruder": extruder_change_dict,
+                    "Position": position_change_dict,
+                    "PositionState": position_state_change_dict,
+                    "TriggerState": trigger_changes_dict
                 }
 
-                if (changeDict["Extruder"] is not None
-                    or changeDict["Position"] is not None
-                    or changeDict["PositionState"] is not None
-                    or changeDict["TriggerState"] is not None):
-                    self.OnStateChangedCallback(changeDict)
+                if (change_dict["Extruder"] is not None
+                        or change_dict["Position"] is not None
+                        or change_dict["PositionState"] is not None
+                        or change_dict["TriggerState"] is not None):
+                    self.OnStateChangedCallback(change_dict)
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
             self.Settings.current_debug_profile().log_exception(e)
 
-    def _isSnapshotCommand(self, command):
-        commandName = get_gcode_from_string(command)
-        snapshotCommandName = get_gcode_from_string(self.Printer.snapshot_command)
-        return commandName == snapshotCommandName
+    def _is_snapshot_command(self, command):
+        command_name = get_gcode_from_string(command)
+        snapshot_command_name = get_gcode_from_string(self.Printer.snapshot_command)
+        return command_name == snapshot_command_name
 
-    def _isTriggerWaiting(self, cmd):
+    def _is_trigger_waiting(self):
         # make sure we're in a state that could want to check for triggers
         if not self.State == TimelapseState.WaitingForTrigger:
             return None
-        isWaiting = False
         # Loop through all of the active currentTriggers
-        waitingTrigger = self.Triggers.get_first_waiting()
-        if waitingTrigger is not None:
+        waiting_trigger = self.Triggers.get_first_waiting()
+        if waiting_trigger is not None:
             return True
         return False
 
-    def _positionReceived_Home(self, x, y, z, e):
+    def _on_home_position_received(self, x, y, z, e):
         try:
             self.Position.update_position(
                 x=x, y=y, z=z, e=e, force=True, calculate_changes=True)
@@ -457,9 +460,9 @@ class Timelapse(object):
         else:
             # there is no saved command, we should be good!
             self.State = TimelapseState.WaitingForTrigger
-            self._resumePrint()
+            self._resume_print()
 
-    def _positionReceived_HomeLocationSavedCommand(self, x, y, z, e):
+    def _on_home_saved_command_position_received(self, x, y, z, e):
         # just sent so we can resume after the commands were sent.
         # Todo:  do this in the gcode sent function instead of sending an m400/m114 combo
         try:
@@ -485,13 +488,12 @@ class Timelapse(object):
 
         self.State = TimelapseState.WaitingForTrigger
         self.RequiresLocationDetectionAfterHome = False
-        self._resumePrint()
+        self._resume_print()
 
-    def _positionReceived_Return(self, x, y, z, e):
+    def _on_return_position_received(self, x, y, z, e):
         try:
             self.ReturnPositionReceivedTime = time.time()
             # todo:  Do we need to re-request the position like we do for the return?  Maybe...
-            printerTolerance = self.Printer.printer_position_confirmation_tolerance
             # If we are requesting a return position we have NOT yet executed the command that triggered the snapshot.
             # Because of this we need to compare the position we received to the previous position, not the current one.
             if not self.Position.is_at_saved_position(x, y, z):
@@ -512,38 +514,35 @@ class Timelapse(object):
             self.CommandIndex = 0
 
             # create the GCode for the timelapse and store it
-            isRelative = self.Position.is_relative()
-            isExtruderRelative = self.Position.is_extruder_relative()
-
             self.SnapshotGcodes = self.Gcode.create_snapshot_gcode(
                 x, y, z, self.Position.f(), self.Position.is_relative(),
                 self.Position.is_extruder_relative(), self.Position.Extruder,
                 self.Position.distance_to_zlift(), saved_command=self.SavedCommand
             )
-            # make sure we acutally received gcode
+            # make sure we actually received gcode
             if self.SnapshotGcodes is None:
-                self._resetSnapshot()
-                self._resumePrint()
-                self._onSnapshotPositionError()
+                self._reset_snapshot()
+                self._resume_print()
+                self._on_snapshot_position_error()
                 return False, "Error - No Snapshot Gcode"
             elif self.Gcode.HasSnapshotPositionErrors:
                 # there is a position error, but gcode was generated.  Just report it to the user.
-                self._onSnapshotPositionError()
+                self._on_snapshot_position_error()
 
             self.State = TimelapseState.SendingSnapshotGcode
 
-            snapshotCommands = self.SnapshotGcodes.get_snapshot_commands()
+            snapshot_commands = self.SnapshotGcodes.get_snapshot_commands()
 
             # send our commands to the printer
             # these commands will go through queuing, no reason to track position
-            self.OctoprintPrinter.commands(snapshotCommands)
+            self.OctoprintPrinter.commands(snapshot_commands)
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # we need to abandon the snapshot completely, reset and resume
-            self._resetSnapshot()
-            self._resumePrint()
+            self._reset_snapshot()
+            self._resume_print()
 
-    def _positionReceived_Snapshot(self, x, y, z, e):
+    def _on_snapshot_position_received(self, x, y, z, e):
         try:
             # snapshot position information received
             message = (
@@ -551,7 +550,6 @@ class Timelapse(object):
                 "Received: x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
             ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
             self.Settings.current_debug_profile().log_snapshot_return_position(message)
-            printerTolerance = self.Printer.printer_position_confirmation_tolerance
             # see if the CURRENT position is the same as the position we received from the printer
             # AND that it is equal to the snapshot position
             if not self.Position.is_at_current_position(x, y, None):
@@ -562,7 +560,7 @@ class Timelapse(object):
                 self.Settings.current_debug_profile().log_warning(message)
             # our snapshot gcode will NOT be offset
             elif not self.Position.is_at_current_position(
-                self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None):
+                    self.SnapshotGcodes.X, self.SnapshotGcodes.Y, None):
                 message = (
                     "The snapshot gcode position is incorrect.  "
                     "x:{0},y:{1},z:{2},e:{3}, Expected: x:{4},y:{5},z:{6}"
@@ -572,19 +570,19 @@ class Timelapse(object):
             self.Settings.current_debug_profile().log_snapshot_return_position(
                 "The snapshot position is correct, taking snapshot.")
             self.State = TimelapseState.TakingSnapshot
-            self._takeSnapshot()
+            self._take_snapshot()
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # our best bet of fixing things up here is just to return to the previous position.
-            self._sendReturnCommands()
+            self._send_return_commands()
 
-    def _onPositionError(self):
+    def _on_position_error(self):
         message = self.Position.position_error(0)
         self.Settings.current_debug_profile().log_error(message)
         if self.OnPositionErrorCallback is not None:
             self.OnPositionErrorCallback(message)
 
-    def _onSnapshotPositionError(self):
+    def _on_snapshot_position_error(self):
         if self.Printer.abort_out_of_bounds:
             message = "No snapshot gcode was created for this snapshot.  Aborting this snapshot.  Details: {0}".format(
                 self.Gcode.SnapshotPositionErrors)
@@ -595,7 +593,9 @@ class Timelapse(object):
         if self.OnSnapshotPositionErrorCallback is not None:
             self.OnSnapshotPositionErrorCallback(message)
 
-    def _positionReceived_ResumePrint(self, x, y, z, e):
+    def _on_resume_print_position_received(self, x, y, z, e):
+        snapshot_success = False
+        snapshot_error = "Unknown Error"
         try:
             if not self.Position.is_at_current_position(x, y, None):
                 message = (
@@ -613,56 +613,57 @@ class Timelapse(object):
             self.SecondsAddedByOctolapse += time.time() - self.ReturnPositionReceivedTime
 
             # before resetting the snapshot, see if it was a success
-            snapshotSuccess = self.SnapshotSuccess
-            snapshotError = self.SnapshotError
+            snapshot_success = self.SnapshotSuccess
+            snapshot_error = self.SnapshotError
             # end the snapshot
-            self._resetSnapshot()
+            self._reset_snapshot()
 
             # If we've requested that the timelapse stop, stop it now
             if self.TimelapseStopRequested:
-                self.StopSnapshots()
+                self.stop_snapshots()
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # do not re-raise, we are better off trying to resume the print here.
-        self._resumePrint()
-        self._onTriggerSnapshotComplete(snapshotSuccess, snapshotError)
+        self._resume_print()
+        self._on_trigger_snapshot_complete(snapshot_success, snapshot_error)
 
-    def _onTriggerSnapshotComplete(self, snapshotSuccess, snapshotError=""):
+    def _on_trigger_snapshot_complete(self, snapshot_success, snapshot_error=""):
         if self.OnSnapshotCompleteCallback is not None:
             payload = {
-                "success": snapshotSuccess,
-                "error": snapshotError,
+                "success": snapshot_success,
+                "error": snapshot_error,
                 "snapshot_count": self.SnapshotCount,
                 "seconds_added_by_octolapse": self.SecondsAddedByOctolapse
             }
             self.OnSnapshotCompleteCallback(payload)
 
-    def _pausePrint(self):
+    def _pause_print(self):
         self.OctoprintPrinter.pause_print()
 
-    def _resumePrint(self):
+    def _resume_print(self):
         self.OctoprintPrinter.resume_print()
         if self.HasBeenStopped or self.HasBeenCancelled:
-            self.EndTimelapse(force=True)
+            self.end_timelapse(force=True)
 
-    def _takeSnapshot(self):
+    def _take_snapshot(self):
         self.Settings.current_debug_profile().log_snapshot_download("Taking Snapshot.")
         try:
             self.CaptureSnapshot.snap(
                 utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                on_complete=self._onSnapshotComplete, on_success=self._onSnapshotSuccess, on_fail=self._onSnapshotFail
+                on_complete=self._on_snapshot_complete, on_success=self._on_snapshot_success,
+                on_fail=self._on_snapshot_fail
             )
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # try to recover by sending the return command
-            self._sendReturnCommands()
+            self._send_return_commands()
 
-    def _onSnapshotSuccess(self, *args, **kwargs):
+    def _on_snapshot_success(self, *args, **kwargs):
         # Increment the number of snapshots received
         self.SnapshotCount += 1
         self.SnapshotSuccess = True
 
-    def _onSnapshotFail(self, *args, **kwargs):
+    def _on_snapshot_fail(self, *args, **kwargs):
         reason = args[0]
         message = "Failed to download the snapshot.  Reason: {0}".format(
             reason)
@@ -670,64 +671,64 @@ class Timelapse(object):
         self.SnapshotSuccess = False
         self.SnapshotError = message
 
-    def _onSnapshotComplete(self, *args, **kwargs):
+    def _on_snapshot_complete(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_snapshot_download("Snapshot Completed.")
-        self._sendReturnCommands()
+        self._send_return_commands()
 
-    def _sendReturnCommands(self):
+    def _send_return_commands(self):
         try:
             # if the print has been cancelled, quit now.
             if self.HasBeenCancelled:
-                self.EndTimelapse(force=True)
+                self.end_timelapse(force=True)
                 return
             # Expand the current command to include the return commands
             if self.SnapshotGcodes is None:
                 self.Settings.current_debug_profile().log_error(
                     "The snapshot gcode generator has no value.")
-                self.EndTimelapse(force=True)
+                self.end_timelapse(force=True)
                 return
-            returnCommands = self.SnapshotGcodes.get_return_commands()
-            if returnCommands is None:
+            return_commands = self.SnapshotGcodes.get_return_commands()
+            if return_commands is None:
                 self.Settings.current_debug_profile().log_error(
                     "No return commands were generated!")
                 # How do we handle this?  we probably need to cancel the print or something....
                 # Todo:  What to do if no return commands are generated?  We should never let this happen.
                 # Make sure this is true.
-                self.EndTimelapse(force=True)
+                self.end_timelapse(force=True)
                 return
 
             # set the state so that the final received position will trigger a resume.
             self.State = TimelapseState.SendingReturnGcode
             # these commands will go through queuing, no need to update the position
-            self.OctoprintPrinter.commands(returnCommands)
+            self.OctoprintPrinter.commands(return_commands)
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # need to re-raise, can't fix this here, but at least it will be logged
             # properly
             raise
 
-    def _renderTimelapse(self):
+    def _render_timelapse(self):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
         if self.Rendering.enabled:
             self.Settings.current_debug_profile().log_render_start("Started Rendering Timelapse")
             # we are rendering, set the state before starting the rendering job.
 
             self.IsRendering = True
-            timelapseRenderJob = Render(
+            timelapse_render_job = Render(
                 self.Settings, self.Snapshot, self.Rendering, self.DataFolder,
                 self.DefaultTimelapseDirectory, self.FfMpegPath, 1,
-                time_added=self.SecondsAddedByOctolapse, on_render_start=self._onRenderStart,
-                on_render_fail=self._onRenderFail, on_render_success=self._onRenderSuccess,
-                on_render_complete=self._onRenderComplete, on_after_sync_fail=self._onSynchronizeRenderingFail,
-                on_after_sync_success=self._onSynchronizeRenderingComplete, on_complete=self._onRenderEnd
+                time_added=self.SecondsAddedByOctolapse, on_render_start=self._on_render_start,
+                on_render_fail=self._on_render_fail, on_render_success=self._on_render_success,
+                on_render_complete=self.on_render_complete, on_after_sync_fail=self._on_synchronize_rendering_fail,
+                on_after_sync_success=self._on_synchronize_rendering_complete, on_complete=self._on_render_end
             )
-            timelapseRenderJob.process(utility.get_currently_printing_filename(
+            timelapse_render_job.process(utility.get_currently_printing_filename(
                 self.OctoprintPrinter), self.PrintStartTime, time.time())
 
             return True
         return False
 
-    def _onRenderStart(self, *args, **kwargs):
+    def _on_render_start(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_render_start(
             "Started rendering/synchronizing the timelapse.")
         payload = args[0]
@@ -735,13 +736,7 @@ class Timelapse(object):
         if self.OnRenderStartCallback is not None:
             self.OnRenderStartCallback(payload)
 
-        # payload = dict(
-        #	FinalFileName = finalFilename
-        #	, WillSync = willSync
-        #	, SnapshotCount = snapshotCount
-        #	, SnapshotTimeSeconds = snapshotTimeSeconds)
-
-    def _onRenderFail(self, *args, **kwargs):
+    def _on_render_fail(self, *args, **kwargs):
         self.IsRendering = False
         self.Settings.current_debug_profile().log_render_fail(
             "The timelapse rendering failed.")
@@ -755,7 +750,7 @@ class Timelapse(object):
         if self.OnRenderFailCallback is not None:
             self.OnRenderFailCallback(payload)
 
-    def _onRenderSuccess(self, *args, **kwargs):
+    def _on_render_success(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_render_complete(
             "Rendering completed successfully.")
         payload = args[0]
@@ -765,7 +760,7 @@ class Timelapse(object):
 
         # TODO:  Notify the user that the rendering is completed if we are not synchronizing with octoprint
 
-    def _onRenderComplete(self, *args, **kwargs):
+    def on_render_complete(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_render_complete(
             "Completed rendering the timelapse.")
         self.IsRendering = False
@@ -774,77 +769,31 @@ class Timelapse(object):
         if self.OnRenderCompleteCallback is not None:
             self.OnRenderCompleteCallback(payload)
 
-    def _onSynchronizeRenderingFail(self, *args, **kwargs):
+    def _on_synchronize_rendering_fail(self, *args, **kwargs):
+        payload = args[0]
         self.Settings.current_debug_profile().log_render_sync(
             "Synchronization with the default timelapse plugin failed.  Reason: {0}", payload.Reason)
-        payload = args[0]
 
         if self.OnRenderingSynchronizeFailCallback is not None:
             self.OnRenderingSynchronizeFailCallback(payload)
 
-        # finalFilename = args[0]
-        # baseFileName = args[1]
-        # Notify the user of success and refresh the default timelapse control
-        # payload = dict(
-        #   gcode="unknown",
-        #   movie=finalFilename,
-        #   movie_basename=baseFileName ,
-        #   reason=(
-        #       "Error copying the rendering to the Octoprint "
-        #       "timelapse folder.  If logging is enabled you can "
-        #       "search for 'Synchronization Error' to find the "
-        #       "error.  Your timelapse is likely within the octolapse "
-        #       "data folder."
-        #   )
-
-    def _onSynchronizeRenderingComplete(self, *args, **kwargs):
+    def _on_synchronize_rendering_complete(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_render_sync(
             "Synchronization with the default timelapse plugin was successful.")
         payload = args[0]
         if self.OnRenderingSynchronizeCompleteCallback is not None:
             self.OnRenderingSynchronizeCompleteCallback(payload)
 
-        # finalFilename = args[0]
-        # baseFileName = args[1]
-        # Notify the user of success and refresh the default timelapse control
-        # payload = dict(
-        #   gcode="unknown",
-        #   movie=finalFilename,
-        #   movie_basename=baseFileName ,
-        #   movie_prefix=(
-        #       "from Octolapse has been synchronized and "
-        #       "is now available within the default timelapse "
-        #       "plugin tab.  Octolapse "
-        #   ),
-        #		returncode=0,
-        #		reason="See the octolapse log for details.")
-
-    def _onRenderEnd(self, *args, **kwargs):
+    def _on_render_end(self, *args, **kwargs):
         self.IsRendering = False
         self.Settings.current_debug_profile().log_render_complete("Completed rendering.")
         payload = args[0]
         success = args[1]
-        # finalFileName = args[0]
-        # baseFileName = args[1]
-        # synchronize = args[2]
-        # success = args[3]
 
-        # moviePrefix = "from Octolapse"
-        # if not synchronize:
-        #   moviePrefix = (
-        #       "from Octolapse.  Your timelapse was NOT synchronized"
-        #       " (see advanced rendering settings for details), but "
-        #       "can be found in octolapse's data directory.  A file "
-        #       "browser will be added in a future release (hopefully)"
-        #  )
-        # payload = dict(movie=finalFileName,
-        #		movie_basename=baseFileName ,
-        #		movie_prefix=moviePrefix,
-        #		success=success)
         if self.OnRenderEndCallback is not None:
             self.OnRenderEndCallback(payload, success)
 
-    def _onTimelapseStart(self):
+    def _on_timelapse_start(self):
         if self.OnTimelapseStartCallback is None:
             return
         self.OnTimelapseStartCallback()
@@ -871,7 +820,7 @@ class Timelapse(object):
         self.HasBeenCancelled = False
         self.HasBeenStopped = False
 
-    def _resetSnapshot(self):
+    def _reset_snapshot(self):
         self.State = TimelapseState.WaitingForTrigger
         self.CommandIndex = -1
         self.SnapshotGcodes = None
