@@ -1,6 +1,6 @@
 import unittest
 
 
-class Test_OctolapsePlugin(unittest.TestCase):
+class TestOctolapsePlugin(unittest.TestCase):
     def setUp(self):
         """How do I do this???"""

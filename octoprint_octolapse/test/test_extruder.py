@@ -5,14 +5,15 @@ from octoprint_octolapse.extruder import Extruder, ExtruderTriggers, ExtruderSta
 from octoprint_octolapse.settings import OctolapseSettings
 
 
-class Test_Extruder(unittest.TestCase):
+class TestExtruder(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
         self.Extruder = Extruder(self.Settings)
         # set the retraction distance
         self.Extruder.PrinterRetractionLength = 4
 
-    def CreateOctoprintPrinterProfile(self):
+    @staticmethod
+    def create_octoprint_printer_profile():
         return {
             "volume": {
                 "custom_box": False,
@@ -44,7 +45,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         self.assertEquals(len(self.Extruder.StateHistory), 0)
 
-    def testExtruderState_InitialValues(self):
+    def test_ExtruderState_InitialValues(self):
         # create a new state
         state = ExtruderState()
 
@@ -66,7 +67,7 @@ class Test_Extruder(unittest.TestCase):
         self.assertFalse(state.IsDetracted)
         self.assertFalse(state.HasChanged)
 
-    def testExtruderStateCopy(self):
+    def test_ExtruderStateCopy(self):
         # create a new state
         state = ExtruderState()
         # change all the default values
@@ -89,24 +90,24 @@ class Test_Extruder(unittest.TestCase):
         state.HasChanged = True
 
         # copy to a new state
-        newState = ExtruderState(state)
+        new_state = ExtruderState(state)
         # verify the state was copied correctly
-        self.assertEquals(newState.E, 1)
-        self.assertEquals(newState.ExtrusionLength, 100)
-        self.assertEquals(newState.ExtrusionLengthTotal, 200)
-        self.assertEquals(newState.RetractionLength, 300)
-        self.assertEquals(newState.DetractionLength, 400)
-        self.assertTrue(newState.IsExtrudingStart)
-        self.assertTrue(newState.IsExtruding)
-        self.assertTrue(newState.IsPrimed)
-        self.assertTrue(newState.IsRetractingStart)
-        self.assertTrue(newState.IsRetracting)
-        self.assertTrue(newState.IsPartiallyRetracted)
-        self.assertTrue(newState.IsRetracted)
-        self.assertTrue(newState.IsDetractingStart)
-        self.assertTrue(newState.IsDetracting)
-        self.assertTrue(newState.IsDetracted)
-        self.assertTrue(newState.HasChanged)
+        self.assertEquals(new_state.E, 1)
+        self.assertEquals(new_state.ExtrusionLength, 100)
+        self.assertEquals(new_state.ExtrusionLengthTotal, 200)
+        self.assertEquals(new_state.RetractionLength, 300)
+        self.assertEquals(new_state.DetractionLength, 400)
+        self.assertTrue(new_state.IsExtrudingStart)
+        self.assertTrue(new_state.IsExtruding)
+        self.assertTrue(new_state.IsPrimed)
+        self.assertTrue(new_state.IsRetractingStart)
+        self.assertTrue(new_state.IsRetracting)
+        self.assertTrue(new_state.IsPartiallyRetracted)
+        self.assertTrue(new_state.IsRetracted)
+        self.assertTrue(new_state.IsDetractingStart)
+        self.assertTrue(new_state.IsDetracting)
+        self.assertTrue(new_state.IsDetracted)
+        self.assertTrue(new_state.HasChanged)
 
     def test_HasChanged(self):
         """Test the HasChanged flag"""
@@ -620,7 +621,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsExtrudingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnExtrudingStart - False Filter
-        triggers = ExtruderTriggers(False, None, None, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(False, None, None, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsExtrudingStart = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -633,7 +634,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, True, None, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, True, None, None, None, None, None, None, None, None)
         # test True with true filter
         state.IsExtruding = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -642,7 +643,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsExtruding = False
         self.assertFalse(self.Extruder.is_triggered(triggers))
         # test OnExtruding - False Filter
-        triggers = ExtruderTriggers(None, False, None, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, False, None, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsExtruding = True
         self.assertFalse(self.Extruder.is_triggered(triggers))
@@ -654,7 +655,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, True, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, True, None, None, None, None, None, None, None)
         # test True with true filter
         state.IsPrimed = True
         self.assertTrue(self.Extruder.is_triggered(triggers))
@@ -662,7 +663,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsPrimed = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnPrimed - False Filter
-        triggers = ExtruderTriggers(None, None, False, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, False, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsPrimed = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -675,7 +676,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, True, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, True, None, None, None, None, None, None)
         # test True with true filter
         state.IsRetractingStart = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -684,7 +685,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsRetractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnRetractingStart - False Filter
-        triggers = ExtruderTriggers(None, None, None, False, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, False, None, None, None, None, None, None)
         # test True with False filter
         state.IsRetractingStart = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -697,7 +698,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, True, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, True, None, None, None, None, None)
         # test True with true filter
         state.IsRetracting = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -706,7 +707,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsRetracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnRetracting - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, False, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, False, None, None, None, None, None)
         # test True with False filter
         state.IsRetracting = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -719,7 +720,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, None, True, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, True, None, None, None, None)
         # test True with true filter
         state.IsPartiallyRetracted = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -728,7 +729,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsPartiallyRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnPartiallyRetracted - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, None, False, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, False, None, None, None, None)
         # test True with False filter
         state.IsPartiallyRetracted = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -741,7 +742,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, None, None, True, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, True, None, None, None)
         # test True with true filter
         state.IsRetracted = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -750,7 +751,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnRetracted - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, None, None, False, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, False, None, None, None)
         # test True with False filter
         state.IsRetracted = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -763,7 +764,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, True, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, True, None, None)
         # test True with true filter
         state.IsDetractingStart = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -772,7 +773,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsDetractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnDetractingStart - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, False, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, False, None, None)
         # test True with False filter
         state.IsDetractingStart = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -785,7 +786,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, True, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, True, None)
         # test True with true filter
         state.IsDetracting = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -794,7 +795,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsDetracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnDetracting - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, False, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, False, None)
         # test True with False filter
         state.IsDetracting = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -807,7 +808,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, True);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, True)
         # test True with true filter
         state.IsDetracted = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
@@ -816,7 +817,7 @@ class Test_Extruder(unittest.TestCase):
         state.IsDetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test OnDetracted - False Filter
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, False);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, False)
         # test True with False filter
         state.IsDetracted = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
@@ -829,7 +830,7 @@ class Test_Extruder(unittest.TestCase):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        triggers = ExtruderTriggers(None, True, False, None, True, False, None, True, False, None);
+        triggers = ExtruderTriggers(None, True, False, None, True, False, None, True, False, None)
         # Forbidden Due to IsPrimed
         state.IsExtrudingStart = True
         state.IsExtruding = True
@@ -866,30 +867,30 @@ class Test_Extruder(unittest.TestCase):
         state.IsDetractingStart = True
         state.IsDetracting = True
         state.IsDetracted = True
-        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, None);
+        triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, None)
         self.assertTrue(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(False, True, True, True, True, True, True, True, True, True);
+        triggers = ExtruderTriggers(False, True, True, True, True, True, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, False, True, True, True, True, True, True, True, True);
+        triggers = ExtruderTriggers(True, False, True, True, True, True, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, False, True, True, True, True, True, True, True);
+        triggers = ExtruderTriggers(True, True, False, True, True, True, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, False, True, True, True, True, True, True);
+        triggers = ExtruderTriggers(True, True, True, False, True, True, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, False, True, True, True, True, True);
+        triggers = ExtruderTriggers(True, True, True, True, False, True, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, True, False, True, True, True, True);
+        triggers = ExtruderTriggers(True, True, True, True, True, False, True, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, True, True, False, True, True, True);
+        triggers = ExtruderTriggers(True, True, True, True, True, True, False, True, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, True, True, True, False, True, True);
+        triggers = ExtruderTriggers(True, True, True, True, True, True, True, False, True, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, True, True, True, True, False, True);
+        triggers = ExtruderTriggers(True, True, True, True, True, True, True, True, False, True)
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        triggers = ExtruderTriggers(True, True, True, True, True, True, True, True, True, False);
+        triggers = ExtruderTriggers(True, True, True, True, True, True, True, True, True, False)
         self.assertFalse(self.Extruder.is_triggered(triggers))
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_Extruder)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestExtruder)
     unittest.TextTestRunner(verbosity=3).run(suite)

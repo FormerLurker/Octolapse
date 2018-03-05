@@ -9,7 +9,7 @@ from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.trigger import TimerTrigger
 
 
-class Test_TimerTrigger(unittest.TestCase):
+class TestTimerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
         self.Settings.current_printer().e_axis_default_mode = 'relative'
@@ -18,13 +18,14 @@ class Test_TimerTrigger(unittest.TestCase):
         self.Settings.current_printer().origin_x = 0
         self.Settings.current_printer().origin_y = 0
         self.Settings.current_printer().origin_z = 0
-        self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
+        self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):
         del self.Settings
         del self.OctoprintPrinterProfile
 
-    def CreateOctoprintPrinterProfile(self):
+    @staticmethod
+    def create_octoprint_printer_profile():
         return dict(
             volume=dict(
                 width=250,
@@ -56,7 +57,8 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
-        # Home all axis and try again with interval seconds 1 - should not trigger since the timer will start after the home command
+        # Home all axis and try again with interval seconds 1 - should not trigger since the timer will start after
+        # the home command
         trigger.IntervalSeconds = 2
         position.update("g28")
         trigger.update(position)
@@ -69,7 +71,8 @@ class Test_TimerTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
-        # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should not trigger
+        # Set the last trigger time to 1 before the previous LastTrigger time(equal to interval seconds), should not
+        # trigger
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         position.update("g0 x0 y0 z.2 e1")
         trigger.update(position)
@@ -341,5 +344,5 @@ class Test_TimerTrigger(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_TimerTrigger)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestTimerTrigger)
     unittest.TextTestRunner(verbosity=3).run(suite)

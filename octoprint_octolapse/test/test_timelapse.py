@@ -53,7 +53,7 @@ def ReturnTrue(*args, **kwargs):
     return True
 
 
-class Test_Timelapse(unittest.TestCase):
+class TestTimelapse(unittest.TestCase):
     def setUp(self):
         self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
         self.Settings = OctolapseSettings("c:\\temp\\octolapse\\data\\")
@@ -1392,5 +1392,5 @@ class Test_Timelapse(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_Timelapse)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestTimelapse)
     nittest.TextTestRunner(verbosity=3).run(suite)

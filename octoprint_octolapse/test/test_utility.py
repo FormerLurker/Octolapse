@@ -3,7 +3,7 @@ import unittest
 import octoprint_octolapse.utility as utility
 
 
-class Test_Utility(unittest.TestCase):
+class TestUtility(unittest.TestCase):
     def test_setbitrate(self):
         """test the setbitrate function"""
         self.assertTrue(utility.get_bitrate("800k", None) is not None)
@@ -17,7 +17,8 @@ class Test_Utility(unittest.TestCase):
         self.assertTrue(utility.get_bitrate("", None) is None)
 
     def test_IsInBounds(self):
-        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move out of bounds."""
+        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move
+        out of bounds. """
 
         bounding_box = {
             "min_x": 0,
@@ -57,7 +58,8 @@ class Test_Utility(unittest.TestCase):
         self.assertTrue(utility.is_in_bounds(bounding_box, 0, 0, 200.0000))
 
     def test_IsInBounds_CustomBox(self):
-        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move out of bounds."""
+        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move
+        out of bounds. """
         # test custom box with values above zero
         bounding_box = {
             "min_x": 1,
@@ -231,5 +233,5 @@ class Test_Utility(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_Utility)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestUtility)
     unittest.TextTestRunner(verbosity=3).run(suite)

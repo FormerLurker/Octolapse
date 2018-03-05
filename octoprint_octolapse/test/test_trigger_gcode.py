@@ -6,20 +6,21 @@ from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.trigger import GcodeTrigger
 
 
-class Test_GcodeTrigger(unittest.TestCase):
+class TestGcodeTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
         self.Settings.current_printer().auto_detect_position = False
         self.Settings.current_printer().origin_x = 0
         self.Settings.current_printer().origin_y = 0
         self.Settings.current_printer().origin_z = 0
-        self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
+        self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):
         del self.Settings
         del self.OctoprintPrinterProfile
 
-    def CreateOctoprintPrinterProfile(self):
+    @staticmethod
+    def create_octoprint_printer_profile():
         return {
             "volume": {
                 "custom_box": False,
@@ -49,8 +50,8 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
-        # reset, set relative extruder and absolute xyz, home the axis, and resend the snap command, should wait since we require
-        # the home command to complete (sent to printer) before triggering
+        # reset, set relative extruder and absolute xyz, home the axis, and resend the snap command, should wait
+        # since we require the home command to complete (sent to printer) before triggering
         position.update("M83")
         position.update("G90")
         position.update("G28")
@@ -110,5 +111,5 @@ class Test_GcodeTrigger(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_GcodeTrigger)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestGcodeTrigger)
     unittest.TextTestRunner(verbosity=3).run(suite)

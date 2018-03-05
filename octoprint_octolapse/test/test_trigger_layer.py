@@ -7,7 +7,7 @@ from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.trigger import LayerTrigger
 
 
-class Test_LayerTrigger(unittest.TestCase):
+class TestLayerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
         self.Settings.current_printer().e_axis_default_mode = 'relative'
@@ -16,13 +16,14 @@ class Test_LayerTrigger(unittest.TestCase):
         self.Settings.current_printer().origin_x = 0
         self.Settings.current_printer().origin_y = 0
         self.Settings.current_printer().origin_z = 0
-        self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
+        self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):
         del self.Settings
         del self.OctoprintPrinterProfile
 
-    def CreateOctoprintPrinterProfile(self):
+    @staticmethod
+    def create_octoprint_printer_profile():
         return dict(
             volume=dict(
                 width=250,
@@ -32,24 +33,6 @@ class Test_LayerTrigger(unittest.TestCase):
                 custom_box=False,
             )
         )
-
-    def TestReset(self):
-        """Test the reset function"""
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        trigger = LayerTrigger(self.Settings)
-        # test initial state
-        self.assertFalse(trigger.is_triggered(0))
-        self.assertFalse(trigger.is_waiting(0))
-        # set the flags to different valuse
-        trigger.is_triggered = True
-        trigger.is_waiting = True
-        self.assertFalse(trigger.is_triggered(0))
-        self.assertFalse(trigger.is_waiting(0))
-
-        # test the reset state
-        trigger.Reset()
-        self.assertFalse(trigger.is_triggered(0))
-        self.assertFalse(trigger.is_waiting(0))
 
     def test_LayerTrigger_LayerChange(self):
         """Test the layer trigger for layer changes triggers"""
@@ -143,7 +126,6 @@ class Test_LayerTrigger(unittest.TestCase):
 
     def test_LayerTrigger_LayerChange_DefaultExtruderTriggers(self):
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        currentSnapshot = self.Settings.current_snapshot()
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(
             False, True, True, False, None, None, True, True, None, False)
@@ -152,7 +134,7 @@ class Test_LayerTrigger(unittest.TestCase):
         # create some gcode
         gcode = []
         # get the startup gcode
-        gcode.extend(self.GetPrintStartGcode())
+        gcode.extend(self.GetPrintStartGcode)
         # start layer 1
         gcode.append(('G1 Z0.250 F7200.000', False, ""))
         # start priming extruder
@@ -271,33 +253,24 @@ class Test_LayerTrigger(unittest.TestCase):
 
         # loop through all of the Gcode and test triggering
         for command in gcode:
-            gcodeCommand = command[0]
-            shouldTrigger = command[1]
+            gcode_command = command[0]
+            should_trigger = command[1]
             comment = command[2]
-            position.update(gcodeCommand)
+            position.update(gcode_command)
             trigger.update(position)
-            self.assertTrue(trigger.is_triggered(0) == shouldTrigger,
-                            "Should have triggered on {0} command.  Command comment:".format(gcodeCommand, comment))
+            self.assertTrue(trigger.is_triggered(0) == should_trigger,
+                            "Should have triggered on {0} command.  Command comment:".format(gcode_command, comment))
 
+    @property
     def GetPrintStartGcode(self):
         # create gcode list
-        gcode = []
+        gcode = [('T0', False, "select tool 0"), ('M104 S255', False, "set extruder temp"),
+                 ('M140 S100', False, "set bed temp"), ('M190 S100', False, "wait for bed temp"),
+                 ('M109 S255', False, "wait for extruder temp"), ('G21', False, "set units to millimeters"),
+                 ('G90', False, "use absolute coordinates"), ('M83', False, "use relative distances for extrusion"),
+                 ('G28 W', False, ""), ('G80', False, ""), ('G92 E0.0', False, ""), ('M203 E100', False, ""),
+                 ('M92 E140', False, ""), ('G92 E0.0', False, ""), ('M900 K200', False, "")]
         # Print Start Code
-        gcode.append(('T0', False, "select tool 0"))
-        gcode.append(('M104 S255', False, "set extruder temp"))
-        gcode.append(('M140 S100', False, "set bed temp"))
-        gcode.append(('M190 S100', False, "wait for bed temp"))
-        gcode.append(('M109 S255', False, "wait for extruder temp"))
-        gcode.append(('G21', False, "set units to millimeters"))
-        gcode.append(('G90', False, "use absolute coordinates"))
-        gcode.append(('M83', False, "use relative distances for extrusion"))
-        gcode.append(('G28 W', False, ""))
-        gcode.append(('G80', False, ""))
-        gcode.append(('G92 E0.0', False, ""))
-        gcode.append(('M203 E100', False, ""))
-        gcode.append(('M92 E140', False, ""))
-        gcode.append(('G92 E0.0', False, ""))
-        gcode.append(('M900 K200', False, ""))
 
         return gcode
 
@@ -743,5 +716,5 @@ class Test_LayerTrigger(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_LayerTrigger)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestLayerTrigger)
     unittest.TextTestRunner(verbosity=3).run(suite)

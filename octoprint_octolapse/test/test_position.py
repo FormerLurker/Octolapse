@@ -7,7 +7,7 @@ from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings
 
 
-class Test_Position(unittest.TestCase):
+class TestPosition(unittest.TestCase):
     def setUp(self):
         self.Commands = Commands()
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
@@ -21,13 +21,14 @@ class Test_Position(unittest.TestCase):
         self.Settings.current_printer().origin_y = 0
         self.Settings.current_printer().origin_z = 0
 
-        self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
+        self.OctoprintPrinterProfile = self.create_octolapse_printer_profile()
 
     def tearDown(self):
         del self.Commands
         del self.Settings
 
-    def CreateOctoprintPrinterProfile(self):
+    @staticmethod
+    def create_octolapse_printer_profile():
         return {
             "volume": {
                 "custom_box": False,
@@ -38,7 +39,8 @@ class Test_Position(unittest.TestCase):
         }
 
     def test_PositionError(self):
-        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move out of bounds."""
+        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move
+        out of bounds. """
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 
         # Initial test, should return false without any coordinates
@@ -653,62 +655,62 @@ class Test_Position(unittest.TestCase):
     def test_ExtruderMovement(self):
         """Test the M82 and M83 command."""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile)
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile)
         # test initial position
         self.assertIsNone(position.e())
         self.assertIsNone(position.is_extruder_relative())
-        self.assertIsNone(position.e_relative(previousPos))
+        self.assertIsNone(position.e_relative(previous_pos))
 
         # set extruder to relative coordinates
         position.update("M83")
 
         # test movement
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E100")
         self.assertEqual(position.e(), 100)
         # this is somewhat reversed from what we do in the position.py module
         # there we update the pos() object and compare to the current state, so
         # comparing the current state to the
         # previous will result in the opposite sign
-        self.assertEqual(position.e_relative(previousPos), -100)
+        self.assertEqual(position.e_relative(previous_pos), -100)
 
         # switch to absolute movement
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("M82")
         self.assertFalse(position.is_extruder_relative())
         self.assertEqual(position.e(), 100)
-        self.assertEqual(position.e_relative(previousPos), 0)
+        self.assertEqual(position.e_relative(previous_pos), 0)
 
         # move to -25
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E-25")
         self.assertEqual(position.e(), -25)
-        self.assertEqual(position.e_relative(previousPos), 125)
+        self.assertEqual(position.e_relative(previous_pos), 125)
 
         # test movement to origin
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E0")
         self.assertEqual(position.e(), 0)
-        self.assertEqual(position.e_relative(previousPos), -25)
+        self.assertEqual(position.e_relative(previous_pos), -25)
 
         # switch to relative position
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("M83")
         position.update("G0 e1.1")
         self.assertEqual(position.e(), 1.1)
-        self.assertEqual(position.e_relative(previousPos), -1.1)
+        self.assertEqual(position.e_relative(previous_pos), -1.1)
 
         # move and test
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 e1.1")
         self.assertEqual(position.e(), 2.2)
-        self.assertEqual(position.e_relative(previousPos), -1.1)
+        self.assertEqual(position.e_relative(previous_pos), -1.1)
 
         # move and test
-        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
+        previous_pos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 e-2.2")
         self.assertEqual(position.e(), 0)
-        self.assertEqual(position.e_relative(previousPos), 2.2)
+        self.assertEqual(position.e_relative(previous_pos), 2.2)
 
     def test_zHop(self):
         """Test zHop detection."""
@@ -848,5 +850,5 @@ class Test_Position(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_Position)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestPosition)
     unittest.TextTestRunner(verbosity=3).run(suite)

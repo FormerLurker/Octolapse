@@ -3,7 +3,7 @@ import unittest
 from octoprint_octolapse.command import Commands
 
 
-class Test_Command(unittest.TestCase):
+class TestCommand(unittest.TestCase):
     def setUp(self):
         self.Commands = Commands()
 
@@ -40,7 +40,7 @@ class Test_Command(unittest.TestCase):
 
         # make sure we get the correct command and parameters
         self.assertTrue(cmd.Command == "G0")
-        self.assertTrue(cmd.Parameters["X"].Value == None)
+        self.assertTrue(cmd.Parameters["X"].Value is None)
         self.assertTrue(cmd.Parameters["Y"].Value == "200.0")
         self.assertTrue(cmd.Parameters["Z"].Value is None)
         self.assertTrue(cmd.Parameters["E"].Value is None)
@@ -66,7 +66,8 @@ class Test_Command(unittest.TestCase):
         self.assertTrue(cmd.CommandParts.Comment is None)
 
     def test_G0_ParseRepeatParameters(self):
-        """Try to parse the G0 Command with repeating parameters, and what the hell throw in a comment.  The X parameter value should be equal to the first occurance value."""
+        """Try to parse the G0 Command with repeating parameters, and what the hell throw in a comment.  The X
+        parameter value should be equal to the first occurance value. """
 
         # gcode to test
         gcode = "g0   z100     X200.0 X100.0 ; This is a comment  "
@@ -158,7 +159,8 @@ class Test_Command(unittest.TestCase):
         self.assertTrue(cmd.CommandParts.Comment is None)
 
     def test_G1_ParseRepeatParameters(self):
-        """Try to parse the G1 Command with repeating parameters, and what the hell throw in a comment.  The X parameter value should be equal to the first occurance value."""
+        """Try to parse the G1 Command with repeating parameters, and what the hell throw in a comment.  The X
+        parameter value should be equal to the first occurance value. """
         # gcode to test
         gcode = "g1   y1 z2 y3 z4 z5 x6 y7 x8 x9 z10        ; This is a comment  "
 
@@ -263,7 +265,8 @@ class Test_Command(unittest.TestCase):
         self.assertTrue(cmd.CommandParts.Comment is None)
 
     def test_G92_ParseRepeatParameters(self):
-        """Try to parse the G92 Command with repeating parameters, and what the hell throw in a comment.  The X parameter value should be equal to the first occurance value."""
+        """Try to parse the G92 Command with repeating parameters, and what the hell throw in a comment.  The X
+        parameter value should be equal to the first occurance value. """
         # gcode to test
         gcode = "g92   y1 z2 y3 z4 z5 x6 y7 x8 x9 z10        ; This is a comment  "
 
@@ -983,7 +986,8 @@ class Test_Command(unittest.TestCase):
         self.assertTrue(cmd.CommandParts.Comment is None)
 
     def test_G28_ParseRepeatParameters(self):
-        """Try to parse the G28 Command with repeating parameters, and what the hell throw in a comment.  The X parameter value should be equal to the first occurance value."""
+        """Try to parse the G28 Command with repeating parameters, and what the hell throw in a comment.  The X
+        parameter value should be equal to the first occurance value. """
         # gcode to test
         gcode = "g28  x y z x y z z y x    ; This is a comment  "
 
@@ -1207,5 +1211,5 @@ class Test_Command(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(Test_Command)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestCommand)
     unittest.TextTestRunner(verbosity=3).run(suite)
