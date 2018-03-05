@@ -9,10 +9,10 @@ from octoprint_octolapse.trigger import GcodeTrigger
 class Test_GcodeTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
-        self.Settings.CurrentPrinter().auto_detect_position = False
-        self.Settings.CurrentPrinter().origin_x = 0
-        self.Settings.CurrentPrinter().origin_y = 0
-        self.Settings.CurrentPrinter().origin_z = 0
+        self.Settings.current_printer().auto_detect_position = False
+        self.Settings.current_printer().origin_x = 0
+        self.Settings.current_printer().origin_y = 0
+        self.Settings.current_printer().origin_z = 0
         self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
 
     def tearDown(self):
@@ -31,7 +31,7 @@ class Test_GcodeTrigger(unittest.TestCase):
 
     def test_GcodeTrigger(self):
         """Test the gcode triggers"""
-        self.Settings.CurrentSnapshot().gcode_trigger_require_zhop = False
+        self.Settings.current_snapshot().gcode_trigger_require_zhop = False
 
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = GcodeTrigger(self.Settings)
@@ -85,16 +85,16 @@ class Test_GcodeTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_waiting(0))
 
         # change the snapshot triggers and make sure they are working
-        self.Settings.CurrentSnapshot().gcode_trigger_require_zhop = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_extruding = True
-        self.Settings.CurrentSnapshot().gcode_trigger_on_extruding_start = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_primed = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_retracting = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_partially_retracted = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_retracted = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_detracting_start = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_detracting = None
-        self.Settings.CurrentSnapshot().gcode_trigger_on_detracted = None
+        self.Settings.current_snapshot().gcode_trigger_require_zhop = None
+        self.Settings.current_snapshot().gcode_trigger_on_extruding = True
+        self.Settings.current_snapshot().gcode_trigger_on_extruding_start = None
+        self.Settings.current_snapshot().gcode_trigger_on_primed = None
+        self.Settings.current_snapshot().gcode_trigger_on_retracting = None
+        self.Settings.current_snapshot().gcode_trigger_on_partially_retracted = None
+        self.Settings.current_snapshot().gcode_trigger_on_retracted = None
+        self.Settings.current_snapshot().gcode_trigger_on_detracting_start = None
+        self.Settings.current_snapshot().gcode_trigger_on_detracting = None
+        self.Settings.current_snapshot().gcode_trigger_on_detracted = None
         trigger = GcodeTrigger(self.Settings)
 
         # send a command that is the snapshot command using the defaults

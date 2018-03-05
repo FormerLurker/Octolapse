@@ -5,6 +5,7 @@
 
 import shutil
 import threading
+import os
 from io import open as i_open
 
 import requests
@@ -24,9 +25,9 @@ class CaptureSnapshot(object):
 
     def __init__(self, settings, data_directory, print_start_time, print_end_time=None):
         self.Settings = settings
-        self.Printer = self.Settings.CurrentPrinter()
-        self.Snapshot = self.Settings.CurrentSnapshot()
-        self.Camera = self.Settings.CurrentCamera()
+        self.Printer = self.Settings.current_printer()
+        self.Snapshot = self.Settings.current_snapshot()
+        self.Camera = self.Settings.current_camera()
         self.PrintStartTime = print_start_time
         self.PrintEndTime = print_end_time
         self.DataDirectory = data_directory
@@ -47,12 +48,12 @@ class CaptureSnapshot(object):
         )
 
         if self.Camera.delay == 0:
-            self.Settings.CurrentDebugProfile().LogSnapshotDownload(
+            self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job Immediately.")
             new_snapshot_job.process()
         else:
             delay_seconds = self.Camera.delay / 1000.0
-            self.Settings.CurrentDebugProfile().LogSnapshotDownload(
+            self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job in {0} seconds.".format(delay_seconds))
             t = threading.Timer(
                 delay_seconds, start_snapshot_job, [new_snapshot_job])
@@ -61,26 +62,26 @@ class CaptureSnapshot(object):
     def clean_snapshots(self, snapshot_directory):
 
         # get snapshot directory
-        self.Settings.CurrentDebugProfile().LogSnapshotClean(
+        self.Settings.current_debug_profile().log_snapshot_clean(
             "Cleaning snapshots from: {0}".format(snapshot_directory))
 
         path = os.path.dirname(snapshot_directory + os.sep)
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
-                self.Settings.CurrentDebugProfile().LogSnapshotClean("Snapshots cleaned.")
+                self.Settings.current_debug_profile().log_snapshot_clean("Snapshots cleaned.")
             except Exception:
                 # Todo:  What exceptions do I catch here?
-                type = sys.exc_info()[0]
+                exception_type = sys.exc_info()[0]
                 value = sys.exc_info()[1]
                 message = (
                     "Snapshot - Clean - Unable to clean the snapshot "
                     "path at {0}.  It may already have been cleaned.  "
                     "Info:  ExceptionType:{1}, Exception Value:{2}"
-                ).format(path, type, value)
-                self.Settings.CurrentDebugProfile().LogSnapshotClean(message)
+                ).format(path, exception_type, value)
+                self.Settings.current_debug_profile().log_snapshot_clean(message)
         else:
-            self.Settings.CurrentDebugProfile().LogSnapshotClean(
+            self.Settings.current_debug_profile().log_snapshot_clean(
                 "Snapshot - No need to clean snapshots: they have already been removed."
             )
 
@@ -89,14 +90,14 @@ class CaptureSnapshot(object):
         # get snapshot directory
         snapshot_directory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
-        self.Settings.CurrentDebugProfile().LogSnapshotClean(
+        self.Settings.current_debug_profile().log_snapshot_clean(
             "Cleaning snapshots from: {0}".format(snapshot_directory))
 
         path = os.path.dirname(snapshot_directory + os.sep)
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
-                self.Settings.CurrentDebugProfile().LogSnapshotClean("Snapshots cleaned.")
+                self.Settings.current_debug_profile().log_snapshot_clean("Snapshots cleaned.")
             except:
                 # Todo:  What exceptions to catch here?
                 exception_type = sys.exc_info()[0]
@@ -106,9 +107,9 @@ class CaptureSnapshot(object):
                     "path at {0}.  It may already have been cleaned.  "
                     "Info:  ExceptionType:{1}, Exception Value:{2}"
                 ).format(path, exception_type, value)
-                self.Settings.CurrentDebugProfile().LogSnapshotClean(message)
+                self.Settings.current_debug_profile().log_snapshot_clean(message)
         else:
-            self.Settings.CurrentDebugProfile().LogSnapshotClean(
+            self.Settings.current_debug_profile().log_snapshot_clean(
                 "Snapshot - No need to clean snapshots: they have already been removed."
             )
 
@@ -120,7 +121,7 @@ class SnapshotJob(object):
             self, settings, data_directory, snapshot_number,
             snapshot_info, url, snapshot_guid, timeout_seconds=5,
             on_complete=None, on_success=None, on_fail=None):
-        camera_settings = settings.CurrentCamera()
+        camera_settings = settings.current_camera()
         self.SnapshotNumber = snapshot_number
         self.DataDirectory = data_directory
         self.Address = camera_settings.address
@@ -158,7 +159,7 @@ class SnapshotJob(object):
                         "Snapshot Download - Authenticating and "
                         "downloading from {0:s} to {1:s}."
                     ).format(self.Url, snapshot_directory)
-                    self.Settings.CurrentDebugProfile().LogSnapshotDownload(message)
+                    self.Settings.current_debug_profile().log_snapshot_download(message)
                     r = requests.get(
                         self.Url,
                         auth=HTTPBasicAuth(self.Username, self.Password),
@@ -166,7 +167,7 @@ class SnapshotJob(object):
                         timeout=float(self.TimeoutSeconds)
                     )
                 else:
-                    self.Settings.CurrentDebugProfile().LogSnapshotDownload(
+                    self.Settings.current_debug_profile().log_snapshot_download(
                         "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, snapshot_directory))
                     r = requests.get(
                         self.Url, verify=not self.IgnoreSslError,
@@ -174,7 +175,7 @@ class SnapshotJob(object):
                     )
             except Exception as e:
                 # If we can't create the thumbnail, just log
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
                 fail_reason = (
                     "Snapshot Download - An unexpected exception occurred.  "
                     "Check the log file (plugin_octolapse.log) for details."
@@ -191,7 +192,7 @@ class SnapshotJob(object):
                         # try to download the file.
                     except Exception as e:
                         # If we can't create the thumbnail, just log
-                        self.Settings.CurrentDebugProfile().LogException(e)
+                        self.Settings.current_debug_profile().log_exception(e)
                         fail_reason = (
                             "Snapshot Download - An unexpected exception occurred.  "
                             "Check the log file (plugin_octolapse.log) for details."
@@ -208,11 +209,11 @@ class SnapshotJob(object):
                         for chunk in r.iter_content(1024):
                             if chunk:
                                 snapshot_file.write(chunk)
-                        self.Settings.CurrentDebugProfile().LogSnapshotSave(
+                        self.Settings.current_debug_profile().log_snapshot_save(
                             "Snapshot - Snapshot saved to disk at {0}".format(snapshot_directory))
                 except Exception as e:
                     # If we can't create the thumbnail, just log
-                    self.Settings.CurrentDebugProfile().LogException(e)
+                    self.Settings.current_debug_profile().log_exception(e)
                     fail_reason = (
                         "Snapshot Download - An unexpected exception occurred.  "
                         "Check the log file (plugin_octolapse.log) for details."
@@ -240,7 +241,7 @@ class SnapshotJob(object):
         # get the save path
         # get the current file name
         new_snapshot_name = self.SnapshotInfo.get_full_path(self.SnapshotNumber)
-        self.Settings.CurrentDebugProfile().LogSnapshotSave(
+        self.Settings.current_debug_profile().log_snapshot_save(
             "Renaming snapshot {0} to {1}".format(self.SnapshotInfo.get_temp_full_path(), new_snapshot_name))
         # create the output directory if it does not exist
         try:
@@ -256,7 +257,7 @@ class SnapshotJob(object):
             self.SnapshotSuccess = True
             return True
         except Exception as e:
-            self.Settings.CurrentDebugProfile().LogException(e)
+            self.Settings.current_debug_profile().log_exception(e)
 
         return False
 
@@ -282,7 +283,7 @@ class SnapshotJob(object):
                 self.DataDirectory), "JPEG")
         except Exception as e:
             # If we can't create the thumbnail, just log
-            self.Settings.CurrentDebugProfile().LogException(e)
+            self.Settings.current_debug_profile().log_exception(e)
 
     def _notify_callback(self, callback, *args, **kwargs):
         """Notifies registered callbacks of type `callback`."""

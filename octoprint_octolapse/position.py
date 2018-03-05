@@ -284,7 +284,7 @@ class Position(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile,
                  g90_influences_extruder):
         self.Settings = octolapse_settings
-        self.Printer = self.Settings.CurrentPrinter()
+        self.Printer = self.Settings.current_printer()
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -572,7 +572,7 @@ class Position(object):
             if cmd.Command in ["G0", "G1"]:
                 # Movement
                 if cmd.Parse():
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived("Received {0}".format(cmd.Name))
+                    self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd.Name))
                     x = cmd.Parameters["X"].Value
                     y = cmd.Parameters["Y"].Value
                     z = cmd.Parameters["Z"].Value
@@ -586,7 +586,7 @@ class Position(object):
                                 pos.PositionError = ""
                             pos.update_position(self.BoundingBox, x, y, z, e=None, f=f)
                         else:
-                            self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                            self.Settings.current_debug_profile().log_position_command_received(
                                 "Position - Unable to update the X/Y/Z axis position, the axis mode ("
                                 "relative/absolute) has not been explicitly set via G90/G91. "
                             )
@@ -603,7 +603,7 @@ class Position(object):
                                 e=e,
                                 f=None)
                         else:
-                            self.Settings.CurrentDebugProfile().LogError(
+                            self.Settings.current_debug_profile().log_error(
                                 "Position - Unable to update the extruder position, the extruder mode ("
                                 "relative/absolute) has been selected (absolute/relative). "
                             )
@@ -620,11 +620,11 @@ class Position(object):
                             if pos.IsRelative else "Absolute", previous_pos.X,
                             previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
                             pos.Y, pos.Z, pos.E)
-                    self.Settings.CurrentDebugProfile().LogPositionChange(
+                    self.Settings.current_debug_profile().log_position_change(
                         message)
 
                 else:
-                    self.Settings.CurrentDebugProfile().LogError(
+                    self.Settings.current_debug_profile().log_error(
                         "Position - Unable to parse the gcode command: {0}".format(gcode))
             elif cmd.Command == "G28":
                 # Home
@@ -680,27 +680,27 @@ class Position(object):
                             home_strings.append("Homing Z to {0}.".format(
                                 get_formatted_coordinate(pos.Z)))
 
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                    self.Settings.current_debug_profile().log_position_command_received(
                         "Received G28 - ".format(" ".join(home_strings)))
                     pos.HasPositionError = False
                     pos.PositionError = None
                     # we must do this in case we have more than one home command
                     previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
                 else:
-                    self.Settings.CurrentDebugProfile().LogError(
+                    self.Settings.current_debug_profile().log_error(
                         "Position - Unable to parse the Gcode:{0}".format(gcode))
 
             elif cmd.Command == "G90":
                 # change x,y,z to absolute
                 if pos.IsRelative is None or pos.IsRelative:
-                    self.Settings.CurrentDebugProfile(
-                    ).LogPositionCommandReceived(
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
                         "Received G90 - Switching to absolute x,y,z coordinates."
                     )
                     pos.IsRelative = False
                 else:
-                    self.Settings.CurrentDebugProfile(
-                    ).LogPositionCommandReceived(
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
                         "Received G90 - Already using absolute x,y,z coordinates."
                     )
 
@@ -710,25 +710,25 @@ class Position(object):
                 # as well
                 if self.G90InfluencesExtruder:
                     if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
-                        self.Settings.CurrentDebugProfile(
-                        ).LogPositionCommandReceived(
+                        self.Settings.current_debug_profile(
+                        ).log_position_command_received(
                             "Received G90 - Switching to absolute extruder coordinates"
                         )
                         pos.IsExtruderRelative = False
                     else:
-                        self.Settings.CurrentDebugProfile(
-                        ).LogPositionCommandReceived(
+                        self.Settings.current_debug_profile(
+                        ).log_position_command_received(
                             "Received G90 - Already using absolute extruder coordinates"
                         )
             elif cmd.Command == "G91":
                 # change x,y,z to relative
                 if pos.IsRelative is None or not pos.IsRelative:
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                    self.Settings.current_debug_profile().log_position_command_received(
                         "Received G91 - Switching to relative x,y,z coordinates")
                     pos.IsRelative = True
                 else:
-                    self.Settings.CurrentDebugProfile(
-                    ).LogPositionCommandReceived(
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
                         "Received G91 - Already using relative x,y,z coordinates"
                     )
 
@@ -738,25 +738,25 @@ class Position(object):
                 # as well
                 if self.G90InfluencesExtruder:
                     if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
-                        self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                        self.Settings.current_debug_profile().log_position_command_received(
                             "Received G91 - Switching to relative extruder coordinates"
                         )
                         pos.IsExtruderRelative = True
                     else:
-                        self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                        self.Settings.current_debug_profile().log_position_command_received(
                             "Received G91 - Already using relative extruder coordinates"
                         )
             elif cmd.Command == "M83":
                 # Extruder - Set Relative
                 if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                    self.Settings.current_debug_profile().log_position_command_received(
                         "Received M83 - Switching Extruder to Relative Coordinates"
                     )
                     pos.IsExtruderRelative = True
             elif cmd.Command == "M82":
                 # Extruder - Set Absolute
                 if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                    self.Settings.current_debug_profile().log_position_command_received(
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
@@ -781,12 +781,12 @@ class Position(object):
                         pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     if e is not None and pos.E is not None:
                         pos.EOffset = pos.E - utility.get_float(e, 0)
-                    self.Settings.CurrentDebugProfile().LogPositionCommandReceived(
+                    self.Settings.current_debug_profile().log_position_command_received(
                         "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                         "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
                             gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
                 else:
-                    self.Settings.CurrentDebugProfile().LogError(
+                    self.Settings.current_debug_profile().log_error(
                         "Position - Unable to parse the Gcode:{0}".format(
                             gcode))
 
@@ -824,8 +824,8 @@ class Position(object):
                     if pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > previous_pos.Height:
                         pos.Height = utility.round_to(
                             pos.Z, self.PrinterTolerance)
-                        self.Settings.CurrentDebugProfile(
-                        ).LogPositionHeightChange(
+                        self.Settings.current_debug_profile(
+                        ).log_position_height_change(
                             "Position - Reached New Height:{0}.".format(
                                 pos.Height))
 
@@ -835,8 +835,8 @@ class Position(object):
                             or pos.Layer == 0):
                         pos.IsLayerChange = True
                         pos.Layer += 1
-                        self.Settings.CurrentDebugProfile(
-                        ).LogPositionLayerChange(
+                        self.Settings.current_debug_profile(
+                        ).log_position_layer_change(
                             "Position - Layer:{0}.".format(pos.Layer))
                     else:
                         pos.IsLayerChange = False
@@ -856,7 +856,7 @@ class Position(object):
                     pos.IsZHop = True
 
             if pos.IsZHop and self.Printer.z_hop > 0:
-                self.Settings.CurrentDebugProfile().LogPositionZHop(
+                self.Settings.current_debug_profile().log_position_zhop(
                     "Position - Zhop:{0}".format(self.Printer.z_hop))
 
         self.Positions.appendleft(pos)

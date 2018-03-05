@@ -5,13 +5,11 @@
 
 import logging
 import math
-import os
 import sys
-import time
 import uuid
 from datetime import datetime
+
 from octoprint.plugin import PluginSettings
-from pprint import pprint
 
 import octoprint_octolapse.utility as utility
 
@@ -82,9 +80,9 @@ class Printer(object):
                 self.g90_influences_extruder = printer.g90_influences_extruder
                 self.xyz_axes_default_mode = printer.xyz_axes_default_mode
             else:
-                self.Update(printer)
+                self.update(printer)
 
-    def Update(self, changes):
+    def update(self, changes):
         if "guid" in changes.keys():
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
@@ -162,7 +160,7 @@ class Printer(object):
             self.xyz_axes_default_mode = utility.get_string(
                 changes["xyz_axes_default_mode"], self.xyz_axes_default_mode)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'name': self.name,
             'description': self.description,
@@ -237,9 +235,9 @@ class Stabilization(object):
         self.y_relative_path_invert_loop = True
 
         if stabilization is not None:
-            self.Update(stabilization)
+            self.update(stabilization)
 
-    def Update(self, changes):
+    def update(self, changes):
         if "guid" in changes.keys():
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
@@ -307,7 +305,7 @@ class Stabilization(object):
             self.y_relative_path_invert_loop = utility.get_bool(
                 changes["y_relative_path_invert_loop"], self.y_relative_path_invert_loop)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'guid': self.guid,
             'name': self.name,
@@ -334,56 +332,57 @@ class Stabilization(object):
             'y_relative_path_invert_loop': self.y_relative_path_invert_loop
         }
 
-    def GetStabilizationPaths(self):
-        xStabilizationPath = StabilizationPath()
-        xStabilizationPath.Axis = "X"
-        xStabilizationPath.Type = self.x_type
+    def get_stabilization_paths(self):
+        x_stabilization_path = StabilizationPath()
+        x_stabilization_path.Axis = "X"
+        x_stabilization_path.Type = self.x_type
         if self.x_type == 'fixed_coordinate':
-            xStabilizationPath.Path.append(self.x_fixed_coordinate)
-            xStabilizationPath.CoordinateSystem = 'absolute'
+            x_stabilization_path.Path.append(self.x_fixed_coordinate)
+            x_stabilization_path.CoordinateSystem = 'absolute'
         elif self.x_type == 'relative':
-            xStabilizationPath.Path.append(self.x_relative)
-            xStabilizationPath.CoordinateSystem = 'bed_relative'
+            x_stabilization_path.Path.append(self.x_relative)
+            x_stabilization_path.CoordinateSystem = 'bed_relative'
         elif self.x_type == 'fixed_path':
-            xStabilizationPath.Path = self.ParseCSVPath(self.x_fixed_path)
-            xStabilizationPath.CoordinateSystem = 'absolute'
-            xStabilizationPath.Loop = self.x_fixed_path_loop
-            xStabilizationPath.InvertLoop = self.x_fixed_path_invert_loop
+            x_stabilization_path.Path = self.parse_csv_path(self.x_fixed_path)
+            x_stabilization_path.CoordinateSystem = 'absolute'
+            x_stabilization_path.Loop = self.x_fixed_path_loop
+            x_stabilization_path.InvertLoop = self.x_fixed_path_invert_loop
         elif self.x_type == 'relative_path':
-            xStabilizationPath.Path = self.ParseCSVPath(self.x_relative_path)
-            xStabilizationPath.CoordinateSystem = 'bed_relative'
-            xStabilizationPath.Loop = self.x_relative_path_loop
-            xStabilizationPath.InvertLoop = self.x_relative_path_invert_loop
+            x_stabilization_path.Path = self.parse_csv_path(self.x_relative_path)
+            x_stabilization_path.CoordinateSystem = 'bed_relative'
+            x_stabilization_path.Loop = self.x_relative_path_loop
+            x_stabilization_path.InvertLoop = self.x_relative_path_invert_loop
 
-        yStabilizationPath = StabilizationPath()
-        yStabilizationPath.Axis = "Y"
-        yStabilizationPath.Type = self.y_type
+        y_stabilization_path = StabilizationPath()
+        y_stabilization_path.Axis = "Y"
+        y_stabilization_path.Type = self.y_type
         if self.y_type == 'fixed_coordinate':
-            yStabilizationPath.Path.append(self.y_fixed_coordinate)
-            yStabilizationPath.CoordinateSystem = 'absolute'
+            y_stabilization_path.Path.append(self.y_fixed_coordinate)
+            y_stabilization_path.CoordinateSystem = 'absolute'
         elif self.y_type == 'relative':
-            yStabilizationPath.Path.append(self.y_relative)
-            yStabilizationPath.CoordinateSystem = 'bed_relative'
+            y_stabilization_path.Path.append(self.y_relative)
+            y_stabilization_path.CoordinateSystem = 'bed_relative'
         elif self.y_type == 'fixed_path':
-            yStabilizationPath.Path = self.ParseCSVPath(self.y_fixed_path)
-            yStabilizationPath.CoordinateSystem = 'absolute'
-            yStabilizationPath.Loop = self.y_fixed_path_loop
-            yStabilizationPath.InvertLoop = self.y_fixed_path_invert_loop
+            y_stabilization_path.Path = self.parse_csv_path(self.y_fixed_path)
+            y_stabilization_path.CoordinateSystem = 'absolute'
+            y_stabilization_path.Loop = self.y_fixed_path_loop
+            y_stabilization_path.InvertLoop = self.y_fixed_path_invert_loop
         elif self.y_type == 'relative_path':
-            yStabilizationPath.Path = self.ParseCSVPath(self.y_relative_path)
-            yStabilizationPath.CoordinateSystem = 'bed_relative'
-            yStabilizationPath.Loop = self.y_relative_path_loop
-            yStabilizationPath.InvertLoop = self.y_relative_path_invert_loop
+            y_stabilization_path.Path = self.parse_csv_path(self.y_relative_path)
+            y_stabilization_path.CoordinateSystem = 'bed_relative'
+            y_stabilization_path.Loop = self.y_relative_path_loop
+            y_stabilization_path.InvertLoop = self.y_relative_path_invert_loop
 
         return dict(
-            X=xStabilizationPath,
-            Y=yStabilizationPath
+            X=x_stabilization_path,
+            Y=y_stabilization_path
         )
 
-    def ParseCSVPath(self, pathCsv):
+    @staticmethod
+    def parse_csv_path(path_csv):
         """Converts a list of floats separated by commas into an array of floats."""
         path = []
-        items = pathCsv.split(',')
+        items = path_csv.split(',')
         for item in items:
             item = item.strip()
             if len(item) > 0:
@@ -392,9 +391,9 @@ class Stabilization(object):
 
 
 class SnapshotPositionRestrictions(object):
-    def __init__(self, type, shape, x, y, x2=None, y2=None, r=None):
+    def __init__(self, restriction_type, shape, x, y, x2=None, y2=None, r=None):
 
-        self.Type = type.lower()
+        self.Type = restriction_type.lower()
         if self.Type not in ["forbidden", "required"]:
             raise TypeError("SnapshotPosition type must be 'forbidden' or 'required'")
 
@@ -412,7 +411,7 @@ class SnapshotPositionRestrictions(object):
             raise TypeError(
                 "SnapshotPosition shape=circle requires that r is not None")
 
-        self.Type = type
+        self.Type = restriction_type
         self.Shape = shape
         self.X = float(x)
         self.Y = float(y)
@@ -420,7 +419,7 @@ class SnapshotPositionRestrictions(object):
         self.Y2 = float(y2)
         self.R = float(r)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'Type': self.Type,
             'Shape': self.Shape,
@@ -431,18 +430,16 @@ class SnapshotPositionRestrictions(object):
             'R': self.R
         }
 
-    def IsInPosition(self, x, y):
+    def is_in_position(self, x, y):
         if x is None or y is None:
             return False
-        isInPosition = None
+
         if self.Shape == 'rect':
-            isInPosition = x >= self.X and x <= self.X2 and y >= self.Y and y <= self.Y2
+            return self.X <= x <= self.X2 and self.Y <= y <= self.Y2
         elif self.Shape == 'circle':
-            isInPosition = math.pow(x - self.X, 2) + math.pow(y - self.Y, 2) <= math.pow(self.R, 2)
+            return math.pow(x - self.X, 2) + math.pow(y - self.Y, 2) <= math.pow(self.R, 2)
         else:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
-
-        return isInPosition
 
 
 class Snapshot(object):
@@ -566,9 +563,9 @@ class Snapshot(object):
                 self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
                 self.retract_before_move = snapshot.retract_before_move
             else:
-                self.Update(snapshot)
+                self.update(snapshot)
 
-    def Update(self, changes):
+    def update(self, changes):
         # Initialize all values according to the provided changes, use defaults if
         # the values are null or incorrectly formatted
         if "guid" in changes.keys():
@@ -586,37 +583,37 @@ class Snapshot(object):
             self.gcode_trigger_require_zhop = utility.get_bool(
                 changes["gcode_trigger_require_zhop"], self.gcode_trigger_require_zhop)
         if "gcode_trigger_on_extruding_start" in changes.keys():
-            self.gcode_trigger_on_extruding_start = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_extruding_start = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_extruding_start"])
         if "gcode_trigger_on_extruding" in changes.keys():
-            self.gcode_trigger_on_extruding = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_extruding = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_extruding"])
         if "gcode_trigger_on_primed" in changes.keys():
-            self.gcode_trigger_on_primed = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_primed = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_primed"])
         if "gcode_trigger_on_retracting_start" in changes.keys():
-            self.gcode_trigger_on_retracting_start = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_retracting_start = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_retracting_start"])
         if "gcode_trigger_on_retracting" in changes.keys():
-            self.gcode_trigger_on_retracting = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_retracting = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_retracting"])
         if "gcode_trigger_on_partially_retracted" in changes.keys():
-            self.gcode_trigger_on_partially_retracted = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_partially_retracted = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_partially_retracted"])
         if "gcode_trigger_on_retracted" in changes.keys():
-            self.gcode_trigger_on_retracted = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_retracted = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_retracted"])
         if "gcode_trigger_on_detracting_start" in changes.keys():
-            self.gcode_trigger_on_detracting_start = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_detracting_start = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_detracting_start"])
         if "gcode_trigger_on_detracting" in changes.keys():
-            self.gcode_trigger_on_detracting = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_detracting = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_detracting"])
         if "gcode_trigger_on_detracted" in changes.keys():
-            self.gcode_trigger_on_detracted = self.GetExtruderTriggerValue(
+            self.gcode_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_detracted"])
         if "gcode_trigger_position_restrictions" in changes.keys():
-            self.gcode_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
+            self.gcode_trigger_position_restrictions = self.get_trigger_position_restrictions(
                 changes["gcode_trigger_position_restrictions"])
         # timer trigger members
         if "timer_trigger_enabled" in changes.keys():
@@ -629,37 +626,37 @@ class Snapshot(object):
             self.timer_trigger_seconds = utility.get_int(
                 changes["timer_trigger_seconds"], self.timer_trigger_seconds)
         if "timer_trigger_on_extruding_start" in changes.keys():
-            self.timer_trigger_on_extruding_start = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_extruding_start = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_extruding_start"])
         if "timer_trigger_on_extruding" in changes.keys():
-            self.timer_trigger_on_extruding = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_extruding = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_extruding"])
         if "timer_trigger_on_primed" in changes.keys():
-            self.timer_trigger_on_primed = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_primed = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_primed"])
         if "timer_trigger_on_retracting_start" in changes.keys():
-            self.timer_trigger_on_retracting_start = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_retracting_start = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_retracting_start"])
         if "timer_trigger_on_retracting" in changes.keys():
-            self.timer_trigger_on_retracting = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_retracting = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_retracting"])
         if "timer_trigger_on_partially_retracted" in changes.keys():
-            self.timer_trigger_on_partially_retracted = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_partially_retracted = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_partially_retracted"])
         if "timer_trigger_on_retracted" in changes.keys():
-            self.timer_trigger_on_retracted = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_retracted = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_retracted"])
         if "timer_trigger_on_detracting_start" in changes.keys():
-            self.timer_trigger_on_detracting_start = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_detracting_start = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_detracting_start"])
         if "timer_trigger_on_detracting" in changes.keys():
-            self.timer_trigger_on_detracting = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_detracting = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_detracting"])
         if "timer_trigger_on_detracted" in changes.keys():
-            self.timer_trigger_on_detracted = self.GetExtruderTriggerValue(
+            self.timer_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_detracted"])
         if "timer_trigger_position_restrictions" in changes.keys():
-            self.timer_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
+            self.timer_trigger_position_restrictions = self.get_trigger_position_restrictions(
                 changes["timer_trigger_position_restrictions"])
         # layer trigger members
         if "layer_trigger_enabled" in changes.keys():
@@ -672,37 +669,37 @@ class Snapshot(object):
             self.layer_trigger_require_zhop = utility.get_bool(
                 changes["layer_trigger_require_zhop"], self.layer_trigger_require_zhop)
         if "layer_trigger_on_extruding_start" in changes.keys():
-            self.layer_trigger_on_extruding_start = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_extruding_start = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_extruding_start"])
         if "layer_trigger_on_extruding" in changes.keys():
-            self.layer_trigger_on_extruding = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_extruding = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_extruding"])
         if "layer_trigger_on_primed" in changes.keys():
-            self.layer_trigger_on_primed = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_primed = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_primed"])
         if "layer_trigger_on_retracting_start" in changes.keys():
-            self.layer_trigger_on_retracting_start = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_retracting_start = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_retracting_start"])
         if "layer_trigger_on_retracting" in changes.keys():
-            self.layer_trigger_on_retracting = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_retracting = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_retracting"])
         if "layer_trigger_on_partially_retracted" in changes.keys():
-            self.layer_trigger_on_partially_retracted = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_partially_retracted = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_partially_retracted"])
         if "layer_trigger_on_retracted" in changes.keys():
-            self.layer_trigger_on_retracted = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_retracted = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_retracted"])
         if "layer_trigger_on_detracting_start" in changes.keys():
-            self.layer_trigger_on_detracting_start = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_detracting_start = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_detracting_start"])
         if "layer_trigger_on_detracting" in changes.keys():
-            self.layer_trigger_on_detracting = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_detracting = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_detracting"])
         if "layer_trigger_on_detracted" in changes.keys():
-            self.layer_trigger_on_detracted = self.GetExtruderTriggerValue(
+            self.layer_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_detracted"])
         if "layer_trigger_position_restrictions" in changes.keys():
-            self.layer_trigger_position_restrictions = self.GetTriggerPositionRestrictions(
+            self.layer_trigger_position_restrictions = self.get_trigger_position_restrictions(
                 changes["layer_trigger_position_restrictions"])
         # other settings
         if "retract_before_move" in changes.keys():
@@ -715,7 +712,7 @@ class Snapshot(object):
             self.cleanup_after_render_fail = utility.get_bool(
                 changes["cleanup_after_render_fail"], self.cleanup_after_render_fail)
 
-    def GetExtruderTriggerValueString(self, value):
+    def get_extruder_trigger_value_string(self, value):
         if value is None:
             return self.ExtruderTriggerIgnoreValue
         elif value:
@@ -723,7 +720,7 @@ class Snapshot(object):
         elif not value:
             return self.ExtruderTriggerForbiddenValue
 
-    def GetExtruderTriggerValue(self, value):
+    def get_extruder_trigger_value(self, value):
         if isinstance(value, basestring):
             if value is None:
                 return None
@@ -736,7 +733,8 @@ class Snapshot(object):
         else:
             return bool(value)
 
-    def GetTriggerPositionRestrictions(self, value):
+    @staticmethod
+    def get_trigger_position_restrictions(value):
         restrictions = []
         for restriction in value:
             restrictions.append(
@@ -749,14 +747,15 @@ class Snapshot(object):
             )
         return restrictions
 
-    def GetTriggerPositionRestrictionsValueString(self, values):
+    @staticmethod
+    def get_trigger_position_restrictions_value_string(values):
         restrictions = []
         for restriction in values:
-            restrictions.append(restriction.ToDict())
+            restrictions.append(restriction.to_dict())
         return restrictions
 
-    def ToDict(self):
-        GETVR = self.GetExtruderTriggerValueString
+    def to_dict(self):
+        get_vr = self.get_extruder_trigger_value_string
         return {
             'guid': self.guid,
             'name': self.name,
@@ -764,49 +763,49 @@ class Snapshot(object):
             # Gcode Trigger
             'gcode_trigger_enabled': self.gcode_trigger_enabled,
             'gcode_trigger_require_zhop': self.gcode_trigger_require_zhop,
-            'gcode_trigger_on_extruding_start': GETVR(self.gcode_trigger_on_extruding_start),
-            'gcode_trigger_on_extruding': GETVR(self.gcode_trigger_on_extruding),
-            'gcode_trigger_on_primed': GETVR(self.gcode_trigger_on_primed),
-            'gcode_trigger_on_retracting_start': GETVR(self.gcode_trigger_on_retracting_start),
-            'gcode_trigger_on_retracting': GETVR(self.gcode_trigger_on_retracting),
-            'gcode_trigger_on_partially_retracted': GETVR(self.gcode_trigger_on_partially_retracted),
-            'gcode_trigger_on_retracted': GETVR(self.gcode_trigger_on_retracted),
-            'gcode_trigger_on_detracting_start': GETVR(self.gcode_trigger_on_detracting_start),
-            'gcode_trigger_on_detracting': GETVR(self.gcode_trigger_on_detracting),
-            'gcode_trigger_on_detracted': GETVR(self.gcode_trigger_on_detracted),
-            'gcode_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+            'gcode_trigger_on_extruding_start': get_vr(self.gcode_trigger_on_extruding_start),
+            'gcode_trigger_on_extruding': get_vr(self.gcode_trigger_on_extruding),
+            'gcode_trigger_on_primed': get_vr(self.gcode_trigger_on_primed),
+            'gcode_trigger_on_retracting_start': get_vr(self.gcode_trigger_on_retracting_start),
+            'gcode_trigger_on_retracting': get_vr(self.gcode_trigger_on_retracting),
+            'gcode_trigger_on_partially_retracted': get_vr(self.gcode_trigger_on_partially_retracted),
+            'gcode_trigger_on_retracted': get_vr(self.gcode_trigger_on_retracted),
+            'gcode_trigger_on_detracting_start': get_vr(self.gcode_trigger_on_detracting_start),
+            'gcode_trigger_on_detracting': get_vr(self.gcode_trigger_on_detracting),
+            'gcode_trigger_on_detracted': get_vr(self.gcode_trigger_on_detracted),
+            'gcode_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
                 self.gcode_trigger_position_restrictions),
             # Timer Trigger
             'timer_trigger_enabled': self.timer_trigger_enabled,
             'timer_trigger_require_zhop': self.timer_trigger_require_zhop,
             'timer_trigger_seconds': self.timer_trigger_seconds,
-            'timer_trigger_on_extruding_start': GETVR(self.timer_trigger_on_extruding_start),
-            'timer_trigger_on_extruding': GETVR(self.timer_trigger_on_extruding),
-            'timer_trigger_on_primed': GETVR(self.timer_trigger_on_primed),
-            'timer_trigger_on_retracting_start': GETVR(self.timer_trigger_on_retracting_start),
-            'timer_trigger_on_retracting': GETVR(self.timer_trigger_on_retracting),
-            'timer_trigger_on_partially_retracted': GETVR(self.timer_trigger_on_partially_retracted),
-            'timer_trigger_on_retracted': GETVR(self.timer_trigger_on_retracted),
-            'timer_trigger_on_detracting_start': GETVR(self.timer_trigger_on_detracting_start),
-            'timer_trigger_on_detracting': GETVR(self.timer_trigger_on_detracting),
-            'timer_trigger_on_detracted': GETVR(self.timer_trigger_on_detracted),
-            'timer_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+            'timer_trigger_on_extruding_start': get_vr(self.timer_trigger_on_extruding_start),
+            'timer_trigger_on_extruding': get_vr(self.timer_trigger_on_extruding),
+            'timer_trigger_on_primed': get_vr(self.timer_trigger_on_primed),
+            'timer_trigger_on_retracting_start': get_vr(self.timer_trigger_on_retracting_start),
+            'timer_trigger_on_retracting': get_vr(self.timer_trigger_on_retracting),
+            'timer_trigger_on_partially_retracted': get_vr(self.timer_trigger_on_partially_retracted),
+            'timer_trigger_on_retracted': get_vr(self.timer_trigger_on_retracted),
+            'timer_trigger_on_detracting_start': get_vr(self.timer_trigger_on_detracting_start),
+            'timer_trigger_on_detracting': get_vr(self.timer_trigger_on_detracting),
+            'timer_trigger_on_detracted': get_vr(self.timer_trigger_on_detracted),
+            'timer_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
                 self.timer_trigger_position_restrictions),
             # Layer Trigger
             'layer_trigger_enabled': self.layer_trigger_enabled,
             'layer_trigger_height': self.layer_trigger_height,
             'layer_trigger_require_zhop': self.layer_trigger_require_zhop,
-            'layer_trigger_on_extruding_start': GETVR(self.layer_trigger_on_extruding_start),
-            'layer_trigger_on_extruding': GETVR(self.layer_trigger_on_extruding),
-            'layer_trigger_on_primed': GETVR(self.layer_trigger_on_primed),
-            'layer_trigger_on_retracting_start': GETVR(self.layer_trigger_on_retracting_start),
-            'layer_trigger_on_retracting': GETVR(self.layer_trigger_on_retracting),
-            'layer_trigger_on_partially_retracted': GETVR(self.layer_trigger_on_partially_retracted),
-            'layer_trigger_on_retracted': GETVR(self.layer_trigger_on_retracted),
-            'layer_trigger_on_detracting_start': GETVR(self.layer_trigger_on_detracting_start),
-            'layer_trigger_on_detracting': GETVR(self.layer_trigger_on_detracting),
-            'layer_trigger_on_detracted': GETVR(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions': self.GetTriggerPositionRestrictionsValueString(
+            'layer_trigger_on_extruding_start': get_vr(self.layer_trigger_on_extruding_start),
+            'layer_trigger_on_extruding': get_vr(self.layer_trigger_on_extruding),
+            'layer_trigger_on_primed': get_vr(self.layer_trigger_on_primed),
+            'layer_trigger_on_retracting_start': get_vr(self.layer_trigger_on_retracting_start),
+            'layer_trigger_on_retracting': get_vr(self.layer_trigger_on_retracting),
+            'layer_trigger_on_partially_retracted': get_vr(self.layer_trigger_on_partially_retracted),
+            'layer_trigger_on_retracted': get_vr(self.layer_trigger_on_retracted),
+            'layer_trigger_on_detracting_start': get_vr(self.layer_trigger_on_detracting_start),
+            'layer_trigger_on_detracting': get_vr(self.layer_trigger_on_detracting),
+            'layer_trigger_on_detracted': get_vr(self.layer_trigger_on_detracted),
+            'layer_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
                 self.layer_trigger_position_restrictions),
 
             # Other Settings
@@ -836,7 +835,7 @@ class Rendering(object):
         self.watermark = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
-        if not rendering is None:
+        if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
                 self.name = rendering.name
@@ -857,9 +856,9 @@ class Rendering(object):
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
             else:
-                self.Update(rendering)
+                self.update(rendering)
 
-    def Update(self, changes):
+    def update(self, changes):
         if "guid" in changes.keys():
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
@@ -907,7 +906,7 @@ class Rendering(object):
             self.pre_roll_seconds = utility.get_float(
                 changes["pre_roll_seconds"], self.pre_roll_seconds)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'guid': self.guid,
             'name': self.name,
@@ -944,60 +943,61 @@ class Camera(object):
         self.username = ""
         self.password = ""
         self.brightness = 128
-        self.brightness_request_template = self.TemplateToString(0, 0, 9963776, 1)
+        self.brightness_request_template = self.template_to_string(0, 0, 9963776, 1)
         self.contrast = 128
-        self.contrast_request_template = self.TemplateToString(0, 0, 9963777, 1)
+        self.contrast_request_template = self.template_to_string(0, 0, 9963777, 1)
         self.saturation = 128
-        self.saturation_request_template = self.TemplateToString(0, 0, 9963778, 1)
+        self.saturation_request_template = self.template_to_string(0, 0, 9963778, 1)
         self.white_balance_auto = True
-        self.white_balance_auto_request_template = self.TemplateToString(0, 0, 9963788, 1)
+        self.white_balance_auto_request_template = self.template_to_string(0, 0, 9963788, 1)
         self.gain = 100
-        self.gain_request_template = self.TemplateToString(0, 0, 9963795, 1)
+        self.gain_request_template = self.template_to_string(0, 0, 9963795, 1)
         self.powerline_frequency = 60
-        self.powerline_frequency_request_template = self.TemplateToString(0, 0, 9963800, 1)
+        self.powerline_frequency_request_template = self.template_to_string(0, 0, 9963800, 1)
         self.white_balance_temperature = 4000
-        self.white_balance_temperature_request_template = self.TemplateToString(0, 0, 9963802, 1)
+        self.white_balance_temperature_request_template = self.template_to_string(0, 0, 9963802, 1)
         self.sharpness = 128
-        self.sharpness_request_template = self.TemplateToString(0, 0, 9963803, 1)
+        self.sharpness_request_template = self.template_to_string(0, 0, 9963803, 1)
         self.backlight_compensation_enabled = False
-        self.backlight_compensation_enabled_request_template = self.TemplateToString(0, 0, 9963804, 1)
+        self.backlight_compensation_enabled_request_template = self.template_to_string(0, 0, 9963804, 1)
         self.exposure_type = 1
-        self.exposure_type_request_template = self.TemplateToString(0, 0, 10094849, 1)
+        self.exposure_type_request_template = self.template_to_string(0, 0, 10094849, 1)
         self.exposure = 250
-        self.exposure_request_template = self.TemplateToString(0, 0, 10094850, 1)
+        self.exposure_request_template = self.template_to_string(0, 0, 10094850, 1)
         self.exposure_auto_priority_enabled = True
-        self.exposure_auto_priority_enabled_request_template = self.TemplateToString(0, 0, 10094851, 1)
+        self.exposure_auto_priority_enabled_request_template = self.template_to_string(0, 0, 10094851, 1)
         self.pan = 0
-        self.pan_request_template = self.TemplateToString(0, 0, 10094856, 1)
+        self.pan_request_template = self.template_to_string(0, 0, 10094856, 1)
         self.tilt = 0
-        self.tilt_request_template = self.TemplateToString(0, 0, 10094857, 1)
+        self.tilt_request_template = self.template_to_string(0, 0, 10094857, 1)
         self.autofocus_enabled = True
-        self.autofocus_enabled_request_template = self.TemplateToString(0, 0, 10094860, 1)
+        self.autofocus_enabled_request_template = self.template_to_string(0, 0, 10094860, 1)
         self.focus = 28
-        self.focus_request_template = self.TemplateToString(0, 0, 10094858, 1)
+        self.focus_request_template = self.template_to_string(0, 0, 10094858, 1)
         self.zoom = 100
-        self.zoom_request_template = self.TemplateToString(0, 0, 10094861, 1)
+        self.zoom_request_template = self.template_to_string(0, 0, 10094861, 1)
         self.led1_mode = 'auto'
-        self.led1_mode_request_template = self.TemplateToString(0, 0, 168062213, 1)
+        self.led1_mode_request_template = self.template_to_string(0, 0, 168062213, 1)
         self.led1_frequency = 0
-        self.led1_frequency_request_template = self.TemplateToString(0, 0, 168062214, 1)
+        self.led1_frequency_request_template = self.template_to_string(0, 0, 168062214, 1)
         self.jpeg_quality = 90
-        self.jpeg_quality_request_template = self.TemplateToString(0, 0, 1, 3)
+        self.jpeg_quality_request_template = self.template_to_string(0, 0, 1, 3)
 
-        if not camera is None:
-            self.Update(camera)
+        if camera is not None:
+            self.update(camera)
 
-    def TemplateToString(self, dest, plugin, id, group):
+    @staticmethod
+    def template_to_string(destination, plugin, setting_id, group):
         return (
             "{camera_address}?action=command&"
-            + "dest=" + str(dest)
+            + "dest=" + str(destination)
             + "&plugin=" + str(plugin)
-            + "&id=" + str(id)
+            + "&id=" + str(setting_id)
             + "&group=" + str(group)
             + "&value={value}"
         )
 
-    def Update(self, changes):
+    def update(self, changes):
         if "guid" in changes.keys():
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
@@ -1144,7 +1144,7 @@ class Camera(object):
             self.zoom_request_template = utility.get_string(
                 changes["zoom_request_template"], self.zoom_request_template)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'guid': self.guid,
             'name': self.name,
@@ -1204,8 +1204,8 @@ class DebugProfile(object):
     FormatString = '%(asctime)s - %(levelname)s - %(message)s'
     ConsoleFormatString = '{asctime} - {levelname} - {message}'
 
-    def __init__(self, logFilePath, debugProfile=None, guid=None, name="Default Debug Profile"):
-        self.logFilePath = logFilePath
+    def __init__(self, log_file_path, debug_profile=None, guid=None, name="Default Debug Profile"):
+        self.logFilePath = log_file_path
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
@@ -1260,10 +1260,10 @@ class DebugProfile(object):
         self.gcode_sent_all = False
         self.gcode_queuing_all = False
 
-        if debugProfile is not None:
-            self.Update(debugProfile)
+        if debug_profile is not None:
+            self.update(debug_profile)
 
-    def Update(self, changes):
+    def update(self, changes):
         if "guid" in changes.keys():
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
@@ -1373,7 +1373,7 @@ class DebugProfile(object):
             self.gcode_queuing_all = utility.get_bool(
                 changes["gcode_queuing_all"], self.gcode_queuing_all)
 
-    def ToDict(self):
+    def to_dict(self):
         return {
             'guid': self.guid,
             'name': self.name,
@@ -1414,185 +1414,157 @@ class DebugProfile(object):
             'gcode_queuing_all': self.gcode_queuing_all
         }
 
-    def LogToConsole(self, levelName, message, force=False):
+    def log_console(self, level_name, message, force=False):
         if self.log_to_console or force:
-            try:
-                print(DebugProfile.ConsoleFormatString.format(asctime=str(
-                    datetime.now()), levelname=levelName, message=message))
-            except:
-                print(message)
+            print(DebugProfile.ConsoleFormatString.format(asctime=str(
+                datetime.now()), levelname=level_name, message=message))
 
-    def LogInfo(self, message):
+    def log_info(self, message):
         if self.enabled:
-            try:
-                self.Logger.info(message)
-                self.LogToConsole('info', message)
-            except:
-                self.LogToConsole(
-                    'error', "Error logging info: message:{0}".format(message), force=True)
-                return
+            self.Logger.info(message)
+            self.log_console('info', message)
 
-    def LogWarning(self, message):
+    def log_warning(self, message):
         if self.enabled:
-            try:
-                self.Logger.warning(message)
-                self.LogToConsole('warn', message)
-            except:
-                self.LogToConsole(
-                    'error', "Error logging warining: message:{0}".format(message), force=True)
-                return
+            self.Logger.warning(message)
+            self.log_console('warn', message)
 
-    def LogException(self, exception):
+    def log_exception(self, exception):
         message = utility.exception_to_string(exception)
-        try:
-            self.Logger.error(message)
-            self.LogToConsole('error', message)
-        except:
-            self.LogToConsole(
-                'error', "Error logging exception:{0}".format(msg), force=True)
-            return
+        self.Logger.error(message)
+        self.log_console('error', message)
 
-    def LogError(self, message):
+    def log_error(self, message):
+        self.Logger.error(message)
+        self.log_console('error', message)
 
-        try:
-            self.Logger.error(message)
-            self.LogToConsole('error', message)
-        except:
-            self.LogToConsole(
-                'error', "Error logging exception: message:{0}".format(message), force=True)
-            return
-
-    def LogPositionChange(self, message):
+    def log_position_change(self, message):
         if self.position_change:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogPositionCommandReceived(self, message):
+    def log_position_command_received(self, message):
         if self.position_command_received:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogExtruderChange(self, message):
+    def log_extruder_change(self, message):
         if self.extruder_change:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogExtruderTriggered(self, message):
+    def log_extruder_triggered(self, message):
         if self.extruder_triggered:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerCreate(self, message):
+    def log_trigger_create(self, message):
         if self.trigger_create:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerWaitState(self, message):
+    def log_trigger_wait_state(self, message):
         if self.trigger_wait_state:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggering(self, message):
+    def log_triggering(self, message):
         if self.trigger_triggering:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerTriggeringState(self, message):
+    def log_triggering_state(self, message):
         if self.trigger_triggering_state:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerHeightChange(self, message):
+    def log_trigger_height_change(self, message):
         if self.trigger_height_change:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogPositionLayerChange(self, message):
+    def log_position_layer_change(self, message):
         if self.position_change:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogPositionHeightChange(self, message):
+    def log_position_height_change(self, message):
         if self.position_change:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogPositionZHop(self, message):
+    def log_position_zhop(self, message):
         if self.trigger_zhop:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTimerTriggerUnpaused(self, message):
+    def log_timer_trigger_unpaused(self, message):
         if self.trigger_time_unpaused:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerTimeRemaining(self, message):
+    def log_trigger_time_remaining(self, message):
         if self.trigger_time_remaining:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogTriggerTimeRemaining(self, message):
-        if self.trigger_time_remaining:
-            self.LogInfo(message)
-
-    def LogSnapshotGcode(self, message):
+    def log_snapshot_gcode(self, message):
         if self.snapshot_gcode:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotGcodeEndcommand(self, message):
+    def log_snapshot_gcode_end_command(self, message):
         if self.snapshot_gcode_endcommand:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotPosition(self, message):
+    def log_snapshot_position(self, message):
         if self.snapshot_position:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotPositionReturn(self, message):
+    def log_snapshot_return_position(self, message):
         if self.snapshot_position_return:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotPositionResumePrint(self, message):
+    def log_snapshot_resume_position(self, message):
         if self.snapshot_position_resume_print:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotSave(self, message):
+    def log_snapshot_save(self, message):
         if self.snapshot_save:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotDownload(self, message):
+    def log_snapshot_download(self, message):
         if self.snapshot_download:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogRenderStart(self, message):
+    def log_render_start(self, message):
         if self.render_start:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogRenderComplete(self, message):
+    def log_render_complete(self, message):
         if self.render_complete:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogRenderFail(self, message):
+    def log_render_fail(self, message):
         if self.render_fail:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogRenderSync(self, message):
+    def log_render_sync(self, message):
         if self.render_sync:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSnapshotClean(self, message):
+    def log_snapshot_clean(self, message):
         if self.snapshot_clean:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSettingsSave(self, message):
+    def log_settings_save(self, message):
         if self.settings_save:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSettingsLoad(self, message):
+    def log_settings_load(self, message):
         if self.settings_load:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogPrintStateChange(self, message):
+    def log_print_state_change(self, message):
         if self.print_state_changed:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogCameraSettingsApply(self, message):
+    def log_camera_settings_apply(self, message):
         if self.camera_settings_apply:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogSentGcode(self, message):
+    def log_gcode_sent(self, message):
         if self.gcode_sent_all:
-            self.LogInfo(message)
+            self.log_info(message)
 
-    def LogQueuingGcode(self, message):
+    def log_gcode_queuing(self, message):
         if self.gcode_queuing_all:
-            self.LogInfo(message)
+            self.log_info(message)
 
 
 class OctolapseSettings(object):
@@ -1601,7 +1573,7 @@ class OctolapseSettings(object):
 
     # constants
 
-    def __init__(self, logFilePath, settings=None):
+    def __init__(self, log_file_path, settings=None):
 
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
@@ -1614,8 +1586,8 @@ class OctolapseSettings(object):
         self.DefaultCamera = Camera(
             name="Default Camera", guid="6b3361a7-82b7-4abf-b3d1-e3046d457d8c")
         self.DefaultDebugProfile = DebugProfile(
-            logFilePath=logFilePath, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7")
-        self.LogFilePath = logFilePath
+            log_file_path=log_file_path, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7")
+        self.LogFilePath = log_file_path
 
         self.version = "0.1.0.0"
         self.show_navbar_icon = True
@@ -1647,155 +1619,155 @@ class OctolapseSettings(object):
         self.current_camera_profile_guid = camera.guid
         self.cameras = {camera.guid: camera}
 
-        debugProfile = self.DefaultDebugProfile
-        self.current_debug_profile_guid = debugProfile.guid
-        self.debug_profiles = {debugProfile.guid: debugProfile}
+        debug_profile = self.DefaultDebugProfile
+        self.current_debug_profile_guid = debug_profile.guid
+        self.debug_profiles = {debug_profile.guid: debug_profile}
 
         if settings is not None:
-            self.Update(settings)
+            self.update(settings)
 
-    def CurrentStabilization(self):
+    def current_stabilization(self):
         if len(self.stabilizations.keys()) == 0:
             stabilization = Stabilization(None)
             self.stabilizations[stabilization.guid] = stabilization
             self.current_stabilization_profile_guid = stabilization.guid
         return self.stabilizations[self.current_stabilization_profile_guid]
 
-    def CurrentSnapshot(self):
+    def current_snapshot(self):
         if len(self.snapshots.keys()) == 0:
             snapshot = Snapshot(None)
             self.snapshots[snapshot.guid] = snapshot
             self.current_snapshot_profile_guid = snapshot.guid
         return self.snapshots[self.current_snapshot_profile_guid]
 
-    def CurrentRendering(self):
+    def current_rendering(self):
         if len(self.renderings.keys()) == 0:
             rendering = Rendering(None)
             self.renderings[rendering.guid] = rendering
             self.current_rendering_profile_guid = rendering.guid
         return self.renderings[self.current_rendering_profile_guid]
 
-    def CurrentPrinter(self):
+    def current_printer(self):
         if len(self.printers.keys()) == 0:
             printer = Printer(printer=None)
             self.printers[printer.guid] = printer
             self.current_printer_profile_guid = printer.guid
         return self.printers[self.current_printer_profile_guid]
 
-    def CurrentCamera(self):
+    def current_camera(self):
         if len(self.cameras.keys()) == 0:
             camera = Camera(camera=None)
             self.cameras[camera.guid] = camera
             self.current_camera_profile_guid = camera.guid
         return self.cameras[self.current_camera_profile_guid]
 
-    def CurrentDebugProfile(self):
+    def current_debug_profile(self):
         if len(self.debug_profiles.keys()) == 0:
-            debug_profile = DebugProfile(self.LogFilePath, debug_profiles=None)
+            debug_profile = DebugProfile(self.LogFilePath)
             self.debug_profiles[debug_profile.guid] = debug_profile
             self.current_debug_profile_guid = debug_profile.guid
         return self.debug_profiles[self.current_debug_profile_guid]
 
-    def Update(self, changes):
+    def update(self, changes):
 
-        if HasKey(changes, "is_octolapse_enabled"):
+        if has_key(changes, "is_octolapse_enabled"):
             self.is_octolapse_enabled = bool(
-                GetValue(changes, "is_octolapse_enabled", self.is_octolapse_enabled))
-        if HasKey(changes, "auto_reload_latest_snapshot"):
-            self.auto_reload_latest_snapshot = bool(GetValue(
+                get_value(changes, "is_octolapse_enabled", self.is_octolapse_enabled))
+        if has_key(changes, "auto_reload_latest_snapshot"):
+            self.auto_reload_latest_snapshot = bool(get_value(
                 changes, "auto_reload_latest_snapshot", self.auto_reload_latest_snapshot))
-        if HasKey(changes, "auto_reload_frames"):
+        if has_key(changes, "auto_reload_frames"):
             self.auto_reload_frames = int(
-                GetValue(changes, "auto_reload_frames", self.auto_reload_frames))
-        if HasKey(changes, "show_navbar_icon"):
+                get_value(changes, "auto_reload_frames", self.auto_reload_frames))
+        if has_key(changes, "show_navbar_icon"):
             self.show_navbar_icon = bool(
-                GetValue(changes, "show_navbar_icon", self.show_navbar_icon))
-        if HasKey(changes, "show_navbar_when_not_printing"):
-            self.show_navbar_when_not_printing = bool(GetValue(
+                get_value(changes, "show_navbar_icon", self.show_navbar_icon))
+        if has_key(changes, "show_navbar_when_not_printing"):
+            self.show_navbar_when_not_printing = bool(get_value(
                 changes, "show_navbar_when_not_printing", self.show_navbar_when_not_printing))
-        if HasKey(changes, "show_position_state_changes"):
-            self.show_position_state_changes = bool(GetValue(
+        if has_key(changes, "show_position_state_changes"):
+            self.show_position_state_changes = bool(get_value(
                 changes, "show_position_state_changes", self.show_position_state_changes))
-        if HasKey(changes, "show_position_changes"):
+        if has_key(changes, "show_position_changes"):
             self.show_position_changes = bool(
-                GetValue(changes, "show_position_changes", self.show_position_changes))
-        if HasKey(changes, "show_extruder_state_changes"):
-            self.show_extruder_state_changes = bool(GetValue(
+                get_value(changes, "show_position_changes", self.show_position_changes))
+        if has_key(changes, "show_extruder_state_changes"):
+            self.show_extruder_state_changes = bool(get_value(
                 changes, "show_extruder_state_changes", self.show_extruder_state_changes))
-        if HasKey(changes, "show_trigger_state_changes"):
-            self.show_trigger_state_changes = bool(GetValue(
+        if has_key(changes, "show_trigger_state_changes"):
+            self.show_trigger_state_changes = bool(get_value(
                 changes, "show_trigger_state_changes", self.show_trigger_state_changes))
-        if HasKey(changes, "current_printer_profile_guid"):
-            self.current_printer_profile_guid = str(GetValue(
+        if has_key(changes, "current_printer_profile_guid"):
+            self.current_printer_profile_guid = str(get_value(
                 changes, "current_printer_profile_guid", self.current_printer_profile_guid))
-        if HasKey(changes, "current_stabilization_profile_guid"):
-            self.current_stabilization_profile_guid = str(GetValue(
+        if has_key(changes, "current_stabilization_profile_guid"):
+            self.current_stabilization_profile_guid = str(get_value(
                 changes, "current_stabilization_profile_guid", self.current_stabilization_profile_guid))
-        if HasKey(changes, "current_snapshot_profile_guid"):
-            self.current_snapshot_profile_guid = str(GetValue(
+        if has_key(changes, "current_snapshot_profile_guid"):
+            self.current_snapshot_profile_guid = str(get_value(
                 changes, "current_snapshot_profile_guid", self.current_snapshot_profile_guid))
-        if HasKey(changes, "current_rendering_profile_guid"):
-            self.current_rendering_profile_guid = str(GetValue(
+        if has_key(changes, "current_rendering_profile_guid"):
+            self.current_rendering_profile_guid = str(get_value(
                 changes, "current_rendering_profile_guid", self.current_rendering_profile_guid))
-        if HasKey(changes, "current_camera_profile_guid"):
-            self.current_camera_profile_guid = str(GetValue(
+        if has_key(changes, "current_camera_profile_guid"):
+            self.current_camera_profile_guid = str(get_value(
                 changes, "current_camera_profile_guid", self.current_camera_profile_guid))
-        if HasKey(changes, "current_debug_profile_guid"):
-            self.current_debug_profile_guid = str(GetValue(
+        if has_key(changes, "current_debug_profile_guid"):
+            self.current_debug_profile_guid = str(get_value(
                 changes, "current_debug_profile_guid", self.current_debug_profile_guid))
 
-        if HasKey(changes, "printers"):
+        if has_key(changes, "printers"):
             self.printers = {}
-            printers = GetValue(changes, "printers", None)
+            printers = get_value(changes, "printers", None)
             for printer in printers:
                 if printer["guid"] == "":
                     printer["guid"] = str(uuid.uuid4())
                 self.printers.update({printer["guid"]: Printer(printer=printer)})
-        if HasKey(changes, "stabilizations"):
+        if has_key(changes, "stabilizations"):
             self.stabilizations = {}
-            stabilizations = GetValue(changes, "stabilizations", None)
+            stabilizations = get_value(changes, "stabilizations", None)
             for stabilization in stabilizations:
                 if stabilization["guid"] == "":
                     stabilization["guid"] = str(uuid.uuid4())
                 self.stabilizations.update({stabilization["guid"]: Stabilization(stabilization=stabilization)})
 
-        if HasKey(changes, "snapshots"):
+        if has_key(changes, "snapshots"):
             self.snapshots = {}
-            snapshots = GetValue(changes, "snapshots", None)
+            snapshots = get_value(changes, "snapshots", None)
             for snapshot in snapshots:
                 if snapshot["guid"] == "":
                     snapshot["guid"] = str(uuid.uuid4())
                 self.snapshots.update({snapshot["guid"]: Snapshot(snapshot=snapshot)})
-        if HasKey(changes, "renderings"):
+        if has_key(changes, "renderings"):
             self.renderings = {}
-            renderings = GetValue(changes, "renderings", None)
+            renderings = get_value(changes, "renderings", None)
             for rendering in renderings:
                 if rendering["guid"] == "":
                     rendering["guid"] = str(uuid.uuid4())
                 self.renderings.update({rendering["guid"]: Rendering(
                     rendering=rendering)})
 
-        if HasKey(changes, "cameras"):
+        if has_key(changes, "cameras"):
             self.cameras = {}
-            cameras = GetValue(changes, "cameras", None)
+            cameras = get_value(changes, "cameras", None)
             for camera in cameras:
                 if camera["guid"] == "":
                     camera["guid"] = str(uuid.uuid4())
                 self.cameras.update({camera["guid"]: Camera(camera=camera)})
 
-        if HasKey(changes, "debug_profiles"):
+        if has_key(changes, "debug_profiles"):
             self.debug_profiles = {}
-            debugProfiles = GetValue(changes, "debug_profiles", None)
-            for debugProfile in debugProfiles:
+            debug_profiles = get_value(changes, "debug_profiles", None)
+            for debugProfile in debug_profiles:
                 if debugProfile["guid"] == "":
                     debugProfile["guid"] = str(uuid.uuid4())
                 self.debug_profiles.update(
-                    {debugProfile["guid"]: DebugProfile(self.LogFilePath, debugProfile=debugProfile)})
+                    {debugProfile["guid"]: DebugProfile(self.LogFilePath, debug_profile=debugProfile)})
 
-    def ToDict(self, ):
+    def to_dict(self, ):
         defaults = OctolapseSettings(self.LogFilePath)
 
-        settingsDict = {
+        settings_dict = {
             'version': utility.get_string(
                 self.version, defaults.version
             ),
@@ -1914,32 +1886,32 @@ class OctolapseSettings(object):
         }
 
         for key, printer in self.printers.items():
-            settingsDict["printers"].append(printer.ToDict())
-        settingsDict["default_printer_profile"] = self.DefaultPrinter.ToDict()
+            settings_dict["printers"].append(printer.to_dict())
+        settings_dict["default_printer_profile"] = self.DefaultPrinter.to_dict()
 
         for key, stabilization in self.stabilizations.items():
-            settingsDict["stabilizations"].append(stabilization.ToDict())
-        settingsDict["default_stabilization_profile"] = self.DefaultStabilization.ToDict()
+            settings_dict["stabilizations"].append(stabilization.to_dict())
+        settings_dict["default_stabilization_profile"] = self.DefaultStabilization.to_dict()
 
         for key, snapshot in self.snapshots.items():
-            settingsDict["snapshots"].append(snapshot.ToDict())
-        settingsDict["default_snapshot_profile"] = self.DefaultSnapshot.ToDict()
+            settings_dict["snapshots"].append(snapshot.to_dict())
+        settings_dict["default_snapshot_profile"] = self.DefaultSnapshot.to_dict()
 
         for key, rendering in self.renderings.items():
-            settingsDict["renderings"].append(rendering.ToDict())
-        settingsDict["default_rendering_profile"] = self.DefaultRendering.ToDict()
+            settings_dict["renderings"].append(rendering.to_dict())
+        settings_dict["default_rendering_profile"] = self.DefaultRendering.to_dict()
 
         for key, camera in self.cameras.items():
-            settingsDict["cameras"].append(camera.ToDict())
-        settingsDict["default_camera_profile"] = self.DefaultCamera.ToDict()
+            settings_dict["cameras"].append(camera.to_dict())
+        settings_dict["default_camera_profile"] = self.DefaultCamera.to_dict()
 
         for key, debugProfile in self.debug_profiles.items():
-            settingsDict["debug_profiles"].append(debugProfile.ToDict())
-        settingsDict["default_debug_profile"] = self.DefaultDebugProfile.ToDict()
+            settings_dict["debug_profiles"].append(debugProfile.to_dict())
+        settings_dict["default_debug_profile"] = self.DefaultDebugProfile.to_dict()
 
-        return settingsDict
+        return settings_dict
 
-    def GetMainSettingsDict(self):
+    def get_main_settings_dict(self):
         return {
             'is_octolapse_enabled': self.is_octolapse_enabled,
             'auto_reload_latest_snapshot': self.auto_reload_latest_snapshot,
@@ -1954,86 +1926,85 @@ class OctolapseSettings(object):
 
     # Add/Update/Remove/set current profile
 
-    def addUpdateProfile(self, profileType, profile):
+    def add_update_profile(self, profile_type, profile):
         # check the guid.  If it is null or empty, assign a new value.
         guid = profile["guid"]
         if guid is None or guid == "":
             guid = str(uuid.uuid4())
             profile["guid"] = guid
-        newProfile = None
 
-        if profileType == "Printer":
-            newProfile = Printer(profile)
-            self.printers[guid] = newProfile
-        elif profileType == "Stabilization":
-            newProfile = Stabilization(profile)
-            self.stabilizations[guid] = newProfile
-        elif profileType == "Snapshot":
-            newProfile = Snapshot(profile)
-            self.snapshots[guid] = newProfile
-        elif profileType == "Rendering":
-            newProfile = Rendering(profile)
-            self.renderings[guid] = newProfile
-        elif profileType == "Camera":
-            newProfile = Camera(profile)
-            self.cameras[guid] = newProfile
-        elif profileType == "Debug":
-            newProfile = DebugProfile(self.LogFilePath, debugProfile=profile)
-            self.debug_profiles[guid] = newProfile
+        if profile_type == "Printer":
+            new_profile = Printer(profile)
+            self.printers[guid] = new_profile
+        elif profile_type == "Stabilization":
+            new_profile = Stabilization(profile)
+            self.stabilizations[guid] = new_profile
+        elif profile_type == "Snapshot":
+            new_profile = Snapshot(profile)
+            self.snapshots[guid] = new_profile
+        elif profile_type == "Rendering":
+            new_profile = Rendering(profile)
+            self.renderings[guid] = new_profile
+        elif profile_type == "Camera":
+            new_profile = Camera(profile)
+            self.cameras[guid] = new_profile
+        elif profile_type == "Debug":
+            new_profile = DebugProfile(self.LogFilePath, debug_profile=profile)
+            self.debug_profiles[guid] = new_profile
         else:
             raise ValueError('An unknown profile type ' +
-                             str(profileType) + ' was received.')
+                             str(profile_type) + ' was received.')
 
-        return newProfile
+        return new_profile
 
-    def removeProfile(self, profileType, guid):
+    def remove_profile(self, profile_type, guid):
 
-        if profileType == "Printer":
+        if profile_type == "Printer":
             del self.printers[guid]
-        elif profileType == "Stabilization":
+        elif profile_type == "Stabilization":
             del self.stabilizations[guid]
-        elif profileType == "Snapshot":
+        elif profile_type == "Snapshot":
             del self.snapshots[guid]
-        elif profileType == "Rendering":
+        elif profile_type == "Rendering":
             del self.renderings[guid]
-        elif profileType == "Camera":
+        elif profile_type == "Camera":
             del self.cameras[guid]
-        elif profileType == "Debug":
+        elif profile_type == "Debug":
             del self.debug_profiles[guid]
         else:
             raise ValueError('An unknown profile type ' +
-                             str(profileType) + ' was received.')
+                             str(profile_type) + ' was received.')
 
-    def setCurrentProfile(self, profileType, guid):
+    def set_current_profile(self, profile_type, guid):
 
-        if profileType == "Printer":
+        if profile_type == "Printer":
             self.current_printer_profile_guid = guid
-        elif profileType == "Stabilization":
+        elif profile_type == "Stabilization":
             self.current_stabilization_profile_guid = guid
-        elif profileType == "Snapshot":
+        elif profile_type == "Snapshot":
             self.current_snapshot_profile_guid = guid
-        elif profileType == "Rendering":
+        elif profile_type == "Rendering":
             self.current_rendering_profile_guid = guid
-        elif profileType == "Camera":
+        elif profile_type == "Camera":
             self.current_camera_profile_guid = guid
-        elif profileType == "Debug":
+        elif profile_type == "Debug":
             self.current_debug_profile_guid = guid
         else:
             raise ValueError('An unknown profile type ' +
-                             str(profileType) + ' was received.')
+                             str(profile_type) + ' was received.')
 
 
-def HasKey(object, key):
-    if isinstance(object, dict):
-        return key in object
-    elif isinstance(object, PluginSettings):
-        return object.has([key])
+def has_key(obj, key):
+    if isinstance(obj, dict):
+        return key in obj
+    elif isinstance(obj, PluginSettings):
+        return obj.has([key])
 
 
-def GetValue(object, key, default=None):
-    if isinstance(object, dict) and key in object:
-        return object[key]
-    elif isinstance(object, PluginSettings) and object.has([key]):
-        return object.get([key])
+def get_value(obj, key, default=None):
+    if isinstance(obj, dict) and key in obj:
+        return obj[key]
+    elif isinstance(obj, PluginSettings) and obj.has([key]):
+        return obj.get([key])
     else:
         return default

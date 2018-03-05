@@ -127,7 +127,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
     def loadMainSettings(self):
         data = {'success': True}
-        data.update(self.Settings.GetMainSettingsDict())
+        data.update(self.Settings.get_main_settings_dict())
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
@@ -149,11 +149,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         profileType = requestValues["profileType"]
         profile = requestValues["profile"]
         client_id = requestValues["client_id"]
-        updatedProfile = self.Settings.addUpdateProfile(profileType, profile)
+        updatedProfile = self.Settings.add_update_profile(profileType, profile)
         # save the updated settings to a file.
         self.SaveSettings()
         self.SendSettingsChangedMessage(client_id)
-        return json.dumps(updatedProfile.ToDict()), 200, {'ContentType': 'application/json'}
+        return json.dumps(updatedProfile.to_dict()), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/removeProfile", methods=["POST"])
     @restricted_access
@@ -163,7 +163,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         profileType = requestValues["profileType"]
         guid = requestValues["guid"]
         client_id = requestValues["client_id"]
-        self.Settings.removeProfile(profileType, guid)
+        self.Settings.remove_profile(profileType, guid)
         # save the updated settings to a file.
         self.SaveSettings()
         self.SendSettingsChangedMessage(client_id)
@@ -177,7 +177,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         profileType = requestValues["profileType"]
         guid = requestValues["guid"]
         client_id = requestValues["client_id"]
-        self.Settings.setCurrentProfile(profileType, guid)
+        self.Settings.set_current_profile(profileType, guid)
         self.SaveSettings()
         self.SendSettingsChangedMessage(client_id)
         return json.dumps({'success': True, 'guid': requestValues["guid"]}), 200, {'ContentType': 'application/json'}
@@ -191,13 +191,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             self.LoadSettings(forceDefaults=True)
             data = {'success': True}
-            data.update(self.Settings.ToDict())
+            data.update(self.Settings.to_dict())
             self.SendSettingsChangedMessage(client_id)
 
             return json.dumps(data), 200, {'ContentType': 'application/json'}
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
         return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
@@ -207,7 +207,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @admin_permission.require(403)
     def loadSettings(self):
         data = {'success': True}
-        data.update(self.Settings.ToDict())
+        data.update(self.Settings.to_dict())
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
@@ -281,16 +281,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # if a settings file does not exist, create one ??
                 newSettings = OctolapseSettings(self.LogFilePath(), data)
                 if (self.Settings is not None):
-                    self.Settings.Update(newSettings.ToDict())
+                    self.Settings.update(newSettings.to_dict())
                 else:
                     self.Settings = createNewSettings
-            self.Settings.CurrentDebugProfile().LogSettingsLoad(
+            self.Settings.current_debug_profile().log_settings_load(
                 "Creating new settings file from defaults.")
             createNewSettings = True
         else:
             # Load settings from file
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                self.Settings.current_debug_profile().log_settings_load(
                     "Loading existings settings file from: {0}.".format(self.SettingsFilePath()))
             else:
                 self._logger.info("Loading existing settings file from: {0}.".format(
@@ -300,13 +300,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if self.Settings == None:
                 #  create a new settings object
                 self.Settings = OctolapseSettings(self.LogFilePath(), data)
-                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                self.Settings.current_debug_profile().log_settings_load(
                     "Settings loaded.  Created new settings object: {0}.".format(data))
             else:
                 # update an existing settings object
-                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                self.Settings.current_debug_profile().log_settings_load(
                     "Settings loaded.  Updating existing settings object: {0}.".format(data))
-                self.Settings.Update(data)
+                self.Settings.update(data)
         # Extract any settings from octoprint that would be useful to our users.
         self.CopyOctoprintDefaultSettings(
             applyToCurrentProfiles=createNewSettings)
@@ -314,7 +314,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if createNewSettings:
             # No file existed, so we must have created default settings.  Save them!
             self.SaveSettings()
-        return self.Settings.ToDict()
+        return self.Settings.to_dict()
 
     def CopyOctoprintDefaultSettings(self, applyToCurrentProfiles=False):
         try:
@@ -329,11 +329,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             try:
                 o = urlparse(snapshotUrl)
                 cameraAddress = o.scheme + "://" + o.netloc + o.path
-                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                self.Settings.current_debug_profile().log_settings_load(
                     "Setting octolapse camera address to {0}.".format(cameraAddress))
                 snapshotAction = urlparse(snapshotUrl).query
                 snapshotRequestTemplate = "{camera_address}?" + snapshotAction
-                self.Settings.CurrentDebugProfile().LogSettingsLoad(
+                self.Settings.current_debug_profile().log_settings_load(
                     "Setting octolapse camera snapshot template to {0}.".format(snapshotRequestTemplate))
                 self.Settings.DefaultCamera.address = cameraAddress
                 self.Settings.DefaultCamera.snapshot_request_template = snapshotRequestTemplate
@@ -347,7 +347,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # connect.
                 # self.SendPopupMessage("Octolapse was unable to extract the default camera address from Octoprint.  Please configure your camera address and snapshot template before using Octolapse.")
 
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
 
             bitrate = self._settings.settings.get(["webcam", "bitrate"])
             self.Settings.DefaultRendering.bitrate = bitrate
@@ -356,19 +356,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     profile.bitrate = bitrate
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
     def SaveSettings(self):
         # Save setting from file
-        settings = self.Settings.ToDict()
-        self.Settings.CurrentDebugProfile().LogSettingsSave(
+        settings = self.Settings.to_dict()
+        self.Settings.current_debug_profile().log_settings_save(
             "Saving Settings.".format(settings))
 
         with open(self.SettingsFilePath(), 'w') as outfile:
             json.dump(settings, outfile)
-        self.Settings.CurrentDebugProfile().LogSettingsSave(
+        self.Settings.current_debug_profile().log_settings_save(
             "Settings saved: {0}".format(settings))
         return None
 
@@ -387,10 +387,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settingsDict = None
         try:
             octoprint.plugin.SettingsPlugin.on_settings_load(self)
-            settingsDict = self.Settings.ToDict()
+            settingsDict = self.Settings.to_dict()
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
@@ -424,7 +424,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     }
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
         return None
@@ -453,10 +453,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # create our timelapse object
 
             self.CreateTimelapseObject()
-            self.Settings.CurrentDebugProfile().LogInfo("Octolapse - loaded and active.")
+            self.Settings.current_debug_profile().log_info("Octolapse - loaded and active.")
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
             raise
@@ -468,14 +468,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if self.Settings is None:
             return
         try:
-            self.Settings.CurrentDebugProfile().LogPrintStateChange(
+            self.Settings.current_debug_profile().log_print_state_change(
                 "Printer event received:{0}.".format(event))
 
             # for printing events use Printer State Change, because it gets sent before Print_Started
             # unfortunately, now we have to know that it
             if event == Events.PRINTER_STATE_CHANGED and payload["state_id"] == "PRINTING":
                 self.OnPrintStart()
-                self.Settings.CurrentDebugProfile().LogPrintStateChange("State Change to Printing")
+                self.Settings.current_debug_profile().log_print_state_change("State Change to Printing")
             if event == Events.PRINT_STARTED:
                 # eventId = self._printer.get_state_id()
                 # if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
@@ -483,16 +483,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self.Timelapse.EndTimelapse()
                     self.SendPopupMessage(
                         "Octolapse does not work when printing from SD the card.  The timelapse has been stopped.")
-                    self.Settings.CurrentDebugProfile().LogPrintStateChange(
+                    self.Settings.current_debug_profile().log_print_state_change(
                         "Octolapse cannot start the timelapse when printing from SD.  Origin:{0}".format(origin))
             elif self.Timelapse == None:
-                self.Settings.CurrentDebugProfile().LogPrintStateChange(
+                self.Settings.current_debug_profile().log_print_state_change(
                     "No timelapse object exists and this is not a print start event, exiting.")
                 return
             elif event == Events.PRINT_PAUSED:
                 self.OnPrintPause()
             elif event == Events.HOME:
-                self.Settings.CurrentDebugProfile().LogPrintStateChange(
+                self.Settings.current_debug_profile().log_print_state_change(
                     "homing to payload:{0}.".format(event))
             elif event == Events.PRINT_RESUMED:
                 self.OnPrintResumed()
@@ -506,12 +506,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.Timelapse.PositionReceived(payload)
         except Exception as e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
     def OnPrintResumed(self):
-        self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Resumed.")
+        self.Settings.current_debug_profile().log_print_state_change("Print Resumed.")
         self.Timelapse.PrintResumed()
 
     def OnPrintPause(self):
@@ -519,42 +519,42 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def OnPrintStart(self):
         if not self.Settings.is_octolapse_enabled:
-            self.Settings.CurrentDebugProfile().LogPrintStateChange("Octolapse is disabled.")
+            self.Settings.current_debug_profile().log_print_state_change("Octolapse is disabled.")
             return
 
         if self.Timelapse.State != TimelapseState.Idle:
-            self.Settings.CurrentDebugProfile().LogPrintStateChange(
+            self.Settings.current_debug_profile().log_print_state_change(
                 "Octolapse is not idling.  CurrentState:{0}".format(self.Timelapse.State))
             return
 
         result = self.StartTimelapse()
         if not result["success"]:
-            self.Settings.CurrentDebugProfile().LogPrintStateChange(
+            self.Settings.current_debug_profile().log_print_state_change(
                 "Unable to start the timelapse. Error:{0}".format(result["error"]))
             return
 
         if result["warning"] != False:
             self.SendPopupMessage(result["warning"])
 
-        self.Settings.CurrentDebugProfile().LogPrintStateChange(
+        self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
-        if self.Settings.CurrentCamera().apply_settings_before_print:
-            self.ApplyCameraSettings(self.Settings.CurrentCamera())
+        if self.Settings.current_camera().apply_settings_before_print:
+            self.ApplyCameraSettings(self.Settings.current_camera())
 
     def StartTimelapse(self):
 
         ffmpegPath = ""
         try:
             ffmpegPath = self._settings.settings.get(["webcam", "ffmpeg"])
-            if self.Settings.CurrentRendering().enabled and ffmpegPath == "":
-                self.Settings.CurrentDebugProfile().LogError(
+            if self.Settings.current_rendering().enabled and ffmpegPath == "":
+                self.Settings.current_debug_profile().log_error(
                     "A timelapse was started, but there is no ffmpeg path set!")
                 return {'success': False,
                         'error': "No ffmpeg path is set.  Please configure this setting within the Octoprint settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to FFMPEG.",
                         'warning': False}
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
             return {'success': False,
@@ -572,7 +572,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
@@ -613,21 +613,21 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def SendRenderStartMessage(self, msg):
         data = {
             "type": "render-start", "msg": msg, "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def SendRenderFailedMessage(self, msg):
         data = {
             "type": "render-failed", "msg": msg, "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def SendRenderEndMessage(self, success):
         data = {
             "type": "render-end", "msg": "Octolapse is finished rendering a timelapse.", "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict(), "is_synchronized": self.IsRenderingSynchronized,
+            "MainSettings": self.Settings.get_main_settings_dict(), "is_synchronized": self.IsRenderingSynchronized,
             'success': success
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -640,7 +640,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         stateData = self.Timelapse.GetStateDict()
         data = {
             "type": "timelapse-start", "msg": "Octolapse has started a timelapse.", "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         data.update(stateData)
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -649,7 +649,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         stateData = self.Timelapse.GetStateDict()
         data = {
             "type": "position-error", "msg": message, "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         data.update(stateData)
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -658,7 +658,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         stateData = self.Timelapse.GetStateDict()
         data = {
             "type": "out-of-bounds", "msg": message, "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         data.update(stateData)
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -666,7 +666,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def SendStateLoadedMessage(self):
         data = {
             "type": "state-loaded", "msg": "The current state has been loaded.", "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
 
         }
         data.update(self.Timelapse.GetStateDict())
@@ -676,7 +676,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         stateData = self.Timelapse.GetStateDict()
         data = {
             "type": "timelapse-complete", "msg": "Octolapse has completed the timelapse.",
-            "Status": self.GetStatusDict(), "MainSettings": self.Settings.GetMainSettingsDict()
+            "Status": self.GetStatusDict(), "MainSettings": self.Settings.get_main_settings_dict()
         }
         data.update(stateData)
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -686,7 +686,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         data = {
             "type": "snapshot-start", "msg": "Octolapse is taking a snapshot.", "Status": self.GetStatusDict(),
-            "MainSettings": self.Settings.GetMainSettingsDict()
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         data.update(stateData)
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -699,7 +699,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         error = payload["error"]
         data = {
             "type": "snapshot-complete", "msg": "Octolapse has completed the current snapshot.", "Status": statusDict,
-            "MainSettings": self.Settings.GetMainSettingsDict(), 'success': success, 'error': error
+            "MainSettings": self.Settings.get_main_settings_dict(), 'success': success, 'error': error
 
         }
         stateData = self.Timelapse.GetStateDict()
@@ -710,7 +710,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settingValue = args[0]
         settingName = args[1]
         template = args[2]
-        self.Settings.CurrentDebugProfile().LogCameraSettingsApply(
+        self.Settings.current_debug_profile().log_camera_settings_apply(
             "Camera Settings - Successfully applied {0} to the {1} setting.  Template:{2}".format(settingValue,
                                                                                                   settingName,
                                                                                                   template))
@@ -720,32 +720,32 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settingName = args[1]
         template = args[2]
         errorMessage = args[3]
-        self.Settings.CurrentDebugProfile().LogCameraSettingsApply(
+        self.Settings.current_debug_profile().log_camera_settings_apply(
             "Camera Settings - Unable to apply {0} to the {1} settings!  Template:{2}, Details:{3}".format(settingValue,
                                                                                                            settingName,
                                                                                                            template,
                                                                                                            errorMessage))
 
     def OnCameraSettingsCompelted(self, *args, **kwargs):
-        self.Settings.CurrentDebugProfile().LogCameraSettingsApply(
+        self.Settings.current_debug_profile().log_camera_settings_apply(
             "Camera Settings - Completed")
 
     def OnPrintFailed(self):
         self.EndTimelapse()
-        self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Failed.")
+        self.Settings.current_debug_profile().log_print_state_change("Print Failed.")
 
     def OnPrintCancelled(self):
         self.EndTimelapse(cancelled=True)
-        self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Cancelled.")
+        self.Settings.current_debug_profile().log_print_state_change("Print Cancelled.")
 
     def OnPrintCompleted(self):
         self.EndTimelapse()
-        self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Completed.")
+        self.Settings.current_debug_profile().log_print_state_change("Print Completed.")
 
     def OnPrintEnd(self):
         # tell the timelapse that the print ended.
         self.EndTimelapse()
-        self.Settings.CurrentDebugProfile().LogPrintStateChange("Print Ended.")
+        self.Settings.current_debug_profile().log_print_state_change("Print Ended.")
 
     def EndTimelapse(self, cancelled=False):
         if self.Timelapse is not None:
@@ -769,7 +769,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
@@ -780,7 +780,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     comm_instance, phase, cmd, cmd_type, gcode, args, kwargs)
         except Exception, e:
             if self.Settings is not None:
-                self.Settings.CurrentDebugProfile().LogException(e)
+                self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
 

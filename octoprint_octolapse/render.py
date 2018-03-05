@@ -44,7 +44,7 @@ class Render(object):
         self.TimelapseRenderJobs = []
 
     def Process(self, printName, printStartTime, printEndTime):
-        self.Settings.CurrentDebugProfile().LogRenderStart("Rendering is starting.")
+        self.Settings.current_debug_profile().log_render_start("Rendering is starting.")
         # Get the capture file and directory info
         snapshotDirectory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
@@ -59,7 +59,7 @@ class Render(object):
 
         job = TimelapseRenderJob(
             self.Rendering,
-            self.Settings.CurrentDebugProfile(),
+            self.Settings.current_debug_profile(),
             printName,
             snapshotDirectory,
             snapshotFileNameTemplate,
@@ -160,17 +160,17 @@ class TimelapseRenderJob(object):
         try:
             self._countImages()
             if self._imageCount == 0:
-                self._debug.LogRenderFail(
+                self._debug.log_render_fail(
                     "No images were captured, or they have been removed.")
                 return False
             if self._imageCount == 1:
-                self._debug.LogRenderFail(
+                self._debug.log_render_fail(
                     "Only 1 frame was captured, cannot make a timelapse with a single frame.")
                 return False
             # calculate the FPS
             self._calculateFps()
             if self._fps < 1:
-                self._debug.LogError(
+                self._debug.log_error(
                     "The calculated FPS is below 1, which is not allowed. "
                     "Please check the rendering settings for Min and Max FPS "
                     "as well as the number of snapshots captured."
@@ -181,7 +181,7 @@ class TimelapseRenderJob(object):
                 self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
             return True
         except Exception as e:
-            self._debug.LogException(e)
+            self._debug.log_exception(e)
         return False
 
     def _calculateFps(self):
@@ -206,11 +206,11 @@ class TimelapseRenderJob(object):
                 self._rendering.max_fps,
                 self._rendering.min_fps
             )
-            self._debug.LogRenderStart(message)
+            self._debug.log_render_start(message)
         else:
             message = "FPS Calculation Type:{0}, Fps:{0}"
             message = message.format(self._rendering.fps_calculation_type, self._fps)
-            self._debug.LogRenderStart(message)
+            self._debug.log_render_start(message)
 
     def _countImages(self):
         """get the number of frames"""
@@ -227,7 +227,7 @@ class TimelapseRenderJob(object):
             else:
                 break
         # since we're starting at 0 and incrementing after a file is found, the index here will be our count.
-        self._debug.LogRenderStart("Found {0} images.".format(imageIndex))
+        self._debug.log_render_start("Found {0} images.".format(imageIndex))
         self._imageCount = imageIndex
 
     def _applyPrePostRoll(self, snapshotDirectory, snapshotFileNameTemplate, fps, imageCount):
@@ -269,7 +269,7 @@ class TimelapseRenderJob(object):
                     shutil.copy(lastImagePath, newImagePath)
             return True
         except Exception as e:
-            self._debug.LogException(e)
+            self._debug.log_exception(e)
         return False
 
     #####################
@@ -351,7 +351,7 @@ class TimelapseRenderJob(object):
                     "Please configure the ffmpeg path within the "
                     "'Features->Webcam & Timelapse' settings tab."
                 )
-                self._debug.LogRenderFail(message)
+                self._debug.log_render_fail(message)
                 self._on_render_fail(0, message)
                 return
             elif self._rendering.bitrate is None:
@@ -359,19 +359,19 @@ class TimelapseRenderJob(object):
                     "Cannot create movie, desired bitrate is unset. "
                     "Please set the bitrate within the Octolapse rendering profile."
                 )
-                self._debug.LogRenderFail(message)
+                self._debug.log_render_fail(message)
                 self._on_render_fail(0, message)
                 return
 
             # add the file extension
             self._output = self._output + "." + self._rendering.output_format
             try:
-                self._debug.LogRenderStart(
+                self._debug.log_render_start(
                     "Creating the directory at {0}".format(self._output_dir))
                 if not os.path.exists(self._output_dir):
                     os.makedirs(self._output_dir)
             except Exception as e:
-                self._debug.LogException(e)
+                self._debug.log_exception(e)
                 message = (
                     "Render - An exception was thrown when trying to "
                     "create the rendering path at: {0}.  Please check "
@@ -382,7 +382,7 @@ class TimelapseRenderJob(object):
 
             if not os.path.exists(self._input % 0):
                 message = 'Cannot create a movie, no frames captured.'
-                self._debug.LogRenderFail(message)
+                self._debug.log_render_fail(message)
                 self._on_render_fail(0, message)
                 return
 
@@ -412,7 +412,7 @@ class TimelapseRenderJob(object):
                 watermark=watermark,
                 vcodec=vcodec
             )
-            self._debug.LogRenderStart(
+            self._debug.log_render_start(
                 "Running ffmpeg with command string: {0}".format(command_str))
 
             with self.render_job_lock:
@@ -428,11 +428,11 @@ class TimelapseRenderJob(object):
                         stderr_text = p.stderr.text
                         message = "Could not render movie, got return code %r: %s" % (
                             returncode, stderr_text)
-                        self._debug.LogRenderFail(message)
+                        self._debug.log_render_fail(message)
                         self._on_render_fail(p.returncode, message)
                         return
                 except Exception as e:
-                    self._debug.LogException(e)
+                    self._debug.log_exception(e)
                     message = (
                         "Could not render movie due to unknown error. "
                         "Please check plugin_octolapse.log for details."
@@ -455,18 +455,18 @@ class TimelapseRenderJob(object):
                             "Syncronizing timelapse with the built in "
                             "timelapse plugin, copying {0} to {1}"
                         ).format(self._output, finalFileName)
-                        self._debug.LogRenderSync(message)
+                        self._debug.log_render_sync(message)
                         shutil.move(self._output, finalFileName)
                         # we've renamed the output due to a sync, update the member
                         self._output = finalFileName
                         self._on_after_sync_success()
                     except Exception, e:
-                        self._debug.LogException(e)
+                        self._debug.log_exception(e)
                         self._on_after_sync_fail()
                         return
 
         except Exception as e:
-            self._debug.LogException(e)
+            self._debug.log_exception(e)
             message = (
                 "An unexpected exception occurred while "
                 "rendering a timelapse.  Please check "

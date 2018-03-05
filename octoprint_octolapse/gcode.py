@@ -65,13 +65,13 @@ class SnapshotGcodeGenerator(object):
 
     def __init__(self, octolapseSettings, octoprintPrinterProfile):
         self.Settings = octolapseSettings
-        self.StabilizationPaths = self.Settings.CurrentStabilization().GetStabilizationPaths()
-        self.Snapshot = Snapshot(self.Settings.CurrentSnapshot())
-        self.Printer = Printer(self.Settings.CurrentPrinter())
+        self.StabilizationPaths = self.Settings.current_stabilization().get_stabilization_paths()
+        self.Snapshot = Snapshot(self.Settings.current_snapshot())
+        self.Printer = Printer(self.Settings.current_printer())
         self.OctoprintPrinterProfile = octoprintPrinterProfile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprintPrinterProfile)
-        self.IsTestMode = self.Settings.CurrentDebugProfile().is_test_mode
+        self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
         self.HasSnapshotPositionErrors = False
         self.SnapshotPositionErrors = ""
 
@@ -101,7 +101,7 @@ class SnapshotGcodeGenerator(object):
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coords["X"])
             self.HasSnapshotPositionErrors = True
-            self.Settings.CurrentDebugProfile().LogError(
+            self.Settings.current_debug_profile().log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
                 coords["X"] = None
@@ -115,7 +115,7 @@ class SnapshotGcodeGenerator(object):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coords["Y"])
             self.HasSnapshotPositionErrors = True
-            self.Settings.CurrentDebugProfile().LogError(
+            self.Settings.current_debug_profile().log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
                 coords["Y"] = None
@@ -206,7 +206,7 @@ class SnapshotGcodeGenerator(object):
             message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(
                 x, y, z)
             self.SnapshotPositionErrors = message
-            self.Settings.CurrentDebugProfile().LogError(
+            self.Settings.current_debug_profile().log_error(
                 "gcode.py - CreateSnapshotGcode - {0}".format(message))
             return None
 
@@ -357,16 +357,16 @@ class SnapshotGcodeGenerator(object):
         # Get the final position after the saved command.  When we get this position we'll know it's time to resume the print.
         newSnapshotGcode.Append(self.GetPositionGcode())
 
-        self.Settings.CurrentDebugProfile().LogSnapshotGcode(
+        self.Settings.current_debug_profile().log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(newSnapshotGcode.SnapshotIndex,
                                                                                     newSnapshotGcode.EndIndex()))
         for str in newSnapshotGcode.GcodeCommands:
-            self.Settings.CurrentDebugProfile(
-            ).LogSnapshotGcode("    {0}".format(str))
+            self.Settings.current_debug_profile(
+            ).log_snapshot_gcode("    {0}".format(str))
 
-        self.Settings.CurrentDebugProfile().LogSnapshotPosition(
+        self.Settings.current_debug_profile().log_snapshot_position(
             "Snapshot Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.X, newSnapshotGcode.Y))
-        self.Settings.CurrentDebugProfile().LogSnapshotPositionReturn(
+        self.Settings.current_debug_profile().log_snapshot_return_position(
             "Return Position: (x:{0:f},y:{1:f})".format(newSnapshotGcode.ReturnX, newSnapshotGcode.ReturnY))
 
         return newSnapshotGcode

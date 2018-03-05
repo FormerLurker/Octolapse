@@ -65,8 +65,8 @@ class Extruder(object):
 
     def __init__(self, octolapse_settings):
         self.Settings = octolapse_settings
-        self.PrinterRetractionLength = self.Settings.CurrentPrinter().retract_length
-        self.PrinterTolerance = self.Settings.CurrentPrinter().printer_position_confirmation_tolerance
+        self.PrinterRetractionLength = self.Settings.current_printer().retract_length
+        self.PrinterTolerance = self.Settings.current_printer().printer_position_confirmation_tolerance
         self.StateHistory = deque(maxlen=5)
         self.reset()
         self.add_state(ExtruderState())
@@ -281,7 +281,7 @@ class Extruder(object):
                 state.IsDetracted
             )
 
-            self.Settings.CurrentDebugProfile().LogExtruderChange(message)
+            self.Settings.current_debug_profile().log_extruder_change(message)
 
     @staticmethod
     def _extruder_state_triggered(option, state):
@@ -384,7 +384,7 @@ class Extruder(object):
                 detracted_triggered,
                 ret_value
             )
-            self.Settings.CurrentDebugProfile().LogExtruderTriggered(message)
+            self.Settings.current_debug_profile().log_extruder_triggered(message)
 
         return ret_value
 

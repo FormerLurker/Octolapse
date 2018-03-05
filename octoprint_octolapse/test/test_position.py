@@ -14,12 +14,12 @@ class Test_Position(unittest.TestCase):
         # in the general test case we want auto_detect_position to be false
         # else we'll have to simulate a position update (m114 return) after
         # a home (g28) command
-        self.Settings.CurrentPrinter().auto_detect_position = False
+        self.Settings.current_printer().auto_detect_position = False
         # since we've set auto_detect_position to false, we need to set
         # an origin, else X,Y and Z will still be None after a home command
-        self.Settings.CurrentPrinter().origin_x = 0
-        self.Settings.CurrentPrinter().origin_y = 0
-        self.Settings.CurrentPrinter().origin_z = 0
+        self.Settings.current_printer().origin_x = 0
+        self.Settings.current_printer().origin_y = 0
+        self.Settings.current_printer().origin_z = 0
 
         self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
 
@@ -653,7 +653,7 @@ class Test_Position(unittest.TestCase):
     def test_ExtruderMovement(self):
         """Test the M82 and M83 command."""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile)
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile)
         # test initial position
         self.assertIsNone(position.e())
         self.assertIsNone(position.is_extruder_relative())
@@ -663,7 +663,7 @@ class Test_Position(unittest.TestCase):
         position.update("M83")
 
         # test movement
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E100")
         self.assertEqual(position.e(), 100)
         # this is somewhat reversed from what we do in the position.py module
@@ -673,39 +673,39 @@ class Test_Position(unittest.TestCase):
         self.assertEqual(position.e_relative(previousPos), -100)
 
         # switch to absolute movement
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("M82")
         self.assertFalse(position.is_extruder_relative())
         self.assertEqual(position.e(), 100)
         self.assertEqual(position.e_relative(previousPos), 0)
 
         # move to -25
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E-25")
         self.assertEqual(position.e(), -25)
         self.assertEqual(position.e_relative(previousPos), 125)
 
         # test movement to origin
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 E0")
         self.assertEqual(position.e(), 0)
         self.assertEqual(position.e_relative(previousPos), -25)
 
         # switch to relative position
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("M83")
         position.update("G0 e1.1")
         self.assertEqual(position.e(), 1.1)
         self.assertEqual(position.e_relative(previousPos), -1.1)
 
         # move and test
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 e1.1")
         self.assertEqual(position.e(), 2.2)
         self.assertEqual(position.e_relative(previousPos), -1.1)
 
         # move and test
-        previousPos = Pos(self.Settings.CurrentPrinter(), self.OctoprintPrinterProfile, position.get_position())
+        previousPos = Pos(self.Settings.current_printer(), self.OctoprintPrinterProfile, position.get_position())
         position.update("G0 e-2.2")
         self.assertEqual(position.e(), 0)
         self.assertEqual(position.e_relative(previousPos), 2.2)
@@ -713,7 +713,7 @@ class Test_Position(unittest.TestCase):
     def test_zHop(self):
         """Test zHop detection."""
         # set zhop distance
-        self.Settings.CurrentPrinter().z_hop = .5
+        self.Settings.current_printer().z_hop = .5
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 
         # test initial state
