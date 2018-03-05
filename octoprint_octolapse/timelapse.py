@@ -716,12 +716,12 @@ class Timelapse(object):
             timelapseRenderJob = Render(
                 self.Settings, self.Snapshot, self.Rendering, self.DataFolder,
                 self.DefaultTimelapseDirectory, self.FfMpegPath, 1,
-                timeAdded=self.SecondsAddedByOctolapse, onRenderStart=self._onRenderStart,
-                onRenderFail=self._onRenderFail, onRenderSuccess=self._onRenderSuccess,
-                onRenderComplete=self._onRenderComplete, onAfterSyncFail=self._onSynchronizeRenderingFail,
-                onAfterSycnSuccess=self._onSynchronizeRenderingComplete, onComplete=self._onRenderEnd
+                time_added=self.SecondsAddedByOctolapse, on_render_start=self._onRenderStart,
+                on_render_fail=self._onRenderFail, on_render_success=self._onRenderSuccess,
+                on_render_complete=self._onRenderComplete, on_after_sync_fail=self._onSynchronizeRenderingFail,
+                on_after_sync_success=self._onSynchronizeRenderingComplete, on_complete=self._onRenderEnd
             )
-            timelapseRenderJob.Process(utility.get_currently_printing_filename(
+            timelapseRenderJob.process(utility.get_currently_printing_filename(
                 self.OctoprintPrinter), self.PrintStartTime, time.time())
 
             return True
