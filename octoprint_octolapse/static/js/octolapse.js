@@ -88,7 +88,7 @@ $(function () {
     const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
     const csvStringComponentRegex = /[A-Z]\d+/gim;
     $.validator.addMethod('csvString', function (value) {
-        console.log("Validating csvString: " + value);
+        //console.log("Validating csvString: " + value);
         // We will allow 0 length trimmed strings
         if (value.length > 0) {
             if (!value.match(csvStringRegex))

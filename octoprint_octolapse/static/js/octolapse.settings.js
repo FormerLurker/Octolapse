@@ -290,7 +290,7 @@ $(function () {
         // show the modal dialog
         self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
-            dialog = this;
+            var dialog = this;
             dialog.sender = sender;
             dialog.profileObservable = options.profileObservable;
             dialog.templateName = options.templateName;
@@ -306,7 +306,7 @@ $(function () {
             dialog.$modalBody = dialog.$addEditDialog.find(".modal-body");
 
             // Create all of the validation rules
-            rules = {
+            var rules = {
                 rules: options.validationRules.rules,
                 messages: options.validationRules.messages,
                 ignore: ".ignore_hidden_errors:hidden",
@@ -331,7 +331,7 @@ $(function () {
                 invalidHandler: function () {
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
-                    numErrors = dialog.validator.numberOfInvalids();
+                    var numErrors = dialog.validator.numberOfInvalids();
                     if (numErrors === 1)
                         dialog.$errorCount.text("1 field is invalid");
                     else
@@ -387,7 +387,7 @@ $(function () {
                 // remove any click event bindings from the defaults button
                 dialog.$defaultButton.unbind("click");
                 dialog.$defaultButton.bind("click", function () {
-                    newProfile = dialog.sender.getResetProfile(Octolapse.Settings.AddEditProfile().profileObservable());
+                    var newProfile = dialog.sender.getResetProfile(Octolapse.Settings.AddEditProfile().profileObservable());
                     Octolapse.Settings.AddEditProfile().profileObservable(newProfile);
 
                 });

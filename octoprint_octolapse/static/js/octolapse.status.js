@@ -3,8 +3,6 @@
     a file called 'LICENSE', which is part of this source code package.
 */
 $(function () {
-
-
     Octolapse.StatusViewModel = function (parameters) {
         // Create a reference to this object
         var self = this;
@@ -40,21 +38,21 @@ $(function () {
             // configure the dialog shown event
 
             $SnapshotDialog.on("shown.bs.modal", function () {
-                console.log("Snapshot dialog shown.");
+                //console.log("Snapshot dialog shown.");
                 self.IsLatestSnapshotDialogShowing = true;
                 self.updateLatestSnapshotImage(force = true);
             });
 
             // configure the dialog show event
             $SnapshotDialog.on("show.bs.modal", function () {
-                console.log("Snapshot dialog showing.");
+                //console.log("Snapshot dialog showing.");
                 self.IsLatestSnapshotDialogShowing = true;
 
             });
 
             // cancel button click handler
             $SnapshotDialog.find('.cancel').one('click', function () {
-                console.log("Hiding snapshot dialog.");
+                //console.log("Hiding snapshot dialog.");
                 self.IsLatestSnapshotDialogShowing = false;
                 $SnapshotDialog.modal("hide");
             });
@@ -69,8 +67,6 @@ $(function () {
 
 
         self.onAfterBinding = function () {
-
-
 
         };
 
@@ -658,7 +654,7 @@ $(function () {
         self.HasBeenCreated = false;
         self.create = function (trigger) {
             var newTrigger = null;
-            switch (state.Type) {
+            switch (trigger.Type) {
                 case "gcode":
                     newTrigger = new Octolapse.gcodeTriggerStateViewModel(trigger);
                     break;
@@ -674,10 +670,13 @@ $(function () {
             }
             self.Triggers.push(newTrigger);
         };
+
         self.removeAll = function () {
             self.Triggers.removeAll();
         };
+
         self.update = function (states) {
+            //console.log("Updating trigger states")
             self.Name(states.Name);
             var triggers = states.Triggers;
             for (var sI = 0; sI < triggers.length; sI++) {
@@ -699,6 +698,7 @@ $(function () {
 
     };
     Octolapse.genericTriggerStateViewModel = function (state) {
+        console.log("creating generic trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -782,6 +782,7 @@ $(function () {
         }, self);
     };
     Octolapse.gcodeTriggerStateViewModel = function (state) {
+        console.log("creating gcode trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -872,6 +873,7 @@ $(function () {
 
     };
     Octolapse.layerTriggerStateViewModel = function (state) {
+        console.log("creating layer trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -991,6 +993,7 @@ $(function () {
 
     };
     Octolapse.timerTriggerStateViewModel = function (state) {
+        console.log("creating timer trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
