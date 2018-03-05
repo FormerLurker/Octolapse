@@ -32,7 +32,7 @@ $(function () {
         self.showLatestSnapshotDialog = function () {
 
             var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
-            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
+            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortening of their name is BS?
             $SnapshotDialog.on("hidden.bs.modal", function () {
                 //console.log("Snapshot dialog hidden.");
                 self.IsLatestSnapshotDialogShowing = false;
@@ -89,19 +89,15 @@ $(function () {
         /*
             Snapshot client animation preview functions
         */
-        self.refreshLatestImage = function (targetId, isThumbnail = false) {
+        self.refreshLatestImage = function (targetId, isThumbnail=false) {
             //console.log("Refreshing Snapshot Thumbnail");
-            var $target = $('#' + targetId + ' .snapshot_refresh_container a.refresh');
-
-
             if (isThumbnail)
-                self.updateLatestSnapshotThumbnail(force = true);
+                self.updateLatestSnapshotThumbnail(force=true);
             else
-                self.updateLatestSnapshotImage(force = true);
+                self.updateLatestSnapshotImage(force=true);
         };
 
-        self.startSnapshotAnimation = function (targetId, fadeButton = false) {
-
+        self.startSnapshotAnimation = function (targetId, fadeButton=false) {
             //console.log("Refreshing Snapshot Thumbnail");
             // Hide and show the play/refresh button
             if (fadeButton && Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -127,7 +123,7 @@ $(function () {
 
         };
 
-        self.updateLatestSnapshotThumbnail = function (force = false) {
+        self.updateLatestSnapshotThumbnail = function (force=false) {
             //console.log("Trying to update the latest snapshot thumbnail.");
             if (!force) {
                 if (!self.IsTabShowing) {
@@ -139,11 +135,12 @@ $(function () {
                     return
                 }
             }
-            self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl() + "&time=" + new Date().getTime());
+            self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl()
+                + "&time=" + new Date().getTime());
 
         };
 
-        self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage = false) {
+        self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage=false) {
             if (eraseCurrentImage) {
                 $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function (index, element) {
                     $(this).remove();
@@ -169,7 +166,7 @@ $(function () {
 
                 // Add the latest image to the previous snapshots list
                 if ($latestSnapshot.length > 0) {
-                    srcAttr = $latestSnapshot.attr('src');
+                    var srcAttr = $latestSnapshot.attr('src');
                     // If the image has a src, and that src is not empty
                     if (typeof srcAttr !== typeof undefined && srcAttr !== false && srcAttr.length > 0) {
                         //console.log("Moving the latest image into the previous image container");
@@ -187,7 +184,7 @@ $(function () {
 
                 while (numSnapshots > parseInt(Octolapse.Globals.auto_reload_frames())) {
                     //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
-                    $element = $previousSnapshots.first();
+                    var $element = $previousSnapshots.first();
                     $element.remove();
 
                     numSnapshots--;
@@ -198,7 +195,7 @@ $(function () {
 
                 // TODO: Do we need to do this??  Find out
                 $previousSnapshots = $previousSnapshotContainer.find("img");
-                numPreviousSnapshots = $previousSnapshots.length;
+                var numPreviousSnapshots = $previousSnapshots.length;
                 var newestImageIndex = numPreviousSnapshots - 1;
                 //console.log("Updating classes for previous " + numPreviousSnapshots + " images.");
                 for (var previousImageIndex = 0; previousImageIndex < numPreviousSnapshots; previousImageIndex++) {
@@ -211,7 +208,7 @@ $(function () {
                     else {
                         $element.addClass("hidden");
                     }
-                    previousImageDelayClass = "effect-delay-" + previousImageIndex;
+                    var previousImageDelayClass = "effect-delay-" + previousImageIndex;
                     //console.log("Updating classes for the previous image delay " + previousImageDelayClass+ ".");
                     $element.addClass(previousImageDelayClass);
 
@@ -271,7 +268,7 @@ $(function () {
             $newSnapshot.attr('src', newSnapshotAddress)
         };
 
-        self.updateLatestSnapshotImage = function (force = false) {
+        self.updateLatestSnapshotImage = function (force=false) {
             //console.log("Trying to update the latest snapshot image.");
             if (!force) {
                 if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -287,6 +284,9 @@ $(function () {
 
         };
 
+        /**
+         * @return {string}
+         */
         self.GetTriggerStateTemplate = function (type) {
             switch (type) {
                 case "gcode":
@@ -577,7 +577,7 @@ $(function () {
         self.getRetractionStateText = ko.pureComputed(function () {
 
             if (self.IsRetracting()) {
-                text = "";
+                var text = "";
 
 
                 if (self.IsPartiallyRetracted() && !self.IsRetracted()) {
@@ -679,12 +679,12 @@ $(function () {
         };
         self.update = function (states) {
             self.Name(states.Name);
-            triggers = states.Triggers;
+            var triggers = states.Triggers;
             for (var sI = 0; sI < triggers.length; sI++) {
-                state = triggers[sI];
+                var state = triggers[sI];
                 var foundState = false;
                 for (var i = 0; i < self.Triggers().length; i++) {
-                    currentTrigger = self.Triggers()[i];
+                    var currentTrigger = self.Triggers()[i];
                     if (state.Type === currentTrigger.Type()) {
                         currentTrigger.update(state);
                         foundState = true;
@@ -740,8 +740,8 @@ $(function () {
                 return "The trigger is paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting";
-                waitList = [];
+                var waitText = "Waiting";
+                var waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
@@ -827,8 +827,8 @@ $(function () {
                 return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting";
-                waitList = [];
+                var waitText = "Waiting";
+                var waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
@@ -927,8 +927,8 @@ $(function () {
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
                 //console.log("Generating wait state text for LayerTrigger");
-                waitText = "Waiting";
-                waitList = [];
+                var waitText = "Waiting";
+                var waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())
@@ -947,7 +947,7 @@ $(function () {
                 return waitText;
             }
             else if (self.HeightIncrement() > 0) {
-                heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
+                var heightToTrigger = self.HeightIncrement() * self.CurrentIncrement();
                 return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
             }
             else
@@ -1034,8 +1034,8 @@ $(function () {
                 return "Paused";
             else if (self.IsWaiting()) {
                 // Create a list of things we are waiting on
-                waitText = "Waiting";
-                waitList = [];
+                var waitText = "Waiting";
+                var waitList = [];
                 if (self.IsWaitingOnZHop())
                     waitList.push("zhop");
                 if (self.IsWaitingOnExtruder())

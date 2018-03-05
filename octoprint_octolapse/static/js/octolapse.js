@@ -2,8 +2,10 @@
     This file is subject to the terms and conditions defined in
     a file called 'LICENSE', which is part of this source code package.
 */
+Octolapse = {};
+OctolapseViewModel = {};
+
 $(function () {
-    Octolapse = this;
     // Finds the first index of an array with the matching predicate
     Octolapse.IsShowingSettingsChangedPopup = false;
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
@@ -25,12 +27,12 @@ $(function () {
             s4() + '-' + s4() + s4() + s4();
     };
     Octolapse.HasTakenFirstSnapshot = false;
-    // Retruns an observable sorted by name(), case insensitive
+    // Returns an observable sorted by name(), case insensitive
     Octolapse.nameSort = function (observable) {
         return observable().sort(
             function (left, right) {
-                leftName = left.name().toLowerCase();
-                rightName = right.name().toLowerCase();
+                var leftName = left.name().toLowerCase();
+                var rightName = right.name().toLowerCase();
                 return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
             });
     };
@@ -38,10 +40,10 @@ $(function () {
     // It will apply the on or off class to the result of each selector, which should return exactly one result.
     Octolapse.toggle = function (caller, args) {
         var elements = args.elements;
-        elements.forEach(function (item, index) {
-            element = $(item.selector);
-            onClass = item.onClass;
-            offClass = item.offClass;
+        elements.forEach(function (item) {
+            var element = $(item.selector);
+            var onClass = item.onClass;
+            var offClass = item.offClass;
             if (element.hasClass(onClass)) {
                 element.removeClass(onClass);
                 element.addClass(offClass);
@@ -54,8 +56,7 @@ $(function () {
     // Apply the toggle click event to every element within our settings that has the .toggle class
 
     Octolapse.displayPopup = function (options) {
-
-        octolapsePopup = new PNotify(options);
+        new PNotify(options);
     };
 
     Octolapse.Popups = {};
@@ -200,6 +201,9 @@ $(function () {
         result.raw = target;
         return result;
     };
+    /**
+     * @return {string}
+     */
     Octolapse.ToTime = function (seconds) {
         if (val == null)
             return Octolapse.NullTimeText;
@@ -211,19 +215,22 @@ $(function () {
             + d.getSeconds();
     };
 
+    /**
+     * @return {string}
+     */
     Octolapse.ToTimer = function (seconds) {
         if (seconds == null)
             return "";
         if (seconds <= 0)
             return "0:00";
 
-        hours = Math.floor(seconds / 3600);
+        var hours = Math.floor(seconds / 3600);
         if (hours > 0) {
             return ("" + hours).slice(-2) + " Hrs"
         }
 
         seconds %= 3600;
-        minutes = Math.floor(seconds / 60);
+        var minutes = Math.floor(seconds / 60);
         seconds = seconds % 60;
         return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
     };
@@ -239,7 +246,9 @@ $(function () {
                 var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g, '');
                 if (dotLessShortValue.length <= 2) { break; }
             }
-            if (shortValue % 1 !== 0) shortNum = shortValue.toFixed(1);
+
+            if (shortValue % 1 !== 0) shortValue = shortValue.toFixed(1);
+
             newValue = shortValue + suffixes[suffixNum];
         }
         return newValue;
@@ -259,6 +268,7 @@ $(function () {
         result.raw = target;
         return result;
     };
+
     OctolapseViewModel = function (parameters) {
         var self = this;
         Octolapse.Globals = self;

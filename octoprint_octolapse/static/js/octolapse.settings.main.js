@@ -35,7 +35,7 @@ $(function () {
         };
         // Get the dialog element
         self.onAfterBinding = function () {
-            settings = self.global_settings.settings.plugins.octolapse;
+            var settings = self.global_settings.settings.plugins.octolapse;
             self.is_octolapse_enabled(settings.is_octolapse_enabled());
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
             self.auto_reload_frames(settings.auto_reload_frames());
@@ -105,7 +105,7 @@ $(function () {
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
 
-            dialog = this;
+            var dialog = this;
             dialog.$editDialog = $("#octolapse_edit_settings_main_dialog");
             dialog.$editForm = $("#octolapse_edit_main_settings_form");
             dialog.$cancelButton = $("a.cancel", dialog.$addEditDialog);
@@ -140,7 +140,7 @@ $(function () {
                 invalidHandler: function () {
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
-                    numErrors = dialog.validator.numberOfInvalids();
+                    var numErrors = dialog.validator.numberOfInvalids();
                     if (numErrors === 1)
                         dialog.$errorCount.text("1 field is invalid");
                     else
@@ -224,7 +224,7 @@ $(function () {
                             data: JSON.stringify(data),
                             contentType: "application/json",
                             dataType: "json",
-                            success: function (settings) {
+                            success: function () {
                                 self.$editDialog.modal("hide");
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -236,14 +236,14 @@ $(function () {
                     {
                         // Search for any hidden elements that are invalid
                         //console.log("Checking ofr hidden field error");
-                        $fieldErrors = dialog.$editForm.find('.error_label_container.error');
+                        var $fieldErrors = dialog.$editForm.find('.error_label_container.error');
                         $fieldErrors.each(function (index, element) {
                             // Check to make sure the field is hidden.  If it's not, don't bother showing the parent container.
                             // This can happen if more than one field is invalid in a hidden form
-                            $errorContainer = $(element);
+                            var $errorContainer = $(element);
                             if (!$errorContainer.is(":visible")) {
                                 //console.log("Hidden error found, showing");
-                                $collapsableContainer = $errorContainer.parents(".collapsible");
+                                var $collapsableContainer = $errorContainer.parents(".collapsible");
                                 if ($collapsableContainer.length > 0)
                                     // The containers may be nested, show each
                                     $collapsableContainer.each(function (index, container) {

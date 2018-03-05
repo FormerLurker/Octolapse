@@ -29,7 +29,7 @@ $(function() {
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            isNewProfile = profile().guid() === "";
+            var isNewProfile = profile().guid() === "";
             var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName };
             $.ajax({
                 url: "/plugin/octolapse/" + self.addUpdatePath,
@@ -45,7 +45,7 @@ $(function() {
                     else {
                         // Since this is an existing element, we must replace the original with the  new one.
                         // First get the original one
-                        currentProfile = self.getProfileByGuid(newProfile.guid());
+                        var currentProfile = self.getProfileByGuid(newProfile.guid());
                         // Now replace with the new one!
                         self.profiles.replace(currentProfile, newProfile);
 
@@ -106,7 +106,7 @@ $(function() {
         */
         // Creates a copy of an existing profile from the supplied guid.  If no guid is supplied (null or empty), it returns a new profile based on the default_profile settings
         self.getNewProfile = function(guid) {
-            newProfile = null;
+            var newProfile = null;
             if (guid == null) {
                 newProfile = new self.profileViewModelCreate(ko.toJS(self.default_profile())); // Create our profile viewmodel
             }
@@ -120,7 +120,7 @@ $(function() {
         self.getProfileByGuid = function(guid) {
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
-                    itemGuid = item.guid();
+                    var itemGuid = item.guid();
                     return itemGuid === guid
                 }
             );
@@ -135,7 +135,7 @@ $(function() {
             var guid = self.current_profile_guid();
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
-                    itemGuid = item.guid();
+                    var itemGuid = item.guid();
                     var matchFound = itemGuid === guid;
                     if (matchFound)
                         return matchFound
@@ -149,7 +149,7 @@ $(function() {
         };
         // TODO:  This is not yet implemented in the new settings.  Well, it's implemented, but there's no button yet.  Add that button, test and (hopefully) remember to remove this comment
         self.getResetProfile = function(currentProfile) {
-            defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile));
+            var defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile));
             defaultProfileClone.name(currentProfile.name());
             defaultProfileClone.guid(currentProfile.guid());
             return defaultProfileClone;
@@ -157,21 +157,20 @@ $(function() {
 
         // Todo: Evaluate this function.  It must be made to work with validation so that invalid fields are automatically unhidden.
         self.toggle = Octolapse.Toggle;
-        // Todo:  Perhaps this can be merged with the code in octolapse.js?  Since simplifying things our old approach seems silly.
-        self.showAddEditDialog = function(guid, isCopy = false) {
+
+        self.showAddEditDialog = function(guid, isCopy=false) {
 
             var title = null;
             var addEditObservable = ko.observable();
             // get and configure the  profile
             if (guid == null) {
-                isNew = true;
                 title = "Add New " + settings.profileTypeName +" Profile";
                 addEditObservable(self.getNewProfile());
                 addEditObservable().name("New " + settings.profileTypeName);
                 addEditObservable().guid("");
             }
             else {
-                newProfile = self.getNewProfile(guid);
+                var newProfile = self.getNewProfile(guid);
                 if (isCopy === true)
                 {
                     newProfile.guid("");
@@ -183,7 +182,6 @@ $(function() {
                     title = _.sprintf("Edit " + settings.profileTypeName + " \"%(name)s\"", { name: newProfile.name() });
                 }
                 addEditObservable(newProfile);
-
 
             }
             // Open the modal

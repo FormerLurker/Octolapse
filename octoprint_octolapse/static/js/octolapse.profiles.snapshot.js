@@ -27,7 +27,8 @@ $(function () {
         self.gcode_trigger_on_detracted = ko.observable(values.gcode_trigger_on_detracted);
         self.gcode_trigger_position_restrictions = ko.observableArray([]);
         for (var index = 0; index < values.gcode_trigger_position_restrictions.length; index++) {
-            self.gcode_trigger_position_restrictions.push(ko.observable(values.gcode_trigger_position_restrictions[index]));
+            self.gcode_trigger_position_restrictions.push(
+                ko.observable(values.gcode_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new gcode position restrictions
         self.new_gcode_position_restriction_type = ko.observable('required');
@@ -56,7 +57,8 @@ $(function () {
         self.timer_trigger_on_detracted = ko.observable(values.timer_trigger_on_detracted);
         self.timer_trigger_position_restrictions = ko.observableArray([]);
         for (var index = 0; index < values.timer_trigger_position_restrictions.length; index++) {
-            self.timer_trigger_position_restrictions.push(ko.observable(values.timer_trigger_position_restrictions[index]));
+            self.timer_trigger_position_restrictions.push(
+                ko.observable(values.timer_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new timer position restrictions
         self.new_timer_position_restriction_type = ko.observable('required');
@@ -85,7 +87,8 @@ $(function () {
         self.layer_trigger_on_detracted = ko.observable(values.layer_trigger_on_detracted);
         self.layer_trigger_position_restrictions = ko.observableArray([]);
         for (var index = 0; index < values.layer_trigger_position_restrictions.length; index++) {
-            self.layer_trigger_position_restrictions.push(ko.observable(values.layer_trigger_position_restrictions[index]));
+            self.layer_trigger_position_restrictions.push(
+                ko.observable(values.layer_trigger_position_restrictions[index]));
         }
         // Temporary variables to hold new layer position restrictions
         self.new_layer_position_restriction_type = ko.observable('required');

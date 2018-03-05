@@ -26,7 +26,7 @@ $(function () {
                 Create our global settings
             */
             self.settings = self.global_settings.settings.plugins.octolapse;
-            settings = ko.toJS(self.settings); // just get the values
+            var settings = ko.toJS(self.settings); // just get the values
 
             /**
              * Profiles - These are bound by octolapse.profiles.js
@@ -403,14 +403,14 @@ $(function () {
                     else {
                         // Search for any hidden elements that are invalid
                         //console.log("Checking ofr hidden field error");
-                        $fieldErrors = dialog.$addEditForm.find('.error_label_container.error');
+                        var $fieldErrors = dialog.$addEditForm.find('.error_label_container.error');
                         $fieldErrors.each(function (index, element) {
                             // Check to make sure the field is hidden.  If it's not, don't bother showing the parent container.
                             // This can happen if more than one field is invalid in a hidden form
-                            $errorContainer = $(element);
+                            var $errorContainer = $(element);
                             if (!$errorContainer.is(":visible")) {
                                 //console.log("Hidden error found, showing");
-                                $collapsableContainer = $errorContainer.parents(".collapsible");
+                                var $collapsableContainer = $errorContainer.parents(".collapsible");
                                 if ($collapsableContainer.length > 0)
                                     // The containers may be nested, show each
                                     $collapsableContainer.each(function (index, container) {
