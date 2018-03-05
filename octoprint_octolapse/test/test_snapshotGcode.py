@@ -37,13 +37,13 @@ class Test_SnapshotGcode(unittest.TestCase):
             self.Settings, self.CreateOctoprintPrinterProfile())
 
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 10 and coords["Y"] == 20)
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 10 and coords["Y"] == 20)
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(100, 100)
+        coords = snapshotGcodeGenerator.get_snapshot_position(100, 100)
         self.assertTrue(coords["X"] == 10 and coords["Y"] == 20)
 
     def test_GetSnapshotPosition_AbsolutePath(self):
@@ -61,21 +61,21 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_fixed_path_invert_loop = False
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 5)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 2 and coords["Y"] == 3)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 3 and coords["Y"] == 2)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 4 and coords["Y"] == 1)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 5 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 5 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 5 and coords["Y"] == 0)
 
         # test with loop, no invert
@@ -85,21 +85,21 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_fixed_path_invert_loop = False
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 5)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 2 and coords["Y"] == 3)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 3 and coords["Y"] == 2)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 4 and coords["Y"] == 1)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 5 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 5)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
 
         # test with loop and invert
@@ -109,29 +109,29 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_fixed_path_invert_loop = True
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 5)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 2 and coords["Y"] == 3)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 3 and coords["Y"] == 2)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 4 and coords["Y"] == 1)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 5 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 4 and coords["Y"] == 1)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 3 and coords["Y"] == 2)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 2 and coords["Y"] == 3)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 5)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 1 and coords["Y"] == 4)
 
     def test_GetSnapshotPosition_BedRelative(self):
@@ -145,13 +145,13 @@ class Test_SnapshotGcode(unittest.TestCase):
             self.Settings, self.CreateOctoprintPrinterProfile())
 
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
         # get the coordinates and test
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(100, 100)
+        coords = snapshotGcodeGenerator.get_snapshot_position(100, 100)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
 
     def test_GetSnapshotPosition_BedRelativePath(self):
@@ -169,19 +169,19 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_relative_path_invert_loop = False
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 62.5 and coords["Y"] == 150)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 125 and coords["Y"] == 100)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 187.5 and coords["Y"] == 50)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 250 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 250 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 250 and coords["Y"] == 0)
 
         # test with loop, no invert
@@ -191,19 +191,19 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_relative_path_invert_loop = False
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 62.5 and coords["Y"] == 150)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 125 and coords["Y"] == 100)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 187.5 and coords["Y"] == 50)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 250 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 62.5 and coords["Y"] == 150)
 
         # test with loop and invert
@@ -213,19 +213,19 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.Settings.current_stabilization().y_relative_path_invert_loop = True
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 0 and coords["Y"] == 200)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 62.5 and coords["Y"] == 150)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 0)
         self.assertTrue(coords["X"] == 125 and coords["Y"] == 100)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(1, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(1, 1)
         self.assertTrue(coords["X"] == 187.5 and coords["Y"] == 50)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 1)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 1)
         self.assertTrue(coords["X"] == 250 and coords["Y"] == 0)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 187.5 and coords["Y"] == 50)
-        coords = snapshotGcodeGenerator.GetSnapshotPosition(0, 0)
+        coords = snapshotGcodeGenerator.get_snapshot_position(0, 0)
         self.assertTrue(coords["X"] == 125 and coords["Y"] == 100)
 
     def test_GetSnapshotGcode_Fixed_AbsoluteCoordintes_ExtruderRelative(self):
@@ -238,7 +238,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
         self.Extruder.is_retracted = lambda: True
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
         self.assertEqual(snapshotGcode.GcodeCommands[0], "G91")
@@ -260,7 +260,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         self.assertEqual(snapshotGcode.GcodeCommands[16], "M114")
         # verify the indexes of the generated gcode
         self.assertEqual(snapshotGcode.SnapshotIndex, 7)
-        self.assertEqual(snapshotGcode.EndIndex(), 16)
+        self.assertEqual(snapshotGcode.end_index(), 16)
         # verify the return coordinates
         self.assertEqual(snapshotGcode.ReturnX, 0)
         self.assertEqual(snapshotGcode.ReturnY, 0)
@@ -281,7 +281,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
 
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             10, 10, 10, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
         self.assertEqual(snapshotGcode.GcodeCommands[0], "M83")
@@ -308,7 +308,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 
         # verify the indexes of the generated gcode
         self.assertTrue(snapshotGcode.SnapshotIndex == 9)
-        self.assertTrue(snapshotGcode.EndIndex() == 20)
+        self.assertTrue(snapshotGcode.end_index() == 20)
         # verify the return coordinates
         self.assertTrue(snapshotGcode.ReturnX == 10)
         self.assertTrue(snapshotGcode.ReturnY == 10)
@@ -329,7 +329,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
         self.Extruder.is_retracted = lambda: True
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
         self.assertEqual(snapshotGcode.GcodeCommands[0], "G1 F6000")
@@ -350,14 +350,14 @@ class Test_SnapshotGcode(unittest.TestCase):
 
         # verify the indexes of the generated gcode
         self.assertEqual(snapshotGcode.SnapshotIndex, 6)
-        self.assertEqual(snapshotGcode.EndIndex(), 14)
+        self.assertEqual(snapshotGcode.end_index(), 14)
         # verify the return coordinates
         self.assertEqual(snapshotGcode.ReturnX, 100)
         self.assertEqual(snapshotGcode.ReturnY, 50)
         self.assertEqual(snapshotGcode.ReturnZ, 0)
 
         # Get the next coordinate in the path
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             101, 51, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
         self.assertEqual(snapshotGcode.GcodeCommands[0], "G1 F6000")
@@ -378,7 +378,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 
         # verify the indexes of the generated gcode
         self.assertEqual(snapshotGcode.SnapshotIndex, 6)
-        self.assertEqual(snapshotGcode.EndIndex(), 14)
+        self.assertEqual(snapshotGcode.end_index(), 14)
         # verify the return coordinates
         self.assertEqual(snapshotGcode.ReturnX, 101)
         self.assertEqual(snapshotGcode.ReturnY, 51)
@@ -397,7 +397,7 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
         # create
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             10, 10, 200, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
         self.assertEqual(snapshotGcode.GcodeCommands[0], "G90")
@@ -414,7 +414,7 @@ class Test_SnapshotGcode(unittest.TestCase):
 
         # verify the indexes of the generated gcode
         self.assertTrue(snapshotGcode.SnapshotIndex == 4)
-        self.assertTrue(snapshotGcode.EndIndex() == 10)
+        self.assertTrue(snapshotGcode.end_index() == 10)
         # verify the return coordinates
         self.assertTrue(snapshotGcode.ReturnX == 10)
         self.assertTrue(snapshotGcode.ReturnY == 10)
@@ -435,17 +435,17 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
         self.Extruder.is_retracted = lambda: True
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 
         # verify the snapshot commands
-        self.assertEqual(snapshotGcode.SnapshotCommands()[0], "G1 F6000")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[1], "G1 Z0.500")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[2], "G90")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[3], "G1 F6000")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[4], "G1 X50.000 Y50.000")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[5], "M400")
-        self.assertEqual(snapshotGcode.SnapshotCommands()[6], "M114")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[0], "G1 F6000")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[1], "G1 Z0.500")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[2], "G90")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[3], "G1 F6000")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[4], "G1 X50.000 Y50.000")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[5], "M400")
+        self.assertEqual(snapshotGcode.get_snapshot_commands()[6], "M114")
 
     def test_GetSnapshotGcode_ReturnCommands(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
@@ -462,18 +462,18 @@ class Test_SnapshotGcode(unittest.TestCase):
         snapshotGcodeGenerator = SnapshotGcodeGenerator(
             self.Settings, self.CreateOctoprintPrinterProfile())
         self.Extruder.is_retracted = lambda: True
-        snapshotGcode = snapshotGcodeGenerator.CreateSnapshotGcode(
+        snapshotGcode = snapshotGcodeGenerator.create_snapshot_gcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
 
         # verify the return commands
-        self.assertEqual(snapshotGcode.ReturnCommands()[0], "G1 X100.000 Y50.000")
-        self.assertEqual(snapshotGcode.ReturnCommands()[1], "G91")
-        self.assertEqual(snapshotGcode.ReturnCommands()[2], "G1 F6000")
-        self.assertEqual(snapshotGcode.ReturnCommands()[3], "G1 Z-0.500")
-        self.assertEqual(snapshotGcode.ReturnCommands()[4], "G1 F3600")
-        self.assertEqual(snapshotGcode.ReturnCommands()[5], "SAVEDCOMMAND")
-        self.assertEqual(snapshotGcode.ReturnCommands()[6], "M400")
-        self.assertEqual(snapshotGcode.ReturnCommands()[7], "M114")
+        self.assertEqual(snapshotGcode.get_return_commands()[0], "G1 X100.000 Y50.000")
+        self.assertEqual(snapshotGcode.get_return_commands()[1], "G91")
+        self.assertEqual(snapshotGcode.get_return_commands()[2], "G1 F6000")
+        self.assertEqual(snapshotGcode.get_return_commands()[3], "G1 Z-0.500")
+        self.assertEqual(snapshotGcode.get_return_commands()[4], "G1 F3600")
+        self.assertEqual(snapshotGcode.get_return_commands()[5], "SAVEDCOMMAND")
+        self.assertEqual(snapshotGcode.get_return_commands()[6], "M400")
+        self.assertEqual(snapshotGcode.get_return_commands()[7], "M114")
 
 
 if __name__ == '__main__':

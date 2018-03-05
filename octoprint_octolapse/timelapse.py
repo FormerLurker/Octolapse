@@ -515,10 +515,10 @@ class Timelapse(object):
             isRelative = self.Position.is_relative()
             isExtruderRelative = self.Position.is_extruder_relative()
 
-            self.SnapshotGcodes = self.Gcode.CreateSnapshotGcode(
+            self.SnapshotGcodes = self.Gcode.create_snapshot_gcode(
                 x, y, z, self.Position.f(), self.Position.is_relative(),
                 self.Position.is_extruder_relative(), self.Position.Extruder,
-                self.Position.distance_to_zlift(), savedCommand=self.SavedCommand
+                self.Position.distance_to_zlift(), saved_command=self.SavedCommand
             )
             # make sure we acutally received gcode
             if self.SnapshotGcodes is None:
@@ -532,7 +532,7 @@ class Timelapse(object):
 
             self.State = TimelapseState.SendingSnapshotGcode
 
-            snapshotCommands = self.SnapshotGcodes.SnapshotCommands()
+            snapshotCommands = self.SnapshotGcodes.get_snapshot_commands()
 
             # send our commands to the printer
             # these commands will go through queuing, no reason to track position
@@ -686,7 +686,7 @@ class Timelapse(object):
                     "The snapshot gcode generator has no value.")
                 self.EndTimelapse(force=True)
                 return
-            returnCommands = self.SnapshotGcodes.ReturnCommands()
+            returnCommands = self.SnapshotGcodes.get_return_commands()
             if returnCommands is None:
                 self.Settings.current_debug_profile().log_error(
                     "No return commands were generated!")
