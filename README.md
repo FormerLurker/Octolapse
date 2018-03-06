@@ -66,7 +66,7 @@ Important Notes:  Most settings changes will only affect the next print.  Active
 ### Printer
 Here you can configure retraction length, speed, axis speeds, home position, print volume, the printer snapshot command, as well as other printer/slicer related settings.  It is very important that the printer profile is correctly configured.
 
-Notes:  Note that all axis speeds are in Millimeters per minute, while many slicers use MM/Sec.  To convert, just multiply MM/m by 60.
+Notes:  Note that all axis speeds are in millimeters per minute, instead of the mm/s that most slicers use.  To convert from mm/s to mm/min, simply multiply mm/s by 60.
 
 ### Stabilization
 Here you can control the position of the bed and extruder before each snapshot.  Positions can be fixed or relative.  Fixed coordinates are just like any absolute printer coordinates.  If your print bed is 200mmx200mm, coordinate 100,100 would represent the center of the bed.  When using relative coordinates, the center of the bed is at 50,50, and 0,0 is at the origin (home position).  100,100 would be the corner opposite the origin.
