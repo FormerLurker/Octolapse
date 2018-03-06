@@ -60,7 +60,7 @@
         </div>
       </div>
       <div data-bind="visible:(layer_trigger_position_restrictions().length > 0)" class="text-warning">
-        <p><strong>The layer trigger has <span data-bind="text: layer_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (layer_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong></p>        
+        <p><strong>The layer trigger has <span data-bind="text: layer_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (layer_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong></p>
       </div>
       <div class="control-group">
         <div class="controls">
@@ -329,7 +329,7 @@
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Trigger on Detracted</label>
+            <label class="control-label" >On Detracted</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
@@ -647,7 +647,7 @@
           </div>
         </div>
         <div class="control-group">
-          <label class="control-label" >Trigger on Detracted</label>
+          <label class="control-label" >On Detracted</label>
           <div class="controls">
             <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
@@ -687,7 +687,7 @@
         <strong>The gcode trigger has <span data-bind="text: gcode_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (gcode_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong>
       </p>
     </div>
-    
+
     <div class="control-group" data-bind="visible: gcode_trigger_enabled">
       <div class="controls">
         <small>
@@ -955,7 +955,7 @@
           </div>
         </div>
         <div class="control-group">
-          <label class="control-label" >Trigger on Detracted</label>
+          <label class="control-label" >On Detracted</label>
           <div class="controls">
             <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',

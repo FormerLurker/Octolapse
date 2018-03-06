@@ -166,19 +166,33 @@ class Extruder(object):
 
     def length_to_retract(self, index=0):
         state = self.get_state(index)
-        if state is not None:
 
-            # retractLength = utility.round_to(
-            #     self.PrinterRetractionLength - self.StateHistory[0].RetractionLength,
-            #     self.PrinterTolerance
-            # )
-            # Don't round this, it causes blobs!
-            retract_length = self.PrinterRetractionLength - self.StateHistory[0].RetractionLength
+        # if we don't have any history, we want to retract
+        if state is None:
+            self.Settings.current_debug_profile().log_error("extruder.py - A 'length_to_retract' was requested, "
+                                                            "but the extruder haa no state history!")
+            return self.PrinterRetractionLength
 
-            if retract_length <= 0:
-                retract_length = 0
-            return retract_length
-        return self.PrinterRetractionLength
+        retract_length = self.PrinterRetractionLength - state.RetractionLength
+
+        # Don't round the retraction length
+        # retractLength = utility.round_to(retract_length, self.PrinterTolerance)
+
+        if retract_length < 0:
+            # This means we are beyond fully retracted, return 0
+            self.Settings.current_debug_profile().log_warning("extruder.py - A 'length_to_retract' was requested, "
+                                                              "but the extruder is beyond the configured retraction "
+                                                              "length.")
+            retract_length = 0
+        elif retract_length > self.PrinterRetractionLength:
+            self.Settings.current_debug_profile().log_error("extruder.py - A 'length_to_retract' was requested, "
+                                                            "but was found to be greater than the retraction "
+                                                            "length.")
+            # for some reason we are over the retraction length.  Return 0
+            retract_length = self.PrinterRetractionLength
+
+        # return the calculated retraction length
+        return retract_length
 
     def undo_update(self):
         state = self.get_state(0)
@@ -205,9 +219,10 @@ class Extruder(object):
         state.E = e
         # Update RetractionLength and ExtrusionLength
         state.RetractionLength -= e
-        state.RetractionLength = utility.round_to(
-            state.RetractionLength, self.PrinterTolerance
-        )
+
+        # do not round the retraction length
+        # state.RetractionLength = utility.round_to(state.RetractionLength, self.PrinterTolerance)
+
         if state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE:
             # we can use the negative retraction length to calculate our extrusion length!
             state.ExtrusionLength = abs(state.RetractionLength)
@@ -220,10 +235,12 @@ class Extruder(object):
 
         # calculate detraction length
         if previous_state.RetractionLength > state.RetractionLength:
-            state.DetractionLength = utility.round_to(
-                previous_state.RetractionLength - state.RetractionLength,
-                self.PrinterTolerance
-            )
+
+            state.DetractionLength = previous_state.RetractionLength - state.RetractionLength
+
+            # do not round the detraction length
+            # state.DetractionLength = utility.round_to(state.DetractionLength,self.PrinterTolerance)
+
         else:
             state.DetractionLength = 0
         # round our lengths to the nearest .05mm to avoid some floating point math errors

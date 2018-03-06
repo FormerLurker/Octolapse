@@ -698,7 +698,7 @@ $(function () {
 
     };
     Octolapse.genericTriggerStateViewModel = function (state) {
-        console.log("creating generic trigger state view model");
+        //console.log("creating generic trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -782,7 +782,7 @@ $(function () {
         }, self);
     };
     Octolapse.gcodeTriggerStateViewModel = function (state) {
-        console.log("creating gcode trigger state view model");
+        //console.log("creating gcode trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -873,7 +873,7 @@ $(function () {
 
     };
     Octolapse.layerTriggerStateViewModel = function (state) {
-        console.log("creating layer trigger state view model");
+        //console.log("creating layer trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);
@@ -993,7 +993,7 @@ $(function () {
 
     };
     Octolapse.timerTriggerStateViewModel = function (state) {
-        console.log("creating timer trigger state view model");
+        //console.log("creating timer trigger state view model");
         var self = this;
         self.Type = ko.observable(state.Type);
         self.Name = ko.observable(state.Name);

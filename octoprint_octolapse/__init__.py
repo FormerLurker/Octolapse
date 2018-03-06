@@ -473,9 +473,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             # for printing events use Printer State Change, because it gets sent before Print_Started
             # unfortunately, now we have to know that it
-            if event == Events.PRINTER_STATE_CHANGED and payload["state_id"] == "PRINTING":
-                self.on_print_start()
-                self.Settings.current_debug_profile().log_print_state_change("State Change to Printing")
+            #if event == Events.PRINTER_STATE_CHANGED and payload["state_id"] == "PRINTING":
+            #    self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
+            #    self.on_print_start()
+
             if event == Events.PRINT_STARTED:
                 # eventId = self._printer.get_state_id()
                 # if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
@@ -486,6 +487,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self.Settings.current_debug_profile().log_print_state_change(
                         "Octolapse cannot start the timelapse when printing from SD.  Origin:{0}"
                         .format(payload["origin"]))
+                else:
+                    self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
+                    self.on_print_start()
+
             elif self.Timelapse is None:
                 self.Settings.current_debug_profile().log_print_state_change(
                     "No timelapse object exists and this is not a print start event, exiting.")
@@ -526,12 +531,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if self.Timelapse.State != TimelapseState.Idle:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Octolapse is not idling.  CurrentState:{0}".format(self.Timelapse.State))
+            self.send_popup_message("Octolapse was unable to start the timelapse when not in an idle state.  StateId: {0}".format(self.Timelapse.State))
             return
 
         result = self.start_timelapse()
         if not result["success"]:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Unable to start the timelapse. Error:{0}".format(result["error"]))
+            self.send_popup_message("Octolapse was unable to start the timelapse.  Error: {0}".format(result["error"]))
             return
 
         if result["warning"]:
@@ -742,7 +749,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.current_debug_profile().log_print_state_change("Print Failed.")
 
     def on_print_canceled(self):
-        self.end_timelapse(cancelled=True)
+        self.Timelapse.on_print_canceled()
         self.Settings.current_debug_profile().log_print_state_change("Print Cancelled.")
 
     def on_print_completed(self):
@@ -754,9 +761,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.end_timelapse()
         self.Settings.current_debug_profile().log_print_state_change("Print Ended.")
 
-    def end_timelapse(self, cancelled=False):
+    def end_timelapse(self):
         if self.Timelapse is not None:
-            self.Timelapse.end_timelapse(cancelled=cancelled)
+            self.Timelapse.end_timelapse()
             self.on_timelapse_complete()
 
     def on_timelapse_stopping(self):

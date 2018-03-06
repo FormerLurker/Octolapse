@@ -63,7 +63,6 @@ class Timelapse(object):
         self.IsTestMode = False
         # State Tracking that should only be reset when starting a timelapse
         self.IsRendering = False
-        self.HasBeenCancelled = False
         self.HasBeenStopped = False
         self.TimelapseStopRequested = False
         self.SavedCommand = None
@@ -155,18 +154,22 @@ class Timelapse(object):
         if self.TimelapseStoppingCallback is not None:
             self.TimelapseStoppingCallback()
 
-    def end_timelapse(self, cancelled=False, force=False):
+    def on_print_canceled(self):
+        self.State = TimelapseState.CancelingPrint
+        self.end_timelapse()
+
+    def end_timelapse(self, force=False):
         try:
             if not self.State == TimelapseState.Idle:
                 if not force:
                     if TimelapseState.WaitingForTrigger < self.State < TimelapseState.WaitingToRender:
-                        if cancelled:
-                            self.HasBeenCancelled = True
-                        else:
-                            self.HasBeenStopped = True
+                        self.HasBeenStopped = True
                         return
                 self._render_timelapse()
                 self._reset()
+            else:
+                self._reset()
+
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
 
@@ -338,9 +341,6 @@ class Timelapse(object):
 
     def on_position_received(self, payload):
         # if we cancelled the print, we don't want to do anything.
-        if self.HasBeenCancelled:
-            self.end_timelapse(force=True)
-            return
 
         x = payload["x"]
         y = payload["y"]
@@ -364,10 +364,15 @@ class Timelapse(object):
             self._on_snapshot_position_received(x, y, z, e)
         elif self.State == TimelapseState.SendingReturnGcode:
             self._on_resume_print_position_received(x, y, z, e)
+        elif self.State == TimelapseState.CancelingPrint:
+            self.Settings.current_debug_profile().log_print_state_change(
+                "A position was received by Octolapse, but the print was cancelling.")
+            self.end_timelapse(force=True)
         else:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Position received by Octolapse while paused, but was declined.")
             return False, "Declined - Incorrect State"
+
 
     # internal functions
     ####################
@@ -475,8 +480,9 @@ class Timelapse(object):
                         "Previous Position: x:{4},y:{5},z:{6}"
                     ).format(x, y, z, e, self.Position.x(), self.Position.y(), self.Position.z())
                     self.Settings.current_debug_profile().log_snapshot_resume_position(message)
-                    self.Position.update_position(
-                        x=x, y=y, z=z, e=e, force=True, calculate_changes=True)
+                    # let's not update here and see what happens.
+                    #self.Position.update_position(
+                    #    x=x, y=y, z=z, e=e, force=True, calculate_changes=True)
                 else:
                     message = (
                         "The saved command required a position update, "
@@ -504,7 +510,8 @@ class Timelapse(object):
                     " (x:{3},y:{4},z:{5})"
                 ).format(x, y, z, self.Position.x(), self.Position.y(), self.Position.z())
                 self.Settings.current_debug_profile().log_warning(message)
-                self.Position.update_position(x=x, y=y, z=z, force=True)
+                # let's try not updating the position and see what happens.
+                #self.Position.update_position(x=x, y=y, z=z, force=True)
             else:
                 # return position information received
                 self.Settings.current_debug_profile().log_snapshot_return_position(
@@ -642,7 +649,7 @@ class Timelapse(object):
 
     def _resume_print(self):
         self.OctoprintPrinter.resume_print()
-        if self.HasBeenStopped or self.HasBeenCancelled:
+        if self.HasBeenStopped or self.State == TimelapseState.CancelingPrint:
             self.end_timelapse(force=True)
 
     def _take_snapshot(self):
@@ -678,7 +685,7 @@ class Timelapse(object):
     def _send_return_commands(self):
         try:
             # if the print has been cancelled, quit now.
-            if self.HasBeenCancelled:
+            if self.State == TimelapseState.CancelingPrint:
                 self.end_timelapse(force=True)
                 return
             # Expand the current command to include the return commands
@@ -817,7 +824,6 @@ class Timelapse(object):
         self.TimelapseStopRequested = False
         self.SnapshotSuccess = False
         self.SnapshotError = ""
-        self.HasBeenCancelled = False
         self.HasBeenStopped = False
 
     def _reset_snapshot(self):
@@ -840,3 +846,4 @@ class TimelapseState(object):
     TakingSnapshot = 7
     SendingReturnGcode = 8
     WaitingToRender = 9
+    CancelingPrint = 10
