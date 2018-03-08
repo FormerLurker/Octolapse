@@ -208,7 +208,7 @@ class SnapshotGcodeGenerator(object):
             self.FCurrent = desired_speed
 
     def create_snapshot_gcode(
-            self, x, y, z, f, is_relative, is_extruder_relative, extruder, z_lift, saved_command=None):
+            self, x, y, z, f, is_relative, is_extruder_relative, extruder, z_lift):
         self.reset()
         if x is None or y is None or z is None:
             self.HasSnapshotPositionErrors = True
@@ -292,13 +292,7 @@ class SnapshotGcodeGenerator(object):
         new_snapshot_gcode.append(self.get_gcode_travel(
             new_snapshot_gcode.X, new_snapshot_gcode.Y))
 
-        # Wait for current moves to finish before requesting the position
-        new_snapshot_gcode.append(self.get_gcode_wait_until_finished())
-
-        # Get the final position after moving.  When we get a response from the, we'll know that the snapshot is
-        # ready to be taken
-        new_snapshot_gcode.append(self.get_gcode_current_position())
-        # mark the snapshot command index
+        # mark the position of the snapshot in the new gcode
         new_snapshot_gcode.set_snapshot_index()
 
         # create return gcode
@@ -349,18 +343,6 @@ class SnapshotGcodeGenerator(object):
 
         # Make sure we return to the original feedrate
         self.append_feedrate_gcode(new_snapshot_gcode, self.FOriginal)
-        # What the hell was this for?!
-        # newSnapshotGcode.GcodeCommands[-1] = "{0}".format(newSnapshotGcode.GcodeCommands[-1])
-        # add the saved command, if there is one
-        if saved_command is not None:
-            new_snapshot_gcode.append(saved_command)
-
-        # Wait for current moves to finish before requesting the save command position
-        new_snapshot_gcode.append(self.get_gcode_wait_until_finished())
-
-        # Get the final position after the saved command.  When we get this position we'll know it's time to resume
-        # the print.
-        new_snapshot_gcode.append(self.get_gcode_current_position())
 
         self.Settings.current_debug_profile().log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(new_snapshot_gcode.SnapshotIndex,

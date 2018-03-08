@@ -395,22 +395,23 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             is_timelapse_active = False
             snapshot_count = 0
-            seconds_added_by_octolapse = 0
+            total_snapshot_time = 0
             is_taking_snapshot = False
             is_rendering = False
             timelapse_state = TimelapseState.Idle
             is_waiting_to_render = False
             if self.Timelapse is not None:
                 snapshot_count = self.Timelapse.SnapshotCount
-                seconds_added_by_octolapse = self.Timelapse.SecondsAddedByOctolapse
+
+                total_snapshot_time = self.Timelapse.SecondsAddedByOctolapse
                 is_timelapse_active = self.Timelapse.is_timelapse_active()
                 is_rendering = self.Timelapse.IsRendering
-                is_taking_snapshot = \
-                    TimelapseState.RequestingReturnPosition <= self.Timelapse.State < TimelapseState.WaitingToRender
+                is_taking_snapshot = TimelapseState.TakingSnapshot == self.Timelapse.State
                 timelapse_state = self.Timelapse.State
                 is_waiting_to_render = self.Timelapse.State == TimelapseState.WaitingToRender
             return {'snapshot_count': snapshot_count,
-                    'seconds_added_by_octolapse': seconds_added_by_octolapse,
+                    'total_snapshot_time': total_snapshot_time,
+                    'current_snapshot_time': 0,
                     'is_timelapse_active': is_timelapse_active,
                     'is_taking_snapshot': is_taking_snapshot,
                     'is_rendering': is_rendering,
@@ -468,28 +469,27 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if self.Settings is None:
             return
         try:
+
             self.Settings.current_debug_profile().log_print_state_change(
                 "Printer event received:{0}.".format(event))
 
-            # for printing events use Printer State Change, because it gets sent before Print_Started
-            # unfortunately, now we have to know that it
-            #if event == Events.PRINTER_STATE_CHANGED and payload["state_id"] == "PRINTING":
-            #    self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
-            #    self.on_print_start()
-
             if event == Events.PRINT_STARTED:
-                # eventId = self._printer.get_state_id()
-                # if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
-                if payload["origin"] != "local" and self.Timelapse is not None and self.Timelapse.is_timelapse_active():
-                    self.Timelapse.end_timelapse()
-                    self.send_popup_message(
-                        "Octolapse does not work when printing from SD the card.  The timelapse has been stopped.")
-                    self.Settings.current_debug_profile().log_print_state_change(
-                        "Octolapse cannot start the timelapse when printing from SD.  Origin:{0}"
-                        .format(payload["origin"]))
-                else:
-                    self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
-                    self.on_print_start()
+                if self._printer.set_job_on_hold(True):
+                    try:
+                        # eventId = self._printer.get_state_id()
+                        # if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
+                        if payload["origin"] != "local" and self.Timelapse is not None and self.Timelapse.is_timelapse_active():
+                            self.Timelapse.end_timelapse()
+                            self.send_popup_message(
+                                "Octolapse does not work when printing from SD the card.  The timelapse has been stopped.")
+                            self.Settings.current_debug_profile().log_print_state_change(
+                                "Octolapse cannot start the timelapse when printing from SD.  Origin:{0}"
+                                .format(payload["origin"]))
+                        else:
+                            self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
+                            self.on_print_start()
+                    finally:
+                        self._printer.set_job_on_hold(False)
 
             elif self.Timelapse is None:
                 self.Settings.current_debug_profile().log_print_state_change(
@@ -745,21 +745,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "Camera Settings - Completed")
 
     def on_print_failed(self):
-        self.end_timelapse()
+        self.Timelapse.on_print_end()
         self.Settings.current_debug_profile().log_print_state_change("Print Failed.")
 
     def on_print_canceled(self):
-        self.Timelapse.on_print_canceled()
         self.Settings.current_debug_profile().log_print_state_change("Print Cancelled.")
 
     def on_print_completed(self):
-        self.end_timelapse()
+        self.Timelapse.on_print_end()
         self.Settings.current_debug_profile().log_print_state_change("Print Completed.")
-
-    def on_print_end(self):
-        # tell the timelapse that the print ended.
-        self.end_timelapse()
-        self.Settings.current_debug_profile().log_print_state_change("Print Ended.")
 
     def end_timelapse(self):
         if self.Timelapse is not None:
@@ -780,7 +774,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             # only handle commands sent while printing
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
-                return self.Timelapse.on_gcode_queuing(cmd, cmd_type, gcode)
+                return self.Timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])
 
         except Exception, e:
             if self.Settings is not None:

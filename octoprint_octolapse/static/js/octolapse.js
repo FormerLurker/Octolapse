@@ -72,18 +72,6 @@ $(function () {
         Octolapse.toggle(this, JSON.parse(args));
     };
 
-    Octolapse.DisableResumeButton = function(){
-        var stateWrapper = $("#state_wrapper");
-        stateWrapper.find("#job_pause").attr("disabled", "disabled");
-        stateWrapper.find("#job_pause span:nth-of-type(1)").text("Snapshot");
-        stateWrapper.find("#job_pause span:nth-of-type(2)").text("Snapshot");
-    };
-    Octolapse.EnableResumeButton = function () {
-        var stateWrapper = $("#state_wrapper");
-        stateWrapper.find("#job_pause").attr("disabled", "");
-        stateWrapper.find("#job_pause span:nth-of-type(1)").text("Pause");
-        stateWrapper.find("#job_pause span:nth-of-type(2)").text("Resume");
-    };
     // Add custom validator for csv strings (no inner whitespace)
     const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
     const csvStringComponentRegex = /[A-Z]\d+/gim;
@@ -327,18 +315,7 @@ $(function () {
             //console.log("octolapse.status.js - User Logged Out")
             self.is_admin(false);
         };
-        self.onEventPrintResumed = function (payload) {
-            Octolapse.EnableResumeButton()
-        };
-        self.onEventPrintCancelled = function (payload) {
-            Octolapse.EnableResumeButton()
-        };
-        self.onEventPrintFailed = function (payload) {
-            Octolapse.EnableResumeButton()
-        };
-        self.onEventPrintDone = function (payload) {
-            Octolapse.EnableResumeButton()
-        };
+
         self.updateState = function (state) {
 
             if (state.Position != null) {
@@ -502,7 +479,6 @@ $(function () {
                     {
                         //console.log('octolapse.js - snapshot-start');
                         self.updateState(data);
-                        Octolapse.DisableResumeButton();
                         Octolapse.Status.snapshot_error(false);
                         Octolapse.Status.snapshot_error_message("");
                     }

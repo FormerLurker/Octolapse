@@ -13,7 +13,8 @@ $(function () {
         self.is_timelapse_active = ko.observable(false);
         self.is_taking_snapshot = ko.observable(false);
         self.is_rendering = ko.observable(false);
-        self.seconds_added_by_octolapse = ko.observable(0);
+        self.current_snapshot_time = ko.observable(0);
+        self.total_snapshot_time = ko.observable(0);
         self.snapshot_count = ko.observable(0);
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
@@ -332,7 +333,8 @@ $(function () {
             self.snapshot_count(settings.snapshot_count);
             self.is_taking_snapshot(settings.is_taking_snapshot);
             self.is_rendering(settings.is_rendering);
-            self.seconds_added_by_octolapse(settings.seconds_added_by_octolapse);
+            self.total_snapshot_time(settings.total_snapshot_time);
+            self.current_snapshot_time(settings.current_snapshot_time);
             self.waiting_to_render(settings.waiting_to_render);
         };
 
@@ -367,7 +369,7 @@ $(function () {
 
         self.snapshotTime = function () {
             var date = new Date(null);
-            date.setSeconds(this.seconds_added_by_octolapse());
+            date.setSeconds(this.total_snapshot_time());
             return date.toISOString().substr(11, 8);
         };
 

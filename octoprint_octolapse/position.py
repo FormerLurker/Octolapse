@@ -369,11 +369,6 @@ class Position(object):
             pos.HasStateChanged = not pos.is_state_equal(previous_pos,
                                                          self.PrinterTolerance)
 
-    def save_position(self):
-        if len(self.Positions) == 0:
-            return
-        self.SavedPosition = Pos(self.Printer, self.OctoprintPrinterProfile, self.Positions[0])
-
     def to_dict(self):
         if len(self.Positions) > 0:
             previous_pos = self.Positions[0]
@@ -938,13 +933,6 @@ class Position(object):
             return False
         return self.is_at_position(
             x, y, z, self.Positions[0],
-            self.Printer.printer_position_confirmation_tolerance, True)
-
-    def is_at_saved_position(self, x, y, z=None):
-        if self.SavedPosition is None:
-            return False
-        return self.is_at_position(
-            x, y, z, self.SavedPosition,
             self.Printer.printer_position_confirmation_tolerance, True)
 
     def get_position_string(self, index=0):
