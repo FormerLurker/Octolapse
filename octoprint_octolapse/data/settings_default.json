@@ -1,7 +1,7 @@
 {
   "show_extruder_state_changes": false,
   "auto_reload_latest_snapshot": true,
-  "current_printer_profile_guid": "88a173b1-0071-4d93-84fa-6662af279e5e",
+  "current_printer_profile_guid": null,
   "default_printer_profile": {
     "movement_speed": 6000,
     "guid": "5d39248f-5e11-4c42-b7f4-810c7acc287e",
@@ -1723,6 +1723,35 @@
       "printer_position_confirmation_tolerance": 0.01,
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": false
+    },
+    {
+      "movement_speed": 3600,
+      "guid": "fdc7000c-9bc3-4dd2-bc2e-85f9ebcc3c7c",
+      "min_x": 0.0,
+      "min_y": 0.0,
+      "min_z": 0.0,
+      "detract_speed": 3000,
+      "z_hop": 0.2,
+      "max_z": 0.0,
+      "max_x": 0.0,
+      "max_y": 0.0,
+      "description": "This is a beta profile submitted by user blackroseanjel (kind thanks).  Please report issues/success so that it can be improved for everyone!",
+      "e_axis_default_mode": "require-explicit",
+      "g90_influences_extruder": "use-octoprint-settings",
+      "origin_z": 0.0,
+      "origin_y": 0.0,
+      "origin_x": 0.0,
+      "abort_out_of_bounds": true,
+      "retract_speed": 5100,
+      "auto_position_detection_commands": "",
+      "name": "CR-10 - Beta",
+      "retract_length": 6.5,
+      "snapshot_command": "snap",
+      "override_octoprint_print_volume": false,
+      "z_hop_speed": 1000,
+      "printer_position_confirmation_tolerance": 0.01,
+      "xyz_axes_default_mode": "require-explicit",
+      "auto_detect_position": true
     }
   ],
   "rendering_output_format_options": [

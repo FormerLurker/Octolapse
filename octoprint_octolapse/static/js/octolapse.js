@@ -3,6 +3,7 @@
     a file called 'LICENSE', which is part of this source code package.
 */
 Octolapse = {};
+ Octolapse.Printers = { 'current_profile_guid': function () {return null;}}
 OctolapseViewModel = {};
 
 $(function () {
@@ -459,6 +460,22 @@ $(function () {
                         Octolapse.displayPopup(options);
                     }
                     break;
+                case "popup-error":
+                    {
+                        //console.log('octolapse.js - popup-error');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Startup Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                        break;
+                    }
                 case "timelapse-start":
                     {
                         //console.log('octolapse.js - timelapse-start');

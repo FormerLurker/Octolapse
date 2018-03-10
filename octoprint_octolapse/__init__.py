@@ -35,8 +35,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     TIMEOUT_DELAY = 1000
 
     def __init__(self):
-        self.Settings = None
-        self.Timelapse = None
+        self.Settings = None # type: OctolapseSettings
+        self.Timelapse = None # type: Timelapse
         self.IsRenderingSynchronized = False
 
     # Blueprint Plugin Mixin Requests
@@ -156,7 +156,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         profile_type = request_values["profileType"]
         guid = request_values["guid"]
         client_id = request_values["client_id"]
-        self.Settings.remove_profile(profile_type, guid)
+        if not self.Settings.remove_profile(profile_type, guid):
+            return json.dumps({'success': False, 'error': "Cannot delete the default profile."}), 200, {'ContentType': 'application/json'}
         # save the updated settings to a file.
         self.save_settings()
         self.send_settings_changed_message(client_id)
@@ -530,15 +531,18 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         if self.Timelapse.State != TimelapseState.Idle:
             self.Settings.current_debug_profile().log_print_state_change(
-                "Octolapse is not idling.  CurrentState:{0}".format(self.Timelapse.State))
-            self.send_popup_message("Octolapse was unable to start the timelapse when not in an idle state.  StateId: {0}".format(self.Timelapse.State))
+                "Octolapse is not idling, unable to start print.  CurrentState:{0}".format(self.Timelapse.State))
+
+            self._printer.cancel_print()
+            self.send_popup_error("Unable to start the timelapse when not in an idle state.  StateId: {0}".format(self.Timelapse.State))
             return
 
         result = self.start_timelapse()
         if not result["success"]:
             self.Settings.current_debug_profile().log_print_state_change(
                 "Unable to start the timelapse. Error:{0}".format(result["error"]))
-            self.send_popup_message("Octolapse was unable to start the timelapse.  Error: {0}".format(result["error"]))
+            self._printer.cancel_print()
+            self.send_popup_error("Unable to start the timelapse.  Canceling print.  Error: {0}".format(result["error"]))
             return
 
         if result["warning"]:
@@ -591,20 +595,42 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         octoprint_printer_profile = self._printer_profile_manager.get_current()
         # check for circular bed.  If it exists, we can't continue:
         if octoprint_printer_profile["volume"]["formFactor"] == "circle":
-            return {'success': False, 'error': "Octolapse does not yet support circular beds, sorry.", 'warning': False}
+            return {'success': False, 'error': "This plugin does not yet support circular beds, sorry."
+                    , 'warning': False}
+
+        # make sure that at least one profile is available
+        if len(self.Settings.printers) == 0:
+            return {'success': False, 'error':  "There are no printer profiles.  Cannot start timelapse.  "
+                                                "Please create a printer profile in the octolapse settings pages and "
+                                                "restart the print."}
+        # check to make sure a printer is selected
+        if self.Settings.current_printer() is None:
+            return {'success': False, 'error':  "No default printer profile was selected.  Cannot start timelapse.  "
+                                                "Please select a printer profile in the octolapse settings pages and "
+                                                "restart the print."}
+
+        # test the camera and see if it works.
+        results = camera.test_camera(self.Settings.current_camera())
+        if not results[0]:
+            return {'success': False, 'warning': False,
+                    'error': "The current camera profile did not pass testing.  You can "
+                    "adjust and test your camera in the profile settings page."}
 
         self.Timelapse.start_timelapse(
             self.Settings, self._printer, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
 
         if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
             return {'success': True,
-                    'warning': "Octolapse has not been tested on printers with origins that are not in the lower "
+                    'warning': "This plugin has not yet been tested on printers with origins that are not in the lower "
                                "left.  Use at your own risk."}
 
         return {'success': True, 'warning': False}
 
     def send_popup_message(self, msg):
         self.send_plugin_message("popup", msg)
+
+    def send_popup_error(self, msg):
+        self.send_plugin_message("popup-error", msg)
 
     def send_state_changed_message(self, state):
         data = {

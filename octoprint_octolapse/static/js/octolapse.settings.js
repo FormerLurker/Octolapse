@@ -2,6 +2,7 @@
     This file is subject to the terms and conditions defined in
     a file called 'LICENSE', which is part of this source code package.
 */
+
 $(function () {
 
 
@@ -15,12 +16,13 @@ $(function () {
         Octolapse.Settings.AddEditProfile = ko.observable({ "templateName": "empty-template", "profileObservable": ko.observable() });
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
+
         self.loginState = parameters[1];
 
 
 
         // Called before octoprint binds the viewmodel to the plugin
-        self.onAfterBinding = function () {
+        self.onBeforeBinding = function () {
 
             /*
                 Create our global settings
@@ -97,8 +99,6 @@ $(function () {
             */
             var renderingSettings =
                 {
-
-
                     'current_profile_guid': settings.current_rendering_profile_guid
                     , 'profiles': settings.renderings
                     , 'default_profile': settings.default_rendering_profile
@@ -433,13 +433,12 @@ $(function () {
             dialog.$addEditDialog.modal();
         };
 
-
     };
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel
         , ["settingsViewModel", "loginStateViewModel"]
-        , ["#octolapse_plugin_settings"]
+        , ["#octolapse_plugin_settings","#octolapse_settings_nav"]
     ]);
 
 

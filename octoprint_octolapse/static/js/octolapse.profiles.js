@@ -24,8 +24,6 @@ $(function() {
         /*
             Octoprint Viewmodel Events
         */
-
-
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
@@ -40,8 +38,14 @@ $(function() {
                 success: function (newProfile) {
 
                     newProfile = new self.profileViewModelCreate(newProfile); // Create our profile viewmodel
-                    if (isNewProfile)
+                    if (isNewProfile) {
+                        console.log("Adding new profile");
+                        if (self.profiles().length == 0)
+                            self.current_profile_guid(newProfile.guid());
                         self.profiles.push(newProfile); // Since it's new, just add it.
+                        // If there is only one profile, it's been set as the default profile
+                        console.log("There are currently " + self.profiles().length.toString() + " profiles.");
+                    }
                     else {
                         // Since this is an existing element, we must replace the original with the  new one.
                         // First get the original one
@@ -72,8 +76,12 @@ $(function() {
                     data: JSON.stringify(data),
                     contentType: "application/json",
                     dataType: "json",
-                    success: function () {
-                        self.profiles.remove(self.getProfileByGuid(guid));
+                    success: function (returnValue) {
+                        if(returnValue.success)
+                            self.profiles.remove(self.getProfileByGuid(guid));
+                        else
+                            alert("Unable to remove the " + settings.profileTypeName +" profile!.  Error: " + returnValue.error);
+
                         // close modal dialog.
 
                     },

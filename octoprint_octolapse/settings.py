@@ -1589,7 +1589,7 @@ class OctolapseSettings(object):
             log_file_path=log_file_path, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7")
         self.LogFilePath = log_file_path
 
-        self.version = "0.1.0.0"
+        self.version = "0.2.0.0"
         self.show_navbar_icon = True
         self.show_navbar_when_not_printing = True
         self.is_octolapse_enabled = True
@@ -1600,8 +1600,8 @@ class OctolapseSettings(object):
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False
         printer = self.DefaultPrinter
-        self.current_printer_profile_guid = printer.guid
-        self.printers = {printer.guid: printer}
+        self.current_printer_profile_guid = None
+        self.printers = {}
 
         stabilization = self.DefaultStabilization
         self.current_stabilization_profile_guid = stabilization.guid
@@ -1648,10 +1648,8 @@ class OctolapseSettings(object):
         return self.renderings[self.current_rendering_profile_guid]
 
     def current_printer(self):
-        if len(self.printers.keys()) == 0:
-            printer = Printer(printer=None)
-            self.printers[printer.guid] = printer
-            self.current_printer_profile_guid = printer.guid
+        if self.current_printer_profile_guid is None or self.current_printer_profile_guid not in self.printers:
+            return None
         return self.printers[self.current_printer_profile_guid]
 
     def current_camera(self):
@@ -1698,8 +1696,9 @@ class OctolapseSettings(object):
             self.show_trigger_state_changes = bool(get_value(
                 changes, "show_trigger_state_changes", self.show_trigger_state_changes))
         if has_key(changes, "current_printer_profile_guid"):
-            self.current_printer_profile_guid = str(get_value(
-                changes, "current_printer_profile_guid", self.current_printer_profile_guid))
+            self.current_printer_profile_guid = get_value(
+                changes, "current_printer_profile_guid", self.current_printer_profile_guid
+            )
         if has_key(changes, "current_stabilization_profile_guid"):
             self.current_stabilization_profile_guid = str(get_value(
                 changes, "current_stabilization_profile_guid", self.current_stabilization_profile_guid))
@@ -1936,6 +1935,8 @@ class OctolapseSettings(object):
         if profile_type == "Printer":
             new_profile = Printer(profile)
             self.printers[guid] = new_profile
+            if len(self.printers) == 1:
+                self.current_printer_profile_guid = new_profile.guid
         elif profile_type == "Stabilization":
             new_profile = Stabilization(profile)
             self.stabilizations[guid] = new_profile
@@ -1960,20 +1961,34 @@ class OctolapseSettings(object):
     def remove_profile(self, profile_type, guid):
 
         if profile_type == "Printer":
+            if self.current_printer_profile_guid == guid:
+                return False
             del self.printers[guid]
         elif profile_type == "Stabilization":
+            if self.current_stabilization_profile_guid == guid:
+                return False
             del self.stabilizations[guid]
         elif profile_type == "Snapshot":
+            if self.current_snapshot_profile_guid == guid:
+                return False
             del self.snapshots[guid]
         elif profile_type == "Rendering":
+            if self.current_rendering_profile_guid == guid:
+                return False
             del self.renderings[guid]
         elif profile_type == "Camera":
+            if self.current_camera_profile_guid == guid:
+                return False
             del self.cameras[guid]
         elif profile_type == "Debug":
+            if self.current_debug_profile_guid == guid:
+                return False
             del self.debug_profiles[guid]
         else:
             raise ValueError('An unknown profile type ' +
                              str(profile_type) + ' was received.')
+
+        return True
 
     def set_current_profile(self, profile_type, guid):
 

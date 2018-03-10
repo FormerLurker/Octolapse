@@ -25,6 +25,9 @@ $(function() {
         }
     };
 
+
+
+
     Octolapse.PrinterProfileViewModel = function (values) {
         var self = this;
         self.guid = ko.observable(values.guid);

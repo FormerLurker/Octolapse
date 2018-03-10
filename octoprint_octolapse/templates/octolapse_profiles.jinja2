@@ -3,52 +3,62 @@
   file called 'LICENSE', which is part of this source code package.
 -->
 <script type="text/html" id="profiles-template">
-  <div class="panel-heading">
-    <h3 class="profile-title"></h3>
-  </div>
-  <div class="panel-body">
+    <div class="panel-heading">
+        <p class="text-error" data-bind="visible: profiles().length == 0">Before starting a timelapse you must
+            create a <span data-bind="text: profileTypeName.toLowerCase()"></span> profile. Please click 'Add
+            Profile' to begin.</p>
+        <p class="text-error" data-bind="visible: profiles().length > 0 && current_profile_guid() == null">
+            Before starting a timelapse you must choose a default <span
+                data-bind="text: profileTypeName.toLowerCase()"></span> profile by clicking on a star icon from
+            the profile list below.</p>
+    </div>
+    <div class="panel-body">
 
-    <div class="row">
-      <div class="span12">
-        <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
-          <thead>
-            <tr>
-              <th class="profile_name">Name</th>
-              <th class="profile_description">Description</th>
-              <th class="profile_action">Action</th>
-            </tr>
-          </thead>
-          <tbody data-bind="foreach: profiles" >
-            <tr>
-              <td class="profile_name" data-bind="attr: {title: name()}">
+        <div class="row">
+            <div class="span12">
+                <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
+                    <thead>
+                    <tr>
+                        <th class="profile_name">Name</th>
+                        <th class="profile_description">Description</th>
+                        <th class="profile_action">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody data-bind="foreach: profiles">
+                    <tr>
+                        <td class="profile_name" data-bind="attr: {title: name()}">
                 <span>
-                  <span class="fa fa-star" data-bind="visible:  guid() == $root.current_profile_guid()"></span>
-                  <span data-bind="text: name(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
+                  <span class="fa fa-star" data-bind="visible:  guid() == $parent.current_profile_guid()"></span>
+                  <span data-bind="text: name(), style: { 'font-weight': guid() == $parent.current_profile_guid() ? 'bold' : 'normal' }"></span>
                 </span>
-             </td>
-              <td class="profile_description"  data-bind="attr: {title: description()}">
-                  <span data-bind="text: description(), style: { 'font-weight': guid() == $root.current_profile_guid() ? 'bold' : 'normal' }"></span>
-              </td>
-              <td class="profile_action text-center" align="center">
-                  <a href="#" class="fa fa-star" title="Set as default profile" data-bind="click: function() { if (guid() != $root.current_profile_guid()) { $root.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
-                  &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile" data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
-                  &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile" data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
-                  &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile" data-bind="click: function() {  if (guid() != $root.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $root.current_profile_guid())}, enabled: (guid() != $root.current_profile_guid())"></a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                        </td>
+                        <td class="profile_description" data-bind="attr: {title: description()}">
+                            <span data-bind="text: description(), style: { 'font-weight': guid() == $parent.current_profile_guid() ? 'bold' : 'normal' }"></span>
+                        </td>
+                        <td class="profile_action text-center" align="center">
+                            <a href="#" class="fa fa-star" title="Set as default profile"
+                               data-bind="click: function() { if (guid() != $parent.current_profile_guid()) { $parent.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $parent.current_profile_guid())}, enabled: (guid() != $parent.current_profile_guid())"></a>
+                            &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile"
+                                            data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
+                            &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile"
+                                            data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
+                            &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile"
+                                            data-bind="click: function() {  if (guid() != $parent.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $parent.current_profile_guid())}, enabled: (guid() != $parent.current_profile_guid())"></a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <button class="span12 btn btn-default" data-bind="click: function() {$root.showAddEditDialog(null);}">Add
+                Profile...
+            </button>
+        </div>
+
+
     </div>
-    <div class="row">
-      <button class="span12 btn btn-default" data-bind="click: function() {$root.showAddEditDialog(null);}">Add Profile...</button>
-    </div>
-
-
-  </div>
-  <div class="panel-footer">
-
-  </div>
+    <!--<div class="panel-footer"></div>-->
 </script>
 
 
