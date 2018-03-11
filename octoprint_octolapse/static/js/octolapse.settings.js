@@ -13,12 +13,14 @@ $(function () {
         // Add this object to our Octolapse namespace
         Octolapse.Settings = this;
         // Create an empty add/edit profile so that the initial binding to the empty template works without errors.
-        Octolapse.Settings.AddEditProfile = ko.observable({ "templateName": "empty-template", "profileObservable": ko.observable() });
+        Octolapse.Settings.AddEditProfile = ko.observable({
+            "templateName": "empty-template",
+            "profileObservable": ko.observable()
+        });
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
 
         self.loginState = parameters[1];
-
 
 
         // Called before octoprint binds the viewmodel to the plugin
@@ -64,7 +66,7 @@ $(function () {
                     'current_profile_guid': settings.current_stabilization_profile_guid
                     , 'profiles': settings.stabilizations
                     , 'default_profile': settings.default_stabilization_profile
-                    , 'profileOptions': { 'stabilization_type_options': settings.stabilization_type_options }
+                    , 'profileOptions': {'stabilization_type_options': settings.stabilization_type_options}
                     , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
                     , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
                     , 'bindingElementId': 'octolapse_stabilization_tab'
@@ -81,17 +83,32 @@ $(function () {
             var snapshotSettings =
                 {
                     'current_profile_guid': settings.current_snapshot_profile_guid
-                    , 'profiles': settings.snapshots
-                    , 'default_profile': settings.default_snapshot_profile
-                    , 'profileOptions': { 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options, 'position_restriction_shapes': settings.position_restriction_shapes, 'position_restriction_types': settings.position_restriction_types }
-                    , 'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
-                    , 'profileValidationRules': Octolapse.SnapshotProfileValidationRules
-                    , 'bindingElementId': 'octolapse_snapshot_tab'
-                    , 'addEditTemplateName': 'snapshot-template'
-                    , 'profileTypeName': 'Snapshot'
-                    , 'addUpdatePath': 'addUpdateProfile'
-                    , 'removeProfilePath': 'removeProfile'
-                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                    ,
+                    'profiles': settings.snapshots
+                    ,
+                    'default_profile': settings.default_snapshot_profile
+                    ,
+                    'profileOptions': {
+                        'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options,
+                        'position_restriction_shapes': settings.position_restriction_shapes,
+                        'position_restriction_types': settings.position_restriction_types
+                    }
+                    ,
+                    'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
+                    ,
+                    'profileValidationRules': Octolapse.SnapshotProfileValidationRules
+                    ,
+                    'bindingElementId': 'octolapse_snapshot_tab'
+                    ,
+                    'addEditTemplateName': 'snapshot-template'
+                    ,
+                    'profileTypeName': 'Snapshot'
+                    ,
+                    'addUpdatePath': 'addUpdateProfile'
+                    ,
+                    'removeProfilePath': 'removeProfile'
+                    ,
+                    'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Snapshots = new Octolapse.ProfilesViewModel(snapshotSettings);
             /*
@@ -147,7 +164,7 @@ $(function () {
                     'current_profile_guid': settings.current_debug_profile_guid
                     , 'profiles': settings.debug_profiles
                     , 'default_profile': settings.default_debug_profile
-                    , 'profileOptions': { 'debug_profile_options': settings.debug_profile_options }
+                    , 'profileOptions': {'debug_profile_options': settings.debug_profile_options}
                     , 'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel
                     , 'profileValidationRules': Octolapse.DebugProfileValidationRules
                     , 'bindingElementId': 'octolapse_debug_tab'
@@ -210,7 +227,7 @@ $(function () {
         self.restoreDefaultSettings = function () {
             if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-                var data = { "client_id": Octolapse.Globals.client_id };
+                var data = {"client_id": Octolapse.Globals.client_id};
                 $.ajax({
                     url: "/plugin/octolapse/restoreDefaults",
                     type: "POST",
@@ -221,7 +238,7 @@ $(function () {
 
                         self.updateSettings(newSettings);
                         Octolapse.Globals.update(newSettings);
-                        alert("The default settings have been restored.  You must reboot octoprint before the settings take effect.");
+                        alert("The default settings have been restored.  It is recommended that you restart the OctoPrint server now.");
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
@@ -362,14 +379,19 @@ $(function () {
             });
             // configure the dialog shown event
             dialog.$addEditDialog.on("show.bs.modal", function () {
-                Octolapse.Settings.AddEditProfile({ "profileObservable": dialog.profileObservable, "templateName": dialog.templateName });
+                Octolapse.Settings.AddEditProfile({
+                    "profileObservable": dialog.profileObservable,
+                    "templateName": dialog.templateName
+                });
                 // Adjust the margins, height and position
                 // Set title
                 dialog.$dialogTitle.text(options.title);
 
                 dialog.$addEditDialog.css({
                     width: 'auto',
-                    'margin-left': function () { return -($(this).width() / 2); }
+                    'margin-left': function () {
+                        return -($(this).width() / 2);
+                    }
                 });
             });
             // Configure the show event
@@ -412,7 +434,7 @@ $(function () {
                                 //console.log("Hidden error found, showing");
                                 var $collapsableContainer = $errorContainer.parents(".collapsible");
                                 if ($collapsableContainer.length > 0)
-                                    // The containers may be nested, show each
+                                // The containers may be nested, show each
                                     $collapsableContainer.each(function (index, container) {
                                         //console.log("Showing the collapsed container");
                                         $(container).show();
@@ -424,7 +446,9 @@ $(function () {
                         // The form is invalid, add a shake animation to inform the user
                         $(dialog.$addEditDialog).addClass('shake');
                         // set a timeout so the dialog stops shaking
-                        setTimeout(function () { $(dialog.$addEditDialog).removeClass('shake'); }, 500);
+                        setTimeout(function () {
+                            $(dialog.$addEditDialog).removeClass('shake');
+                        }, 500);
                     }
 
                 });
@@ -438,7 +462,7 @@ $(function () {
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel
         , ["settingsViewModel", "loginStateViewModel"]
-        , ["#octolapse_plugin_settings","#octolapse_settings_nav","#octolapse_about_tab"]
+        , ["#octolapse_plugin_settings", "#octolapse_settings_nav", "#octolapse_about_tab"]
     ]);
 
 
