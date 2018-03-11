@@ -150,11 +150,18 @@ $(function() {
                 }
             );
             if (index < 0) {
-                alert("No default " + settings.profileTypeName +" profile found!!");
                 return null;
             }
             return self.profiles()[index];
         };
+
+        self.currentProfileName = function() {
+            var profile =self.currentProfile();
+            if(profile == null)
+                return "No default profile selected"
+            return profile.name();
+        };
+
         // TODO:  This is not yet implemented in the new settings.  Well, it's implemented, but there's no button yet.  Add that button, test and (hopefully) remember to remove this comment
         self.getResetProfile = function(currentProfile) {
             var defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile));

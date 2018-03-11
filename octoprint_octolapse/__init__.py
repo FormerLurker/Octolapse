@@ -401,11 +401,34 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             is_rendering = False
             timelapse_state = TimelapseState.Idle
             is_waiting_to_render = False
+            current_settings = {
+                "printer":
+                    "None Selected" if self.Settings.current_printer() is None
+                    else self.Settings.current_printer().name,
+                "stabilization": "None Selected"
+                    if self.Settings.current_stabilization() is None
+                    else self.Settings.current_stabilization().name,
+                "snapshot": "None Selected"
+                    if self.Settings.current_snapshot() is None
+                    else self.Settings.current_snapshot().name,
+                "rendering": "None Selected"
+                    if self.Settings.current_rendering() is None
+                    else self.Settings.current_rendering().name,
+                "camera": "None Selected"
+                    if self.Settings.current_camera() is None
+                    else self.Settings.current_camera().name,
+                "debug_profile": "None Selected"
+                    if self.Settings.current_debug_profile() is None
+                    else self.Settings.current_debug_profile().name,
+            }
+
             if self.Timelapse is not None:
                 snapshot_count = self.Timelapse.SnapshotCount
 
                 total_snapshot_time = self.Timelapse.SecondsAddedByOctolapse
                 is_timelapse_active = self.Timelapse.is_timelapse_active()
+                if is_timelapse_active:
+                    current_settings = self.Timelapse.CurrentSettingsDescription
                 is_rendering = self.Timelapse.IsRendering
                 is_taking_snapshot = TimelapseState.TakingSnapshot == self.Timelapse.State
                 timelapse_state = self.Timelapse.State
@@ -417,7 +440,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     'is_taking_snapshot': is_taking_snapshot,
                     'is_rendering': is_rendering,
                     'waiting_to_render': is_waiting_to_render,
-                    'state': timelapse_state
+                    'state': timelapse_state,
+                    'current_settings': current_settings
                     }
         except Exception, e:
             if self.Settings is not None:
@@ -645,7 +669,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def send_settings_changed_message(self, client_id):
         data = {
-            "type": "settings-changed", "client_id": client_id
+            "type": "settings-changed",
+            "client_id": client_id,
+            "Status": self.get_status_dict(),
+            "MainSettings": self.Settings.get_main_settings_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
@@ -712,7 +739,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def send_state_loaded_message(self):
         data = {
             "type": "state-loaded", "msg": "The current state has been loaded.", "Status": self.get_status_dict(),
-            "MainSettings": self.Settings.get_main_settings_dict()
+            "MainSettings": self.Settings.get_main_settings_dict(),
+            "Status": self.get_status_dict(),
 
         }
         data.update(self.Timelapse.to_state_dict())

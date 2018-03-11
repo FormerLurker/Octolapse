@@ -19,14 +19,23 @@ $(function () {
         self.snapshot_error = ko.observable(false);
         self.snapshot_error_message = ko.observable("");
         self.waiting_to_render = ko.observable();
+        self.current_settings = ko.observable({
+            'printer':"Unknown",
+            'stabilization':"Unknown",
+            'snapshot':"Unknown",
+            'rendering':"Unknown",
+            'camera':"Unknown",
+            'debug_profile':"Unknown",
 
+        });
         self.PositionState = new Octolapse.positionStateViewModel();
         self.Position = new Octolapse.positionViewModel();
         self.ExtruderState = new Octolapse.extruderStateViewModel();
         self.TriggerState = new Octolapse.triggersStateViewModel();
-
         self.IsTabShowing = false;
         self.IsLatestSnapshotDialogShowing = false;
+
+
 
         self.showLatestSnapshotDialog = function () {
 
@@ -65,7 +74,6 @@ $(function () {
             $SnapshotDialog.modal();
 
         };
-
 
         self.onAfterBinding = function () {
 
@@ -336,6 +344,8 @@ $(function () {
             self.total_snapshot_time(settings.total_snapshot_time);
             self.current_snapshot_time(settings.current_snapshot_time);
             self.waiting_to_render(settings.waiting_to_render);
+            console.log(self.current_settings());
+            self.current_settings(settings.current_settings);
         };
 
         self.onTimelapseStart = function () {

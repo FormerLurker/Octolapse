@@ -1,0 +1,58 @@
+<!--
+  This file is subject to the terms and conditions defined in
+  file called 'LICENSE', which is part of this source code package.
+-->
+<script type="text/html" id="octolapse-settings-current">
+    <a href="#" class="muted"
+       data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_status_settings_current_panel' }">
+        Current Settings <i class="fa fa-caret-down"></i>
+    </a>
+    <div id="octolapse_status_settings_current_panel" >
+        <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
+            <thead>
+            <tr>
+                <th class="profile_name">Profile</th>
+                <th class="profile_description">Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Printer</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().printer"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Stabilization</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().stabilization"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Snapshot</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().snapshot"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Rendering</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().rendering"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Camera</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().camera"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Debug</td>
+                <td>
+                    <span data-bind="text: Octolapse.Status.current_settings().debug_profile"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</script>

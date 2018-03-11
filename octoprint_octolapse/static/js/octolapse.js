@@ -319,7 +319,7 @@ $(function () {
         };
 
         self.updateState = function (state) {
-
+            console.log(state);
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
@@ -438,6 +438,7 @@ $(function () {
                                 Octolapse.IsShowingSettingsChangedPopup = false;
                             }
                         }
+                        self.updateState(data);
                     }
                     break;
                 case "state-loaded":

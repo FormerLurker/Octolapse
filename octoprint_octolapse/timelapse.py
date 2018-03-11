@@ -85,7 +85,7 @@ class Timelapse(object):
         self._snapshot_timeout = 30.0
         self._snapshot_signal = threading.Event()
         self._snapshot_signal.set()
-
+        self.CurrentSettingsDescription = {}
         self._reset()
 
     def on_position_received(self, payload):
@@ -238,6 +238,9 @@ class Timelapse(object):
         self.Settings = settings
 
         self._reset()
+        # time tracking - how much time did we add to the print?
+        self.SnapshotCount = 0
+        self.SecondsAddedByOctolapse = 0
         self.HasSentInitialStatus = False
         self.RequiresLocationDetectionAfterHome = False
         self.OctoprintPrinter = octoprint_printer
@@ -257,6 +260,9 @@ class Timelapse(object):
         self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
         self.Triggers = Triggers(settings)
         self.Triggers.create()
+
+        # take a snapshot of the current settings for use in the Octolapse Tab
+        self.CurrentSettingsDescription = settings.get_current_profiles_description()
         # send an initial state message
         self._on_timelapse_start()
 
@@ -720,20 +726,27 @@ class Timelapse(object):
         if self.Triggers is not None:
             self.Triggers.reset()
         self.CommandIndex = -1
-        self.SnapshotCount = 0
+
         self.PrintStartTime = None
         self.SnapshotGcodes = None
         self.SavedCommand = None
         self.PositionRequestAttempts = 0
         self.IsTestMode = False
-        # time tracking - how much time did we add to the print?
-        self.SecondsAddedByOctolapse = 0
+
         self.ReturnPositionReceivedTime = None
         # A list of callbacks who want to be informed when a timelapse ends
         self.TimelapseStopRequested = False
         self._snapshot_success = False
         self.SnapshotError = ""
         self.HasBeenStopped = False
+        self.CurrentSettingsDescription = {
+            "printer": "",
+            "stabilization": "",
+            "snapshot": "",
+            "rendering": "",
+            "camera": "",
+            "debug_profile": ""
+        }
 
     def _reset_snapshot(self):
         self.State = TimelapseState.WaitingForTrigger

@@ -1763,6 +1763,28 @@ class OctolapseSettings(object):
                 self.debug_profiles.update(
                     {debugProfile["guid"]: DebugProfile(self.LogFilePath, debug_profile=debugProfile)})
 
+    def get_current_profiles_description(self):
+        return {
+            "printer":
+                "None Selected" if self.current_printer() is None
+                else self.current_printer().name,
+            "stabilization": "None Selected"
+                if self.current_stabilization() is None
+                else self.current_stabilization().name,
+            "snapshot": "None Selected"
+                if self.current_snapshot() is None
+                else self.current_snapshot().name,
+            "rendering": "None Selected"
+                if self.current_rendering() is None
+                else self.current_rendering().name,
+            "camera": "None Selected"
+                if self.current_camera() is None
+                else self.current_camera().name,
+            "debug_profile": "None Selected"
+                if self.current_debug_profile() is None
+                else self.current_debug_profile().name,
+        }
+
     def to_dict(self, ):
         defaults = OctolapseSettings(self.LogFilePath)
 
