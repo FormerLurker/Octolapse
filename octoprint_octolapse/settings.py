@@ -1913,6 +1913,7 @@ class OctolapseSettings(object):
     def get_main_settings_dict(self):
         return {
             'is_octolapse_enabled': self.is_octolapse_enabled,
+            'version': self.version,
             'auto_reload_latest_snapshot': self.auto_reload_latest_snapshot,
             'auto_reload_frames': int(self.auto_reload_frames),
             'show_navbar_icon': self.show_navbar_icon,

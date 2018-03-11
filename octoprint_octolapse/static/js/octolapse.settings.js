@@ -438,7 +438,7 @@ $(function () {
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel
         , ["settingsViewModel", "loginStateViewModel"]
-        , ["#octolapse_plugin_settings","#octolapse_settings_nav"]
+        , ["#octolapse_plugin_settings","#octolapse_settings_nav","#octolapse_about_tab"]
     ]);
 
 

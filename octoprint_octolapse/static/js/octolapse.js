@@ -275,6 +275,7 @@ $(function () {
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
         self.show_navbar_when_not_printing = ko.observable(false);
+        self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid();
         // Have we loaded the state yet?
@@ -367,6 +368,12 @@ $(function () {
                 self.enabled(settings.is_octolapse_enabled());
             else
                 self.enabled(settings.is_octolapse_enabled);
+
+            if (ko.isObservable(settings.version))
+                self.version(settings.version());
+            else
+                self.version(settings.version);
+
             // self.auto_reload_latest_snapshot
             if (ko.isObservable(settings.auto_reload_latest_snapshot))
                 self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
