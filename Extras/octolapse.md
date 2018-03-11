@@ -1,8 +1,8 @@
 ---
 layout: plugin
-id: your plugin's identifier
-title: Octolapse
-description: Takes stabilized timelapses of your 3d prints.
+id: octolapse
+title: OctoLapse
+description: Create a stabilized timelapse of your 3d prints.  Highly customizable, loads of presets, lots of fun.
 author: Brad Hochgesang
 license: [AGPL-3.0](https://github.com/FormerLurker/Octolapse/blob/master/LICENSE)
 date: 2018-03-10

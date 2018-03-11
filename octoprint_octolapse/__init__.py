@@ -496,6 +496,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.Settings.current_debug_profile().log_print_state_change(
                     "No timelapse object exists and this is not a print start event, exiting.")
                 return
+            elif event == Events.DISCONNECTING:
+                self.on_printer_disconnecting()
+            elif event == Events.DISCONNECTED:
+                self.on_printer_disconnected()
             elif event == Events.PRINT_PAUSED:
                 self.on_print_paused()
             elif event == Events.HOME:
@@ -772,14 +776,23 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_print_failed(self):
         self.Timelapse.on_print_end()
-        self.Settings.current_debug_profile().log_print_state_change("Print Failed.")
+        self.Settings.current_debug_profile().log_print_state_change("Print failed.")
+
+    def on_printer_disconnecting(self):
+        self.Timelapse.on_print_end()
+        self.Settings.current_debug_profile().log_print_state_change("Printer disconnecting.")
+
+    def on_printer_disconnected(self):
+        self.Timelapse.on_print_end()
+        self.Settings.current_debug_profile().log_print_state_change("Printer disconnected.")
+
 
     def on_print_canceled(self):
-        self.Settings.current_debug_profile().log_print_state_change("Print Cancelled.")
+        self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
 
     def on_print_completed(self):
         self.Timelapse.on_print_end()
-        self.Settings.current_debug_profile().log_print_state_change("Print Completed.")
+        self.Settings.current_debug_profile().log_print_state_change("Print completed.")
 
     def end_timelapse(self):
         if self.Timelapse is not None:
@@ -936,7 +949,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 # other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties.  See the
 # documentation for that.
-__plugin_name__ = "Octolapse Plugin"
+__plugin_name__ = "OctoLapse"
 
 
 def __plugin_load__():
