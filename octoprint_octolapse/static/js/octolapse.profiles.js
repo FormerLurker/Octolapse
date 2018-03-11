@@ -39,12 +39,12 @@ $(function() {
 
                     newProfile = new self.profileViewModelCreate(newProfile); // Create our profile viewmodel
                     if (isNewProfile) {
-                        console.log("Adding new profile");
+                        //console.log("Adding new profile");
                         if (self.profiles().length == 0)
                             self.current_profile_guid(newProfile.guid());
                         self.profiles.push(newProfile); // Since it's new, just add it.
                         // If there is only one profile, it's been set as the default profile
-                        console.log("There are currently " + self.profiles().length.toString() + " profiles.");
+                        //console.log("There are currently " + self.profiles().length.toString() + " profiles.");
                     }
                     else {
                         // Since this is an existing element, we must replace the original with the  new one.

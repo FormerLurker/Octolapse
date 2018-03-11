@@ -344,7 +344,6 @@ $(function () {
             self.total_snapshot_time(settings.total_snapshot_time);
             self.current_snapshot_time(settings.current_snapshot_time);
             self.waiting_to_render(settings.waiting_to_render);
-            console.log(self.current_settings());
             self.current_settings(settings.current_settings);
         };
 
@@ -949,7 +948,7 @@ $(function () {
                     waitList.push("extruder");
                 if (!self.IsInPosition()) {
                     waitList.push("position");
-                    console.log("Waiting on position.");
+                    //console.log("Waiting on position.");
                 }
                 if (waitList.length > 1) {
                     waitText += " for " + waitList.join(" and ");

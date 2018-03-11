@@ -152,13 +152,13 @@ $(function () {
                     }
                     break;
                 default:
-                    console.log("Unknown position restriction type");
+                    console.log("Octolapse Error:  Unknown position restriction type");
             }
 
 
         };
         self.removePositionRestriction = function (type, index) {
-            console.log("Removing " + type + " restriction at index: " + index());
+           //console.log("Removing " + type + " restriction at index: " + index());
 
             switch (type) {
                 case "layer":
@@ -177,7 +177,7 @@ $(function () {
                     }
                     break;
                 default:
-                    console.log("Unknown position restriction type");
+                    console.log("Octolapse Error:  Unknown position restriction type");
             }
 
 
