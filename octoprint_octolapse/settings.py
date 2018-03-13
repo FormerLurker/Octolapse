@@ -1573,7 +1573,7 @@ class OctolapseSettings(object):
 
     # constants
 
-    def __init__(self, log_file_path, settings=None):
+    def __init__(self, log_file_path, settings=None, pluginVersion = "unknown"):
 
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
@@ -1589,7 +1589,7 @@ class OctolapseSettings(object):
             log_file_path=log_file_path, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7")
         self.LogFilePath = log_file_path
 
-        self.version = "0.2.0.0"
+        self.version = pluginVersion
         self.show_navbar_icon = True
         self.show_navbar_when_not_printing = True
         self.is_octolapse_enabled = True
@@ -1786,7 +1786,7 @@ class OctolapseSettings(object):
         }
 
     def to_dict(self, ):
-        defaults = OctolapseSettings(self.LogFilePath)
+        defaults = OctolapseSettings(self.LogFilePath, self.version)
 
         settings_dict = {
             'version': utility.get_string(

@@ -274,7 +274,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             with open(self.get_default_settings_path()) as defaultSettingsJson:
                 data = json.load(defaultSettingsJson)
                 # if a settings file does not exist, create one ??
-                new_settings = OctolapseSettings(self.get_log_file_path(), data)
+                new_settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
                 if self.Settings is not None:
                     self.Settings.update(new_settings.to_dict())
                 else:
@@ -294,7 +294,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 data = json.load(settingsJson)
             if self.Settings is None:
                 #  create a new settings object
-                self.Settings = OctolapseSettings(self.get_log_file_path(), data)
+                self.Settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
                 self.Settings.current_debug_profile().log_settings_load(
                     "Settings loaded.  Created new settings object: {0}.".format(data))
             else:
