@@ -3,7 +3,7 @@ layout: plugin
 
 id: octolapse
 title: Octolapse
-description: Create a stabilized timelapse of your 3d prints.  Highly customizable, loads of presets, lots of fun.
+description: Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.
 author: Brad Hochgesang
 license: AGPL-3.0
 date: 2018-03-10
@@ -15,7 +15,7 @@ archive: https://github.com/FormerLurker/Octolapse/archive/NoPause.zip
 tags:
 - timelapse
  
-featuredimage: /assets/img/plugins/octolapse/tab.png
+featuredimage: /assets/img/plugins/octolapse/tab_mini.png
 
 compatibility:
 
@@ -30,6 +30,13 @@ compatibility:
 ---
 
 # Octolapse
+<div style="text-align:center">
+    <img src="/assets/img/plugins/octolapse/tab_mini.png" alt="Octolapse Tab"/>
+    <div> 
+        <i>The Octolapse Tab</i>
+    </div>
+    <br/>
+</div>
 Octolapse is designed to make stabilized timelapses of your prints with as little hassle as possible, and it's extremely configurable.  Now you can create a silky smooth timelapse without a custom camera mount.  No gcode customization required.
 
 Octolapse moves the print bed and extruder into position before taking each snapshot, giving you a crisp image in every frame.  Snapshots can be taken at each layer change, at specific height increments, after a period of time has elapsed, or when certain GCodes are detected.  You can even combine multiple methods in a single timelapse.
@@ -40,8 +47,19 @@ Octolapse is still in Beta, but has been confirmed to work on several printers:
 *  Anet A8
 *  CR-10 (Beta Profile)
 
-Please note that some settings may need to be adjusted depending on your slicer settings.   
-
+Please note that some settings may need to be adjusted depending on your slicer settings.
+<div style="text-align:center">
+    <br/>
+    <div>
+        <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/er0VCYen1MY" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </div>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+            <i>A timelapse of a double spiral vase made with Octolapse</i>
+        </a>
+    </div>
+    <br/>
+</div>
 **Octolapse is provided without warranties of any kind.  By installing Octolapse you agree to accept all liability for any damage caused directly or indirectly by Octolapse.**  
 
 Use caution and never leave your printer unattended.
@@ -64,49 +82,40 @@ Use caution and never leave your printer unattended.
 ## To make good timelapses you need good snapshots
 * Slow camera or low framerate?  Octolapse allows you to set a delay beofre taking a snapshot to allow your camera enough time to get a clear image.
 * If you have a compatible camera you can control contrast, brightness, focus, white balance, pan, tilt, zoom, and much more.  You can apply your custom settings before each print.
-# Tab
-You can navigate to the Octolapse tab by either clicking on the drop down menu in OctoPrint, or by clicking the 'Octolapse' link in the nav bar.
-<details>
-	<summary>click to see the tab</summary>
-	<img src="/assets/img/plugins/octolapse/tab.jpg" alt="Octolapse Tab"/>
-</details>
-# Settings
-Octolapse has lots of settings, but there are lots of presets to help you get started quickly.  Most settings are organized into profiles, which can be created, updated, removed or copied.  You can see which profiles are active within the main tab so you always know which profiles you are using. 
-## Main Settings
-The main settings tab allows you to do the following:
 
-* Enable/disable Octolapse
-* Enable/disable the nav bar control
-* Adjust the timelapse preview display on the tab
-* Show or hide various information panels that can be useful for debugging or testing
-<details>
-	<summary>click to see the main settings</summary>
-	<img src="/assets/img/plugins/octolapse/settings_main.jpg" alt="Main Settings"/>
-</details>
-## Stabilization Profiles
-The stabilizations tell Octolapse where to move the bed and extruder for a snapshot.  You can pick fixed or bed-relative coordinates.  You can also provide a list of coordinates to animate each axis, or disable stabilization entirely for an axis.
-<details>
-<summary>click to see the stabilization settings</summary>
-<img src="/assets/img/plugins/octolapse/settings_stabilizations.jpg" alt="Main Settings"/>
-</details>
-## Snapshot Profiles
-<details>
-	<summary>click to see the snapshot settings</summary>
-	<img src="/assets/img/plugins/octolapse/settings_snapshots.jpg" alt="Snapshot Settings"/>
-</details>
-## Rendering Profiles
-<details>
-	<summary>click to see the rendering settings</summary>
-	<img src="/assets/img/plugins/octolapse/settings_rendering.jpg" alt="Rendering Settings"/>
-</details>
-## Camera Profiles
-<details>
-	<summary>click to see the camera settings</summary>
-	<img src="/assets/img/plugins/octolapse/settings_camera.jpg" alt="Camera Settings"/>
-</details>
-## Debug Profiles
-<details>
-	<summary>click to see the debug settings</summary>
-	<img src="/assets/img/plugins/octolapse/settings_debug.jpg" alt="Debug Settings"/>
-</details>
+## More Octolapses
+<div style="text-align:center">
+    <div>
+        <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/dYbWfBCLNbI" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </div>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+            <i>The Milennium Falcon</i>
+        </a>
+    </div>
+    <br/>
+</div>
+
+<div style="text-align:center">
+    <div>
+        <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/4kEHbRrp2Jk" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </div>
+    <div>
+        <a href="https://www.thingiverse.com/thing:2531838" alt="Link to the model from this video" title="view model on thingiverse" target="_blank"> 
+            <i>The Moon - Animated X Axis</i>
+        </a>
+    </div>
+    <br/>
+</div>
+<div style="text-align:center">
+    <div>
+        <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/Ra5Jjq-nJfA" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </div>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:763622" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+            <i>The obligatory benchy</i>
+        </a>
+    </div>
+    <br/>
+</div>
 

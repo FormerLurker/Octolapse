@@ -46,7 +46,7 @@ def test_camera(camera_profile, timeout_seconds=2):
 
 
 class CameraControl(object):
-    def __init__(self, camera, on_success=None, on_fail=None, on_complete=None, timeout_seconds=2.0):
+    def __init__(self, camera, on_success=None, on_fail=None, on_complete=None, timeout_seconds=10):
         self.Camera = camera
         self.TimeoutSeconds = timeout_seconds
         self.OnSuccess = on_success
