@@ -1785,6 +1785,59 @@ class OctolapseSettings(object):
                 else self.current_debug_profile().name,
         }
 
+    def get_profiles_dict(self):
+        profiles_dict = {
+            'current_printer_profile_guid': self.current_printer_profile_guid,
+            'current_stabilization_profile_guid': self.current_stabilization_profile_guid,
+            'current_snapshot_profile_guid': self.current_snapshot_profile_guid,
+            'current_rendering_profile_guid': self.current_rendering_profile_guid,
+            'current_camera_profile_guid': self.current_camera_profile_guid,
+            'current_debug_profile_guid': self.current_debug_profile_guid,
+            'printers': [],
+            'stabilizations': [],
+            'snapshots': [],
+            'renderings': [],
+            'cameras': [],
+            'debug_profiles': []
+        }
+
+        for key, printer in self.printers.items():
+            profiles_dict["printers"].append({
+                "name": printer.name,
+                "guid": printer.guid
+            })
+
+        for key, stabilization in self.stabilizations.items():
+            profiles_dict["stabilizations"].append({
+                "name": stabilization.name,
+                "guid": stabilization.guid
+            })
+
+        for key, snapshot in self.snapshots.items():
+            profiles_dict["snapshots"].append({
+                "name": snapshot.name,
+                "guid": snapshot.guid
+            })
+
+        for key, rendering in self.renderings.items():
+            profiles_dict["renderings"].append({
+                "name": rendering.name,
+                "guid": rendering.guid
+            })
+
+        for key, camera in self.cameras.items():
+            profiles_dict["cameras"].append({
+                "name": camera.name,
+                "guid": camera.guid
+            })
+
+        for key, debugProfile in self.debug_profiles.items():
+            profiles_dict["debug_profiles"].append({
+                "name": debugProfile.name,
+                "guid": debugProfile.guid
+            })
+        return profiles_dict
+
     def to_dict(self, ):
         defaults = OctolapseSettings(self.LogFilePath, self.version)
 

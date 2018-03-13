@@ -401,34 +401,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             is_rendering = False
             timelapse_state = TimelapseState.Idle
             is_waiting_to_render = False
-            current_settings = {
-                "printer":
-                    "None Selected" if self.Settings.current_printer() is None
-                    else self.Settings.current_printer().name,
-                "stabilization": "None Selected"
-                    if self.Settings.current_stabilization() is None
-                    else self.Settings.current_stabilization().name,
-                "snapshot": "None Selected"
-                    if self.Settings.current_snapshot() is None
-                    else self.Settings.current_snapshot().name,
-                "rendering": "None Selected"
-                    if self.Settings.current_rendering() is None
-                    else self.Settings.current_rendering().name,
-                "camera": "None Selected"
-                    if self.Settings.current_camera() is None
-                    else self.Settings.current_camera().name,
-                "debug_profile": "None Selected"
-                    if self.Settings.current_debug_profile() is None
-                    else self.Settings.current_debug_profile().name,
-            }
-
+            profiles_dict = self.Settings.get_profiles_dict()
+            debugDict = profiles_dict["debug_profiles"]
             if self.Timelapse is not None:
                 snapshot_count = self.Timelapse.SnapshotCount
 
                 total_snapshot_time = self.Timelapse.SecondsAddedByOctolapse
                 is_timelapse_active = self.Timelapse.is_timelapse_active()
                 if is_timelapse_active:
-                    current_settings = self.Timelapse.CurrentSettingsDescription
+                    profiles_dict = self.Timelapse.CurrentProfiles
+
+                # Always get the current debug settings, else they won't update from the tab while a timelapse is
+                # running.
+                profiles_dict["current_debug_profile_guid"] = self.Settings.current_debug_profile_guid
+                profiles_dict["debug_profiles"] = debugDict
                 is_rendering = self.Timelapse.IsRendering
                 is_taking_snapshot = TimelapseState.TakingSnapshot == self.Timelapse.State
                 timelapse_state = self.Timelapse.State
@@ -441,7 +427,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     'is_rendering': is_rendering,
                     'waiting_to_render': is_waiting_to_render,
                     'state': timelapse_state,
-                    'current_settings': current_settings
+                    'profiles': profiles_dict
                     }
         except Exception, e:
             if self.Settings is not None:

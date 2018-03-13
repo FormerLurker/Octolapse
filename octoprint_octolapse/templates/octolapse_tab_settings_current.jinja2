@@ -7,7 +7,7 @@
        data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_status_settings_current_panel' }">
         Current Settings <i class="fa fa-caret-down"></i>
     </a>
-    <div id="octolapse_status_settings_current_panel" >
+    <div id="octolapse_status_settings_current_panel">
         <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
             <thead>
             <tr>
@@ -19,37 +19,87 @@
             <tr>
                 <td>Printer</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().printer"></span>
+                    <select id="octolapse_tab_printer_profile"
+                            class="input-block-level"
+                            data-bind="
+                               enable: Octolapse.Globals.is_admin() &&  !Octolapse.Status.is_timelapse_active(),
+                               options: Octolapse.Status.profiles().printers,
+                               optionsText: 'name',
+                               optionsValue: 'guid',
+                               value: Octolapse.Status.current_printer_profile_guid,
+                               event: {change: Octolapse.Status.defaultPrinterChanged},
+                               optionsCaption: 'Please select...'">
+                    </select>
                 </td>
             </tr>
             <tr>
                 <td>Stabilization</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().stabilization"></span>
+                    <select id="octolapse_tab_stabilization_profile"
+                            class="input-block-level"
+                            data-bind="
+                                enable: Octolapse.Globals.is_admin() &&  !Octolapse.Status.is_timelapse_active(),
+                                options: Octolapse.Status.profiles().stabilizations,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultStabilizationChanged},
+                                value: Octolapse.Status.current_stabilization_profile_guid"></select>
                 </td>
             </tr>
             <tr>
                 <td>Snapshot</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().snapshot"></span>
+                    <select id="octolapse_tab_snapshot_profile"
+                            class="input-block-level"
+                            data-bind="
+                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
+                                options: Octolapse.Status.profiles().snapshots,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultSnapshotChanged},
+                                value: Octolapse.Status.current_snapshot_profile_guid"></select>
                 </td>
             </tr>
             <tr>
                 <td>Rendering</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().rendering"></span>
+                    <select id="octolapse_tab_rendering_profile"
+                            class="input-block-level"
+                            data-bind="
+                                enable: Octolapse.Globals.is_admin() &&  !Octolapse.Status.is_timelapse_active(),
+                                options: Octolapse.Status.profiles().renderings,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultRenderingChanged},
+                                value: Octolapse.Status.current_rendering_profile_guid"></select>
                 </td>
             </tr>
             <tr>
                 <td>Camera</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().camera"></span>
+                    <select id="octolapse_tab_camera_profile"
+                            class="input-block-level"
+                            data-bind="
+                                enable: Octolapse.Globals.is_admin() &&  !Octolapse.Status.is_timelapse_active(),
+                                options: Octolapse.Status.profiles().cameras,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultCameraChanged},
+                                value: Octolapse.Status.current_camera_profile_guid"></select>
                 </td>
             </tr>
             <tr>
                 <td>Debug</td>
                 <td>
-                    <span data-bind="text: Octolapse.Status.current_settings().debug_profile"></span>
+                    <select id="octolapse_tab_debug_profile"
+                            class="input-block-level"
+                            data-bind="
+                                enable: Octolapse.Globals.is_admin(),
+                                options: Octolapse.Status.profiles().debug_profiles,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultDebugProfileChanged},
+                                value: Octolapse.Status.current_debug_profile_guid"></select>
                 </td>
             </tr>
             </tbody>

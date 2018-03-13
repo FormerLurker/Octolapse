@@ -86,7 +86,7 @@ class Timelapse(object):
         self._snapshot_timeout = 30.0
         self._snapshot_signal = threading.Event()
         self._snapshot_signal.set()
-        self.CurrentSettingsDescription = {}
+        self.CurrentProfiles = {}
         self._reset()
 
     def on_position_received(self, payload):
@@ -263,7 +263,18 @@ class Timelapse(object):
         self.Triggers.create()
 
         # take a snapshot of the current settings for use in the Octolapse Tab
-        self.CurrentSettingsDescription = settings.get_current_profiles_description()
+        self.CurrentProfiles = settings.get_profiles_dict()
+
+        # fetch position private variables
+        self._position_payload = None
+        self._position_timeout = 30.0
+        self._position_signal.set()
+
+        # get snapshot async private variables
+        self._snapshot_success = None
+        self._snapshot_timeout = 30.0
+        self._snapshot_signal.set()
+
         # send an initial state message
         self._on_timelapse_start()
 
@@ -740,7 +751,7 @@ class Timelapse(object):
         self._snapshot_success = False
         self.SnapshotError = ""
         self.HasBeenStopped = False
-        self.CurrentSettingsDescription = {
+        self.CurrentProfiles = {
             "printer": "",
             "stabilization": "",
             "snapshot": "",
@@ -748,6 +759,17 @@ class Timelapse(object):
             "camera": "",
             "debug_profile": ""
         }
+        # fetch position private variables
+        self._position_payload = None
+        self._position_timeout = 30.0
+        self._position_signal = threading.Event()
+        self._position_signal.set()
+
+        # get snapshot async private variables
+        self._snapshot_success = None
+        self._snapshot_timeout = 30.0
+        self._snapshot_signal = threading.Event()
+        self._snapshot_signal.set()
 
     def _reset_snapshot(self):
         self.State = TimelapseState.WaitingForTrigger

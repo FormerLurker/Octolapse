@@ -102,10 +102,11 @@ $(function() {
                 dataType: "json",
                 success: function(result) {
                     // Set the current profile guid observable.  This will cause the UI to react to the change.
+                    //console.log("current profile guid updated: " + result.guid)
                     self.current_profile_guid(result.guid);
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to remove the " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    alert("Unable to set the current " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
         };
