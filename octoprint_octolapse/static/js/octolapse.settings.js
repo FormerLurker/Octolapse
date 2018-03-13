@@ -40,14 +40,10 @@ $(function () {
             */
             var printerSettings =
                 {
-                    'current_profile_guid': settings.current_printer_profile_guid
-                    , 'profiles': settings.printers
-                    , 'default_profile': settings.default_printer_profile
-                    , 'profileOptions': {
-                        'e_axis_default_mode_options': settings.e_axis_default_mode_options,
-                        'g90_influences_extruder_options': settings.g90_influences_extruder_options,
-                        'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,
-                    }
+                    'current_profile_guid': null
+                    , 'profiles': []
+                    , 'default_profile': null
+                    , 'profileOptions': {}
                     , 'profileViewModelCreateFunction': Octolapse.PrinterProfileViewModel
                     , 'profileValidationRules': Octolapse.PrinterProfileValidationRules
                     , 'bindingElementId': 'octolapse_printer_tab'
@@ -63,10 +59,10 @@ $(function () {
             */
             var stabilizationSettings =
                 {
-                    'current_profile_guid': settings.current_stabilization_profile_guid
-                    , 'profiles': settings.stabilizations
-                    , 'default_profile': settings.default_stabilization_profile
-                    , 'profileOptions': {'stabilization_type_options': settings.stabilization_type_options}
+                    'current_profile_guid': null
+                    , 'profiles': []
+                    , 'default_profile': null
+                    , 'profileOptions': {}
                     , 'profileViewModelCreateFunction': Octolapse.StabilizationProfileViewModel
                     , 'profileValidationRules': Octolapse.StabilizationProfileValidationRules
                     , 'bindingElementId': 'octolapse_stabilization_tab'
@@ -82,32 +78,17 @@ $(function () {
             */
             var snapshotSettings =
                 {
-                    'current_profile_guid': settings.current_snapshot_profile_guid
-                    ,
-                    'profiles': settings.snapshots
-                    ,
-                    'default_profile': settings.default_snapshot_profile
-                    ,
-                    'profileOptions': {
-                        'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options,
-                        'position_restriction_shapes': settings.position_restriction_shapes,
-                        'position_restriction_types': settings.position_restriction_types
-                    }
-                    ,
-                    'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel
-                    ,
-                    'profileValidationRules': Octolapse.SnapshotProfileValidationRules
-                    ,
-                    'bindingElementId': 'octolapse_snapshot_tab'
-                    ,
-                    'addEditTemplateName': 'snapshot-template'
-                    ,
-                    'profileTypeName': 'Snapshot'
-                    ,
-                    'addUpdatePath': 'addUpdateProfile'
-                    ,
-                    'removeProfilePath': 'removeProfile'
-                    ,
+                    'current_profile_guid': null,
+                    'profiles': [],
+                    'default_profile': null,
+                    'profileOptions': {},
+                    'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel,
+                    'profileValidationRules': Octolapse.SnapshotProfileValidationRules,
+                    'bindingElementId': 'octolapse_snapshot_tab',
+                    'addEditTemplateName': 'snapshot-template',
+                    'profileTypeName': 'Snapshot',
+                    'addUpdatePath': 'addUpdateProfile',
+                    'removeProfilePath': 'removeProfile',
                     'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Snapshots = new Octolapse.ProfilesViewModel(snapshotSettings);
@@ -116,21 +97,18 @@ $(function () {
             */
             var renderingSettings =
                 {
-                    'current_profile_guid': settings.current_rendering_profile_guid
-                    , 'profiles': settings.renderings
-                    , 'default_profile': settings.default_rendering_profile
-                    , 'profileOptions': {
-                        'rendering_fps_calculation_options': settings.rendering_fps_calculation_options
-                        , 'rendering_output_format_options': settings.rendering_output_format_options
-                    }
-                    , 'profileViewModelCreateFunction': Octolapse.RenderingProfileViewModel
-                    , 'profileValidationRules': Octolapse.RenderingProfileValidationRules
-                    , 'bindingElementId': 'octolapse_rendering_tab'
-                    , 'addEditTemplateName': 'rendering-template'
-                    , 'profileTypeName': 'Rendering'
-                    , 'addUpdatePath': 'addUpdateProfile'
-                    , 'removeProfilePath': 'removeProfile'
-                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                    'current_profile_guid': null,
+                     'profiles': [],
+                     'default_profile': null,
+                     'profileOptions': {},
+                    'profileViewModelCreateFunction': Octolapse.RenderingProfileViewModel,
+                    'profileValidationRules': Octolapse.RenderingProfileValidationRules,
+                    'bindingElementId': 'octolapse_rendering_tab',
+                    'addEditTemplateName': 'rendering-template',
+                    'profileTypeName': 'Rendering',
+                    'addUpdatePath': 'addUpdateProfile',
+                    'removeProfilePath': 'removeProfile',
+                    'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Renderings = new Octolapse.ProfilesViewModel(renderingSettings);
             /*
@@ -138,22 +116,18 @@ $(function () {
             */
             var cameraSettings =
                 {
-                    'current_profile_guid': settings.current_camera_profile_guid
-                    , 'profiles': settings.cameras
-                    , 'default_profile': settings.default_camera_profile
-                    , 'profileOptions': {
-                        'camera_powerline_frequency_options': settings.camera_powerline_frequency_options
-                        , 'camera_exposure_type_options': settings.camera_exposure_type_options
-                        , 'camera_led_1_mode_options': settings.camera_led_1_mode_options
-                    }
-                    , 'profileViewModelCreateFunction': Octolapse.CameraProfileViewModel
-                    , 'profileValidationRules': Octolapse.CameraProfileValidationRules
-                    , 'bindingElementId': 'octolapse_camera_tab'
-                    , 'addEditTemplateName': 'camera-template'
-                    , 'profileTypeName': 'Camera'
-                    , 'addUpdatePath': 'addUpdateProfile'
-                    , 'removeProfilePath': 'removeProfile'
-                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                    'current_profile_guid': null,
+                    'profiles': [],
+                    'default_profile': null,
+                    'profileOptions': {},
+                    'profileViewModelCreateFunction': Octolapse.CameraProfileViewModel,
+                    'profileValidationRules': Octolapse.CameraProfileValidationRules,
+                    'bindingElementId': 'octolapse_camera_tab',
+                    'addEditTemplateName': 'camera-template',
+                    'profileTypeName': 'Camera',
+                    'addUpdatePath': 'addUpdateProfile',
+                    'removeProfilePath': 'removeProfile',
+                    'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Cameras = new Octolapse.ProfilesViewModel(cameraSettings);
             /*
@@ -161,18 +135,18 @@ $(function () {
             */
             var debugSettings =
                 {
-                    'current_profile_guid': settings.current_debug_profile_guid
-                    , 'profiles': settings.debug_profiles
-                    , 'default_profile': settings.default_debug_profile
-                    , 'profileOptions': {'debug_profile_options': settings.debug_profile_options}
-                    , 'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel
-                    , 'profileValidationRules': Octolapse.DebugProfileValidationRules
-                    , 'bindingElementId': 'octolapse_debug_tab'
-                    , 'addEditTemplateName': 'debug-template'
-                    , 'profileTypeName': 'Debug'
-                    , 'addUpdatePath': 'addUpdateProfile'
-                    , 'removeProfilePath': 'removeProfile'
-                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                    'current_profile_guid': null,
+                    'profiles': [],
+                    'default_profile': null,
+                    'profileOptions': {},
+                    'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel,
+                    'profileValidationRules': Octolapse.DebugProfileValidationRules,
+                    'bindingElementId': 'octolapse_debug_tab',
+                    'addEditTemplateName': 'debug-template',
+                    'profileTypeName': 'Debug',
+                    'addUpdatePath': 'addUpdateProfile',
+                    'removeProfilePath': 'removeProfile',
+                    'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
 
@@ -180,40 +154,74 @@ $(function () {
 
         // Update all octolapse settings
         self.updateSettings = function (settings) {
+            //console.log("Settings Received:");
+            //console.log(settings);
             // SettingsMain
             Octolapse.SettingsMain.update(settings);
+
             // Printers
             Octolapse.Printers.profiles([]);
+            Octolapse.Printers.default_profile(settings.default_printer_profile);
+            Octolapse.Printers.profileOptions = {
+                'e_axis_default_mode_options': settings.e_axis_default_mode_options,
+                'g90_influences_extruder_options': settings.g90_influences_extruder_options,
+                        'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options
+            };
             Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid);
             settings.printers.forEach(function (item, index) {
                 Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
             });
-            // Stabilizations
+
             Octolapse.Stabilizations.profiles([]);
+            Octolapse.Stabilizations.default_profile(settings.default_stabilization_profile);
+            Octolapse.Stabilizations.profileOptions = {'stabilization_type_options': settings.stabilization_type_options}
             Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid);
             settings.stabilizations.forEach(function (item, index) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
             });
+
             // Snapshots
             Octolapse.Snapshots.profiles([]);
+            Octolapse.Snapshots.default_profile(settings.default_snapshot_profile);
+            Octolapse.Snapshots.profileOptions ={
+                'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options,
+                'position_restriction_shapes': settings.position_restriction_shapes,
+                'position_restriction_types': settings.position_restriction_types
+            }
             Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid);
             settings.snapshots.forEach(function (item, index) {
                 Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
             });
+
             // Renderings
             Octolapse.Renderings.profiles([]);
+            Octolapse.Renderings.default_profile(settings.default_rendering_profile);
+            Octolapse.Renderings.profileOptions = {
+                'rendering_fps_calculation_options': settings.rendering_fps_calculation_options,
+                'rendering_output_format_options': settings.rendering_output_format_options
+            }
             Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
             settings.renderings.forEach(function (item, index) {
                 Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
             });
+
             // Cameras
             Octolapse.Cameras.profiles([]);
+            Octolapse.Cameras.default_profile(settings.default_camera_profile);
+            Octolapse.Cameras.profileOptions = {
+                'camera_powerline_frequency_options': settings.camera_powerline_frequency_options
+                , 'camera_exposure_type_options': settings.camera_exposure_type_options
+                , 'camera_led_1_mode_options': settings.camera_led_1_mode_options
+            }
             Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid);
             settings.cameras.forEach(function (item, index) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
             });
-            // Debugs
+
+            // Debug
             Octolapse.DebugProfiles.profiles([]);
+            Octolapse.DebugProfiles.default_profile(settings.current_debug_profile_guid);
+            Octolapse.DebugProfiles.profileOptions = {'debug_profile_options': settings.debug_profile_options}
             Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid);
             settings.debug_profiles.forEach(function (item, index) {
                 Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
@@ -267,6 +275,39 @@ $(function () {
             });
 
         };
+
+        self.clearSettings = function (){
+             // Printers
+            Octolapse.Printers.profiles([]);
+            Octolapse.Printers.default_profile(null);
+            Octolapse.Printers.current_profile_guid(null);
+            Octolapse.Printers.profileOptions = {};
+            // Stabilizations
+            Octolapse.Stabilizations.profiles([]);
+            Octolapse.Stabilizations.default_profile(null);
+            Octolapse.Stabilizations.current_profile_guid(null);
+            Octolapse.Stabilizations.profileOptions = {};
+            // Snapshots
+            Octolapse.Snapshots.profiles([]);
+            Octolapse.Snapshots.default_profile(null);
+            Octolapse.Snapshots.current_profile_guid(null);
+            Octolapse.Snapshots.profileOptions = {};
+            // Renderings
+            Octolapse.Renderings.profiles([]);
+            Octolapse.Renderings.default_profile(null);
+            Octolapse.Renderings.current_profile_guid(null);
+            Octolapse.Renderings.profileOptions = {};
+            // Cameras
+            Octolapse.Cameras.profiles([]);
+            Octolapse.Cameras.default_profile(null);
+            Octolapse.Cameras.current_profile_guid(null);
+            Octolapse.Cameras.profileOptions = {};
+            // Debugs
+            Octolapse.DebugProfiles.profiles([]);
+            Octolapse.DebugProfiles.default_profile(null);
+            Octolapse.DebugProfiles.current_profile_guid(null);
+            Octolapse.DebugProfiles.profileOptions = {};
+        }
         /*
             Profile Add/Update routine for showAddEditDialog
         */

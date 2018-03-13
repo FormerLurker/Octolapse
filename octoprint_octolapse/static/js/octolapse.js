@@ -291,7 +291,7 @@ $(function () {
         };
 
         self.loadState = function () {
-            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("octolapse.js - Loading State");
             $.ajax({
                 url: "/plugin/octolapse/loadState",
                 type: "POST",
@@ -310,12 +310,15 @@ $(function () {
             });
         };
         self.onUserLoggedIn = function (user) {
-            //console.log("octolapse.status.js - User Logged In.  User: " + user)
+            //console.log("octolapse.js - User Logged In.  User: " + user);
             self.is_admin(self.loginState.isAdmin());
+            if(self.is_admin())
+                Octolapse.Settings.loadSettings();
         };
         self.onUserLoggedOut = function () {
-            //console.log("octolapse.status.js - User Logged Out")
+            //console.log("octolapse.js - User Logged Out");
             self.is_admin(false);
+            Octolapse.Settings.clearSettings();
         };
 
         self.updateState = function (state) {

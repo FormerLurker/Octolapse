@@ -381,14 +381,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_settings_load(self):
         settings_dict = None
-        try:
-            octoprint.plugin.SettingsPlugin.on_settings_load(self)
-            settings_dict = self.Settings.to_dict()
-        except Exception, e:
-            if self.Settings is not None:
-                self.Settings.current_debug_profile().log_exception(e)
-            else:
-                self._logger.critical(utility.exception_to_string(e))
+        # try:
+        #     octoprint.plugin.SettingsPlugin.on_settings_load(self)
+        #     settings_dict = self.Settings.to_dict()
+        # except Exception, e:
+        #     if self.Settings is not None:
+        #         self.Settings.current_debug_profile().log_exception(e)
+        #     else:
+        #         self._logger.critical(utility.exception_to_string(e))
 
         return settings_dict
 
@@ -667,7 +667,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data.update(state)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_settings_changed_message(self, client_id):
+    def send_settings_changed_message(self, client_id=""):
         data = {
             "type": "settings-changed",
             "client_id": client_id,
@@ -738,10 +738,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def send_state_loaded_message(self):
         data = {
-            "type": "state-loaded", "msg": "The current state has been loaded.", "Status": self.get_status_dict(),
+            "type": "state-loaded",
+            "msg": "The current state has been loaded.",
             "MainSettings": self.Settings.get_main_settings_dict(),
             "Status": self.get_status_dict(),
-
         }
         data.update(self.Timelapse.to_state_dict())
         self._plugin_manager.send_plugin_message(self._identifier, data)

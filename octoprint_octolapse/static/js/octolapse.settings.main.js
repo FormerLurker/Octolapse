@@ -35,18 +35,7 @@ $(function () {
         };
         // Get the dialog element
         self.onAfterBinding = function () {
-            var settings = self.global_settings.settings.plugins.octolapse;
-            self.is_octolapse_enabled(settings.is_octolapse_enabled());
-            self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
-            self.auto_reload_frames(settings.auto_reload_frames());
-            self.show_navbar_icon(settings.show_navbar_icon());
-            self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
 
-            self.show_position_state_changes(settings.show_position_state_changes());
-            self.show_position_changes(settings.show_position_changes());
-            self.show_extruder_state_changes(settings.show_extruder_state_changes());
-            self.show_trigger_state_changes(settings.show_trigger_state_changes());
-            self.platform(settings.platform());
 
 
         };
@@ -88,6 +77,8 @@ $(function () {
             self.show_position_changes(settings.show_position_changes);
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
+            //self.platform(settings.platform());
+
 
             // Set the tab-button/tab visibility
             self.setSettingsVisibility(settings.is_octolapse_enabled);

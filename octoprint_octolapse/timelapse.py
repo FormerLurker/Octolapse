@@ -66,6 +66,7 @@ class Timelapse(object):
         self.State = TimelapseState.Idle
         self.IsTestMode = False
         # State Tracking that should only be reset when starting a timelapse
+        self.SnapshotCount = 0
         self.IsRendering = False
         self.HasBeenStopped = False
         self.TimelapseStopRequested = False

@@ -205,17 +205,6 @@ $(function() {
         /*
             Set data prior to bindings
         */
-        // Add all of the profiles from the octoprint settings viewmodel.
-        settings.profiles.forEach(function(item, index) {
-            self.profiles.push(new self.profileViewModelCreate(item));
-        });
-        // Add any profile specific options and/or static viewmodel data
-        self.profileOptions = settings.profileOptions;
-        // Set the current profile guid
-        self.current_profile_guid(settings.current_profile_guid);
-        // Set the default profile used to pre-populate new profiles and (eventually)
-        self.default_profile(settings.default_profile);
-        // This must be the very last line!  Well, at least it probably should be
         ko.applyBindings(self, document.getElementById(self.bindingElementId));
     };
     Octolapse.restoreDefaultSettings = function (onSuccess) {
