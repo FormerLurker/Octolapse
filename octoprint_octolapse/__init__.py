@@ -13,10 +13,11 @@ import octoprint.plugin
 # used to send messages to the web client for notifying it of new timelapses
 from octoprint.events import eventManager, Events
 from octoprint.server import admin_permission
-from octoprint.server.util.flask import restricted_access, check_lastmodified, check_etag
-
+from octoprint.server.util.flask import restricted_access
+from octoprint_octolapse.render import RenderingCallbackArgs
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.utility as utility
+import octoprint_octolapse.render as render
 from octoprint_octolapse.command import Commands
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, \
     DebugProfile
@@ -35,8 +36,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     TIMEOUT_DELAY = 1000
 
     def __init__(self):
-        self.Settings = None # type: OctolapseSettings
-        self.Timelapse = None # type: Timelapse
+        self.Settings = None  # type: OctolapseSettings
+        self.Timelapse = None  # type: Timelapse
         self.IsRenderingSynchronized = False
 
     # Blueprint Plugin Mixin Requests
@@ -157,7 +158,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         guid = request_values["guid"]
         client_id = request_values["client_id"]
         if not self.Settings.remove_profile(profile_type, guid):
-            return json.dumps({'success': False, 'error': "Cannot delete the default profile."}), 200, {'ContentType': 'application/json'}
+            return (
+                json.dumps({'success': False, 'error': "Cannot delete the default profile."}),
+                200,
+                {'ContentType': 'application/json'}
+            )
         # save the updated settings to a file.
         self.save_settings()
         self.send_settings_changed_message(client_id)
@@ -215,7 +220,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
 
-    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["GET"])
     @restricted_access
     @admin_permission.require(403)
     def test_camera_request(self):
@@ -227,6 +232,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
         else:
             return json.dumps({'success': False, 'error': results[1]}), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
+    def validate_rendering_template(self):
+        template = flask.request.form['output_template']
+        result = render.is_rendering_template_valid(
+            template,
+            self.Settings.rendering_file_templates,
+            self.get_plugin_data_folder()
+        )
+        if result[0]:
+            valid = "true"
+        else:
+            valid = result[1]
+        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
     # blueprint helpers
     @staticmethod
@@ -251,7 +270,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def apply_camera_settings(self, camera_profile):
         camera_control = camera.CameraControl(
-            camera_profile, self.on_apply_camera_settings_success, self.on_apply_camera_settings_fail, self.on_apply_camera_settings_complete)
+            camera_profile,
+            self.on_apply_camera_settings_success,
+            self.on_apply_camera_settings_fail,
+            self.on_apply_camera_settings_complete
+        )
         camera_control.apply_settings()
 
     def get_timelapse_folder(self):
@@ -402,7 +425,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             timelapse_state = TimelapseState.Idle
             is_waiting_to_render = False
             profiles_dict = self.Settings.get_profiles_dict()
-            debugDict = profiles_dict["debug_profiles"]
+            debug_dict = profiles_dict["debug_profiles"]
             if self.Timelapse is not None:
                 snapshot_count = self.Timelapse.SnapshotCount
 
@@ -414,11 +437,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # Always get the current debug settings, else they won't update from the tab while a timelapse is
                 # running.
                 profiles_dict["current_debug_profile_guid"] = self.Settings.current_debug_profile_guid
-                profiles_dict["debug_profiles"] = debugDict
-                is_rendering = self.Timelapse.IsRendering
+                profiles_dict["debug_profiles"] = debug_dict
+                is_rendering = self.Timelapse.get_is_rendering()
                 is_taking_snapshot = TimelapseState.TakingSnapshot == self.Timelapse.State
                 timelapse_state = self.Timelapse.State
-                is_waiting_to_render = self.Timelapse.State == TimelapseState.WaitingToRender
+                is_waiting_to_render = (not is_rendering) and self.Timelapse.State == TimelapseState.WaitingToRender
             return {'snapshot_count': snapshot_count,
                     'total_snapshot_time': total_snapshot_time,
                     'current_snapshot_time': 0,
@@ -444,10 +467,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Timelapse = Timelapse(self.get_plugin_data_folder(),
                                    self._settings.getBaseFolder("timelapse"),
                                    on_render_start=self.on_render_start,
-                                   on_render_complete=self.on_render_complete,
-                                   on_render_fail=self.on_render_fail,
-                                   on_render_synchronize_fail=self.on_render_synchronize_fail,
-                                   on_render_synchronize_complete=self.on_render_synchronize_complete,
                                    on_render_end=self.on_render_end,
                                    on_snapshot_start=self.on_snapshot_start,
                                    on_snapshot_end=self.on_snapshot_end,
@@ -477,7 +496,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_event(self, event, payload):
         # If we haven't loaded our settings yet, return.
-        if self.Settings is None:
+        if self.Settings is None or self.Timelapse is None:
             return
         try:
 
@@ -485,27 +504,33 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "Printer event received:{0}.".format(event))
 
             if event == Events.PRINT_STARTED:
+                if not self.Settings.is_octolapse_enabled:
+                    return
+
+                if (
+                    payload["origin"] != "local"
+                ):
+                    self.Timelapse.end_timelapse("FAILED")
+                    self.send_popup_error(
+                        "Octolapse does not work when printing from SD the card.  Disable octolapse if you want to "
+                        "print from the SD card.  Cancelling print")
+                    self.Settings.current_debug_profile().log_print_state_change(
+                        "Octolapse cannot start the timelapse when printing from SD."
+                    )
+                    self._printer.cancel_print();
+                    return;
+
                 if self._printer.set_job_on_hold(True):
                     try:
-                        # eventId = self._printer.get_state_id()
-                        # if the origin is not local, and the timelapse is running, stop it now, we can't lapse from SD :(
-                        if payload["origin"] != "local" and self.Timelapse is not None and self.Timelapse.is_timelapse_active():
-                            self.Timelapse.end_timelapse()
-                            self.send_popup_message(
-                                "Octolapse does not work when printing from SD the card.  The timelapse has been stopped.")
-                            self.Settings.current_debug_profile().log_print_state_change(
-                                "Octolapse cannot start the timelapse when printing from SD.  Origin:{0}"
-                                .format(payload["origin"]))
-                        else:
-                            self.Settings.current_debug_profile().log_print_state_change("Print start detected, attempting to start timelapse.")
-                            self.on_print_start()
+                        # eventId = self._printer.get_state_id() if the origin is not local, and the timelapse is
+                        # running, stop it now, we can't lapse from SD :(
+
+                        self.Settings.current_debug_profile().log_print_state_change(
+                            "Print start detected, attempting to start timelapse."
+                        )
+                        self.on_print_start()
                     finally:
                         self._printer.set_job_on_hold(False)
-
-            elif self.Timelapse is None:
-                self.Settings.current_debug_profile().log_print_state_change(
-                    "No timelapse object exists and this is not a print start event, exiting.")
-                return
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:
@@ -548,7 +573,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "Octolapse is not idling, unable to start print.  CurrentState:{0}".format(self.Timelapse.State))
 
             self._printer.cancel_print()
-            self.send_popup_error("Unable to start the timelapse when not in an idle state.  StateId: {0}".format(self.Timelapse.State))
+            self.send_popup_error(
+                "Unable to start the timelapse when not in an idle state. StateId: "
+                "{0}".format(self.Timelapse.State)
+            )
             return
 
         result = self.start_timelapse()
@@ -556,7 +584,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.Settings.current_debug_profile().log_print_state_change(
                 "Unable to start the timelapse. Error:{0}".format(result["error"]))
             self._printer.cancel_print()
-            self.send_popup_error("Unable to start the timelapse.  Canceling print.  Error: {0}".format(result["error"]))
+            self.send_popup_error(
+                "Unable to start the timelapse.  Canceling print.  Error: "
+                "{0}".format(result["error"])
+            )
             return
 
         if result["warning"]:
@@ -594,23 +625,36 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return {'success': False,
                     'error': "The ffmpeg {0} does not exist.  Please configure this setting within the Octoprint "
                              "settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path "
-                             "to FFMPEG.".format( ffmpeg_path), 'warning': False}
-        g90_influences_extruder = False
+                             "to FFMPEG.".format(ffmpeg_path), 'warning': False}
         try:
-            g90_influences_extruder = self._settings.settings.get(
-                ["feature", "g90InfluencesExtruder"])
+            g90_influences_extruder = self._settings.settings.get(["feature", "g90InfluencesExtruder"])
 
         except Exception, e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
+            return {'success': False,
+                    'error': "Unable to extract the OctoPrint setting - g90_influences_extruder.", 'warning': False}
+
+        # Check the rendering filename template
+        if not render.is_rendering_template_valid(
+            self.Settings.current_rendering().output_template,
+            self.Settings.rendering_file_templates,
+            self.get_plugin_data_folder()
+        ):
+            return {
+                'success': False,
+                'error': "The rendering file template is invalid.  Please correct the token" 
+                         " within the current rendering profile.",
+                'warning': False}
 
         octoprint_printer_profile = self._printer_profile_manager.get_current()
         # check for circular bed.  If it exists, we can't continue:
         if octoprint_printer_profile["volume"]["formFactor"] == "circle":
-            return {'success': False, 'error': "This plugin does not yet support circular beds, sorry."
-                    , 'warning': False}
+            return {
+                'success': False, 'error': "This plugin does not yet support circular beds, sorry.", 'warning': False
+            }
 
         # make sure that at least one profile is available
         if len(self.Settings.printers) == 0:
@@ -680,13 +724,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_end_message(self, success):
+    def send_render_end_message(self, success, synchronized):
         data = {
             "type": "render-end",
             "msg": "Octolapse is finished rendering a timelapse.",
             "Status": self.get_status_dict(),
             "MainSettings": self.Settings.get_main_settings_dict(),
-            "is_synchronized": self.IsRenderingSynchronized,
+            "is_synchronized": synchronized,
             'success': success
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -789,29 +833,25 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "Camera Settings - Completed")
 
     def on_print_failed(self):
-        self.Timelapse.on_print_end()
+        self.Timelapse.on_print_failed()
         self.Settings.current_debug_profile().log_print_state_change("Print failed.")
 
     def on_printer_disconnecting(self):
-        self.Timelapse.on_print_end()
+        self.Timelapse.on_print_disconnecting()
         self.Settings.current_debug_profile().log_print_state_change("Printer disconnecting.")
 
     def on_printer_disconnected(self):
-        self.Timelapse.on_print_end()
+        self.Timelapse.on_print_disconnected()
         self.Settings.current_debug_profile().log_print_state_change("Printer disconnected.")
 
 
     def on_print_canceled(self):
         self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
+        self.Timelapse.on_print_canceled()
 
     def on_print_completed(self):
-        self.Timelapse.on_print_end()
+        self.Timelapse.on_print_completed()
         self.Settings.current_debug_profile().log_print_state_change("Print completed.")
-
-    def end_timelapse(self):
-        if self.Timelapse is not None:
-            self.Timelapse.end_timelapse()
-            self.on_timelapse_complete()
 
     def on_timelapse_stopping(self):
         self.send_plugin_message(
@@ -853,6 +893,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the
         constructor. """
         payload = args[0]
+        assert(isinstance(payload, RenderingCallbackArgs))
         # Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this
         # later.
         self.IsRenderingSynchronized = False
@@ -863,65 +904,51 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if payload.Synchronize:
             will_sync_message = "This timelapse will synchronized with the default timelapse module, and will be " \
                               "available within the default timelapse plugin as '{0}' after rendering is " \
-                              "complete.".format(payload.RenderingFileName)
+                              "complete.".format(payload.get_synchronization_filename())
         else:
             will_sync_message = "Due to your rendering settings, this timelapse will NOT be synchronized with the " \
                               "default timelapse module.  You will be able to find on your octoprint server here: " \
-                              "{0}".format(payload.RenderingFullPath)
+                              "{0}".format(payload.get_rendering_path())
 
         message = "{0}{1}".format(msg, will_sync_message)
         # send a message to the client
         self.send_render_start_message(message)
 
-    def on_render_fail(self, *args, **kwargs):
-        """Called after a timelapse rendering attempt has failed.  Calls any callbacks onMovieFailed callback set in
-        the constructor. """
-        payload = args[0]
-        # Octoprint Event Manager Code
-        self.send_render_failed_message(
-            "Octolapse has failed to render a timelapse.  {0}".format(payload.Reason))
-
-    def on_render_complete(self, *args, **kwargs):
-        self.send_render_complete_message()
-
-    def on_render_synchronize_fail(self, *args, **kwargs):
-        """Called when a synchronization attempt with the default app fails."""
-        payload = args[0]
-        message = "Octolapse has failed to syncronize the default timelapse plugin.  {0}  You should be able to find " \
-                  "your video within your octoprint server here: '{1}'"\
-                  .format(payload.Reason, payload.RenderingFullPath)
-        # Octoprint Event Manager Code
-        self.send_plugin_message("synchronize-failed", message)
-
-    def on_render_synchronize_complete(self, *args, **kwargs):
-        """Called when a synchronization attempt goes well!  Notifies Octoprint of the new timelapse!"""
-        payload = args[0]
-
-        self.IsRenderingSynchronized = True
-
-        # create a message that makes sense, since Octoprint will display its own popup message that already contains
-        # text
-        # Todo:  Enter the text here so we can easily see what our message should be to fit into the boilerplate text.
-        message = "from Octolapse has been synchronized and is now available within the default timelapse plugin tab " \
-                  "as '{0}'.  Octolapse ".format(payload.RenderingFileName)
-        # Here we create a special payload to notify the default timelapse plugin of a new timelapse
-
-        octoprint_payload = dict(gcode="unknown",
-                                 movie=payload.RenderingFullPath,
-                                 movie_basename=payload.RenderingFileName,
-                                 movie_prefix=message,
-                                 returncode=payload.ReturnCode,
-                                 reason=payload.Reason)
-        # notify Octoprint using the event manager.  Is there a way to do this that is more in the spirit of the API?
-        eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
-        self.send_render_end_message(True)
-
     def on_render_end(self, *args, **kwargs):
         """Called after all rendering and synchronization attemps are complete."""
-        # payload = args[0]
-        success = args[1]
-        if not self.IsRenderingSynchronized:
-            self.send_render_end_message(success)
+        payload = args[0]
+        if payload.ErrorType is not None:
+            if payload.ErrorType == "RENDER":
+                # if we're here, we've failed.
+                self.send_render_failed_message(
+                    "Octolapse has failed to render a timelapse.  {0}".format(payload.Reason))
+            else:
+                message = "Octolapse has failed to syncronize the default timelapse plugin." \
+                          "{0}  You should be able to find your video within your octoprint " \
+                          " server here: '{1}'".format(payload.Reason, payload.get_rendering_path())
+                # Octoprint Event Manager Code
+                self.send_plugin_message("synchronize-failed", message)
+        else:
+            if payload.Synchronize:
+                # create a message that makes sense, since Octoprint will display its own popup message that already
+                # contains text
+
+                message = "from Octolapse has been synchronized and is now available within the default timelapse" \
+                          "plugin tab as '{0}'.  Octolapse ".format(payload.get_synchronization_filename())
+                # Here we create a special payload to notify the default timelapse plugin of a new timelapse
+                octoprint_payload = dict(gcode="unknown",
+                                         movie=payload.get_synchronization_path(),
+                                         movie_basename=payload.get_synchronization_filename(),
+                                         movie_prefix=message,
+                                         returncode=payload.ReturnCode,
+                                         reason=payload.Reason)
+                # notify Octoprint using the event manager.  Is there a way to do this that is more in the
+                # spirit of the API?
+                eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
+                # we've either successfully rendered or rendered and synchronized
+                self.send_render_end_message(True, True)
+            else:
+                self.send_render_end_message(True, False)
 
     # ~~ AssetPlugin mixin
     def get_assets(self):

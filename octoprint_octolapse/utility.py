@@ -138,6 +138,10 @@ def get_rendering_base_filename_template():
     return "{FILENAME}_{DATETIMESTAMP}"
 
 
+def get_rendering_filename(template, tokens):
+    template.format(**tokens)
+
+
 def get_rendering_base_filename(print_name, print_start_time, print_end_time=None):
     file_template = get_rendering_base_filename_template()
     file_template = file_template.replace("{FILENAME}", get_string(print_name, ""))

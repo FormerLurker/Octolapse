@@ -2,18 +2,53 @@
 
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
-
-
 import logging
 import os
 import shutil
 import sys
 import threading
+import time
+import math
 # sarge was added to the additional requirements for the plugin
+import uuid
+
 import sarge
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
+
+
+def is_rendering_template_valid(template, options, data_directory):
+
+    # make sure we have all the replacements we need
+    option_dict = {}
+    for option in options:
+        option_dict[option] = "F"  # use any valid file character, F seems ok
+    try:
+        filename = template.format(**option_dict)
+    except KeyError as e:
+        return False, "The following token is invalid: {{{0}}}".format(e.args[0])
+    except ValueError:
+        return False, "A value error occurred when replacing the provided tokens."
+    temp_directory = "{0}{1}{2}{3}".format(data_directory, os.sep, str(uuid.uuid4()), os.sep)
+
+    try:
+        os.makedirs(temp_directory)
+    except (IOError, OSError):
+        return False, "Could not create a temp directory at {0} to test the template.".format(temp_directory)
+
+    file_path = "{0}{1}.{2}".format(temp_directory, filename, "mp4")
+    # see if the filename is valid
+    if not os.access(file_path, os.W_OK):
+        try:
+            open(file_path, 'w').close()
+            os.unlink(file_path)
+        except (IOError, OSError):
+            return False, "The resulting filename is not a valid filename.  Most likely an invalid character was used."
+
+    shutil.rmtree(temp_directory)
+
+    return True, ""
 
 
 class Render(object):
@@ -39,30 +74,35 @@ class Render(object):
         self.OnAfterSyncFail = on_after_sync_fail
         self.OnAfterSycnSuccess = on_after_sync_success
         self.OnComplete = on_complete
+        self.PrintState = "UnknownState"
+        self.PrintName = "UnknownName"
+        self.PrintStartTime = time.time()
+        self.PrintEndTime = time.time()
         self.TimelapseRenderJobs = []
 
-    def process(self, print_name, print_start_time, print_end_time):
+    def process(self, job_id, print_name, print_start_time, print_end_time, print_state):
         self.Settings.current_debug_profile().log_render_start("Rendering is starting.")
+
+        self.PrintState = print_state
+        self.PrintName = print_name
+        self.PrintStartTime = print_start_time
+        self.PrintEndTime = print_end_time
+
         # Get the capture file and directory info
         snapshot_directory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
         snapshot_file_name_template = utility.get_snapshot_filename(
             print_name, print_start_time, utility.SnapshotNumberFormat)
-        # get the output file and directory info
-        output_directory = utility.get_rendering_directory(
-            self.DataDirectory, print_name, print_start_time, self.Rendering.output_format, print_end_time)
-
-        output_filename = utility.get_rendering_base_filename(
-            print_name, print_start_time, print_end_time)
+        output_tokens = self._get_output_tokens()
 
         job = TimelapseRenderJob(
+            job_id,
             self.Rendering,
             self.Settings.current_debug_profile(),
             print_name,
             snapshot_directory,
             snapshot_file_name_template,
-            output_directory,
-            output_filename,
+            output_tokens,
             self.OctoprintTimelapseFolder,
             self.FfmpegPath,
             self.ThreadCount,
@@ -77,14 +117,24 @@ class Render(object):
             clean_after_success=self.Snapshot.cleanup_after_render_complete,
             clean_after_fail=self.Snapshot.cleanup_after_render_complete
         )
-
         job.process()
 
-
-class RenderInfo(object):
-    def __init__(self):
-        self.FileName = ""
-        self.Directory = ""
+    def _get_output_tokens(self):
+        return {
+            "FAILEDFLAG": "FAILED" if self.PrintState != "COMPLETED" else "",
+            "FAILEDSEPARATOR": "_" if self.PrintState != "COMPLETED" else "",
+            "FAILEDSTATE": "" if self.PrintState == "COMPLETED" else self.PrintState,
+            "PRINTSTATE": self.PrintState,
+            "GCODEFILENAME": self.PrintName,
+            "PRINTENDTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(self.PrintEndTime)),
+            "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(self.PrintEndTime, 2) * 100)),
+            "PRINTSTARTTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(self.PrintStartTime)),
+            "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(self.PrintStartTime, 2) * 100)),
+            "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
+            "DATADIRECTORY": self.DataDirectory,
+            "SNAPSHOTCOUNT": 0,
+            "FPS": 0,
+        }
 
 
 class TimelapseRenderJob(object):
@@ -93,22 +143,33 @@ class TimelapseRenderJob(object):
     # , capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 
     def __init__(
-            self, rendering, debug, print_filename,
-            capture_dir, capture_template, output_dir,
-            output_name, octoprint_timelapse_folder,
-            ffmpeg_path, threads, time_added=0,
-            on_render_start=None, on_render_fail=None,
-            on_render_success=None, on_render_complete=None,
-            on_after_sync_success=None, on_after_sync_fail=None,
-            on_complete=None, clean_after_success=False,
+            self,
+            job_id,
+            rendering,
+            debug,
+            print_filename,
+            capture_dir,
+            capture_template,
+            output_tokens,
+            octoprint_timelapse_folder,
+            ffmpeg_path,
+            threads,
+            time_added=0,
+            on_render_start=None,
+            on_render_fail=None,
+            on_render_success=None,
+            on_render_complete=None,
+            on_after_sync_success=None,
+            on_after_sync_fail=None,
+            on_complete=None,
+            clean_after_success=False,
             clean_after_fail=False):
         self._rendering = Rendering(rendering)
         self._debug = debug
         self._printFileName = print_filename
         self._capture_dir = capture_dir
         self._capture_file_template = capture_template
-        self._output_dir = output_dir
-        self._output_file_name = output_name
+        self._output_tokens = output_tokens
         self._octoprintTimelapseFolder = octoprint_timelapse_folder
         self._fps = None
         self._imageCount = None
@@ -130,26 +191,28 @@ class TimelapseRenderJob(object):
         self._thread = None
         self.cleanAfterSuccess = clean_after_success
         self.cleanAfterFail = clean_after_fail
-        self._input = ""
-        self._output = ""
         self._synchronize = False
-        self._baseOutputFileName = ""
+        # full path of the input
+        self._input = ""
+        self._output_directory = ""
+        self._output_filename = ""
+        self._output_extension = ""
+        self._rendering_output_file_path = ""
+        self._synchronized_directory = ""
+        self._synchronized_filename = ""
+        self._job_id = job_id
+        self._error_type = None
 
     def process(self):
         """Processes the job."""
         # do our file operations first, this seems to crash rendering if we do it inside the thread.  Of course.
         self._input = os.path.join(self._capture_dir,
                                    self._capture_file_template)
-        self._output = os.path.join(self._output_dir,
-                                    self._output_file_name)
 
-        self._baseOutputFileName = utility.get_filename_from_full_path(
-            self._output)
         self._synchronize = (
             self._rendering.sync_with_timelapse and self._rendering.output_format in ["mp4"])
-
         self._thread = threading.Thread(target=self._render,
-                                        name="TimelapseRenderJob_{name}".format(name=self._printFileName))
+                                        name=self._job_id)
         self._thread.daemon = True
         self._thread.start()
 
@@ -177,6 +240,10 @@ class TimelapseRenderJob(object):
             # apply pre and post roll
             self._apply_pre_post_roll(
                 self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
+
+            # set the outputs - output directory, output filename, output extension
+            self._set_outputs()
+
             return True
         except Exception as e:
             self._debug.log_exception(e)
@@ -209,6 +276,8 @@ class TimelapseRenderJob(object):
             message = "FPS Calculation Type:{0}, Fps:{0}"
             message = message.format(self._rendering.fps_calculation_type, self._fps)
             self._debug.log_render_start(message)
+        # Add the FPS to the output tokens
+        self._output_tokens["FPS"] = "{0}".format(int(math.ceil(self._fps)))
 
     def _count_images(self):
         """get the number of frames"""
@@ -226,6 +295,8 @@ class TimelapseRenderJob(object):
         # since we're starting at 0 and incrementing after a file is found, the index here will be our count.
         self._debug.log_render_start("Found {0} images.".format(image_index))
         self._imageCount = image_index
+        # add the snapshot count to the output tokens
+        self._output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
 
     def _apply_pre_post_roll(self, snapshot_directory, snapshot_filename_template, fps, image_count):
         try:
@@ -269,55 +340,104 @@ class TimelapseRenderJob(object):
             self._debug.log_exception(e)
         return False
 
+    def _set_outputs(self):
+        self._output_directory = "{0}{1}{2}{3}".format(
+            self._output_tokens["DATADIRECTORY"], os.sep, "timelapse", os.sep
+        )
+        try:
+            self._output_filename = self._rendering.output_template.format(**self._output_tokens)
+        except ValueError as e:
+            self._debug.log_exception(e)
+            self._output_filename = "RenderingFilenameTemplateError"
+        self._output_extension = self._rendering.output_format
+
+        # check for a rendered timelapse file collision
+        original_output_filename = self._output_filename
+        file_number = 0
+        while os.path.isfile(
+            "{0}{1}.{2}".format(
+                self._output_directory,
+                self._output_filename,
+                self._output_extension)
+        ):
+            file_number += 1
+            self._output_filename = "{0}_{1}".format(original_output_filename, file_number)
+
+        self._rendering_output_file_path = "{0}{1}.{2}".format(
+            self._output_directory, self._output_filename, self._output_extension
+        )
+
+        synchronized_output_filename = original_output_filename
+        # check for a synchronized timelapse file collision
+        file_number = 0
+        while os.path.isfile("{0}{1}{2}.{3}".format(
+            self._octoprintTimelapseFolder,
+            os.sep,
+            synchronized_output_filename,
+            self._output_extension
+        )):
+            file_number += 1
+            synchronized_output_filename = "{0}_{1}".format(original_output_filename, file_number)
+
+        self._synchronized_directory = "{0}{1}".format(self._octoprintTimelapseFolder, os.sep)
+        self._synchronized_filename = synchronized_output_filename
+
     #####################
     # Event Notification
     #####################
 
     def _create_callback_payload(self, return_code, reason):
         return RenderingCallbackArgs(
-            reason=reason,
-            return_code=return_code,
-            snapshot_directory=self._capture_dir,
-            rendering_full_path=self._output,
-            rendering_filename=self._baseOutputFileName,
-            synchronize=self._synchronize,
-            snapshot_count=self._imageCount,
-            seconds_added_to_print=self._secondsAddedToPrint
+            reason,
+            return_code,
+            self._capture_dir,
+            self._output_directory,
+            self._output_filename,
+            self._output_extension,
+            self._synchronized_directory,
+            self._synchronized_filename,
+            self._synchronize,
+            self._imageCount,
+            self._secondsAddedToPrint,
+            self._error_type,
         )
 
     def _on_render_start(self):
         payload = self._create_callback_payload(0, "The rendering has started.")
-        self._notify_callback(self._render_start_callback, payload)
+        self._notify_callback(self._render_start_callback, self._job_id, payload)
 
     def _on_render_fail(self, return_code, message):
+        self._error_type = "RENDER"
         # we've failed, inform the client
         payload = self._create_callback_payload(return_code, message)
-        self._notify_callback(self._render_fail_callback, payload)
+        self._notify_callback(self._render_fail_callback, self._job_id, payload)
         # Time to end the rendering, inform the client.
-        self._on_complete(False)
+        self._notify_callback(self._on_complete_callback, self._job_id, payload)
 
     def _on_render_success(self):
         payload = self._create_callback_payload(
             0, "The rendering was successful.")
-        self._notify_callback(self._render_success_callback, payload)
+        self._notify_callback(self._render_success_callback, self._job_id, payload)
 
     def _on_render_complete(self):
         payload = self._create_callback_payload(
             0, "The rendering process has completed.")
-        self._notify_callback(self._render_complete_callback, payload)
+        self._notify_callback(self._render_complete_callback, self._job_id, payload)
 
     def _on_after_sync_success(self):
         payload = self._create_callback_payload(
             0, "Synchronization was successful.")
-        self._notify_callback(self._after_sync_success_callback, payload)
+        self._notify_callback(self._after_sync_success_callback, self._job_id, payload)
 
     def _on_after_sync_fail(self):
+        self._error_type = "SYNCHRONIZE"
         payload = self._create_callback_payload(0, "Synchronization has failed.")
-        self._notify_callback(self._after_sync_fail_callback, payload)
+        self._notify_callback(self._after_sync_fail_callback, self._job_id, payload)
+        self._notify_callback(self._on_complete_callback, self._job_id, payload)
 
-    def _on_complete(self, success):
-        payload = self._create_callback_payload(0, "Synchronization has failed.")
-        self._notify_callback(self._on_complete_callback, payload, success)
+    def _on_complete(self):
+        payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
+        self._notify_callback(self._on_complete_callback, self._job_id, payload)
 
     def _render(self):
         """Rendering runnable."""
@@ -359,20 +479,18 @@ class TimelapseRenderJob(object):
                 self._on_render_fail(0, message)
                 return
 
-            # add the file extension
-            self._output = self._output + "." + self._rendering.output_format
             try:
                 self._debug.log_render_start(
-                    "Creating the directory at {0}".format(self._output_dir))
-                if not os.path.exists(self._output_dir):
-                    os.makedirs(self._output_dir)
+                    "Creating the directory at {0}".format(self._output_directory))
+                if not os.path.exists(self._output_directory):
+                    os.makedirs(self._output_directory)
             except Exception as e:
                 self._debug.log_exception(e)
                 message = (
                     "Render - An exception was thrown when trying to "
                     "create the rendering path at: {0}.  Please check "
                     "the logs (plugin_octolapse.log) for details."
-                ).format(self._output_dir)
+                ).format(self._output_directory)
                 self._on_render_fail(-1, message)
                 return
 
@@ -393,6 +511,7 @@ class TimelapseRenderJob(object):
                         "\\", "/").replace(":", "\\\\:")
 
             vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
+
             # prepare ffmpeg command
             command_str = self._create_ffmpeg_command_string(
                 self._ffmpeg,
@@ -400,7 +519,7 @@ class TimelapseRenderJob(object):
                 self._rendering.bitrate,
                 self._threads,
                 self._input,
-                self._output,
+                self._rendering_output_file_path,
                 self._rendering.output_format,
                 h_flip=self._rendering.flip_h,
                 v_flip=self._rendering.flip_v,
@@ -437,23 +556,24 @@ class TimelapseRenderJob(object):
                 self._on_render_complete()
 
                 if self._synchronize:
-                    final_filename = "{0}{1}{2}".format(
-                        self._octoprintTimelapseFolder, os.sep,
-                        self._baseOutputFileName + "." + self._rendering.output_format
-                    )
+
                     # Move the timelapse to the Octoprint timelapse folder.
                     try:
                         # get the timelapse folder for the Octoprint timelapse plugin
+                        synchronization_path = "{0}{1}.{2}".format(
+                            self._synchronized_directory, self._synchronized_filename, self._output_extension
+                        )
                         message = (
-                            "Syncronizing timelapse with the built in "
+                            "Synchronizing timelapse with the built in "
                             "timelapse plugin, copying {0} to {1}"
-                        ).format(self._output, final_filename)
+                        ).format(self._rendering_output_file_path, synchronization_path)
                         self._debug.log_render_sync(message)
-                        shutil.move(self._output, final_filename)
+                        shutil.move(self._rendering_output_file_path, synchronization_path)
                         # we've renamed the output due to a sync, update the member
-                        self._output = final_filename
+
                         self._on_after_sync_success()
                     except Exception, e:
+                        # todo:  Test this exception handler
                         self._debug.log_exception(e)
                         self._on_after_sync_fail()
                         return
@@ -467,7 +587,7 @@ class TimelapseRenderJob(object):
             )
             self._on_render_fail(-1, message)
             return
-        self._on_complete(True)
+        self._on_complete()
 
     @staticmethod
     def _get_vcodec_from_extension(extension):
@@ -592,14 +712,40 @@ class TimelapseRenderJob(object):
 
 class RenderingCallbackArgs(object):
     def __init__(
-            self, snapshot_directory="", rendering_full_path="",
-            rendering_filename="", return_code=0, reason="",
-            synchronize=False, snapshot_count=0, seconds_added_to_print=0):
-        self.SnapshotDirectory = snapshot_directory
-        self.RenderingFullPath = rendering_full_path
-        self.RenderingFileName = rendering_filename
-        self.ReturnCode = return_code
+            self,
+            reason,
+            return_code,
+            snapshot_directory,
+            rendering_directory,
+            rendering_filename,
+            rendering_extension,
+            synchronized_directory,
+            synchronized_filename,
+            synchronize,
+            snapshot_count,
+            seconds_added_to_print,
+            error_type):
         self.Reason = reason
+        self.ReturnCode = return_code
+        self.SnapshotDirectory = snapshot_directory
+        self.RenderingDirectory = rendering_directory
+        self.RenderingFilename = rendering_filename
+        self.RenderingExtension = rendering_extension
+        self.SynchronizedDirectory = synchronized_directory
+        self.SynchronizedFilename = synchronized_filename
         self.Synchronize = synchronize
         self.SnapshotCount = snapshot_count
         self.SecondsAddedToPrint = seconds_added_to_print
+        self.ErrorType = error_type
+
+    def get_rendering_filename(self):
+        return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)
+
+    def get_synchronization_filename(self):
+        return "{0}.{1}".format(self.SynchronizedFilename, self.RenderingExtension)
+
+    def get_rendering_path(self):
+        return "{0}{1}".format(self.RenderingDirectory, self.get_rendering_filename())
+
+    def get_synchronization_path(self):
+        return "{0}{1}".format(self.SynchronizedDirectory, self.get_synchronization_filename())

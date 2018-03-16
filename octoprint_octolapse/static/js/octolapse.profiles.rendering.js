@@ -24,18 +24,25 @@ $(function() {
         self.watermark = ko.observable(values.watermark);
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
-
+        self.output_template = ko.observable(values.output_template);
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {
             bitrate: { required: true, ffmpegBitRate: true },
+            output_template: {
+                remote: {
+                    url: "/plugin/octolapse/validateRenderingTemplate",
+                    type:"post"
+                }
+            },
             min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
             max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' }
         },
         messages: {
             name: "Please enter a name for your profile",
             min_fps: { lessThanOrEqual: 'Must be less than or equal to the maximum fps.' },
-            max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' }
+            max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
+            output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' }
         }
     };
 });

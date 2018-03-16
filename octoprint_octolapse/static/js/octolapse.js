@@ -158,6 +158,29 @@ $(function () {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}", "1");
             return jQuery.validator.methods.url.call(this, testUrl, element);
         });
+    $.validator.addMethod('octolapseRenderingTemplate',
+        function (value, element) {
+            var data = {"rendering_template":value};
+            $.ajax({
+                url: "/plugin/octolapse/validateRenderingTemplate",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (result) {
+                    if(result.success)
+                        return true;
+                    return false;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Octolapse could not validate the rendering template.");
+                    return false;
+                }
+            });
+
+        });
 
     jQuery.extend(jQuery.validator.messages, {
         name: "Please enter a name.",
@@ -572,7 +595,7 @@ $(function () {
                     break;
                 case "render-end":
                     {
-                        //console.log('octolapse.js - render-end');
+                        console.log('octolapse.js - render-end');
                         self.updateState(data);
                         if (!data.is_synchronized) {
                             // Make sure we aren't synchronized, else there's no reason to display a popup

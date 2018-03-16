@@ -835,6 +835,7 @@ class Rendering(object):
         self.watermark = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
+        self.output_template = "{FAILEDFLAG]{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -855,6 +856,7 @@ class Rendering(object):
                 self.watermark = rendering.watermark
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
+                self.output_template = rendering.output_template
             else:
                 self.update(rendering)
 
@@ -905,6 +907,9 @@ class Rendering(object):
         if "pre_roll_seconds" in changes.keys():
             self.pre_roll_seconds = utility.get_float(
                 changes["pre_roll_seconds"], self.pre_roll_seconds)
+        if "output_template" in changes.keys():
+            self.output_template = utility.get_string(
+                changes["output_template"], self.output_template)
 
     def to_dict(self):
         return {
@@ -925,7 +930,8 @@ class Rendering(object):
             'rotate_90': self.rotate_90,
             'watermark': self.watermark,
             'post_roll_seconds': self.post_roll_seconds,
-            'pre_roll_seconds': self.pre_roll_seconds
+            'pre_roll_seconds': self.pre_roll_seconds,
+            'output_template': self.output_template
         }
 
 
@@ -1573,8 +1579,21 @@ class OctolapseSettings(object):
 
     # constants
 
-    def __init__(self, log_file_path, settings=None, pluginVersion = "unknown"):
-
+    def __init__(self, log_file_path, settings=None, plugin_version="unknown"):
+        self.rendering_file_templates = [
+            "FAILEDFLAG",
+            "FAILEDSTATE",
+            "FAILEDSEPARATOR",
+            "PRINTSTATE",
+            "GCODEFILENAME",
+            "DATETIMESTAMP",
+            "PRINTENDTIME",
+            "PRINTENDTIMESTAMP",
+            "PRINTSTARTTIME",
+            "PRINTSTARTTIMESTAMP",
+            "SNAPSHOTCOUNT",
+            "FPS"
+        ]
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
         self.DefaultStabilization = Stabilization(
@@ -1589,7 +1608,7 @@ class OctolapseSettings(object):
             log_file_path=log_file_path, name="Default Debug", guid="08ad284a-76cc-4854-b8a0-f2658b784dd7")
         self.LogFilePath = log_file_path
 
-        self.version = pluginVersion
+        self.version = plugin_version
         self.show_navbar_icon = True
         self.show_navbar_when_not_printing = True
         self.is_octolapse_enabled = True
@@ -1599,7 +1618,6 @@ class OctolapseSettings(object):
         self.show_position_changes = False
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False
-        printer = self.DefaultPrinter
         self.current_printer_profile_guid = None
         self.printers = {}
 
@@ -1917,6 +1935,7 @@ class OctolapseSettings(object):
                 dict(value='mp4', name='MP4'),
                 dict(value='mpeg', name='MPEG')
             ],
+            'rendering_file_templates': self.rendering_file_templates,
             'camera_powerline_frequency_options': [
                 dict(value='50', name='50 HZ (Europe, China, India, etc)'),
                 dict(value='60', name='60 HZ (North/South America, Japan, etc')
