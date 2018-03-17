@@ -595,7 +595,7 @@ $(function () {
                     break;
                 case "render-end":
                     {
-                        console.log('octolapse.js - render-end');
+                        //console.log('octolapse.js - render-end');
                         self.updateState(data);
                         if (!data.is_synchronized) {
                             // Make sure we aren't synchronized, else there's no reason to display a popup
@@ -659,6 +659,19 @@ $(function () {
                             desktop: {
                                 desktop: true
                             }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "timelapse-stopped-error":
+                    {
+                        //console.log('octolapse.js - timelapse-stopped-error');
+                        Octolapse.Status.onTimelapseStop();
+                        var options = {
+                            title: 'Octolapse Timelapse Stopped',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false
                         };
                         Octolapse.displayPopup(options);
                     }

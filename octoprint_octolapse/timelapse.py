@@ -181,11 +181,7 @@ class Timelapse(object):
 
         try:
             # create the GCode for the timelapse and store it
-            snapshot_gcode = self.Gcode.create_snapshot_gcode(
-                self.Position.x(), self.Position.y(), self.Position.z(), self.Position.f(), self.Position.is_relative(),
-                self.Position.is_extruder_relative(), self.Position.Extruder,
-                self.Position.distance_to_zlift()
-            )
+            snapshot_gcode = self.Gcode.create_snapshot_gcode(self.Position)
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
             # wait for the current position
@@ -318,10 +314,10 @@ class Timelapse(object):
             "TriggerState": None
         }
 
-    def stop_snapshots(self):
+    def stop_snapshots(self, message=None, error=False):
         self.State = TimelapseState.WaitingToRender
         if self.TimelapseStoppedCallback is not None:
-            self.TimelapseStoppedCallback()
+            self.TimelapseStoppedCallback(message, error)
         return True
 
     def on_print_failed(self):
@@ -419,8 +415,7 @@ class Timelapse(object):
             extruder_change_dict = None
             trigger_change_list = None
             self.Position.update(cmd)
-            if self.Position.has_position_error(0):
-                self._on_position_error()
+
             # capture any changes, if neccessary, to the position, position state and extruder state
             # Note:  We'll get the trigger state later
             if (self.Settings.show_position_changes
@@ -435,8 +430,33 @@ class Timelapse(object):
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
             is_snapshot_gcode_command = self._is_snapshot_command(cmd)
+
+            # make sure we're not using inches
+            is_metric = self.Position.is_metric()
+            if is_metric is None and self.Position.has_position_error():
+                self.stop_snapshots(
+                    "The printer profile requires an explicit G21 command before any position altering/setting "
+                    "commands, including any home commands.  Stopping timelapse, but continuing the print. "
+                    , error=True
+                )
+            elif not is_metric and self.Position.has_position_error():
+                if self.Printer.units_default == "inches":
+                    self.stop_snapshots(
+                        "The printer profile uses 'inches' as the default unit of measurement.  In order to use "
+                        "Octolapse, a G21 command must come before any position altering/setting commands, including"
+                        " any home commands.  Stopping timelapse, but continuing the print. "
+                        , error=True
+                    )
+                else:
+                    self.stop_snapshots(
+                        "The gcode file contains a G20 command (set units to inches), which Octolapse does not "
+                        "support.  Stopping timelapse, but continuing the print."
+                        , error=True
+                    )
+            elif self.Position.has_position_error(0):
+                self._on_position_error()
             # check to see if we've just completed a home command
-            if (self.State == TimelapseState.WaitingForTrigger
+            elif (self.State == TimelapseState.WaitingForTrigger
                     and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
 
                 self.State = TimelapseState.AcquiringLocation

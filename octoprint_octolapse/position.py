@@ -60,6 +60,7 @@ class Pos(object):
         if pos is not None:
             self.IsRelative = pos.IsRelative
             self.IsExtruderRelative = pos.IsExtruderRelative
+            self.IsMetric = pos.IsMetric
         else:
             if printer.e_axis_default_mode in ['absolute', 'relative']:
                 self.IsExtruderRelative = True if printer.e_axis_default_mode == 'relative' else False
@@ -69,6 +70,10 @@ class Pos(object):
                 self.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
             else:
                 self.IsRelative = None
+            if printer.units_default in ['inches', 'millimeters']:
+                self.IsMetric = True if printer.units_default == 'millimeters' else False
+            else:
+                self.IsMetric = None
 
         self.LastExtrusionHeight = None if pos is None else pos.LastExtrusionHeight
         # Layer and Height Tracking
@@ -143,6 +148,7 @@ class Pos(object):
             "IsZHop": self.IsZHop,
             "IsRelative": self.IsRelative,
             "IsExtruderRelative": self.IsExtruderRelative,
+            "IsMetric": self.IsMetric,
             "Layer": self.Layer,
             "Height": self.Height,
             "LastExtrusionHeight": self.LastExtrusionHeight,
@@ -181,6 +187,7 @@ class Pos(object):
             "EOffset": self.EOffset,
             "IsRelative": self.IsRelative,
             "IsExtruderRelative": self.IsExtruderRelative,
+            "IsMetric": self.IsMetric,
             "LastExtrusionHeight": self.LastExtrusionHeight,
             "IsLayerChange": self.IsLayerChange,
             "IsZHop": self.IsZHop,
@@ -197,7 +204,7 @@ class Pos(object):
         return self.XHomed and self.YHomed and self.ZHomed
 
     def has_homed_position(self):
-        return (self.has_homed_axes() and self.X is not None
+        return (self.has_homed_axes() and self.IsMetric and self.X is not None
                 and self.Y is not None and self.Z is not None)
 
     def update_position(self,
@@ -536,6 +543,12 @@ class Position(object):
             return None
         return pos.IsExtruderRelative
 
+    def is_metric(self, index=0):
+        pos = self.get_position(index)
+        if pos is None:
+            return None
+        return pos.IsMetric
+
     def has_received_home_command(self, index=0):
         pos = self.get_position(index)
         if pos is None:
@@ -592,10 +605,13 @@ class Position(object):
         pos.GCode = gcode
 
         # apply the cmd to the position tracker
+        # TODO: this should NOT be an else/if structure anymore..  Simplify
         if cmd is not None:
-            # I'm currently too lazy to keep this DRY
-            # TODO: Make DRY
-            if cmd.Command in ["G0", "G1"]:
+
+            if cmd.Command in self.Commands.CommandsRequireMetric and not pos.IsMetric:
+                pos.HasPositionError = True
+                pos.PositionError = "Units are not metric.  Unable to continue print."
+            elif cmd.Command in ["G0", "G1"]:
                 # Movement
                 if cmd.parse():
                     self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd.Name))
@@ -648,10 +664,35 @@ class Position(object):
                             pos.Y, pos.Z, pos.E)
                     self.Settings.current_debug_profile().log_position_change(
                         message)
-
                 else:
                     self.Settings.current_debug_profile().log_error(
                         "Position - Unable to parse the gcode command: {0}".format(gcode))
+            elif cmd.Command == "G20":
+                # change units to inches
+                if pos.IsMetric is None or pos.IsMetric:
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
+                        "Received G20 - Switching units to inches."
+                    )
+                    pos.IsMetric = False
+                else:
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
+                        "Received G20 - Already in inches."
+                    )
+            elif cmd.Command == "G21":
+                # change units to millimeters
+                if pos.IsMetric is None or not pos.IsMetric:
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
+                        "Received G21 - Switching units to millimeters."
+                    )
+                    pos.IsMetric = True
+                else:
+                    self.Settings.current_debug_profile(
+                    ).log_position_command_received(
+                        "Received G21 - Already in millimeters."
+                    )
             elif cmd.Command == "G28":
                 # Home
                 if cmd.parse():
@@ -715,7 +756,6 @@ class Position(object):
                 else:
                     self.Settings.current_debug_profile().log_error(
                         "Position - Unable to parse the Gcode:{0}".format(gcode))
-
             elif cmd.Command == "G90":
                 # change x,y,z to absolute
                 if pos.IsRelative is None or pos.IsRelative:

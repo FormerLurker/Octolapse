@@ -146,6 +146,19 @@
           <div class="error_label_container text-error" ></div>
         </div>
       </div>
+    <div class="control-group">
+        <label class="control-label" >Default Units</label>
+        <div class="controls">
+          <select data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: units_default"></select>
+          <div class="error_label_container text-error" ></div>
+            <span class="help-inline">
+                <span class="label label-important">Attention</span>&nbsp;Do not change from 'Millimeters' unless you have a good reason to do this.  Octolapse is not compatible with non-metric units.  However, octolapse will attempt to detect a G21 command before automatically stopping a timelapse if the units are unknown, or set to inches.
+            </span>
+        </div>
+      </div>
 
     </div>
   </div>

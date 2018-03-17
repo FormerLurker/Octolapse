@@ -71,9 +71,9 @@
         </div>
       </div>
       <div class="row-fluid">
-        <div class="span6">
+        <div class="span8">
           <div class="row-fluid">
-            <div class="span4 octolapse-container">
+            <div class="span3 octolapse-container">
               <div class="margin-small">
                 <div>Extruder</div>
                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsExtruderRelativeStateText}">
@@ -85,7 +85,7 @@
                 </div>
               </div>
             </div>
-            <div class="span4 octolapse-container">
+            <div class="span3 octolapse-container">
               <div class="margin-small">
                 <div>XYZ</div>
                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsRelativeStateText}">
@@ -97,7 +97,7 @@
                 </div>
               </div>
             </div>
-            <div class="span4 octolapse-container">
+            <div class="span3 octolapse-container">
               <div class="margin-small">
                 <div>
                   <div>Layer</div>
@@ -111,10 +111,22 @@
                 </div>
               </div>
             </div>
+            <div class="span3 octolapse-container">
+              <div class="margin-small">
+                <div>
+                  <div>Metric</div>
+                  <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsMetricStateText}">
+                    <span class="fa fa-square fa-stack-2x"></span>
+                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsMetric())"></span>
+                  </span>
+                  <div class="ol-text-status-1">
+                    Units
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-
       </div>
     </div>
     <div class="panel-footer ol-info-footer">

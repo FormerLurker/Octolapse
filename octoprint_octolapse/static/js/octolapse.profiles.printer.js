@@ -58,5 +58,6 @@ $(function() {
         self.e_axis_default_mode = ko.observable(values.e_axis_default_mode);
         self.g90_influences_extruder = ko.observable(values.g90_influences_extruder);
         self.xyz_axes_default_mode = ko.observable(values.xyz_axes_default_mode);
+        self.units_default = ko.observable(values.units_default);
     };
 });

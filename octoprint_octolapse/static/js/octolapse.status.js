@@ -406,7 +406,6 @@ $(function () {
 
             self.defaultPrinterChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    //console.log("Default Printer Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_printer_profile").val();
@@ -418,7 +417,6 @@ $(function () {
             };
             self.defaultStabilizationChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    //console.log("Default Stabilization Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_stabilization_profile").val();
@@ -430,7 +428,6 @@ $(function () {
             };
             self.defaultSnapshotChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    //console.log("Default Snapshot Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_snapshot_profile").val();
@@ -443,7 +440,6 @@ $(function () {
 
             self.defaultRenderingChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    //console.log("Default Rendering Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_rendering_profile").val();
@@ -456,7 +452,6 @@ $(function () {
 
             self.defaultCameraChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    //console.log("Default Camera Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_camera_profile").val();
@@ -469,11 +464,10 @@ $(function () {
 
             self.defaultDebugProfileChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
-                    console.log("Default Debug Profile Changing");
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_debug_profile").val();
-                        console.log("Default Debug Profile is changing to " + guid);
+                        //console.log("Default Debug Profile is changing to " + guid);
                         Octolapse.DebugProfiles.setCurrentProfile(guid);
                         return true;
                     }
@@ -499,6 +493,8 @@ $(function () {
             self.LastExtrusionHeight = ko.observable(0).extend({numeric: 2});
             self.HasPositionError = ko.observable(false);
             self.PositionError = ko.observable(false);
+            self.IsMetric = ko.observable(null);
+
             self.update = function (state) {
                 this.GCode(state.GCode);
                 this.XHomed(state.XHomed);
@@ -514,6 +510,7 @@ $(function () {
                 this.LastExtrusionHeight(state.LastExtrusionHeight);
                 this.HasPositionError(state.HasPositionError);
                 this.PositionError(state.PositionError);
+                this.IsMetric(state.IsMetric);
             };
 
             self.getCheckedIconClass = function (value) {
@@ -559,6 +556,14 @@ $(function () {
                     return "Zhop detected";
                 else
                     return "Not a zhop";
+            }, self);
+            self.getIsMetricStateText = ko.pureComputed(function () {
+                if (self.IsMetric())
+                    return "Metric";
+                else if (self.IsMetric() === null)
+                    return "Unknown";
+                else
+                    return "Not Metric";
             }, self);
             self.getIsExtruderRelativeStateText = ko.pureComputed(function () {
                 if (self.IsExtruderRelative() == null)

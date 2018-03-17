@@ -78,6 +78,7 @@ $(function() {
 
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("Running camera request.");
             var data = { 'profile': ko.toJS(self) };
             $.ajax({
                 url: "/plugin/octolapse/testCamera",

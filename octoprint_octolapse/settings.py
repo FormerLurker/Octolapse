@@ -48,7 +48,7 @@ class Printer(object):
         self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
-
+        self.units_default = 'millimeters'
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -79,6 +79,7 @@ class Printer(object):
                 self.e_axis_default_mode = printer.e_axis_default_mode
                 self.g90_influences_extruder = printer.g90_influences_extruder
                 self.xyz_axes_default_mode = printer.xyz_axes_default_mode
+                self.units_default = printer.units_default
             else:
                 self.update(printer)
 
@@ -159,7 +160,10 @@ class Printer(object):
         if "xyz_axes_default_mode" in changes.keys():
             self.xyz_axes_default_mode = utility.get_string(
                 changes["xyz_axes_default_mode"], self.xyz_axes_default_mode)
-
+        if "units_default" in changes.keys():
+            self.units_default = utility.get_string(
+                changes["units_default"], self.units_default
+            )
     def to_dict(self):
         return {
             'name': self.name,
@@ -189,7 +193,8 @@ class Printer(object):
             'priming_height': self.priming_height,
             'e_axis_default_mode': self.e_axis_default_mode,
             'g90_influences_extruder': self.g90_influences_extruder,
-            'xyz_axes_default_mode': self.xyz_axes_default_mode
+            'xyz_axes_default_mode': self.xyz_axes_default_mode,
+            'units_default': self.units_default
         }
 
 
@@ -1906,6 +1911,11 @@ class OctolapseSettings(object):
                 dict(value='require-explicit', name='Require Explicit G90/G91'),
                 dict(value='relative', name='Default To Relative'),
                 dict(value='absolute', name='Default To Absolute')
+            ],
+            'units_default_options': [
+                dict(value='require-explicit', name='Require Explicit G90/G91'),
+                dict(value='inches', name='Inches'),
+                dict(value='millimeters', name='Millimeters')
             ],
             'stabilization_type_options': [
                 dict(value='disabled', name='Disabled'),

@@ -220,7 +220,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
 
-    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
     def test_camera_request(self):
@@ -495,10 +495,27 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     # Event Mixin Handler
 
     def on_event(self, event, payload):
-        # If we haven't loaded our settings yet, return.
-        if self.Settings is None or self.Timelapse is None:
-            return
+        job_lock_acquired = False
         try:
+            if event == Events.PRINT_STARTED:
+                if not self._printer.set_job_on_hold(True):
+                    self.Timelapse.end_timelapse("FAILED")
+                    self.send_popup_error(
+                        "Octolapse was unable to acquire a job lock, which is necessary for starting a print.  Please "
+                        "try again.  Cancelling print")
+                    self.Settings.current_debug_profile().log_print_state_change(
+                        "Octolapse cannot start the timelapse, unable to acquire a job lock."
+                    )
+                    self._printer.cancel_print()
+                    return
+                else:
+                    job_lock_acquired = True
+
+
+            # If we haven't loaded our settings yet, return.
+            if self.Settings is None or self.Timelapse is None:
+                return
+
 
             self.Settings.current_debug_profile().log_print_state_change(
                 "Printer event received:{0}.".format(event))
@@ -517,20 +534,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self.Settings.current_debug_profile().log_print_state_change(
                         "Octolapse cannot start the timelapse when printing from SD."
                     )
-                    self._printer.cancel_print();
-                    return;
+                    self._printer.cancel_print()
+                    return
 
-                if self._printer.set_job_on_hold(True):
-                    try:
-                        # eventId = self._printer.get_state_id() if the origin is not local, and the timelapse is
-                        # running, stop it now, we can't lapse from SD :(
+                    # eventId = self._printer.get_state_id() if the origin is not local, and the timelapse is
+                    # running, stop it now, we can't lapse from SD :(
 
-                        self.Settings.current_debug_profile().log_print_state_change(
-                            "Print start detected, attempting to start timelapse."
-                        )
-                        self.on_print_start()
-                    finally:
-                        self._printer.set_job_on_hold(False)
+                self.Settings.current_debug_profile().log_print_state_change(
+                    "Print start detected, attempting to start timelapse."
+                )
+                self.on_print_start()
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:
@@ -555,7 +568,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.Settings.current_debug_profile().log_exception(e)
             else:
                 self._logger.critical(utility.exception_to_string(e))
-
+        finally:
+            if job_lock_acquired:
+                self._printer.set_job_on_hold(False)
     def on_print_resumed(self):
         self.Settings.current_debug_profile().log_print_state_change("Print Resumed.")
         self.Timelapse.on_print_resumed()
@@ -854,14 +869,30 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.current_debug_profile().log_print_state_change("Print completed.")
 
     def on_timelapse_stopping(self):
+
         self.send_plugin_message(
             "timelapse-stopping", "Waiting for a snapshot to complete before stopping the timelapse.")
 
-    def on_timelapse_stopped(self):
-        self.send_plugin_message(
-            "timelapse-stopped",
-            "Octolapse has been stopped for the remainder of the print.  Snapshots will be rendered after the print "
-            "is complete.")
+    def on_timelapse_stopped(self, message, error):
+        state_data = self.Timelapse.to_state_dict()
+
+        if message is None:
+            message = "Octolapse has been stopped for the remainder of the print.  Snapshots will be rendered after " \
+                      "the print is complete. "
+
+        if error:
+            message_type = "timelapse-stopped-error"
+        else:
+            message_type = "timelapse-stopped"
+        data = {
+            "type": message_type,
+            "msg": message,
+            "Status": self.get_status_dict(),
+            "MainSettings": self.Settings.get_main_settings_dict()
+        }
+        data.update(state_data)
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
 
     def on_gcode_queuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:

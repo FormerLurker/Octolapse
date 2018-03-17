@@ -165,7 +165,8 @@ $(function () {
             Octolapse.Printers.profileOptions = {
                 'e_axis_default_mode_options': settings.e_axis_default_mode_options,
                 'g90_influences_extruder_options': settings.g90_influences_extruder_options,
-                        'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options
+                'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,
+                'units_default_options': settings.units_default_options,
             };
             Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid);
             settings.printers.forEach(function (item, index) {

@@ -273,6 +273,16 @@ class Commands(object):
         display_template="M83 - Set Extruder Absolute Mode{Comment}",
         parameters=[]
     )
+    G20 = Command(
+        name="Set Units to Inches", command="G20",
+        display_template="G20 - Set Units to Inches{Comment}",
+        parameters=[]
+    )
+    G21 = Command(
+        name="Set Units to Millimeters", command="G21",
+        display_template="G21 - Set Units to Millimeters{Comment}",
+        parameters=[]
+    )
     G28 = Command(
         name="Go To Origin", command="G28",
         display_template="G28 - Go to Origin{Comment}",
@@ -374,9 +384,12 @@ class Commands(object):
         ]
     )
 
+    CommandsRequireMetric = ['G0', 'G1', 'G28', 'G92']
     CommandsDictionary = {
         G0.Command: G0,
         G1.Command: G1,
+        G20.Command: G20,
+        G21.Command: G21,
         G28.Command: G28,
         G29.Command: G29,
         G80.Command: G80,

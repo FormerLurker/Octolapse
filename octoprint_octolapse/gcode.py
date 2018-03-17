@@ -58,7 +58,7 @@ class SnapshotGcodeGenerator(object):
     CurrentYPathIndex = 0
 
     def __init__(self, octolapse_settings, octoprint_printer_profile):
-        self.Settings = octolapse_settings
+        self.Settings = octolapse_settings  # type: OctolapseSettings
         self.StabilizationPaths = self.Settings.current_stabilization().get_stabilization_paths()
         self.Snapshot = Snapshot(self.Settings.current_snapshot())
         self.Printer = Printer(self.Settings.current_printer())
@@ -71,6 +71,8 @@ class SnapshotGcodeGenerator(object):
         self.ZhopBySnapshotStartGcode = None
         self.IsRelativeOriginal = None
         self.IsRelativeCurrent = None
+        self.IsMetricOriginal = None
+        self.IsMetricCurrent = None
         self.IsExtruderRelativeOriginal = None
         self.IsExtruderRelativeCurrent = None
         self.FOriginal = None
@@ -207,8 +209,19 @@ class SnapshotGcodeGenerator(object):
             snapshot_gcode.append(self.get_gcode_feedrate(desired_speed))
             self.FCurrent = desired_speed
 
-    def create_snapshot_gcode(
-            self, x, y, z, f, is_relative, is_extruder_relative, extruder, z_lift):
+    def create_snapshot_gcode(self, position):
+        # Todo:  Compress Gcode, too many lines being generated.
+
+        x = position.x()
+        y = position.y()
+        z = position.z()
+        f = position.f()
+        is_relative = position.is_relative()
+        is_extruder_relative = position.is_extruder_relative()
+        is_metric = position.is_metric()
+        extruder = position.Extruder
+        z_lift = position.distance_to_zlift()
+
         self.reset()
         if x is None or y is None or z is None:
             self.HasSnapshotPositionErrors = True
@@ -219,6 +232,7 @@ class SnapshotGcodeGenerator(object):
                 "gcode.py - CreateSnapshotGcode - {0}".format(message))
             return None
 
+        # Todo:  Clean this mess up (used to take separate params in the fn, now we take a position object)
         self.FOriginal = f
         self.FCurrent = f
         self.RetractedBySnapshotStartGcode = False
@@ -230,7 +244,17 @@ class SnapshotGcodeGenerator(object):
         self.IsExtruderRelativeOriginal = is_extruder_relative
         self.IsExtruderRelativeCurrent = is_extruder_relative
 
+        # check the units
+        if is_metric is None or not is_metric:
+            self.Settings.current_debug_profile().log_error(
+                "No unit of measurement has been set and the current"
+                " printer profile is set to require explicit G20/G21, or the unit of measurement is inches. "
+            )
+            return None
+
+        # create our gcode object
         new_snapshot_gcode = SnapshotGcode(self.IsTestMode)
+
         # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
         # IsRetracted will be false because we've undone the previous position update.
         if self.Snapshot.retract_before_move and not (extruder.is_retracted() or extruder.is_retracting_start()):
