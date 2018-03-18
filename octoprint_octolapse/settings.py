@@ -396,7 +396,7 @@ class Stabilization(object):
 
 
 class SnapshotPositionRestrictions(object):
-    def __init__(self, restriction_type, shape, x, y, x2=None, y2=None, r=None):
+    def __init__(self, restriction_type, shape, x, y, x2=None, y2=None, r=None, calculate_intersections=False):
 
         self.Type = restriction_type.lower()
         if self.Type not in ["forbidden", "required"]:
@@ -423,6 +423,7 @@ class SnapshotPositionRestrictions(object):
         self.X2 = float(x2)
         self.Y2 = float(y2)
         self.R = float(r)
+        self.CalculateIntersections = calculate_intersections
 
     def to_dict(self):
         return {
@@ -432,8 +433,28 @@ class SnapshotPositionRestrictions(object):
             'Y': self.Y,
             'X2': self.X2,
             'Y2': self.Y2,
-            'R': self.R
+            'R': self.R,
+            'CalculateIntersections': self.CalculateIntersections
         }
+
+    def get_intersections(self, x, y, previous_x, previous_y):
+        if not self.CalculateIntersections:
+            return False
+
+        if x is None or y is None or previous_x is None or previous_y is None:
+            return False
+
+        if self.Shape == 'rect':
+            intersections = utility.get_intersections_rectangle(previous_x, previous_y, x, y, self.X, self.Y, self.X2, self.Y2)
+        elif self.Shape == 'circle':
+            intersections = utility.get_intersections_circle(previous_x, previous_y, x, y, self.X, self.Y, self.R)
+        else:
+            raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
+
+        if not intersections:
+            return False
+
+        return intersections
 
     def is_in_position(self, x, y):
         if x is None or y is None:
@@ -747,7 +768,7 @@ class Snapshot(object):
                     restriction["Type"], restriction["Shape"],
                     restriction["X"], restriction["Y"],
                     restriction["X2"], restriction["Y2"],
-                    restriction["R"]
+                    restriction["R"], restriction["CalculateIntersections"]
                 )
             )
         return restrictions

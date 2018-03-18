@@ -4,7 +4,7 @@
 -->
 <script type="text/html" id="octolapse-settings-current">
     <a href="#" class="muted"
-       data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#octolapse_status_settings_current_panel' }">
+       data-bind="octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
         Current Settings <i class="fa fa-caret-down"></i>
     </a>
     <div id="octolapse_status_settings_current_panel">
@@ -104,5 +104,50 @@
             </tr>
             </tbody>
         </table>
+        <div class="row-fluid" data-bind="visible:Octolapse.Globals.is_admin">
+            <div class="span3 text-center">
+                <div>Trigger State</div>
+                <span class="fa-stack fa-2x"
+                      data-bind="attr: { title: ('Trigger State - ' + ( Octolapse.Globals.show_trigger_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_trigger_state_changes');}">
+                  <i class="fa fa-square fa-stack-2x"
+                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_trigger_state_changes()) ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-off fa-stack-1x fa-inverse"
+                     data-bind="style: { color: (Octolapse.Globals.show_trigger_state_changes() ? 'greenyellow' : '') }"></i>
+                </span>
+            </div>
+            <div class="span3 text-center">
+                <div>Extrider State</div>
+                <span class="fa-stack fa-2x"
+                      data-bind="attr: { title: ('Extruder State - ' + ( Octolapse.Globals.show_extruder_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_extruder_state_changes');}">
+                  <i class="fa fa-square fa-stack-2x"
+                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_extruder_state_changes()) ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-off fa-stack-1x fa-inverse"
+                     data-bind="style: { color: (Octolapse.Globals.show_extruder_state_changes() ? 'greenyellow' : '') }"></i>
+                </span>
+            </div>
+            <div class="span3 text-center">
+                <div>Position State</div>
+                <span class="fa-stack fa-2x"
+                      data-bind="attr: { title: ('Position State - ' + ( Octolapse.Globals.show_position_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_position_state_changes');}">
+                  <i class="fa fa-square fa-stack-2x"
+                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_position_state_changes()) ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-off fa-stack-1x fa-inverse"
+                     data-bind="style: { color: (Octolapse.Globals.show_position_state_changes() ? 'greenyellow' : '') }"></i>
+                </span>
+
+            </div>
+            <div class="span3 text-center">
+                <div>Position Changes</div>
+                <span class="fa-stack fa-2x"
+                      data-bind="attr: { title: ('Position Changes - ' + ( Octolapse.Globals.show_position_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_position_changes');}">
+                  <i class="fa fa-square fa-stack-2x"
+                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_position_changes()) ? '' : 'lightgray' }"></i>
+                  <i class="fa icon-off fa-stack-1x fa-inverse"
+                     data-bind="style: { color: (Octolapse.Globals.show_position_changes() ? 'greenyellow' : '') }"></i>
+                </span>
+            </div>
+
+
+        </div>
     </div>
 </script>

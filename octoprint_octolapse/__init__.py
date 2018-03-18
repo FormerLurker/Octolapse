@@ -116,6 +116,33 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data = {'success': True}
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/toggleInfoPanel", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def toggle_info_panel(self):
+        request_values = flask.request.get_json()
+        panel_type = request_values["panel_type"]
+
+        if panel_type == "show_position_state_changes":
+            self.Settings.show_position_state_changes = not self.Settings.show_position_state_changes
+        elif panel_type == "show_position_changes":
+            self.Settings.show_position_changes = not self.Settings.show_position_changes
+        elif panel_type == "show_extruder_state_changes":
+            self.Settings.show_extruder_state_changes = not self.Settings.show_extruder_state_changes
+        elif panel_type == "show_trigger_state_changes":
+            self.Settings.show_trigger_state_changes = not self.Settings.show_trigger_state_changes
+        else:
+            return json.dumps({'error': "Unknown panel_type."}), 500, {'ContentType': 'application/json'}
+
+        # save the updated settings to a file.
+        self.save_settings()
+
+        self.send_state_loaded_message()
+        data = {'success': True}
+        return json.dumps(data), 200, {'ContentType': 'application/json'}
+
+
+
     @octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
     def load_main_settings_request(self):
         data = {'success': True}
@@ -739,10 +766,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_end_message(self, success, synchronized):
+    def send_render_end_message(self, success, synchronized, message="Octolapse is finished rendering a timelapse."):
+
         data = {
             "type": "render-end",
-            "msg": "Octolapse is finished rendering a timelapse.",
+            "msg": message,
             "Status": self.get_status_dict(),
             "MainSettings": self.Settings.get_main_settings_dict(),
             "is_synchronized": synchronized,
@@ -938,8 +966,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                               "complete.".format(payload.get_synchronization_filename())
         else:
             will_sync_message = "Due to your rendering settings, this timelapse will NOT be synchronized with the " \
-                              "default timelapse module.  You will be able to find on your octoprint server here: " \
-                              "{0}".format(payload.get_rendering_path())
+                              "default timelapse module.  You will be able to find on your octoprint server" \
+                                " here:<br/>{0}".format(payload.get_rendering_path())
 
         message = "{0}{1}".format(msg, will_sync_message)
         # send a message to the client
@@ -956,7 +984,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             else:
                 message = "Octolapse has failed to syncronize the default timelapse plugin." \
                           "{0}  You should be able to find your video within your octoprint " \
-                          " server here: '{1}'".format(payload.Reason, payload.get_rendering_path())
+                          " server here:<br/> '{1}'".format(payload.Reason, payload.get_rendering_path())
                 # Octoprint Event Manager Code
                 self.send_plugin_message("synchronize-failed", message)
         else:
@@ -979,7 +1007,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # we've either successfully rendered or rendered and synchronized
                 self.send_render_end_message(True, True)
             else:
-                self.send_render_end_message(True, False)
+                message = "Octolapse has completed rendering a timelapse.  Due to your rendering settings," \
+                          " the timelapse was not synchronized with the OctoPrint plugin." \
+                          "  You should be able to find your video within your octoprint " \
+                          " server here:<br/> '{0}'".format(payload.get_rendering_path())
+                self.send_render_end_message(True, False, message)
 
     # ~~ AssetPlugin mixin
     def get_assets(self):

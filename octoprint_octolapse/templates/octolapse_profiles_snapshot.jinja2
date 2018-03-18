@@ -3,7 +3,7 @@
   file called 'LICENSE', which is part of this source code package.
 -->
 <script type="text/html" id="snapshot-template">
-  <input type="hidden"  data-bind="value : guid" />
+  <input type="hidden" data-bind="value : guid"/>
   <div>
     <div>
       <h4>Profile</h4>
@@ -12,19 +12,18 @@
       <label class="control-label">Name</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: name" required="true"/>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error"></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Description</label>
       <div class="controls">
-        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" ></div>
+        <textarea name="description" type="text" class="input-block-level" data-bind="value: description"
+                  maxlength="1024"/>
+        <div class="error_label_container text-error"></div>
       </div>
     </div>
   </div>
-
-
   <hr/>
   <div>
     <div>
@@ -35,37 +34,47 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: layer_trigger_enabled" />Enabled
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: layer_trigger_enabled">
-      <label class="control-label" >Trigger on Z-Hop Only</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: layer_trigger_require_zhop" />Enabled
+          <input type="checkbox" data-bind="checked: layer_trigger_enabled"/>Enabled
         </label>
       </div>
     </div>
     <div data-bind="visible: layer_trigger_enabled">
       <div class="control-group">
+        <label class="control-label">Trigger on Z-Hop Only</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: layer_trigger_require_zhop"/>Enabled
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group">
         <label class="control-label">Trigger Height</label>
         <div class="controls">
           <div class="input-append">
-            <input name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors" data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true"/>
+            <input name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors"
+                    data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true"/>
             <span class="add-on">mm</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error"></div>
           <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
         </div>
       </div>
       <div data-bind="visible:(layer_trigger_position_restrictions().length > 0)" class="text-warning">
-        <p><strong>The layer trigger has <span data-bind="text: layer_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (layer_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong></p>
+        <p>
+          <strong>
+            The layer trigger has <span
+data-bind="text: layer_trigger_position_restrictions().length"></span> position restriction<span
+                      data-bind="text: (layer_trigger_position_restrictions().length > 1 ? 's' : '')"></span>
+            currently enabled.
+          </strong>
+        </p>
       </div>
       <div class="control-group">
         <div class="controls">
           <small>
-            <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_height_advanced.hide' }">
+            <a href="#" class="muted"
+                data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_height_advanced.hide' }">
               <i class="fa fa-caret-right"></i> {{ _('Advanced Layer/Height Trigger Options') }}
             </a>
           </small>
@@ -75,26 +84,33 @@
         <div>
           <div>
             <h5>Layer/Height Position Restrictions</h5>
+            <p>
+              Restrict snapshots so that they can only occur within the boundries, either rectangular or
+              circular, you set. You can add as many as you require.
+            </p>
+            <p>
+              <span class="label label-important">Warning</span>&nbsp;This is a Beta feature.
+            </p>
           </div>
           <!-- Add new position restriction -->
           <div class="control-group">
-            <label class="control-label" >Position Restriction Type</label>
+            <label class="control-label">Position Restriction Type</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_layer_position_restriction_type"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Position Restriction Shape</label>
+            <label class="control-label">Position Restriction Shape</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_shapes,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_layer_position_restriction_shape"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
@@ -103,18 +119,26 @@
                 <div class="span6">
                   <div class="input-prepend input-append">
                     <span class="add-on">X</span>
-                    <input id="octolapse_new_layer_position_restriction_x" name="new_layer_position_restriction_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_layer_position_restriction_x" step="any" required="true" />
+                    <input id="octolapse_new_layer_position_restriction_x"
+                           name="new_layer_position_restriction_x" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_layer_position_restriction_x" step="any"
+                           required="true"/>
                     <span class="add-on">mm</span>
                   </div>
-                  <div class="error_label_container text-error" ></div>
+                  <div class="error_label_container text-error"></div>
                 </div>
                 <div class="span6">
                   <div class="input-prepend input-append">
                     <span class="add-on">Y</span>
-                    <input id="octolapse_new_layer_position_restriction_y" name="new_layer_position_restriction_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_layer_position_restriction_y" step="any" required="true" />
+                    <input id="octolapse_new_layer_position_restriction_y"
+                           name="new_layer_position_restriction_y" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_layer_position_restriction_y" step="any"
+                           required="true"/>
                     <span class="add-on">mm</span>
                   </div>
-                  <div class="error_label_container text-error" ></div>
+                  <div class="error_label_container text-error"></div>
                 </div>
               </div>
             </div>
@@ -125,18 +149,26 @@
                 <div class="span6">
                   <div class="input-prepend input-append">
                     <span class="add-on">X2</span>
-                    <input id="octolapse_new_layer_position_restriction_x2" name="new_layer_position_restriction_x2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_layer_position_restriction_x2" step="any" required="true" />
+                    <input id="octolapse_new_layer_position_restriction_x2"
+                           name="new_layer_position_restriction_x2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_layer_position_restriction_x2" step="any"
+                           required="true"/>
                     <span class="add-on">mm</span>
                   </div>
-                  <div class="error_label_container text-error" ></div>
+                  <div class="error_label_container text-error"></div>
                 </div>
                 <div class="span6">
                   <div class="input-prepend input-append">
                     <span class="add-on">Y2</span>
-                    <input id="octolapse_new_layer_position_restriction_y2" name="new_layer_position_restriction_y2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_layer_position_restriction_y2" step="any" required="true" />
+                    <input id="octolapse_new_layer_position_restriction_y2"
+                           name="new_layer_position_restriction_y2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_layer_position_restriction_y2" step="any"
+                           required="true"/>
                     <span class="add-on">mm</span>
                   </div>
-                  <div class="error_label_container text-error" ></div>
+                  <div class="error_label_container text-error"></div>
                 </div>
               </div>
             </div>
@@ -147,18 +179,39 @@
                 <div class="span12">
                   <div class="input-prepend input-append">
                     <span class="add-on">Radius</span>
-                    <input id="octolapse_new_layer_position_restriction_r" name="new_layer_position_restriction_r" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_layer_position_restriction_r" step="any" min="0" required="true" />
+                    <input id="octolapse_new_layer_position_restriction_r"
+                           name="new_layer_position_restriction_r" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_layer_position_restriction_r" step="any" min="0"
+                           required="true"/>
                     <span class="add-on">mm</span>
                   </div>
-                  <div class="error_label_container text-error" ></div>
+                  <div class="error_label_container text-error"></div>
                 </div>
               </div>
             </div>
           </div>
           <div class="control-group">
             <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: new_layer_calculate_intersections"
+                       title="Calculate intersections and trigger if an intersection is in position."/>Calculate
+                Intersections
+              </label>
+              <span class="help-inline">
+                When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.
+              </span>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
               <small>
-                <a href="#" class="btn btn-default" data-bind="click: function(){$data.addPositionRestriction('layer');}"> Add Position Restriction</a>
+                <a href="#" class="btn btn-default"
+                   data-bind="click: function(){$data.addPositionRestriction('layer');}">
+                  Add Position
+                  Restriction
+                </a>
               </small>
             </div>
           </div>
@@ -195,6 +248,9 @@
                         R
                       </th>
                       <th>
+                        Intersect
+                      </th>
+                      <th>
                         Action
                       </th>
                       <th>
@@ -210,8 +266,10 @@
                       <td data-bind="text: (Shape == 'rect' ? X2 : '')"></td>
                       <td data-bind="text: (Shape == 'rect' ? Y2 : '')"></td>
                       <td data-bind="text: (Shape == 'circle' ? R : '')"></td>
+                      <td data-bind="text: (CalculateIntersections ? 'True' : 'False')"></td>
                       <td>
-                        <a href="#" class="btn btn-default" data-bind="click: function() {$parent.removePositionRestriction('layer',$index);}">Remove</a>
+                        <a href="#" class="btn btn-default"
+                           data-bind="click: function() {$parent.removePositionRestriction('layer',$index);}">Remove</a>
                       </td>
                     </tr>
                   </tbody>
@@ -225,118 +283,119 @@
           <div>
             <h5>Layer Trigger Extruder State Requirements</h5>
             <p>
-              Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.
+              Set extruder requirements for taking a snapshot. The extruder state will be ignored if all
+              of the options are set to <i>Ignore</i>.
             </p>
           </div>
 
           <div class="control-group">
-            <label class="control-label" >Extrusion Starting</label>
+            <label class="control-label">Extrusion Starting</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_extruding_start"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >During Extrusion</label>
+            <label class="control-label">During Extrusion</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_extruding"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >On Extruder Primed</label>
+            <label class="control-label">On Extruder Primed</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_primed"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Start Retracting</label>
+            <label class="control-label">Start Retracting</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_retracting_start"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Retracting</label>
+            <label class="control-label">Retracting</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_retracting"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Partially Retracted</label>
+            <label class="control-label">Partially Retracted</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_partially_retracted"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Fully Retracted</label>
+            <label class="control-label">Fully Retracted</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_retracted"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Start Detracting</label>
+            <label class="control-label">Start Detracting</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_detracting_start"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >Detracting</label>
+            <label class="control-label">Detracting</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_detracting"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
           <div class="control-group">
-            <label class="control-label" >On Detracted</label>
+            <label class="control-label">On Detracted</label>
             <div class="controls">
               <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: layer_trigger_on_detracted"></select>
-              <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
             </div>
           </div>
         </div>
@@ -353,308 +412,365 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: timer_trigger_enabled" />Enabled
+          <input type="checkbox" data-bind="checked: timer_trigger_enabled"/>Enabled
         </label>
       </div>
     </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <label class="control-label" >Trigger on Z-Hop Only</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: timer_trigger_require_zhop" />Enabled
-        </label>
+    <div data-bind="visible: timer_trigger_enabled">
+      <div class="control-group" >
+        <label class="control-label">Trigger on Z-Hop Only</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: timer_trigger_require_zhop"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <label class="control-label">Seconds to Trigger</label>
-      <div class="controls">
-        <input name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors" data-bind="value: timer_trigger_seconds" min="0" required="true" />
-        <div class="error_label_container text-error" ></div>
-        <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
+      <div class="control-group">
+        <label class="control-label">Seconds to Trigger</label>
+        <div class="controls">
+          <input name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
+                 data-bind="value: timer_trigger_seconds" min="0" required="true"/>
+          <div class="error_label_container text-error"></div>
+          <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
+        </div>
       </div>
-    </div>
-    <div data-bind="visible:(timer_trigger_position_restrictions().length > 0)" class="text-warning">
-      <p>
-        <strong>The timer trigger has <span data-bind="text: timer_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (timer_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong>
-      </p>
-    </div>
-    <div class="control-group" data-bind="visible: timer_trigger_enabled">
-      <div class="controls">
-        <small>
-          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
-            <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
-          </a>
-        </small>
+      <div data-bind="visible:(timer_trigger_position_restrictions().length > 0)" class="text-warning">
+        <p>
+          <strong>
+            The timer trigger has <span data-bind="text: timer_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (timer_trigger_position_restrictions().length > 1 ? 's' : '')"></span>
+            currently enabled.
+          </strong>
+        </p>
       </div>
-    </div>
-    <div id="trigger_timer_advanced" class="hide collapsible">
-      <div>
+
+      <div class="control-group">
+        <div class="controls">
+          <small>
+            <a href="#" class="muted"
+               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_timer_advanced.hide' }">
+              <i class="fa fa-caret-right"></i> {{ _('Advanced Timer Trigger Options') }}
+            </a>
+          </small>
+        </div>
+      </div>
+      <div id="trigger_timer_advanced" class="hide collapsible">
         <div>
-          <h5>Timer Position Restrictions</h5>
-          <p>Restrict snapshots so that they can only occur within the boundries, either rectangular or circular, you set.  You can add as many as you require.</p>
-        </div>
-        <!-- Add new position restriction -->
+          <div>
+            <h5>Timer Position Restrictions</h5>
+            <p>
+              Restrict snapshots so that they can only occur within the boundries, either rectangular or
+              circular, you set. You can add as many as you require.
+            </p>
+            <p>
+              <span class="label label-important">Warning</span>&nbsp;This is a Beta feature.
+            </p>
+          </div>
+          <!-- Add new position restriction -->
 
-        <div class="control-group">
-          <label class="control-label" >Position Restriction Type</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
+          <div class="control-group">
+            <label class="control-label">Position Restriction Type</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_timer_position_restriction_type"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Position Restriction Shape</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_shapes,
+          <div class="control-group">
+            <label class="control-label">Position Restriction Shape</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_shapes,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
-                                   value: new_timer_position_restriction_type"></select>
-            <div class="error_label_container text-error" ></div>
+                                   value: new_timer_position_restriction_shape"></select>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">X</span>
-                  <input id="octolapse_new_timer_position_restriction_x" name="new_timer_position_restriction_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_timer_position_restriction_x" step="any" required="true" />
-                  <span class="add-on">mm</span>
+          <div class="control-group">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">X</span>
+                    <input id="octolapse_new_timer_position_restriction_x"
+                           name="new_timer_position_restriction_x" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_timer_position_restriction_x" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Y</span>
-                  <input id="octolapse_new_timer_position_restriction_y" name="new_timer_position_restriction_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_timer_position_restriction_y" step="any" required="true" />
-                  <span class="add-on">mm</span>
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Y</span>
+                    <input id="octolapse_new_timer_position_restriction_y"
+                           name="new_timer_position_restriction_y" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_timer_position_restriction_y" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="control-group" data-bind="visible: new_timer_position_restriction_type() == 'rect'">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">X2</span>
-                  <input id="octolapse_new_timer_position_restriction_x2" name="new_timer_position_restriction_x2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_timer_position_restriction_x2" step="any" required="true" />
-                  <span class="add-on">mm</span>
+          <div class="control-group" data-bind="visible: new_timer_position_restriction_type() == 'rect'">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">X2</span>
+                    <input id="octolapse_new_timer_position_restriction_x2"
+                           name="new_timer_position_restriction_x2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_timer_position_restriction_x2" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Y2</span>
-                  <input id="octolapse_new_timer_position_restriction_y2" name="new_timer_position_restriction_y2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_timer_position_restriction_y2" step="any" required="true" />
-                  <span class="add-on">mm</span>
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Y2</span>
+                    <input id="octolapse_new_timer_position_restriction_y2"
+                           name="new_timer_position_restriction_y2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_timer_position_restriction_y2" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="control-group" data-bind="visible: new_timer_position_restriction_type() == 'circle'">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span12">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Radius</span>
-                  <input id="octolapse_new_timer_position_restriction_r" name="new_timer_position_restriction_r" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_timer_position_restriction_r" step="any" min="0" required="true" />
-                  <span class="add-on">mm</span>
-                </div>
-                <div class="error_label_container text-error" ></div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <small>
-              <a href="#" class="btn btn-default" data-bind="click: function(){$data.addPositionRestriction('timer');}"> Add Position Restriction</a>
-            </small>
+          <div class="control-group" data-bind="visible: new_timer_position_restriction_type() == 'circle'">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span12">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Radius</span>
+                    <input id="octolapse_new_timer_position_restriction_r"
+                           name="new_timer_position_restriction_r" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_timer_position_restriction_r" step="any" min="0"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="control-group" data-bind="visible: (timer_trigger_position_restrictions().length > 0)">
-          <div class="controls">
-            <div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: new_timer_calculate_intersections"
+                       title="Calculate intersections and trigger if an intersection is in position."/>Calculate
+                Intersections
+              </label>
+              <span class="help-inline">
+                <span class="label label-important">Warning</span>&nbsp;This is a Beta feature.  When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.
+              </span>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <small>
+                <a href="#" class="btn btn-default"
+                   data-bind="click: function(){$data.addPositionRestriction('timer');}">
+                  Add Position
+                  Restriction
+                </a>
+              </small>
+            </div>
+          </div>
+          <div class="control-group" data-bind="visible: (timer_trigger_position_restrictions().length > 0)">
+            <div class="controls">
               <div>
-                <h4>
-                  Current Position Restrictions
-                </h4>
+                <div>
+                  <h4>
+                    Current Position Restrictions
+                  </h4>
+                </div>
+                <table class="table-striped table-hover table-condensed table-hover octolapse-profiles">
+                  <thead>
+                    <tr>
+                      <th>
+                        Type
+                      </th>
+                      <th>
+                        Shape
+                      </th>
+                      <th>
+                        X
+                      </th>
+                      <th>
+                        Y
+                      </th>
+                      <th>
+                        X2
+                      </th>
+                      <th>
+                        Y2
+                      </th>
+                      <th>
+                        R
+                      </th>
+                      <th>
+                        Intersect
+                      </th>
+                      <th>
+                        Action
+                      </th>
+                      <th>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody data-bind="foreach: timer_trigger_position_restrictions">
+                    <tr>
+                      <td data-bind="text: Type"></td>
+                      <td data-bind="text: Shape"></td>
+                      <td data-bind="text: X"></td>
+                      <td data-bind="text: Y"></td>
+                      <td data-bind="text: (Shape == 'rect' ? X2 : '')"></td>
+                      <td data-bind="text: (Shape == 'rect' ? Y2 : '')"></td>
+                      <td data-bind="text: (Shape == 'circle' ? R : '')"></td>
+                      <td data-bind="text: (CalculateIntersections ? 'True' : 'False')"></td>
+                      <td>
+                        <a href="#" class="btn btn-default"
+                           data-bind="click: function() {$parent.removePositionRestriction('timer',$index);}">Remove</a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <table class="table-striped table-hover table-condensed table-hover octolapse-profiles">
-                <thead>
-                  <tr>
-                    <th>
-                      Type
-                    </th>
-                    <th>
-                      Shape
-                    </th>
-                    <th>
-                      X
-                    </th>
-                    <th>
-                      Y
-                    </th>
-                    <th>
-                      X2
-                    </th>
-                    <th>
-                      Y2
-                    </th>
-                    <th>
-                      R
-                    </th>
-                    <th>
-                      Action
-                    </th>
-                    <th>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach: timer_trigger_position_restrictions">
-                  <tr>
-                    <td data-bind="text: Type"></td>
-                    <td data-bind="text: Shape"></td>
-                    <td data-bind="text: X"></td>
-                    <td data-bind="text: Y"></td>
-                    <td data-bind="text: (Shape == 'rect' ? X2 : '')"></td>
-                    <td data-bind="text: (Shape == 'rect' ? Y2 : '')"></td>
-                    <td data-bind="text: (Shape == 'circle' ? R : '')"></td>
-                    <td>
-                      <a href="#" class="btn btn-default" data-bind="click: function() {$parent.removePositionRestriction('timer',$index);}">Remove</a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
-        </div>
 
-      </div>
-      <div>
-        <div>
-          <h5>Timer Trigger Extruder State Requirements</h5>
-          <p>
-            Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.
-          </p>
         </div>
-        <div class="control-group">
-          <label class="control-label" >Extrusion Starting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+        <div>
+          <div>
+            <h5>Timer Trigger Extruder State Requirements</h5>
+            <p>
+              Set extruder requirements for taking a snapshot. The extruder state will be ignored if all
+              of
+              the options are set to <i>Ignore</i>.
+            </p>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Extrusion Starting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_extruding_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >During Extrusion</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">During Extrusion</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_extruding"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >On Extruder Primed</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">On Extruder Primed</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_primed"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Start Retracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_retracting_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Retracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_retracting"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Partially Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Partially Retracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_partially_retracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Fully Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Fully Retracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_retracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Start Detracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_detracting_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Detracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_detracting"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >On Detracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">On Detracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: timer_trigger_on_detracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -670,129 +786,176 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_trigger_enabled" />Enabled
+          <input type="checkbox" data-bind="checked: gcode_trigger_enabled"/>Enabled
         </label>
       </div>
     </div>
-    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
-      <label class="control-label" >Trigger on Z-Hop Only</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop" />Enabled
-        </label>
+    <div data-bind="visible: gcode_trigger_enabled">
+      <div class="control-group">
+        <label class="control-label">Trigger on Z-Hop Only</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: gcode_trigger_require_zhop"/>Enabled
+          </label>
+        </div>
       </div>
-    </div>
-    <div data-bind="visible:(gcode_trigger_position_restrictions().length > 0)" class="text-warning">
-      <p>
-        <strong>The gcode trigger has <span data-bind="text: gcode_trigger_position_restrictions().length"></span> position restriction<span data-bind="text: (gcode_trigger_position_restrictions().length > 1 ? 's' : '')"></span> currently enabled.</strong>
-      </p>
-    </div>
-
-    <div class="control-group" data-bind="visible: gcode_trigger_enabled">
-      <div class="controls">
-        <small>
-          <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
-            <i class="fa fa-caret-right"></i> {{ _('Advanced GCode Trigger Options') }}
-          </a>
-        </small>
+      <div data-bind="visible:(gcode_trigger_position_restrictions().length > 0)" class="text-warning">
+        <p>
+          <strong>
+            The gcode trigger has <span
+  data-bind="text: gcode_trigger_position_restrictions().length"></span> position restriction<span
+                        data-bind="text: (gcode_trigger_position_restrictions().length > 1 ? 's' : '')"></span>
+            currently enabled.
+          </strong>
+        </p>
       </div>
-    </div>
-    <div id="trigger_gcode_advanced" class="hide">
-      <div>
+      <div class="control-group">
+        <div class="controls">
+          <small>
+            <a href="#" class="muted"
+               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#trigger_gcode_advanced.hide' }">
+              <i class="fa fa-caret-right"></i> {{ _('Advanced GCode Trigger Options') }}
+            </a>
+          </small>
+        </div>
+      </div>
+      <div id="trigger_gcode_advanced" class="hide">
         <div>
-          <h5>Gcode Position Restrictions</h5>
-          <p>Restrict snapshots so that they can only occur within the boundries, either rectangular or circular, you set.  You can add as many as you require.</p>
-        </div>
-        <!-- Add new position restriction -->
-        <div class="control-group">
-          <label class="control-label" >Position Restriction Type</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
+          <div>
+            <h5>Gcode Position Restrictions</h5>
+            <p>
+              Restrict snapshots so that they can only occur within the boundries, either rectangular or
+              circular, you set. You can add as many as you require.
+            </p>
+            <p>
+              <span class="label label-important">Warning</span>&nbsp;This is a Beta feature.
+            </p>
+          </div>
+          <!-- Add new position restriction -->
+          <div class="control-group">
+            <label class="control-label">Position Restriction Type</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_types,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_gcode_position_restriction_type"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Position Restriction Shape</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_shapes,
+          <div class="control-group">
+            <label class="control-label">Position Restriction Shape</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.position_restriction_shapes,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: new_gcode_position_restriction_type"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">X</span>
-                  <input id="octolapse_new_gcode_position_restriction_x" name="new_gcode_position_restriction_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_gcode_position_restriction_x" step="any" required="true" />
-                  <span class="add-on">mm</span>
+          <div class="control-group">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">X</span>
+                    <input id="octolapse_new_gcode_position_restriction_x"
+                           name="new_gcode_position_restriction_x" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_gcode_position_restriction_x" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Y</span>
-                  <input id="octolapse_new_gcode_position_restriction_y" name="new_gcode_position_restriction_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_gcode_position_restriction_y" step="any" required="true" />
-                  <span class="add-on">mm</span>
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Y</span>
+                    <input id="octolapse_new_gcode_position_restriction_y"
+                           name="new_gcode_position_restriction_y" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_gcode_position_restriction_y" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="control-group" data-bind="visible: new_gcode_position_restriction_type() == 'rect'">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">X2</span>
-                  <input id="octolapse_new_gcode_position_restriction_x2" name="new_gcode_position_restriction_x2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_gcode_position_restriction_x2" step="any" required="true" />
-                  <span class="add-on">mm</span>
+          <div class="control-group" data-bind="visible: new_gcode_position_restriction_type() == 'rect'">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">X2</span>
+                    <input id="octolapse_new_gcode_position_restriction_x2"
+                           name="new_gcode_position_restriction_x2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_gcode_position_restriction_x2" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-              <div class="span6">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Y2</span>
-                  <input id="octolapse_new_gcode_position_restriction_y2" name="new_gcode_position_restriction_y2" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_gcode_position_restriction_y2" step="any" required="true" />
-                  <span class="add-on">mm</span>
+                <div class="span6">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Y2</span>
+                    <input id="octolapse_new_gcode_position_restriction_y2"
+                           name="new_gcode_position_restriction_y2" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_gcode_position_restriction_y2" step="any"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
                 </div>
-                <div class="error_label_container text-error" ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="control-group" data-bind="visible: new_gcode_position_restriction_type() == 'circle'">
-          <div class="controls">
-            <div class="row-fluid">
-              <div class="span12">
-                <div class="input-prepend input-append">
-                  <span class="add-on">Radius</span>
-                  <input id="octolapse_new_gcode_position_restriction_r" name="new_gcode_position_restriction_r" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: new_gcode_position_restriction_r" step="any" min="0" required="true" />
-                  <span class="add-on">mm</span>
-                </div>
-                <div class="error_label_container text-error" ></div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            <small>
-              <a href="#" class="btn btn-default" data-bind="click: function(){$data.addPositionRestriction('gcode');}"> Add Position Restriction</a>
-            </small>
+          <div class="control-group" data-bind="visible: new_gcode_position_restriction_type() == 'circle'">
+            <div class="controls">
+              <div class="row-fluid">
+                <div class="span12">
+                  <div class="input-prepend input-append">
+                    <span class="add-on">Radius</span>
+                    <input id="octolapse_new_gcode_position_restriction_r"
+                           name="new_gcode_position_restriction_r" type="number"
+                           class="input-small ignore_hidden_errors text-right"
+                           data-bind="value: new_gcode_position_restriction_r" step="any" min="0"
+                           required="true"/>
+                    <span class="add-on">mm</span>
+                  </div>
+                  <div class="error_label_container text-error"></div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="control-group" data-bind="visible: (gcode_trigger_position_restrictions().length > 0)">
-          <div class="controls">
-            <div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" data-bind="checked: new_gcode_calculate_intersections"
+                       title="Calculate intersections and trigger if an intersection is in position."/>Calculate
+                Intersections
+              </label>
+              <span class="help-inline">
+                When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.
+              </span>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <small>
+                <a href="#" class="btn btn-default"
+                   data-bind="click: function(){$data.addPositionRestriction('gcode');}">
+                  Add Position
+                  Restriction
+                </a>
+              </small>
+            </div>
+          </div>
+          <div class="control-group" data-bind="visible: (gcode_trigger_position_restrictions().length > 0)">
+            <div class="controls">
               <div>
                 <h4>
                   Current Position Restrictions
@@ -821,6 +984,9 @@
                     </th>
                     <th>
                       R
+                    </th>
+                    <th>
+                      Intersect
                     </th>
                     <th>
                       Action
@@ -838,8 +1004,10 @@
                     <td data-bind="text: (Shape == 'rect' ? X2 : '')"></td>
                     <td data-bind="text: (Shape == 'rect' ? Y2 : '')"></td>
                     <td data-bind="text: (Shape == 'circle' ? R : '')"></td>
+                    <td data-bind="text: (CalculateIntersections ? 'True' : 'False')"></td>
                     <td>
-                      <a href="#" class="btn btn-default" data-bind="click: function() {$parent.removePositionRestriction('gcode',$index);}">Remove</a>
+                      <a href="#" class="btn btn-default"
+                         data-bind="click: function() {$parent.removePositionRestriction('gcode',$index);}">Remove</a>
                     </td>
                   </tr>
                 </tbody>
@@ -847,122 +1015,122 @@
             </div>
           </div>
         </div>
-
-      </div>
-      <div>
         <div>
-          <h5>Gcode Trigger Extruder State Requirements</h5>
-          <p>
-            Set extruder requirements for taking a snapshot.  The extruder state will be ignored if all of the options are set to <i>Ignore</i>.
-          </p>
-        </div>
+          <div>
+            <h5>Gcode Trigger Extruder State Requirements</h5>
+            <p>
+              Set extruder requirements for taking a snapshot. The extruder state will be ignored if all of
+              the options are set to <i>Ignore</i>.
+            </p>
+          </div>
 
-        <div class="control-group">
-          <label class="control-label" >Extrusion Starting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Extrusion Starting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: gcode_trigger_on_extruding_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >During Extrusion</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">During Extrusion</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: gcode_trigger_on_extruding"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >On Extruder Primed</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">On Extruder Primed</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_primed"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Start Retracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_retracting_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Retracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Retracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_retracting"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Partially Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Partially Retracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_partially_retracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Fully Retracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Fully Retracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_retracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Start Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Start Detracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_detracting_start"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >Detracting</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">Detracting</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_detracting"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" >On Detracted</label>
-          <div class="controls">
-            <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+          <div class="control-group">
+            <label class="control-label">On Detracted</label>
+            <div class="controls">
+              <select data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
 
                                    value: gcode_trigger_on_detracted"></select>
-            <div class="error_label_container text-error" ></div>
+              <div class="error_label_container text-error"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -970,49 +1138,53 @@
   </div>
   <hr/>
   <div>
-    <small>
-      <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
-        <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
-      </a>
-    </small>
-  </div>
-  <div id="snapshot_trigger_advanced" class="control-group hide">
     <div>
-      <h4>Advanced Snapshot Settings</h4>
+      <small>
+        <a href="#" class="muted"
+           data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
+          <i class="fa fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
+        </a>
+      </small>
     </div>
-    <div class="control-group">
-      <label class="control-label">Retract Before Move</label>
-      <div class="controls">
-        <label class="checkbox" title="If not retracted, retract before move">
-          <input type="checkbox" data-bind="checked: retract_before_move" /> Enabled
-        </label>
-        <span class="help-inline">If enabled, Octolapse will retract up to the length specified in the active printer profile.</span>
+    <div id="snapshot_trigger_advanced" class="control-group hide">
+      <div>
+        <h4>Advanced Snapshot Settings</h4>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Clean Snapshots After Rendering</label>
-      <div class="controls">
-        <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
-          <input type="checkbox" data-bind="checked: cleanup_after_render_complete" title="After timelapse is rendered"/>Enabled
-        </label>
-        <span class="help-inline">
-          <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary images, even those taken during a different timelapse.
-        </span>
+      <div class="control-group">
+        <label class="control-label">Retract Before Move</label>
+        <div class="controls">
+          <label class="checkbox" title="If not retracted, retract before move">
+            <input type="checkbox" data-bind="checked: retract_before_move"/> Enabled
+          </label>
+          <span class="help-inline">If enabled, Octolapse will retract up to the length specified in the active printer profile.</span>
+        </div>
       </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Clean Snapshots After Rendering Failure</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input type="checkbox" data-bind="checked: cleanup_after_render_fail" title="After timelapse fails"/>Enabled
-        </label>
-        <span class="help-inline">
-          <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting, but it should not cause any errors.  Currently this process will delete ALL temporary images, even those taken during a different timelapse.
-        </span>
+      <div class="control-group">
+        <label class="control-label">Clean Snapshots After Rendering</label>
+        <div class="controls">
+          <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
+            <input type="checkbox" data-bind="checked: cleanup_after_render_complete"
+                   title="After timelapse is rendered"/>Enabled
+          </label>
+          <span class="help-inline">
+            <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary images, even those taken during a different timelapse.
+          </span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Clean Snapshots After Rendering Failure</label>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: cleanup_after_render_fail"
+                   title="After timelapse fails"/>Enabled
+          </label>
+          <span class="help-inline">
+            <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting, but it should not cause any errors.  Currently this process will delete ALL temporary images, even those taken during a different timelapse.
+          </span>
+        </div>
       </div>
     </div>
   </div>
-
 </script>
 
 

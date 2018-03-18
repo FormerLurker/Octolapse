@@ -19,7 +19,6 @@ from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
 
 
-
 class Timelapse(object):
 
     def __init__(
@@ -96,20 +95,19 @@ class Timelapse(object):
             self._position_payload = payload
             self._position_signal.set()
 
-
-    def get_position_async(self, pre_gcode=None, post_gcode=None):
+    def get_position_async(self, start_gcode=None, end_gcode=None):
         self.Settings.current_debug_profile().log_print_state_change("Octolapse is requesting a position.")
         if self._position_signal.is_set():
             # only clear signal and send a new M114 if we haven't already done that from another thread
             self._position_signal.clear()
             # send any code that is to be run before the position request
-            if pre_gcode is not None:
-                self.OctoprintPrinter.commands(pre_gcode)
+            if start_gcode is not None:
+                self.OctoprintPrinter.commands(start_gcode)
             # wait for all motion to stop and request the position
             self.OctoprintPrinter.commands(["M400", "M114"])
             # send any remaining gcode
-            if post_gcode is not None:
-                self.OctoprintPrinter.commands(post_gcode)
+            if end_gcode is not None:
+                self.OctoprintPrinter.commands(end_gcode)
 
         self._position_signal.wait(self._position_timeout)
 
@@ -154,7 +152,8 @@ class Timelapse(object):
 
                 if not self._snapshot_signal.is_set():
                     # we ran into a timeout while waiting for a fresh position
-                    snapshot_async_payload["error"] = "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
+                    snapshot_async_payload["error"] = \
+                        "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
                     return snapshot_async_payload
 
                 snapshot_async_payload["success"] = True
@@ -166,26 +165,27 @@ class Timelapse(object):
 
         return snapshot_async_payload
 
-    def _take_timelapse_snapshot(self):
+    def _take_timelapse_snapshot(self, trigger, triggering_command):
         timelapse_snapshot_payload = {
             "starting_position": None,
             "snapshot_position": None,
             "return_position": None,
-            "snapshot_gcode" : None,
+            "snapshot_gcode": None,
             "snapshot_payload": None,
             "current_snapshot_time": 0,
             "total_snapshot_time": 0,
-            "success":False,
+            "success": False,
             "error": ""
         }
 
         try:
+
             # create the GCode for the timelapse and store it
-            snapshot_gcode = self.Gcode.create_snapshot_gcode(self.Position)
+            snapshot_gcode = self.Gcode.create_snapshot_gcode(self.Position, trigger, triggering_command)
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
             # wait for the current position
-            current_position = self.get_position_async()
+            current_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
             # record the position
             timelapse_snapshot_payload["starting_position"] = current_position
             # todo: check current position
@@ -198,7 +198,7 @@ class Timelapse(object):
             snapshot_start_time = time.time()
 
             # park the printhead in the snapshot position
-            current_position = self.get_position_async(pre_gcode=snapshot_gcode.get_snapshot_commands())
+            current_position = self.get_position_async(start_gcode=snapshot_gcode.SnapshotCommands)
             # record the position
             timelapse_snapshot_payload["snapshot_position"] = current_position
             # record the time
@@ -214,22 +214,41 @@ class Timelapse(object):
             timelapse_snapshot_payload["snapshot_time"] = time.time() - snapshot_start_time
 
             # return the printhead to the start position
-            current_position = self.get_position_async(pre_gcode=snapshot_gcode.get_return_commands())
-            # record the position
-            timelapse_snapshot_payload["return_position"] = current_position
+            current_position = self.get_position_async(
+                start_gcode=snapshot_gcode.ReturnCommands,
+                end_gcode=snapshot_gcode.EndGcode
+            )
             # record the time
+            # note that the previous get_position_async call returns right after sending the end gcode, so this
+            # should add a negligible amount of time
             current_snapshot_time = time.time() - snapshot_start_time
             self.SecondsAddedByOctolapse += current_snapshot_time
-
+            # record the position
+            timelapse_snapshot_payload["return_position"] = current_position
             timelapse_snapshot_payload["current_snapshot_time"] = current_snapshot_time
             timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = True
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
-            timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse snapshot procedure."
+            timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \
+                                                  "snapshot procedure. "
 
         return timelapse_snapshot_payload
+
+    def alter_gcode_for_trigger(self, command):
+
+        # We don't want to send the snapshot command to the printer, or any of
+        # the SupporessedSavedCommands (gcode.py)
+        if command is None or command == (None,) or command in self.Commands.SuppressedSavedCommands:
+            # this will suppress the command since it won't be added to our snapshot commands list
+            return None
+        # adjust the triggering command for test mode
+        command = self.Commands.get_test_mode_command_string(command)
+        if command == "":
+            return None
+        # send the triggering command
+        return command
 
     # public functions
     def start_timelapse(
@@ -356,11 +375,11 @@ class Timelapse(object):
                             "unknown",
                             "unknown",
                             "unknown",
+                            "unknown",
                             False,
                             0,
                             0,
                             "RENDER")
-
                         self.OnRenderEndCallback(payload)
                 self._reset()
             elif self.State != TimelapseState.Idle:
@@ -400,7 +419,7 @@ class Timelapse(object):
     def get_is_rendering(self):
         return len(self.RenderingJobs) > 0
 
-    def on_gcode_queuing(self, cmd, cmd_type, gcode,tags):
+    def on_gcode_queuing(self, cmd, cmd_type, gcode, tags):
 
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
@@ -416,7 +435,7 @@ class Timelapse(object):
             trigger_change_list = None
             self.Position.update(cmd)
 
-            # capture any changes, if neccessary, to the position, position state and extruder state
+            # capture any changes, if necessary, to the position, position state and extruder state
             # Note:  We'll get the trigger state later
             if (self.Settings.show_position_changes
                     and (self.Position.has_position_changed() or not self.HasSentInitialStatus)):
@@ -436,22 +455,22 @@ class Timelapse(object):
             if is_metric is None and self.Position.has_position_error():
                 self.stop_snapshots(
                     "The printer profile requires an explicit G21 command before any position altering/setting "
-                    "commands, including any home commands.  Stopping timelapse, but continuing the print. "
-                    , error=True
+                    "commands, including any home commands.  Stopping timelapse, but continuing the print. ",
+                    error=True
                 )
             elif not is_metric and self.Position.has_position_error():
                 if self.Printer.units_default == "inches":
                     self.stop_snapshots(
                         "The printer profile uses 'inches' as the default unit of measurement.  In order to use "
                         "Octolapse, a G21 command must come before any position altering/setting commands, including"
-                        " any home commands.  Stopping timelapse, but continuing the print. "
-                        , error=True
+                        " any home commands.  Stopping timelapse, but continuing the print. ",
+                        error=True
                     )
                 else:
                     self.stop_snapshots(
                         "The gcode file contains a G20 command (set units to inches), which Octolapse does not "
-                        "support.  Stopping timelapse, but continuing the print."
-                        , error=True
+                        "support.  Stopping timelapse, but continuing the print.",
+                        error=True
                     )
             elif self.Position.has_position_error(0):
                 self._on_position_error()
@@ -485,7 +504,9 @@ class Timelapse(object):
 
                             # adjust the triggering command
                             if post_position_command is not None and post_position_command != (None,):
-                                post_position_command = self.Commands.get_test_mode_command_string(post_position_command)
+                                post_position_command = self.Commands.get_test_mode_command_string(
+                                    post_position_command
+                                )
                                 if post_position_command != "":
                                     self.Settings.current_debug_profile().log_print_state_change(
                                         "Sending saved command - {0}.".format(post_position_command))
@@ -495,7 +516,7 @@ class Timelapse(object):
                             if self.State == TimelapseState.AcquiringLocation:
                                 self.State = TimelapseState.WaitingForTrigger
 
-                            self.Settings.current_debug_profile().log_snapshot_download("The snapshot has completed")
+                            self.Settings.current_debug_profile().log_snapshot_download("Position Acquired")
 
                     finally:
                         try:
@@ -518,11 +539,13 @@ class Timelapse(object):
                 if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
                     trigger_change_list = self.Triggers.changes_to_list()
 
-                if self.is_triggering():
+                _first_triggering = self.get_first_triggering()
+
+                if _first_triggering:
                     # set the state
                     self.State = TimelapseState.TakingSnapshot
 
-                    def take_snapshot_async(triggering_command):
+                    def take_snapshot_async(triggering_command, trigger):
                         timelapse_snapshot_payload = None
                         try:
                             self.Settings.current_debug_profile().log_snapshot_download(
@@ -535,22 +558,8 @@ class Timelapse(object):
                             self.Position.undo_update()
 
                             # take the snapshot
-                            timelapse_snapshot_payload = self._take_timelapse_snapshot()
+                            timelapse_snapshot_payload = self._take_timelapse_snapshot(trigger, triggering_command)
 
-                            # We don't want to send the snapshot command to the printer, or any of
-                            # the SupporessedSavedCommands (gcode.py)
-                            if triggering_command in self.Commands.SuppressedSavedCommands:
-                                # this will suppress the command since it won't be added to our snapshot commands list
-                                triggering_command = None,
-
-                            # adjust the triggering command
-                            if triggering_command is not None and triggering_command != (None,):
-                                triggering_command = self.Commands.get_test_mode_command_string(triggering_command)
-                                if triggering_command != "":
-                                    # send the triggering command
-                                    self.Settings.current_debug_profile().log_print_state_change(
-                                        "Sending saved snapshot command - {0}.".format(triggering_command))
-                                    self.OctoprintPrinter.commands(triggering_command)
                             self.Settings.current_debug_profile().log_snapshot_download("The snapshot has completed")
                         finally:
 
@@ -570,7 +579,7 @@ class Timelapse(object):
                                 self._on_trigger_snapshot_complete(timelapse_snapshot_payload)
 
                     if self.OctoprintPrinter.set_job_on_hold(True):
-                        thread = threading.Thread(target=take_snapshot_async, args=[cmd])
+                        thread = threading.Thread(target=take_snapshot_async, args=[cmd, _first_triggering])
                         thread.daemon = True
                         thread.start()
                         return None,
@@ -595,7 +604,6 @@ class Timelapse(object):
 
             if cmd != (None,):
                 cmd = self._get_command_for_octoprint(cmd)
-
         except:
             e = sys.exc_info()[0]
             self.Settings.current_debug_profile().log_exception(e)
@@ -603,19 +611,23 @@ class Timelapse(object):
 
         return cmd
 
-    def is_triggering(self):
+    def get_first_triggering(self):
         try:
             # make sure we're in a state that could want to check for triggers
             if not self.State == TimelapseState.WaitingForTrigger:
-                return None
+                return False
             # see if the PREVIOUS command triggered (that means current gcode gets sent if the trigger[0]
             # is triggering
-            current_trigger = self.Triggers.get_first_triggering(1)
+            first_trigger = self.Triggers.get_first_triggering_in_path(0)
 
-            if current_trigger is not None:  # We're triggering
-                self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
-                # notify any callbacks
-                return True
+            if first_trigger:
+                return first_trigger
+            else:
+                current_trigger = self.Triggers.get_first_triggering(1)
+                if current_trigger:  # We're triggering
+                    self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
+                    # notify any callbacks
+                    return current_trigger
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # no need to re-raise here, the trigger just won't happen
@@ -739,7 +751,6 @@ class Timelapse(object):
         job_id = args[0]
         self.Settings.current_debug_profile().log_render_start(
             "Started rendering/synchronizing the timelapse. JobId: {0}".format(job_id))
-        job_id = args[0]
         payload = args[1]
         # notify the caller
         if self.OnRenderStartCallback is not None:
@@ -751,19 +762,15 @@ class Timelapse(object):
         self.Settings.current_debug_profile().log_render_fail(
             "The timelapse rendering failed. JobId: {0}".format(job_id))
 
-
-
     def _on_render_success(self, *args, **kwargs):
         job_id = args[0]
         self.Settings.current_debug_profile().log_render_complete(
             "Rendering completed successfully. JobId: {0}".format(job_id))
-
-        payload = args[1]
-
+        # payload = args[1]
 
     def on_render_complete(self, *args, **kwargs):
         job_id = args[0]
-        payload = args[1]
+        # payload = args[1]
         self.Settings.current_debug_profile().log_render_complete(
             "Completed rendering the timelapse. JobId: {0}".format(job_id))
 
@@ -771,11 +778,13 @@ class Timelapse(object):
         job_id = args[0]
         payload = args[1]
         self.Settings.current_debug_profile().log_render_sync(
-            "Synchronization with the default timelapse plugin failed.  JobId: {0}, Reason: {1}".format(job_id, payload.Reason))
+            "Synchronization with the default timelapse plugin failed."
+            "  JobId: {0}, Reason: {1}".format(job_id, payload.Reason)
+        )
 
     def _on_synchronize_rendering_complete(self, *args, **kwargs):
         job_id = args[0]
-        payload = args[1]
+        # payload = args[1]
         self.Settings.current_debug_profile().log_render_sync(
             "Synchronization with the default timelapse plugin was successful. JobId: {0}".format(job_id))
 
@@ -860,4 +869,3 @@ class TimelapseState(object):
     TakingSnapshot = 4
     WaitingToRender = 5
     WaitingToEndTimelapse = 6
-

@@ -25,7 +25,7 @@ $(function () {
             self.current_rendering_profile_guid = ko.observable();
             self.current_camera_profile_guid = ko.observable();
             self.current_debug_profile_guid = ko.observable();
-
+            self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
                 'printers': [{name: "Unknown", guid: ""}],
                 'stabilizations': [{name: "Unknown", guid: ""}],
@@ -79,9 +79,28 @@ $(function () {
 
             };
 
-            self.onAfterBinding = function () {
+            self.SETTINGS_VISIBLE_KEY = "settings_visible";
+            self.onBeforeBinding = function () {
+                var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY)
+                // console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
+                var $settingsContainer = $("#octolapse_status_settings_current_panel")
+                if(settingsVisible.toLowerCase() == "true")
+                {
+                    self.current_settings_showing(true);
+                }
+                else
+                {
+                    self.current_settings_showing(false);
+                }
 
             };
+
+            self.onAfterBinding = function () {
+                    self.current_settings_showing.subscribe(function (newData) {
+                    //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
+                    Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY,newData)
+                });
+            }
 
             self.onTabChange = function (current, previous) {
                 if (current != null && current === "#tab_plugin_octolapse") {
@@ -292,6 +311,19 @@ $(function () {
                 self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
 
             };
+
+            self.toggleInfoPanel = function (panelType){
+                $.ajax({
+                    url: "/plugin/octolapse/toggleInfoPanel",
+                    type: "POST",
+                    data: JSON.stringify({panel_type: panelType}),
+                    contentType: "application/json",
+                    dataType: "json",
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    }
+                });
+            }
 
             /**
              * @return {string}

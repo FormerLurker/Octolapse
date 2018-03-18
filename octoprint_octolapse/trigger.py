@@ -8,6 +8,42 @@ from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.settings import *
 
 
+def get_in_position_intersection(x, y, previous_x, previous_y, restrictions):
+    intersections = []
+    for restriction in restrictions:
+        cur_intersections = restriction.get_intersections(x, y, previous_x, previous_y)
+        if cur_intersections:
+            for cur_intersection in cur_intersections:
+                intersections.append(cur_intersection)
+
+    if len(intersections) == 0:
+        return False
+
+    for intersection in intersections:
+        if is_in_position(restrictions, intersection[0], intersection[1]):
+            # calculate the distance from x/y previous to the intersection
+            distance_to_intersection = math.sqrt(
+                math.pow(previous_x - intersection[0], 2) + math.pow(previous_y - intersection[1], 2)
+            )
+            # calculate the length of the lin x,y to previous_x, previous_y
+            total_distance = math.sqrt(
+                math.pow(previous_x - x, 2) + math.pow(previous_y - y, 2)
+            )
+            if total_distance > 0:
+                path_ratio_1 = distance_to_intersection / total_distance
+                path_ratio_2 = 1.0 - path_ratio_1
+            else:
+                path_ratio_1 = 0
+                path_ratio_2 = 0
+
+            return {
+                'intersection': intersection,
+                'path_ratio_1': path_ratio_1,
+                'path_ratio_2': path_ratio_2
+            }
+    return False
+
+
 def is_in_position(restrictions, x, y):
     # we need to know if there is at least one required position
     has_required_position = False
@@ -116,6 +152,15 @@ class Triggers(object):
 
         return None
 
+    def get_first_triggering_in_path(self, index):
+        first_triggering = self.get_first_triggering(index)
+        if first_triggering is not None:
+            first_triggereing_state = first_triggering.get_state(index)
+            if not first_triggereing_state.IsInPosition and first_triggereing_state.InPathPosition:
+                return first_triggering
+
+        return False
+
     def get_first_triggering(self, index):
         if len(self._triggers) < 1:
             return False
@@ -179,6 +224,7 @@ class TriggerState(object):
         self.IsWaitingOnZHop = False if state is None else state.IsWaitingOnZHop
         self.IsWaitingOnExtruder = False if state is None else state.IsWaitingOnExtruder
         self.IsInPosition = False if state is None else state.IsInPosition
+        self.InPathPosition = False if state is None else state.PositionIsInPath
         self.HasChanged = False if state is None else state.HasChanged
         self.IsHomed = False if state is None else state.IsHomed
 
@@ -189,6 +235,7 @@ class TriggerState(object):
             "IsWaitingOnZHop": self.IsWaitingOnZHop,
             "IsWaitingOnExtruder": self.IsWaitingOnExtruder,
             "IsInPosition": self.IsInPosition,
+            "PositionIsInPath": self.InPathPosition,
             "HasChanged": self.HasChanged,
             "RequireZHop": trigger.RequireZHop,
             "IsHomed": self.IsHomed,
@@ -199,6 +246,7 @@ class TriggerState(object):
         self.IsTriggered = False
         self.HasChanged = False
         self.IsInPosition = False
+        self.InPathPosition = False
 
     def is_equal(self, state):
         if (state is not None
@@ -212,6 +260,9 @@ class TriggerState(object):
 
 
 class Trigger(object):
+    TRIGGER_TYPE_DEFAULT = 'default'
+    TRIGGER_TYPE_IN_PATH = 'in-path'
+
     def __init__(self, octolapse_settings, max_states=5):
         self.Settings = octolapse_settings
         self.Printer = Printer(self.Settings.current_printer())
@@ -246,11 +297,31 @@ class Trigger(object):
             return False
         return state.IsTriggered
 
+    def triggered_type(self):
+        state = self.get_state(0)
+        if state is None:
+            return None
+        if state.IsTriggered and state.InPathPosition:
+            return self.TRIGGER_TYPE_IN_PATH
+        state = self.get_state(1)
+        if state is None:
+            return None
+        if state.IsTriggered and state.IsInPosition:
+            return self.TRIGGER_TYPE_DEFAULT
+
+        return None
+
     def is_in_position(self, index):
         state = self.get_state(index)
         if state is None:
             return False
         return state.IsInPosition
+
+    def in_path_position(self, index):
+        state = self.get_state(index)
+        if state is None:
+            return False
+        return state.InPathPosition
 
     def is_waiting(self, index):
         state = self.get_state(index)
@@ -271,6 +342,26 @@ class Trigger(object):
         state_dict = state.to_dict(self)
         state_dict.update({"Name": self.name(), "Type": self.Type})
         return state_dict
+
+    def get_path_intersections(self, x, y, previous_x, previous_y, restrictions):
+
+        if is_in_position(
+            self.Snapshot.gcode_trigger_position_restrictions,
+            x,
+            y
+        ):
+            return True, None
+
+        if previous_x is None or previous_y is None:
+            return False, False
+
+        return False, get_in_position_intersection(
+            x,
+            y,
+            previous_x,
+            previous_y,
+            restrictions
+        )
 
 
 class GcodeTriggerState(TriggerState):
@@ -357,9 +448,19 @@ class GcodeTrigger(Trigger):
                 state.IsHomed = True
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = is_in_position(self.Snapshot.gcode_trigger_position_restrictions,
-                                                        position.x(0),
-                                                        position.y(0))
+                    _is_in_position, _intersections = self.get_path_intersections(
+                        self.Snapshot.gcode_trigger_position_restrictions,
+                        position.x(0),
+                        position.y(0),
+                        position.x(1),
+                        position.y(1)
+                    )
+                    if _is_in_position:
+                        state.IsInPosition = _is_in_position
+                    elif not position:
+                        state.IsInPosition = False
+                    else:
+                        state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True
 
@@ -371,7 +472,7 @@ class GcodeTrigger(Trigger):
                             state.IsWaitingOnZHop = True
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on ZHop.")
-                        elif not self.is_in_position(0):
+                        elif not self.is_in_position(0) and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on Position.")
@@ -548,9 +649,19 @@ class LayerTrigger(Trigger):
 
                 # check to see if we are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = is_in_position(self.Snapshot.layer_trigger_position_restrictions,
-                                                        position.x(0),
-                                                        position.y(0))
+                    _is_in_position, _intersections = self.get_path_intersections(
+                        self.Snapshot.layer_trigger_position_restrictions,
+                        position.x(0),
+                        position.y(0),
+                        position.x(1),
+                        position.y(1)
+                    )
+                    if _is_in_position:
+                        state.IsInPosition = _is_in_position
+                    elif not position:
+                        state.IsInPosition = False
+                    else:
+                        state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True
 
@@ -573,7 +684,7 @@ class LayerTrigger(Trigger):
                             state.IsWaitingOnZHop = True
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
-                        elif not self.is_in_position(0):
+                        elif not self.is_in_position(0) and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "LayerTrigger - Waiting on Position.")
@@ -763,9 +874,19 @@ class TimerTrigger(Trigger):
 
                 # check to see if the X/Y axes are in the proper position to take a snapshot
                 if self.HasRestrictedPosition:
-                    state.IsInPosition = is_in_position(self.Snapshot.timer_trigger_position_restrictions,
-                                                        position.x(0),
-                                                        position.y(0))
+                    _is_in_position, _intersections = self.get_path_intersections(
+                        self.Snapshot.timer_trigger_position_restrictions,
+                        position.x(0),
+                        position.y(0),
+                        position.x(1),
+                        position.y(1)
+                    )
+                    if _is_in_position:
+                        state.IsInPosition = _is_in_position
+                    elif not position:
+                        state.IsInPosition = False
+                    else:
+                        state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True
 
@@ -779,7 +900,7 @@ class TimerTrigger(Trigger):
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True
-                        elif not self.is_in_position(0):
+                        elif not self.is_in_position(0) and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "TimerTrigger - Waiting on Position.")

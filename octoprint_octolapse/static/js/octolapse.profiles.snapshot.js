@@ -38,7 +38,7 @@ $(function () {
         self.new_gcode_position_restriction_x2 = ko.observable(1);
         self.new_gcode_position_restriction_y2 = ko.observable(1);
         self.new_gcode_position_restriction_r = ko.observable(1);
-
+        self.new_gcode_calculate_intersections = ko.observable(false);
         /*
             Timer Trigger Settings
         */
@@ -68,7 +68,7 @@ $(function () {
         self.new_timer_position_restriction_x2 = ko.observable(1);
         self.new_timer_position_restriction_y2 = ko.observable(1);
         self.new_timer_position_restriction_r = ko.observable(1);
-
+        self.new_timer_calculate_intersections = ko.observable(false);
         /*
             Layer/Height Trigger Settings
         */
@@ -98,7 +98,7 @@ $(function () {
         self.new_layer_position_restriction_x2 = ko.observable(1);
         self.new_layer_position_restriction_y2 = ko.observable(1);
         self.new_layer_position_restriction_r = ko.observable(1);
-
+        self.new_layer_calculate_intersections = ko.observable(false);
 
         self.retract_before_move = ko.observable(values.retract_before_move);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
@@ -118,7 +118,8 @@ $(function () {
                             "Y": self.new_layer_position_restriction_y(),
                             "X2": self.new_layer_position_restriction_x2(),
                             "Y2": self.new_layer_position_restriction_y2(),
-                            "R": self.new_layer_position_restriction_r()
+                            "R": self.new_layer_position_restriction_r(),
+                            "CalculateIntersections": self.new_layer_calculate_intersections()
                         });
                         self.layer_trigger_position_restrictions.push(restriction);
                     }
@@ -132,7 +133,8 @@ $(function () {
                             "Y": self.new_timer_position_restriction_y(),
                             "X2": self.new_timer_position_restriction_x2(),
                             "Y2": self.new_timer_position_restriction_y2(),
-                            "R": self.new_timer_position_restriction_r()
+                            "R": self.new_timer_position_restriction_r(),
+                            "CalculateIntersections": self.new_timer_calculate_intersections()
                         });
                         self.timer_trigger_position_restrictions.push(restriction);
                     }
@@ -146,7 +148,8 @@ $(function () {
                             "Y": self.new_gcode_position_restriction_y(),
                             "X2": self.new_gcode_position_restriction_x2(),
                             "Y2": self.new_gcode_position_restriction_y2(),
-                            "R": self.new_gcode_position_restriction_r()
+                            "R": self.new_gcode_position_restriction_r(),
+                            "CalculateIntersections": self.new_gcode_calculate_intersections()
                         });
                         self.gcode_trigger_position_restrictions.push(restriction);
                     }

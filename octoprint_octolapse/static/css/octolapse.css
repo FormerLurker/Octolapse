@@ -8,6 +8,10 @@ a.disabled {
     cursor: default;
 }
 
+.ui-pnotify.octolapse .ui-pnotify-text{
+    word-wrap: break-word;
+}
+
 .snapshot_refresh_container a {
     color: greenyellow;
 }

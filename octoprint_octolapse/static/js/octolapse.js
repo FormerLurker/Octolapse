@@ -9,6 +9,95 @@ OctolapseViewModel = {};
 $(function () {
     // Finds the first index of an array with the matching predicate
     Octolapse.IsShowingSettingsChangedPopup = false;
+
+    Octolapse.toggleContentFunction = function ($elm, options, updateObservable)
+    {
+        if(options.toggle_observable){
+            //console.log("Toggling element.");
+            if(updateObservable) {
+                options.toggle_observable(!options.toggle_observable());
+                //console.log("Observable updated - " + options.toggle_observable())
+            }
+            if (options.toggle_observable()) {
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').addClass(options.class_showing);
+                    $elm.children('[class^="fa"]').addClass(options.class_showing);
+                }
+                if (options.class_hiding) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_hiding);
+                    $elm.children('[class^="fa"]').removeClass(options.class_hiding);
+                }
+                if(options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideDown('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideDown('fast', options.onComplete);
+                    }
+                }
+            }
+            else
+             {
+                 if (options.class_hiding) {
+                     $elm.children('[class^="icon-"]').addClass(options.class_hiding);
+                     $elm.children('[class^="fa"]').addClass(options.class_hiding);
+                 }
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_showing);
+                    $elm.children('[class^="fa"]').removeClass(options.class_showing);
+                }
+                if(options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideUp('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideUp('fast', options.onComplete);
+                    }
+                }
+            }
+        }
+        else {
+            if (options.class) {
+                $elm.children('[class^="icon-"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+                $elm.children('[class^="fa"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+            }
+            if (options.container) {
+                if (options.parent) {
+                    $elm.parents(options.parent).find(options.container).stop().slideToggle('fast', options.onComplete);
+                } else {
+                    $(options.container).stop().slideToggle('fast', options.onComplete);
+                }
+            }
+        }
+
+    };
+
+    Octolapse.toggleContent = {
+            init: function(element, valueAccessor) {
+                var $elm = $(element),
+                    options = $.extend({
+                        class_showing: null,
+                        class_hiding: null,
+                        container: null,
+                        parent: null,
+                        toggle_observable: null,
+                        onComplete: function() {
+                            $(document).trigger("slideCompleted");
+                        }
+                    }, valueAccessor());
+
+                    if(options.toggle_observable)
+                        Octolapse.toggleContentFunction($elm,options, false);
+
+
+                $elm.on("click", function(e) {
+                    e.preventDefault();
+                    Octolapse.toggleContentFunction($elm,options, true);
+
+
+                });
+            }
+        };
+    ko.bindingHandlers.octolapseToggle = Octolapse.toggleContent ;
+
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
         for (var i = 0, j = array.length; i < j; i++) {
             if (predicate.call(predicateOwner, array[i])) {
@@ -54,7 +143,16 @@ $(function () {
             }
         });
     };
-    // Apply the toggle click event to every element within our settings that has the .toggle class
+
+    // Cookies (only for UI display purposes, not for any tracking
+    Octolapse.COOKIE_EXPIRE_DAYS = 30;
+
+    Octolapse.setLocalStorage = function (name, value) {
+        localStorage.setItem("octolapse_"+name,value)
+    }
+    Octolapse.getLocalStorage = function (name, value) {
+        return localStorage.getItem("octolapse_"+name)
+    }
 
     Octolapse.displayPopup = function (options) {
         new PNotify(options);
@@ -487,6 +585,7 @@ $(function () {
                             text: data.msg,
                             type: 'notice',
                             hide: true,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -503,6 +602,7 @@ $(function () {
                             text: data.msg,
                             type: 'error',
                             hide: false,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -565,6 +665,7 @@ $(function () {
                             text: data.msg,
                             type: 'notice',
                             hide: true,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -581,6 +682,7 @@ $(function () {
                             text: data.msg,
                             type: 'error',
                             hide: false,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -605,6 +707,7 @@ $(function () {
                                     text: data.msg,
                                     type: 'success',
                                     hide: false,
+                                    addclass: "octolapse",
                                     desktop: {
                                         desktop: true
                                     }
@@ -623,6 +726,7 @@ $(function () {
                             text: data.msg,
                             type: 'error',
                             hide: false,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -639,6 +743,7 @@ $(function () {
                             text: data.msg,
                             type: 'notice',
                             hide: true,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -656,6 +761,7 @@ $(function () {
                             text: data.msg,
                             type: 'notice',
                             hide: true,
+                            addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
@@ -671,7 +777,8 @@ $(function () {
                             title: 'Octolapse Timelapse Stopped',
                             text: data.msg,
                             type: 'error',
-                            hide: false
+                            hide: false,
+                            addclass: "octolapse"
                         };
                         Octolapse.displayPopup(options);
                     }
@@ -683,7 +790,8 @@ $(function () {
                             title: 'Octolapse - Out Of Bounds',
                             text: data.msg ,
                             type: 'error',
-                            hide: false
+                            hide: false,
+                            addclass: "octolapse"
                         };
                         Octolapse.displayPopupForKey(options,"out-of-bounds");
                     }
@@ -695,7 +803,8 @@ $(function () {
                             title: 'Octolapse - Out Of Bounds',
                             text: data.msg,
                             type: 'error',
-                            hide: false
+                            hide: false,
+                            addclass: "octolapse"
                         };
                         Octolapse.displayPopupForKey(options, "position-error");
                     }

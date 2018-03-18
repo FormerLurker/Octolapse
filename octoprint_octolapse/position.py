@@ -858,7 +858,7 @@ class Position(object):
 
         ########################################
         # Update the extruder monitor.
-        self.Extruder.update(self.e_relative(pos))
+        self.Extruder.update(self.e_relative_pos(pos))
 
         ########################################
         # If we have a homed axis, detect changes.
@@ -940,7 +940,67 @@ class Position(object):
         pos = self.Positions[index]
         return pos.has_homed_axes()
 
-    def e_relative(self, pos):
+    def x_relative(self, index=0, x=None):
+
+        if x:
+            if len(self.Positions) <= index:
+                return None
+            pos = self.Positions[index]
+            return x - pos.X
+
+        else:
+            if len(self.Positions) <= index + 1:
+                return None
+            pos = self.Positions[index]
+            previous_pos = self.Positions[index + 1]
+            return pos.X - previous_pos.X
+
+    def y_relative(self, index=0, y=None):
+
+        if y:
+            if len(self.Positions) <= index:
+                return None
+            pos = self.Positions[index]
+            return y - pos.Y
+
+        else:
+            if len(self.Positions) <= index + 1:
+                return None
+            pos = self.Positions[index]
+            previous_pos = self.Positions[index + 1]
+            return pos.Y - previous_pos.Y
+
+    def z_relative(self, index=0, z=None):
+
+        if z:
+            if len(self.Positions) <= index:
+                return None
+            pos = self.Positions[index]
+            return z - pos.Z
+
+        else:
+            if len(self.Positions) <= index + 1:
+                return None
+            pos = self.Positions[index]
+            previous_pos = self.Positions[index + 1]
+            return pos.Z - previous_pos.Z
+
+    def e_relative(self, index=0, e=None):
+
+        if e:
+            if len(self.Positions) <= index:
+                return None
+            pos = self.Positions[index]
+            return e - pos.E
+
+        else:
+            if len(self.Positions) <= index+1:
+                return None
+            pos = self.Positions[index]
+            previous_pos = self.Positions[index+1]
+            return pos.E - previous_pos.E
+
+    def e_relative_pos(self, pos):
         if len(self.Positions) < 1:
             return None
         previous_pos = self.Positions[0]

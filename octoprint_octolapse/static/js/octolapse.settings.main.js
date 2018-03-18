@@ -255,7 +255,6 @@ $(function () {
             });
 
 
-
             dialog.$editDialog.modal();
         };
 

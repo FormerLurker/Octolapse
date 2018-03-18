@@ -314,6 +314,145 @@ def get_bounding_box(octolapse_printer_profile, octoprint_printer_profile):
     }
 
 
+def get_intersections_circle(x1, y1, x2, y2, c_x, c_y, c_radius):
+    # Finds any intersections as well as the closest point on or within the circle to the center (cx, cy)
+    intersections = []
+    closest = False
+
+    segment_length = math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+
+    # create direction vector
+    if segment_length != 0:
+        vector_x = (x2 - x1) / segment_length
+        vector_y = (y2 - y1) / segment_length
+    else:
+        vector_x = 0
+        vector_y = 0
+
+    # compute the value t of the closest point to the circle center (cx, cy)
+    t = (vector_x * (c_x - x1)) + (vector_y * (c_y - y1))
+
+    # compute the coordinates of the point closest to c
+    closest_x = (t * vector_x) + x1
+    closest_y = (t * vector_y) + y1
+
+    # get the distance from c
+    closest_to_c_dist = math.sqrt(math.pow(closest_x - c_x, 2) + math.pow(closest_y - c_y, 2))
+
+    # is closest within the circle?
+    if closest_to_c_dist <= c_radius:
+        closest = [closest_x, closest_y];
+
+    # If the closest point is inside the circle (but not on)
+    if closest_to_c_dist < c_radius:
+        # Distance from closest point to intersection
+        intersect_dist = math.sqrt(math.pow(c_radius, 2) - math.pow(closest_to_c_dist, 2))
+
+        # calculate intersection 1
+        intersection_1_x = ((t - intersect_dist) * vector_x) + x1
+        intersection_1_y = ((t - intersect_dist) * vector_y) + y1
+        # does intersection 1 exist
+        if(
+            math.sqrt(math.pow(x1 - intersection_1_x, 2) + math.pow(y1 - intersection_1_y, 2)) +
+            math.sqrt(math.pow(intersection_1_x - x2, 2) + math.pow(intersection_1_y - y2, 2))
+            == segment_length
+        ):
+            intersections.append([intersection_1_x,intersection_1_y])
+
+        # calculate intersection 2
+        intersection_2_x = ((t + intersect_dist) * vector_x) + x1
+        intersection_2_y = ((t + intersect_dist) * vector_y) + y1
+        # does intersection 2 exist
+        if(
+            math.sqrt(math.pow(x1 - intersection_2_x, 2) + math.pow(y1 - intersection_2_y, 2)) +
+            math.sqrt(math.pow(intersection_2_x - x2, 2) + math.pow(intersection_2_y - y2, 2))
+            == segment_length
+        ):
+            intersections.append([intersection_2_x, intersection_2_y])
+
+    if len(intersections) == 0 and closest:
+        # make sure closest is on the radius
+        a = closest[0] - c_x
+        b = closest[1] - c_y
+        r = math.sqrt(pow(a, 2) + pow(b, 2))
+        if r == c_radius:
+            intersections.append(closest)
+
+    if len(intersections) == 0:
+        return False
+
+    return intersections
+
+
+def get_intersections_rectangle(x1, y1, x2, y2, rect_x1, rect_y1, rect_x2, rect_y2):
+
+    left = rect_x1 if rect_x1 < rect_x2 else rect_x2
+    right = rect_x2 if rect_x1 < rect_x2 else rect_x1
+    bottom = rect_y1 if rect_y1 < rect_y2 else rect_y2
+    top = rect_y2 if rect_y1 < rect_y2 else rect_y1
+
+    t0 = 0.0
+    t1 = 1.0
+    dx = x2 - x1 * 1.0
+    dy = y2 - y1 * 1.0
+
+    # if the points aren't fully outside or on the rect, return false
+    if (
+        left < x1 < right and
+        left < x2 < right and
+        bottom < y1  < top and
+        bottom < y2 < top
+    ):
+        return False
+
+    for edge in range(0, 4):
+        if edge == 0:
+            p = -dx
+            q = -(left - x1)
+        elif edge == 1:
+            p = dx
+            q = right - x1
+        elif edge == 2:
+            p = -dy
+            q = -(bottom - y1)
+        elif edge == 3:
+            p = dy
+            q = top - y1
+
+        if p == 0 and q < 0:
+            return False
+
+        if p != 0:
+            r = q / (p * 1.0)
+            if p < 0:
+                if r > t1:
+                    return False
+                elif r > t0:
+                    t0 = r
+            else:
+                if r < t0:
+                    return False
+                elif r < t1:
+                    t1 = r
+
+    intersections = []
+    intersection_x1 = x1 + t0 * dx
+    intersection_y1 = y1 + t0 * dy
+    intersection_x2 = x1 + t1 * dx
+    intersection_y2 = y1 + t1 * dy
+
+    if not(left < intersection_x1 < right and bottom < intersection_y1 < top):
+        intersections.append([intersection_x1, intersection_y1])
+    if not(left < intersection_x2 < right and bottom < intersection_y2 < top):
+        intersections.append([intersection_x2, intersection_y2])
+
+    if len(intersections) > 0:
+        return intersections
+    else:
+        return False
+
+
+
 def exception_to_string(e):
     trace_back = sys.exc_info()[2]
     if trace_back is None:
