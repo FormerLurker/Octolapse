@@ -83,8 +83,8 @@ $(function () {
             self.onBeforeBinding = function () {
                 var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY)
                 // console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
-                var $settingsContainer = $("#octolapse_status_settings_current_panel")
-                if(settingsVisible.toLowerCase() == "true")
+
+                if(settingsVisible == null || settingsVisible.toLowerCase() == "true")
                 {
                     self.current_settings_showing(true);
                 }
