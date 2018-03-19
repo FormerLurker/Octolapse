@@ -5,7 +5,6 @@
 
 import time
 import threading
-
 import sys
 import uuid
 
@@ -18,20 +17,23 @@ from octoprint_octolapse.settings import (Printer, Rendering, Snapshot, Octolaps
 from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
 
-
 class Timelapse(object):
 
     def __init__(
-            self, data_folder, timelapse_folder,
+            self, settings, octoprint_printer, data_folder, timelapse_folder,
+            on_print_started=None, on_print_start_failed=None,
             on_snapshot_start=None, on_snapshot_end=None,
             on_render_start=None, on_render_end=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
             on_state_changed=None, on_timelapse_start=None,
             on_snapshot_position_error=None, on_position_error=None):
         # config variables - These don't change even after a reset
-        self.Settings = None  # type: OctolapseSettings
         self.DataFolder = data_folder
+        self.Settings = settings  # type: OctolapseSettings
+        self.OctoprintPrinter = octoprint_printer
         self.DefaultTimelapseDirectory = timelapse_folder
+        self.OnPrintStartCallback = on_print_started
+        self.OnPrintStartFailedCallback = on_print_start_failed
         self.OnRenderStartCallback = on_render_start
         self.OnRenderEndCallback = on_render_end
         self.OnSnapshotStartCallback = on_snapshot_start
@@ -48,7 +50,7 @@ class Timelapse(object):
         self.RenderingJobs = set()
         self.PrintEndStatus = "Unknown"
         # Settings that may be different after StartTimelapse is called
-        self.OctoprintPrinter = None
+
         self.OctoprintPrinterProfile = None
         self.PrintStartTime = None
         self.FfMpegPath = None
@@ -252,17 +254,16 @@ class Timelapse(object):
 
     # public functions
     def start_timelapse(
-            self, settings, octoprint_printer, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
+            self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
         # we must supply the settings first!  Else reset won't work properly.
-        self.Settings = settings
-
         self._reset()
+        # in case the settings have been destroyed and recreated
+        self.Settings = settings
         # time tracking - how much time did we add to the print?
         self.SnapshotCount = 0
         self.SecondsAddedByOctolapse = 0
         self.HasSentInitialStatus = False
         self.RequiresLocationDetectionAfterHome = False
-        self.OctoprintPrinter = octoprint_printer
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.FfMpegPath = ffmpeg_path
         self.PrintStartTime = time.time()
@@ -277,11 +278,11 @@ class Timelapse(object):
             self.Settings, octoprint_printer_profile, g90_influences_extruder)
         self.State = TimelapseState.WaitingForTrigger
         self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
-        self.Triggers = Triggers(settings)
+        self.Triggers = Triggers(self.Settings)
         self.Triggers.create()
 
         # take a snapshot of the current settings for use in the Octolapse Tab
-        self.CurrentProfiles = settings.get_profiles_dict()
+        self.CurrentProfiles = self.Settings.get_profiles_dict()
 
         # fetch position private variables
         self._position_payload = None
@@ -419,8 +420,48 @@ class Timelapse(object):
     def get_is_rendering(self):
         return len(self.RenderingJobs) > 0
 
-    def on_gcode_queuing(self, cmd, cmd_type, gcode, tags):
+    def on_print_start(self, tags):
+        if self.OnPrintStartCallback is not None:
+            self.OnPrintStartCallback(tags)
 
+    def on_print_start_failed(self, message):
+        if self.OnPrintStartFailedCallback is not None:
+            self.OnPrintStartFailedCallback(message)
+
+    def on_gcode_queuing(self, cmd, cmd_type, gcode, tags):
+        # detect print start
+        if (
+            self.Settings.is_octolapse_enabled and
+            self.State == TimelapseState.Idle and
+            self.OctoprintPrinter.is_printing() and
+            set(['trigger:comm.start_print', 'api:job']) <= tags
+        ):
+            self.Settings.current_debug_profile().log_print_state_change(
+                "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
+            )
+            if self.OctoprintPrinter.set_job_on_hold(True):
+                try:
+                    if 'fileline:1' not in tags:
+
+                        self.OctoprintPrinter.cancel_print()
+                    else:
+                        self.on_print_start(tags)
+                        # resend the command while we have the job lock.  This is important else your first
+                        # two gcodes will run out of order.
+                        if self.State == TimelapseState.WaitingForTrigger:
+                            self.OctoprintPrinter.commands(cmd)
+                        # suppress the current command so it doesn't get sent twice
+                    return None,
+                finally:
+                    self.OctoprintPrinter.set_job_on_hold(False)
+            else:
+                self.on_print_start_failed(
+                    "Octolapse was unable to start.  Unable to acquire the job lock."
+                )
+
+        # if the timelapse is not active, exit without changing any gcode
+        if not self.is_timelapse_active():
+            return
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
                 "Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(cmd_type, gcode, cmd, tags))
