@@ -738,6 +738,7 @@ class Timelapse(object):
             job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
             self.RenderingJobs.add(job_id)
             try:
+
                 timelapse_render_job.process(job_id, utility.get_currently_printing_filename(
                     self.OctoprintPrinter), self.PrintStartTime, time.time(), print_end_state)
                 return True

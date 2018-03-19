@@ -1,6 +1,6 @@
 
 #octolapse_settings .row {
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 a.disabled {
@@ -117,7 +117,7 @@ form.octolapse_form {
 }
 
 form.octolapse_form .alert {
-    margin: 5px 0px;
+    margin: 5px 0;
     padding: 5px;
 }
 
@@ -125,7 +125,7 @@ form.octolapse_form .modal-footer {
     padding: 9px 10px 10px;
 }
 
-form.octolapse_form .modal-body, {
+form.octolapse_form .modal-body {
     padding: 5px 15px;
 }
 
@@ -167,7 +167,7 @@ form.octolapse_form .modal-body, {
     color: greenyellow;
 }
 
-.bg-paused, .bg-not-homed, bg-lightgray {
+.bg-paused, .bg-not-homed, .bg-lightgray {
     color: lightgray;
 }
 
@@ -209,7 +209,7 @@ form.octolapse_form .modal-body, {
     }
 
 .ol-heading h1, .ol-heading h2, .ol-heading h3, .ol-heading h4, .ol-heading h5, .ol-heading h6 {
-    margin: 0px
+    margin: 0
 }
 
 .panel-footer.ol-info-footer {
@@ -243,7 +243,6 @@ form.octolapse_form .modal-body, {
 .shake {
     -webkit-animation: shakeIt 0.25s linear 4;
     -moz-animation: shakeIt 0.25s linear 4;
-    -ms-animation: shakeIt 0.25s linear 4;
     -o-animation: shakeIt 0.25s linear 4;
     animation: shakeIt 0.25s linear 4;
     border-color: #C00;
@@ -305,7 +304,6 @@ table.octolapse-profiles {
 }
 
 .snapshot_container img {
-    vertical-align: auto;
     position: absolute;
     display: block;
     width: auto;

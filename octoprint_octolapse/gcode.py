@@ -288,43 +288,56 @@ class SnapshotGcodeGenerator(object):
                 path_ratio_1 = in_path_position["path_ratio_1"]
                 path_ratio_2 = in_path_position["path_ratio_2"]
 
+                _x1 = intersection[0]  # will be in absolute coordinates
+                _y1 = intersection[1]  # will be in absolute coordinates
+                _x2 = cmd.Parameters["X"].Value  # should remain in the original coordinate system
+                _y2 = cmd.Parameters["Y"].Value # should remain in the original coordinate system
+                _z = cmd.Parameters["Z"].Value # should remain in the original coordinate system
+                _e = cmd.Parameters["E"].Value
+                _f = cmd.Parameters["F"].Value
                 # if the command has an F parameter, update FCurrent
-                f = cmd.Parameters["F"]
-                if f:
-                    f = float(f)
-                    if self.FCurrent != f:
-                        self.FCurrent = f
+
+                if _f:
+                    _f = float(_f)
+                    if self.FCurrent != _f:
+                        self.FCurrent = _f
                         # The only way the feedrate can change after the return gcode is sent
                         # is by this f paramater.  If F has a value here, no need to
                         # set the feedrate before sending End_Gcode
                         reset_feedrate_before_end_gcode = False
 
-                e = cmd.Parameters["E"]
-                e1 = None
-                e2 = None
-                if e:
-                    e = float(e)
+                _e1 = None
+                _e2 = None
+                # calculate e
+                if _e:
+                    _e = float(_e)
                     if not self.IsExtruderRelativeCurrent:
-                        _extrusion_amount = position.e_relative(e)
+                        _extrusion_amount = position.e_relative(_e)
                         # set e1 absolute
-                        e1 = e - _extrusion_amount * path_ratio_2
-                        e2 = e
+                        _e1 = _e - _extrusion_amount * path_ratio_2
+                        _e2 = _e
                     else:
-                        e1 = e * path_ratio_1
-                        e2 = e * path_ratio_2
+                        _e1 = _e * path_ratio_1
+                        _e2 = _e * path_ratio_2
 
-                z = cmd.Parameters["Z"]
-                # create the first command
-
-                x1 = intersection[0]
-                y1 = intersection[1]
+                # Convert X1 and y1 to relative
                 if self.IsRelativeCurrent:
-                    x1 = position.x_relative(x1)
-                    y1 = position.y_relative(y1)
+                    if _x1:
+                        _x1 = position.x_relative(_x1)
+                    if _y1:
+                        _y1 = position.y_relative(_y1)
+                if _x2:
+                    _x2 = float(_x2)
+                if _y2:
+                    _y2 = float(_y2)
 
-                cmd1 = self.get_g_command(cmd, intersection[0], intersection[1], z, e1, f)
+                if _z:
+                    _z = float(_z)
+                if _f:
+                    _f = float(_f)
+                cmd1 = self.get_g_command(cmd.Command, _x1, _y1, _z, _e1, _f)
                 # create the second command
-                cmd2 = self.get_g_command(cmd, cmd.Parameters["X"], cmd.Parameters["Y"], z, e2, f)
+                cmd2 = self.get_g_command(cmd.Command, _x2, _y2, _z, _e2, _f)
 
                 # append both commands
                 new_snapshot_gcode.append(SnapshotGcode.START_GCODE, cmd1)
@@ -333,9 +346,9 @@ class SnapshotGcodeGenerator(object):
                 # recalculate z_lift
                 if z:
                     position.update(cmd1)
-                self.ZLift = position.distance_to_zlift()
-                # undo the update since the position has not changed, only the zlift value
-                position.undo_update()
+                    self.ZLift = position.distance_to_zlift()
+                    # undo the update since the position has not changed, only the zlift value
+                    position.undo_update()
 
         # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
         # IsRetracted will be false because we've undone the previous position update.

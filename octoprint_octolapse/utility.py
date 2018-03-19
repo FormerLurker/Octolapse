@@ -79,6 +79,7 @@ def is_sequence(arg):
 
 
 def get_filename_from_full_path(path):
+
     basename = ntpath.basename(path)
     head, tail = ntpath.split(basename)
     file_name = tail or ntpath.basename(head)
@@ -231,7 +232,8 @@ def get_currently_printing_filename(octoprint_printer):
             current_job_file = current_job["file"]
             if "path" in current_job_file and "origin" in current_job_file:
                 current_file_path = current_job_file["path"]
-                return get_filename_from_full_path(current_file_path)
+                if current_file_path is not None:
+                    return get_filename_from_full_path(current_file_path)
     return ""
 
 

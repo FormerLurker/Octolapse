@@ -8,7 +8,7 @@ from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.settings import *
 
 
-def get_in_position_intersection(x, y, previous_x, previous_y, restrictions):
+def get_in_position_intersection(restrictions, x, y, previous_x, previous_y, tolerance):
     intersections = []
     for restriction in restrictions:
         cur_intersections = restriction.get_intersections(x, y, previous_x, previous_y)
@@ -20,7 +20,7 @@ def get_in_position_intersection(x, y, previous_x, previous_y, restrictions):
         return False
 
     for intersection in intersections:
-        if is_in_position(restrictions, intersection[0], intersection[1]):
+        if is_in_position(restrictions, intersection[0], intersection[1], tolerance):
             # calculate the distance from x/y previous to the intersection
             distance_to_intersection = math.sqrt(
                 math.pow(previous_x - intersection[0], 2) + math.pow(previous_y - intersection[1], 2)
@@ -44,7 +44,7 @@ def get_in_position_intersection(x, y, previous_x, previous_y, restrictions):
     return False
 
 
-def is_in_position(restrictions, x, y):
+def is_in_position(restrictions, x, y, tolerance):
     # we need to know if there is at least one required position
     has_required_position = False
     # isInPosition will be used to determine if we return
@@ -57,7 +57,7 @@ def is_in_position(restrictions, x, y):
             # we have at least on required position, so at least one point must be in
             # position for us to return true
             has_required_position = True
-        if restriction.is_in_position(x, y):
+        if restriction.is_in_position(x, y, tolerance):
             if restriction.Type == "forbidden":
                 # if we're in a forbidden position, return false now
                 return False
@@ -343,12 +343,13 @@ class Trigger(object):
         state_dict.update({"Name": self.name(), "Type": self.Type})
         return state_dict
 
-    def get_path_intersections(self, x, y, previous_x, previous_y, restrictions):
+    def get_path_intersections(self, restrictions, x, y, previous_x, previous_y ):
 
         if is_in_position(
-            self.Snapshot.gcode_trigger_position_restrictions,
+            restrictions,
             x,
-            y
+            y,
+            self.Printer.printer_position_confirmation_tolerance
         ):
             return True, None
 
@@ -356,11 +357,12 @@ class Trigger(object):
             return False, False
 
         return False, get_in_position_intersection(
+            restrictions,
             x,
             y,
             previous_x,
             previous_y,
-            restrictions
+            self.Printer.printer_position_confirmation_tolerance
         )
 
 
@@ -457,9 +459,8 @@ class GcodeTrigger(Trigger):
                     )
                     if _is_in_position:
                         state.IsInPosition = _is_in_position
-                    elif not position:
-                        state.IsInPosition = False
                     else:
+                        state.IsInPosition = False
                         state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True
@@ -658,9 +659,9 @@ class LayerTrigger(Trigger):
                     )
                     if _is_in_position:
                         state.IsInPosition = _is_in_position
-                    elif not position:
-                        state.IsInPosition = False
+
                     else:
+                        state.IsInPosition = False
                         state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True
@@ -883,9 +884,9 @@ class TimerTrigger(Trigger):
                     )
                     if _is_in_position:
                         state.IsInPosition = _is_in_position
-                    elif not position:
-                        state.IsInPosition = False
+
                     else:
+                        state.IsInPosition = False
                         state.InPathPosition = _intersections
                 else:
                     state.IsInPosition = True

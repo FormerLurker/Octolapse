@@ -456,14 +456,16 @@ class SnapshotPositionRestrictions(object):
 
         return intersections
 
-    def is_in_position(self, x, y):
+    def is_in_position(self, x, y, tolerance):
         if x is None or y is None:
             return False
 
         if self.Shape == 'rect':
             return self.X <= x <= self.X2 and self.Y <= y <= self.Y2
         elif self.Shape == 'circle':
-            return math.pow(x - self.X, 2) + math.pow(y - self.Y, 2) <= math.pow(self.R, 2)
+            lsq = math.pow(x - self.X, 2) + math.pow(y - self.Y, 2)
+            rsq = math.pow(self.R, 2)
+            return utility.is_close(lsq, rsq , tolerance) or lsq < rsq
         else:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
