@@ -67,7 +67,7 @@ Use caution and never leave your printer unattended.
 
 ## Octolapse was designed with print quality in mind
 * Continuous tracking of the X,Y and Z axes.  Octolapse knows where your extruder and bed will be at all times.
-* Extruder state detection enables Octolapse choose a good time to time to take a snapshot, minimizing defects.  Use existing presets, or use a custom configuration to maximize quality for your specific application.
+* Extruder state detection enables Octolapse to choose a good time take a snapshot, minimizing defects.  Use existing presets, or use a custom configuration to maximize quality for your specific application.
 * Optional Z-Hop and retract detection to reduce stringing, maximizing quality.
 * Configurable stabilizations allow you complete control of the X and Y position of each snapshot.  You can choose a position as close to or as far away from your part as you wish.
 * Minimal impact on print time and print quality.  Octolapse normally takes between one and three seconds to take a snapshot.  It even reports exactly how much time it's using after each snapshot!
