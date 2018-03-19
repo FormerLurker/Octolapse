@@ -153,11 +153,20 @@ class Triggers(object):
         return None
 
     def get_first_triggering_in_path(self, index):
-        first_triggering = self.get_first_triggering(index)
-        if first_triggering is not None:
-            first_triggereing_state = first_triggering.get_state(index)
-            if not first_triggereing_state.IsInPosition and first_triggereing_state.InPathPosition:
-                return first_triggering
+        if len(self._triggers) < 1:
+            return False
+        try:
+            # Loop through all of the active currentTriggers
+            for currentTrigger in self._triggers:
+                current_triggereing_state = currentTrigger.get_state(index)
+                if (
+                    current_triggereing_state.IsTriggered and
+                    current_triggereing_state.InPathPosition and
+                    not current_triggereing_state.IsInPosition
+                ):
+                    return currentTrigger
+        except Exception, e:
+            self.Settings.current_debug_profile().log_exception(e)
 
         return False
 
@@ -167,11 +176,17 @@ class Triggers(object):
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
-                if currentTrigger.is_triggered(index):
+                current_triggereing_state = currentTrigger.get_state(index)
+                if (
+                    current_triggereing_state.IsTriggered and
+                    not current_triggereing_state.InPathPosition and
+                    current_triggereing_state.IsInPosition
+                ):
                     return currentTrigger
         except Exception, e:
             self.Settings.current_debug_profile().log_exception(e)
-            return False
+
+        return False
 
     def get_first_waiting(self):
         try:

@@ -103,12 +103,12 @@ class Timelapse(object):
             # only clear signal and send a new M114 if we haven't already done that from another thread
             self._position_signal.clear()
             # send any code that is to be run before the position request
-            if start_gcode is not None:
+            if start_gcode is not None and len(start_gcode) > 0:
                 self.OctoprintPrinter.commands(start_gcode)
             # wait for all motion to stop and request the position
             self.OctoprintPrinter.commands(["M400", "M114"])
             # send any remaining gcode
-            if end_gcode is not None:
+            if end_gcode is not None and len(end_gcode) > 0:
                 self.OctoprintPrinter.commands(end_gcode)
 
         self._position_signal.wait(self._position_timeout)
@@ -217,9 +217,14 @@ class Timelapse(object):
 
             # return the printhead to the start position
             current_position = self.get_position_async(
-                start_gcode=snapshot_gcode.ReturnCommands,
-                end_gcode=snapshot_gcode.EndGcode
+                start_gcode=snapshot_gcode.ReturnCommands
             )
+
+            # send any remaining gcode commands
+            if len(snapshot_gcode.EndGcode)>0:
+                current_position = self.get_position_async(
+                    start_gcode=snapshot_gcode.EndGcode
+                )
             # record the time
             # note that the previous get_position_async call returns right after sending the end gcode, so this
             # should add a negligible amount of time

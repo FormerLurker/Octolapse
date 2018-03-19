@@ -234,6 +234,7 @@ class SnapshotGcodeGenerator(object):
         is_metric = position.is_metric()
         extruder = position.Extruder
         z_lift = position.distance_to_zlift()
+        retracted_length = extruder.length_to_retract()
 
         self.reset()
         if x_return is None or y_return is None or z_return is None:
@@ -350,17 +351,15 @@ class SnapshotGcodeGenerator(object):
                 x_return = intersection[0]  # will be in absolute coordinates
                 y_return = intersection[1]  # will be in absolute coordinates
 
-                # recalculate z_lift
-                if z_return:
-                    position.update(cmd1)
-
-                    # set z_return to the new z position
-                    # must be absolute
-                    z_return = position.z()
-
-                    self.ZLift = position.distance_to_zlift()
-                    # undo the update since the position has not changed, only the zlift value
-                    position.undo_update()
+                # recalculate z_lift and retract distance since we have moved a bit
+                position.update(cmd1)
+                # set z_return to the new z position
+                # must be absolute
+                z_return = position.z()
+                self.ZLift = position.distance_to_zlift()
+                retracted_length = position.Extruder.length_to_retract()
+                # undo the update since the position has not changed, only the zlift value
+                position.undo_update()
 
         # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
         # IsRetracted will be false because we've undone the previous position update.
@@ -371,7 +370,7 @@ class SnapshotGcodeGenerator(object):
                     self.get_gcode_extruder_relative()
                 )
                 self.IsExtruderRelativeCurrent = True
-            retracted_length = extruder.length_to_retract()
+
 
             if self.Printer.retract_speed != self.FCurrent:
                 f_return = self.Printer.retract_speed
