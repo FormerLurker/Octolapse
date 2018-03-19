@@ -441,8 +441,9 @@ class Timelapse(object):
             )
             if self.OctoprintPrinter.set_job_on_hold(True):
                 try:
-                    if 'fileline:1' not in tags:
-
+                    if 'fileline:1' not in tags and 'filesentline:1' not in tags:
+                        # If we're here, we're pinting from SD, but Octolapse is enabled.
+                        # A warning message will be sent to the user in on_event : PRINT_STARTED
                         self.OctoprintPrinter.cancel_print()
                     else:
                         self.on_print_start(tags)
