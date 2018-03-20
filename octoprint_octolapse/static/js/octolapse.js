@@ -190,6 +190,18 @@ $(function () {
     }, 'Please enter a list of strings separated by commas.');
 
 
+    $.validator.addMethod("check_one", function(value, elem, param)
+        {
+            //console.log("Validating trigger checks");
+            $(param).val()
+                if($(param + ":checkbox:checked").length > 0){
+                   return true;
+                }else {
+                   return false;
+                }
+        }
+    );
+
     // Add custom validator for csv floats
     $.validator.addMethod('csvFloat', function (value) {
         return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
@@ -406,10 +418,23 @@ $(function () {
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
         };
-        self.onAfterBinding = function () {
-            self.loadState();
+        self.onStartupComplete = function () {
+            console.log("Startup Complete")
+            self.getInitialState();
 
         };
+        self.onDataUpdaterReconnect = function () {
+            console.log("Reconnected Client")
+            self.getInitialState();
+
+        };
+
+        self.getInitialState = function(){
+            self.loadState();
+            // reset snapshot error state
+            Octolapse.Status.snapshot_error(false);
+            Octolapse.Status.snapshot_error_message("");
+        }
 
         self.loadState = function () {
             //console.log("octolapse.js - Loading State");
@@ -421,11 +446,11 @@ $(function () {
                 ccontentType: "application/json",
                 dataType: "json",
                 success: function (result) {
-                    //console.log("Main Settings have been loaded.  Waiting for message");
+                    //console.log("The state has been loaded.  Waiting for message");
 
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+                    // Todo:  update the UI don't show an alert!
                     alert("Octolapse could not load the current state.  Please try again in a few minutes, or check plugin_octolapse.log in the 'Logs' menu for exceptions.");
                 }
             });

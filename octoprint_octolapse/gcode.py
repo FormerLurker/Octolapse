@@ -5,7 +5,7 @@
 
 from octoprint_octolapse.command import Commands
 from octoprint_octolapse.settings import *
-from octoprint_octolapse.trigger import Trigger
+from octoprint_octolapse.trigger import Triggers
 
 
 class SnapshotGcode(object):
@@ -271,13 +271,17 @@ class SnapshotGcodeGenerator(object):
 
         # create the start and end gcode, which would include any split gcode (position restriction intersection)
         # or any saved command that needs to be appended
-        trigger_type = trigger.triggered_type()
+
         # Flag to indicate that we should make sure the final feedrate = self.FOriginal
         # by default we want to change the feedrate if FCurrent != FOriginal
         reset_feedrate_before_end_gcode = True
-        if trigger_type == Trigger.TRIGGER_TYPE_DEFAULT:
+        triggered_type = trigger.triggered_type(0)
+        if triggered_type is None:
+            triggered_type = trigger.triggered_type(1)
+
+        if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
             new_snapshot_gcode.append(SnapshotGcode.END_GCODE, triggering_command)
-        elif trigger_type == Trigger.TRIGGER_TYPE_IN_PATH:
+        elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
             cmd = self.Commands.get_command(triggering_command)
             if cmd:
@@ -360,7 +364,8 @@ class SnapshotGcodeGenerator(object):
                 retracted_length = position.Extruder.length_to_retract()
                 # undo the update since the position has not changed, only the zlift value
                 position.undo_update()
-
+        else:
+            return None
         # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
         # IsRetracted will be false because we've undone the previous position update.
         if self.Snapshot.retract_before_move and not (extruder.is_retracted() or extruder.is_retracting_start()):
@@ -389,7 +394,7 @@ class SnapshotGcodeGenerator(object):
         can_zhop = self.Printer.z_hop > 0 and utility.is_in_bounds(
             self.BoundingBox, z=z_return + self.Printer.z_hop)
         # if we can ZHop, do
-        if can_zhop and self.ZLift > 0:
+        if can_zhop and self.ZLift > 0 and self.Snapshot.lift_before_move:
             if not self.IsRelativeCurrent:  # must be in relative mode
                 new_snapshot_gcode.append(
                     SnapshotGcode.SNAPSHOT_COMMANDS,

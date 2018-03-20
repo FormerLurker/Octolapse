@@ -707,6 +707,18 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                                                 "Please select a printer profile in the octolapse settings pages and "
                                                 "restart the print."}
 
+        # make sure at least one trigger is enabled
+        current_snapshot = self.Settings.current_snapshot()
+        if not (
+            current_snapshot.layer_trigger_enabled or
+            current_snapshot.timer_trigger_enabled or
+            current_snapshot.gcode_trigger_enabled
+        ):
+            return {
+                'success': False,
+                'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
+            }
+
         # test the camera and see if it works.
         results = camera.test_camera(self.Settings.current_camera())
         if not results[0]:

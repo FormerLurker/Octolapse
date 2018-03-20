@@ -4,8 +4,11 @@
 # file called 'LICENSE', which is part of this source code package.
 from collections import deque
 
+import math
+
 import octoprint_octolapse.command as command
 import octoprint_octolapse.utility as utility
+from octoprint_octolapse.settings import Printer, Snapshot
 from octoprint_octolapse.extruder import Extruder
 
 
@@ -80,6 +83,8 @@ class Pos(object):
         self.Layer = 0 if pos is None else pos.Layer
         self.Height = 0 if pos is None else pos.Height
         self.IsPrimed = False if pos is None else pos.IsPrimed
+        self.IsInPosition = False if pos is None else pos.IsInPosition
+        self.InPathPosition = False if pos is None else pos.InPathPosition
 
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
@@ -111,9 +116,12 @@ class Pos(object):
                 and utility.round_to(pos.Layer, tolerance) != utility.round_to(
                     self.Layer, tolerance)
                 and utility.round_to(pos.Height, tolerance) !=
-                utility.round_to(self.Height, tolerance)
+                    utility.round_to(self.Height, tolerance)
                 and utility.round_to(pos.LastExtrusionHeight, tolerance) !=
-                utility.round_to(self.LastExtrusionHeight, tolerance)
+                    utility.round_to(self.LastExtrusionHeight, tolerance)
+                and self.IsPrimed == pos.IsPrimed
+                and self.IsInPosition == pos.IsInPosition
+                and self.InPathPosition == Pos.InPathPosition
                 and self.HasPositionError == pos.HasPositionError
                 and self.PositionError == pos.PositionError
                 and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand):
@@ -152,6 +160,9 @@ class Pos(object):
             "Layer": self.Layer,
             "Height": self.Height,
             "LastExtrusionHeight": self.LastExtrusionHeight,
+            "IsInPosition": self.IsInPosition,
+            "InPathPosition": self.InPathPosition,
+            "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
             "HasReceivedHomeCommand": self.HasReceivedHomeCommand
@@ -167,7 +178,8 @@ class Pos(object):
             "Z": self.Z,
             "ZOffset": self.ZOffset,
             "E": self.E,
-            "EOffset": self.EOffset,
+            "EOffset": self.EOffset
+
         }
 
     def to_dict(self):
@@ -191,6 +203,9 @@ class Pos(object):
             "LastExtrusionHeight": self.LastExtrusionHeight,
             "IsLayerChange": self.IsLayerChange,
             "IsZHop": self.IsZHop,
+            "IsInPosition": self.IsInPosition,
+            "InPathPosition": self.InPathPosition,
+            "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
             "HasPositionChanged": self.HasPositionChanged,
@@ -307,7 +322,8 @@ class Position(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile,
                  g90_influences_extruder):
         self.Settings = octolapse_settings
-        self.Printer = self.Settings.current_printer()
+        self.Printer = Printer(self.Settings.current_printer())
+        self.Snapshot = Snapshot(self.Settings.current_snapshot())
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -320,6 +336,7 @@ class Position(object):
         self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
         self.Positions = deque(maxlen=5)
         self.SavedPosition = None
+        self.HasRestrictedPosition = len(self.Snapshot.position_restrictions) > 0
 
         self.reset()
 
@@ -335,6 +352,7 @@ class Position(object):
         self.Commands = command.Commands()
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()
+
 
     def create_location_detection_commands(self):
 
@@ -434,6 +452,18 @@ class Position(object):
         if pos is None:
             return None
         return pos.HasStateChanged
+
+    def is_in_position(self, index=0):
+        pos = self.get_position(index)
+        if pos is None:
+            return None
+        return pos.IsInPosition
+
+    def in_path_position(self, index=0):
+        pos = self.get_position(index)
+        if pos is None:
+            return None
+        return pos.InPathPosition
 
     def has_position_changed(self, index=0):
         pos = self.get_position(index)
@@ -872,6 +902,23 @@ class Position(object):
         if pos.has_homed_position() and previous_pos.has_homed_position():
 
             # if (hasExtruderChanged or pos.HasPositionChanged):
+            if pos.HasPositionChanged:
+                if self.HasRestrictedPosition:
+                    _is_in_position, _intersections = self.calculate_path_intersections(
+                        self.Snapshot.position_restrictions,
+                        pos.X,
+                        pos.Y,
+                        previous_pos.X,
+                        previous_pos.Y
+                    )
+                    if _is_in_position:
+                        pos.IsInPosition = _is_in_position
+
+                    else:
+                        pos.IsInPosition = False
+                        pos.InPathPosition = _intersections
+                else:
+                    pos.IsInPosition = True
 
             # calculate LastExtrusionHeight and Height
             if self.Extruder.is_extruding():
@@ -1041,3 +1088,91 @@ class Position(object):
         current_position = self.Positions[index]
         return get_formatted_coordinates(current_position.X, current_position.Y,
                                          current_position.Z, current_position.E)
+
+    def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y):
+
+        if self.calculate_is_in_position(
+            restrictions,
+            x,
+            y,
+            self.Printer.printer_position_confirmation_tolerance
+        ):
+            return True, None
+
+        if previous_x is None or previous_y is None:
+            return False, False
+
+        return False, self.calculate_in_position_intersection(
+            restrictions,
+            x,
+            y,
+            previous_x,
+            previous_y,
+            self.Printer.printer_position_confirmation_tolerance
+        )
+
+    @staticmethod
+    def calculate_in_position_intersection(restrictions, x, y, previous_x, previous_y, tolerance):
+        intersections = []
+        for restriction in restrictions:
+            cur_intersections = restriction.get_intersections(x, y, previous_x, previous_y)
+            if cur_intersections:
+                for cur_intersection in cur_intersections:
+                    intersections.append(cur_intersection)
+
+        if len(intersections) == 0:
+            return False
+
+        for intersection in intersections:
+            if Position.calculate_is_in_position(restrictions, intersection[0], intersection[1], tolerance):
+                # calculate the distance from x/y previous to the intersection
+                distance_to_intersection = math.sqrt(
+                    math.pow(previous_x - intersection[0], 2) + math.pow(previous_y - intersection[1], 2)
+                )
+                # calculate the length of the lin x,y to previous_x, previous_y
+                total_distance = math.sqrt(
+                    math.pow(previous_x - x, 2) + math.pow(previous_y - y, 2)
+                )
+                if total_distance > 0:
+                    path_ratio_1 = distance_to_intersection / total_distance
+                    path_ratio_2 = 1.0 - path_ratio_1
+                else:
+                    path_ratio_1 = 0
+                    path_ratio_2 = 0
+
+                return {
+                    'intersection': intersection,
+                    'path_ratio_1': path_ratio_1,
+                    'path_ratio_2': path_ratio_2
+                }
+        return False
+
+    @staticmethod
+    def calculate_is_in_position(restrictions, x, y, tolerance):
+        # we need to know if there is at least one required position
+        has_required_position = False
+        # isInPosition will be used to determine if we return
+        # true where we have at least one required type
+        in_position = False
+
+        # loop through each restriction
+        for restriction in restrictions:
+            if restriction.Type == "required":
+                # we have at least on required position, so at least one point must be in
+                # position for us to return true
+                has_required_position = True
+            if restriction.is_in_position(x, y, tolerance):
+                if restriction.Type == "forbidden":
+                    # if we're in a forbidden position, return false now
+                    return False
+                else:
+                    # we're in position in at least one required position restriction
+                    in_position = True
+
+        if has_required_position:
+            # if at least one position restriction is required
+            return in_position
+
+        # if we're here then we only have forbidden restrictions, but the point
+        # was not within the restricted area(s)
+        return True

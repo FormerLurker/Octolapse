@@ -183,7 +183,11 @@ class Timelapse(object):
         try:
 
             # create the GCode for the timelapse and store it
-            snapshot_gcode = self.Gcode.create_snapshot_gcode(self.Position, trigger, triggering_command)
+            snapshot_gcode = self.Gcode.create_snapshot_gcode(
+                self.Position,
+                trigger,
+                triggering_command
+            )
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
             # wait for the current position
@@ -439,18 +443,14 @@ class Timelapse(object):
             self.Settings.is_octolapse_enabled and
             self.State == TimelapseState.Idle and
             self.OctoprintPrinter.is_printing() and
-            set(['trigger:comm.start_print', 'api:job']) <= tags
+            set(['trigger:comm.start_print']) <= tags
         ):
             self.Settings.current_debug_profile().log_print_state_change(
                 "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
             )
             if self.OctoprintPrinter.set_job_on_hold(True):
                 try:
-                    if 'fileline:1' not in tags and 'filesentline:1' not in tags:
-                        # If we're here, we're pinting from SD, but Octolapse is enabled.
-                        # A warning message will be sent to the user in on_event : PRINT_STARTED
-                        self.OctoprintPrinter.cancel_print()
-                    else:
+                    if 'fileline:1' in tags or 'filesentline:1' in tags:
                         self.on_print_start(tags)
                         # resend the command while we have the job lock.  This is important else your first
                         # two gcodes will run out of order.
@@ -665,16 +665,17 @@ class Timelapse(object):
                 return False
             # see if the PREVIOUS command triggered (that means current gcode gets sent if the trigger[0]
             # is triggering
-            first_trigger = self.Triggers.get_first_triggering_in_path(0)
+            first_trigger = self.Triggers.get_first_triggering(0, Triggers.TRIGGER_TYPE_IN_PATH)
 
             if first_trigger:
+                self.Settings.current_debug_profile().log_triggering("An in-path snapshot is triggering")
                 return first_trigger
-            else:
-                current_trigger = self.Triggers.get_first_triggering(1)
-                if current_trigger:  # We're triggering
-                    self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
-                    # notify any callbacks
-                    return current_trigger
+
+            first_trigger = self.Triggers.get_first_triggering(1, Triggers.TRIGGER_TYPE_DEFAULT)
+            if first_trigger:  # We're triggering
+                self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
+                # notify any callbacks
+                return first_trigger
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             # no need to re-raise here, the trigger just won't happen

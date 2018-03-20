@@ -500,7 +500,6 @@ class Snapshot(object):
         self.gcode_trigger_on_detracting_start = None
         self.gcode_trigger_on_detracting = None
         self.gcode_trigger_on_detracted = None
-        self.gcode_trigger_position_restrictions = []
         # Timer Trigger
         self.timer_trigger_enabled = False
         self.timer_trigger_seconds = 30
@@ -515,7 +514,6 @@ class Snapshot(object):
         self.timer_trigger_on_detracting_start = True
         self.timer_trigger_on_detracting = False
         self.timer_trigger_on_detracted = False
-        self.timer_trigger_position_restrictions = []
         # Layer Trigger
         self.layer_trigger_enabled = True
         self.layer_trigger_height = 0.0
@@ -530,9 +528,9 @@ class Snapshot(object):
         self.layer_trigger_on_detracting_start = True
         self.layer_trigger_on_detracting = False
         self.layer_trigger_on_detracted = False
-        self.layer_trigger_position_restrictions = []
         # other settings
-
+        self.position_restrictions = []
+        self.lift_before_move = True
         self.retract_before_move = True
 
         self.cleanup_after_render_complete = True
@@ -556,7 +554,6 @@ class Snapshot(object):
                 self.gcode_trigger_on_detracting_start = snapshot.gcode_trigger_on_detracting_start
                 self.gcode_trigger_on_detracting = snapshot.gcode_trigger_on_detracting
                 self.gcode_trigger_on_detracted = snapshot.gcode_trigger_on_detracted
-                self.gcode_trigger_position_restrictions = snapshot.gcode_trigger_position_restrictions
                 # timer trigger members
                 self.timer_trigger_enabled = snapshot.timer_trigger_enabled
                 self.timer_trigger_require_zhop = snapshot.timer_trigger_require_zhop
@@ -570,7 +567,6 @@ class Snapshot(object):
                 self.timer_trigger_on_detracting_start = snapshot.timer_trigger_on_detracting_start
                 self.timer_trigger_on_detracting = snapshot.timer_trigger_on_detracting
                 self.timer_trigger_on_detracted = snapshot.timer_trigger_on_detracted
-                self.timer_trigger_position_restrictions = snapshot.timer_trigger_position_restrictions
                 # layer trigger members
                 self.layer_trigger_enabled = snapshot.layer_trigger_enabled
                 self.layer_trigger_height = snapshot.layer_trigger_height
@@ -585,11 +581,13 @@ class Snapshot(object):
                 self.layer_trigger_on_detracting_start = snapshot.layer_trigger_on_detracting_start
                 self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
                 self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
-                self.layer_trigger_position_restrictions = snapshot.layer_trigger_position_restrictions
 
+                self.position_restrictions = snapshot.position_restrictions
+                self.lift_before_move = snapshot.lift_before_move
+                self.retract_before_move = snapshot.retract_before_move
                 self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
                 self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
-                self.retract_before_move = snapshot.retract_before_move
+
             else:
                 self.update(snapshot)
 
@@ -640,9 +638,6 @@ class Snapshot(object):
         if "gcode_trigger_on_detracted" in changes.keys():
             self.gcode_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["gcode_trigger_on_detracted"])
-        if "gcode_trigger_position_restrictions" in changes.keys():
-            self.gcode_trigger_position_restrictions = self.get_trigger_position_restrictions(
-                changes["gcode_trigger_position_restrictions"])
         # timer trigger members
         if "timer_trigger_enabled" in changes.keys():
             self.timer_trigger_enabled = utility.get_bool(
@@ -683,9 +678,6 @@ class Snapshot(object):
         if "timer_trigger_on_detracted" in changes.keys():
             self.timer_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["timer_trigger_on_detracted"])
-        if "timer_trigger_position_restrictions" in changes.keys():
-            self.timer_trigger_position_restrictions = self.get_trigger_position_restrictions(
-                changes["timer_trigger_position_restrictions"])
         # layer trigger members
         if "layer_trigger_enabled" in changes.keys():
             self.layer_trigger_enabled = utility.get_bool(
@@ -726,10 +718,13 @@ class Snapshot(object):
         if "layer_trigger_on_detracted" in changes.keys():
             self.layer_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_detracted"])
-        if "layer_trigger_position_restrictions" in changes.keys():
-            self.layer_trigger_position_restrictions = self.get_trigger_position_restrictions(
-                changes["layer_trigger_position_restrictions"])
         # other settings
+        if "position_restrictions" in changes.keys():
+            self.position_restrictions = self.get_trigger_position_restrictions(
+                changes["position_restrictions"])
+        if "lift_before_move" in changes.keys():
+            self.lift_before_move = utility.get_bool(
+                changes["lift_before_move"], self.lift_before_move)
         if "retract_before_move" in changes.keys():
             self.retract_before_move = utility.get_bool(
                 changes["retract_before_move"], self.retract_before_move)
@@ -801,8 +796,6 @@ class Snapshot(object):
             'gcode_trigger_on_detracting_start': get_vr(self.gcode_trigger_on_detracting_start),
             'gcode_trigger_on_detracting': get_vr(self.gcode_trigger_on_detracting),
             'gcode_trigger_on_detracted': get_vr(self.gcode_trigger_on_detracted),
-            'gcode_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
-                self.gcode_trigger_position_restrictions),
             # Timer Trigger
             'timer_trigger_enabled': self.timer_trigger_enabled,
             'timer_trigger_require_zhop': self.timer_trigger_require_zhop,
@@ -817,8 +810,6 @@ class Snapshot(object):
             'timer_trigger_on_detracting_start': get_vr(self.timer_trigger_on_detracting_start),
             'timer_trigger_on_detracting': get_vr(self.timer_trigger_on_detracting),
             'timer_trigger_on_detracted': get_vr(self.timer_trigger_on_detracted),
-            'timer_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
-                self.timer_trigger_position_restrictions),
             # Layer Trigger
             'layer_trigger_enabled': self.layer_trigger_enabled,
             'layer_trigger_height': self.layer_trigger_height,
@@ -833,10 +824,11 @@ class Snapshot(object):
             'layer_trigger_on_detracting_start': get_vr(self.layer_trigger_on_detracting_start),
             'layer_trigger_on_detracting': get_vr(self.layer_trigger_on_detracting),
             'layer_trigger_on_detracted': get_vr(self.layer_trigger_on_detracted),
-            'layer_trigger_position_restrictions': self.get_trigger_position_restrictions_value_string(
-                self.layer_trigger_position_restrictions),
 
             # Other Settings
+            'position_restrictions': self.get_trigger_position_restrictions_value_string(
+                self.position_restrictions),
+            'lift_before_move': self.lift_before_move,
             'retract_before_move': self.retract_before_move,
             'cleanup_after_render_complete': self.cleanup_after_render_complete,
             'cleanup_after_render_fail': self.cleanup_after_render_fail,
@@ -863,7 +855,7 @@ class Rendering(object):
         self.watermark = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
-        self.output_template = "{FAILEDFLAG]{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
+        self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
