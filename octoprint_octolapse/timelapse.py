@@ -670,9 +670,9 @@ class Timelapse(object):
             # no need to re-raise here, the trigger just won't happen
         return False
 
-    def on_gcode_sent(self, cmd, cmd_type, gcode):
+    def on_gcode_sent(self, cmd, cmd_type, gcode, tags):
         self.Settings.current_debug_profile().log_gcode_sent(
-            "Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}".format(cmd_type, gcode, cmd))
+            "Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(cmd_type, gcode, cmd, tags))
 
     # internal functions
     ####################

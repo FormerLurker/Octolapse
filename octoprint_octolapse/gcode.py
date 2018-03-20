@@ -228,6 +228,7 @@ class SnapshotGcodeGenerator(object):
         y_return = position.y()
         z_return = position.z()
         f_return = position.f()
+        e_return = position.e()
 
         is_relative = position.is_relative()
         is_extruder_relative = position.is_extruder_relative()
@@ -316,7 +317,7 @@ class SnapshotGcodeGenerator(object):
                 if _e:
                     _e = float(_e)
                     if not self.IsExtruderRelativeCurrent:
-                        _extrusion_amount = position.e_relative(_e)
+                        _extrusion_amount = position.e_relative(e=_e)
                         # set e1 absolute
                         _e1 = _e - _extrusion_amount * path_ratio_2
                         _e2 = _e

@@ -943,7 +943,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
-                self.Timelapse.on_gcode_sent(cmd, cmd_type, gcode)
+                self.Timelapse.on_gcode_sent(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception, e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)

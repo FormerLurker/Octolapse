@@ -993,7 +993,7 @@ class Position(object):
             if len(self.Positions) <= index:
                 return None
             pos = self.Positions[index]
-            return x - pos.X
+            return x - pos.X+ pos.XOffset
 
         else:
             if len(self.Positions) <= index + 1:
@@ -1008,7 +1008,7 @@ class Position(object):
             if len(self.Positions) <= index:
                 return None
             pos = self.Positions[index]
-            return y - pos.Y
+            return y - pos.Y + pos.YOffset
 
         else:
             if len(self.Positions) <= index + 1:
@@ -1023,7 +1023,7 @@ class Position(object):
             if len(self.Positions) <= index:
                 return None
             pos = self.Positions[index]
-            return z - pos.Z
+            return z - pos.Z + pos.ZOffset
 
         else:
             if len(self.Positions) <= index + 1:
@@ -1038,7 +1038,7 @@ class Position(object):
             if len(self.Positions) <= index:
                 return None
             pos = self.Positions[index]
-            return e - pos.E
+            return e - pos.E + pos.EOffset
 
         else:
             if len(self.Positions) <= index+1:
