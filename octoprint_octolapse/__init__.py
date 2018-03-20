@@ -552,8 +552,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     )
                     self._printer.cancel_print()
                     return
-
-            if event == Events.DISCONNECTING:
+            if event == Events.POSITION_UPDATE:
+                self.Timelapse.on_position_received(payload)
+            elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:
                 self.on_printer_disconnected()
@@ -570,8 +571,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.on_print_canceled()
             elif event == Events.PRINT_DONE:
                 self.on_print_completed()
-            elif event == Events.POSITION_UPDATE:
-                self.Timelapse.on_position_received(payload)
         except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)

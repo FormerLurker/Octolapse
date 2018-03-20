@@ -552,7 +552,7 @@ class Timelapse(object):
                             if self.State == TimelapseState.AcquiringLocation:
                                 self.State = TimelapseState.WaitingForTrigger
 
-                            self.Settings.current_debug_profile().log_snapshot_download("Position Acquired")
+                            self.Settings.current_debug_profile().log_print_state_change("Position Acquired")
 
                     finally:
                         try:
