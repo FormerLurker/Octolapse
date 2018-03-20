@@ -169,7 +169,6 @@ class Timelapse(object):
 
     def _take_timelapse_snapshot(self, trigger, triggering_command):
         timelapse_snapshot_payload = {
-            "starting_position": None,
             "snapshot_position": None,
             "return_position": None,
             "snapshot_gcode": None,
@@ -188,56 +187,46 @@ class Timelapse(object):
                 trigger,
                 triggering_command
             )
-            assert (isinstance(snapshot_gcode, SnapshotGcode))
-
-            # wait for the current position
-            current_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
-            # record the position
-            timelapse_snapshot_payload["starting_position"] = current_position
-            # todo: check current position
-
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
+            assert (isinstance(snapshot_gcode, SnapshotGcode))
 
-            # start our snapshot timer AFTER we receive the initial position, since this tells us when the printer
-            # has completed all of the gcode that was queued up.
+            # park the printhead in the snapshot position and wait for the movement to complete
+            snapshot_position = self.get_position_async(
+                start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
+
+            )
+            timelapse_snapshot_payload["snapshot_position"] = snapshot_position
+            # record the snapshot start time
             snapshot_start_time = time.time()
-
-            # park the printhead in the snapshot position
-            current_position = self.get_position_async(start_gcode=snapshot_gcode.SnapshotCommands)
-            # record the position
-            timelapse_snapshot_payload["snapshot_position"] = current_position
-            # record the time
-            timelapse_snapshot_payload["snapshot_time"] = time.time() - snapshot_start_time
-
-            # todo: check current position
-
             # take the snapshot
             snapshot_async_payload = self._take_snapshot_async()
-            # record snapshot payload
             timelapse_snapshot_payload["snapshot_payload"] = snapshot_async_payload
-            # record the time
-            timelapse_snapshot_payload["snapshot_time"] = time.time() - snapshot_start_time
+            # calculate the snapshot time
+            snapshot_time = time.time() - snapshot_start_time
+
+            # record the return movement start time
+            return_start_time = time.time()
 
             # return the printhead to the start position
-            current_position = self.get_position_async(
-                start_gcode=snapshot_gcode.ReturnCommands
+            return_position = self.get_position_async(
+                start_gcode=snapshot_gcode.ReturnCommands,
+                end_gcode=snapshot_gcode.EndGcode
             )
+            # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
+            # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
+            timelapse_snapshot_payload["return_position"] = return_position
+            # calculate the return movement time
+            return_time = time.time() - return_start_time
 
-            # send any remaining gcode commands
-            if len(snapshot_gcode.EndGcode)>0:
-                current_position = self.get_position_async(
-                    start_gcode=snapshot_gcode.EndGcode
-                )
-            # record the time
-            # note that the previous get_position_async call returns right after sending the end gcode, so this
-            # should add a negligible amount of time
-            current_snapshot_time = time.time() - snapshot_start_time
+            # calculate the total snapshot time
+            # Note that we use 2 * return_time as opposed to snapshot_travel_time + return_time.
+            # This is so we can avoid sending an M400 until after we've lifted and hopped
+            current_snapshot_time = snapshot_time + 2 * return_time
             self.SecondsAddedByOctolapse += current_snapshot_time
-            # record the position
-            timelapse_snapshot_payload["return_position"] = current_position
             timelapse_snapshot_payload["current_snapshot_time"] = current_snapshot_time
             timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
+
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = True
         except Exception as e:
