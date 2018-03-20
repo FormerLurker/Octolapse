@@ -550,7 +550,7 @@ class SnapshotGcodeGenerator(object):
             "" if x is None else " X{0:.3f}".format(x),
             "" if y is None else " Y{0:.3f}".format(y),
             "" if z is None else " Z{0:.3f}".format(z),
-            "" if e is None else " E{0:.3f}".format(e),
+            "" if e is None else " E{0:.5f}".format(e),
             "" if f is None else " F{0}".format(f)
         )
 
@@ -598,14 +598,14 @@ class SnapshotGcodeGenerator(object):
 
     @staticmethod
     def get_gcode_retract(distance, f=None):
-        return "G1 E{0:.3f}{1}".format(
+        return "G1 E{0:.5f}{1}".format(
             -1 * distance,
             "" if f is None else " F{0}".format(int(f))
         )
 
     @staticmethod
     def get_gcode_detract(distance, f=None):
-        return "G1 E{0:.3f}{1}".format(
+        return "G1 E{0:.5f}{1}".format(
             distance,
             "" if f is None else " F{0}".format(int(f))
         )
