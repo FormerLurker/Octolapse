@@ -22,12 +22,17 @@ Please note that some settings may need to be adjusted depending on your slicer 
 
 [View the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
 
-[![The obligatory benchy](https://img.youtube.com/vi/er0VCYen1MY/0.jpg)](https://youtu.be/er0VCYen1MY)
-
-<a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+<div align="center">
+    <a href="https://youtu.be/er0VCYen1MY" title="Watch on youtube">
+        <img src="https://img.youtube.com/vi/er0VCYen1MY/0.jpg" alt="A timelapse of a double spiral vase made with Octolapse"/>
+    </a>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
   <i>A timelapse of a double spiral vase made with Octolapse</i>
 </a>
-
+    </div>
+    <br/>
+</div>
 
 **Octolapse is provided without warranties of any kind.  By installing Octolapse you agree to accept all liability for any damage caused directly or indirectly by Octolapse.**  
 
@@ -62,25 +67,42 @@ Octolapse can be installed from within OctoPrint (thanks Gina)!  [Learn how to i
 
 
 ## More Octolapses
-[![The Milennium Falcon](https://img.youtube.com/vi/dYbWfBCLNbI/0.jpg)](https://youtu.be/dYbWfBCLNbI)
+<div align="center">
+    <a href="https://youtu.be/dYbWfBCLNbI" title="Watch on youtube">
+        <img src="https://img.youtube.com/vi/dYbWfBCLNbI/0.jpg" alt="The Milennium Falcon"/>
+    </a>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+            <i>The Milennium Falcon</i>
+        </a>
+    </div>
+    <br/>
+</div>
 
-<a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-  <i>The Milennium Falcon</i>
-</a>
+<div align="center">
+    <a href="https://youtu.be/4kEHbRrp2Jk" title="Watch on youtube">
+        <img src="https://img.youtube.com/vi/4kEHbRrp2Jk/0.jpg" alt="The Moon - Animated X Axis"/>
+    </a>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:2531838" alt="Link to the model from this video" title="view model on thingiverse" target="_blank"> 
+            <i>The Moon - Animated X Axis</i>
+        </a>
+    </div>
+    <br/>
+</div>
 
-
-[![The Moon - Animated X Axis](https://img.youtube.com/vi/4kEHbRrp2Jk/0.jpg)](https://youtu.be/4kEHbRrp2Jk)
-
-<a href="https://www.thingiverse.com/thing:2531838" alt="Link to the model from this video" title="view model on thingiverse" target="_blank"> 
-     <i>The Moon - Animated X Axis</i>
-</a>
-
-[![The obligatory benchy](https://img.youtube.com/vi/Ra5Jjq-nJfA/0.jpg)](https://youtu.be/Ra5Jjq-nJfA)
-
-<a href="https://www.thingiverse.com/thing:763622" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-  <i>The obligatory benchy</i>
-</a>
-
+<div align="center">
+    <a href="https://youtu.be/Ra5Jjq-nJfA" title="Watch on youtube">
+        <img src="https://img.youtube.com/vi/Ra5Jjq-nJfA/0.jpg" alt="The obligatory benchy"/>
+    </a>
+    <div> 
+        <a href="https://www.thingiverse.com/thing:763622" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+            <i>The obligatory benchy</i>
+        </a>
+    </div>
+    <br/>
+</div>
 
 ## History of Octolapse
 I got the idea for Octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my GCode files.  To accomplish this I used the excellent and simple [GCode System Commands](https://github.com/kantlivelong/OctoPrint-GCodesystemCommands) plugin.  The timelapse worked great, but it required a lot of effort which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, so I decided to give plugin development a go.  I've never done one before (or programmed python or knockout or anything open source), but figured I could contribute something good to the community.  This is my "thank you" to all of the makers out there who have contributed your time and effort!
+
