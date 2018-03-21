@@ -1,30 +1,22 @@
 # coding=utf-8
 
 ########################################################################################################################
-# Do not forget to adjust the following variables to your own plugin.
-
 # The plugin's identifier, has to be unique
 plugin_identifier = "octolapse"
-
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
 plugin_package = "octoprint_octolapse"
-
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
 plugin_name = "Octolapse"
-
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
 plugin_version = "0.2.1"
-
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create a stabilized timelapse of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
-
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "Brad Hochgesang"
-
 # The plugin's author's mail address.
-plugin_author_email = "hochgebe@gmail.com"
+plugin_author_email = "FormerLurker@protonmail.com"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
 plugin_url = "https://github.com/FormerLurker/Octolapse"

@@ -20,7 +20,12 @@ Octolapse is still in Beta, but has been confirmed to work on several printers:
 
 Please note that some settings may need to be adjusted depending on your slicer settings.
 
-[View the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
+# Installation
+Octolapse can be installed from within OctoPrint (thanks Gina)!  [Learn how to install Octolapse here.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
+
+After installation, you can learn more by [visiting the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
+
+# What Octolapse Does
 
 <div align="center">
     <a href="https://youtu.be/er0VCYen1MY" title="Watch on youtube">
@@ -58,9 +63,6 @@ Use caution and never leave your printer unattended.
 ## To make good timelapses you need good snapshots
 * Slow camera or low framerate?  Octolapse allows you to set a delay beofre taking a snapshot to allow your camera enough time to get a clear image.
 * If you have a compatible camera you can control contrast, brightness, focus, white balance, pan, tilt, zoom, and much more.  You can apply your custom settings before each print.
-
-# Installation
-Octolapse can be installed from within OctoPrint (thanks Gina)!  [Learn how to install Octolapse here.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
 
 # Usage
 [Learn how to start your first print here.](https://github.com/FormerLurker/Octolapse/wiki/Usage)  It's a good idea to read about the settings before using Octolapse.
