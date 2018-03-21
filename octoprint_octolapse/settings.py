@@ -1936,7 +1936,7 @@ class OctolapseSettings(object):
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
                 dict(value='fixed_path', name='List of Fixed Coordinates'),
-                dict(value='relative', name='Relative Coordinates (0-100)'),
+                dict(value='relative', name='Relative Coordinate (0-100)'),
                 dict(value='relative_path', name='List of Relative Coordinates')
             ],
 

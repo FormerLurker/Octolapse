@@ -6,7 +6,7 @@ title: Octolapse
 description: Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.
 author: Brad Hochgesang
 license: AGPL-3.0
-date: 2018-03-15
+date: 2018-03-23
 
 homepage: https://formerlurker.github.io/Octolapse/
 source: https://github.com/FormerLurker/Octolapse/
@@ -49,6 +49,9 @@ Octolapse is still in Beta, but has been confirmed to work on several printers:
 *  I've heard reports that the Monoprice Maker Select v2/Wanhao Duplicator i3 also works, but have yet to receive a profile for this printer.  [See this issue if you can help!](https://github.com/FormerLurker/Octolapse/issues/27)
 
 Please note that some settings may need to be adjusted depending on your slicer settings.
+
+[View the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
+
 <div style="text-align:center">
     <br/>
     <div>
@@ -71,7 +74,8 @@ Use caution and never leave your printer unattended.
 * Optional Z-Hop and retract detection to reduce stringing, maximizing quality.
 * Configurable stabilizations allow you complete control of the X and Y position of each snapshot.  You can choose a position as close to or as far away from your part as you wish.
 * Minimal impact on print time and print quality.  Octolapse normally takes between one and three seconds to take a snapshot.  It even reports exactly how much time it's using after each snapshot!
-* Allow or prevent snapshots in certain areas.  This can be used to prevent snapshots over critical areas of your print or a delicate part.  If you have a multi-material printer, you can even restrict snapshots to your wipe tower, virtually eliminating any quality considerations!
+* Allow or prevent snapshots in certain areas with Position Restrictions.  This can be used to prevent snapshots over critical areas of your print or a delicate part.  If you have a multi-material printer, you can even restrict snapshots to your wipe tower, virtually eliminating any quality considerations!  
+* Octolapse can optionally calculate intersections between the printer path and the any Position Restriction, allowing a snapshot even if it's in the middle of an extrusion!
 * Stop the timelapse whenever you want!  If things go awry, you can prevent Octolapse from taking any further snapshots for the rest of the print.  It will even wait to render any snapshots that were already taken until after the print has finished!
 * Use test mode to try out your timelapse settings without heating your bed or nozzle, turning on any fans, or extruding any filament.  This saves time and plastic.  It's also very useful for development and testing! 
 ## Octolapse was also designed to make great timelapses

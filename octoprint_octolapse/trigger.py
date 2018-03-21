@@ -505,18 +505,38 @@ class LayerTrigger(Trigger):
                 state.IsHomed = True
 
                 # calculate height increment changed
+                if (
+                    self.HeightIncrement is not None
+                    and self.HeightIncrement > 0
+                    and position.is_layer_change(0)
+                    and (
+                        state.CurrentIncrement * self.HeightIncrement < position.height(0) or
+                        state.CurrentIncrement == 0
+                    )
+                ):
+                    # Removed since height increments may be skipped!
+                    #state.CurrentIncrement += 1
 
-                if (self.HeightIncrement is not None
-                        and self.HeightIncrement > 0
-                        and position.is_layer_change(0)
-                        and state.CurrentIncrement * self.HeightIncrement <= position.height(0)):
-                    state.CurrentIncrement += 1
-                    state.IsHeightChange = True
+                    new_increment = int(math.ceil(position.height(0)/self.HeightIncrement))
 
-                    message = (
-                        "Layer Trigger - Height Increment:{0}, Current Increment"
-                    ).format(self.HeightIncrement, state.CurrentIncrement)
-                    self.Settings.current_debug_profile().log_trigger_height_change(message)
+                    if new_increment <= state.CurrentIncrement:
+                        message = (
+                            "Layer Trigger - Warning - The height increment was expected to increase, but it did not." 
+                            " Height Increment:{0}, Current Increment:{1}, Calculated Inrement:{2}"
+                        ).format(self.HeightIncrement, state.CurrentIncrement, new_increment)
+                        self.Settings.current_debug_profile().log_trigger_height_change(message)
+                    else:
+                        state.CurrentIncrement = new_increment
+                        # if the current increment is below one here, set it to one.  This is not normal, but can happen
+                        # if extrusion is detected at height 0.
+                        if state.CurrentIncrement < 1:
+                            state.CurrentIncrement = 1
+
+                        state.IsHeightChange = True
+                        message = (
+                            "Layer Trigger - Height Increment:{0}, Current Increment:{1}, Height: {2}"
+                        ).format(self.HeightIncrement, state.CurrentIncrement, position.height(0))
+                        self.Settings.current_debug_profile().log_trigger_height_change(message)
 
                 # see if we've encountered a layer or height change
                 if self.HeightIncrement is not None and self.HeightIncrement > 0:
