@@ -357,18 +357,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     "Loading existings settings file from: {0}.".format(self.get_settings_file_path()))
             else:
                 self._logger.info("Loading existing settings file from: {0}.".format(
-                    self.get_settings_file_path()))
+                    self.get_settings_file_path())
+                )
             with open(self.get_settings_file_path()) as settingsJson:
                 data = json.load(settingsJson)
             if self.Settings is None:
                 #  create a new settings object
                 self.Settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
-                self.Settings.current_debug_profile().log_settings_load(
-                    "Settings loaded.  Created new settings object: {0}.".format(data))
+                self.Settings.current_debug_profile().log_settings_load("Settings loaded.")
             else:
                 # update an existing settings object
                 self.Settings.current_debug_profile().log_settings_load(
-                    "Settings loaded.  Updating existing settings object: {0}.".format(data))
+                    "Settings loaded.  Updating existing settings object."
+                )
                 self.Settings.update(data)
         # Extract any settings from octoprint that would be useful to our users.
         self.copy_octoprint_default_settings(
@@ -428,12 +429,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # Save setting from file
         settings_dict = self.Settings.to_dict()
         self.Settings.current_debug_profile().log_settings_save(
-            "Saving Settings.".format(settings_dict))
+            "Saving Settings.")
 
         with open(self.get_settings_file_path(), 'w') as outfile:
             json.dump(settings_dict, outfile)
         self.Settings.current_debug_profile().log_settings_save(
-            "Settings saved: {0}".format(settings_dict))
+            "Settings saved.".format(settings_dict))
+
         return None
 
     # def on_settings_initialized(self):

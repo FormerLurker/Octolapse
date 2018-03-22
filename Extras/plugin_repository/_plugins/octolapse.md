@@ -125,3 +125,5 @@ Use caution and never leave your printer unattended.
     <br/>
 </div>
 
+Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+Copyright (C) 2017  Brad Hochgesang - FormerLurker@protonmail.com
