@@ -1,6 +1,6 @@
 # Octolapse
 <div align="center">
-    <img src="https://raw.githubusercontent.com/FormerLurker/Octolapse/NoPause/Extras/Wiki/assets/img/tab_mini.png" alt="Octolapse Tab"/>
+    <img src="https://raw.githubusercontent.com/FormerLurker/Octolapse/master/Extras/Wiki/assets/img/tab_mini.png" alt="Octolapse Tab"/>
     <div> 
         <i>Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.</i>
     </div>

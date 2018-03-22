@@ -26,6 +26,7 @@ from tempfile import NamedTemporaryFile
 from octoprint_octolapse.settings import OctolapseSettings
 import octoprint_octolapse.utility as utility
 
+
 class TestTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
@@ -34,9 +35,6 @@ class TestTrigger(unittest.TestCase):
         del self.Settings
 
     def test_intersections_circle(self):
-        a = [100, 100]
-        b = [100, 0]
-        c = [100, 50, 10]
         tests = [
             {
                 'name': "intersects_1",
@@ -83,7 +81,7 @@ class TestTrigger(unittest.TestCase):
                     test["assert"],
                     intersections,
                     "Failed test test_intersections_rectangle:  TestName: {0}".format(test["name"])
-            )
+                )
 
     def test_intersections_rectangle(self):
         tests = [
@@ -109,7 +107,7 @@ class TestTrigger(unittest.TestCase):
                 'p2': [15, 3],
                 'rect1': [15, 10],
                 'rect2': [10, 5],
-                'assert': [[13.0, 5.0],[10.0, 8.0] ]
+                'assert': [[13.0, 5.0], [10.0, 8.0]]
             },
             {
                 'name': "intersects_4",
@@ -281,23 +279,23 @@ class TestTrigger(unittest.TestCase):
                     test["assert"],
                     intersections,
                     "Failed test test_intersections_rectangle:  TestName: {0}".format(test["name"])
-            )
+                )
 
-    def test_get_restriction_intersection_point(self):
-        restrictions_dict = [
-            {
-                "Shape": "rect",
-                "X": 10.0,
-                "Y": 10.0,
-                "X2": 20.0,
-                "Y2": 20.0,
-                "Type": "forbidden",
-                "R": 1.0,
-                "CalculateIntersections": False
-            }
-        ]
-
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+    # def test_get_restriction_intersection_point(self):
+    #    restrictions_dict = [
+    #        {
+    #            "Shape": "rect",
+    #            "X": 10.0,
+    #            "Y": 10.0,
+    #            "X2": 20.0,
+    #            "Y2": 20.0,
+    #            "Type": "forbidden",
+    #            "R": 1.0,
+    #            "CalculateIntersections": False
+    #        }
+    #    ]
+    #
+    #    restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
 
 
 if __name__ == '__main__':
