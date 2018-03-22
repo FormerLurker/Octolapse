@@ -3,7 +3,7 @@ layout: plugin
 
 id: octolapse
 title: Octolapse
-description: Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.
+description: Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.  Requires OctoPrint 1.3.7 or higher
 author: Brad Hochgesang
 license: AGPL-3.0
 date: 2018-03-24
@@ -29,7 +29,9 @@ compatibility:
   - freebsd
 ---
 
+
 # Octolapse
+
 <div style="text-align:center">
     <img src="/assets/img/plugins/octolapse/tab_mini.png" alt="Octolapse Tab"/>
     <div> 
@@ -37,9 +39,12 @@ compatibility:
     </div>
     <br/>
 </div>
+
 Octolapse is designed to make stabilized timelapses of your prints with as little hassle as possible, and it's extremely configurable.  Now you can create a silky smooth timelapse without a custom camera mount, no GCode customizations required.
 
 Octolapse moves the print bed and extruder into position before taking each snapshot, giving you a crisp image in every frame.  Snapshots can be taken at each layer change, at specific height increments, after a period of time has elapsed, or when certain GCodes are detected.  You can even combine multiple methods in a single timelapse.
+
+**Important**:  *Octolapse requires OctoPrint v1.3.7 or higher.*  You can check your OctoPrint version by looking in the lower left hand corner of your OctoPrint server home page. 
 
 Octolapse is still in Beta but has been confirmed to work on several printers:
 
