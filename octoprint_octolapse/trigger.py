@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -173,6 +173,7 @@ class TriggerState(object):
     def __init__(self, state=None):
         self.IsTriggered = False if state is None else state.IsTriggered
         self.TriggerType = None if state is None else state.TriggerType
+        self.IsInPosition = False if state is None else state.IsInPosition
         self.InPathPosition = False if state is None else state.InPathPosition
         self.IsWaiting = False if state is None else state.IsWaiting
         self.IsWaitingOnZHop = False if state is None else state.IsWaitingOnZHop
@@ -185,6 +186,7 @@ class TriggerState(object):
             "IsTriggered": self.IsTriggered,
             "TriggerType": self.TriggerType,
             "InPathPosition": self.InPathPosition,
+            "IsInPosition": self.IsInPosition,
             "IsWaiting": self.IsWaiting,
             "IsWaitingOnZHop": self.IsWaitingOnZHop,
             "IsWaitingOnExtruder": self.IsWaitingOnExtruder,
@@ -197,6 +199,7 @@ class TriggerState(object):
     def reset_state(self):
         self.IsTriggered = False
         self.InPathPosition = False
+        self.IsInPosition = False
         self.TriggerType = None
         self.HasChanged = False
 
@@ -204,6 +207,7 @@ class TriggerState(object):
         if (state is not None
                 and self.IsTriggered == state.IsTriggered
                 and self.TriggerType == state.TriggerType
+                and self.IsInPosition == state.IsInPosition
                 and self.InPathPosition == state.InPathPosition
                 and self.IsWaiting == state.IsWaiting
                 and self.IsWaitingOnZHop == state.IsWaitingOnZHop
@@ -363,6 +367,10 @@ class GcodeTrigger(Trigger):
                 state.IsHomed = True
                 # check to see if we are in the proper position to take a snapshot
 
+                # set is in position
+                state.IsInPosition = position.is_in_position(0)
+                state.InPathPosition = position.in_path_position(0)
+
                 if self.is_snapshot_command(command_name):
                     state.IsWaiting = True
                 if state.IsWaiting:
@@ -371,20 +379,20 @@ class GcodeTrigger(Trigger):
                             state.IsWaitingOnZHop = True
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on ZHop.")
-                        elif not position.is_in_position(0) and not position.in_path_position(0):
+                        elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on Position.")
                         else:
                             state.IsTriggered = True
                             self.TriggeredCount += 1
-                            if position.is_in_position(0):
+                            if state.IsInPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_DEFAULT
-                            elif position.in_path_position(0):
-                                state.InPathPosition = position.in_path_position(0)
+                            elif state.InPathPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_IN_PATH
                             else:
                                 state.TriggerType = None
+
                             state.IsWaiting = False
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
@@ -523,6 +531,10 @@ class LayerTrigger(Trigger):
             else:
                 state.IsHomed = True
 
+                # set is in position
+                state.IsInPosition = position.is_in_position(0)
+                state.InPathPosition = position.in_path_position(0)
+
                 # calculate height increment changed
                 if (
                     self.HeightIncrement is not None
@@ -533,8 +545,6 @@ class LayerTrigger(Trigger):
                         state.CurrentIncrement == 0
                     )
                 ):
-                    # Removed since height increments may be skipped!
-                    #state.CurrentIncrement += 1
 
                     new_increment = int(math.ceil(position.height(0)/self.HeightIncrement))
 
@@ -589,7 +599,7 @@ class LayerTrigger(Trigger):
                             state.IsWaitingOnZHop = True
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
-                        elif not position.is_in_position(0) and not position.in_path_position(0):
+                        elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "LayerTrigger - Waiting on Position.")
@@ -603,11 +613,10 @@ class LayerTrigger(Trigger):
 
                             self.TriggeredCount += 1
                             # set the trigger teyp
-                            if position.is_in_position(0):
+                            if state.IsInPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_DEFAULT
-                            elif position.in_path_position(0):
+                            elif state.InPathPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_IN_PATH
-                                state.InPathPosition = position.in_path_position(0)
                             else:
                                 state.TriggerType = None
 
@@ -766,6 +775,10 @@ class TimerTrigger(Trigger):
                 # record the current time to keep things consistant
                 current_time = time.time()
 
+                # set is in position
+                state.IsInPosition = position.is_in_position(0)
+                state.InPathPosition = position.in_path_position(0)
+
                 # if the trigger start time is null, set it now.
                 if state.TriggerStartTime is None:
                     state.TriggerStartTime = current_time
@@ -795,8 +808,9 @@ class TimerTrigger(Trigger):
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True
-                        elif not position.is_in_position(0) and not position.in_path_position(0):
+                        elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
+
                             self.Settings.current_debug_profile().log_trigger_wait_state(
                                 "TimerTrigger - Waiting on Position.")
                         else:
@@ -804,10 +818,10 @@ class TimerTrigger(Trigger):
                             self.TriggeredCount += 1
                             state.IsTriggered = True
                             # set the trigger teyp
-                            if position.is_in_position(0):
+                            if state.IsInPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_DEFAULT
-                            elif position.in_path_position(0):
-                                state.InPathPosition = position.in_path_position(0)
+                                state.IsInPosition = True
+                            elif state.InPathPosition:
                                 state.TriggerType = Triggers.TRIGGER_TYPE_IN_PATH
                             else:
                                 state.TriggerType = None

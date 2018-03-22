@@ -22,7 +22,7 @@
 ##################################################################################
 */
 $(function () {
-        Octolapse.StatusViewModel = function (parameters) {
+        Octolapse.StatusViewModel = function () {
             // Create a reference to this object
             var self = this;
             // Add this object to our Octolapse namespace
@@ -74,7 +74,7 @@ $(function () {
                 $SnapshotDialog.on("shown.bs.modal", function () {
                     //console.log("Snapshot dialog shown.");
                     self.IsLatestSnapshotDialogShowing = true;
-                    self.updateLatestSnapshotImage(force = true);
+                    self.updateLatestSnapshotImage(true);
                 });
 
                 // configure the dialog show event
@@ -100,10 +100,10 @@ $(function () {
 
             self.SETTINGS_VISIBLE_KEY = "settings_visible";
             self.onBeforeBinding = function () {
-                var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY)
+                var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY);
                 // console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
 
-                if(settingsVisible == null || settingsVisible.toLowerCase() == "true")
+                if(settingsVisible == null || settingsVisible.toLowerCase() === "true")
                 {
                     self.current_settings_showing(true);
                 }
@@ -136,19 +136,20 @@ $(function () {
             /*
                 Snapshot client animation preview functions
             */
-            self.refreshLatestImage = function (targetId, isThumbnail=false) {
+            self.refreshLatestImage = function (targetId, isThumbnail) {
+                isThumbnail = isThumbnail || false;
                 //console.log("Refreshing Snapshot Thumbnail");
                 if (isThumbnail)
-                    self.updateLatestSnapshotThumbnail(force = true);
+                    self.updateLatestSnapshotThumbnail(true);
                 else
-                    self.updateLatestSnapshotImage(force = true);
+                    self.updateLatestSnapshotImage(true);
             };
 
-            self.startSnapshotAnimation = function (targetId, fadeButton=false) {
+            self.startSnapshotAnimation = function (targetId) {
                 //console.log("Refreshing Snapshot Thumbnail");
                 // Hide and show the play/refresh button
-                if (fadeButton && Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    var $target = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
+                if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    $('#' + targetId + ' .snapshot_refresh_container a.start-animation').fadeOut();
                 }
 
 
@@ -166,11 +167,15 @@ $(function () {
                         $(element).removeClass('hidden');
                         $(element).addClass('visible');
                     });
+                    if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                        $('#' + targetId + ' .snapshot_refresh_container a.start-animation').fadeIn();
+                    }
                 }, 1)
 
             };
 
-            self.updateLatestSnapshotThumbnail = function (force=false) {
+            self.updateLatestSnapshotThumbnail = function (force) {
+                force = force || false;
                 //console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
                     if (!self.IsTabShowing) {
@@ -187,13 +192,14 @@ $(function () {
 
             };
 
-            self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage=false) {
+            self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage) {
+                eraseCurrentImage = eraseCurrentImage || false;
                 if (eraseCurrentImage) {
-                    $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function (index, element) {
+                    $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function () {
                         $(this).remove();
                     });
                 }
-                $('#' + targetId + ' .snapshot_container .previous-snapshots img').each(function (index, element) {
+                $('#' + targetId + ' .snapshot_container .previous-snapshots img').each(function () {
                     $(this).remove();
                 });
             };
@@ -315,7 +321,8 @@ $(function () {
                 $newSnapshot.attr('src', newSnapshotAddress)
             };
 
-            self.updateLatestSnapshotImage = function (force=false) {
+            self.updateLatestSnapshotImage = function (force) {
+                force = force || false;
                 //console.log("Trying to update the latest snapshot image.");
                 if (!force) {
                     if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -342,7 +349,7 @@ $(function () {
                         alert("Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown);
                     }
                 });
-            }
+            };
 
             /**
              * @return {string}
@@ -536,6 +543,8 @@ $(function () {
             self.ZHomed = ko.observable(false);
             self.IsLayerChange = ko.observable(false);
             self.IsHeightChange = ko.observable(false);
+            self.IsInPosition = ko.observable(false);
+            self.InPathPosition = ko.observable(false);
             self.IsZHop = ko.observable(false);
             self.IsRelative = ko.observable(null);
             self.IsExtruderRelative = ko.observable(null);
@@ -553,6 +562,8 @@ $(function () {
                 this.ZHomed(state.ZHomed);
                 this.IsLayerChange(state.IsLayerChange);
                 this.IsHeightChange(state.IsHeightChange);
+                this.IsInPosition(state.IsInPosition);
+                this.InPathPosition(state.InPathPosition);
                 this.IsZHop(state.IsZHop);
                 this.IsRelative(state.IsRelative);
                 this.IsExtruderRelative(state.IsExtruderRelative);
@@ -608,6 +619,16 @@ $(function () {
                 else
                     return "Not a zhop";
             }, self);
+
+            self.getIsInPositionStateText = ko.pureComputed(function () {
+                if (self.IsInPosition())
+                    return "In position";
+                else if (self.InPathPosition)
+                    return "In path position"
+                else
+                    return "Not in position";
+            }, self);
+
             self.getIsMetricStateText = ko.pureComputed(function () {
                 if (self.IsMetric())
                     return "Metric";
@@ -869,6 +890,7 @@ $(function () {
             self.TriggeredCount = ko.observable(state.TriggeredCount).extend({compactint: 1});
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
+            self.InPathPosition = ko.observable(state.IsInPathPosition);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -880,6 +902,7 @@ $(function () {
                 self.TriggeredCount(state.TriggeredCount);
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
+                self.InPathPosition(state.InPathPosition);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.IsHomed())
@@ -892,7 +915,7 @@ $(function () {
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.IsHomed())
-                    return "Idle until axis are homed";
+                    return "Idle until all axes are homed";
                 else if (self.IsTriggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -905,7 +928,7 @@ $(function () {
                         waitList.push("zhop");
                     if (self.IsWaitingOnExtruder())
                         waitList.push("extruder");
-                    if (!self.IsInPosition())
+                    if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
@@ -954,6 +977,7 @@ $(function () {
             self.TriggeredCount = ko.observable(state.TriggeredCount).extend({compactint: 1});
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
+            self.InPathPosition = ko.observable(state.IsInPathPosition);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -966,6 +990,7 @@ $(function () {
                 self.TriggeredCount(state.TriggeredCount);
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
+                self.InPathPosition(state.InPathPosition);
             };
 
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
@@ -980,7 +1005,7 @@ $(function () {
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.IsHomed())
-                    return "Idle until axis are homed";
+                    return "Idle until all axes are homed";
                 else if (self.IsTriggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -993,7 +1018,7 @@ $(function () {
                         waitList.push("zhop");
                     if (self.IsWaitingOnExtruder())
                         waitList.push("extruder");
-                    if (!self.IsInPosition())
+                    if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
@@ -1051,6 +1076,7 @@ $(function () {
             self.IsHomed = ko.observable(state.IsHomed);
             self.Layer = ko.observable(state.Layer);
             self.IsInPosition = ko.observable(state.IsInPosition);
+            self.InPathPosition = ko.observable(state.IsInPathPosition);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1069,6 +1095,7 @@ $(function () {
                 self.IsHomed(state.IsHomed);
                 self.Layer(state.Layer);
                 self.IsInPosition(state.IsInPosition);
+                self.InPathPosition(state.InPathPosition);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.IsHomed())
@@ -1080,7 +1107,7 @@ $(function () {
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.IsHomed())
-                    return "Idle until axis are homed";
+                    return "Idle until all axes are homed";
                 else if (self.IsTriggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1094,7 +1121,8 @@ $(function () {
                         waitList.push("zhop");
                     if (self.IsWaitingOnExtruder())
                         waitList.push("extruder");
-                    if (!self.IsInPosition()) {
+                    if (!self.IsInPosition() && !self.InPathPosition())
+                    {
                         waitList.push("position");
                         //console.log("Waiting on position.");
                     }
@@ -1168,6 +1196,7 @@ $(function () {
             self.TriggeredCount = ko.observable(state.TriggeredCount);
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
+            self.InPathPosition = ko.observable(state.IsInPathPosition);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1183,13 +1212,14 @@ $(function () {
                 self.TriggeredCount(state.TriggeredCount);
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
+                self.InPathPosition(state.InPathPosition);
             };
 
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.IsHomed())
-                    return "Idle until axis are homed";
+                    return "Idle until all axes are homed";
                 else if (self.IsTriggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1202,7 +1232,7 @@ $(function () {
                         waitList.push("zhop");
                     if (self.IsWaitingOnExtruder())
                         waitList.push("extruder");
-                    if (!self.IsInPosition())
+                    if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");

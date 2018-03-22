@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 */
@@ -59,7 +59,7 @@ $(function() {
                     newProfile = new self.profileViewModelCreate(newProfile); // Create our profile viewmodel
                     if (isNewProfile) {
                         //console.log("Adding new profile");
-                        if (self.profiles().length == 0)
+                        if (self.profiles().length === 0)
                             self.current_profile_guid(newProfile.guid());
                         self.profiles.push(newProfile); // Since it's new, just add it.
                         // If there is only one profile, it's been set as the default profile
@@ -178,11 +178,10 @@ $(function() {
         self.currentProfileName = function() {
             var profile =self.currentProfile();
             if(profile == null)
-                return "No default profile selected"
+                return "No default profile selected";
             return profile.name();
         };
 
-        // TODO:  This is not yet implemented in the new settings.  Well, it's implemented, but there's no button yet.  Add that button, test and (hopefully) remember to remove this comment
         self.getResetProfile = function(currentProfile) {
             var defaultProfileClone = new self.profileViewModelCreate(ko.toJS(self.default_profile));
             defaultProfileClone.name(currentProfile.name());
@@ -190,11 +189,10 @@ $(function() {
             return defaultProfileClone;
         };
 
-        // Todo: Evaluate this function.  It must be made to work with validation so that invalid fields are automatically unhidden.
         self.toggle = Octolapse.Toggle;
 
-        self.showAddEditDialog = function(guid, isCopy=false) {
-
+        self.showAddEditDialog = function(guid, isCopy) {
+            isCopy = isCopy || false;
             var title = null;
             var addEditObservable = ko.observable();
             // get and configure the  profile
@@ -227,14 +225,14 @@ $(function() {
         */
         ko.applyBindings(self, document.getElementById(self.bindingElementId));
     };
-    Octolapse.restoreDefaultSettings = function (onSuccess) {
+    Octolapse.restoreDefaultSettings = function () {
         if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
                 url: "/plugin/octolapse/restoreDefaults",
                 type: "POST",
                 contentType: "application/json",
-                success: function (newSettings) {
+                success: function () {
                     //load settings from the provided data
                     alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
 
