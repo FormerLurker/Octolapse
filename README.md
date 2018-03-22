@@ -21,9 +21,11 @@ Octolapse is still in Beta, but has been confirmed to work on several printers:
 Please note that some settings may need to be adjusted depending on your slicer settings.
 
 # Installation
-Octolapse can be installed from within OctoPrint (thanks Gina)!  [Learn how to install Octolapse here.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
+Octolapse can be installed from within OctoPrint (thanks Gina)!  Octolapse requires OctoPrint V1.3.7 or higher.  You can see the version number in the lower left hand corner of OctoPrint.
 
-After installation, you can learn more by [visiting the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
+[Read the installation instructions.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
+
+After installation, you can learn more by reading other pages from this Wiki.  It never hurts to know more about what you're doing!
 
 # What Octolapse Does
 
