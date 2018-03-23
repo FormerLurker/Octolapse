@@ -22,6 +22,8 @@ Octolapse is still in Beta but has been confirmed to work on several printers:
 
 Please note that some settings may need to be adjusted depending on your slicer settings.
 
+# Installation
+
 [Read the installation instructions.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
 
 After installation, [checkout the project's wiki pages](https://github.com/FormerLurker/Octolapse/wiki).  It never hurts to know more about what you're doing!
