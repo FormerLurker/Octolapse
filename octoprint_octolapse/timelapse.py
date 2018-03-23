@@ -98,8 +98,8 @@ class Timelapse(object):
         self._position_signal.set()
 
         # get snapshot async private variables
-        self._snapshot_success = None
-        self._snapshot_timeout = 30.0
+        self._snapshot_success = False
+        self._snapshot_timeout = 600.0
         self._snapshot_signal = threading.Event()
         self._snapshot_signal.set()
         self.CurrentProfiles = {}
@@ -299,16 +299,6 @@ class Timelapse(object):
 
         # take a snapshot of the current settings for use in the Octolapse Tab
         self.CurrentProfiles = self.Settings.get_profiles_dict()
-
-        # fetch position private variables
-        self._position_payload = None
-        self._position_timeout = 30.0
-        self._position_signal.set()
-
-        # get snapshot async private variables
-        self._snapshot_success = None
-        self._snapshot_timeout = 30.0
-        self._snapshot_signal.set()
 
         # send an initial state message
         self._on_timelapse_start()
@@ -898,14 +888,9 @@ class Timelapse(object):
         }
         # fetch position private variables
         self._position_payload = None
-        self._position_timeout = 600.0
-        self._position_signal = threading.Event()
         self._position_signal.set()
 
         # get snapshot async private variables
-        self._snapshot_success = None
-        self._snapshot_timeout = 30.0
-        self._snapshot_signal = threading.Event()
         self._snapshot_signal.set()
 
     def _reset_snapshot(self):
