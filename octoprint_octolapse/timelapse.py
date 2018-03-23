@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -898,7 +898,7 @@ class Timelapse(object):
         }
         # fetch position private variables
         self._position_payload = None
-        self._position_timeout = 30.0
+        self._position_timeout = 600.0
         self._position_signal = threading.Event()
         self._position_signal.set()
 
