@@ -93,7 +93,7 @@ class Timelapse(object):
 
         # fetch position private variables
         self._position_payload = None
-        self._position_timeout = 30.0
+        self._position_timeout = 600.0
         self._position_signal = threading.Event()
         self._position_signal.set()
 
