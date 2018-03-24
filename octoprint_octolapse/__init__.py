@@ -346,7 +346,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 if self.Settings is not None:
                     self.Settings.update(new_settings.to_dict())
                 else:
-                    self.Settings = create_new_settings
+                    self.Settings = new_settings
             self.Settings.current_debug_profile().log_settings_load(
                 "Creating new settings file from defaults.")
             create_new_settings = True
