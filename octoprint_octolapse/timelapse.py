@@ -534,6 +534,7 @@ class Timelapse(object):
                         current_position = self.get_position_async()
 
                         if current_position is None:
+                            self.State == TimelapseState.WaitingToEndTimelapse
                             self.Settings.current_debug_profile().log_print_state_change(
                                 "Unable to acquire a position.")
                         else:
