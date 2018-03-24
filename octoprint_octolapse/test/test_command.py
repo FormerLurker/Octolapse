@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -144,6 +144,72 @@ class TestCommand(unittest.TestCase):
         self.assertTrue(cmd.Parameters["E"].Value is None)
         self.assertTrue(cmd.Parameters["F"].Value is None)
         self.assertTrue(cmd.CommandParts.Comment == " Here is a comment")
+
+    def test_g1_positive_sign(self):
+        # gcode to test
+        # test a lowercase g1 command with all parameters and a comment
+        gcode = "G1 Z+0.5 E+5 X+20.0 Y+21 F+9000"
+        # get the command from the gcode
+        cmd = self.Commands.get_command(gcode)
+
+        # make sure we get the correct command and parameters
+        self.assertTrue(cmd.Command == "G1")
+
+        self.assertTrue(cmd.Parameters["Z"].Value == "+0.5")
+        self.assertTrue(cmd.Parameters["E"].Value == "+5")
+        self.assertTrue(cmd.Parameters["X"].Value == "+20.0")
+        self.assertTrue(cmd.Parameters["Y"].Value == "+21")
+        self.assertTrue(cmd.Parameters["F"].Value == "+9000")
+        self.assertTrue(cmd.CommandParts.Comment is None)
+
+    def test_g0_positive_sign(self):
+        # gcode to test
+        # test a lowercase g1 command with all parameters and a comment
+        gcode = "G0 Z+0.5 E+5 X+20.0 Y+21 F+9000"
+        # get the command from the gcode
+        cmd = self.Commands.get_command(gcode)
+
+        # make sure we get the correct command and parameters
+        self.assertTrue(cmd.Command == "G0")
+
+        self.assertTrue(cmd.Parameters["Z"].Value == "+0.5")
+        self.assertTrue(cmd.Parameters["E"].Value == "+5")
+        self.assertTrue(cmd.Parameters["X"].Value == "+20.0")
+        self.assertTrue(cmd.Parameters["Y"].Value == "+21")
+        self.assertTrue(cmd.Parameters["F"].Value == "+9000")
+        self.assertTrue(cmd.CommandParts.Comment is None)
+
+    def test_g92_positive_sign(self):
+        # gcode to test
+        # test a lowercase g1 command with all parameters and a comment
+        gcode = "G92 Z+0.5 E+5 X+20.0 Y+21"
+        # get the command from the gcode
+        cmd = self.Commands.get_command(gcode)
+
+        # make sure we get the correct command and parameters
+        self.assertTrue(cmd.Command == "G92")
+
+        self.assertTrue(cmd.Parameters["Z"].Value == "+0.5")
+        self.assertTrue(cmd.Parameters["E"].Value == "+5")
+        self.assertTrue(cmd.Parameters["X"].Value == "+20.0")
+        self.assertTrue(cmd.Parameters["Y"].Value == "+21")
+        self.assertTrue(cmd.CommandParts.Comment is None)
+
+    def test_g28_positive_sign(self):
+        # gcode to test
+        # test a lowercase g1 command with all parameters and a comment
+        gcode = "G28 Z+0.5 X+20.0 Y+21 W+100"
+        # get the command from the gcode
+        cmd = self.Commands.get_command(gcode)
+
+        # make sure we get the correct command and parameters
+        self.assertTrue(cmd.Command == "G28")
+
+        self.assertTrue(cmd.Parameters["Z"].Value == "Z")
+        self.assertTrue(cmd.Parameters["X"].Value == "X")
+        self.assertTrue(cmd.Parameters["Y"].Value == "Y")
+        self.assertTrue(cmd.Parameters["W"].Value == "W")
+        self.assertTrue(cmd.CommandParts.Comment is None)
 
     def test_G1_ParsePartialParameters(self):
         """Try to parse the G1 Command with only partial parameters and no comment"""

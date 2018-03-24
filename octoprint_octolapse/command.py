@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -246,22 +246,22 @@ class Commands(object):
         name="Rapid Linear Move", command="G0",
         display_template="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}, Comment={CommentText}",
         parameters=[
-            CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
-            CommandParameter("Z", "(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
-            CommandParameter("E", "(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4),
-            CommandParameter("F", "(?i)^f(?P<f>-?[0-9]{0,15}.?[0-9]{1,15})$", order=5)
+            CommandParameter("X", "(?i)^x(?P<x>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("Y", "(?i)^y(?P<y>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
+            CommandParameter("Z", "(?i)^z(?P<z>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
+            CommandParameter("E", "(?i)^e(?P<e>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=4),
+            CommandParameter("F", "(?i)^f(?P<f>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=5)
         ]
     )
     G1 = Command(
         name="Linear Move", command="G1",
         display_template="Position: X={X}, Y={Y}, Z={Z}, E={E}, F={F}{Comment}",
         parameters=[
-            CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
-            CommandParameter("Z", "(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
-            CommandParameter("E", "(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4),
-            CommandParameter("F", "(?i)^f(?P<f>-?[0-9]{0,15}.?[0-9]{1,15})$", order=5)
+            CommandParameter("X", "(?i)^x(?P<x>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("Y", "(?i)^y(?P<y>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
+            CommandParameter("Z", "(?i)^z(?P<z>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
+            CommandParameter("E", "(?i)^e(?P<e>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=4),
+            CommandParameter("F", "(?i)^f(?P<f>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=5)
         ]
     )
     G29 = Command(
@@ -275,10 +275,10 @@ class Commands(object):
         name="Set Absolute Position", command="G92",
         display_template="New Absolute Position: X={X}, Y={Y}, Z={Z}, E={E}{Comment}",
         parameters=[
-            CommandParameter("X", "(?i)^x(?P<x>-?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
-            CommandParameter("Y", "(?i)^y(?P<y>-?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
-            CommandParameter("Z", "(?i)^z(?P<z>-?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
-            CommandParameter("E", "(?i)^e(?P<e>-?[0-9]{0,15}.?[0-9]{1,15})$", order=4)
+            CommandParameter("X", "(?i)^x(?P<x>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=1),
+            CommandParameter("Y", "(?i)^y(?P<y>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=2),
+            CommandParameter("Z", "(?i)^z(?P<z>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=3),
+            CommandParameter("E", "(?i)^e(?P<e>[+-]?[0-9]{0,15}.?[0-9]{1,15})$", order=4)
         ]
     )
     M82 = Command(
@@ -305,10 +305,10 @@ class Commands(object):
         name="Go To Origin", command="G28",
         display_template="G28 - Go to Origin{Comment}",
         parameters=[
-            CommandParameter("X", "(?i)^(x)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=1),
-            CommandParameter("Y", "(?i)^(y)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=2),
-            CommandParameter("Z", "(?i)^(z)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=3),
-            CommandParameter("W", "(?i)^(w)(?:-?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=4)
+            CommandParameter("X", "(?i)^(x)(?:[+-]?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=1),
+            CommandParameter("Y", "(?i)^(y)(?:[+-]?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=2),
+            CommandParameter("Z", "(?i)^(z)(?:[+-]?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=3),
+            CommandParameter("W", "(?i)^(w)(?:[+-]?[0-9]{1,15}(?:.[0-9]{1,15})?)?$", order=4)
         ]
     )
     G80 = Command(
