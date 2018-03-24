@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 */
@@ -681,7 +681,6 @@ $(function () {
                 case "snapshot-complete":
                     {
                         //console.log('octolapse.js - snapshot-complete');
-
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(!data.success);
                         Octolapse.Status.snapshot_error_message(data.error);

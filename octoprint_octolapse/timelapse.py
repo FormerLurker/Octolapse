@@ -146,6 +146,7 @@ class Timelapse(object):
         reason = args[0]
         message = "Failed to download the snapshot.  Reason: {0}".format(
             reason)
+
         self.Settings.current_debug_profile().log_snapshot_download(message)
         self._snapshot_success = False
         self.SnapshotError = message
@@ -440,7 +441,7 @@ class Timelapse(object):
             self.Settings.is_octolapse_enabled and
             self.State == TimelapseState.Idle and
             self.OctoprintPrinter.is_printing() and
-            set(['trigger:comm.start_print']) <= tags
+            {'trigger:comm.start_print'} <= tags
         ):
             self.Settings.current_debug_profile().log_print_state_change(
                 "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
@@ -534,7 +535,8 @@ class Timelapse(object):
                         current_position = self.get_position_async()
 
                         if current_position is None:
-                            self.State == TimelapseState.WaitingToEndTimelapse
+                            self.PrintEndStatus = "POSITION_TIMEOUT"
+                            self.State = TimelapseState.WaitingToEndTimelapse
                             self.Settings.current_debug_profile().log_print_state_change(
                                 "Unable to acquire a position.")
                         else:
@@ -566,7 +568,11 @@ class Timelapse(object):
                     finally:
                         try:
                             if self.State == TimelapseState.WaitingToEndTimelapse:
-                                self.end_timelapse(self.PrintEndStatus)
+                                self.stop_snapshots(
+                                    "A timeout occurred when attempting to acquire the printer's current position."
+                                    "The current timeout is {0} seconds.  Stopping timelapse.".format(self._position_timeout),
+                                    True
+                                )
                         finally:
                             self.OctoprintPrinter.set_job_on_hold(False)
 
@@ -604,7 +610,6 @@ class Timelapse(object):
 
                             # take the snapshot
                             timelapse_snapshot_payload = self._take_timelapse_snapshot(trigger, triggering_command)
-
                             self.Settings.current_debug_profile().log_snapshot_download("The snapshot has completed")
                         finally:
 
@@ -615,7 +620,12 @@ class Timelapse(object):
                             try:
                                 if self.State == TimelapseState.WaitingToEndTimelapse:
                                     timelapse_ended = False
-                                    self.end_timelapse(self.PrintEndStatus)
+                                    self.stop_snapshots(
+                                        "A timeout occurred when attempting to take a snapshot."
+                                        "The current timeout is {0} seconds.  Stopping timelapse.".format(
+                                            self._snapshot_timeout),
+                                        True
+                                    )
                             finally:
                                 self.OctoprintPrinter.set_job_on_hold(False)
 
@@ -911,3 +921,4 @@ class TimelapseState(object):
     TakingSnapshot = 4
     WaitingToRender = 5
     WaitingToEndTimelapse = 6
+
