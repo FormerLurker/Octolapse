@@ -985,7 +985,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # later.
         self.IsRenderingSynchronized = False
         # Generate a notification message
-        msg = "Octolapse captured {0} frames in {1} seconds, and has started rending your timelapse file.".format(
+        msg = "Octolapse captured {0} frames in {1} seconds, and has started rendering your timelapse file.".format(
             payload.SnapshotCount, utility.seconds_to_hhmmss(payload.SecondsAddedToPrint))
 
         if payload.Synchronize:
