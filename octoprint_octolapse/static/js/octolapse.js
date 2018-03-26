@@ -489,7 +489,7 @@ $(function () {
         };
 
         self.updateState = function (state) {
-            //console.log(state);
+            console.log(state);
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
@@ -513,7 +513,9 @@ $(function () {
                 //Octolapse.SettingsMain.update(state.MainSettings);
                 // detect changes to auto_reload_latest_snapshot
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
+
                 Octolapse.Globals.update(state.MainSettings);
+                Octolapse.SettingsMain.setSettingsVisibility(Octolapse.Globals.enabled());
                 if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
