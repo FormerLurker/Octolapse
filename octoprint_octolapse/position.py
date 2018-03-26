@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -714,8 +714,17 @@ class Position(object):
                     self.Settings.current_debug_profile().log_position_change(
                         message)
                 else:
+                    error_message = "Unable to parse the gcode command: {0}".format(gcode)
+                    pos.HasPositionError = True
+                    # Todo:  We need to end the timelapse if we get here
+                    #pos.X = None
+                    #pos.Y = None
+                    #pos.Z = None
+                    #pos.E = None#
+                    #pos.F = None
+                    pos.PositionError = "Unable to parse the gcode command"
                     self.Settings.current_debug_profile().log_error(
-                        "Position - Unable to parse the gcode command: {0}".format(gcode))
+                        "Position - {0}".format(error_message))
             elif cmd.Command == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:

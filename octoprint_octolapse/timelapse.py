@@ -106,34 +106,40 @@ class Timelapse(object):
         self._reset()
 
     def on_position_received(self, payload):
-        if self.State in [
-            TimelapseState.AcquiringLocation,
-            TimelapseState.TakingSnapshot,
-            TimelapseState.WaitingToEndTimelapse,
-            TimelapseState.WaitingToRender
-        ]:
+        if self.State != TimelapseState.Idle:
             self._position_payload = payload
             self._position_signal.set()
 
-    def get_position_async(self, start_gcode=None, end_gcode=None):
+    def get_position_async(self, start_gcode=None):
         self.Settings.current_debug_profile().log_print_state_change("Octolapse is requesting a position.")
-        if self._position_signal.is_set():
-            # only clear signal and send a new M114 if we haven't already done that from another thread
-            self._position_signal.clear()
-            # send any code that is to be run before the position request
-            if start_gcode is not None and len(start_gcode) > 0:
-                self.OctoprintPrinter.commands(start_gcode)
-            # wait for all motion to stop and request the position
-            self.OctoprintPrinter.commands(["M400", "M114"])
-            # send any remaining gcode
-            if end_gcode is not None and len(end_gcode) > 0:
-                self.OctoprintPrinter.commands(end_gcode)
 
+        # Warning, we can only request one position at a time!
+        if not self._position_signal.is_set():
+            self.Settings.current_debug_profile().log_warning(
+                "Warning:  A position request has already been made, clearing existing signal."
+            )
+
+        self._position_signal.clear()
+
+        # build the staret commands
+        commands_to_send = ["M400", "M114"]
+        # send any code that is to be run before the position request
+        if start_gcode is not None and len(start_gcode) > 0:
+            commands_to_send = start_gcode + commands_to_send
+
+        self.OctoprintPrinter.commands(commands_to_send)
         self._position_signal.wait(self._position_timeout)
 
         if not self._position_signal.is_set():
             # we ran into a timeout while waiting for a fresh position
+            # set the position signal
+            self._snapshot_signal.set()
+            self.Settings.current_debug_profile().log_warning(
+                "Warning:  A timeout occurred while requesting the current position!."
+            )
+
             return None
+
         return self._position_payload
 
     def _on_snapshot_success(self, *args, **kwargs):
@@ -210,6 +216,7 @@ class Timelapse(object):
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
+            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot start gcode and snapshot commands.")
             # park the printhead in the snapshot position and wait for the movement to complete
             snapshot_position = self.get_position_async(
                 start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
@@ -227,16 +234,28 @@ class Timelapse(object):
             # record the return movement start time
             return_start_time = time.time()
 
+            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return gcode.")
             # return the printhead to the start position
             return_position = self.get_position_async(
-                start_gcode=snapshot_gcode.ReturnCommands,
-                end_gcode=snapshot_gcode.EndGcode
+                start_gcode=snapshot_gcode.ReturnCommands
             )
+
             # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
             # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
             timelapse_snapshot_payload["return_position"] = return_position
+
+            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot end gcode.")
+            # send the end gcode
+            end_position = self.get_position_async(
+                start_gcode=snapshot_gcode.EndGcode
+            )
+
             # calculate the return movement time
             return_time = time.time() - return_start_time
+
+            # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
+            # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
+            timelapse_snapshot_payload["end_position"] = end_position
 
             # calculate the total snapshot time
             # Note that we use 2 * return_time as opposed to snapshot_travel_time + return_time.

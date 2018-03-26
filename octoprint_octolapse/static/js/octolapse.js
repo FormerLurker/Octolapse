@@ -843,7 +843,7 @@ $(function () {
                     {
                         //console.log("An out-of-bounds snapshot position was detected.")
                         var options = {
-                            title: 'Octolapse - Out Of Bounds',
+                            title: 'Octolapse - Position Error',
                             text: data.msg,
                             type: 'error',
                             hide: false,
