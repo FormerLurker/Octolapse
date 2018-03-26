@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -27,6 +27,9 @@ import sys
 import uuid
 from datetime import datetime
 
+import concurrent
+
+from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
 from octoprint.plugin import PluginSettings
 
 import octoprint_octolapse.utility as utility
@@ -1247,6 +1250,25 @@ class DebugProfile(object):
     Logger = None
     FormatString = '%(asctime)s - %(levelname)s - %(message)s'
     ConsoleFormatString = '{asctime} - {levelname} - {message}'
+    Logging_Executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+
+    def get_logger(self):
+        _logger = logging.getLogger(
+            "octoprint.plugins.octolapse")
+
+        from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
+        octoprint_logging_handler = CleaningTimedRotatingFileHandler(
+            self.logFilePath, when="D", backupCount=3)
+
+        octoprint_logging_handler.setFormatter(
+            logging.Formatter("%(asctime)s %(message)s"))
+        octoprint_logging_handler.setLevel(logging.DEBUG)
+        _logger.addHandler(octoprint_logging_handler)
+        _logger.propagate = False
+        # we are controlling our logging via settings, so set to debug so that nothing is filtered
+        _logger.setLevel(logging.DEBUG)
+
+        return _logger
 
     def __init__(self, log_file_path, debug_profile=None, guid=None, name="Default Debug Profile"):
         self.logFilePath = log_file_path
@@ -1255,19 +1277,7 @@ class DebugProfile(object):
         self.description = ""
         # Configure the logger if it has not been created
         if DebugProfile.Logger is None:
-            DebugProfile.Logger = logging.getLogger(
-                "octoprint.plugins.octolapse")
-
-            from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
-            octoprint_logging_handler = CleaningTimedRotatingFileHandler(
-                self.logFilePath, when="D", backupCount=3)
-            octoprint_logging_handler.setFormatter(
-                logging.Formatter("%(asctime)s %(message)s"))
-            octoprint_logging_handler.setLevel(logging.DEBUG)
-            DebugProfile.Logger.addHandler(octoprint_logging_handler)
-            DebugProfile.Logger.propagate = False
-            # we are controlling our logging via settings, so set to debug so that nothing is filtered
-            DebugProfile.Logger.setLevel(logging.DEBUG)
+            DebugProfile.Logger = self.get_logger()
 
         self.log_to_console = False
         self.enabled = False
@@ -1465,21 +1475,21 @@ class DebugProfile(object):
 
     def log_info(self, message):
         if self.enabled:
-            self.Logger.info(message)
+            DebugProfile.Logging_Executor.submit(self.Logger.info, message)
             self.log_console('info', message)
 
     def log_warning(self, message):
         if self.enabled:
-            self.Logger.warning(message)
+            DebugProfile.Logging_Executor.submit(self.Logger.warning, message)
             self.log_console('warn', message)
 
     def log_exception(self, exception):
         message = utility.exception_to_string(exception)
-        self.Logger.error(message)
+        DebugProfile.Logging_Executor.submit(self.Logger.error, message)
         self.log_console('error', message)
 
     def log_error(self, message):
-        self.Logger.error(message)
+        DebugProfile.Logging_Executor.submit(self.Logger.error, message)
         self.log_console('error', message)
 
     def log_position_change(self, message):

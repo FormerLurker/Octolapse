@@ -99,9 +99,11 @@ class Timelapse(object):
 
         # get snapshot async private variables
         self._snapshot_success = False
-        self._snapshot_timeout = 600.0
+        # It shouldn't take more than 5 seconds to take a snapshot!
+        self._snapshot_timeout = 5.0
         self._snapshot_signal = threading.Event()
         self._snapshot_signal.set()
+
         self.CurrentProfiles = {}
         self._reset()
 
@@ -163,9 +165,9 @@ class Timelapse(object):
             commands_to_send = start_gcode + commands_to_send
 
         self.OctoprintPrinter.commands(commands_to_send)
-        self._position_signal.wait(self._position_timeout)
+        event_is_set = self._position_signal.wait(self._position_timeout)
 
-        if not self._position_signal.is_set():
+        if not event_is_set:
             # we ran into a timeout while waiting for a fresh position
             # set the position signal
             self._snapshot_signal.set()
@@ -199,31 +201,36 @@ class Timelapse(object):
             "error": ""
         }
 
-        if self._snapshot_signal.is_set():
-            # only clear signal and send a new M114 if we haven't already done that from another thread
-            self._snapshot_signal.clear()
-            # start the snapshot
-            self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
-            try:
-                self.CaptureSnapshot.snap(
-                    utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                    on_success=self._on_snapshot_success,
-                    on_fail=self._on_snapshot_fail
-                )
-                self._snapshot_signal.wait(self._snapshot_timeout)
+        if not self._snapshot_signal.is_set():
+            self.Settings.current_debug_profile().log_warning(
+                "Warning:  A snapshot request has already been made, clearing existing signal."
+            )
 
-                if not self._snapshot_signal.is_set():
-                    # we ran into a timeout while waiting for a fresh position
-                    snapshot_async_payload["error"] = \
-                        "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
-                    return snapshot_async_payload
+        # only clear signal and send a new M114 if we haven't already done that from another thread
+        self._snapshot_signal.clear()
+        # start the snapshot
+        self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
+        try:
+            self.CaptureSnapshot.snap(
+                utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
+                on_success=self._on_snapshot_success,
+                on_fail=self._on_snapshot_fail
+            )
+            event_is_set = self._snapshot_signal.wait(self._snapshot_timeout)
 
+            if not event_is_set:
+                # we ran into a timeout while waiting for a fresh position
+                snapshot_async_payload["success"] = False
+                snapshot_async_payload["error"] = \
+                    "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
+                self._snapshot_signal.set()
+            else:
                 snapshot_async_payload["success"] = True
-                return self._snapshot_success
 
-            except Exception as e:
-                self.Settings.current_debug_profile().log_exception(e)
-                snapshot_async_payload["error"] = "An unexpected error was encountered while taking a snapshot"
+        except Exception as e:
+            self.Settings.current_debug_profile().log_exception(e)
+            snapshot_async_payload["success"] = False
+            snapshot_async_payload["error"] = "An unexpected error was encountered while taking a snapshot"
 
         return snapshot_async_payload
 

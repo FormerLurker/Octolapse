@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -65,17 +65,18 @@ class CaptureSnapshot(object):
             snapshot_guid, timeout_seconds=1, on_complete=on_complete, on_success=on_success, on_fail=on_fail
         )
 
-        if self.Camera.delay == 0:
+        delay_seconds = self.Camera.delay / 1000.0
+        if delay_seconds == 0:
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job Immediately.")
-            new_snapshot_job.process()
         else:
             delay_seconds = self.Camera.delay / 1000.0
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job in {0} seconds.".format(delay_seconds))
-            t = threading.Timer(
-                delay_seconds, start_snapshot_job, [new_snapshot_job])
-            t.start()
+
+        t = threading.Timer(
+            delay_seconds, start_snapshot_job, [new_snapshot_job])
+        t.start()
 
     def clean_snapshots(self, snapshot_directory):
 
@@ -244,16 +245,48 @@ class SnapshotJob(object):
                 error = not self._move_rename_snapshot_sequential()
 
             if not error:
-                self._notify_callback("success", self.SnapshotInfo)
+                self._notify_callback_async("success", self.SnapshotInfo)
             else:
-                self._notify_callback("fail", fail_reason)
+                self._notify_callback_async("fail", fail_reason)
 
-            self._notify_callback("complete")
+            self._notify_callback_async("complete")
             # do this after we notify of success.  It will likely complete before the client
             # is notified of snapshot changes and if it doesn't, no big deal.  It is better
             # if we start the print back up sooner and fail to deliver a new thumbnail than to not.
+
             if not error:
-                self._save_snapshot_and_thumbnail()
+
+                def _save_snapshot_and_thumbnail():
+                    # create a copy to be used for the full sized latest snapshot image.
+                    latest_snapshot_path = utility.get_latest_snapshot_download_path(
+                        self.DataDirectory
+                    )
+                    shutil.copy(self.SnapshotInfo.get_full_path(
+                        self.SnapshotNumber), latest_snapshot_path)
+                    # create a thumbnail of the image
+
+                    try:
+                        from PIL import ImageFile
+                        # without this I get errors during load (happens in resize, where the image is actually loaded)
+                        ImageFile.LOAD_TRUNCATED_IMAGES = True
+                        #######################################
+
+                        basewidth = 300
+                        img = Image.open(latest_snapshot_path)
+                        wpercent = (basewidth / float(img.size[0]))
+                        hsize = int((float(img.size[1]) * float(wpercent)))
+                        img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+                        img.save(utility.get_latest_snapshot_thumbnail_download_path(
+                            self.DataDirectory), "JPEG")
+                    except Exception as e:
+                        # If we can't create the thumbnail, just log
+                        self.Settings.current_debug_profile().log_exception(e)
+
+                _save_latest_snapshot_thread = threading.Thread(
+                    target=_save_snapshot_and_thumbnail
+                )
+                _save_latest_snapshot_thread.daemon = True
+                _save_latest_snapshot_thread.start()
 
     def _move_rename_snapshot_sequential(self):
         # get the save path
@@ -279,36 +312,17 @@ class SnapshotJob(object):
 
         return False
 
-    def _save_snapshot_and_thumbnail(self):
-        # create a copy to be used for the full sized latest snapshot image.
-        latest_snapshot_path = utility.get_latest_snapshot_download_path(
-            self.DataDirectory)
-        shutil.copy(self.SnapshotInfo.get_full_path(
-            self.SnapshotNumber), latest_snapshot_path)
-        # create a thumbnail of the image
-        try:
-            from PIL import ImageFile
-            # without this I get errors during load (happens in resize, where the image is actually loaded)
-            ImageFile.LOAD_TRUNCATED_IMAGES = True
-            #######################################
 
-            basewidth = 300
-            img = Image.open(latest_snapshot_path)
-            wpercent = (basewidth / float(img.size[0]))
-            hsize = int((float(img.size[1]) * float(wpercent)))
-            img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-            img.save(utility.get_latest_snapshot_thumbnail_download_path(
-                self.DataDirectory), "JPEG")
-        except Exception as e:
-            # If we can't create the thumbnail, just log
-            self.Settings.current_debug_profile().log_exception(e)
-
-    def _notify_callback(self, callback, *args, **kwargs):
+    def _notify_callback_async(self, callback, *args, **kwargs):
         """Notifies registered callbacks of type `callback`."""
         name = "_on_{}".format(callback)
         method = getattr(self, name, None)
         if method is not None and callable(method):
-            method(*args, **kwargs)
+            _notify_callback_thread = threading.Thread(
+                target=method
+            )
+            _notify_callback_thread.daemon = True
+            _notify_callback_thread.start()
 
 
 class SnapshotInfo(object):
