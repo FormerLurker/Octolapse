@@ -105,6 +105,41 @@ class Timelapse(object):
         self.CurrentProfiles = {}
         self._reset()
 
+    def start_timelapse(
+            self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
+        # we must supply the settings first!  Else reset won't work properly.
+        self._reset()
+        # in case the settings have been destroyed and recreated
+        self.Settings = settings
+        # time tracking - how much time did we add to the print?
+        self.SnapshotCount = 0
+        self.SecondsAddedByOctolapse = 0
+        self.HasSentInitialStatus = False
+        self.RequiresLocationDetectionAfterHome = False
+        self.OctoprintPrinterProfile = octoprint_printer_profile
+        self.FfMpegPath = ffmpeg_path
+        self.PrintStartTime = time.time()
+        self.Snapshot = Snapshot(self.Settings.current_snapshot())
+        self.Gcode = SnapshotGcodeGenerator(
+            self.Settings, octoprint_printer_profile)
+        self.Printer = Printer(self.Settings.current_printer())
+        self.Rendering = Rendering(self.Settings.current_rendering())
+        self.CaptureSnapshot = CaptureSnapshot(
+            self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
+        self.Position = Position(
+            self.Settings, octoprint_printer_profile, g90_influences_extruder)
+        self.State = TimelapseState.WaitingForTrigger
+        self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
+        self.Triggers = Triggers(self.Settings)
+        self.Triggers.create()
+
+        # take a snapshot of the current settings for use in the Octolapse Tab
+        self.CurrentProfiles = self.Settings.get_profiles_dict()
+
+        # send an initial state message
+        self._on_timelapse_start()
+
+
     def on_position_received(self, payload):
         if self.State != TimelapseState.Idle:
             self._position_payload = payload
@@ -289,40 +324,6 @@ class Timelapse(object):
         return command
 
     # public functions
-    def start_timelapse(
-            self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
-        # we must supply the settings first!  Else reset won't work properly.
-        self._reset()
-        # in case the settings have been destroyed and recreated
-        self.Settings = settings
-        # time tracking - how much time did we add to the print?
-        self.SnapshotCount = 0
-        self.SecondsAddedByOctolapse = 0
-        self.HasSentInitialStatus = False
-        self.RequiresLocationDetectionAfterHome = False
-        self.OctoprintPrinterProfile = octoprint_printer_profile
-        self.FfMpegPath = ffmpeg_path
-        self.PrintStartTime = time.time()
-        self.Snapshot = Snapshot(self.Settings.current_snapshot())
-        self.Gcode = SnapshotGcodeGenerator(
-            self.Settings, octoprint_printer_profile)
-        self.Printer = Printer(self.Settings.current_printer())
-        self.Rendering = Rendering(self.Settings.current_rendering())
-        self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
-        self.Position = Position(
-            self.Settings, octoprint_printer_profile, g90_influences_extruder)
-        self.State = TimelapseState.WaitingForTrigger
-        self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
-        self.Triggers = Triggers(self.Settings)
-        self.Triggers.create()
-
-        # take a snapshot of the current settings for use in the Octolapse Tab
-        self.CurrentProfiles = self.Settings.get_profiles_dict()
-
-        # send an initial state message
-        self._on_timelapse_start()
-
     def to_state_dict(self):
         try:
 
@@ -363,7 +364,11 @@ class Timelapse(object):
     def stop_snapshots(self, message=None, error=False):
         self.State = TimelapseState.WaitingToRender
         if self.TimelapseStoppedCallback is not None:
-            self.TimelapseStoppedCallback(message, error)
+            timelapse_stopped_callback_thread = threading.Thread(
+                target=self.TimelapseStoppedCallback, args=[message, error]
+            )
+            timelapse_stopped_callback_thread.daemon = True
+            timelapse_stopped_callback_thread.start()
         return True
 
     def on_print_failed(self):
@@ -407,7 +412,11 @@ class Timelapse(object):
                             0,
                             0,
                             "RENDER")
-                        self.OnRenderEndCallback(payload)
+                        render_end_callback_thread = threading.Thread(
+                            target=self.OnRenderEndCallback, args=[payload]
+                        )
+                        render_end_callback_thread.daemon = True
+                        render_end_callback_thread.start()
                 self._reset()
             elif self.State != TimelapseState.Idle:
                 self.State = TimelapseState.WaitingToEndTimelapse
@@ -448,11 +457,20 @@ class Timelapse(object):
 
     def on_print_start(self, tags):
         if self.OnPrintStartCallback is not None:
-            self.OnPrintStartCallback(tags)
+            print_start_callback_thread = threading.Thread(
+                target=self.OnPrintStartCallback, args=[tags]
+            )
+            print_start_callback_thread.daemon = True
+            print_start_callback_thread.start()
 
     def on_print_start_failed(self, message):
         if self.OnPrintStartFailedCallback is not None:
-            self.OnPrintStartFailedCallback(message)
+            print_start_failed_callback_thread = threading.Thread(
+                target=self.OnPrintStartFailedCallback, args=[message]
+            )
+            print_start_failed_callback_thread.daemon = True
+            print_start_failed_callback_thread.start()
+
 
     def on_gcode_queuing(self, cmd, cmd_type, gcode, tags):
         # detect print start
@@ -622,7 +640,10 @@ class Timelapse(object):
                                 "About to take a snapshot.  Triggering Command: {0}".format(
                                     triggering_command))
                             if self.OnSnapshotStartCallback is not None:
-                                self.OnSnapshotStartCallback()
+                                snapshot_callback_thread = threading.Thread(target=self.OnSnapshotStartCallback)
+                                snapshot_callback_thread.daemon = True
+                                snapshot_callback_thread.start()
+
 
                             # Undo the last position update, we're not going to be using it!
                             self.Position.undo_update()
@@ -701,7 +722,6 @@ class Timelapse(object):
             first_trigger = self.Triggers.get_first_triggering(1, Triggers.TRIGGER_TYPE_DEFAULT)
             if first_trigger:  # We're triggering
                 self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
-                # notify any callbacks
                 return first_trigger
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
@@ -754,11 +774,18 @@ class Timelapse(object):
                     "TriggerState": trigger_changes_dict
                 }
 
-                if (change_dict["Extruder"] is not None
-                        or change_dict["Position"] is not None
-                        or change_dict["PositionState"] is not None
-                        or change_dict["TriggerState"] is not None):
-                    self.OnStateChangedCallback(change_dict)
+                if (
+                    change_dict["Extruder"] is not None
+                    or change_dict["Position"] is not None
+                    or change_dict["PositionState"] is not None
+                    or change_dict["TriggerState"] is not None
+                ):
+                    state_changed_callback_thread = threading.Thread(
+                        target=self.OnStateChangedCallback, args=[change_dict]
+                    )
+                    state_changed_callback_thread.daemon = True
+                    state_changed_callback_thread.start()
+
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
             self.Settings.current_debug_profile().log_exception(e)
@@ -782,7 +809,11 @@ class Timelapse(object):
         message = self.Position.position_error(0)
         self.Settings.current_debug_profile().log_error(message)
         if self.OnPositionErrorCallback is not None:
-            self.OnPositionErrorCallback(message)
+            position_error_callback_thread = threading.Thread(
+                target=self.OnPositionErrorCallback, args=[message]
+            )
+            position_error_callback_thread.daemon = True
+            position_error_callback_thread.start()
 
     def _on_trigger_snapshot_complete(self, snapshot_payload):
 
@@ -794,7 +825,12 @@ class Timelapse(object):
                 "total_snapshot_time": snapshot_payload["total_snapshot_time"],
                 "current_snapshot_time": snapshot_payload["total_snapshot_time"]
             }
-            self.OnSnapshotCompleteCallback(payload)
+            if self.OnSnapshotCompleteCallback is not None:
+                snapshot_complete_callback_thread = threading.Thread(
+                    target=self.OnSnapshotCompleteCallback, args=[payload]
+                )
+                snapshot_complete_callback_thread.daemon = True
+                snapshot_complete_callback_thread.start()
 
     def _render_timelapse(self, print_end_state):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
@@ -830,7 +866,11 @@ class Timelapse(object):
         payload = args[1]
         # notify the caller
         if self.OnRenderStartCallback is not None:
-            self.OnRenderStartCallback(payload)
+            render_start_complete_callback_thread = threading.Thread(
+                target=self.OnRenderStartCallback, args=[payload]
+            )
+            render_start_complete_callback_thread.daemon = True
+            render_start_complete_callback_thread.start()
 
     def _on_render_fail(self, *args, **kwargs):
 
@@ -882,7 +922,11 @@ class Timelapse(object):
                 self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
 
         if self.OnRenderEndCallback is not None:
-            self.OnRenderEndCallback(payload)
+            render_end_complete_callback_thread = threading.Thread(
+                target=self.OnRenderEndCallback, args=[payload]
+            )
+            render_end_complete_callback_thread.daemon = True
+            render_end_complete_callback_thread.start()
 
     def _on_timelapse_start(self):
         if self.OnTimelapseStartCallback is None:

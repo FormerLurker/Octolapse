@@ -469,8 +469,10 @@ $(function () {
 
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    // Todo:  update the UI don't show an alert!
-                    alert("Octolapse could not load the current state.  Please try again in a few minutes, or check plugin_octolapse.log in the 'Logs' menu for exceptions.");
+
+                    console.log("Octolapse was unable to retrieve the current state, trying again in 5 seconds");
+                    setInterval(self.getInitialState, 5000);
+                    // Todo:  update the UI to show we're waiting for our state!
                 }
             });
         };
