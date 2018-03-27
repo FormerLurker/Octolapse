@@ -856,7 +856,7 @@ class Timelapse(object):
 
     def _render_timelapse(self, print_end_state):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
-        if self.Rendering.enabled:
+        if self.Rendering is not None and self.Rendering.enabled:
             self.Settings.current_debug_profile().log_render_start("Started Rendering Timelapse")
             # we are rendering, set the state before starting the rendering job.
 

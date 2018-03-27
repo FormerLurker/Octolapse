@@ -625,12 +625,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self._printer.cancel_print()
             return
 
-        if self.Timelapse.State != TimelapseState.Idle:
+        if self.Timelapse.State != TimelapseState.Initializing:
             self.Settings.current_debug_profile().log_print_state_change(
-                "Octolapse is not idling, unable to start print.  CurrentState:{0}".format(self.Timelapse.State))
+                "Octolapse is not in the Initializing state, unable to start print.  CurrentState:{0}".format(
+                    self.Timelapse.State)
+            )
 
             self.send_popup_error(
-                "Unable to start the timelapse when not in an idle state. StateId: "
+                "Unable to start the timelapse when not in the Initializing state. StateId: "
                 "{0}".format(self.Timelapse.State)
             )
             self._printer.cancel_print()
