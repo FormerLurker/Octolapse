@@ -35,6 +35,7 @@ from octoprint_octolapse.settings import (Printer, Rendering, Snapshot, Octolaps
 from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
 
+
 class Timelapse(object):
 
     def __init__(
@@ -105,6 +106,7 @@ class Timelapse(object):
         self._snapshot_signal.set()
 
         self.CurrentProfiles = {}
+        self.CurrentFileLine = 0
         self._reset()
 
     def start_timelapse(
@@ -140,7 +142,6 @@ class Timelapse(object):
 
         # send an initial state message
         self._on_timelapse_start()
-
 
     def on_position_received(self, payload):
         if self.State != TimelapseState.Idle:
@@ -453,7 +454,7 @@ class Timelapse(object):
     def is_timelapse_active(self):
         if (
             self.Settings is None
-            or self.State in [TimelapseState.Idle, TimelapseState.WaitingToRender]
+            or self.State in [TimelapseState.Idle, TimelapseState.Initializing, TimelapseState.WaitingToRender]
             or self.Triggers.count() < 1
         ):
             return False
@@ -463,53 +464,65 @@ class Timelapse(object):
         return len(self.RenderingJobs) > 0
 
     def on_print_start(self, tags):
-        if self.OnPrintStartCallback is not None:
-            print_start_callback_thread = threading.Thread(
-                target=self.OnPrintStartCallback, args=[tags]
-            )
-            print_start_callback_thread.daemon = True
-            print_start_callback_thread.start()
+        self.OnPrintStartCallback(tags)
 
     def on_print_start_failed(self, message):
-        if self.OnPrintStartFailedCallback is not None:
-            print_start_failed_callback_thread = threading.Thread(
-                target=self.OnPrintStartFailedCallback, args=[message]
-            )
-            print_start_failed_callback_thread.daemon = True
-            print_start_failed_callback_thread.start()
-
+        self.OnPrintStartFailedCallback(message)
 
     def on_gcode_queuing(self, cmd, cmd_type, gcode, tags):
         # detect print start
         if (
             self.Settings.is_octolapse_enabled and
             self.State == TimelapseState.Idle and
-            self.OctoprintPrinter.is_printing() and
-            {'trigger:comm.start_print'} <= tags
+            {'trigger:comm.start_print', 'fileline:1'} <= tags and
+            self.OctoprintPrinter.is_printing()
         ):
-            self.Settings.current_debug_profile().log_print_state_change(
-                "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
-            )
             if self.OctoprintPrinter.set_job_on_hold(True):
                 try:
-                    if 'fileline:1' in tags or 'filesentline:1' in tags:
-                        self.on_print_start(tags)
-                        # resend the command while we have the job lock.  This is important else your first
-                        # two gcodes will run out of order.
-                        if self.State == TimelapseState.WaitingForTrigger:
-                            self.OctoprintPrinter.commands(cmd)
-                        # suppress the current command so it doesn't get sent twice
-                    return None,
+                    self.State = TimelapseState.Initializing
+
+                    self.Settings.current_debug_profile().log_print_state_change(
+                        "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
+                    )
+                    # call the synchronous callback on_print_start
+                    self.on_print_start(tags)
+
+                    if self.State == TimelapseState.WaitingForTrigger:
+                        # set the current line to 0 so that the plugin checks for line 1 below after startup.
+                        self.CurrentFileLine = 0
+                    else:
+                        # if we're not in the waiting for trigger state, there is a problem
+                        self.on_print_start_failed(
+                            "Unable to start timelapse, failed to initialize.  Print start failed."
+                        )
                 finally:
                     self.OctoprintPrinter.set_job_on_hold(False)
             else:
                 self.on_print_start_failed(
-                    "Octolapse was unable to start.  Unable to acquire the job lock."
+                    "Unabled to start timelapse, failed to acquire a job lock.  Print start failed."
                 )
 
         # if the timelapse is not active, exit without changing any gcode
         if not self.is_timelapse_active():
             return
+
+        # check the current line number
+
+        if {'source:file'} in tags:
+            # this line is from the file, advance!
+            self.CurrentFileLine += 1
+            if "fileline:{0}".format(self.CurrentFileLine) not in tags:
+                actual_file_line = "unknown"
+                for tag in tags:
+                    if len(tag) > 9 and tag.startswith("fileline:"):
+                        actual_file_line = tag[9:]
+                message = "File line number {0} was expected, but {1} was received!".format(
+                    self.CurrentFileLine + 1,
+                    actual_file_line
+                )
+                self.Settings.current_debug_profile().log_error(message)
+                self.stop_snapshots(message, True)
+
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
                 "Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(cmd_type, gcode, cmd, tags))
@@ -614,7 +627,9 @@ class Timelapse(object):
                             if self.State == TimelapseState.WaitingToEndTimelapse:
                                 self.stop_snapshots(
                                     "A timeout occurred when attempting to acquire the printer's current position."
-                                    "The current timeout is {0} seconds.  Stopping timelapse.".format(self._position_timeout),
+                                    "The current timeout is {0} seconds.  Stopping timelapse.".format(
+                                        self._position_timeout
+                                    ),
                                     True
                                 )
                         finally:
@@ -650,7 +665,6 @@ class Timelapse(object):
                                 snapshot_callback_thread = threading.Thread(target=self.OnSnapshotStartCallback)
                                 snapshot_callback_thread.daemon = True
                                 snapshot_callback_thread.start()
-
 
                             # Undo the last position update, we're not going to be using it!
                             self.Position.undo_update()
@@ -942,6 +956,7 @@ class Timelapse(object):
 
     def _reset(self):
         self.State = TimelapseState.Idle
+        self.CurrentFileLine = 0
         self.HasSentInitialStatus = False
         if self.Triggers is not None:
             self.Triggers.reset()
@@ -986,9 +1001,9 @@ class Timelapse(object):
 
 class TimelapseState(object):
     Idle = 1
-    WaitingForTrigger = 2
-    AcquiringLocation = 3
-    TakingSnapshot = 4
-    WaitingToRender = 5
-    WaitingToEndTimelapse = 6
-
+    Initializing = 2
+    WaitingForTrigger = 3
+    AcquiringLocation = 4
+    TakingSnapshot = 5
+    WaitingToRender = 6
+    WaitingToEndTimelapse = 7
