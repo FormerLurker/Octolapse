@@ -1313,6 +1313,7 @@ class DebugProfile(object):
         self.camera_settings_apply = False
         self.gcode_sent_all = False
         self.gcode_queuing_all = False
+        self.gcode_received_all = False
 
         if debug_profile is not None:
             self.update(debug_profile)
@@ -1426,6 +1427,9 @@ class DebugProfile(object):
         if "gcode_queuing_all" in changes.keys():
             self.gcode_queuing_all = utility.get_bool(
                 changes["gcode_queuing_all"], self.gcode_queuing_all)
+        if "gcode_received_all" in changes.keys():
+            self.gcode_received_all = utility.get_bool(
+                changes["gcode_received_all"], self.gcode_received_all)
 
     def to_dict(self):
         return {
@@ -1465,7 +1469,8 @@ class DebugProfile(object):
             'print_state_changed': self.print_state_changed,
             'camera_settings_apply': self.camera_settings_apply,
             'gcode_sent_all': self.gcode_sent_all,
-            'gcode_queuing_all': self.gcode_queuing_all
+            'gcode_queuing_all': self.gcode_queuing_all,
+            'gcode_received_all': self.gcode_received_all
         }
 
     def log_console(self, level_name, message, force=False):
@@ -1618,6 +1623,10 @@ class DebugProfile(object):
 
     def log_gcode_queuing(self, message):
         if self.gcode_queuing_all:
+            self.log_info(message)
+
+    def log_gcode_received(self, message):
+        if self.gcode_received_all:
             self.log_info(message)
 
 

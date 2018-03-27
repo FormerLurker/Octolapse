@@ -389,6 +389,18 @@
       </div>
     </div>
 
+  <div class="control-group">
+      <label class="control-label">Log GCode Received</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gcode_received_all" title="Log all GCode received from the printer"/>Enabled
+        </label>
+        <span class="help-inline">
+          <span class="label label-important">Attention</span>&nbsp;  This option will log every printer response.  This can be very useful but also will create a lot of log entries.
+        </span>
+      </div>
+    </div>
+
 
   </div>
 </script>

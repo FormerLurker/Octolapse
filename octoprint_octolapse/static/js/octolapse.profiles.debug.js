@@ -61,6 +61,7 @@ $(function() {
         self.camera_settings_apply = ko.observable(values.camera_settings_apply);
         self.gcode_sent_all = ko.observable(values.gcode_sent_all);
         self.gcode_queuing_all = ko.observable(values.gcode_queuing_all);
+        self.gcode_received_all = ko.observable(values.gcode_received_all);
 
     };
     Octolapse.DebugProfileValidationRules = {
