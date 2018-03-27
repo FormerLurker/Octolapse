@@ -455,6 +455,7 @@ class Timelapse(object):
         if (
             self.Settings is None
             or self.State in [TimelapseState.Idle, TimelapseState.Initializing, TimelapseState.WaitingToRender]
+            or self.Triggers is None
             or self.Triggers.count() < 1
         ):
             return False
