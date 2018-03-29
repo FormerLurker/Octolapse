@@ -148,7 +148,10 @@ class Timelapse(object):
             self._position_payload = payload
             self._position_signal.set()
 
-    def get_position_async(self, start_gcode=None):
+    def get_position_async(self, start_gcode=None, timeout=None):
+        if timeout is None:
+            timeout = self._position_timeout
+
         self.Settings.current_debug_profile().log_print_state_change("Octolapse is requesting a position.")
 
         # Warning, we can only request one position at a time!
@@ -166,7 +169,7 @@ class Timelapse(object):
             commands_to_send = start_gcode + commands_to_send
 
         self.OctoprintPrinter.commands(commands_to_send)
-        event_is_set = self._position_signal.wait(self._position_timeout)
+        event_is_set = self._position_signal.wait(timeout)
 
         if not event_is_set:
             # we ran into a timeout while waiting for a fresh position
@@ -264,7 +267,6 @@ class Timelapse(object):
             # park the printhead in the snapshot position and wait for the movement to complete
             snapshot_position = self.get_position_async(
                 start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
-
             )
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
             # record the snapshot start time

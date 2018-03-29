@@ -101,7 +101,7 @@ $(function () {
             self.SETTINGS_VISIBLE_KEY = "settings_visible";
             self.onBeforeBinding = function () {
                 var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY);
-                // console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
+                //console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
 
                 if(settingsVisible == null || settingsVisible.toLowerCase() === "true")
                 {

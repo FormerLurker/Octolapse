@@ -438,12 +438,12 @@ $(function () {
             self.is_admin(self.loginState.isAdmin());
         };
         self.onStartupComplete = function () {
-            console.log("Startup Complete")
+            //console.log("Startup Complete")
             self.getInitialState();
 
         };
         self.onDataUpdaterReconnect = function () {
-            console.log("Reconnected Client")
+            //console.log("Reconnected Client")
             self.getInitialState();
 
         };
@@ -489,7 +489,7 @@ $(function () {
         };
 
         self.updateState = function (state) {
-            console.log(state);
+            //console.log(state);
             if (state.Position != null) {
                 //console.log('octolapse.js - state-changed - Position');
                 Octolapse.Status.updatePosition(state.Position);
