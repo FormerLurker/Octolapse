@@ -816,6 +816,21 @@ $(function () {
                         Octolapse.displayPopup(options);
                     }
                     break;
+                case "disabled-running":
+                    {
+                        var options = {
+                            title: 'Octolapse Disabled for Next Print',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                break;
                 case "timelapse-stopped-error":
                     {
                         //console.log('octolapse.js - timelapse-stopped-error');

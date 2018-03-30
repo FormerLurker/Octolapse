@@ -103,6 +103,30 @@ $(function () {
             self.setSettingsVisibility(settings.is_octolapse_enabled);
         };
 
+        self.toggleOctolapse = function(){
+
+            var previousEnabledValue = !Octolapse.Globals.enabled();
+            var data = {
+                "is_octolapse_enabled": Octolapse.Globals.enabled()
+            };
+            //console.log("Toggling octolapse.")
+            $.ajax({
+                url: "/plugin/octolapse/setEnabled",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function () {
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to enable/disable Octolapse.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    Octolapse.Globals.enabled(previousEnabledValue);
+                }
+            });
+            return true;
+        }
+
         self.showEditMainSettingsPopup = function () {
             //console.log("showing main settings")
             self.is_octolapse_enabled(Octolapse.Globals.enabled());

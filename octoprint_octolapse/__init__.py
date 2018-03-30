@@ -136,6 +136,32 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data = {'success': True}
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def set_enabled(self):
+        request_values = flask.request.get_json()
+        enable_octolapse = request_values["is_octolapse_enabled"]
+
+        if (
+            self.Timelapse is not None and
+            self.Timelapse.is_timelapse_active()and
+            self.Settings.is_octolapse_enabled and
+            not enable_octolapse
+        ):
+            self.send_plugin_message(
+                "disabled-running",
+                "Octolapse will remain active until the current print ends."
+                "  If you wish to stop the active timelapse, click 'Stop Timelapse'."
+            )
+
+        # save the updated settings to a file.
+        self.Settings.is_octolapse_enabled = enable_octolapse
+        self.save_settings()
+        self.send_state_loaded_message()
+        data = {'success': True}
+        return json.dumps(data), 200, {'ContentType': 'application/json'}
+
     @octoprint.plugin.BlueprintPlugin.route("/toggleInfoPanel", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)

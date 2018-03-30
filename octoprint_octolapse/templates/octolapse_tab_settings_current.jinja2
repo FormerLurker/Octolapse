@@ -27,6 +27,7 @@
         Current Settings <i class="fa fa-caret-down"></i>
     </a>
     <div id="octolapse_status_settings_current_panel">
+
         <table class="table table-striped table-hover table-condensed table-hover octolapse-profiles">
             <thead>
             <tr>
@@ -126,44 +127,31 @@
         <div class="row-fluid" data-bind="visible:Octolapse.Globals.is_admin">
             <div class="span3 text-center">
                 <div>Trigger State</div>
-                <span class="fa-stack fa-2x"
-                      data-bind="attr: { title: ('Trigger State - ' + ( Octolapse.Globals.show_trigger_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_trigger_state_changes');}">
-                  <i class="fa fa-square fa-stack-2x"
-                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_trigger_state_changes()) ? '' : 'lightgray' }"></i>
-                  <i class="fa icon-off fa-stack-1x fa-inverse"
-                     data-bind="style: { color: (Octolapse.Globals.show_trigger_state_changes() ? 'greenyellow' : '') }"></i>
-                </span>
+                <label class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.show_trigger_state_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
+                  <input type="checkbox" data-bind="checked: Octolapse.Globals.show_trigger_state_changes(), click: function() {toggleInfoPanel('show_trigger_state_changes');}" >
+                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray' }" ><i class="fa icon-circle fa-inverse"></i></span>
+                </label>
             </div>
             <div class="span3 text-center">
                 <div>Extruder State</div>
-                <span class="fa-stack fa-2x"
-                      data-bind="attr: { title: ('Extruder State - ' + ( Octolapse.Globals.show_extruder_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_extruder_state_changes');}">
-                  <i class="fa fa-square fa-stack-2x"
-                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_extruder_state_changes()) ? '' : 'lightgray' }"></i>
-                  <i class="fa icon-off fa-stack-1x fa-inverse"
-                     data-bind="style: { color: (Octolapse.Globals.show_extruder_state_changes() ? 'greenyellow' : '') }"></i>
-                </span>
+                <label class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.show_extruder_state_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
+                  <input type="checkbox" data-bind="checked: Octolapse.Globals.show_extruder_state_changes(), click: function() {toggleInfoPanel('show_extruder_state_changes');}" >
+                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray' }" ><i class="fa icon-circle fa-inverse"></i></span>
+                </label>
             </div>
             <div class="span3 text-center">
                 <div>Position State</div>
-                <span class="fa-stack fa-2x"
-                      data-bind="attr: { title: ('Position State - ' + ( Octolapse.Globals.show_position_state_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_position_state_changes');}">
-                  <i class="fa fa-square fa-stack-2x"
-                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_position_state_changes()) ? '' : 'lightgray' }"></i>
-                  <i class="fa icon-off fa-stack-1x fa-inverse"
-                     data-bind="style: { color: (Octolapse.Globals.show_position_state_changes() ? 'greenyellow' : '') }"></i>
-                </span>
-
+                <label class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.show_position_state_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
+                  <input type="checkbox" data-bind="checked: Octolapse.Globals.show_position_state_changes(), click: function() {toggleInfoPanel('show_position_state_changes');}" >
+                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray' }" ><i class="fa icon-circle fa-inverse"></i></span>
+                </label>
             </div>
             <div class="span3 text-center">
                 <div>Position Changes</div>
-                <span class="fa-stack fa-2x"
-                      data-bind="attr: { title: ('Position Changes - ' + ( Octolapse.Globals.show_position_changes() ? 'Enabled': 'Disabled'))}, click: function() {toggleInfoPanel('show_position_changes');}">
-                  <i class="fa fa-square fa-stack-2x"
-                     data-bind="style: { color: (Octolapse.Globals.enabled() && is_timelapse_active() && Octolapse.Globals.show_position_changes()) ? '' : 'lightgray' }"></i>
-                  <i class="fa icon-off fa-stack-1x fa-inverse"
-                     data-bind="style: { color: (Octolapse.Globals.show_position_changes() ? 'greenyellow' : '') }"></i>
-                </span>
+                <label class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.show_position_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
+                  <input type="checkbox" data-bind="checked: Octolapse.Globals.show_position_changes(), click: function() {toggleInfoPanel('show_position_changes');}" >
+                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray' }" ><i class="fa icon-circle fa-inverse"></i></span>
+                </label>
             </div>
 
 
