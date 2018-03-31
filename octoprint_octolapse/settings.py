@@ -986,6 +986,7 @@ class Camera(object):
         self.apply_settings_before_print = False
         self.address = "http://127.0.0.1/webcam/"
         self.snapshot_request_template = "{camera_address}?action=snapshot"
+        self.snapshot_transpose = ""
         self.ignore_ssl_error = False
         self.username = ""
         self.password = ""
@@ -1057,6 +1058,12 @@ class Camera(object):
                 changes["delay"], self.delay)
         if "address" in changes.keys():
             self.address = utility.get_string(changes["address"], self.address)
+        if "snapshot_request_template" in changes.keys():
+            self.snapshot_request_template = utility.get_string(
+                changes["snapshot_request_template"], self.snapshot_request_template)
+        if "snapshot_transpose" in changes.keys():
+            self.snapshot_transpose = utility.get_string(
+                changes["snapshot_transpose"], self.snapshot_transpose)
         if "apply_settings_before_print" in changes.keys():
             self.apply_settings_before_print = utility.get_bool(
                 changes["apply_settings_before_print"], self.apply_settings_before_print)
@@ -1123,9 +1130,8 @@ class Camera(object):
         if "jpeg_quality" in changes.keys():
             self.jpeg_quality = utility.get_int(
                 changes["jpeg_quality"], self.jpeg_quality)
-        if "snapshot_request_template" in changes.keys():
-            self.snapshot_request_template = utility.get_string(
-                changes["snapshot_request_template"], self.snapshot_request_template)
+
+
         if "brightness_request_template" in changes.keys():
             self.brightness_request_template = utility.get_string(
                 changes["brightness_request_template"], self.brightness_request_template)
@@ -1199,6 +1205,7 @@ class Camera(object):
             'delay': self.delay,
             'address': self.address,
             'snapshot_request_template': self.snapshot_request_template,
+            'snapshot_transpose': self.snapshot_transpose,
             'apply_settings_before_print': self.apply_settings_before_print,
             'ignore_ssl_error': self.ignore_ssl_error,
             'password': self.password,
@@ -2013,6 +2020,15 @@ class OctolapseSettings(object):
                 dict(value='off', name='Off'),
                 dict(value='blink', name='Blink'),
                 dict(value='auto', name='Auto')
+            ],
+            'snapshot_transpose_options': [
+                dict(value='', name='None'),
+                dict(value='flip_left_right', name='Flip Left and Right'),
+                dict(value='flip_top_bottom', name='Flip Top and Bottom'),
+                dict(value='rotate_90', name='Rotate 90 Degrees'),
+                dict(value='rotate_180', name='Rotate 180 Degrees'),
+                dict(value='rotate_270', name='Rotate 270 Degrees'),
+                dict(value='transpose', name='Transpose')
             ],
             'current_printer_profile_guid': utility.get_string(
                 self.current_printer_profile_guid, defaults.current_printer_profile_guid

@@ -25,6 +25,7 @@ import shutil
 import threading
 import os
 from io import open as i_open
+from PIL import ImageFile, Image
 
 import requests
 from PIL import Image
@@ -147,6 +148,7 @@ class SnapshotJob(object):
         self.Username = camera_settings.username
         self.Password = camera_settings.password
         self.IgnoreSslError = camera_settings.ignore_ssl_error
+        self.SnapshotTranspose = camera_settings.snapshot_transpose
         self.Settings = settings
         self.SnapshotInfo = snapshot_info
         self.Url = url
@@ -169,8 +171,8 @@ class SnapshotJob(object):
 
             error = False
             fail_reason = "unknown"
-            snapshot_directory = "{0:s}{1}{2:s}".format(
-                self.SnapshotInfo.DirectoryName, os.sep, self.SnapshotInfo.FileName)
+            snapshot_directory = "{0:s}{1:s}".format(
+                self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
             r = None
             try:
                 if len(self.Username) > 0:
@@ -238,6 +240,38 @@ class SnapshotJob(object):
                         "Check the log file (plugin_octolapse.log) for details."
                     )
                     error = True
+
+            # transpose image if this is enabled.
+            if not error:
+                try:
+                    transpose_method = None
+                    if self.SnapshotTranspose is not None and self.SnapshotTranspose != "":
+                        if self.SnapshotTranspose == 'flip_left_right':
+                            transpose_method = Image.FLIP_LEFT_RIGHT
+                        elif self.SnapshotTranspose == 'flip_top_bottom':
+                            transpose_method = Image.FLIP_TOP_BOTTOM
+                        elif self.SnapshotTranspose == 'rotate_90':
+                            transpose_method = Image.ROTATE_90
+                        elif self.SnapshotTranspose == 'rotate_180':
+                            transpose_method = Image.ROTATE_180
+                        elif self.SnapshotTranspose == 'rotate_270':
+                            transpose_method = Image.ROTATE_270
+                        elif self.SnapshotTranspose == 'transpose':
+                            transpose_method = Image.TRANSPOSE
+
+                        if transpose_method is not None:
+                            im = Image.open(snapshot_directory)
+                            im = im.transpose(transpose_method)
+                            im.save(snapshot_directory)
+                except IOError as e:
+                    # If we can't create the thumbnail, just log
+                    self.Settings.current_debug_profile().log_exception(e)
+                    fail_reason = (
+                        "Snapshot transpose - An unexpected IOException occurred.  "
+                        "Check the log file (plugin_octolapse.log) for details."
+                    )
+                    error = True
+
             if not error:
                 # this call renames the snapshot so that it is
                 # sequential (prob could just sort by create date
@@ -266,7 +300,6 @@ class SnapshotJob(object):
                     # create a thumbnail of the image
 
                     try:
-                        from PIL import ImageFile
                         # without this I get errors during load (happens in resize, where the image is actually loaded)
                         ImageFile.LOAD_TRUNCATED_IMAGES = True
                         #######################################
@@ -287,6 +320,11 @@ class SnapshotJob(object):
                 )
                 _save_latest_snapshot_thread.daemon = True
                 _save_latest_snapshot_thread.start()
+
+
+
+
+
 
     def _move_rename_snapshot_sequential(self):
         # get the save path
@@ -317,10 +355,9 @@ class SnapshotJob(object):
         """Notifies registered callbacks of type `callback`."""
         name = "_on_{}".format(callback)
         method = getattr(self, name, None)
+
         if method is not None and callable(method):
-            _notify_callback_thread = threading.Thread(
-                target=method
-            )
+            _notify_callback_thread = threading.Thread(target=method, args=args)
             _notify_callback_thread.daemon = True
             _notify_callback_thread.start()
 

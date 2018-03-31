@@ -230,9 +230,11 @@ $(function () {
             Octolapse.Cameras.profiles([]);
             Octolapse.Cameras.default_profile(settings.default_camera_profile);
             Octolapse.Cameras.profileOptions = {
-                'camera_powerline_frequency_options': settings.camera_powerline_frequency_options
-                , 'camera_exposure_type_options': settings.camera_exposure_type_options
-                , 'camera_led_1_mode_options': settings.camera_led_1_mode_options
+                'camera_powerline_frequency_options': settings.camera_powerline_frequency_options,
+                'camera_exposure_type_options': settings.camera_exposure_type_options,
+                'camera_led_1_mode_options': settings.camera_led_1_mode_options,
+                'snapshot_transpose_options': settings.snapshot_transpose_options
+
             }
             Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid);
             settings.cameras.forEach(function (item, index) {

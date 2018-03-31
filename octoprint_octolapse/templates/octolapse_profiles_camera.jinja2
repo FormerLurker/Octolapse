@@ -87,6 +87,18 @@
         <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label">Snapshot Transposition Options</label>
+      <div class="controls">
+        <select data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
+                             optionsText: 'name',
+                             optionsValue: 'value',
+                             optionsCaption: 'Select One...',
+                             value: snapshot_transpose"></select>
+        <div class="error_label_container text-error" ></div>
+          <span class="help-inline">Beta Feature - Optionally rotate, mirror, or flip or transpose your snapshots.  Requires some additional power from your CPU.  Not recommended for slower hardware.</span>
+      </div>
+    </div>
   </div>
   <hr/>
   <div>

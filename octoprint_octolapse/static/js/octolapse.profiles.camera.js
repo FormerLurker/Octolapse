@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 */
@@ -32,6 +32,7 @@ $(function() {
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.address = ko.observable(values.address);
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);
+        self.snapshot_transpose = ko.observable(values.snapshot_transpose);
         self.ignore_ssl_error = ko.observable(values.ignore_ssl_error);
         self.username = ko.observable(values.username);
         self.password = ko.observable(values.password);
