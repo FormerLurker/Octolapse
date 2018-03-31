@@ -9,7 +9,7 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.2.5"
+plugin_version = "v0.2.5"
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
@@ -29,7 +29,7 @@ plugin_requires = ["Pillow", "sarge"]
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point
-# --------------------------------------------------------------------------------------------------------------------
+# --------------------------------------d------------------------------------------------------------------------------
 
 # Additional package data to install for this plugin. The subfolders "templates", "static" and "translations" will
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
