@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 */
@@ -78,5 +78,62 @@ $(function() {
         self.g90_influences_extruder = ko.observable(values.g90_influences_extruder);
         self.xyz_axes_default_mode = ko.observable(values.xyz_axes_default_mode);
         self.units_default = ko.observable(values.units_default);
+        self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
+
+        // get the time component of the axis speed units (min/mm)
+        self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
+                if (self.axis_speed_display_units() === "mm-min")
+                    return 'min';
+                if (self.axis_speed_display_units() === "mm-sec")
+                    return 'sec';
+                return '?';
+            }, self);
+
+        self.axisSpeedDisplayUnitsChanged = function (obj, event) {
+            if (Octolapse.Globals.is_admin()) {
+                if (event.originalEvent) {
+                    // Get the current guid
+                    var newUnit = $("#octolapse_axis_speed_display_unit_options").val();
+                    var previousUnit = self.axis_speed_display_units();
+
+                    if(newUnit === previousUnit) {
+                        console.log("Axis speed display units, no change detected!")
+                        return false;
+
+                    }
+                    console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
+                    // in case we want to have more units in the future, check all cases
+                    switch (previousUnit)
+                    {
+                        case "mm-min":
+                            if(newUnit === "mm-sec")
+                            {
+                                self.retract_speed(Math.round(self.retract_speed()/60.0 * 100) / 100);
+                                self.detract_speed(Math.round(self.detract_speed()/60.0 * 100) / 100);
+                                self.movement_speed(Math.round(self.movement_speed()/60.0 * 100) / 100);
+                                self.z_hop_speed(Math.round(self.z_hop_speed()/60.0 * 100) / 100);
+                                // Convert all from mm-min to mm-sec
+                            }
+                            else
+                                return false;
+                            break;
+                        case "mm-sec":
+                            if(newUnit === "mm-min")
+                            {
+                                self.retract_speed(Math.round(self.retract_speed()*60.0 * 100) / 100);
+                                self.detract_speed(Math.round(self.detract_speed()*60.0 * 100) / 100);
+                                self.movement_speed(Math.round(self.movement_speed()*60.0 * 100) / 100);
+                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0 * 100) / 100);
+                            }
+                            else
+                                return false;
+                            break;
+                        default:
+                            return false;
+                    }
+                    return true;
+                }
+            }
+        };
     };
 });

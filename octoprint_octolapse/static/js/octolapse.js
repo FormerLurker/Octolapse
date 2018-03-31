@@ -191,9 +191,9 @@ $(function () {
     };
 
     // Add custom validator for csv strings (no inner whitespace)
-    const csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
-    const csvStringComponentRegex = /[A-Z]\d+/gim;
     $.validator.addMethod('csvString', function (value) {
+        var csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
+        var csvStringComponentRegex = /[A-Z]\d+/gim;
         //console.log("Validating csvString: " + value);
         // We will allow 0 length trimmed strings
         if (value.length > 0) {

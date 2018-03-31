@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -71,86 +71,60 @@ def is_rendering_template_valid(template, options, data_directory):
 
 
 class Render(object):
-
-    def __init__(
-            self, settings, snapshot, rendering, data_directory,
-            octoprint_timelapse_folder, ffmpeg_path, thread_count,
-            time_added=0, on_render_start=None, on_render_fail=None,
-            on_render_success=None, on_render_complete=None, on_after_sync_fail=None,
-            on_after_sync_success=None, on_complete=None):
-        self.Settings = settings
-        self.DataDirectory = data_directory
-        self.OctoprintTimelapseFolder = octoprint_timelapse_folder
-        self.FfmpegPath = ffmpeg_path
-        self.Snapshot = snapshot
-        self.Rendering = rendering
-        self.ThreadCount = thread_count
-        self.TimeAdded = time_added
-        self.OnRenderStart = on_render_start
-        self.OnRenderFail = on_render_fail
-        self.OnRenderSuccess = on_render_success
-        self.OnRenderComplete = on_render_complete
-        self.OnAfterSyncFail = on_after_sync_fail
-        self.OnAfterSycnSuccess = on_after_sync_success
-        self.OnComplete = on_complete
-        self.PrintState = "UnknownState"
-        self.PrintName = "UnknownName"
-        self.PrintStartTime = time.time()
-        self.PrintEndTime = time.time()
-        self.TimelapseRenderJobs = []
-
-    def process(self, job_id, print_name, print_start_time, print_end_time, print_state):
-        self.Settings.current_debug_profile().log_render_start("Rendering is starting.")
-
-        self.PrintState = print_state
-        self.PrintName = print_name
-        self.PrintStartTime = print_start_time
-        self.PrintEndTime = print_end_time
+    @staticmethod
+    def create_render_job(
+        settings, snapshot, rendering, data_directory,
+        octoprint_timelapse_folder, ffmpeg_path, thread_count, render_task_queue, job_id, print_name,
+        print_start_time, print_end_time, print_state,
+        time_added=0, on_render_start=None, on_render_fail=None,
+        on_render_success=None, on_render_complete=None, on_after_sync_fail=None,
+        on_after_sync_success=None, on_complete=None
+    ):
 
         # Get the capture file and directory info
-        snapshot_directory = utility.get_snapshot_temp_directory(
-            self.DataDirectory)
+        snapshot_directory = utility.get_snapshot_temp_directory(data_directory)
         snapshot_file_name_template = utility.get_snapshot_filename(
             print_name, print_start_time, utility.SnapshotNumberFormat)
-        output_tokens = self._get_output_tokens()
+        output_tokens = Render._get_output_tokens(data_directory,print_state, print_name, print_start_time, print_end_time )
 
         job = TimelapseRenderJob(
             job_id,
-            self.Rendering,
-            self.Settings.current_debug_profile(),
+            rendering,
+            settings.current_debug_profile(),
             print_name,
             snapshot_directory,
             snapshot_file_name_template,
             output_tokens,
-            self.OctoprintTimelapseFolder,
-            self.FfmpegPath,
-            self.ThreadCount,
-            time_added=self.TimeAdded,
-            on_render_start=self.OnRenderStart,
-            on_render_fail=self.OnRenderFail,
-            on_render_success=self.OnRenderSuccess,
-            on_render_complete=self.OnRenderComplete,
-            on_after_sync_fail=self.OnAfterSyncFail,
-            on_after_sync_success=self.OnAfterSycnSuccess,
-            on_complete=self.OnComplete,
-            clean_after_success=self.Snapshot.cleanup_after_render_complete,
-            clean_after_fail=self.Snapshot.cleanup_after_render_complete
+            octoprint_timelapse_folder,
+            ffmpeg_path,
+            thread_count,
+            render_task_queue,
+            time_added,
+            on_render_start,
+            on_render_fail,
+            on_render_success,
+            on_render_complete,
+            on_after_sync_fail,
+            on_after_sync_success,
+            on_complete,
+            snapshot.cleanup_after_render_complete,
+            snapshot.cleanup_after_render_complete
         )
-        job.process()
-
-    def _get_output_tokens(self):
+        return job.process
+    @staticmethod
+    def _get_output_tokens(data_directory, print_state, print_name, print_start_time, print_end_time):
         return {
-            "FAILEDFLAG": "FAILED" if self.PrintState != "COMPLETED" else "",
-            "FAILEDSEPARATOR": "_" if self.PrintState != "COMPLETED" else "",
-            "FAILEDSTATE": "" if self.PrintState == "COMPLETED" else self.PrintState,
-            "PRINTSTATE": self.PrintState,
-            "GCODEFILENAME": self.PrintName,
-            "PRINTENDTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(self.PrintEndTime)),
-            "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(self.PrintEndTime, 2) * 100)),
-            "PRINTSTARTTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(self.PrintStartTime)),
-            "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(self.PrintStartTime, 2) * 100)),
+            "FAILEDFLAG": "FAILED" if print_state != "COMPLETED" else "",
+            "FAILEDSEPARATOR": "_" if print_state != "COMPLETED" else "",
+            "FAILEDSTATE": "" if print_state == "COMPLETED" else print_state,
+            "PRINTSTATE": print_state,
+            "GCODEFILENAME": print_name,
+            "PRINTENDTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time)),
+            "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(print_end_time, 2) * 100)),
+            "PRINTSTARTTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time)),
+            "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(print_start_time, 2) * 100)),
             "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
-            "DATADIRECTORY": self.DataDirectory,
+            "DATADIRECTORY": data_directory,
             "SNAPSHOTCOUNT": 0,
             "FPS": 0,
         }
@@ -173,16 +147,17 @@ class TimelapseRenderJob(object):
             octoprint_timelapse_folder,
             ffmpeg_path,
             threads,
-            time_added=0,
-            on_render_start=None,
-            on_render_fail=None,
-            on_render_success=None,
-            on_render_complete=None,
-            on_after_sync_success=None,
-            on_after_sync_fail=None,
-            on_complete=None,
-            clean_after_success=False,
-            clean_after_fail=False):
+            rendering_task_queue,
+            time_added,
+            on_render_start,
+            on_render_fail,
+            on_render_success,
+            on_render_complete,
+            on_after_sync_success,
+            on_after_sync_fail,
+            on_complete,
+            clean_after_success,
+            clean_after_fail):
         self._rendering = Rendering(rendering)
         self._debug = debug
         self._printFileName = print_filename
@@ -195,7 +170,7 @@ class TimelapseRenderJob(object):
         self._secondsAddedToPrint = time_added
         self._threads = threads
         self._ffmpeg = ffmpeg_path
-
+        self._rendering_task_queue = rendering_task_queue
         ###########
         # callbacks
         ###########
@@ -431,7 +406,7 @@ class TimelapseRenderJob(object):
         payload = self._create_callback_payload(return_code, message)
         self._notify_callback(self._render_fail_callback, self._job_id, payload)
         # Time to end the rendering, inform the client.
-        self._notify_callback(self._on_complete_callback, self._job_id, payload)
+        self._on_complete()
 
     def _on_render_success(self):
         payload = self._create_callback_payload(
@@ -452,15 +427,17 @@ class TimelapseRenderJob(object):
         self._error_type = "SYNCHRONIZE"
         payload = self._create_callback_payload(0, "Synchronization has failed.")
         self._notify_callback(self._after_sync_fail_callback, self._job_id, payload)
-        self._notify_callback(self._on_complete_callback, self._job_id, payload)
+        self._on_complete()
 
     def _on_complete(self):
         payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
         self._notify_callback(self._on_complete_callback, self._job_id, payload)
 
+        self._rendering_task_queue.get()
+        self._rendering_task_queue.task_done()
+
     def _render(self):
         """Rendering runnable."""
-
         try:
             # I've had bad luck doing this inside of the thread
             if not self._pre_render():

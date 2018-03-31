@@ -26,6 +26,7 @@ import threading
 import os
 from io import open as i_open
 from PIL import ImageFile, Image
+from time import sleep
 
 import requests
 from PIL import Image
@@ -34,11 +35,6 @@ from requests.auth import HTTPBasicAuth
 
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.settings import *
-
-
-def start_snapshot_job(job):
-    job.process()
-
 
 class CaptureSnapshot(object):
 
@@ -51,10 +47,9 @@ class CaptureSnapshot(object):
         self.PrintEndTime = print_end_time
         self.DataDirectory = data_directory
 
-    def snap(self, printer_file_name, snapshot_number, on_complete=None, on_success=None, on_fail=None):
+    def create_snapshot_job(self, printer_file_name, snapshot_number, snapshot_guid, task_queue, on_complete=None, on_success=None, on_fail=None):
         info = SnapshotInfo(printer_file_name, self.PrintStartTime)
         # set the file name.  It will be a guid + the file extension
-        snapshot_guid = str(uuid.uuid4())
         info.FileName = "{0}.{1}".format(snapshot_guid, "jpg")
         info.DirectoryName = utility.get_snapshot_temp_directory(
             self.DataDirectory)
@@ -63,21 +58,13 @@ class CaptureSnapshot(object):
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
         new_snapshot_job = SnapshotJob(
             self.Settings, self.DataDirectory, snapshot_number, info, url,
-            snapshot_guid, timeout_seconds=1, on_complete=on_complete, on_success=on_success, on_fail=on_fail
+            snapshot_guid, task_queue, self.Camera.delay, timeout_seconds=1, on_complete=on_complete, on_success=on_success, on_fail=on_fail
         )
 
-        delay_seconds = self.Camera.delay / 1000.0
-        if delay_seconds == 0:
-            self.Settings.current_debug_profile().log_snapshot_download(
-                "Starting Snapshot Download Job Immediately.")
-        else:
-            delay_seconds = self.Camera.delay / 1000.0
-            self.Settings.current_debug_profile().log_snapshot_download(
-                "Starting Snapshot Download Job in {0} seconds.".format(delay_seconds))
 
-        t = threading.Timer(
-            delay_seconds, start_snapshot_job, [new_snapshot_job])
-        t.start()
+        return new_snapshot_job.process
+
+
 
     def clean_snapshots(self, snapshot_directory):
 
@@ -139,8 +126,11 @@ class SnapshotJob(object):
 
     def __init__(
             self, settings, data_directory, snapshot_number,
-            snapshot_info, url, snapshot_guid, timeout_seconds=5,
-            on_complete=None, on_success=None, on_fail=None):
+            snapshot_info, url, snapshot_guid, task_queue, delay_ms, timeout_seconds=5,
+            on_complete=None, on_success=None, on_fail=None
+    ):
+
+        self.DelaySeconds = delay_ms / 1000.0
         camera_settings = settings.current_camera()
         self.SnapshotNumber = snapshot_number
         self.DataDirectory = data_directory
@@ -157,16 +147,17 @@ class SnapshotJob(object):
         self._on_complete = on_complete
         self._on_success = on_success
         self._on_fail = on_fail
-        self._thread = None
+        self.task_queue = task_queue
+
 
     def process(self):
-        # TODO:  REPLACE THE SNAPSHOT NUMBER WITH A GUID HERE
-        self._thread = threading.Thread(
-            target=self._process, name="SnapshotDownloadJob_{name}".format(name=self.SnapshotGuid))
-        self._thread.daemon = True
-        self._thread.start()
-
-    def _process(self):
+        if self.DelaySeconds == 0:
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Starting Snapshot Download Job Immediately.")
+        else:
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Starting Snapshot Download Job in {0} seconds.".format(self.DelaySeconds))
+            sleep(self.DelaySeconds)
         with self.snapshot_job_lock:
 
             error = False
@@ -241,6 +232,12 @@ class SnapshotJob(object):
                     )
                     error = True
 
+            # go ahead and report success or fail for the timelapse routine
+            if not error:
+                self._notify_callback_async("success", self.SnapshotInfo)
+            else:
+                self._notify_callback_async("fail", fail_reason)
+
             # transpose image if this is enabled.
             if not error:
                 try:
@@ -278,19 +275,14 @@ class SnapshotJob(object):
                 # instead, todo). returns true on success.
                 error = not self._move_rename_snapshot_sequential()
 
-            if not error:
-                self._notify_callback_async("success", self.SnapshotInfo)
-            else:
-                self._notify_callback_async("fail", fail_reason)
-
-            self._notify_callback_async("complete")
-            # do this after we notify of success.  It will likely complete before the client
-            # is notified of snapshot changes and if it doesn't, no big deal.  It is better
-            # if we start the print back up sooner and fail to deliver a new thumbnail than to not.
-
+            # create a thumbnail and save the current snapshot as the most recent snapshot image
             if not error:
 
-                def _save_snapshot_and_thumbnail():
+                try:
+                    # without this I get errors during load (happens in resize, where the image is actually loaded)
+                    ImageFile.LOAD_TRUNCATED_IMAGES = True
+                    #######################################
+
                     # create a copy to be used for the full sized latest snapshot image.
                     latest_snapshot_path = utility.get_latest_snapshot_download_path(
                         self.DataDirectory
@@ -299,30 +291,28 @@ class SnapshotJob(object):
                         self.SnapshotNumber), latest_snapshot_path)
                     # create a thumbnail of the image
 
-                    try:
-                        # without this I get errors during load (happens in resize, where the image is actually loaded)
-                        ImageFile.LOAD_TRUNCATED_IMAGES = True
-                        #######################################
+                    basewidth = 300
+                    img = Image.open(latest_snapshot_path)
+                    wpercent = (basewidth / float(img.size[0]))
+                    hsize = int((float(img.size[1]) * float(wpercent)))
+                    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+                    img.save(utility.get_latest_snapshot_thumbnail_download_path(
+                        self.DataDirectory), "JPEG")
+                except Exception as e:
+                    # If we can't create the thumbnail, just log
+                    self.Settings.current_debug_profile().log_exception(e)
+                    fail_reason = (
+                        "Create latest snapshot and thumbnail - An unexpected exception occurred.  "
+                        "Check the log file (plugin_octolapse.log) for details."
+                    )
+                    error = True
 
-                        basewidth = 300
-                        img = Image.open(latest_snapshot_path)
-                        wpercent = (basewidth / float(img.size[0]))
-                        hsize = int((float(img.size[1]) * float(wpercent)))
-                        img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-                        img.save(utility.get_latest_snapshot_thumbnail_download_path(
-                            self.DataDirectory), "JPEG")
-                    except Exception as e:
-                        # If we can't create the thumbnail, just log
-                        self.Settings.current_debug_profile().log_exception(e)
+            self._notify_callback_async("complete", self.SnapshotGuid, error, fail_reason)
 
-                _save_latest_snapshot_thread = threading.Thread(
-                    target=_save_snapshot_and_thumbnail
-                )
-                _save_latest_snapshot_thread.daemon = True
-                _save_latest_snapshot_thread.start()
-
-
-
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Starting Snapshot Download Job completed, signaling task queue.")
+            self.task_queue.get()
+            self.task_queue.task_done()
 
 
 

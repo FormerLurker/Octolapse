@@ -17,7 +17,7 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
@@ -116,6 +116,20 @@ class SnapshotGcodeGenerator(object):
         self.SnapshotPositionErrors = ""
         self.ZLift = 0
         self.RetractedLength = 0
+        self.AxisSpeedUnits = self.Printer.axis_speed_display_units
+        if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
+            self.AxisSpeedUnits = "mm-min"
+
+        self.RetractSpeed = self.convert_to_mm_min(self.Printer.retract_speed)
+        self.DetractSpeed = self.convert_to_mm_min(self.Printer.detract_speed)
+        self.TravelSpeed = self.convert_to_mm_min(self.Printer.movement_speed)
+        self.ZHopSpeed = self.convert_to_mm_min(self.Printer.z_hop_speed)
+
+    def convert_to_mm_min(self, axis_speed):
+        if self.AxisSpeedUnits == "mm-sec":
+            return axis_speed * 60.0
+        else:
+            return axis_speed
 
     def reset(self):
         self.RetractedBySnapshotStartGcode = None
@@ -246,7 +260,7 @@ class SnapshotGcodeGenerator(object):
         y_return = position.y()
         z_return = position.z()
         f_return = position.f()
-        e_return = position.e()
+        #e_return = position.e()
 
         is_relative = position.is_relative()
         is_extruder_relative = position.is_extruder_relative()
@@ -395,8 +409,8 @@ class SnapshotGcodeGenerator(object):
                 )
                 self.IsExtruderRelativeCurrent = True
 
-            if self.Printer.retract_speed != self.FCurrent:
-                new_f = self.Printer.retract_speed
+            if self.RetractSpeed != self.FCurrent:
+                new_f = self.RetractSpeed
                 self.FCurrent = new_f
             else:
                 new_f = None
@@ -419,8 +433,8 @@ class SnapshotGcodeGenerator(object):
                 )
                 self.IsRelativeCurrent = True
 
-            if self.Printer.z_hop_speed != self.FCurrent:
-                new_f = self.Printer.z_hop_speed
+            if self.ZHopSpeed != self.FCurrent:
+                new_f = self.ZHopSpeed
                 self.FCurrent = new_f
             else:
                 new_f = None
@@ -450,8 +464,8 @@ class SnapshotGcodeGenerator(object):
             self.IsRelativeCurrent = False
 
         # detect speed change
-        if self.FCurrent != self.Printer.movement_speed:
-            new_f = self.Printer.movement_speed
+        if self.FCurrent != self.TravelSpeed:
+            new_f = self.TravelSpeed
             self.FCurrent = new_f
         else:
             new_f = None
@@ -485,8 +499,8 @@ class SnapshotGcodeGenerator(object):
                 )
                 self.IsRelativeCurrent = True
 
-            if self.Printer.z_hop_speed != self.FCurrent:
-                new_f = self.Printer.z_hop_speed
+            if self.ZHopSpeed != self.FCurrent:
+                new_f = self.ZHopSpeed
                 self.FCurrent = new_f
             else:
                 new_f = None
@@ -505,8 +519,8 @@ class SnapshotGcodeGenerator(object):
                 )
                 self.IsExtruderRelativeCurrent = True
 
-            if self.Printer.detract_speed != self.FCurrent:
-                new_f = self.Printer.detract_speed
+            if self.DetractSpeed != self.FCurrent:
+                new_f = self.DetractSpeed
                 self.FCurrent = new_f
             else:
                 new_f = None

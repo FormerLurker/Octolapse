@@ -70,6 +70,7 @@ class Printer(object):
         self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.units_default = 'millimeters'
+        self.axis_speed_display_units = 'mm-min'
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -101,6 +102,7 @@ class Printer(object):
                 self.g90_influences_extruder = printer.g90_influences_extruder
                 self.xyz_axes_default_mode = printer.xyz_axes_default_mode
                 self.units_default = printer.units_default
+                self.axis_speed_display_units = printer.axis_speed_display_units
             else:
                 self.update(printer)
 
@@ -116,13 +118,13 @@ class Printer(object):
             self.retract_length = utility.get_float(
                 changes["retract_length"], self.retract_length)
         if "retract_speed" in changes.keys():
-            self.retract_speed = utility.get_int(
+            self.retract_speed = utility.get_float(
                 changes["retract_speed"], self.retract_speed)
         if "detract_speed" in changes.keys():
-            self.detract_speed = utility.get_int(
+            self.detract_speed = utility.get_float(
                 changes["detract_speed"], self.detract_speed)
         if "movement_speed" in changes.keys():
-            self.movement_speed = utility.get_int(
+            self.movement_speed = utility.get_float(
                 changes["movement_speed"], self.movement_speed)
         if "snapshot_command" in changes.keys():
             self.snapshot_command = utility.get_string(
@@ -130,7 +132,7 @@ class Printer(object):
         if "z_hop" in changes.keys():
             self.z_hop = utility.get_float(changes["z_hop"], self.z_hop)
         if "z_hop_speed" in changes.keys():
-            self.z_hop_speed = utility.get_int(
+            self.z_hop_speed = utility.get_float(
                 changes["z_hop_speed"], self.z_hop_speed)
         if "printer_position_confirmation_tolerance" in changes.keys():
             self.printer_position_confirmation_tolerance = utility.get_float(
@@ -185,6 +187,11 @@ class Printer(object):
             self.units_default = utility.get_string(
                 changes["units_default"], self.units_default
             )
+        if "axis_speed_display_units" in changes.keys():
+            self.axis_speed_display_units = utility.get_string(
+                changes["axis_speed_display_units"], self.axis_speed_display_units
+            )
+
     def to_dict(self):
         return {
             'name': self.name,
@@ -215,7 +222,9 @@ class Printer(object):
             'e_axis_default_mode': self.e_axis_default_mode,
             'g90_influences_extruder': self.g90_influences_extruder,
             'xyz_axes_default_mode': self.xyz_axes_default_mode,
-            'units_default': self.units_default
+            'units_default': self.units_default,
+            'axis_speed_display_units': self.axis_speed_display_units,
+
         }
 
 
@@ -1959,6 +1968,10 @@ class OctolapseSettings(object):
                 dict(value='require-explicit', name='Require Explicit M82/M83'),
                 dict(value='relative', name='Default To Relative'),
                 dict(value='absolute', name='Default To Absolute')
+            ],
+            'axis_speed_display_unit_options': [
+                dict(value='mm-min', name='Millimeters per Minute (mm/min)'),
+                dict(value='mm-sec', name='Millimeters per Second (mm/sec)')
             ],
 
             'g90_influences_extruder_options': [

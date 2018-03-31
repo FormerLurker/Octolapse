@@ -77,53 +77,71 @@
     <div>
       <div>
         <h5>Axis Speeds</h5>
+        <p>The axis speeds should be acquired from your slicer settings.  If your slicer doesn't have separate settings for movement (travel) speed and z-movement speed, use the movement speed for both.  Similarly, if your slicer doesn't have separate settings for retraction/detraction speed, use retraction speed for both.</p>
       </div>
+        <div class="control-group">
+        <label class="control-label" >Axis Speed Display Units</label>
+        <div class="controls">
+          <select id="octolapse_axis_speed_display_unit_options" data-bind="options: Octolapse.Printers.profileOptions.axis_speed_display_unit_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                    event: {change: axisSpeedDisplayUnitsChanged},
+                                   value: axis_speed_display_units"></select>
+          <div class="error_label_container text-error" ></div>
+            <span class="help-inline">
+                Here you can change your axis speeds from mm/min to mm/sec so you don't have to do any conversions.
+            </span>
+        </div>
+      </div>
+
+
+
       <div class="control-group">
         <label class="control-label">Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="10" min="0" max="9999999" required="true" />
+            <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
-            <span class="add-on">min</span>
+            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
           <div class="error_label_container text-error" ></div>
-          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+          <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">Retraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="10" min="0" max="9999999" required="true" />
+            <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
-            <span class="add-on">min</span>
+            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
           <div class="error_label_container text-error" ></div>
-          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+          <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">Detraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="10" min="0" max="9999999" required="true" />
+            <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
-            <span class="add-on">min</span>
+            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
           <div class="error_label_container text-error" ></div>
-          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+          <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">Z Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="10" min="0" max="9999999" required="true" />
+            <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
-            <span class="add-on">min</span>
+            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
           <div class="error_label_container text-error" ></div>
-          <span class="help-inline">Use 0 mm/min to use the previous axis speed.</span>
+          <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
     </div>

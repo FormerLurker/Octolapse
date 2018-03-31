@@ -186,6 +186,7 @@ $(function () {
                 'g90_influences_extruder_options': settings.g90_influences_extruder_options,
                 'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,
                 'units_default_options': settings.units_default_options,
+                'axis_speed_display_unit_options': settings.axis_speed_display_unit_options
             };
             Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid);
             settings.printers.forEach(function (item, index) {
