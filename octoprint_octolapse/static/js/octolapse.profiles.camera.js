@@ -81,7 +81,7 @@ $(function() {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = { 'profile': ko.toJS(self) };
             $.ajax({
-                url: "/plugin/octolapse/applyCameraSettings",
+                url: "./plugin/octolapse/applyCameraSettings",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",
@@ -101,7 +101,7 @@ $(function() {
             //console.log("Running camera request.");
             var data = { 'profile': ko.toJS(self) };
             $.ajax({
-                url: "/plugin/octolapse/testCamera",
+                url: "./plugin/octolapse/testCamera",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",

@@ -50,7 +50,7 @@ $(function() {
             bitrate: { required: true, ffmpegBitRate: true },
             output_template: {
                 remote: {
-                    url: "/plugin/octolapse/validateRenderingTemplate",
+                    url: "./plugin/octolapse/validateRenderingTemplate",
                     type:"post"
                 }
             },

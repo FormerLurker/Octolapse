@@ -49,7 +49,7 @@ $(function() {
             var isNewProfile = profile().guid() === "";
             var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName };
             $.ajax({
-                url: "/plugin/octolapse/" + self.addUpdatePath,
+                url: "./plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",
@@ -90,7 +90,7 @@ $(function() {
             if (confirm("Are you sure you want to permanently erase the profile:'" + settings.profileTypeName + "'?")) {
                 var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
                 $.ajax({
-                    url: "/plugin/octolapse/" + self.removeProfilePath,
+                    url: "./plugin/octolapse/" + self.removeProfilePath,
                     type: "POST",
                     data: JSON.stringify(data),
                     contentType: "application/json",
@@ -114,7 +114,7 @@ $(function() {
         self.setCurrentProfile = function(guid) {
             var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
             $.ajax({
-                url: "/plugin/octolapse/" + self.setCurrentProfilePath,
+                url: "./plugin/octolapse/" + self.setCurrentProfilePath,
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",
@@ -229,7 +229,7 @@ $(function() {
         if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
-                url: "/plugin/octolapse/restoreDefaults",
+                url: "./plugin/octolapse/restoreDefaults",
                 type: "POST",
                 contentType: "application/json",
                 success: function () {

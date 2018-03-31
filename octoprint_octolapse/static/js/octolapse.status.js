@@ -340,7 +340,7 @@ $(function () {
 
             self.toggleInfoPanel = function (panelType){
                 $.ajax({
-                    url: "/plugin/octolapse/toggleInfoPanel",
+                    url: "./plugin/octolapse/toggleInfoPanel",
                     type: "POST",
                     data: JSON.stringify({panel_type: panelType}),
                     contentType: "application/json",
@@ -438,7 +438,7 @@ $(function () {
                     //console.log("octolapse.status.js - ButtonClick: StopTimelapse");
                     if (confirm("Warning: You cannot restart octolapse once it is stopped until the next print.  Do you want to stop Octolapse?")) {
                         $.ajax({
-                            url: "/plugin/octolapse/stopTimelapse",
+                            url: "./plugin/octolapse/stopTimelapse",
                             type: "POST",
                             contentType: "application/json",
                             success: function (data) {

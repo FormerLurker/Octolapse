@@ -260,7 +260,7 @@ $(function () {
                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
                 var data = {"client_id": Octolapse.Globals.client_id};
                 $.ajax({
-                    url: "/plugin/octolapse/restoreDefaults",
+                    url: "./plugin/octolapse/restoreDefaults",
                     type: "POST",
                     data: JSON.stringify(data),
                     contentType: "application/json",
@@ -284,7 +284,7 @@ $(function () {
 
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
-                url: "/plugin/octolapse/loadSettings",
+                url: "./plugin/octolapse/loadSettings",
                 type: "POST",
                 contentType: "application/json",
                 dataType: "json",

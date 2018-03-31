@@ -111,7 +111,7 @@ $(function () {
             };
             //console.log("Toggling octolapse.")
             $.ajax({
-                url: "/plugin/octolapse/setEnabled",
+                url: "./plugin/octolapse/setEnabled",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",
@@ -253,7 +253,7 @@ $(function () {
                         };
                         //console.log("Saving main settings.")
                         $.ajax({
-                            url: "/plugin/octolapse/saveMainSettings",
+                            url: "./plugin/octolapse/saveMainSettings",
                             type: "POST",
                             data: JSON.stringify(data),
                             contentType: "application/json",
