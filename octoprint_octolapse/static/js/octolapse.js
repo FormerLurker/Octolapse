@@ -291,7 +291,7 @@ $(function () {
         function (value, element) {
             var data = {"rendering_template":value};
             $.ajax({
-                url: "/plugin/octolapse/validateRenderingTemplate",
+                url: "./plugin/octolapse/validateRenderingTemplate",
                 type: "POST",
                 tryCount: 0,
                 retryLimit: 3,
@@ -458,7 +458,7 @@ $(function () {
         self.loadState = function () {
             //console.log("octolapse.js - Loading State");
             $.ajax({
-                url: "/plugin/octolapse/loadState",
+                url: "./plugin/octolapse/loadState",
                 type: "POST",
                 tryCount: 0,
                 retryLimit: 3,
