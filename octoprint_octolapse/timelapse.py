@@ -874,7 +874,7 @@ class Timelapse(object):
             else:
                 self.Settings.current_debug_profile().log_render_start(
                     "Waiting for {0} snapshot threads to complete".format(
-                        len(self._snapshot_task_queue)))
+                        self._snapshot_task_queue.qsize()))
                 self._snapshot_task_queue.join()
                 self.Settings.current_debug_profile().log_render_start(
                     "All snapshot tasks have completed, rendering timelapse"
