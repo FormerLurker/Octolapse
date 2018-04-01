@@ -273,27 +273,26 @@ class Timelapse(object):
 
             self.Settings.current_debug_profile().log_snapshot_gcode(
                 "Sending snapshot start gcode and snapshot commands.")
+            # get starting position
+            start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
+
             # park the printhead in the snapshot position and wait for the movement to complete
+            snapshot_start_time = time.time()
             snapshot_position = self.get_position_async(
-                start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
+                start_gcode=snapshot_gcode.SnapshotCommands, timeout=self._position_timeout_short
             )
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
-            # record the snapshot start time
-            snapshot_start_time = time.time()
             # take the snapshot
             snapshot_async_payload = self._take_snapshot_async()
             timelapse_snapshot_payload["snapshot_payload"] = snapshot_async_payload
-            # calculate the snapshot time
-            snapshot_time = time.time() - snapshot_start_time
-
-            # record the return movement start time
-            return_start_time = time.time()
-
             self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return gcode.")
+
             # return the printhead to the start position
             return_position = self.get_position_async(
                 start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
             )
+            # return end time
+            snapshot_end_time = time.time()
 
             # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
             # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
@@ -305,9 +304,6 @@ class Timelapse(object):
                 start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
             )
 
-            # calculate the return movement time
-            return_time = time.time() - return_start_time
-
             # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
             # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
             timelapse_snapshot_payload["end_position"] = end_position
@@ -315,9 +311,9 @@ class Timelapse(object):
             # calculate the total snapshot time
             # Note that we use 2 * return_time as opposed to snapshot_travel_time + return_time.
             # This is so we can avoid sending an M400 until after we've lifted and hopped
-            current_snapshot_time = snapshot_time + 2 * return_time
-            self.SecondsAddedByOctolapse += current_snapshot_time
-            timelapse_snapshot_payload["current_snapshot_time"] = current_snapshot_time
+            snapshot_time = snapshot_end_time - snapshot_start_time
+            self.SecondsAddedByOctolapse += snapshot_time
+            timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
             timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
 
             # we've completed the procedure, set success
