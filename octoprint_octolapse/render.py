@@ -38,7 +38,6 @@ from octoprint_octolapse.settings import Rendering
 
 
 def is_rendering_template_valid(template, options, data_directory):
-
     # make sure we have all the replacements we need
     option_dict = {}
     for option in options:
@@ -73,19 +72,29 @@ def is_rendering_template_valid(template, options, data_directory):
 class Render(object):
     @staticmethod
     def create_render_job(
-        settings, snapshot, rendering, data_directory,
-        octoprint_timelapse_folder, ffmpeg_path, thread_count, render_task_queue, job_id, print_name,
-        print_start_time, print_end_time, print_state,
-        time_added=0, on_render_start=None, on_render_fail=None,
-        on_render_success=None, on_render_complete=None, on_after_sync_fail=None,
-        on_after_sync_success=None, on_complete=None
+        settings,
+        snapshot,
+        rendering,
+        data_directory,
+        octoprint_timelapse_folder,
+        ffmpeg_path,
+        thread_count,
+        render_task_queue,
+        job_id,
+        print_name,
+        print_start_time,
+        print_end_time,
+        print_state,
+        time_added,
+        on_render_start,
+        on_complete
     ):
-
         # Get the capture file and directory info
         snapshot_directory = utility.get_snapshot_temp_directory(data_directory)
         snapshot_file_name_template = utility.get_snapshot_filename(
             print_name, print_start_time, utility.SnapshotNumberFormat)
-        output_tokens = Render._get_output_tokens(data_directory,print_state, print_name, print_start_time, print_end_time )
+        output_tokens = Render._get_output_tokens(data_directory, print_state, print_name, print_start_time,
+                                                  print_end_time)
 
         job = TimelapseRenderJob(
             job_id,
@@ -101,16 +110,12 @@ class Render(object):
             render_task_queue,
             time_added,
             on_render_start,
-            on_render_fail,
-            on_render_success,
-            on_render_complete,
-            on_after_sync_fail,
-            on_after_sync_success,
             on_complete,
             snapshot.cleanup_after_render_complete,
             snapshot.cleanup_after_render_complete
         )
         return job.process
+
     @staticmethod
     def _get_output_tokens(data_directory, print_state, print_name, print_start_time, print_end_time):
         return {
@@ -119,9 +124,9 @@ class Render(object):
             "FAILEDSTATE": "" if print_state == "COMPLETED" else print_state,
             "PRINTSTATE": print_state,
             "GCODEFILENAME": print_name,
-            "PRINTENDTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time)),
+            "PRINTENDTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time)),
             "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(print_end_time, 2) * 100)),
-            "PRINTSTARTTIME":  time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time)),
+            "PRINTSTARTTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time)),
             "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(print_start_time, 2) * 100)),
             "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
             "DATADIRECTORY": data_directory,
@@ -136,28 +141,24 @@ class TimelapseRenderJob(object):
     # , capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
 
     def __init__(
-            self,
-            job_id,
-            rendering,
-            debug,
-            print_filename,
-            capture_dir,
-            capture_template,
-            output_tokens,
-            octoprint_timelapse_folder,
-            ffmpeg_path,
-            threads,
-            rendering_task_queue,
-            time_added,
-            on_render_start,
-            on_render_fail,
-            on_render_success,
-            on_render_complete,
-            on_after_sync_success,
-            on_after_sync_fail,
-            on_complete,
-            clean_after_success,
-            clean_after_fail):
+        self,
+        job_id,
+        rendering,
+        debug,
+        print_filename,
+        capture_dir,
+        capture_template,
+        output_tokens,
+        octoprint_timelapse_folder,
+        ffmpeg_path,
+        threads,
+        rendering_task_queue,
+        time_added,
+        on_render_start,
+        on_complete,
+        clean_after_success,
+        clean_after_fail
+    ):
         self._rendering = Rendering(rendering)
         self._debug = debug
         self._printFileName = print_filename
@@ -175,11 +176,6 @@ class TimelapseRenderJob(object):
         # callbacks
         ###########
         self._render_start_callback = on_render_start
-        self._render_fail_callback = on_render_fail
-        self._render_success_callback = on_render_success
-        self._render_complete_callback = on_render_complete
-        self._after_sync_success_callback = on_after_sync_success
-        self._after_sync_fail_callback = on_after_sync_fail
         self._on_complete_callback = on_complete
 
         self._thread = None
@@ -195,7 +191,9 @@ class TimelapseRenderJob(object):
         self._synchronized_directory = ""
         self._synchronized_filename = ""
         self._job_id = job_id
-        self._error_type = None
+        self.error_type = ""
+        self.has_error = ""
+        self.error_message = ""
 
     def process(self):
         """Processes the job."""
@@ -393,164 +391,141 @@ class TimelapseRenderJob(object):
             self._synchronize,
             self._imageCount,
             self._secondsAddedToPrint,
-            self._error_type,
+            self.has_error,
+            self.error_type,
+            self.error_message
         )
 
-    def _on_render_start(self):
+    def _on_start(self):
         payload = self._create_callback_payload(0, "The rendering has started.")
-        self._notify_callback(self._render_start_callback, self._job_id, payload)
-
-    def _on_render_fail(self, return_code, message):
-        self._error_type = "RENDER"
-        # we've failed, inform the client
-        payload = self._create_callback_payload(return_code, message)
-        self._notify_callback(self._render_fail_callback, self._job_id, payload)
-        # Time to end the rendering, inform the client.
-        self._on_complete()
-
-    def _on_render_success(self):
-        payload = self._create_callback_payload(
-            0, "The rendering was successful.")
-        self._notify_callback(self._render_success_callback, self._job_id, payload)
-
-    def _on_render_complete(self):
-        payload = self._create_callback_payload(
-            0, "The rendering process has completed.")
-        self._notify_callback(self._render_complete_callback, self._job_id, payload)
-
-    def _on_after_sync_success(self):
-        payload = self._create_callback_payload(
-            0, "Synchronization was successful.")
-        self._notify_callback(self._after_sync_success_callback, self._job_id, payload)
-
-    def _on_after_sync_fail(self):
-        self._error_type = "SYNCHRONIZE"
-        payload = self._create_callback_payload(0, "Synchronization has failed.")
-        self._notify_callback(self._after_sync_fail_callback, self._job_id, payload)
-        self._on_complete()
+        self._render_start_callback(self._job_id, payload)
 
     def _on_complete(self):
         payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
-        self._notify_callback(self._on_complete_callback, self._job_id, payload)
-
-        self._rendering_task_queue.get()
-        self._rendering_task_queue.task_done()
+        self._on_complete_callback(self._job_id, payload)
 
     def _render(self):
         """Rendering runnable."""
+        self.has_error = False
+
+        self.error_message = ""
+        self.error_type = ""
         try:
             # I've had bad luck doing this inside of the thread
             if not self._pre_render():
                 if self._imageCount == 0:
-                    self._on_render_fail(0, "No frames were captured.")
+                    self.error_message = "No frames were captured."
+                    self.error_type = "no_frames_captured"
+                    self.has_error = True
                 elif self._imageCount == 1:
-                    self._on_render_fail(
-                        0, "Only 1 frame was captured.  Cannot render a timelapse from a single image.")
+                    self.error_message = "Only 1 frame was captured.  Cannot render a timelapse from a single image."
+                    self.error_type = "one_frame_captured"
+                    self.has_error = True
                 else:
-                    message = (
+                    self.error_message = (
                         "Rendering failed during the pre-render phase. "
                         "Please check the logs (plugin_octolapse.log) for details."
                     )
-                    self._on_render_fail(-1, message)
-                return
+                    self.error_type = "pre_render"
+                    self.has_error = True
 
-            # notify any listeners that we are rendering.
-            self._on_render_start()
+            if not self.has_error:
 
-            if self._ffmpeg is None:
-                message = (
-                    "Cannot create movie, path to ffmpeg is unset. "
-                    "Please configure the ffmpeg path within the "
-                    "'Features->Webcam & Timelapse' settings tab."
-                )
-                self._debug.log_render_fail(message)
-                self._on_render_fail(0, message)
-                return
-            elif self._rendering.bitrate is None:
-                message = (
-                    "Cannot create movie, desired bitrate is unset. "
-                    "Please set the bitrate within the Octolapse rendering profile."
-                )
-                self._debug.log_render_fail(message)
-                self._on_render_fail(0, message)
-                return
+                # notify any listeners that we are rendering.
+                self._on_start()
 
-            try:
-                self._debug.log_render_start(
-                    "Creating the directory at {0}".format(self._output_directory))
-                if not os.path.exists(self._output_directory):
-                    os.makedirs(self._output_directory)
-            except Exception as e:
-                self._debug.log_exception(e)
-                message = (
-                    "Render - An exception was thrown when trying to "
-                    "create the rendering path at: {0}.  Please check "
-                    "the logs (plugin_octolapse.log) for details."
-                ).format(self._output_directory)
-                self._on_render_fail(-1, message)
-                return
+                if self._ffmpeg is None:
+                    self.error_message = (
+                        "Cannot create movie, path to ffmpeg is unset. "
+                        "Please configure the ffmpeg path within the "
+                        "'Features->Webcam & Timelapse' settings tab."
+                    )
+                    self.error_type = "ffmpeg_path"
+                    self.has_error = True
 
-            if not os.path.exists(self._input % 0):
-                message = 'Cannot create a movie, no frames captured.'
-                self._debug.log_render_fail(message)
-                self._on_render_fail(0, message)
-                return
+            if not self.has_error:
+                if self._rendering.bitrate is None:
+                    self.error_message = (
+                        "Cannot create movie, desired bitrate is unset. "
+                        "Please set the bitrate within the Octolapse rendering profile."
+                    )
+                    self.error_type = "no-bitrate"
+                    self.has_error = True
 
-            watermark = None
-            if self._rendering.watermark:
-                watermark = os.path.join(os.path.dirname(
-                    __file__), "static", "img", "watermark.png")
-                if sys.platform == "win32":
-                    # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
-                    # path a special treatment. Yeah, I couldn't believe it either...
-                    watermark = watermark.replace(
-                        "\\", "/").replace(":", "\\\\:")
-
-            vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
-
-            # prepare ffmpeg command
-            command_str = self._create_ffmpeg_command_string(
-                self._ffmpeg,
-                self._fps,
-                self._rendering.bitrate,
-                self._threads,
-                self._input,
-                self._rendering_output_file_path,
-                self._rendering.output_format,
-                h_flip=self._rendering.flip_h,
-                v_flip=self._rendering.flip_v,
-                rotate=self._rendering.rotate_90,
-                watermark=watermark,
-                v_codec=vcodec
-            )
-            self._debug.log_render_start(
-                "Running ffmpeg with command string: {0}".format(command_str))
-
-            with self.render_job_lock:
+            if not self.has_error:
                 try:
-                    p = sarge.run(
-                        command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
-                    if p.returncode == 0:
-                        self._on_render_success()
-                    else:
-                        return_code = p.returncode
-                        stderr_text = p.stderr.text
-                        message = "Could not render movie, got return code %r: %s" % (
-                            return_code, stderr_text)
-                        self._debug.log_render_fail(message)
-                        self._on_render_fail(p.returncode, message)
-                        return
+                    self._debug.log_render_start(
+                        "Creating the directory at {0}".format(self._output_directory))
+                    if not os.path.exists(self._output_directory):
+                        os.makedirs(self._output_directory)
                 except Exception as e:
                     self._debug.log_exception(e)
-                    message = (
-                        "Could not render movie due to unknown error. "
-                        "Please check plugin_octolapse.log for details."
-                    )
-                    self._on_render_fail(-1, message)
-                    return
+                    self.error_message = (
+                        "Render - An exception was thrown when trying to "
+                        "create the rendering path at: {0}.  Please check "
+                        "the logs (plugin_octolapse.log) for details."
+                    ).format(self._output_directory)
+                    self.error_type = "create-render-path"
+                    self.has_error = True
 
-                self._on_render_complete()
+            if not self.has_error:
+                if not os.path.exists(self._input % 0):
+                    self.error_message = 'Cannot create a movie, no frames captured.'
+                    self.error_type = "no_frames_captured"
+                    self.has_error = True
 
+            if not self.has_error:
+                watermark = None
+                if self._rendering.watermark:
+                    watermark = os.path.join(os.path.dirname(
+                        __file__), "static", "img", "watermark.png")
+                    if sys.platform == "win32":
+                        # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
+                        # path a special treatment. Yeah, I couldn't believe it either...
+                        watermark = watermark.replace(
+                            "\\", "/").replace(":", "\\\\:")
+
+                vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
+
+                # prepare ffmpeg command
+                command_str = self._create_ffmpeg_command_string(
+                    self._ffmpeg,
+                    self._fps,
+                    self._rendering.bitrate,
+                    self._threads,
+                    self._input,
+                    self._rendering_output_file_path,
+                    self._rendering.output_format,
+                    h_flip=self._rendering.flip_h,
+                    v_flip=self._rendering.flip_v,
+                    rotate=self._rendering.rotate_90,
+                    watermark=watermark,
+                    v_codec=vcodec
+                )
+                self._debug.log_render_start(
+                    "Running ffmpeg with command string: {0}".format(command_str))
+
+                with self.render_job_lock:
+                    try:
+                        p = sarge.run(
+                            command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+                        if p.returncode != 0:
+                            return_code = p.returncode
+                            stderr_text = p.stderr.text
+                            self.error_message = "Could not render movie, got return code %r: %s" % (
+                                return_code, stderr_text)
+                            self.error_type = "return-code"
+                            self.has_error = True
+                    except Exception as e:
+                        self._debug.log_exception(e)
+                        self.error_message = (
+                            "Could not render movie due to unknown error. "
+                            "Please check plugin_octolapse.log for details."
+                        )
+                        self.error_type = "rendering-exception"
+                        self.has_error = True
+
+            if not self.has_error:
                 if self._synchronize:
 
                     # Move the timelapse to the Octoprint timelapse folder.
@@ -566,24 +541,30 @@ class TimelapseRenderJob(object):
                         self._debug.log_render_sync(message)
                         shutil.move(self._rendering_output_file_path, synchronization_path)
                         # we've renamed the output due to a sync, update the member
-
-                        self._on_after_sync_success()
                     except Exception, e:
-                        # todo:  Test this exception handler
                         self._debug.log_exception(e)
-                        self._on_after_sync_fail()
-                        return
 
+                        self.error_message = "Octolapse has failed to synchronize the default timelapse plugin due" \
+                                             " to an unexpected exception.  Check plugin_octolapse.log for more " \
+                                             " information.  You should be able to find your video within your " \
+                                             " OctoPrint  server here:<br/> '{0}'" \
+                                             .format(self._rendering_output_file_path)
+
+                        self.has_error = True
+                        self.error_type = "synchronizing-exception"
         except Exception as e:
             self._debug.log_exception(e)
-            message = (
+            self.error_message = (
                 "An unexpected exception occurred while "
                 "rendering a timelapse.  Please check "
                 "plugin_octolapse.log for details."
             )
-            self._on_render_fail(-1, message)
-            return
+            self.has_error = True
+            self.error_type = "unexpected-exception"
+
         self._on_complete()
+        self._rendering_task_queue.get()
+        self._rendering_task_queue.task_done()
 
     @staticmethod
     def _get_vcodec_from_extension(extension):
@@ -600,11 +581,12 @@ class TimelapseRenderJob(object):
 
     @classmethod
     def _create_ffmpeg_command_string(
-            cls, ffmpeg, fps, bitrate, threads,
-            input_file, output_file, output_format='vob',
-            h_flip=False, v_flip=False,
-            rotate=False, watermark=None, pix_fmt="yuv420p",
-            v_codec="mpeg2video"):
+        cls, ffmpeg, fps, bitrate, threads,
+        input_file, output_file, output_format='vob',
+        h_flip=False, v_flip=False,
+        rotate=False, watermark=None, pix_fmt="yuv420p",
+        v_codec="mpeg2video"
+    ):
         """
         Create ffmpeg command string based on input parameters.
         Arguments:
@@ -708,19 +690,23 @@ class TimelapseRenderJob(object):
 
 class RenderingCallbackArgs(object):
     def __init__(
-            self,
-            reason,
-            return_code,
-            snapshot_directory,
-            rendering_directory,
-            rendering_filename,
-            rendering_extension,
-            synchronized_directory,
-            synchronized_filename,
-            synchronize,
-            snapshot_count,
-            seconds_added_to_print,
-            error_type):
+        self,
+        reason,
+        return_code,
+        snapshot_directory,
+        rendering_directory,
+        rendering_filename,
+        rendering_extension,
+        synchronized_directory,
+        synchronized_filename,
+        synchronize,
+        snapshot_count,
+        seconds_added_to_print,
+        has_error,
+        error_type,
+        error_message
+
+    ):
         self.Reason = reason
         self.ReturnCode = return_code
         self.SnapshotDirectory = snapshot_directory
@@ -732,7 +718,9 @@ class RenderingCallbackArgs(object):
         self.Synchronize = synchronize
         self.SnapshotCount = snapshot_count
         self.SecondsAddedToPrint = seconds_added_to_print
+        self.HasError = has_error
         self.ErrorType = error_type
+        self.ErrorMessage = error_message
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

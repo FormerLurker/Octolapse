@@ -1043,17 +1043,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_end(self, *args, **kwargs):
         """Called after all rendering and synchronization attemps are complete."""
         payload = args[0]
-        if payload.ErrorType is not None:
-            if payload.ErrorType == "RENDER":
-                # if we're here, we've failed.
-                self.send_render_failed_message(
-                    "Octolapse has failed to render a timelapse.  {0}".format(payload.Reason))
-            else:
-                message = "Octolapse has failed to syncronize the default timelapse plugin." \
-                          "{0}  You should be able to find your video within your octoprint " \
-                          " server here:<br/> '{1}'".format(payload.Reason, payload.get_rendering_path())
-                # Octoprint Event Manager Code
-                self.send_plugin_message("synchronize-failed", message)
+        assert (isinstance(payload, RenderingCallbackArgs))
+        if payload.HasError:
+            self.send_plugin_message("synchronize-failed", payload.ErrorMessage)
         else:
             if payload.Synchronize:
                 # create a message that makes sense, since Octoprint will display its own popup message that already

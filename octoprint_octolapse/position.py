@@ -104,6 +104,7 @@ class Pos(object):
         self.IsPrimed = False if pos is None else pos.IsPrimed
         self.IsInPosition = False if pos is None else pos.IsInPosition
         self.InPathPosition = False if pos is None else pos.InPathPosition
+        self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
 
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
@@ -143,7 +144,8 @@ class Pos(object):
                 and self.InPathPosition == Pos.InPathPosition
                 and self.HasPositionError == pos.HasPositionError
                 and self.PositionError == pos.PositionError
-                and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand):
+                and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand
+                and self.IsTravelOnly == pos.IsTravelOnly):
             return True
 
         return False
@@ -184,7 +186,8 @@ class Pos(object):
             "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
-            "HasReceivedHomeCommand": self.HasReceivedHomeCommand
+            "HasReceivedHomeCommand": self.HasReceivedHomeCommand,
+            "IsTravelOnly": self.IsTravelOnly
         }
 
     def to_position_dict(self):
@@ -669,6 +672,12 @@ class Position(object):
                     z = cmd.Parameters["Z"].Value
                     e = cmd.Parameters["E"].Value
                     f = cmd.Parameters["F"].Value
+
+                    pos.IsTravelOnly = e is None and (
+                        x is not None or
+                        y is not None or
+                        z is not None
+                    )
 
                     if x is not None or y is not None or z is not None or f is not None:
                         if pos.IsRelative is not None:

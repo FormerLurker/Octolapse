@@ -96,7 +96,8 @@ class Timelapse(object):
 
         # fetch position private variables
         self._position_payload = None
-        self._position_timeout = 600.0
+        self._position_timeout_long = 600.0
+        self._position_timeout_short = 10.0
         self._position_signal = threading.Event()
         self._position_signal.set()
 
@@ -112,7 +113,7 @@ class Timelapse(object):
         self.CurrentFileLine = 0
 
         # snapshot thread queue
-        self._snapshot_task_queue = Queue(maxsize=5)
+        self._snapshot_task_queue = Queue(maxsize=1)
         self._rendering_task_queue = Queue(maxsize=1)
         self._reset()
 
@@ -157,25 +158,23 @@ class Timelapse(object):
 
     def get_position_async(self, start_gcode=None, timeout=None):
         if timeout is None:
-            timeout = self._position_timeout
+            timeout = self._position_timeout_long
 
         self.Settings.current_debug_profile().log_print_state_change("Octolapse is requesting a position.")
 
         # Warning, we can only request one position at a time!
-        if not self._position_signal.is_set():
-            self.Settings.current_debug_profile().log_warning(
-                "Warning:  A position request has already been made, clearing existing signal."
-            )
+        if self._position_signal.is_set():
+            self._position_signal.clear()
 
-        self._position_signal.clear()
+            # build the staret commands
+            commands_to_send = ["M400", "M114"]
+            # send any code that is to be run before the position request
+            if start_gcode is not None and len(start_gcode) > 0:
+                commands_to_send = start_gcode + commands_to_send
 
-        # build the staret commands
-        commands_to_send = ["M400", "M114"]
-        # send any code that is to be run before the position request
-        if start_gcode is not None and len(start_gcode) > 0:
-            commands_to_send = start_gcode + commands_to_send
+            self.OctoprintPrinter.commands(commands_to_send)
 
-        self.OctoprintPrinter.commands(commands_to_send)
+
         event_is_set = self._position_signal.wait(timeout)
 
         if not event_is_set:
@@ -207,28 +206,19 @@ class Timelapse(object):
         self._snapshot_signal.set()
 
     def _on_snapshot_complete(self, *args, **kwargs):
-
-        # notify that we're finished, but only if we haven't just stopped the timelapse.
-        if self._most_recent_snapshot_payload is not None:
-            # send a copy of the dict in case it gets changed by threads.
-            self._on_trigger_snapshot_complete(self._most_recent_snapshot_payload.copy())
+        self.Settings.current_debug_profile().log_snapshot_download("Snapshot download complete.")
 
     def _take_snapshot_async(self):
         snapshot_async_payload = {
             "success": False,
-            "error": ""
+            "error": "Waiting on thread to signal, aborting"
         }
 
-        if not self._snapshot_signal.is_set():
-            self.Settings.current_debug_profile().log_warning(
-                "Warning:  A snapshot request has already been made, clearing existing signal."
-            )
-
-        # only clear signal and send a new M114 if we haven't already done that from another thread
-        self._snapshot_signal.clear()
-        # start the snapshot
-        self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
-        try:
+        if self._snapshot_signal.is_set():
+            # only clear signal and send a new M114 if we haven't already done that from another thread
+            self._snapshot_signal.clear()
+            # start the snapshot
+            self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
 
             snapshot_guid = str(uuid.uuid4())
             snapshot_job = self.CaptureSnapshot.create_snapshot_job(
@@ -245,21 +235,15 @@ class Timelapse(object):
             snapshot_thread.daemon = True
             snapshot_thread.start()
 
-            event_is_set = self._snapshot_signal.wait(self._snapshot_timeout)
-
-            if not event_is_set:
-                # we ran into a timeout while waiting for a fresh position
-                snapshot_async_payload["success"] = False
-                snapshot_async_payload["error"] = \
-                    "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
-                self._snapshot_signal.set()
-            else:
-                snapshot_async_payload["success"] = True
-
-        except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+        event_is_set = self._snapshot_signal.wait(self._snapshot_timeout)
+        if not event_is_set:
+            # we ran into a timeout while waiting for a fresh position
             snapshot_async_payload["success"] = False
-            snapshot_async_payload["error"] = "An unexpected error was encountered while taking a snapshot"
+            snapshot_async_payload["error"] = \
+                "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
+            self._snapshot_signal.set()
+        else:
+            snapshot_async_payload["success"] = True
 
         return snapshot_async_payload
 
@@ -308,7 +292,7 @@ class Timelapse(object):
             self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return gcode.")
             # return the printhead to the start position
             return_position = self.get_position_async(
-                start_gcode=snapshot_gcode.ReturnCommands
+                start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
             )
 
             # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
@@ -318,7 +302,7 @@ class Timelapse(object):
             self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot end gcode.")
             # send the end gcode
             end_position = self.get_position_async(
-                start_gcode=snapshot_gcode.EndGcode
+                start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
             )
 
             # calculate the return movement time
@@ -447,7 +431,10 @@ class Timelapse(object):
                             False,
                             0,
                             0,
-                            "RENDER")
+                            True,
+                            "timelapse_start"
+                            "The render_start function returned false"
+                        )
                         render_end_callback_thread = threading.Thread(
                             target=self.OnRenderEndCallback, args=[payload]
                         )
@@ -690,7 +677,9 @@ class Timelapse(object):
 
                             # take the snapshot
                             # Todo:  We probably don't need the payload here.
-                            self._most_recent_snapshot_payload = self._take_timelapse_snapshot(trigger, triggering_command)
+                            self._most_recent_snapshot_payload = self._take_timelapse_snapshot(
+                                trigger, triggering_command
+                            )
                             self.Settings.current_debug_profile().log_snapshot_download("The snapshot has completed")
                         finally:
 
@@ -699,6 +688,10 @@ class Timelapse(object):
                                 self.State = TimelapseState.WaitingForTrigger
 
                             self.OctoprintPrinter.set_job_on_hold(False)
+                            # notify that we're finished, but only if we haven't just stopped the timelapse.
+                            if self._most_recent_snapshot_payload is not None:
+                                # send a copy of the dict in case it gets changed by threads.
+                                self._on_trigger_snapshot_complete(self._most_recent_snapshot_payload.copy())
 
                     if self.OctoprintPrinter.set_job_on_hold(True):
                         thread = threading.Thread(target=take_snapshot_async, args=[cmd, _first_triggering])
@@ -865,43 +858,60 @@ class Timelapse(object):
                 snapshot_complete_callback_thread.daemon = True
                 snapshot_complete_callback_thread.start()
 
+
+
+
     def _render_timelapse(self, print_end_state):
-        # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
-        if self.Rendering is not None and self.Rendering.enabled:
-            num_snapshot_tasks = self._snapshot_task_queue.qsize()
-            if num_snapshot_tasks == 0:
-                self.Settings.current_debug_profile().log_render_start("Started Rendering Timelapse.")
-            else:
-                self.Settings.current_debug_profile().log_render_start(
-                    "Waiting for {0} snapshot threads to complete".format(
-                        self._snapshot_task_queue.qsize()))
-                self._snapshot_task_queue.join()
-                self.Settings.current_debug_profile().log_render_start(
-                    "All snapshot tasks have completed, rendering timelapse"
-                )
-            # we are rendering, set the state before starting the rendering job.
-            job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
+
+        def _render_timelapse_async(render_job_id, timelapse_render_job):
 
             try:
-                timelapse_render_job = Render.create_render_job(
-                    self.Settings, self.Snapshot, self.Rendering, self.DataFolder,
-                    self.DefaultTimelapseDirectory, self.FfMpegPath, 1, self._rendering_task_queue, job_id, utility.get_currently_printing_filename(
-                    self.OctoprintPrinter), self.PrintStartTime, time.time(), print_end_state,
-                    self.SecondsAddedByOctolapse, self._on_render_start,
-                    self._on_render_fail, self._on_render_success,
-                    self.on_render_complete, self._on_synchronize_rendering_fail,
-                    self._on_synchronize_rendering_complete, self._on_render_end
-                )
-
                 snapshot_thread = threading.Thread(target=timelapse_render_job, args=[])
                 snapshot_thread.daemon = True
-                self._rendering_task_queue.put(job_id)
+                num_snapshot_tasks = self._snapshot_task_queue.qsize()
+                if num_snapshot_tasks > 0:
+                    self.Settings.current_debug_profile().log_render_start("Started Rendering Timelapse.")
+                else:
+                    self.Settings.current_debug_profile().log_render_start(
+                        "Waiting for {0} snapshot threads to complete".format(
+                            self._snapshot_task_queue.qsize()))
+                    self._snapshot_task_queue.join()
+                    self.Settings.current_debug_profile().log_render_start(
+                        "All snapshot tasks have completed, rendering timelapse"
+                    )
+                # we are rendering, set the state before starting the rendering job.
+                self._rendering_task_queue.put(render_job_id)
                 snapshot_thread.start()
-
-                return True
             except Exception as e:
                 self.Settings.current_debug_profile().log_exception(e)
+                self._rendering_task_queue.get()
+                self._rendering_task_queue.task_done()
 
+        # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
+        if self.Rendering is not None and self.Rendering.enabled:
+            job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
+            job = Render.create_render_job(
+                self.Settings,
+                self.Snapshot,
+                self.Rendering,
+                self.DataFolder,
+                self.DefaultTimelapseDirectory,
+                self.FfMpegPath,
+                1,
+                self._rendering_task_queue,
+                job_id,
+                utility.get_currently_printing_filename(self.OctoprintPrinter),
+                self.PrintStartTime,
+                time.time(),
+                print_end_state,
+                self.SecondsAddedByOctolapse,
+                self._on_render_start,
+                self._on_render_end
+            )
+            rendering_thread = threading.Thread(target=_render_timelapse_async, args=[job_id, job])
+            rendering_thread.daemon = True
+            rendering_thread.start()
+            return True
         return False
 
     def _on_render_start(self, *args, **kwargs):
@@ -917,38 +927,6 @@ class Timelapse(object):
             render_start_complete_callback_thread.daemon = True
             render_start_complete_callback_thread.start()
 
-    def _on_render_fail(self, *args, **kwargs):
-
-        job_id = args[0]
-        self.Settings.current_debug_profile().log_render_fail(
-            "The timelapse rendering failed. JobId: {0}".format(job_id))
-
-    def _on_render_success(self, *args, **kwargs):
-        job_id = args[0]
-        self.Settings.current_debug_profile().log_render_complete(
-            "Rendering completed successfully. JobId: {0}".format(job_id))
-        # payload = args[1]
-
-    def on_render_complete(self, *args, **kwargs):
-        job_id = args[0]
-        # payload = args[1]
-        self.Settings.current_debug_profile().log_render_complete(
-            "Completed rendering the timelapse. JobId: {0}".format(job_id))
-
-    def _on_synchronize_rendering_fail(self, *args, **kwargs):
-        job_id = args[0]
-        payload = args[1]
-        self.Settings.current_debug_profile().log_render_sync(
-            "Synchronization with the default timelapse plugin failed."
-            "  JobId: {0}, Reason: {1}".format(job_id, payload.Reason)
-        )
-
-    def _on_synchronize_rendering_complete(self, *args, **kwargs):
-        job_id = args[0]
-        # payload = args[1]
-        self.Settings.current_debug_profile().log_render_sync(
-            "Synchronization with the default timelapse plugin was successful. JobId: {0}".format(job_id))
-
     def _on_render_end(self, *args, **kwargs):
         job_id = args[0]
         payload = args[1]
@@ -956,12 +934,10 @@ class Timelapse(object):
         self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
         assert (isinstance(payload, RenderingCallbackArgs))
 
-        if payload.ErrorType is not None:
-            if self.Snapshot.cleanup_after_render_fail:
-                self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
-        else:
-            if self.Snapshot.cleanup_after_render_complete:
-                self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+        if not payload.HasError and self.Snapshot.cleanup_after_render_fail:
+            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+        elif self.Snapshot.cleanup_after_render_complete:
+            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
 
         if self.OnRenderEndCallback is not None:
             render_end_complete_callback_thread = threading.Thread(
