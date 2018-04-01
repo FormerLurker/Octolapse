@@ -120,6 +120,7 @@ class Pos(object):
     def reset_state(self):
         self.IsLayerChange = False
         self.IsHeightChange = False
+        self.IsTravelOnly = False
         self.IsZHop = False
         self.HasPositionChanged = False
         self.HasStateChanged = False
@@ -679,7 +680,7 @@ class Position(object):
 
                     # If we're moving on the X/Y plane only, mark this position as travel only
                     pos.IsTravelOnly = e is None and (
-                        x is not None and y is not None
+                        x is not None or y is not None or z is not None
                     )
 
                     if x is not None or y is not None or z is not None or f is not None:
