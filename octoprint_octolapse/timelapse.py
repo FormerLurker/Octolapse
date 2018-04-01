@@ -785,9 +785,6 @@ class Timelapse(object):
         # if another thread is trying to send the message, stop it
         if self.StateChangeMessageThread is not None and self.StateChangeMessageThread.isAlive():
             self.StateChangeMessageThread.cancel()
-            self.Settings.current_debug_profile().log_info(
-                "Existing state update thread cancelled, newer info available."
-            )
 
         if self.LastStateChangeMessageTime is not None:
             # do not send more than 1 per second
@@ -827,21 +824,14 @@ class Timelapse(object):
                     def send_change_message(changes):
                         self.OnStateChangedCallback(changes)
                         self.LastStateChangeMessageTime = time.time()
-                        self.Settings.current_debug_profile().log_info(
-                            "State update sent."
-                        )
 
                     self.StateChangeMessageThread = threading.Timer(
                         delay_seconds,
                         send_change_message,
                         [change_dict]
                     )
-
                     self.StateChangeMessageThread.daemon = True
                     self.StateChangeMessageThread.start()
-                    self.Settings.current_debug_profile().log_info(
-                        "Sending State Update Message, delayed {0} seconds.".format(delay_seconds)
-                    )
 
 
         except Exception as e:
@@ -889,9 +879,6 @@ class Timelapse(object):
                 )
                 snapshot_complete_callback_thread.daemon = True
                 snapshot_complete_callback_thread.start()
-
-
-
 
     def _render_timelapse(self, print_end_state):
 
