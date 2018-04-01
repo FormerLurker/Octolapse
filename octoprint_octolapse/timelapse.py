@@ -410,9 +410,12 @@ class Timelapse(object):
     def end_timelapse(self, print_status):
         self.PrintEndStatus = print_status
         try:
-            if self.State in [
+            if self.PrintStartTime is None:
+                self._reset()
+            elif self.PrintStartTime is not None and self.State in [
                 TimelapseState.WaitingForTrigger, TimelapseState.WaitingToRender, TimelapseState.WaitingToEndTimelapse
             ]:
+
                 if not self._render_timelapse(self.PrintEndStatus):
                     if self.OnRenderEndCallback is not None:
                         payload = RenderingCallbackArgs(
@@ -428,9 +431,10 @@ class Timelapse(object):
                             0,
                             0,
                             True,
-                            "timelapse_start"
+                            "timelapse_start",
                             "The render_start function returned false"
                         )
+
                         render_end_callback_thread = threading.Thread(
                             target=self.OnRenderEndCallback, args=[payload]
                         )
@@ -502,11 +506,6 @@ class Timelapse(object):
                     if self.State == TimelapseState.WaitingForTrigger:
                         # set the current line to 0 so that the plugin checks for line 1 below after startup.
                         self.CurrentFileLine = 0
-                    else:
-                        # if we're not in the waiting for trigger state, there is a problem
-                        self.on_print_start_failed(
-                            "Unable to start timelapse, failed to initialize.  Print start failed."
-                        )
                 finally:
                     self.OctoprintPrinter.set_job_on_hold(False)
             else:

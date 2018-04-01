@@ -705,7 +705,6 @@ class RenderingCallbackArgs(object):
         has_error,
         error_type,
         error_message
-
     ):
         self.Reason = reason
         self.ReturnCode = return_code

@@ -29,6 +29,9 @@ import os
 
 import flask
 import octoprint.plugin
+import octoprint.server
+from distutils.version import LooseVersion, StrictVersion
+
 # Octoprint Imports
 # used to send messages to the web client for notifying it of new timelapses
 from octoprint.events import eventManager, Events
@@ -68,6 +71,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def download_timelapse_request(self, filename):
         """Restricted access function to download a timelapse"""
         return self.get_download_file_response(self.get_timelapse_folder() + filename, filename)
+
 
     @octoprint.plugin.BlueprintPlugin.route("/snapshot/<filename>", methods=["GET"])
     def snapshot_request(self, filename):
@@ -688,7 +692,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._printer.cancel_print()
 
     def start_timelapse(self):
-
+        # check for version 1.3.7 min
+        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.3.7"):
+            return {'success': False,
+                    'error': "Octolapse requires Octoprint v1.3.7 or above, but version v{0} is installed."  
+                             "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
+                    'warning': False}
         try:
             ffmpeg_path = self._settings.settings.get(["webcam", "ffmpeg"])
             if self.Settings.current_rendering().enabled and ffmpeg_path == "":
