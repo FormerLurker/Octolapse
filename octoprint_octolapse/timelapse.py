@@ -247,7 +247,9 @@ class Timelapse(object):
 
         return snapshot_async_payload
 
-    def _take_timelapse_snapshot(self, trigger, triggering_command):
+    def _take_timelapse_snapshot(
+        self, trigger, triggering_command, triggering_command_position, triggering_extruder_position
+    ):
         timelapse_snapshot_payload = {
             "snapshot_position": None,
             "return_position": None,
@@ -265,7 +267,9 @@ class Timelapse(object):
             snapshot_gcode = self.Gcode.create_snapshot_gcode(
                 self.Position,
                 trigger,
-                triggering_command
+                triggering_command,
+                triggering_command_position,
+                triggering_extruder_position
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
@@ -667,13 +671,14 @@ class Timelapse(object):
                                 snapshot_callback_thread.daemon = True
                                 snapshot_callback_thread.start()
 
-                            # Undo the last position update, we're not going to be using it!
-                            self.Position.undo_update()
+
+                            # Capture and undo the last position update, we're not going to be using it!
+                            triggering_command_position, triggering_extruder_position = self.Position.undo_update()
 
                             # take the snapshot
                             # Todo:  We probably don't need the payload here.
                             self._most_recent_snapshot_payload = self._take_timelapse_snapshot(
-                                trigger, triggering_command
+                                trigger, triggering_command, triggering_command_position, triggering_extruder_position
                             )
                             self.Settings.current_debug_profile().log_snapshot_download("The snapshot has completed")
                         finally:

@@ -215,9 +215,9 @@ class Extruder(object):
         return retract_length
 
     def undo_update(self):
-        state = self.get_state(0)
-        if state is not None:
-            self.StateHistory.popleft()
+        if len(self.StateHistory) == 0:
+            return None
+        return self.StateHistory.popleft()
 
     # Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
     def update(self, e_relative):

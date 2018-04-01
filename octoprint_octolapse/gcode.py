@@ -22,6 +22,7 @@
 ##################################################################################
 
 from octoprint_octolapse.command import Commands
+from octoprint_octolapse.position import Pos
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 
@@ -117,6 +118,7 @@ class SnapshotGcodeGenerator(object):
         self.ZLift = 0
         self.RetractedLength = 0
         self.AxisSpeedUnits = self.Printer.axis_speed_display_units
+        self.ReturnWhenComplete = True
         if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
             self.AxisSpeedUnits = "mm-min"
 
@@ -132,6 +134,7 @@ class SnapshotGcodeGenerator(object):
             return axis_speed
 
     def reset(self):
+        self.ReturnWhenComplete = True
         self.RetractedBySnapshotStartGcode = None
         self.ZhopBySnapshotStartGcode = None
         self.IsRelativeOriginal = None
@@ -253,14 +256,17 @@ class SnapshotGcodeGenerator(object):
     def get_relative_coordinate(percent, min_value, max_value):
         return ((float(max_value) - float(min_value)) * (percent / 100.0)) + float(min_value)
 
-    def create_snapshot_gcode(self, position, trigger, triggering_command):
-        # Todo:  Compress Gcode, too many lines being generated.
+    def create_snapshot_gcode(
+        self, position, trigger, triggering_command, triggering_command_position, triggering_extruder_position
+    ):
+
+        assert (isinstance(triggering_command_position, Pos))
 
         x_return = position.x()
         y_return = position.y()
         z_return = position.z()
         f_return = position.f()
-        #e_return = position.e()
+        # e_return = position.e()
 
         is_relative = position.is_relative()
         is_extruder_relative = position.is_extruder_relative()
@@ -280,6 +286,7 @@ class SnapshotGcodeGenerator(object):
             return None
 
         # Todo:  Clean this mess up (used to take separate params in the fn, now we take a position object)
+        self.ReturnWhenComplete = True
         self.FOriginal = f_return
         self.FCurrent = f_return
         self.RetractedBySnapshotStartGcode = False
@@ -313,6 +320,10 @@ class SnapshotGcodeGenerator(object):
             triggered_type = trigger.triggered_type(1)
 
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
+            if triggering_command_position.IsTravelOnly:
+                # No need to perform the return step!  We'll go right the the next travel location after
+                # taking the snapshot!
+                self.ReturnWhenComplete = False
             new_snapshot_gcode.append(SnapshotGcode.END_GCODE, triggering_command)
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
@@ -476,19 +487,46 @@ class SnapshotGcodeGenerator(object):
             self.get_gcode_travel(new_snapshot_gcode.X, new_snapshot_gcode.Y, new_f)
         )
         # End Snapshot Gcode
-        # Start Return Gcode
-        # record our previous position for posterity
-        new_snapshot_gcode.ReturnX = x_return
-        new_snapshot_gcode.ReturnY = y_return
-        new_snapshot_gcode.ReturnZ = z_return
 
-        # Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-        # also, our current speed will be correct, no need to append F
-        if x_return is not None and y_return is not None:
-            new_snapshot_gcode.append(
-                SnapshotGcode.RETURN_COMMANDS,
-                self.get_gcode_travel(x_return, y_return)
-            )
+        # Start Return Gcode
+        if self.ReturnWhenComplete:
+            # Only return to the previous coordinates if we need to (which will be most cases,
+            # except when the triggering command is a travel only (moves both X and Y)
+            # record our previous position for posterity
+            new_snapshot_gcode.ReturnX = x_return
+            new_snapshot_gcode.ReturnY = y_return
+            new_snapshot_gcode.ReturnZ = z_return
+
+            # Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
+            # also, our current speed will be correct, no need to append F
+            if x_return is not None and y_return is not None:
+                new_snapshot_gcode.append(
+                    SnapshotGcode.RETURN_COMMANDS,
+                    self.get_gcode_travel(x_return, y_return)
+                )
+        else:
+            # record the final position
+            new_snapshot_gcode.ReturnX = triggering_command_position.X
+            new_snapshot_gcode.ReturnY = triggering_command_position.Y
+            # see about Z, we may need to suppress our
+            new_snapshot_gcode.ReturnZ = triggering_command_position.Z
+
+            # Set the feedrate if the command's feedrate is different from the current
+            # detect speed change
+            if self.FCurrent != triggering_command_position.F:
+                new_f = self.TravelSpeed
+                self.FCurrent = new_f
+            else:
+                new_f = None
+
+            if x_return is not None and y_return is not None:
+                new_snapshot_gcode.append(
+                    SnapshotGcode.RETURN_COMMANDS,
+                    self.get_gcode_travel(triggering_command_position.X, triggering_command_position.Y)
+                )
+
+
+            # Return to the previous feedrate if it's changed
 
         # If we zhopped in the beginning, lower z
         if self.ZhopBySnapshotStartGcode:

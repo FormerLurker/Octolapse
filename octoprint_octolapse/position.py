@@ -625,9 +625,13 @@ class Position(object):
 
     def undo_update(self):
         pos = self.get_position(0)
+        previous_position = None
+        previous_extruder = None
         if pos is not None:
-            self.Positions.popleft()
-        self.Extruder.undo_update()
+            previous_position = self.Positions.popleft()
+        previous_extruder = self.Extruder.undo_update()
+
+        return previous_position, previous_extruder
 
     def get_position(self, index=0):
         if len(self.Positions) > index:
@@ -673,10 +677,9 @@ class Position(object):
                     e = cmd.Parameters["E"].Value
                     f = cmd.Parameters["F"].Value
 
+                    # If we're moving on the X/Y plane only, mark this position as travel only
                     pos.IsTravelOnly = e is None and (
-                        x is not None or
-                        y is not None or
-                        z is not None
+                        x is not None and y is not None
                     )
 
                     if x is not None or y is not None or z is not None or f is not None:
@@ -906,14 +909,30 @@ class Position(object):
                         pos.ZOffset = pos.Z
                         pos.EOffset = pos.E
                     # set the offsets if they are provided
-                    if x is not None and pos.X is not None and pos.XHomed:
-                        pos.XOffset = pos.X - utility.get_float(x, 0)
-                    if y is not None and pos.Y is not None and pos.YHomed:
-                        pos.YOffset = pos.Y - utility.get_float(y, 0)
-                    if z is not None and pos.Z is not None and pos.ZHomed:
-                        pos.ZOffset = pos.Z - utility.get_float(z, 0)
-                    if e is not None and pos.E is not None:
-                        pos.EOffset = pos.E - utility.get_float(e, 0)
+                    if x is not None:
+                        if pos.X is not None and pos.XHomed:
+                                pos.XOffset = pos.X - utility.get_float(x, 0)
+                        else:
+                            pos.X = utility.get_float(x, 0)
+
+                    if y is not None:
+                        if pos.Y is not None and pos.YHomed:
+                                pos.YOffset = pos.Y - utility.get_float(y, 0)
+                        else:
+                            pos.Y = utility.get_float(y, 0)
+
+                    if z is not None:
+                        if pos.Z is not None and pos.ZHomed:
+                                pos.ZOffset = pos.Z - utility.get_float(z, 0)
+                        else:
+                            pos.Z = utility.get_float(z, 0)
+
+                    if e is not None:
+                        if pos.E is not None:
+                            pos.EOffset = pos.E - utility.get_float(e, 0)
+                        else:
+                            pos.E = utility.get_float(e, 0)
+
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                         "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
@@ -936,26 +955,27 @@ class Position(object):
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
         pos.HasStateChanged = not pos.is_state_equal(previous_pos, self.PrinterTolerance)
 
-        if pos.has_homed_position() and previous_pos.has_homed_position():
+        if (
+            pos.has_homed_position() and
+            previous_pos.has_homed_position() and
+            (self.Extruder.has_changed(0) or pos.HasPositionChanged)
+        ):
+            if self.HasRestrictedPosition:
+                _is_in_position, _intersections = self.calculate_path_intersections(
+                    self.Snapshot.position_restrictions,
+                    pos.X,
+                    pos.Y,
+                    previous_pos.X,
+                    previous_pos.Y
+                )
+                if _is_in_position:
+                    pos.IsInPosition = _is_in_position
 
-            # if (hasExtruderChanged or pos.HasPositionChanged):
-            if pos.HasPositionChanged:
-                if self.HasRestrictedPosition:
-                    _is_in_position, _intersections = self.calculate_path_intersections(
-                        self.Snapshot.position_restrictions,
-                        pos.X,
-                        pos.Y,
-                        previous_pos.X,
-                        previous_pos.Y
-                    )
-                    if _is_in_position:
-                        pos.IsInPosition = _is_in_position
-
-                    else:
-                        pos.IsInPosition = False
-                        pos.InPathPosition = _intersections
                 else:
-                    pos.IsInPosition = True
+                    pos.IsInPosition = False
+                    pos.InPathPosition = _intersections
+            else:
+                pos.IsInPosition = True
 
             # calculate LastExtrusionHeight and Height
             if self.Extruder.is_extruding():
