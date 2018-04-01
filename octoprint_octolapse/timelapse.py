@@ -70,6 +70,8 @@ class Timelapse(object):
         self.Commands = Commands()  # used to parse and generate gcode
         self.Triggers = None
         self.PrintEndStatus = "Unknown"
+        self.LastStateChangeMessageTime = None
+        self.StateChangeMessageThread = None
         # Settings that may be different after StartTimelapse is called
 
         self.OctoprintPrinterProfile = None
@@ -778,6 +780,21 @@ class Timelapse(object):
         """Notifies any callbacks about any changes contained in the dictionaries.
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
+
+        delay_seconds = 0
+        # if another thread is trying to send the message, stop it
+        if self.StateChangeMessageThread is not None and self.StateChangeMessageThread.isAlive():
+            self.StateChangeMessageThread.cancel()
+            self.Settings.current_debug_profile().log_info(
+                "Existing state update thread cancelled, newer info available."
+            )
+
+        if self.LastStateChangeMessageTime is not None:
+            # do not send more than 1 per second
+            time_since_last_update = time.time() - self.LastStateChangeMessageTime
+            if time_since_last_update < 1:
+                delay_seconds = 1-time_since_last_update
+
         trigger_changes_dict = None
         try:
 
@@ -806,11 +823,26 @@ class Timelapse(object):
                     or change_dict["PositionState"] is not None
                     or change_dict["TriggerState"] is not None
                 ):
-                    state_changed_callback_thread = threading.Thread(
-                        target=self.OnStateChangedCallback, args=[change_dict]
+
+                    def send_change_message(changes):
+                        self.OnStateChangedCallback(changes)
+                        self.LastStateChangeMessageTime = time.time()
+                        self.Settings.current_debug_profile().log_info(
+                            "State update sent."
+                        )
+
+                    self.StateChangeMessageThread = threading.Timer(
+                        delay_seconds,
+                        send_change_message,
+                        [change_dict]
                     )
-                    state_changed_callback_thread.daemon = True
-                    state_changed_callback_thread.start()
+
+                    self.StateChangeMessageThread.daemon = True
+                    self.StateChangeMessageThread.start()
+                    self.Settings.current_debug_profile().log_info(
+                        "Sending State Update Message, delayed {0} seconds.".format(delay_seconds)
+                    )
+
 
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
@@ -959,6 +991,7 @@ class Timelapse(object):
             self.Triggers.reset()
         self.CommandIndex = -1
 
+        self.LastStateChangeMessageTime = None
         self.PrintStartTime = None
         self.SnapshotGcodes = None
         self.SavedCommand = None
