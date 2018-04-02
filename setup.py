@@ -9,7 +9,7 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "v0.2.6"
+plugin_version = "v0.3.0"
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""

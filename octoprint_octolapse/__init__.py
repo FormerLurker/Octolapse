@@ -1103,7 +1103,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # Plugin here.  See
         # https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
         # for details.
-        self._logger.info("Octolapse is getting update information.")
         return dict(octolapse=dict(displayName="Octolapse",
                                    displayVersion=self._plugin_version,
                                    # version check: github repository
