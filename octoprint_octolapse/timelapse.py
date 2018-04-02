@@ -25,7 +25,6 @@ import time
 import threading
 import sys
 import uuid
-import concurrent
 
 from Queue import Queue
 import octoprint_octolapse.utility as utility
@@ -38,7 +37,6 @@ from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
 
 
-
 class Timelapse(object):
 
     def __init__(
@@ -47,7 +45,7 @@ class Timelapse(object):
             on_snapshot_start=None, on_snapshot_end=None,
             on_render_start=None, on_render_end=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
-            on_state_changed=None, on_timelapse_start=None,
+            on_state_changed=None, on_timelapse_start=None, on_timelapse_end = None,
             on_snapshot_position_error=None, on_position_error=None):
         # config variables - These don't change even after a reset
         self.DataFolder = data_folder
@@ -64,6 +62,7 @@ class Timelapse(object):
         self.TimelapseStoppedCallback = on_timelapse_stopped
         self.OnStateChangedCallback = on_state_changed
         self.OnTimelapseStartCallback = on_timelapse_start
+        self.OnTimelapseEndCallback = on_timelapse_end
         self.OnSnapshotPositionErrorCallback = on_snapshot_position_error
         self.OnPositionErrorCallback = on_position_error
         self.Responses = Responses()  # Used to decode responses from the 3d printer
@@ -176,7 +175,6 @@ class Timelapse(object):
 
             self.OctoprintPrinter.commands(commands_to_send)
 
-
         event_is_set = self._position_signal.wait(timeout)
 
         if not event_is_set:
@@ -262,6 +260,7 @@ class Timelapse(object):
             "success": False,
             "error": ""
         }
+        has_error = False
 
         try:
 
@@ -281,15 +280,20 @@ class Timelapse(object):
                 "Sending snapshot start gcode and snapshot commands.")
             # get starting position
             start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
+            # Todo: Handle start_position = None
 
             # park the printhead in the snapshot position and wait for the movement to complete
             snapshot_start_time = time.time()
             snapshot_position = self.get_position_async(
                 start_gcode=snapshot_gcode.SnapshotCommands, timeout=self._position_timeout_short
             )
+            # Todo: Handle snapshot_position = None
+
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
+
             # take the snapshot
             snapshot_async_payload = self._take_snapshot_async()
+
             timelapse_snapshot_payload["snapshot_payload"] = snapshot_async_payload
             self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return gcode.")
 
@@ -297,6 +301,8 @@ class Timelapse(object):
             return_position = self.get_position_async(
                 start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
             )
+            # Todo: Handle return_position = None
+
             # return end time
             snapshot_end_time = time.time()
 
@@ -309,6 +315,8 @@ class Timelapse(object):
             end_position = self.get_position_async(
                 start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
             )
+            # Todo: Handle return_position = None
+
 
             # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
             # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
@@ -415,6 +423,7 @@ class Timelapse(object):
 
     def end_timelapse(self, print_status):
         self.PrintEndStatus = print_status
+
         try:
             if self.PrintStartTime is None:
                 self._reset()
@@ -447,11 +456,14 @@ class Timelapse(object):
                         render_end_callback_thread.daemon = True
                         render_end_callback_thread.start()
                 self._reset()
-            elif self.State != TimelapseState.Idle:
+            if self.State != TimelapseState.Idle:
                 self.State = TimelapseState.WaitingToEndTimelapse
 
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
+
+        if self.OnTimelapseEndCallback is not None:
+            self.OnTimelapseEndCallback()
 
     def on_print_paused(self):
         try:
@@ -548,10 +560,6 @@ class Timelapse(object):
             # position
             cmd = cmd.upper().strip()
             # create our state change dictionaries
-            position_change_dict = None
-            position_state_change_dict = None
-            extruder_change_dict = None
-            trigger_change_list = None
             self.Position.update(cmd)
 
             # get the position state in case it has changed
@@ -641,15 +649,14 @@ class Timelapse(object):
                   and not self.Position.has_position_error(0)):
                 self.Triggers.update(self.Position, cmd)
 
-
                 _first_triggering = self.get_first_triggering()
 
                 if _first_triggering:
                     # set the state
                     self.State = TimelapseState.TakingSnapshot
+                    self.Triggers.pause()
 
                     def take_snapshot_async(triggering_command, trigger):
-                        timelapse_snapshot_payload = None
                         try:
                             self.Settings.current_debug_profile().log_snapshot_download(
                                 "About to take a snapshot.  Triggering Command: {0}".format(
@@ -658,7 +665,6 @@ class Timelapse(object):
                                 snapshot_callback_thread = threading.Thread(target=self.OnSnapshotStartCallback)
                                 snapshot_callback_thread.daemon = True
                                 snapshot_callback_thread.start()
-
 
                             # Capture and undo the last position update, we're not going to be using it!
                             triggering_command_position, triggering_extruder_position = self.Position.undo_update()
@@ -674,7 +680,7 @@ class Timelapse(object):
                             # set the state
                             if self.State == TimelapseState.TakingSnapshot:
                                 self.State = TimelapseState.WaitingForTrigger
-
+                            self.Triggers.resume()
                             self.OctoprintPrinter.set_job_on_hold(False)
                             # notify that we're finished, but only if we haven't just stopped the timelapse.
                             if self._most_recent_snapshot_payload is not None:
@@ -775,10 +781,10 @@ class Timelapse(object):
             time_since_last_update = time.time() - self.LastStateChangeMessageTime
             if time_since_last_update < 1:
                 delay_seconds = 1-time_since_last_update
-
+                if delay_seconds < 0:
+                    delay_seconds = 0
 
         try:
-
             # Notify any callbacks
             if self.OnStateChangedCallback is not None:
 
@@ -788,26 +794,18 @@ class Timelapse(object):
                         position_state_change_dict = None
                         extruder_change_dict = None
                         trigger_changes_dict = None
-                        # Get the changes
-                        if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
-                            trigger_change_list = self.Triggers.changes_to_list()
 
-                        if (
-                            self.Settings.show_position_changes
-                            and (self.Position.has_position_changed() or not self.HasSentInitialStatus)
-                        ):
+                        # Get the changes
+                        if self.Settings.show_trigger_state_changes:
+                            trigger_change_list = self.Triggers.state_to_list()
+                        if self.Settings.show_position_changes and not self.HasSentInitialStatus:
                             position_change_dict = self.Position.to_position_dict()
-                        if (
-                            self.Settings.show_position_state_changes
-                            and (self.Position.has_state_changed() or not self.HasSentInitialStatus)
-                        ):
+                        if self.Settings.show_position_state_changes and not self.HasSentInitialStatus:
                             position_state_change_dict = self.Position.to_state_dict()
-                        if (
-                            self.Settings.show_extruder_state_changes
-                            and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)
-                        ):
+                        if self.Settings.show_extruder_state_changes and not self.HasSentInitialStatus:
                             extruder_change_dict = self.Position.Extruder.to_dict()
 
+                        # if there are any state changes, send them
                         if (
                             position_change_dict is not None
                             or position_state_change_dict is not None
@@ -832,7 +830,6 @@ class Timelapse(object):
                             or change_dict["PositionState"] is not None
                             or change_dict["TriggerState"] is not None
                         ):
-
                             self.OnStateChangedCallback(change_dict)
                             self.LastStateChangeMessageTime = time.time()
 
@@ -967,6 +964,7 @@ class Timelapse(object):
             self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
         elif self.Snapshot.cleanup_after_render_complete:
             self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+
 
         if self.OnRenderEndCallback is not None:
             render_end_complete_callback_thread = threading.Thread(

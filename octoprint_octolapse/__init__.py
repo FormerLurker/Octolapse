@@ -554,6 +554,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_snapshot_end=self.on_snapshot_end,
             on_timelapse_stopping=self.on_timelapse_stopping,
             on_timelapse_stopped=self.on_timelapse_stopped,
+            on_timelapse_end=self.on_timelapse_end,
             on_state_changed=self.on_timelapse_state_changed,
             on_timelapse_start=self.on_timelapse_start,
             on_snapshot_position_error=self.on_snapshot_position_error,
@@ -858,6 +859,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def on_timelapse_end(self, *args, **kwargs):
+        self.send_state_changed_message(self.get_status_dict())
 
     def on_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()
