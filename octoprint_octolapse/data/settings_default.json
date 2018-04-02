@@ -857,7 +857,7 @@
       "max_z": 250.0,
       "max_x": 289.0,
       "max_y": 289.0,
-      "description": "This is a beta profile, use at your own risk.",
+      "description": "This is a beta profile, use at your own risk.  Submitted by bluecamel.",
       "e_axis_default_mode": "require-explicit",
       "g90_influences_extruder": "use-octoprint-settings",
       "origin_z": 10.0,

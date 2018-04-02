@@ -554,17 +554,6 @@ class Timelapse(object):
             trigger_change_list = None
             self.Position.update(cmd)
 
-            # capture any changes, if necessary, to the position, position state and extruder state
-            # Note:  We'll get the trigger state later
-            if (self.Settings.show_position_changes
-                    and (self.Position.has_position_changed() or not self.HasSentInitialStatus)):
-                position_change_dict = self.Position.to_position_dict()
-            if (self.Settings.show_position_state_changes
-                    and (self.Position.has_state_changed() or not self.HasSentInitialStatus)):
-                position_state_change_dict = self.Position.to_state_dict()
-            if (self.Settings.show_extruder_state_changes
-                    and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)):
-                extruder_change_dict = self.Position.Extruder.to_dict()
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
             is_snapshot_gcode_command = self._is_snapshot_command(cmd)
@@ -652,9 +641,6 @@ class Timelapse(object):
                   and not self.Position.has_position_error(0)):
                 self.Triggers.update(self.Position, cmd)
 
-                # If our triggers have changed, update our dict
-                if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
-                    trigger_change_list = self.Triggers.changes_to_list()
 
                 _first_triggering = self.get_first_triggering()
 
@@ -715,8 +701,7 @@ class Timelapse(object):
                 cmd = None,
 
             # notify any callbacks
-            self._on_state_changed(
-                position_change_dict, position_state_change_dict, extruder_change_dict, trigger_change_list)
+            self._send_state_changed_message()
             self.HasSentInitialStatus = True
 
             if cmd != (None,):
@@ -775,8 +760,7 @@ class Timelapse(object):
         # if we were given a command return None (don't change the command at all)
         return None
 
-    def _on_state_changed(
-            self, position_change_dict, position_state_change_dict, extruder_change_dict, trigger_change_list):
+    def _send_state_changed_message(self):
         """Notifies any callbacks about any changes contained in the dictionaries.
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
@@ -792,47 +776,73 @@ class Timelapse(object):
             if time_since_last_update < 1:
                 delay_seconds = 1-time_since_last_update
 
-        trigger_changes_dict = None
+
         try:
 
             # Notify any callbacks
-            if (self.OnStateChangedCallback is not None
-                and (position_change_dict is not None
-                     or position_state_change_dict is not None
-                     or extruder_change_dict is not None
-                     or trigger_change_list is not None)):
+            if self.OnStateChangedCallback is not None:
 
-                if trigger_change_list is not None and len(trigger_change_list) > 0:
-                    trigger_changes_dict = {
-                        "Name": self.Triggers.Name,
-                        "Triggers": trigger_change_list
-                    }
-                change_dict = {
-                    "Extruder": extruder_change_dict,
-                    "Position": position_change_dict,
-                    "PositionState": position_state_change_dict,
-                    "TriggerState": trigger_changes_dict
-                }
+                    def send_change_message():
+                        trigger_change_list = None
+                        position_change_dict = None
+                        position_state_change_dict = None
+                        extruder_change_dict = None
+                        trigger_changes_dict = None
+                        # Get the changes
+                        if self.Settings.show_trigger_state_changes and self.Triggers.has_changed():
+                            trigger_change_list = self.Triggers.changes_to_list()
 
-                if (
-                    change_dict["Extruder"] is not None
-                    or change_dict["Position"] is not None
-                    or change_dict["PositionState"] is not None
-                    or change_dict["TriggerState"] is not None
-                ):
+                        if (
+                            self.Settings.show_position_changes
+                            and (self.Position.has_position_changed() or not self.HasSentInitialStatus)
+                        ):
+                            position_change_dict = self.Position.to_position_dict()
+                        if (
+                            self.Settings.show_position_state_changes
+                            and (self.Position.has_state_changed() or not self.HasSentInitialStatus)
+                        ):
+                            position_state_change_dict = self.Position.to_state_dict()
+                        if (
+                            self.Settings.show_extruder_state_changes
+                            and (self.Position.Extruder.has_changed() or not self.HasSentInitialStatus)
+                        ):
+                            extruder_change_dict = self.Position.Extruder.to_dict()
 
-                    def send_change_message(changes):
-                        self.OnStateChangedCallback(changes)
-                        self.LastStateChangeMessageTime = time.time()
+                        if (
+                            position_change_dict is not None
+                            or position_state_change_dict is not None
+                            or extruder_change_dict is not None
+                            or trigger_change_list is not None
+                        ):
+                            if trigger_change_list is not None and len(trigger_change_list) > 0:
+                                trigger_changes_dict = {
+                                    "Name": self.Triggers.Name,
+                                    "Triggers": trigger_change_list
+                                }
+                        change_dict = {
+                            "Extruder": extruder_change_dict,
+                            "Position": position_change_dict,
+                            "PositionState": position_state_change_dict,
+                            "TriggerState": trigger_changes_dict
+                        }
 
+                        if (
+                            change_dict["Extruder"] is not None
+                            or change_dict["Position"] is not None
+                            or change_dict["PositionState"] is not None
+                            or change_dict["TriggerState"] is not None
+                        ):
+
+                            self.OnStateChangedCallback(change_dict)
+                            self.LastStateChangeMessageTime = time.time()
+
+                    # Send a delayed message
                     self.StateChangeMessageThread = threading.Timer(
                         delay_seconds,
-                        send_change_message,
-                        [change_dict]
+                        send_change_message
                     )
                     self.StateChangeMessageThread.daemon = True
                     self.StateChangeMessageThread.start()
-
 
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
