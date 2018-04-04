@@ -218,7 +218,7 @@ $(function() {
                 {
                     title = _.sprintf("Edit " + settings.profileTypeName + " \"%(name)s\"", { name: newProfile.name() });
                 }
-                console.log("Checking for active timelapse")
+                /console.log("Checking for active timelapse")
                 warning = null;
                 if(Octolapse.Status.is_timelapse_active())
                 {

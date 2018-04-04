@@ -461,7 +461,7 @@ $(function () {
             };
 
             self.nameSort = function (observable) {
-                console.log("Sorting profiles on primary tab.")
+                //console.log("Sorting profiles on primary tab.")
                 return observable().sort(
                     function (left, right) {
                         var leftName = left.name.toLowerCase();
@@ -473,7 +473,7 @@ $(function () {
             // Printer Profile Settings
             self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });
             self.openCurrentPrinterProfile = function () {
-                console.log("Opening current printer profile from tab.")
+                //console.log("Opening current printer profile from tab.")
                 Octolapse.Printers.showAddEditDialog(self.current_printer_profile_guid(), false);
             };
             self.defaultPrinterChanged = function (obj, event) {
@@ -491,7 +491,7 @@ $(function () {
             // Stabilization Profile Settings
             self.stabilizations_sorted = ko.computed(function() { return self.nameSort(self.profiles().stabilizations) });
             self.openCurrentStabilizationProfile = function () {
-                console.log("Opening current stabilization profile from tab.")
+                //console.log("Opening current stabilization profile from tab.")
                 Octolapse.Stabilizations.showAddEditDialog(self.current_stabilization_profile_guid(), false);
             };
             self.defaultStabilizationChanged = function (obj, event) {
@@ -509,7 +509,7 @@ $(function () {
             // Snapshot Profile Settings
             self.snapshots_sorted = ko.computed(function() { return self.nameSort(self.profiles().snapshots) });
             self.openCurrentSnapshotProfile = function () {
-                console.log("Opening current snapshot profile from tab.")
+                //console.log("Opening current snapshot profile from tab.")
                 Octolapse.Snapshots.showAddEditDialog(self.current_snapshot_profile_guid(), false);
             };
             self.defaultSnapshotChanged = function (obj, event) {
@@ -527,7 +527,7 @@ $(function () {
             // Rendering Profile Settings
             self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings) });
             self.openCurrentRenderingProfile = function () {
-                console.log("Opening current rendering profile from tab.")
+                //console.log("Opening current rendering profile from tab.")
                 Octolapse.Renderings.showAddEditDialog(self.current_rendering_profile_guid(), false);
             };
             self.defaultRenderingChanged = function (obj, event) {
@@ -545,7 +545,7 @@ $(function () {
             // Camera Profile Settings
             self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras) });
             self.openCurrentCameraProfile = function () {
-                console.log("Opening current camera profile from tab.")
+                //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.showAddEditDialog(self.current_camera_profile_guid(), false);
             };
             self.defaultCameraChanged = function (obj, event) {
@@ -563,7 +563,7 @@ $(function () {
             // Debug Profile Settings
             self.debug_sorted = ko.computed(function() { return self.nameSort(self.profiles().debug_profiles) });
             self.openCurrentDebugProfile = function () {
-                console.log("Opening current debug profile from tab.")
+                //console.log("Opening current debug profile from tab.")
                 Octolapse.DebugProfiles.showAddEditDialog(self.current_debug_profile_guid(), false);
             };
             self.defaultDebugProfileChanged = function (obj, event) {
