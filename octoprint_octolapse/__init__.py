@@ -606,11 +606,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self._printer.cancel_print()
                     return
             if event == Events.PRINTER_STATE_CHANGED:
-                printer_state = self._printer.get_state_id()
-                # send a status update if the state changed to operational
-                if printer_state == "OPERATIONAL":
-                    self.send_state_changed_message({"Status": self.get_status_dict()})
-
+                self.send_state_changed_message({"Status": self.get_status_dict()})
+            if event == Events.CONNECTIVITY_CHANGED:
+                self.send_state_changed_message({"Status": self.get_status_dict()})
+            if event == Events.CLIENT_OPENED:
+                self.send_state_changed_message({"Status": self.get_status_dict()})
             if event == Events.POSITION_UPDATE:
                 self.Timelapse.on_position_received(payload)
             elif event == Events.DISCONNECTING:

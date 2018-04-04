@@ -49,6 +49,7 @@ $(function() {
 
     Octolapse.PrinterProfileViewModel = function (values) {
         var self = this;
+        self.profileTypeName = ko.observable("Printer")
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);

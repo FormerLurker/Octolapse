@@ -46,12 +46,12 @@ $(function () {
             self.current_debug_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
-                'printers': [{name: "Unknown", guid: ""}],
-                'stabilizations': [{name: "Unknown", guid: ""}],
-                'snapshots': [{name: "Unknown", guid: ""}],
-                'renderings': [{name: "Unknown", guid: ""}],
-                'cameras': [{name: "Unknown", guid: ""}],
-                'debug_profiles': [{name: "Unknown", guid: ""}]
+                'printers': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'stabilizations': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'snapshots': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'renderings': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'cameras': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
@@ -407,14 +407,12 @@ $(function () {
                 self.current_snapshot_time(settings.current_snapshot_time);
                 self.waiting_to_render(settings.waiting_to_render);
                 //console.log("Updating Profiles");
-                self.profiles({
-                    'printers': settings.profiles.printers,
-                    'stabilizations': settings.profiles.stabilizations,
-                    'snapshots': settings.profiles.snapshots,
-                    'renderings': settings.profiles.renderings,
-                    'cameras': settings.profiles.cameras,
-                    'debug_profiles': settings.profiles.debug_profiles
-                });
+                self.profiles().printers(settings.profiles.printers);
+                self.profiles().stabilizations(settings.profiles.stabilizations);
+                self.profiles().snapshots(settings.profiles.snapshots);
+                self.profiles().renderings(settings.profiles.renderings);
+                self.profiles().cameras(settings.profiles.cameras);
+                self.profiles().debug_profiles(settings.profiles.debug_profiles);
                 self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
                 self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
                 self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
@@ -462,6 +460,22 @@ $(function () {
                 $("#tab_plugin_octolapse_link").find("a").click();
             };
 
+            self.nameSort = function (observable) {
+                console.log("Sorting profiles on primary tab.")
+                return observable().sort(
+                    function (left, right) {
+                        var leftName = left.name.toLowerCase();
+                        var rightName = right.name.toLowerCase();
+                        return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
+                    });
+            };
+
+            // Printer Profile Settings
+            self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });
+            self.openCurrentPrinterProfile = function () {
+                console.log("Opening current printer profile from tab.")
+                Octolapse.Printers.showAddEditDialog(self.current_printer_profile_guid(), false);
+            };
             self.defaultPrinterChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
@@ -473,6 +487,13 @@ $(function () {
                     }
                 }
             };
+
+            // Stabilization Profile Settings
+            self.stabilizations_sorted = ko.computed(function() { return self.nameSort(self.profiles().stabilizations) });
+            self.openCurrentStabilizationProfile = function () {
+                console.log("Opening current stabilization profile from tab.")
+                Octolapse.Stabilizations.showAddEditDialog(self.current_stabilization_profile_guid(), false);
+            };
             self.defaultStabilizationChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
@@ -483,6 +504,13 @@ $(function () {
                         return true;
                     }
                 }
+            };
+
+            // Snapshot Profile Settings
+            self.snapshots_sorted = ko.computed(function() { return self.nameSort(self.profiles().snapshots) });
+            self.openCurrentSnapshotProfile = function () {
+                console.log("Opening current snapshot profile from tab.")
+                Octolapse.Snapshots.showAddEditDialog(self.current_snapshot_profile_guid(), false);
             };
             self.defaultSnapshotChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
@@ -496,6 +524,12 @@ $(function () {
                 }
             };
 
+            // Rendering Profile Settings
+            self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings) });
+            self.openCurrentRenderingProfile = function () {
+                console.log("Opening current rendering profile from tab.")
+                Octolapse.Renderings.showAddEditDialog(self.current_rendering_profile_guid(), false);
+            };
             self.defaultRenderingChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
@@ -508,6 +542,12 @@ $(function () {
                 }
             };
 
+            // Camera Profile Settings
+            self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras) });
+            self.openCurrentCameraProfile = function () {
+                console.log("Opening current camera profile from tab.")
+                Octolapse.Cameras.showAddEditDialog(self.current_camera_profile_guid(), false);
+            };
             self.defaultCameraChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
@@ -520,6 +560,12 @@ $(function () {
                 }
             };
 
+            // Debug Profile Settings
+            self.debug_sorted = ko.computed(function() { return self.nameSort(self.profiles().debug_profiles) });
+            self.openCurrentDebugProfile = function () {
+                console.log("Opening current debug profile from tab.")
+                Octolapse.DebugProfiles.showAddEditDialog(self.current_debug_profile_guid(), false);
+            };
             self.defaultDebugProfileChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
@@ -531,6 +577,7 @@ $(function () {
                     }
                 }
             };
+
         };
         /*
             Status Tab viewmodels

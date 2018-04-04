@@ -17,14 +17,14 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 */
 $(function() {
     Octolapse.StabilizationProfileViewModel = function (values) {
         var self = this;
-        
+        self.profileTypeName = ko.observable("Stabilization")
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);

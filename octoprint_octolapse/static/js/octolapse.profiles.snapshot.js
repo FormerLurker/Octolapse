@@ -25,6 +25,7 @@ $(function () {
 
     Octolapse.SnapshotProfileViewModel = function (values) {
         var self = this;
+        self.profileTypeName = ko.observable("Snapshot")
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);

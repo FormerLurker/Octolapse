@@ -382,6 +382,8 @@ $(function () {
             dialog.$saveButton = $("a.save", dialog.$addEditDialog);
             dialog.$defaultButton = $("a.set-defaults", dialog.$addEditDialog);
             dialog.$dialogTitle = $("h3.modal-title", dialog.$addEditDialog);
+            dialog.$dialogWarningContainer = $("div.dialog-warning", dialog.$addEditDialog);
+            dialog.$dialogWarningText = $("span", dialog.$dialogWarningContainer);
             dialog.$summary = dialog.$addEditForm.find("#add_edit_validation_summary");
             dialog.$errorCount = dialog.$summary.find(".error-count");
             dialog.$errorList = dialog.$summary.find("ul.error-list");
@@ -451,6 +453,17 @@ $(function () {
                 // Adjust the margins, height and position
                 // Set title
                 dialog.$dialogTitle.text(options.title);
+                if(options.warning == null)
+                {
+                    dialog.$dialogWarningContainer.hide();
+                    dialog.$dialogWarningText.text("");
+                }
+                else
+                {
+                    dialog.$dialogWarningText.text(options.warning);
+                    dialog.$dialogWarningContainer.show();
+
+                }
 
                 dialog.$addEditDialog.css({
                     width: 'auto',

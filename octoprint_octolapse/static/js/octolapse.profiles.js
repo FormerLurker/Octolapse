@@ -27,6 +27,7 @@ $(function() {
         var self = this;
 
         self.profiles = ko.observableArray();
+        self.profileTypeName = ko.observable(settings.profileTypeName);
         self.default_profile = ko.observable();
         self.current_profile_guid = ko.observable();
         self.profileOptions = null;
@@ -37,7 +38,7 @@ $(function() {
         self.addUpdatePath = settings.addUpdatePath;
         self.removeProfilePath = settings.removeProfilePath;
         self.setCurrentProfilePath = settings.setCurrentProfilePath;
-        self.profileTypeName = settings.profileTypeName;
+
         // Created a sorted observable
         self.profiles_sorted = ko.computed(function() { return Octolapse.nameSort(self.profiles) });
         /*
@@ -47,7 +48,7 @@ $(function() {
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var isNewProfile = profile().guid() === "";
-            var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName };
+            var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName() };
             $.ajax({
                 url: "./plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
@@ -81,14 +82,15 @@ $(function() {
 
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to add/update the " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    alert("Unable to add/update the " + settings.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
         };
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
-            if (confirm("Are you sure you want to permanently erase the profile:'" + settings.profileTypeName + "'?")) {
-                var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
+            currentProfile = self.getProfileByGuid(guid)
+            if (confirm("Are you sure you want to permanently erase the profile:'" + currentProfile.name() + "'?")) {
+                var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
                 $.ajax({
                     url: "./plugin/octolapse/" + self.removeProfilePath,
                     type: "POST",
@@ -99,20 +101,21 @@ $(function() {
                         if(returnValue.success)
                             self.profiles.remove(self.getProfileByGuid(guid));
                         else
-                            alert("Unable to remove the " + settings.profileTypeName +" profile!.  Error: " + returnValue.error);
+                            alert("Unable to remove the " + currentProfile.name() +" profile!.  Error: " + returnValue.error);
 
                         // close modal dialog.
 
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Unable to remove the " + settings.profileTypeName + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        alert("Unable to remove the " + currentProfile.name() + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                     }
                 });
             }
         };
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
-            var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName };
+            currentProfile = self.getProfileByGuid(guid)
+            var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
             $.ajax({
                 url: "./plugin/octolapse/" + self.setCurrentProfilePath,
                 type: "POST",
@@ -125,7 +128,7 @@ $(function() {
                     self.current_profile_guid(result.guid);
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to set the current " + settings.profileTypeName +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    alert("Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
         };
@@ -153,7 +156,7 @@ $(function() {
                 }
             );
             if (index < 0) {
-                alert("Could not find a " + settings.profileTypeName +" with the guid:" + guid + "!");
+                alert("Could not find a " + self.profileTypeName() +" profile with the guid:" + guid + "!");
                 return null;
             }
             return self.profiles()[index];
@@ -195,11 +198,12 @@ $(function() {
             isCopy = isCopy || false;
             var title = null;
             var addEditObservable = ko.observable();
+            var warning = null;
             // get and configure the  profile
             if (guid == null) {
                 title = "Add New " + settings.profileTypeName +" Profile";
                 addEditObservable(self.getNewProfile());
-                addEditObservable().name("New " + settings.profileTypeName);
+                addEditObservable().name("New " + self.profileTypeName());
                 addEditObservable().guid("");
             }
             else {
@@ -214,11 +218,23 @@ $(function() {
                 {
                     title = _.sprintf("Edit " + settings.profileTypeName + " \"%(name)s\"", { name: newProfile.name() });
                 }
-                addEditObservable(newProfile);
-
+                console.log("Checking for active timelapse")
+                warning = null;
+                if(Octolapse.Status.is_timelapse_active())
+                {
+                     if(newProfile.profileTypeName() == 'Debug')
+                     {
+                        warning = "A timelapse is active.  All debug settings will IMMEDIATELY take effect, except for 'Test Mode' which will not take affect until the next print.";
+                     }
+                     else
+                        warning = "A timelapse is active.  Any changes made here will NOT take affect until the next print.";
+                }
             }
+
             // Open the modal
-            Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)) },this);
+            addEditObservable(newProfile);
+
+            Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)), 'warning':warning },this);
         };
         /*
             Set data prior to bindings

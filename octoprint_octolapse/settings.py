@@ -65,7 +65,7 @@ class Printer(object):
         self.min_z = 0.0
         self.max_z = 0.0
         self.auto_position_detection_commands = ""
-        self.priming_height = 0
+        self.priming_height = 0.75
         self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'

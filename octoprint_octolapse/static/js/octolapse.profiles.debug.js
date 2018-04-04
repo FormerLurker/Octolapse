@@ -24,6 +24,7 @@
 $(function() {
     Octolapse.DebugProfileViewModel = function (values) {
         var self = this;
+        self.profileTypeName = ko.observable("Debug")
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);

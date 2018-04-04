@@ -275,9 +275,9 @@ class SnapshotGcodeGenerator(object):
         is_relative = position.is_relative()
         is_extruder_relative = position.is_extruder_relative()
         is_metric = position.is_metric()
-        extruder = position.Extruder
         z_lift = position.distance_to_zlift()
-        length_to_retract = extruder.length_to_retract()
+        length_to_retract = position.Extruder.length_to_retract()
+
 
         self.reset()
         if x_return is None or y_return is None or z_return is None:
@@ -415,14 +415,16 @@ class SnapshotGcodeGenerator(object):
                 self.ZLift = position.distance_to_zlift()
                 length_to_retract = position.Extruder.length_to_retract()
 
-                # undo the update since the position has not changed, only the zlift value
+                # undo the update since the position has not changed, only the zlift value and potentially the
+                # retraction length
                 position.undo_update()
         else:
             return None
 
-        # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
-        # IsRetracted will be false because we've undone the previous position update.
-        if self.Snapshot.retract_before_move and not (extruder.is_retracted() or extruder.is_retracting_start()):
+        if (
+            self.Snapshot.retract_before_move and
+            length_to_retract > 0
+        ):
             if not self.IsExtruderRelativeCurrent:
                 new_snapshot_gcode.append(
                     SnapshotGcode.SNAPSHOT_COMMANDS,

@@ -24,11 +24,11 @@
 <script type="text/html" id="profiles-template">
     <div class="panel-heading">
         <p class="text-error" data-bind="visible: profiles().length == 0">Before starting a timelapse you must
-            create a <span data-bind="text: profileTypeName.toLowerCase()"></span> profile. Please click 'Add
+            create a <span data-bind="text: profileTypeName().toLowerCase()"></span> profile. Please click 'Add
             Profile' to begin.</p>
         <p class="text-error" data-bind="visible: profiles().length > 0 && current_profile_guid() == null">
             Before starting a timelapse you must choose a default <span
-                data-bind="text: profileTypeName.toLowerCase()"></span> profile by clicking on a star icon from
+                data-bind="text: profileTypeName().toLowerCase()"></span> profile by clicking on a star icon from
             the profile list below.</p>
     </div>
     <div class="panel-body">
