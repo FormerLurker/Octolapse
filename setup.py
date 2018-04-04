@@ -25,7 +25,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow", "sarge"]
+plugin_requires = ["Pillow", "sarge", "six"]
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point

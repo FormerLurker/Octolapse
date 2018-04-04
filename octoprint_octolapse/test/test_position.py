@@ -17,14 +17,14 @@
 # along with this program.  If not, see the following:
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
-# You can contact the author either through the git-hub repository, or at the 
+# You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
 import unittest
 from tempfile import NamedTemporaryFile
 
-from octoprint_octolapse.command import Commands
+from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings

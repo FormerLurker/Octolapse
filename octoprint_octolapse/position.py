@@ -25,8 +25,8 @@ from collections import deque
 
 import math
 
-import octoprint_octolapse.command as command
 import octoprint_octolapse.utility as utility
+from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.settings import Printer, Snapshot
 from octoprint_octolapse.extruder import Extruder
 
@@ -59,8 +59,9 @@ def get_formatted_coordinate(coord):
 class Pos(object):
     def __init__(self, printer, octoprint_printer_profile, pos=None):
         self.OctoprintPrinterProfile = octoprint_printer_profile
-        # GCode
         self.GCode = None if pos is None else pos.GCode
+        self.Command = None if pos is None else pos.Command
+        self.Parameters = None if pos is None else pos.Parameters
         # F
         self.F = None if pos is None else pos.F
         # X
@@ -242,8 +243,14 @@ class Pos(object):
         return self.XHomed and self.YHomed and self.ZHomed
 
     def has_homed_position(self):
-        return (self.has_homed_axes() and self.IsMetric and self.X is not None
-                and self.Y is not None and self.Z is not None)
+        return (
+            self.has_homed_axes() and
+            self.IsMetric and
+            self.X is not None and
+            self.Y is not None and
+            self.Z is not None and
+            self.IsRelative is not None and
+            self.IsExtruderRelative is not None)
 
     def update_position(self,
                         bounding_box,
@@ -372,10 +379,8 @@ class Position(object):
         if self.Printer.z_hop is None:
             self.Printer.z_hop = 0
 
-        self.Commands = command.Commands()
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()
-
 
     def create_location_detection_commands(self):
 
@@ -610,8 +615,7 @@ class Position(object):
 
     def command_requires_location_detection(self, cmd):
         if self.Printer.auto_detect_position:
-            gcode = command.get_gcode_from_string(cmd)
-            if gcode in self.LocationDetectionCommands:
+           if cmd in self.LocationDetectionCommands:
                 return True
         return False
 
@@ -620,7 +624,7 @@ class Position(object):
         if pos is None:
             return False
 
-        if self.command_requires_location_detection(pos.GCode):
+        if self.command_requires_location_detection(pos.Command):
             return True
         return False
 
@@ -639,10 +643,8 @@ class Position(object):
             return self.Positions[index]
         return None
 
-    def update(self, gcode):
-        cmd = self.Commands.get_command(gcode)
+    def update(self, gcode, cmd, parameters):
         # a new position
-
         pos = None
         previous_pos = None
         num_positions = len(self.Positions)
@@ -659,86 +661,77 @@ class Position(object):
         # new position)
         pos.reset_state()
         # set the pos gcode cmd
+        pos.Command = cmd
+        pos.Parameters = parameters
         pos.GCode = gcode
 
         # apply the cmd to the position tracker
         # TODO: this should NOT be an else/if structure anymore..  Simplify
         if cmd is not None:
 
-            if cmd.Command in self.Commands.CommandsRequireMetric and not pos.IsMetric:
+            if cmd in Commands.CommandsRequireMetric and not pos.IsMetric:
                 pos.HasPositionError = True
                 pos.PositionError = "Units are not metric.  Unable to continue print."
-            elif cmd.Command in ["G0", "G1"]:
+            elif cmd in ["G0", "G1"]:
                 # Movement
-                if cmd.parse():
-                    self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd.Name))
-                    x = cmd.Parameters["X"].Value
-                    y = cmd.Parameters["Y"].Value
-                    z = cmd.Parameters["Z"].Value
-                    e = cmd.Parameters["E"].Value
-                    f = cmd.Parameters["F"].Value
 
-                    # If we're moving on the X/Y plane only, mark this position as travel only
-                    pos.IsTravelOnly = e is None and (
-                        x is not None or y is not None or z is not None
-                    )
+                self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd))
 
-                    if x is not None or y is not None or z is not None or f is not None:
-                        if pos.IsRelative is not None:
-                            if pos.HasPositionError and not pos.IsRelative:
-                                pos.HasPositionError = False
-                                pos.PositionError = ""
-                            pos.update_position(self.BoundingBox, x, y, z, e=None, f=f)
-                        else:
-                            self.Settings.current_debug_profile().log_position_command_received(
-                                "Position - Unable to update the X/Y/Z axis position, the axis mode ("
-                                "relative/absolute) has not been explicitly set via G90/G91. "
-                            )
-                    if e is not None:
-                        if pos.IsExtruderRelative is not None:
-                            if pos.HasPositionError and not pos.IsExtruderRelative:
-                                pos.HasPositionError = False
-                                pos.PositionError = ""
-                            pos.update_position(
-                                self.BoundingBox,
-                                x=None,
-                                y=None,
-                                z=None,
-                                e=e,
-                                f=None)
-                        else:
-                            self.Settings.current_debug_profile().log_error(
-                                "Position - Unable to update the extruder position, the extruder mode ("
-                                "relative/absolute) has been selected (absolute/relative). "
-                            )
-                    message = "Position Change - {0} - {1} Move From(X:{2},Y:{3},Z:{4},E:{5}) - To(X:{6},Y:{7},Z:{8}," \
-                              "E:{9}) "
-                    if previous_pos is None:
-                        message = message.format(
-                            gcode, "Relative"
-                            if pos.IsRelative else "Absolute", "None", "None",
-                            "None", "None", pos.X, pos.Y, pos.Z, pos.E)
+                x = parameters["X"] if "X" in parameters else None
+                y = parameters["Y"] if "Y" in parameters else None
+                z = parameters["Z"] if "Z" in parameters else None
+                e = parameters["E"] if "E" in parameters else None
+                f = parameters["F"] if "F" in parameters else None
+
+                # If we're moving on the X/Y plane only, mark this position as travel only
+                pos.IsTravelOnly = e is None and (
+                    x is not None or y is not None or z is not None
+                )
+
+                if x is not None or y is not None or z is not None or f is not None:
+                    if pos.IsRelative is not None:
+                        if pos.HasPositionError and not pos.IsRelative:
+                            pos.HasPositionError = False
+                            pos.PositionError = ""
+                        pos.update_position(self.BoundingBox, x, y, z, e=None, f=f)
                     else:
-                        message = message.format(
-                            gcode, "Relative"
-                            if pos.IsRelative else "Absolute", previous_pos.X,
-                            previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
-                            pos.Y, pos.Z, pos.E)
-                    self.Settings.current_debug_profile().log_position_change(
-                        message)
+                        self.Settings.current_debug_profile().log_position_command_received(
+                            "Position - Unable to update the X/Y/Z axis position, the axis mode ("
+                            "relative/absolute) has not been explicitly set via G90/G91. "
+                        )
+                if e is not None:
+                    if pos.IsExtruderRelative is not None:
+                        if pos.HasPositionError and not pos.IsExtruderRelative:
+                            pos.HasPositionError = False
+                            pos.PositionError = ""
+                        pos.update_position(
+                            self.BoundingBox,
+                            x=None,
+                            y=None,
+                            z=None,
+                            e=e,
+                            f=None)
+                    else:
+                        self.Settings.current_debug_profile().log_error(
+                            "Position - Unable to update the extruder position, the extruder mode ("
+                            "relative/absolute) has been selected (absolute/relative). "
+                        )
+                message = "Position Change - {0} - {1} Move From(X:{2},Y:{3},Z:{4},E:{5}) - To(X:{6},Y:{7},Z:{8}," \
+                          "E:{9}) "
+                if previous_pos is None:
+                    message = message.format(
+                        gcode, "Relative"
+                        if pos.IsRelative else "Absolute", "None", "None",
+                        "None", "None", pos.X, pos.Y, pos.Z, pos.E)
                 else:
-                    error_message = "Unable to parse the gcode command: {0}".format(gcode)
-                    pos.HasPositionError = True
-                    # Todo:  We need to end the timelapse if we get here
-                    #pos.X = None
-                    #pos.Y = None
-                    #pos.Z = None
-                    #pos.E = None#
-                    #pos.F = None
-                    pos.PositionError = "Unable to parse the gcode command"
-                    self.Settings.current_debug_profile().log_error(
-                        "Position - {0}".format(error_message))
-            elif cmd.Command == "G20":
+                    message = message.format(
+                        gcode, "Relative"
+                        if pos.IsRelative else "Absolute", previous_pos.X,
+                        previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
+                        pos.Y, pos.Z, pos.E)
+                self.Settings.current_debug_profile().log_position_change(
+                    message)
+            elif cmd == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:
                     self.Settings.current_debug_profile(
@@ -751,7 +744,7 @@ class Position(object):
                     ).log_position_command_received(
                         "Received G20 - Already in inches."
                     )
-            elif cmd.Command == "G21":
+            elif cmd == "G21":
                 # change units to millimeters
                 if pos.IsMetric is None or not pos.IsMetric:
                     self.Settings.current_debug_profile(
@@ -764,70 +757,68 @@ class Position(object):
                     ).log_position_command_received(
                         "Received G21 - Already in millimeters."
                     )
-            elif cmd.Command == "G28":
+            elif cmd == "G28":
                 # Home
-                if cmd.parse():
-                    pos.HasReceivedHomeCommand = True
-                    x = cmd.Parameters["X"].Value
-                    y = cmd.Parameters["Y"].Value
-                    z = cmd.Parameters["Z"].Value
-                    # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
-                    # w = cmd.Parameters["W"].Value
-                    x_homed = False
-                    y_homed = False
-                    z_homed = False
-                    if x is not None:
-                        x_homed = True
-                    if y is not None:
-                        y_homed = True
-                    if z is not None:
-                        z_homed = True
 
-                    # if there are no x,y or z parameters, we're homing all axes
-                    if x is None and y is None and z is None:
-                        x_homed = True
-                        y_homed = True
-                        z_homed = True
+                pos.HasReceivedHomeCommand = True
+                x = parameters["X"] if "X" in parameters else None
+                y = parameters["Y"] if "Y" in parameters else None
+                z = parameters["Z"] if "Z" in parameters else None
+                # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
+                #w = parameters["W"] if "W" in parameters else None
 
-                    home_strings = []
-                    if x_homed:
-                        pos.XHomed = True
-                        pos.X = self.Origin[
-                            "X"] if not self.Printer.auto_detect_position else None
-                        if pos.X is None:
-                            home_strings.append("Homing X to Unknown Origin.")
-                        else:
-                            home_strings.append("Homing X to {0}.".format(
-                                get_formatted_coordinate(pos.X)))
-                    if y_homed:
-                        pos.YHomed = True
-                        pos.Y = self.Origin[
-                            "Y"] if not self.Printer.auto_detect_position else None
-                        if pos.Y is None:
-                            home_strings.append("Homing Y to Unknown Origin.")
-                        else:
-                            home_strings.append("Homing Y to {0}.".format(
-                                get_formatted_coordinate(pos.Y)))
-                    if z_homed:
-                        pos.ZHomed = True
-                        pos.Z = self.Origin[
-                            "Z"] if not self.Printer.auto_detect_position else None
-                        if pos.Z is None:
-                            home_strings.append("Homing Z to Unknown Origin.")
-                        else:
-                            home_strings.append("Homing Z to {0}.".format(
-                                get_formatted_coordinate(pos.Z)))
+                x_homed = False
+                y_homed = False
+                z_homed = False
+                if x is not None:
+                    x_homed = True
+                if y is not None:
+                    y_homed = True
+                if z is not None:
+                    z_homed = True
 
-                    self.Settings.current_debug_profile().log_position_command_received(
-                        "Received G28 - ".format(" ".join(home_strings)))
-                    pos.HasPositionError = False
-                    pos.PositionError = None
-                    # we must do this in case we have more than one home command
-                    previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
-                else:
-                    self.Settings.current_debug_profile().log_error(
-                        "Position - Unable to parse the Gcode:{0}".format(gcode))
-            elif cmd.Command == "G90":
+                # if there are no x,y or z parameters, we're homing all axes
+                if x is None and y is None and z is None:
+                    x_homed = True
+                    y_homed = True
+                    z_homed = True
+
+                home_strings = []
+                if x_homed:
+                    pos.XHomed = True
+                    pos.X = self.Origin[
+                        "X"] if not self.Printer.auto_detect_position else None
+                    if pos.X is None:
+                        home_strings.append("Homing X to Unknown Origin.")
+                    else:
+                        home_strings.append("Homing X to {0}.".format(
+                            get_formatted_coordinate(pos.X)))
+                if y_homed:
+                    pos.YHomed = True
+                    pos.Y = self.Origin[
+                        "Y"] if not self.Printer.auto_detect_position else None
+                    if pos.Y is None:
+                        home_strings.append("Homing Y to Unknown Origin.")
+                    else:
+                        home_strings.append("Homing Y to {0}.".format(
+                            get_formatted_coordinate(pos.Y)))
+                if z_homed:
+                    pos.ZHomed = True
+                    pos.Z = self.Origin[
+                        "Z"] if not self.Printer.auto_detect_position else None
+                    if pos.Z is None:
+                        home_strings.append("Homing Z to Unknown Origin.")
+                    else:
+                        home_strings.append("Homing Z to {0}.".format(
+                            get_formatted_coordinate(pos.Z)))
+
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received G28 - ".format(" ".join(home_strings)))
+                pos.HasPositionError = False
+                pos.PositionError = None
+                # we must do this in case we have more than one home command
+                previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
+            elif cmd == "G90":
                 # change x,y,z to absolute
                 if pos.IsRelative is None or pos.IsRelative:
                     self.Settings.current_debug_profile(
@@ -857,7 +848,7 @@ class Position(object):
                         ).log_position_command_received(
                             "Received G90 - Already using absolute extruder coordinates"
                         )
-            elif cmd.Command == "G91":
+            elif cmd == "G91":
                 # change x,y,z to relative
                 if pos.IsRelative is None or not pos.IsRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
@@ -883,65 +874,61 @@ class Position(object):
                         self.Settings.current_debug_profile().log_position_command_received(
                             "Received G91 - Already using relative extruder coordinates"
                         )
-            elif cmd.Command == "M83":
+            elif cmd == "M83":
                 # Extruder - Set Relative
                 if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received M83 - Switching Extruder to Relative Coordinates"
                     )
                     pos.IsExtruderRelative = True
-            elif cmd.Command == "M82":
+            elif cmd == "M82":
                 # Extruder - Set Absolute
                 if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
-            elif cmd.Command == "G92":
+            elif cmd == "G92":
                 # Set Position (offset)
-                if cmd.parse():
-                    x = cmd.Parameters["X"].Value
-                    y = cmd.Parameters["Y"].Value
-                    z = cmd.Parameters["Z"].Value
-                    e = cmd.Parameters["E"].Value
-                    if x is None and y is None and z is None and e is None:
-                        pos.XOffset = pos.X
-                        pos.YOffset = pos.Y
-                        pos.ZOffset = pos.Z
-                        pos.EOffset = pos.E
-                    # set the offsets if they are provided
-                    if x is not None:
-                        if pos.X is not None and pos.XHomed:
-                                pos.XOffset = pos.X - utility.get_float(x, 0)
-                        else:
-                            pos.X = utility.get_float(x, 0)
 
-                    if y is not None:
-                        if pos.Y is not None and pos.YHomed:
-                                pos.YOffset = pos.Y - utility.get_float(y, 0)
-                        else:
-                            pos.Y = utility.get_float(y, 0)
+                x = parameters["X"] if "X" in parameters else None
+                y = parameters["Y"] if "Y" in parameters else None
+                z = parameters["Z"] if "Z" in parameters else None
+                e = parameters["E"] if "E" in parameters else None
+                if x is None and y is None and z is None and e is None:
+                    pos.XOffset = pos.X
+                    pos.YOffset = pos.Y
+                    pos.ZOffset = pos.Z
+                    pos.EOffset = pos.E
+                # set the offsets if they are provided
+                if x is not None:
+                    if pos.X is not None and pos.XHomed:
+                            pos.XOffset = pos.X - utility.get_float(x, 0)
+                    else:
+                        pos.X = utility.get_float(x, 0)
 
-                    if z is not None:
-                        if pos.Z is not None and pos.ZHomed:
-                                pos.ZOffset = pos.Z - utility.get_float(z, 0)
-                        else:
-                            pos.Z = utility.get_float(z, 0)
+                if y is not None:
+                    if pos.Y is not None and pos.YHomed:
+                            pos.YOffset = pos.Y - utility.get_float(y, 0)
+                    else:
+                        pos.Y = utility.get_float(y, 0)
 
-                    if e is not None:
-                        if pos.E is not None:
-                            pos.EOffset = pos.E - utility.get_float(e, 0)
-                        else:
-                            pos.E = utility.get_float(e, 0)
+                if z is not None:
+                    if pos.Z is not None and pos.ZHomed:
+                            pos.ZOffset = pos.Z - utility.get_float(z, 0)
+                    else:
+                        pos.Z = utility.get_float(z, 0)
 
-                    self.Settings.current_debug_profile().log_position_command_received(
-                        "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
-                        "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
-                            gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
-                else:
-                    self.Settings.current_debug_profile().log_error(
-                        "Position - Unable to parse the Gcode:{0}".format(
-                            gcode))
+                if e is not None:
+                    if pos.E is not None:
+                        pos.EOffset = pos.E - utility.get_float(e, 0)
+                    else:
+                        pos.E = utility.get_float(e, 0)
+
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
+                    "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
+                        gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
 
         ########################################
         # Update the extruder monitor.

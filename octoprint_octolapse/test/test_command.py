@@ -23,7 +23,7 @@
 
 import unittest
 
-from octoprint_octolapse.command import Commands
+from octoprint_octolapse.gcode_parser import Commands
 
 
 class TestCommand(unittest.TestCase):

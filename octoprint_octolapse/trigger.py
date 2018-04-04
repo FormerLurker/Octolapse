@@ -22,7 +22,7 @@
 ##################################################################################
 
 import time
-from octoprint_octolapse.command import *
+from octoprint_octolapse.gcode_parser import *
 from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.settings import *
 
@@ -301,8 +301,14 @@ class GcodeTrigger(Trigger):
     def __init__(self, octolapse_settings):
         # call parent constructor
         super(GcodeTrigger, self).__init__(octolapse_settings)
-        self.SnapshotCommand = get_gcode_from_string(
-            self.Printer.snapshot_command)
+        try:
+            cmd, parameters = Commands.parse(self.Printer.snapshot_command)
+            if cmd is None:
+                cmd = ""
+            self.SnapshotCommand = cmd
+        except ValueError as e:
+            self.Settings.current_debug_profile().log_exception(e)
+
         self.Type = "gcode"
         self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
 
@@ -371,7 +377,7 @@ class GcodeTrigger(Trigger):
                 state.IsInPosition = position.is_in_position(0)
                 state.InPathPosition = position.in_path_position(0)
 
-                if self.is_snapshot_command(command_name):
+                if self.SnapshotCommand == command_name:
                     state.IsWaiting = True
                 if state.IsWaiting:
                     if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
@@ -410,10 +416,6 @@ class GcodeTrigger(Trigger):
             self.add_state(state)
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
-
-    def is_snapshot_command(self, command):
-        command_name = get_gcode_from_string(command)
-        return command_name == self.SnapshotCommand
 
 
 class LayerTriggerState(TriggerState):

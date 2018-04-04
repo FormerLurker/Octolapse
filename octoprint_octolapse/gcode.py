@@ -21,7 +21,7 @@
 # following email address: FormerLurker@protonmail.com
 ##################################################################################
 
-from octoprint_octolapse.command import Commands
+from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
@@ -61,12 +61,16 @@ class SnapshotGcode(object):
 
     def append(self, command_type, command):
         original_command = command
-        if self.IsTestMode:
-            command = self.CommandsDictionary.get_test_mode_command_string(command)
-        command = command.upper().strip()
 
-        if len(command) == 0:
-            return
+        if self.IsTestMode:
+            # todo:  remove the need to re-parse this!
+            cmd, parameters = self.CommandsDictionary.parse(command)
+            if cmd is not None and parameters is not None:
+                command = self.CommandsDictionary.alter_for_test_mode(
+                    original_command, cmd, parameters, return_string=True
+                )
+            if len(command) == 0:
+                return
 
         if command_type == self.START_GCODE:
             self.StartGcode.append(command)
@@ -257,7 +261,7 @@ class SnapshotGcodeGenerator(object):
         return ((float(max_value) - float(min_value)) * (percent / 100.0)) + float(min_value)
 
     def create_snapshot_gcode(
-        self, position, trigger, triggering_command, triggering_command_position, triggering_extruder_position
+        self, position, trigger, gcode, cmd, parameters, triggering_command_position, triggering_extruder_position
     ):
 
         assert (isinstance(triggering_command_position, Pos))
@@ -273,7 +277,7 @@ class SnapshotGcodeGenerator(object):
         is_metric = position.is_metric()
         extruder = position.Extruder
         z_lift = position.distance_to_zlift()
-        retracted_length = extruder.length_to_retract()
+        length_to_retract = extruder.length_to_retract()
 
         self.reset()
         if x_return is None or y_return is None or z_return is None:
@@ -319,17 +323,17 @@ class SnapshotGcodeGenerator(object):
         if triggered_type is None:
             triggered_type = trigger.triggered_type(1)
 
+        # handle the trigger types
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
             if triggering_command_position.IsTravelOnly:
                 # No need to perform the return step!  We'll go right the the next travel location after
                 # taking the snapshot!
                 self.ReturnWhenComplete = False
-            new_snapshot_gcode.append(SnapshotGcode.END_GCODE, triggering_command)
+            new_snapshot_gcode.append(SnapshotGcode.END_GCODE, gcode)
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
-            cmd = self.Commands.get_command(triggering_command)
             if cmd:
-                if cmd.Command not in ["G0", "G1"]:
+                if cmd not in ["G0", "G1"]:
                     # if this isn't a g0 or g1, I don't know what's up!
                     return None
                 # get the data necessary to split the command up
@@ -340,11 +344,11 @@ class SnapshotGcodeGenerator(object):
 
                 _x1 = intersection[0]  # will be in absolute coordinates
                 _y1 = intersection[1]  # will be in absolute coordinates
-                _x2 = cmd.Parameters["X"].Value  # should remain in the original coordinate system
-                _y2 = cmd.Parameters["Y"].Value  # should remain in the original coordinate system
-                _z = cmd.Parameters["Z"].Value  # should remain in the original coordinate system
-                _e = cmd.Parameters["E"].Value
-                _f = cmd.Parameters["F"].Value
+                _x2 = parameters["X"] if "X" in parameters else None  # should remain in the original coordinate system
+                _y2 = parameters["Y"] if "Y" in parameters else None  # should remain in the original coordinate system
+                _z = parameters["Z"] if "Z" in parameters else None  # should remain in the original coordinate system
+                _e = parameters["E"] if "E" in parameters else None
+                _f = parameters["F"] if "F" in parameters else None
                 # if the command has an F parameter, update FCurrent
 
                 if _f:
@@ -385,13 +389,17 @@ class SnapshotGcodeGenerator(object):
                 if _f:
                     _f = float(_f)
 
-                cmd1 = self.get_g_command(cmd.Command, _x1, _y1, _z, _e1, _f)
+                if(self.IsTestMode):
+                    _e1 = None
+                    _e2 = None
+
+                gcode1 = self.get_g_command(cmd, _x1, _y1, _z, _e1, _f)
                 # create the second command
-                cmd2 = self.get_g_command(cmd.Command, _x2, _y2, _z, _e2, _f)
+                gcode2 = self.get_g_command(cmd, _x2, _y2, _z, _e2, _f)
 
                 # append both commands
-                new_snapshot_gcode.append(SnapshotGcode.START_GCODE, cmd1)
-                new_snapshot_gcode.append(SnapshotGcode.END_GCODE, cmd2)
+                new_snapshot_gcode.append(SnapshotGcode.START_GCODE, gcode1)
+                new_snapshot_gcode.append(SnapshotGcode.END_GCODE, gcode2)
 
                 # set the return x and return y to the intersection point
                 # must be in absolute coordinates
@@ -399,17 +407,19 @@ class SnapshotGcodeGenerator(object):
                 y_return = intersection[1]  # will be in absolute coordinates
 
                 # recalculate z_lift and retract distance since we have moved a bit
-                position.update(cmd1)
+                cmd1, cmd1_parameters = Commands.parse(gcode1)
+                position.update(gcode, cmd1, cmd1_parameters)
                 # set z_return to the new z position
                 # must be absolute
                 z_return = position.z()
                 self.ZLift = position.distance_to_zlift()
-                retracted_length = position.Extruder.length_to_retract()
+                length_to_retract = position.Extruder.length_to_retract()
 
                 # undo the update since the position has not changed, only the zlift value
                 position.undo_update()
         else:
             return None
+
         # retract if necessary Note that if IsRetractedStart is true, that means the printer is now retracted.
         # IsRetracted will be false because we've undone the previous position update.
         if self.Snapshot.retract_before_move and not (extruder.is_retracted() or extruder.is_retracting_start()):
@@ -425,13 +435,14 @@ class SnapshotGcodeGenerator(object):
                 self.FCurrent = new_f
             else:
                 new_f = None
-            if retracted_length > 0:
+            if length_to_retract > 0:
                 new_snapshot_gcode.append(
                     SnapshotGcode.SNAPSHOT_COMMANDS,
-                    self.get_gcode_retract(retracted_length, new_f)
+                    self.get_gcode_retract(length_to_retract, new_f)
                 )
-                self.RetractedLength = retracted_length
+                self.RetractedLength = length_to_retract
                 self.RetractedBySnapshotStartGcode = True
+
         # Can we hop or are we too close to the top?
         can_zhop = self.Printer.z_hop > 0 and utility.is_in_bounds(
             self.BoundingBox, z=z_return + self.Printer.z_hop)
@@ -600,6 +611,11 @@ class SnapshotGcodeGenerator(object):
                 SnapshotGcode.RETURN_COMMANDS,
                 self.get_gcode_feedrate(self.FOriginal))
 
+        if self.IsTestMode:
+            self.Settings.current_debug_profile().log_snapshot_gcode(
+                "The print is in test mode, so all extrusion has" \
+                " been stripped from the following gcode."
+            )
         self.Settings.current_debug_profile().log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(new_snapshot_gcode.snapshot_index(),
                                                                                     new_snapshot_gcode.end_index()))

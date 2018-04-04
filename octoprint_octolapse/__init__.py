@@ -41,7 +41,7 @@ from octoprint_octolapse.render import RenderingCallbackArgs
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.render as render
-from octoprint_octolapse.command import Commands
+from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, \
     DebugProfile
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
@@ -269,7 +269,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.send_settings_changed_message(client_id)
 
             return json.dumps(data), 200, {'ContentType': 'application/json'}
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -435,7 +435,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     for profile in self.Settings.cameras.values():
                         profile.address = camera_address
                         profile.snapshot_request_template = snapshot_request_template
-            except Exception, e:
+            except Exception as e:
                 # cannot send a popup yet,because no clients will be connected.  We should write a routine that
                 # checks to make sure Octolapse is correctly configured if it is enabled and send some kind of
                 # message on client connect. self.SendPopupMessage("Octolapse was unable to extract the default
@@ -449,7 +449,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if apply_to_current_profile:
                 for profile in self.Settings.renderings.values():
                     profile.bitrate = bitrate
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -529,7 +529,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     'state': timelapse_state,
                     'profiles': profiles_dict
                     }
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -569,7 +569,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             self.create_timelapse_object()
             self.Settings.current_debug_profile().log_info("Octolapse - loaded and active.")
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -605,6 +605,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     )
                     self._printer.cancel_print()
                     return
+            if event == Events.PRINTER_STATE_CHANGED:
+                printer_state = self._printer.get_state_id()
+                # send a status update if the state changed to operational
+                if printer_state == "OPERATIONAL":
+                    self.send_state_changed_message({"Status": self.get_status_dict()})
+
             if event == Events.POSITION_UPDATE:
                 self.Timelapse.on_position_received(payload)
             elif event == Events.DISCONNECTING:
@@ -647,37 +653,22 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return
 
         if 'source:file' not in tags:
-            self.send_popup_error(
-                "Octolapse does not work when printing from SD the card.  Disable octolapse if you want to "
-                "print from the SD card.  Cancelling print")
-            self.Settings.current_debug_profile().log_print_state_change(
-                "Octolapse cannot start the timelapse when printing from SD."
-            )
-            self._printer.cancel_print()
+            message = "Octolapse does not work when printing from SD the card.  Disable octolapse if you want to " \
+                      "print from the SD card.  Cancelling print"
+            self.on_print_cancelled(message, True)
             return
 
         if self.Timelapse.State != TimelapseState.Initializing:
-            self.Settings.current_debug_profile().log_print_state_change(
-                "Octolapse is not in the Initializing state, unable to start print.  CurrentState:{0}".format(
-                    self.Timelapse.State)
-            )
 
-            self.send_popup_error(
-                "Unable to start the timelapse when not in the Initializing state. StateId: "
+            message = "Unable to start the timelapse when not in the Initializing state. StateId: " \
                 "{0}".format(self.Timelapse.State)
-            )
-            self._printer.cancel_print()
+            self.on_print_cancelled(message, True)
             return
 
         result = self.start_timelapse()
         if not result["success"]:
-            self.Settings.current_debug_profile().log_print_state_change(
-                "Unable to start the timelapse. Error:{0}".format(result["error"]))
-            self.send_popup_error(
-                "Unable to start the timelapse.  Canceling print.  Error: "
-                "{0}".format(result["error"])
-            )
-            self._printer.cancel_print()
+            message = "Unable to start the timelapse.  Canceling print.  {0}: {1}".format("Error", result["error"])
+            self.on_print_cancelled(message, result["error"])
             return
 
         if result["warning"]:
@@ -687,6 +678,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "Print Started - Timelapse Started.")
         if self.Settings.current_camera().apply_settings_before_print:
             self.apply_camera_settings(self.Settings.current_camera())
+
+    def on_print_cancelled(self, message, is_error):
+        self._printer.cancel_print()
+        self.Settings.current_debug_profile().log_print_state_change(message)
+        if is_error:
+            self.send_popup_error(message)
+        else:
+            self.send_popup_message(message)
 
     def on_print_start_failed(self, message):
         self.send_popup_error(message)
@@ -709,7 +708,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                                  "pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path to "
                                  "FFMPEG.",
                         'warning': False}
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -728,7 +727,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             g90_influences_extruder = self._settings.settings.get(["feature", "g90InfluencesExtruder"])
 
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -861,7 +860,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_timelapse_end(self, *args, **kwargs):
-        self.send_state_changed_message(self.get_status_dict())
+        self.send_state_changed_message({"Status":self.get_status_dict()})
 
     def on_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()
@@ -963,6 +962,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
         self.Timelapse.on_print_canceled()
 
+
     def on_print_completed(self):
         self.Timelapse.on_print_completed()
         self.Settings.current_debug_profile().log_print_state_change("Print completed.")
@@ -997,7 +997,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # only handle commands sent while printing
             if self.Timelapse is not None:
                 return self.Timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -1007,7 +1007,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
                 self.Timelapse.on_gcode_sent(cmd, cmd_type, gcode, kwargs["tags"])
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
@@ -1017,7 +1017,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
                 self.Timelapse.on_gcode_received(comm,line,*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
             else:
