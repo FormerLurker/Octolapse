@@ -320,7 +320,9 @@ class Timelapse(object):
                 timelapse_snapshot_payload["return_position"] = return_position
 
                 self.Settings.current_debug_profile().log_snapshot_gcode("Sending end gcode.")
-                self.OctoprintPrinter.commands(snapshot_gcode.EndGcode)
+                return_position = self.get_position_async(
+                    start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
+                )
 
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = True
