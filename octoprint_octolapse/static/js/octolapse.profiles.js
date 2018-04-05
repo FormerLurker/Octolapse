@@ -224,10 +224,10 @@ $(function() {
                 {
                      if(newProfile.profileTypeName() == 'Debug')
                      {
-                        warning = "A timelapse is active.  All debug settings will IMMEDIATELY take effect, except for 'Test Mode' which will not take affect until the next print.";
+                        warning = "A timelapse is active.  All debug settings will IMMEDIATELY take effect, except for 'Test Mode' which will not take effect until the next print.";
                      }
                      else
-                        warning = "A timelapse is active.  Any changes made here will NOT take affect until the next print.";
+                        warning = "A timelapse is active.  Any changes made here will NOT take effect until the next print.";
                 }
             }
 
