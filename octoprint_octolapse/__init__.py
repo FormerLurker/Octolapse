@@ -132,6 +132,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.show_position_changes = request_values["show_position_changes"]
         self.Settings.show_extruder_state_changes = request_values["show_extruder_state_changes"]
         self.Settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
+        self.Settings.show_real_snapshot_time = request_values["show_real_snapshot_time"]
+
 
         # save the updated settings to a file.
         self.save_settings()

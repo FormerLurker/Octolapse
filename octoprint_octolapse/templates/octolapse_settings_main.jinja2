@@ -113,6 +113,21 @@
             <div data-bind="visible:is_octolapse_enabled">
               <hr/>
               <div>
+                <h4>Snapshot Time</h4>
+                <p>Octolapse can determine the exact amount of time that it adds to your print, but this requires multiple M400 commands to be sent which can reduce quality on some printers in some situations.  Disable if you see any blobs on your print that weren't there before you started using Octolapse.</p>
+                  <p>Note:  A feature is in the works to calculate the snapshot time if this settings is disabled.</p>
+              </div>
+              <div class="control-group">
+                  <label class="control-label">Display real snapshot time</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Display real snapshot time" data-bind="checked:show_real_snapshot_time" />Enabled
+                  </label>
+                </div>
+              </div>
+
+              <hr/>
+              <div>
                 <h4>Navbar Control</h4>
                 <p>View the current Octolapse status at a glance.</p>
               </div>
