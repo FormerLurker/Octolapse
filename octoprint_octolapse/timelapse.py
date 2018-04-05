@@ -275,7 +275,7 @@ class Timelapse(object):
 
             self.Settings.current_debug_profile().log_snapshot_gcode(
                 "Sending snapshot start gcode and snapshot commands.")
-            # get starting position
+            # send start commands and zhop/retract if they exist
             start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
             # Todo: Handle start_position = None
 

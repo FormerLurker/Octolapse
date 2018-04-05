@@ -427,7 +427,7 @@ class SnapshotGcodeGenerator(object):
         ):
             if not self.IsExtruderRelativeCurrent:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.SNAPSHOT_COMMANDS,
+                    SnapshotGcode.START_GCODE,
                     self.get_gcode_extruder_relative()
                 )
                 self.IsExtruderRelativeCurrent = True
@@ -439,7 +439,7 @@ class SnapshotGcodeGenerator(object):
                 new_f = None
             if length_to_retract > 0:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.SNAPSHOT_COMMANDS,
+                    SnapshotGcode.START_GCODE,
                     self.get_gcode_retract(length_to_retract, new_f)
                 )
                 self.RetractedLength = length_to_retract
@@ -452,7 +452,7 @@ class SnapshotGcodeGenerator(object):
         if can_zhop and self.ZLift > 0 and self.Snapshot.lift_before_move:
             if not self.IsRelativeCurrent:  # must be in relative mode
                 new_snapshot_gcode.append(
-                    SnapshotGcode.SNAPSHOT_COMMANDS,
+                    SnapshotGcode.START_GCODE,
                     self.get_gcode_axes_relative()
                 )
                 self.IsRelativeCurrent = True
@@ -464,7 +464,7 @@ class SnapshotGcodeGenerator(object):
                 new_f = None
             # append to snapshot gcode
             new_snapshot_gcode.append(
-                SnapshotGcode.SNAPSHOT_COMMANDS,
+                SnapshotGcode.START_GCODE,
                 self.get_gcode_z_lift_relative(self.ZLift, new_f)
             )
             self.ZhopBySnapshotStartGcode = True
