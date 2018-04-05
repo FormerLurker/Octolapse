@@ -307,16 +307,6 @@ class Timelapse(object):
             # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
             timelapse_snapshot_payload["return_position"] = return_position
 
-            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot end gcode.")
-            # send the end gcode
-            end_position = self.get_position_async(
-                start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
-            )
-            # Todo: Handle return_position = None
-
-            # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
-            # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
-            timelapse_snapshot_payload["end_position"] = end_position
 
             # calculate the total snapshot time
             # Note that we use 2 * return_time as opposed to snapshot_travel_time + return_time.
@@ -326,8 +316,13 @@ class Timelapse(object):
             timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
             timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
 
+
+            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot end gcode.")
+            # send the end gcode
+            self.OctoprintPrinter.commands(snapshot_gcode.EndGcode)
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = True
+
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \

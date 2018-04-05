@@ -277,7 +277,7 @@ class SnapshotGcodeGenerator(object):
         is_metric = position.is_metric()
         z_lift = position.distance_to_zlift()
         length_to_retract = position.Extruder.length_to_retract()
-
+        final_command = gcode
 
         self.reset()
         if x_return is None or y_return is None or z_return is None:
@@ -329,7 +329,7 @@ class SnapshotGcodeGenerator(object):
                 # No need to perform the return step!  We'll go right the the next travel location after
                 # taking the snapshot!
                 self.ReturnWhenComplete = False
-            new_snapshot_gcode.append(SnapshotGcode.END_GCODE, gcode)
+                final_command = gcode
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
             if cmd:
@@ -399,8 +399,8 @@ class SnapshotGcodeGenerator(object):
 
                 # append both commands
                 new_snapshot_gcode.append(SnapshotGcode.START_GCODE, gcode1)
-                new_snapshot_gcode.append(SnapshotGcode.END_GCODE, gcode2)
 
+                final_command = gcode2
                 # set the return x and return y to the intersection point
                 # must be in absolute coordinates
                 x_return = intersection[0]  # will be in absolute coordinates
@@ -545,7 +545,7 @@ class SnapshotGcodeGenerator(object):
         if self.ZhopBySnapshotStartGcode:
             if not self.IsRelativeCurrent:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_axes_relative()
                 )
                 self.IsRelativeCurrent = True
@@ -557,7 +557,7 @@ class SnapshotGcodeGenerator(object):
                 new_f = None
 
             new_snapshot_gcode.append(
-                SnapshotGcode.RETURN_COMMANDS,
+                SnapshotGcode.END_GCODE,
                 self.get_gocde_z_lower_relative(self.ZLift, new_f)
             )
 
@@ -565,7 +565,7 @@ class SnapshotGcodeGenerator(object):
         if self.RetractedBySnapshotStartGcode:
             if not self.IsExtruderRelativeCurrent:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_extruder_relative()
                 )
                 self.IsExtruderRelativeCurrent = True
@@ -578,7 +578,7 @@ class SnapshotGcodeGenerator(object):
 
             if self.RetractedLength > 0:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_detract(self.RetractedLength, new_f)
                 )
 
@@ -586,12 +586,12 @@ class SnapshotGcodeGenerator(object):
         if self.IsRelativeOriginal != self.IsRelativeCurrent:
             if self.IsRelativeCurrent:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_axes_absolute()
                 )
             else:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_axes_relative()
                 )
             self.IsRelativeCurrent = self.IsRelativeOriginal
@@ -599,19 +599,24 @@ class SnapshotGcodeGenerator(object):
         if self.IsExtruderRelativeOriginal != self.IsExtruderRelativeCurrent:
             if self.IsExtruderRelativeOriginal:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_extruder_relative())
             else:
                 new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
+                    SnapshotGcode.END_GCODE,
                     self.get_gcode_extruder_absolute())
 
         # Make sure we return to the original feedrate
         if reset_feedrate_before_end_gcode and self.FOriginal != self.FCurrent:
             # we can't count on the end gcode to set f, set it here
             new_snapshot_gcode.append(
-                SnapshotGcode.RETURN_COMMANDS,
+                SnapshotGcode.END_GCODE,
                 self.get_gcode_feedrate(self.FOriginal))
+
+        new_snapshot_gcode.append(
+            SnapshotGcode.END_GCODE,
+            final_command)
+
 
         if self.IsTestMode:
             self.Settings.current_debug_profile().log_snapshot_gcode(
