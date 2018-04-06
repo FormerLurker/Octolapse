@@ -319,7 +319,6 @@ class SnapshotJob(object):
                     self.HasError = True
 
             self.on_complete()
-
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job completed, signaling task queue.")
             self.task_queue.get()

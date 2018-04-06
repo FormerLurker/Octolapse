@@ -274,6 +274,12 @@ class Timelapse(object):
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
+            if snapshot_gcode is None:
+                self.Settings.current_debug_profile().log_warning(
+                    "No snapshot gcode was generated."
+                )
+                return timelapse_snapshot_payload
+
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
             if not show_real_snapshot_time:
@@ -476,6 +482,7 @@ class Timelapse(object):
         if (
             self.Settings is None
             or self.State in [TimelapseState.Idle, TimelapseState.Initializing, TimelapseState.WaitingToRender]
+            or self.OctoprintPrinter.get_state_id() == "CANCELLING"
             or self.Triggers is None
             or self.Triggers.count() < 1
         ):
