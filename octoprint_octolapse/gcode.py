@@ -326,10 +326,12 @@ class SnapshotGcodeGenerator(object):
         # handle the trigger types
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
             if triggering_command_position.IsTravelOnly:
+                self.Settings.current_debug_profile().log_snapshot_gcode(
+                    "The triggering command is travel only, skipping return command generation"
+                )
                 # No need to perform the return step!  We'll go right the the next travel location after
                 # taking the snapshot!
                 self.ReturnWhenComplete = False
-                final_command = gcode
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
             if cmd:
@@ -523,20 +525,15 @@ class SnapshotGcodeGenerator(object):
             new_snapshot_gcode.ReturnY = triggering_command_position.Y
             # see about Z, we may need to suppress our
             new_snapshot_gcode.ReturnZ = triggering_command_position.Z
-
-            # Set the feedrate if the command's feedrate is different from the current
-            # detect speed change
-            if self.FCurrent != triggering_command_position.F:
-                new_f = self.TravelSpeed
-                self.FCurrent = new_f
-            else:
-                new_f = None
-
-            if x_return is not None and y_return is not None:
-                new_snapshot_gcode.append(
-                    SnapshotGcode.RETURN_COMMANDS,
-                    self.get_gcode_travel(triggering_command_position.X, triggering_command_position.Y)
+            self.Settings.current_debug_profile().log_snapshot_gcode(
+                "Skipping return position, traveling to the triggering command position: X={0}, y={0}".format(
+                    triggering_command_position.X, triggering_command_position.Y
                 )
+            )
+            new_snapshot_gcode.append(
+                SnapshotGcode.RETURN_COMMANDS,
+                self.get_gcode_travel(triggering_command_position.X, triggering_command_position.Y)
+            )
 
 
             # Return to the previous feedrate if it's changed
@@ -617,22 +614,19 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.END_GCODE,
             final_command)
 
-
         if self.IsTestMode:
             self.Settings.current_debug_profile().log_snapshot_gcode(
-                "The print is in test mode, so all extrusion has" \
-                " been stripped from the following gcode."
+                "The print is in test mode, so all extrusion has been stripped from the following gcode."
             )
         self.Settings.current_debug_profile().log_snapshot_gcode(
-            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex{1}, Gcode:".format(new_snapshot_gcode.snapshot_index(),
-                                                                                    new_snapshot_gcode.end_index()))
+            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
+                new_snapshot_gcode.snapshot_index(),
+                new_snapshot_gcode.end_index(),
+                gcode
+            )
+        )
         for gcode in new_snapshot_gcode.snapshot_gcode():
             self.Settings.current_debug_profile().log_snapshot_gcode("    {0}".format(gcode))
-
-        self.Settings.current_debug_profile().log_snapshot_position(
-            "Snapshot Position: (x:{0:f},y:{1:f})".format(new_snapshot_gcode.X, new_snapshot_gcode.Y))
-        self.Settings.current_debug_profile().log_snapshot_return_position(
-            "Return Position: (x:{0:f},y:{1:f})".format(new_snapshot_gcode.ReturnX, new_snapshot_gcode.ReturnY))
 
         return new_snapshot_gcode
 

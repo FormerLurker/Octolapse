@@ -1007,8 +1007,8 @@ class Position(object):
 
                 # todo:  replace rounding with a call to is close or greater than utility function
                 lift = utility.round_to(lift, self.PrinterTolerance)
-                is_lifted = lift >= self.Printer.z_hop and (
-                    not self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
+                is_lifted = lift >= self.Printer.z_hop and not (
+                    self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
                 )
 
                 if is_lifted or self.Printer.z_hop == 0:
