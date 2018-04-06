@@ -23,7 +23,6 @@
 
 import time
 import threading
-import sys
 import uuid
 
 from Queue import Queue
@@ -154,6 +153,9 @@ class Timelapse(object):
             self._position_payload = payload
             self._position_signal.set()
 
+    def send_snapshot_gcode_array(self, gcode_array):
+        self.OctoprintPrinter.commands(gcode_array, tags={"snapshot_gcode"})
+
     def get_position_async(self, start_gcode=None, timeout=None):
         if timeout is None:
             timeout = self._position_timeout_long
@@ -170,7 +172,7 @@ class Timelapse(object):
             if start_gcode is not None and len(start_gcode) > 0:
                 commands_to_send = start_gcode + commands_to_send
 
-            self.OctoprintPrinter.commands(commands_to_send)
+            self.send_snapshot_gcode_array(commands_to_send)
 
         event_is_set = self._position_signal.wait(timeout)
 
@@ -300,7 +302,7 @@ class Timelapse(object):
             if not self.Settings.show_real_snapshot_time:
                 self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return and end gcode.")
                 # return the printhead to the start position
-                self.OctoprintPrinter.commands(snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode)
+                self.send_snapshot_gcode_array(snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode)
             else:
                 self.Settings.current_debug_profile().log_snapshot_gcode("Sending return gcode.")
                 return_position = self.get_position_async(
@@ -522,6 +524,10 @@ class Timelapse(object):
                 # create our state change dictionaries
                 self.Position.update(command_string, cmd, parameters)
 
+            # if this code is snapshot gcode, simply return it to the printer.
+            if {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
+                return None
+
             if not self.check_for_non_metric_errors():
                 if self.Position.has_position_error(0):
                     # There are position errors, report them!
@@ -711,7 +717,7 @@ class Timelapse(object):
                         self.Settings.current_debug_profile().log_print_state_change(
                             "Sending triggering command for position acquisition - {0}.".format(gcode))
                         # send the triggering command
-                        self.OctoprintPrinter.commands(gcode)
+                        self.send_snapshot_gcode_array(gcode)
                 # set the state
                 if self.State == TimelapseState.AcquiringLocation:
                     self.State = TimelapseState.WaitingForTrigger
