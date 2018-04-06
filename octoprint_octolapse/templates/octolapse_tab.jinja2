@@ -138,10 +138,11 @@
                     <span data-bind="text: snapshot_count"></span>
                 </div>
                 <div class="span3 text-right">
-                    Snapshot Time:
+                    <span>Snapshot Time:</span>
                 </div>
                 <div class="span3 text-left">
-                    <span data-bind="text: $data.snapshotTime()"></span>
+                    <span data-bind="visible: Octolapse.Globals.show_real_snapshot_time, text: $data.snapshotTime()"></span>
+                    <span data-bind="visible: !Octolapse.Globals.show_real_snapshot_time()"><i>Disabled</i></span>
                 </div>
 
             </div>

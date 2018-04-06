@@ -562,9 +562,9 @@ class TimelapseRenderJob(object):
             self.has_error = True
             self.error_type = "unexpected-exception"
 
-        self._on_complete()
         self._rendering_task_queue.get()
         self._rendering_task_queue.task_done()
+        self._on_complete()
 
     @staticmethod
     def _get_vcodec_from_extension(extension):

@@ -23,7 +23,6 @@
 
 import time
 import threading
-import sys
 import uuid
 
 from Queue import Queue
@@ -154,6 +153,9 @@ class Timelapse(object):
             self._position_payload = payload
             self._position_signal.set()
 
+    def send_snapshot_gcode_array(self, gcode_array):
+        self.OctoprintPrinter.commands(gcode_array, tags={"snapshot_gcode"})
+
     def get_position_async(self, start_gcode=None, timeout=None):
         if timeout is None:
             timeout = self._position_timeout_long
@@ -170,7 +172,7 @@ class Timelapse(object):
             if start_gcode is not None and len(start_gcode) > 0:
                 commands_to_send = start_gcode + commands_to_send
 
-            self.OctoprintPrinter.commands(commands_to_send)
+            self.send_snapshot_gcode_array(commands_to_send)
 
         event_is_set = self._position_signal.wait(timeout)
 
@@ -259,6 +261,7 @@ class Timelapse(object):
         }
         try:
 
+            show_real_snapshot_time = self.Settings.show_real_snapshot_time
             # create the GCode for the timelapse and store it
             snapshot_gcode = self.Gcode.create_snapshot_gcode(
                 self.Position,
@@ -271,63 +274,73 @@ class Timelapse(object):
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
+            if snapshot_gcode is None:
+                self.Settings.current_debug_profile().log_warning(
+                    "No snapshot gcode was generated."
+                )
+                return timelapse_snapshot_payload
+
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
-            self.Settings.current_debug_profile().log_snapshot_gcode(
-                "Sending snapshot start gcode and snapshot commands.")
-            # get starting position
-            start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
-            # Todo: Handle start_position = None
+            if not show_real_snapshot_time:
+                gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
+                if len(gcodes_to_send) > 0:
+                    self.Settings.current_debug_profile().log_snapshot_gcode(
+                        "Sending snapshot start gcode and snapshot commands.")
+                    snapshot_position = self.get_position_async(
+                        start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
+                    )
+            else:
+                self.Settings.current_debug_profile().log_snapshot_gcode(
+                    "Sending snapshot start gcode.")
+                # send start commands and zhop/retract if they exist
+                if len(snapshot_gcode.StartGcode) > 0:
+                    start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
+                    # Todo: Handle start_position = None
 
-            # park the printhead in the snapshot position and wait for the movement to complete
-            snapshot_start_time = time.time()
-            snapshot_position = self.get_position_async(
-                start_gcode=snapshot_gcode.SnapshotCommands, timeout=self._position_timeout_short
-            )
-            # Todo: Handle snapshot_position = None
+                # park the printhead in the snapshot position and wait for the movement to complete
+                snapshot_start_time = time.time()
+                if len(snapshot_gcode.SnapshotCommands) > 0:
+                    self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot commands.")
+                    snapshot_position = self.get_position_async(
+                        start_gcode=snapshot_gcode.SnapshotCommands, timeout=self._position_timeout_short
+                    )
 
+            # record the snapshot position
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
-
-            # take the snapshot
+            # by now we should be ready to take a snapshot
             snapshot_async_payload = self._take_snapshot_async()
-
             timelapse_snapshot_payload["snapshot_payload"] = snapshot_async_payload
-            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return gcode.")
 
-            # return the printhead to the start position
-            return_position = self.get_position_async(
-                start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
-            )
-            # Todo: Handle return_position = None
+            if not show_real_snapshot_time:
+                # return the printhead to the start position
+                gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
+                if len (gcode_to_send) > 0:
+                    self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot return and end gcode.")
+                    self.send_snapshot_gcode_array(gcode_to_send)
+            else:
 
-            # return end time
-            snapshot_end_time = time.time()
+                if len(snapshot_gcode.ReturnCommands) > 0:
+                    self.Settings.current_debug_profile().log_snapshot_gcode("Sending return gcode.")
+                    return_position = self.get_position_async(
+                        start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
+                    )
+                    timelapse_snapshot_payload["return_position"] = return_position
 
-            # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
-            # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
-            timelapse_snapshot_payload["return_position"] = return_position
+                # calculate the total snapshot time
+                snapshot_end_time = time.time()
+                snapshot_time = snapshot_end_time - snapshot_start_time
+                self.SecondsAddedByOctolapse += snapshot_time
+                timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
+                timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
 
-            self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot end gcode.")
-            # send the end gcode
-            end_position = self.get_position_async(
-                start_gcode=snapshot_gcode.EndGcode, timeout=self._position_timeout_short
-            )
-            # Todo: Handle return_position = None
-
-            # Note that sending the EndGccode via the end_gcode parameter allows us to execute additional
-            # gcode and still know when the ReturnCommands were completed.  Hopefully this will reduce delays.
-            timelapse_snapshot_payload["end_position"] = end_position
-
-            # calculate the total snapshot time
-            # Note that we use 2 * return_time as opposed to snapshot_travel_time + return_time.
-            # This is so we can avoid sending an M400 until after we've lifted and hopped
-            snapshot_time = snapshot_end_time - snapshot_start_time
-            self.SecondsAddedByOctolapse += snapshot_time
-            timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
-            timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
+                if len(snapshot_gcode.EndGcode) > 0:
+                    self.Settings.current_debug_profile().log_snapshot_gcode("Sending end gcode.")
+                    self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
 
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = True
+
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \
@@ -469,6 +482,7 @@ class Timelapse(object):
         if (
             self.Settings is None
             or self.State in [TimelapseState.Idle, TimelapseState.Initializing, TimelapseState.WaitingToRender]
+            or self.OctoprintPrinter.get_state_id() == "CANCELLING"
             or self.Triggers is None
             or self.Triggers.count() < 1
         ):
@@ -522,6 +536,10 @@ class Timelapse(object):
             if cmd is not None and not is_snapshot_gcode_command:
                 # create our state change dictionaries
                 self.Position.update(command_string, cmd, parameters)
+
+            # if this code is snapshot gcode, simply return it to the printer.
+            if {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
+                return None
 
             if not self.check_for_non_metric_errors():
                 if self.Position.has_position_error(0):
@@ -712,7 +730,7 @@ class Timelapse(object):
                         self.Settings.current_debug_profile().log_print_state_change(
                             "Sending triggering command for position acquisition - {0}.".format(gcode))
                         # send the triggering command
-                        self.OctoprintPrinter.commands(gcode)
+                        self.send_snapshot_gcode_array(gcode)
                 # set the state
                 if self.State == TimelapseState.AcquiringLocation:
                     self.State = TimelapseState.WaitingForTrigger

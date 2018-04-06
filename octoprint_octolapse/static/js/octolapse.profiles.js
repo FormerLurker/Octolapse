@@ -195,6 +195,7 @@ $(function() {
         self.toggle = Octolapse.Toggle;
 
         self.showAddEditDialog = function(guid, isCopy) {
+            console.log("octolapse.profiles.js - Showing add edit dialog.")
             isCopy = isCopy || false;
             var title = null;
             var addEditObservable = ko.observable();
@@ -202,9 +203,9 @@ $(function() {
             // get and configure the  profile
             if (guid == null) {
                 title = "Add New " + settings.profileTypeName +" Profile";
-                addEditObservable(self.getNewProfile());
-                addEditObservable().name("New " + self.profileTypeName());
-                addEditObservable().guid("");
+                newProfile = self.getNewProfile();
+                newProfile.name("New " + self.profileTypeName());
+                newProfile.guid("");
             }
             else {
                 var newProfile = self.getNewProfile(guid);
@@ -218,7 +219,7 @@ $(function() {
                 {
                     title = _.sprintf("Edit " + settings.profileTypeName + " \"%(name)s\"", { name: newProfile.name() });
                 }
-                console.log("Checking for active timelapse")
+                //console.log("Checking for active timelapse")
                 warning = null;
                 if(Octolapse.Status.is_timelapse_active())
                 {
@@ -231,7 +232,7 @@ $(function() {
                 }
             }
 
-            // Open the modal
+            // Save the model into the addEditObservable
             addEditObservable(newProfile);
 
             Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)), 'warning':warning },this);

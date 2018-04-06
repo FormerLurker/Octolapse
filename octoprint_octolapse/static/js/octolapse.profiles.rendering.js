@@ -44,6 +44,7 @@ $(function() {
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);
+
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

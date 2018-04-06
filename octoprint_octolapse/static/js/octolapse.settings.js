@@ -372,6 +372,7 @@ $(function () {
         // show the modal dialog
         self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
+            console.log("octolapse.settings.js - Showing add edit dialog.");
             var dialog = this;
             dialog.sender = sender;
             dialog.profileObservable = options.profileObservable;

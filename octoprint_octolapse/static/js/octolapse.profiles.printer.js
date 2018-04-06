@@ -98,11 +98,11 @@ $(function() {
                     var previousUnit = self.axis_speed_display_units();
 
                     if(newUnit === previousUnit) {
-                        console.log("Axis speed display units, no change detected!")
+                        //console.log("Axis speed display units, no change detected!")
                         return false;
 
                     }
-                    console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
+                    //console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
                     // in case we want to have more units in the future, check all cases
                     switch (previousUnit)
                     {

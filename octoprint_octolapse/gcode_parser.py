@@ -527,10 +527,8 @@ class Commands(object):
         if cmd is None:
             return command_string
 
-        if cmd in Commands.TestModeSuppressExtrusionCommands:
-            if "E" in parameters:
-                parameters.pop("E")
-
+        if cmd in Commands.TestModeSuppressExtrusionCommands and "E" in parameters:
+            parameters.pop("E")
             # reform the gcode
             gcode = Commands.to_string(cmd, parameters)
             if return_string:

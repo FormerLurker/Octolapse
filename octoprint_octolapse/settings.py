@@ -1692,6 +1692,7 @@ class OctolapseSettings(object):
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False
         self.current_printer_profile_guid = None
+        self.show_real_snapshot_time = False
         self.printers = {}
 
         stabilization = self.DefaultStabilization
@@ -1805,6 +1806,9 @@ class OctolapseSettings(object):
         if has_key(changes, "current_debug_profile_guid"):
             self.current_debug_profile_guid = str(get_value(
                 changes, "current_debug_profile_guid", self.current_debug_profile_guid))
+        if has_key(changes, "show_real_snapshot_time"):
+            self.show_real_snapshot_time = bool(
+                get_value(changes, "show_real_snapshot_time", self.show_real_snapshot_time))
 
         if has_key(changes, "printers"):
             self.printers = {}
@@ -1963,6 +1967,9 @@ class OctolapseSettings(object):
             "show_trigger_state_changes": utility.get_bool(
                 self.show_trigger_state_changes, defaults.show_trigger_state_changes
             ),
+            "show_real_snapshot_time": utility.get_bool(
+                self.show_real_snapshot_time, defaults.show_real_snapshot_time
+            ),
             "platform": sys.platform,
             'e_axis_default_mode_options': [
                 dict(value='require-explicit', name='Require Explicit M82/M83'),
@@ -2106,7 +2113,8 @@ class OctolapseSettings(object):
             'show_position_state_changes': self.show_position_state_changes,
             'show_position_changes': self.show_position_changes,
             'show_extruder_state_changes': self.show_extruder_state_changes,
-            'show_trigger_state_changes': self.show_trigger_state_changes
+            'show_trigger_state_changes': self.show_trigger_state_changes,
+            'show_real_snapshot_time': self.show_real_snapshot_time
         }
 
     # Add/Update/Remove/set current profile
