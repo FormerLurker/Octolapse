@@ -51,7 +51,7 @@ class Printer(object):
         self.z_hop_speed = 6000
         self.retract_speed = 4000
         self.snapshot_command = "snap"
-        self.printer_position_confirmation_tolerance = 0.01
+        self.printer_position_confirmation_tolerance = 0.001
         self.auto_detect_position = True
         self.origin_x = None
         self.origin_y = None

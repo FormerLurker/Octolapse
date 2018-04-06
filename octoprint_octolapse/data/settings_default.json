@@ -27,7 +27,7 @@
     "snapshot_command": "snap",
     "override_octoprint_print_volume": false,
     "z_hop_speed": 6000,
-    "printer_position_confirmation_tolerance": 0.01,
+    "printer_position_confirmation_tolerance": 0.001,
     "units_default": "millimeters",
     "xyz_axes_default_mode": "require-explicit",
     "auto_detect_position": true
@@ -624,7 +624,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 6000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -655,7 +655,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 3000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": false
@@ -686,7 +686,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": true,
       "z_hop_speed": 0,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "relative",
       "auto_detect_position": true
@@ -717,7 +717,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 1000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -748,7 +748,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 6000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -779,7 +779,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 1000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -810,7 +810,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 7200,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -841,7 +841,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": false,
       "z_hop_speed": 0,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
@@ -872,7 +872,7 @@
       "snapshot_command": "snap",
       "override_octoprint_print_volume": true,
       "z_hop_speed": 6000,
-      "printer_position_confirmation_tolerance": 0.01,
+      "printer_position_confirmation_tolerance": 0.001,
       "units_default": "millimeters",
       "xyz_axes_default_mode": "require-explicit",
       "auto_detect_position": true
