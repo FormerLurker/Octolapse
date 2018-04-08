@@ -276,6 +276,12 @@ class SnapshotGcodeGenerator(object):
         is_extruder_relative = position.is_extruder_relative()
         is_metric = position.is_metric()
         z_lift = position.distance_to_zlift()
+        if z_lift is None:
+            pos = position.get_position(0)
+            if pos is not None:
+                self.Settings.current_debug_profile().log_warning(
+                    "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(pos.Z, pos.LastExtrusionHeight)
+                )
         length_to_retract = position.Extruder.length_to_retract()
         final_command = gcode
 
@@ -448,8 +454,8 @@ class SnapshotGcodeGenerator(object):
                 self.RetractedBySnapshotStartGcode = True
 
         # Can we hop or are we too close to the top?
-        can_zhop = self.Printer.z_hop > 0 and utility.is_in_bounds(
-            self.BoundingBox, z=z_return + self.Printer.z_hop)
+        can_zhop = self.ZLift is not None and self.Printer.z_hop > 0 and utility.is_in_bounds(
+            self.BoundingBox, z=z_return + self.ZLift)
         # if we can ZHop, do
         if can_zhop and self.ZLift > 0 and self.Snapshot.lift_before_move:
             if not self.IsRelativeCurrent:  # must be in relative mode

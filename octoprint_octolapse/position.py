@@ -332,6 +332,8 @@ class Pos(object):
                 self.PositionError = None
 
     def distance_to_zlift(self, z_hop, restrict_lift_height=True):
+        if self.Z is None or self.LastExtrusionHeight is None:
+            return None
 
         current_lift = self.Z - self.LastExtrusionHeight
         amount_to_lift = z_hop - current_lift
