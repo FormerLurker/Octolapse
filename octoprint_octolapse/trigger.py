@@ -302,10 +302,8 @@ class GcodeTrigger(Trigger):
         # call parent constructor
         super(GcodeTrigger, self).__init__(octolapse_settings)
         try:
-            cmd, parameters = Commands.parse(self.Printer.snapshot_command)
-            if cmd is None:
-                cmd = ""
-            self.SnapshotCommand = cmd
+            self.SnapshotCommand = self.Printer.snapshot_command
+
         except ValueError as e:
             self.Settings.current_debug_profile().log_exception(e)
 

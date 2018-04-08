@@ -508,6 +508,11 @@ class Timelapse(object):
 
         self.check_current_line_number(tags)
 
+        # update the position tracker so that we know where all of the axis are.
+        # We will need this later when generating snapshot gcode so that we can return to the previous
+        # position
+        is_snapshot_gcode_command = self._is_snapshot_command(command_string)
+
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
                 "Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(
@@ -524,11 +529,6 @@ class Timelapse(object):
                 )
                 self.stop_snapshots(message, True)
                 return None
-
-            # update the position tracker so that we know where all of the axis are.
-            # We will need this later when generating snapshot gcode so that we can return to the previous
-            # position
-            is_snapshot_gcode_command = self._is_snapshot_command(cmd)
 
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
@@ -559,7 +559,7 @@ class Timelapse(object):
                       and self.OctoprintPrinter.is_printing()
                       and not self.Position.has_position_error(0)):
                     # update the triggers with the current position
-                    self.Triggers.update(self.Position, cmd)
+                    self.Triggers.update(self.Position, command_string)
                     # see if at least one trigger is triggering
                     _first_triggering = self.get_first_triggering()
 
