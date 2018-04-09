@@ -44,14 +44,19 @@ Octolapse is designed to make stabilized timelapses of your prints with as littl
 
 Octolapse moves the print bed and extruder into position before taking each snapshot, giving you a crisp image in every frame.  Snapshots can be taken at each layer change, at specific height increments, after a period of time has elapsed, or when certain GCodes are detected.  You can even combine multiple methods in a single timelapse.
 
+[Please support my work on Patreon.](https://www.patreon.com/FormerLurker)
+
 **Important**:  *Octolapse requires OctoPrint v1.3.7 or higher.*  You can check your OctoPrint version by looking in the lower left hand corner of your OctoPrint server home page.
 
 Octolapse is still in Beta but has been confirmed to work on several printers:
 
 *  Genuine Prusa - Mk2, Mk2S, Mk2 w Multi Material, Mk3
-*  Anet A8
-*  CR-10 (Beta Profile)
-*  I've heard reports that the Monoprice Maker Select v2/Wanhao Duplicator i3 also works but have yet to receive a profile for this printer.  [See this issue if you can help!](https://github.com/FormerLurker/Octolapse/issues/27)
+*  Anet A8 - Beta - User Submitted
+*  Anycube I3 Mega - Beta - User Submitted
+*  CR-10 - Beta - User Submitted
+*  Dagoma Neva - Beta - User Submitted
+*  Irapid Black - Beta - User Submitted
+*  Monoprice Maker Select v2/Wanhao Duplicator i3 - Beta - User Submitted - Requires OctoPrint 1.3.7rc3 or above
 
 Please note that some settings may need to be adjusted depending on your slicer settings.
 
@@ -95,6 +100,7 @@ Use caution and never leave your printer unattended.
 ## To make good timelapses, you need good snapshots
 * Slow camera or low frame rate?  Octolapse allows you to **set a snapshot delay** before taking a snapshot to allow your camera enough time to get a clear image.
 * **Control your camera settings** including: contrast, brightness, focus, white balance, pan, tilt, zoom, and much more.  You can apply your custom settings before each print.
+* **Rotate, flip, and transpose your snapshots**
 
 ## More Octolapses
 <div style="text-align:center">
