@@ -1126,7 +1126,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 # other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties.  See the
 # documentation for that.
-__plugin_name__ = "OctoLapse"
+__plugin_name__ = "Octolapse"
 
 
 def __plugin_load__():
