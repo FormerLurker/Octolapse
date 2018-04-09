@@ -18,7 +18,7 @@
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
-# following email address: FormerLurker@protonmail.com
+# following email address: FormerLurker@pm.me
 ##################################################################################
 import operator
 from six import string_types
