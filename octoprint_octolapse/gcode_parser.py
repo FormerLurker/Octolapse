@@ -525,7 +525,9 @@ class Commands(object):
     @staticmethod
     def alter_for_test_mode(command_string, cmd, parameters, return_string=False):
         if cmd is None:
-            return command_string
+            if return_string:
+                return command_string
+            return None
 
         if cmd in Commands.TestModeSuppressExtrusionCommands and "E" in parameters:
             parameters.pop("E")

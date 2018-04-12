@@ -723,19 +723,23 @@ class Timelapse(object):
                     force=True,
                     calculate_changes=True)
 
-                # adjust the triggering command
-                if cmd is not None and cmd != (None,):
-                    gcode = self.Commands.alter_for_test_mode(command_string, cmd, parameters, return_string=True)
-                    if gcode != "":
-                        self.Settings.current_debug_profile().log_print_state_change(
-                            "Sending triggering command for position acquisition - {0}.".format(gcode))
-                        # send the triggering command
-                        self.send_snapshot_gcode_array(gcode)
-                # set the state
-                if self.State == TimelapseState.AcquiringLocation:
-                    self.State = TimelapseState.WaitingForTrigger
+            # adjust the triggering command
+            if self.IsTestMode:
+                gcode = self.Commands.alter_for_test_mode(command_string, cmd, parameters, return_string=True)
+            else:
+                gcode = command_string
 
-                self.Settings.current_debug_profile().log_print_state_change("Position Acquired")
+            if gcode != "":
+                self.Settings.current_debug_profile().log_print_state_change(
+                    "Sending triggering command for position acquisition - {0}.".format(gcode))
+                # send the triggering command
+                self.send_snapshot_gcode_array([gcode])
+
+            # set the state
+            if self.State == TimelapseState.AcquiringLocation:
+                self.State = TimelapseState.WaitingForTrigger
+
+            self.Settings.current_debug_profile().log_print_state_change("Position Acquired")
 
         finally:
             self.OctoprintPrinter.set_job_on_hold(False)

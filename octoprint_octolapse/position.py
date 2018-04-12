@@ -899,27 +899,34 @@ class Position(object):
                 e = parameters["E"] if "E" in parameters else None
                 if x is None and y is None and z is None and e is None:
                     pos.XOffset = pos.X
+                    pos.XHomed = True
                     pos.YOffset = pos.Y
+                    pos.YHomed = True
                     pos.ZOffset = pos.Z
+                    pos.ZHomed = True
                     pos.EOffset = pos.E
+
                 # set the offsets if they are provided
                 if x is not None:
                     if pos.X is not None and pos.XHomed:
                             pos.XOffset = pos.X - utility.get_float(x, 0)
                     else:
                         pos.X = utility.get_float(x, 0)
-
+                    pos.XHomed = True
                 if y is not None:
                     if pos.Y is not None and pos.YHomed:
                             pos.YOffset = pos.Y - utility.get_float(y, 0)
                     else:
                         pos.Y = utility.get_float(y, 0)
 
+                    pos.YHomed = True
+
                 if z is not None:
                     if pos.Z is not None and pos.ZHomed:
                             pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     else:
                         pos.Z = utility.get_float(z, 0)
+                    pos.ZHomed = True
 
                 if e is not None:
                     if pos.E is not None:
