@@ -221,6 +221,7 @@ class Commands(object):
             "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
             "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
             "E": CommandParameter("E", CommandParameter.parse_float, 4),
+            "O": CommandParameter("O", CommandParameter.parse_float, 5)
         }
     )
 

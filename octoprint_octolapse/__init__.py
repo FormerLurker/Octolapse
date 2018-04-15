@@ -654,14 +654,54 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.Settings.current_debug_profile().log_print_state_change("Octolapse is disabled.")
             return
 
-        if 'source:file' not in tags:
-            message = "Octolapse does not work when printing from SD the card.  Disable octolapse if you want to " \
-                      "print from the SD card.  Cancelling print"
+        # determine the file source
+        printer_data = self._printer.get_current_data()
+        current_job = printer_data.get("job", None)
+        if not current_job:
+            message = "An unexpected error occurred:" \
+                      "  Octolapse was unable to acquire job start information from Octoprint." \
+                      "  Please see octolapse_log for details.  Cancelling Print."
             self.on_print_cancelled(message, True)
+
+            log_message = "Failed to get current job data on_print_start:" \
+                          "  Current printer data: {0}".format(printer_data)
+            self.Settings.current_debug_profile().log_error(log_message)
+            return
+
+        current_file = current_job.get("file", None)
+        if not current_file:
+            message = "An unexpected error occurred:" \
+                      "  Octolapse was unable to acquire file information from the current job." \
+                      "  Please see octolapse_log for details.  Cancelling Print."
+
+            self.on_print_cancelled(message, True)
+            log_message = "Failed to get current file data on_print_start:" \
+                          "  Current job data: {0}".format(current_job)
+            self.Settings.current_debug_profile().log_error(log_message)
+            return
+
+        current_origin = current_file.get("origin", "unknown")
+        if not current_origin:
+            message = "An unexpected error occurred:" \
+                      "  Octolapse was unable to acquire the current origin information from the current file." \
+                      "  Please see octolapse_log for details.  Cancelling Print."
+            self.on_print_cancelled(message, True)
+            log_message = "Failed to get current origin data on_print_start:" \
+                "Current file data: {0}".format(current_file)
+
+            self.Settings.current_debug_profile().log_error(log_message)
+            return
+
+        if current_origin != "local":
+            message = "Octolapse only works when printing locally.  The current source ({0}) is incompatible.  " \
+                      "Disable octolapse if you want to print from the SD card." \
+                      "  Cancelling print".format(current_origin)
+            self.on_print_cancelled(message, True)
+            log_message = "Unable to start Octolapse when printing from {0}.  Cancelling print.".format(current_origin)
+            self.Settings.current_debug_profile().log_warning(log_message)
             return
 
         if self.Timelapse.State != TimelapseState.Initializing:
-
             message = "Unable to start the timelapse when not in the Initializing state. StateId: " \
                 "{0}".format(self.Timelapse.State)
             self.on_print_cancelled(message, True)

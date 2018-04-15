@@ -611,7 +611,8 @@ class Timelapse(object):
         if (
             self.Settings.is_octolapse_enabled and
             self.State == TimelapseState.Idle and
-            {'trigger:comm.start_print', 'fileline:1'} <= tags and
+            {'trigger:comm.start_print', 'trigger:comm.reset_line_numbers'} <= tags and
+            #  ({'trigger:comm.start_print', 'fileline:1'} <= tags or {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags) and
             self.OctoprintPrinter.is_printing()
         ):
             if self.OctoprintPrinter.set_job_on_hold(True):
