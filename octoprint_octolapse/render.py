@@ -22,16 +22,15 @@
 ##################################################################################
 
 import logging
+import math
 import os
+import sarge
 import shutil
 import sys
 import threading
 import time
-import math
 # sarge was added to the additional requirements for the plugin
 import uuid
-
-import sarge
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
@@ -548,7 +547,7 @@ class TimelapseRenderJob(object):
                                              " to an unexpected exception.  Check plugin_octolapse.log for more " \
                                              " information.  You should be able to find your video within your " \
                                              " OctoPrint  server here:<br/> '{0}'" \
-                                             .format(self._rendering_output_file_path)
+                            .format(self._rendering_output_file_path)
 
                         self.has_error = True
                         self.error_type = "synchronizing-exception"

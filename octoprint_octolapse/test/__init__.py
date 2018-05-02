@@ -25,7 +25,7 @@ import unittest
 
 from octoprint_octolapse.test.test_command import TestCommand
 from octoprint_octolapse.test.test_extruder import TestExtruder
-from octoprint_octolapse.test.test_gcodeparts import TestGcodeParts
+# from octoprint_octolapse.test.test_gcodeparts import TestGcodeParts
 from octoprint_octolapse.test.test_octolapseplugin import TestOctolapsePlugin
 from octoprint_octolapse.test.test_position import TestPosition
 from octoprint_octolapse.test.test_snapshotGcode import TestSnapshotGcode
@@ -39,7 +39,9 @@ from octoprint_octolapse.test.test_utility import TestUtility
 
 def test_all():
     # removed Test_Timelapse from the list for the time being.  This test class is very messed up.
-    test_classes = [TestCommand, TestExtruder, TestGcodeParts, TestPosition, TestSnapshotGcode,
+    test_classes = [TestCommand, TestExtruder,
+                    # TestGcodeParts,
+                    TestPosition, TestSnapshotGcode,
                     TestGcodeTrigger, TestLayerTrigger, TestTimerTrigger, TestUtility, TestOctolapsePlugin,
                     TestTrigger]
 
