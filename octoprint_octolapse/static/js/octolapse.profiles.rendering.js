@@ -43,8 +43,47 @@ $(function() {
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);
-        self.watermark = ko.observable(values.watermark);
+        self.enable_watermark = ko.observable(values.enable_watermark);
         self.watermark_path = ko.observable(values.watermark_path);
+        self.watermark_upload_path = ko.observable(values.watermark_upload_path);
+
+        self.onStartup = function() {
+            self.watermarkUploadElement = $("#octolapse_watermark_path_upload");
+            self.watermarkUploadButton = $("#octolapse_watermark_path_upload_start");
+
+             self.watermarkUploadElement.fileupload({
+                dataType: "json",
+                maxNumberOfFiles: 1,
+                autoUpload: false,
+                headers: OctoPrint.getRequestHeaders(),
+                add: function(e, data) {
+                    if (data.files.length == 0) {
+                        return false;
+                    }
+
+                    self.watermark_upload_path(data.files[0].name);
+
+                    self.watermarkUploadButton.unbind("click");
+                    self.watermarkUploadButton.bind("click", function() {
+                        data.submit();
+                        return false;
+                    });
+                },
+                done: function(e, data) {
+                    self.watermarkUploadButton.unbind("click");
+                    self.watermark_upload_path(undefined);
+                    self.fromTranslationResponse(data.result);
+                },
+                fail: function(e, data) {
+                    self.watermarkUploadButton.unbind("click");
+                    self.watermark_upload_path(undefined);
+                }
+            });
+        }
+
+        self.startWatermarkUpload = function() {
+            console.log("StartWatermarkUpload");
+        };
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

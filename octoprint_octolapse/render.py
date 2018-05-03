@@ -24,13 +24,14 @@
 import logging
 import math
 import os
-import sarge
 import shutil
 import sys
 import threading
 import time
 # sarge was added to the additional requirements for the plugin
 import uuid
+
+import sarge
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
@@ -474,14 +475,12 @@ class TimelapseRenderJob(object):
                     self.has_error = True
 
             if not self.has_error:
-                watermark = None
-                if self._rendering.watermark:
-                    watermark = os.path.join(os.path.dirname(
-                        __file__), "static", "img", "watermark.png")
+                if self._rendering.enable_watermark:
+                    watermark_path = self._rendering.watermark_path
                     if sys.platform == "win32":
                         # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
                         # path a special treatment. Yeah, I couldn't believe it either...
-                        watermark = watermark.replace(
+                        watermark_path = watermark_path.replace(
                             "\\", "/").replace(":", "\\\\:")
 
                 vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
@@ -498,7 +497,7 @@ class TimelapseRenderJob(object):
                     h_flip=self._rendering.flip_h,
                     v_flip=self._rendering.flip_v,
                     rotate=self._rendering.rotate_90,
-                    watermark=watermark,
+                    watermark=watermark_path,
                     v_codec=vcodec
                 )
                 self._debug.log_render_start(

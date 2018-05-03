@@ -242,13 +242,28 @@
                     <label class="control-label">Embed watermark</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <input name="watermark" type="checkbox" data-bind="checked: watermark"
+                            <input name="watermark" type="checkbox" data-bind="checked: enable_watermark"
                                    title="Embed a watermark in the resulting timelapse"/>Enabled
                         </label>
                         <span class="help-inline">
                           <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
                         </span>
-                        <input id="octolapse_watermark_path" name="watermark_path" type="text" class="input-block-level form-input" data-bind="value: watermark_path" required="True"/>
+
+                        <span>Current path:</span>
+                        <input id="octolapse_watermark_path" name="watermark_path" type="image/*" class="input-block-level form-input" data-bind="value: watermark_path" disabled/>
+                        <span>Upload path:</span>
+                        <div class="controls-row">
+                                <div class="input-group">
+                                    <div class="input-prepend span3">
+                                        <span class="btn fileinput-button">
+                                            <span>Browse...</span>
+                                            <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for("plugin.octolapse.upload_watermark") }}">
+                                        </span>
+                                        <span class="add-on add-on-limited text-left" data-bind="text: watermark_upload_path, attr: {title: watermark_upload_path}"></span>
+                                    </div>
+                                </div>
+                                <button id="octolapse_watermark_path_upload_start" class="btn btn-primary" data-bind="enable: enable_watermark, css: {disabled: !enable_watermark()}, click: startWatermarkUpload">Upload</button>
+                        </div>
                     </div>
                 </div>
             </div>

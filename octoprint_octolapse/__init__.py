@@ -324,6 +324,35 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             valid = result[1]
         return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/rendering", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def upload_watermark(self):
+        self._logger.info("Uploading watermark...")
+        # TODO(Shadowen): Do stuff.
+        # input_name = "file"
+        # input_upload_path = input_name + "." + settings().get(["server", "uploads", "pathSuffix"])
+        # input_upload_name = input_name + "." + settings().get(["server", "uploads", "nameSuffix"])
+        # if not input_upload_path in flask.request.values or not input_upload_name in flask.request.values:
+        #     return flask.make_response("No file included", 400)
+        #
+        # upload_name = flask.request.values[input_upload_name]
+        # upload_path = flask.request.values[input_upload_path]
+        #
+        # exts = filter(lambda x: upload_name.lower().endswith(x), (".zip", ".tar.gz", ".tgz", ".tar"))
+        # if not len(exts):
+        #     return flask.make_response("File doesn't have a valid extension for a language pack archive", 400)
+        #
+        # target_path = settings().getBaseFolder("translations")
+        #
+        # if tarfile.is_tarfile(upload_path):
+        #     _unpack_uploaded_tarball(upload_path, target_path)
+        # elif zipfile.is_zipfile(upload_path):
+        #     _unpack_uploaded_zipfile(upload_path, target_path)
+        # else:
+        #     return make_response("Neither zip file nor tarball included", 400)
+        return flask.make_response("Not implemented!", 500)
+
     # blueprint helpers
     @staticmethod
     def get_download_file_response(file_path, download_filename):

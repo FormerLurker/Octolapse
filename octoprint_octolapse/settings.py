@@ -885,7 +885,7 @@ class Rendering(object):
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
-        self.watermark = False
+        self.enable_watermark = False
         self.watermark_path = "" # TODO(Shadowen): Add a default path.
         if rendering is not None:
             if isinstance(rendering, Rendering):
@@ -904,7 +904,7 @@ class Rendering(object):
                 self.flip_h = rendering.flip_h
                 self.flip_v = rendering.flip_v
                 self.rotate_90 = rendering.rotate_90
-                self.watermark = rendering.watermark
+                self.enable_watermark = rendering.enable_watermark
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
@@ -960,9 +960,9 @@ class Rendering(object):
             self.output_template = utility.get_string(
                 changes["output_template"], self.output_template)
 
-        if "watermark" in changes.keys():
-            self.watermark = utility.get_bool(
-                changes["watermark"], self.watermark)
+        if "enable_watermark" in changes.keys():
+            self.enable_watermark = utility.get_bool(
+                changes["enable_watermark"], self.enable_watermark)
         if "watermark_path" in changes.keys():
             self.watermark_path = utility.get_string(
                 changes["watermark_path"], self.watermark_path)
@@ -987,7 +987,7 @@ class Rendering(object):
             'post_roll_seconds': self.post_roll_seconds,
             'pre_roll_seconds': self.pre_roll_seconds,
             'output_template': self.output_template,
-            'watermark': self.watermark,
+            'enable_watermark': self.enable_watermark,
             'watermark_path': self.watermark_path,
         }
 
