@@ -224,7 +224,8 @@ $(function () {
             }
             Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
             settings.renderings.forEach(function (item, index) {
-                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
+                var o = new Octolapse.RenderingProfileViewModel(item);
+                Octolapse.Renderings.profiles.push(o);
             });
 
             // Cameras
@@ -370,7 +371,7 @@ $(function () {
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
         // show the modal dialog
-        self.showAddEditDialog = function (options, sender) {
+        self.showAddEditDialog = function (options, sender, profile) {
             // Create all the variables we want to store for callbacks
             console.log("octolapse.settings.js - Showing add edit dialog.");
             var dialog = this;
@@ -531,6 +532,10 @@ $(function () {
                     }
 
                 });
+
+                // Initialize the profile.
+                var onStartup = Octolapse.Settings.AddEditProfile().profileObservable().onStartup;
+                typeof onStartup == 'function' && onStartup();
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();

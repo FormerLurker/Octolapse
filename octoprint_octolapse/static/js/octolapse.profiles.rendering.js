@@ -48,42 +48,34 @@ $(function() {
         self.watermark_upload_path = ko.observable(values.watermark_upload_path);
 
         self.onStartup = function() {
-            self.watermarkUploadElement = $("#octolapse_watermark_path_upload");
-            self.watermarkUploadButton = $("#octolapse_watermark_path_upload_start");
+             self.watermarkUploadElement = $("#octolapse_watermark_path_upload");
 
              self.watermarkUploadElement.fileupload({
                 dataType: "json",
                 maxNumberOfFiles: 1,
-                autoUpload: false,
                 headers: OctoPrint.getRequestHeaders(),
-                add: function(e, data) {
-                    if (data.files.length == 0) {
-                        return false;
-                    }
-
-                    self.watermark_upload_path(data.files[0].name);
-
-                    self.watermarkUploadButton.unbind("click");
-                    self.watermarkUploadButton.bind("click", function() {
-                        data.submit();
-                        return false;
-                    });
+                // Need to chunk large image files or else Flask will reject them.
+                // TODO: This size was found to work via binary search. It's probably better to figure out the correct size somehow.
+                // See http://flask.pocoo.org/docs/1.0/patterns/fileuploads/ for more details on max file upload size.
+                maxChunkSize: 100000,
+                progressall: function (e, data) {
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+//                    console.log("Progress" + progress);
+                    $('#progress .bar').css(
+                        'width',
+                        progress + '%'
+                    );
                 },
-                done: function(e, data) {
-                    self.watermarkUploadButton.unbind("click");
-                    self.watermark_upload_path(undefined);
-                    self.fromTranslationResponse(data.result);
-                },
-                fail: function(e, data) {
-                    self.watermarkUploadButton.unbind("click");
-                    self.watermark_upload_path(undefined);
-                }
+//                done: function(e, data) {
+//                    $.each(data.result.files, function (index, file) {
+//                        $('<p/>').text(file.name).appendTo(document.body);
+//                    });
+//                },
+//                fail: function(e, data) {
+//                    console.log(data);
+//                }
             });
         }
-
-        self.startWatermarkUpload = function() {
-            console.log("StartWatermarkUpload");
-        };
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

@@ -253,16 +253,18 @@
                         <input id="octolapse_watermark_path" name="watermark_path" type="image/*" class="input-block-level form-input" data-bind="value: watermark_path" disabled/>
                         <span>Upload path:</span>
                         <div class="controls-row">
-                                <div class="input-group">
-                                    <div class="input-prepend span3">
-                                        <span class="btn fileinput-button">
-                                            <span>Browse...</span>
-                                            <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for("plugin.octolapse.upload_watermark") }}">
-                                        </span>
-                                        <span class="add-on add-on-limited text-left" data-bind="text: watermark_upload_path, attr: {title: watermark_upload_path}"></span>
-                                    </div>
+                            <div class="input-group">
+                                <div class="input-prepend span3">
+                                    <span class="btn fileinput-button">
+                                        <span>Browse...</span>
+                                        <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
+                                    </span>
+                                    <span class="add-on add-on-limited text-left" data-bind="text: watermark_upload_path, attr: {title: watermark_upload_path}"></span>
                                 </div>
-                                <button id="octolapse_watermark_path_upload_start" class="btn btn-primary" data-bind="enable: enable_watermark, css: {disabled: !enable_watermark()}, click: startWatermarkUpload">Upload</button>
+                            </div>
+                            <div id="progress">
+                                <div class="bar" style="width: 0%;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
