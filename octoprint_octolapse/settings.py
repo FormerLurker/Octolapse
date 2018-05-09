@@ -886,7 +886,7 @@ class Rendering(object):
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         self.enable_watermark = False
-        self.watermark_path = ""
+        self.selected_watermark = ""
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -908,7 +908,7 @@ class Rendering(object):
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
-                self.watermark_path = rendering.watermark_path
+                self.selected_watermark = rendering.selected_watermark
             else:
                 self.update(rendering)
 
@@ -963,9 +963,9 @@ class Rendering(object):
         if "enable_watermark" in changes.keys():
             self.enable_watermark = utility.get_bool(
                 changes["enable_watermark"], self.enable_watermark)
-        if "watermark_path" in changes.keys():
-            self.watermark_path = utility.get_string(
-                changes["watermark_path"], self.watermark_path)
+        if "selected_watermark" in changes.keys():
+            self.selected_watermark = utility.get_string(
+                changes["selected_watermark"], self.selected_watermark)
 
     def to_dict(self):
         return {
@@ -988,7 +988,7 @@ class Rendering(object):
             'pre_roll_seconds': self.pre_roll_seconds,
             'output_template': self.output_template,
             'enable_watermark': self.enable_watermark,
-            'watermark_path': self.watermark_path,
+            'selected_watermark': self.selected_watermark,
         }
 
 

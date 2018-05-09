@@ -50,19 +50,31 @@ $(function() {
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);
         self.enable_watermark = ko.observable(values.enable_watermark);
+        self.selected_watermark = ko.observable(values.selected_watermark);
         self.watermark_list = ko.observableArray();
 
-
         self.onShow = function() {
-             // Load existing watermarks in from Octolapse server.
-             OctoPrint.get('plugin/octolapse/rendering/watermarks')
-                .done(function(response){
+             updateWatermarkList();
+             initWatermarkUploadButton();
+        };
+
+        self.selectWatermark = function(watermark_file, event) {
+            self.selected_watermark(watermark_file.filepath);
+        };
+
+        function updateWatermarkList() {
+            // Load existing watermarks in from Octolapse server.
+             OctoPrint.get('plugin/octolapse/rendering/watermark')
+                .done(function(response) {
                     self.watermark_list.removeAll()
                     for (let file of response['filepaths']) {
                         self.watermark_list.push(new WatermarkImage(file));
                     }
                  });
+            // TODO(Shadowen): Catch failure.
+        }
 
+        function initWatermarkUploadButton() {
              // Set up the file upload button.
              var $watermarkUploadElement = $('#octolapse_watermark_path_upload');
              var $progressBarContainer = $('#octolapse-upload-watermark-progress');
@@ -72,7 +84,7 @@ $(function() {
                 dataType: "json",
                 maxNumberOfFiles: 1,
                 headers: OctoPrint.getRequestHeaders(),
-                // Need to chunk large image files or else Flask will reject them.
+                // Need to chunk large image files or else OctoPrint/Flask will reject them.
                 // TODO: Octoprint limits file upload size on a per-endpoint basis.
                 // http://docs.octoprint.org/en/master/plugins/hooks.html#octoprint-server-http-bodysize
                 maxChunkSize: 100000,
@@ -85,13 +97,14 @@ $(function() {
                 done: function(e, data) {
                     $progressBar.text("Done!");
                     $progressBar.animate({'width': '100%'}, {'queue':false});
+                    updateWatermarkList();
                 },
                 fail: function(e, data) {
                     $progressBar.text("Failed...").addClass('failed');
                     $progressBar.animate({'width': '100%'}, {'queue':false});
                 }
              });
-        };
+        }
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

@@ -446,7 +446,7 @@ $(function () {
                     dialog.validator = null;
                 }
             });
-            // configure the dialog shown event
+            // configure the dialog show event
             dialog.$addEditDialog.on("show.bs.modal", function () {
                 Octolapse.Settings.AddEditProfile({
                     "profileObservable": dialog.profileObservable,
@@ -473,8 +473,12 @@ $(function () {
                         return -($(this).width() / 2);
                     }
                 });
+
+                // Initialize the profile.
+                var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
+                typeof onShow == 'function' && onShow();
             });
-            // Configure the show event
+            // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
                 dialog.validator = dialog.$addEditForm.validate(rules);
 
@@ -532,10 +536,6 @@ $(function () {
                     }
 
                 });
-
-                // Initialize the profile.
-                var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
-                typeof onShow == 'function' && onShow();
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();

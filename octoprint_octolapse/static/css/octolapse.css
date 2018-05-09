@@ -3025,3 +3025,7 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
 .progress-bar.failed {
     background: red;
 }
+
+.file-selector-list .selected {
+    font-weight: bold;
+}

@@ -249,11 +249,15 @@
                           <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
                         </span>
 
-                        <div>Images:</div>
-                        <table>
+                        <span class="help-inline">
+                          <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
+                        </span>
+                        <table class="file-selector-list">
                             <tbody data-bind="foreach: watermark_list">
                                 <tr>
-                                    <td data-bind="text: filepath"></td>
+                                    <td>
+                                        <div data-bind="text: filepath, click: $parent.selectWatermark, css: { selected: filepath == $parent.selected_watermark() }" ></div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -261,7 +265,7 @@
                         <div class="controls-row">
                             <div class="input-group" style="display:flex; align-items:center">
                                 <span class="btn fileinput-button">
-                                    <span>Upload...</span>
+                                    <span>Upload new...</span>
                                     <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
                                 </span>
                                 <span id="octolapse-upload-watermark-progress" class="progress-bar-container">

@@ -476,7 +476,7 @@ class TimelapseRenderJob(object):
 
             if not self.has_error:
                 if self._rendering.enable_watermark:
-                    watermark_path = self._rendering.watermark_path
+                    watermark_path = self._rendering.selected_watermark
                     if sys.platform == "win32":
                         # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
                         # path a special treatment. Yeah, I couldn't believe it either...

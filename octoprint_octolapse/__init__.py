@@ -323,7 +323,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             valid = result[1]
         return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
-    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermarks", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
     @restricted_access
     @admin_permission.require(403)
     def get_available_watermarks(self):
@@ -336,7 +336,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data = {'filepaths': files}
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
-    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermarks/upload", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/upload", methods=["POST"])
     # @restricted_access
     # @admin_permission.require(403)
     def upload_watermark(self):
@@ -374,7 +374,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._logger.info("Moving watermark from {} to {}.".format(watermark_temp_path, watermark_destination_path))
         shutil.move(watermark_temp_path, watermark_destination_path)
 
-        return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
+        return json.dumps({}, 200, {'ContentType': 'application/json'})
 
     # blueprint helpers
     @staticmethod
