@@ -48,9 +48,11 @@ $(function() {
         self.watermark_upload_path = ko.observable(values.watermark_upload_path);
 
         self.onStartup = function() {
-             self.watermarkUploadElement = $("#octolapse_watermark_path_upload");
+             var $watermarkUploadElement = $('#octolapse_watermark_path_upload');
+             var $progressBarContainer = $('#octolapse-upload-watermark-progress');
+             var $progressBar = $progressBarContainer.find('.progress-bar');
 
-             self.watermarkUploadElement.fileupload({
+             $watermarkUploadElement.fileupload({
                 dataType: "json",
                 maxNumberOfFiles: 1,
                 headers: OctoPrint.getRequestHeaders(),
@@ -59,21 +61,19 @@ $(function() {
                 // See http://flask.pocoo.org/docs/1.0/patterns/fileuploads/ for more details on max file upload size.
                 maxChunkSize: 100000,
                 progressall: function (e, data) {
+                    // TODO: Get a better progress bar implementation.
                     var progress = parseInt(data.loaded / data.total * 100, 10);
-//                    console.log("Progress" + progress);
-                    $('#progress .bar').css(
-                        'width',
-                        progress + '%'
-                    );
+                    $progressBar.text(progress + "%");
+                    $progressBar.animate({'width': progress + '%'}, {'queue':false});
                 },
-//                done: function(e, data) {
-//                    $.each(data.result.files, function (index, file) {
-//                        $('<p/>').text(file.name).appendTo(document.body);
-//                    });
-//                },
-//                fail: function(e, data) {
-//                    console.log(data);
-//                }
+                done: function(e, data) {
+                    $progressBar.text("Done!");
+                    $progressBar.animate({'width': '100%'}, {'queue':false});
+                },
+                fail: function(e, data) {
+                    $progressBar.text("Failed...").addClass('failed');
+                    $progressBar.animate({'width': '100%'}, {'queue':false});
+                }
             });
         }
     };
