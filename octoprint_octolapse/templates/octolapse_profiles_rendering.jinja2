@@ -249,8 +249,14 @@
                           <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
                         </span>
 
-                        <span>Current path:</span>
-                        <input id="octolapse_watermark_path" name="watermark_path" type="image/*" class="input-block-level form-input" data-bind="value: watermark_path" disabled/>
+                        <div>Images:</div>
+                        <table>
+                            <tbody data-bind="foreach: watermark_list">
+                                <tr>
+                                    <td data-bind="text: filepath"></td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <div class="controls-row">
                             <div class="input-group" style="display:flex; align-items:center">

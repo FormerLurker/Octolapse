@@ -534,8 +534,8 @@ $(function () {
                 });
 
                 // Initialize the profile.
-                var onStartup = Octolapse.Settings.AddEditProfile().profileObservable().onStartup;
-                typeof onStartup == 'function' && onStartup();
+                var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
+                typeof onShow == 'function' && onShow();
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();

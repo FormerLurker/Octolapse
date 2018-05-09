@@ -323,7 +323,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             valid = result[1]
         return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
-    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermarks", methods=["GET"])
+    @restricted_access
+    @admin_permission.require(403)
+    def get_available_watermarks(self):
+        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+        watermarks_directory_name = "watermarks"
+        full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+        files = []
+        if os.path.exists(full_watermarks_dir):
+            files = os.listdir(full_watermarks_dir)
+        data = {'filepaths': files}
+        return json.dumps(data), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermarks/upload", methods=["POST"])
     # @restricted_access
     # @admin_permission.require(403)
     def upload_watermark(self):
@@ -334,7 +347,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         image_filename = flask.request.values['image.name']
         # The path where the watermark file was saved by the uploader.
         watermark_temp_path = flask.request.values['image.path']
-        self._logger.info("Receiving uploaded watermark {}.".format(image_filename))
+        self._logger.debug("Receiving uploaded watermark {}.".format(image_filename))
 
         # Move the watermark from the (temp) upload location to a permanent location.
         # Maybe it could be uploaded directly there, but I don't know how to do that.

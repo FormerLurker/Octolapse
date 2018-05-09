@@ -886,7 +886,7 @@ class Rendering(object):
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         self.enable_watermark = False
-        self.watermark_path = "" # TODO(Shadowen): Add a default path.
+        self.watermark_path = ""
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid

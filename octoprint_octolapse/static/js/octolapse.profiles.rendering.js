@@ -22,6 +22,12 @@
 ##################################################################################
 */
 $(function() {
+    WatermarkImage = function(filepath) {
+        var self = this;
+        self.filepath = filepath;
+        self.uploadDate;
+    }
+
     Octolapse.RenderingProfileViewModel = function (values) {
         var self = this;
         self.profileTypeName = ko.observable("Render")
@@ -44,10 +50,20 @@ $(function() {
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);
         self.enable_watermark = ko.observable(values.enable_watermark);
-        self.watermark_path = ko.observable(values.watermark_path);
-        self.watermark_upload_path = ko.observable(values.watermark_upload_path);
+        self.watermark_list = ko.observableArray();
 
-        self.onStartup = function() {
+
+        self.onShow = function() {
+             // Load existing watermarks in from Octolapse server.
+             OctoPrint.get('plugin/octolapse/rendering/watermarks')
+                .done(function(response){
+                    self.watermark_list.removeAll()
+                    for (let file of response['filepaths']) {
+                        self.watermark_list.push(new WatermarkImage(file));
+                    }
+                 });
+
+             // Set up the file upload button.
              var $watermarkUploadElement = $('#octolapse_watermark_path_upload');
              var $progressBarContainer = $('#octolapse-upload-watermark-progress');
              var $progressBar = $progressBarContainer.find('.progress-bar');
@@ -57,8 +73,8 @@ $(function() {
                 maxNumberOfFiles: 1,
                 headers: OctoPrint.getRequestHeaders(),
                 // Need to chunk large image files or else Flask will reject them.
-                // TODO: This size was found to work via binary search. It's probably better to figure out the correct size somehow.
-                // See http://flask.pocoo.org/docs/1.0/patterns/fileuploads/ for more details on max file upload size.
+                // TODO: Octoprint limits file upload size on a per-endpoint basis.
+                // http://docs.octoprint.org/en/master/plugins/hooks.html#octoprint-server-http-bodysize
                 maxChunkSize: 100000,
                 progressall: function (e, data) {
                     // TODO: Get a better progress bar implementation.
@@ -74,8 +90,8 @@ $(function() {
                     $progressBar.text("Failed...").addClass('failed');
                     $progressBar.animate({'width': '100%'}, {'queue':false});
                 }
-            });
-        }
+             });
+        };
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {
