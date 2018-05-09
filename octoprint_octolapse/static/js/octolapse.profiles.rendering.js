@@ -53,25 +53,30 @@ $(function() {
         self.selected_watermark = ko.observable(values.selected_watermark);
         self.watermark_list = ko.observableArray();
 
+        // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
              updateWatermarkList();
              initWatermarkUploadButton();
         };
 
-        self.selectWatermark = function(watermark_file, event) {
-            self.selected_watermark(watermark_file.filepath);
+        // Set a WatermarkImage as the selected watermark.
+        self.selectWatermark = function(watermark_image, event) {
+            self.selected_watermark(watermark_image.filepath);
         };
 
+        // Load watermark list from server-side Octolapse directory.
         function updateWatermarkList() {
-            // Load existing watermarks in from Octolapse server.
              OctoPrint.get('plugin/octolapse/rendering/watermark')
-                .done(function(response) {
+                .then(function(response) {
                     self.watermark_list.removeAll()
                     for (let file of response['filepaths']) {
                         self.watermark_list.push(new WatermarkImage(file));
                     }
+                 }, function(response) {
+                    self.watermark_list.removeAll()
+                    // Hacky solution, but good enough. We shouldn't encounter this error too much anyways.
+                    self.watermark_list.push(new WatermarkImage("Failed to load watermarks from Octolapse data directory."));
                  });
-            // TODO(Shadowen): Catch failure.
         }
 
         function initWatermarkUploadButton() {
