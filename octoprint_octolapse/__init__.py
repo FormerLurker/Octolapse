@@ -327,8 +327,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     # @restricted_access
     # @admin_permission.require(403)
     def upload_watermark(self):
-        self._logger.info("Uploading watermark {}", flask.request.values['image.name'])
-        # TODO(Shadowen): Receive chunked uploads properly. It seems like this function is called once PER CHUNK rather than when the entire upload has completed.
+        # TODO(Shadowen): Receive chunked uploads properly.
+        # It seems like this function is called once PER CHUNK rather than when the entire upload has completed.
+
+        # Parse the request.
+        image_filename = flask.request.values['image.name']
+        # The path where the watermark file was saved by the uploader.
+        watermark_temp_path = flask.request.values['image.path']
+        self._logger.info("Receiving uploaded watermark {}.".format(image_filename))
 
         # Move the watermark from the (temp) upload location to a permanent location.
         # Maybe it could be uploaded directly there, but I don't know how to do that.
@@ -336,13 +342,26 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         watermarks_directory_name = "watermarks"
         # Ensure the watermarks directory exists.
         full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
-        os.makedirs(full_watermarks_dir)
-        # Move the image.
-        watermark_destination_path = os.path.join(full_watermarks_dir, flask.request.values['image.name'])
-        shutil.move(flask.request.values['image.path'], watermark_destination_path)
+        if not os.path.exists(full_watermarks_dir):
+            self._logger.info("Creating watermarks directory at {}.".format(full_watermarks_dir))
+            os.makedirs(full_watermarks_dir)
 
-        # TODO(Shadowen): Actually construct a response using flask.create_response.
-        return json.dumps({'success': True, 'asdf': False}, 200, {'ContentType': 'application/json'})
+        # Move the image.
+        watermark_destination_path = os.path.join(full_watermarks_dir, image_filename)
+        if os.path.exists(watermark_destination_path):
+            if os.path.isdir(watermark_destination_path):
+                self._logger.error("Tried to upload watermark to {} but already contains a directory! Aborting!".format(
+                    watermark_destination_path))
+                return json.dumps({'error': 'Bad file name.'}, 501, {'ContentType': 'application/json'})
+            else:
+                # TODO(Shadowen): Maybe offer a config.yaml option for this.
+                self._logger.warning("Tried to upload watermark to {} but file already exists! Overwriting...".format(
+                    watermark_destination_path))
+                os.remove(watermark_destination_path)
+        self._logger.info("Moving watermark from {} to {}.".format(watermark_temp_path, watermark_destination_path))
+        shutil.move(watermark_temp_path, watermark_destination_path)
+
+        return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
 
     # blueprint helpers
     @staticmethod
