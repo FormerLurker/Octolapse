@@ -475,6 +475,7 @@ class TimelapseRenderJob(object):
                     self.has_error = True
 
             if not self.has_error:
+                watermark_path = None
                 if self._rendering.enable_watermark:
                     watermark_path = self._rendering.selected_watermark
                     if watermark_path == '':
