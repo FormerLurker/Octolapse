@@ -371,7 +371,7 @@ $(function () {
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
         // show the modal dialog
-        self.showAddEditDialog = function (options, sender, profile) {
+        self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
             console.log("octolapse.settings.js - Showing add edit dialog.");
             var dialog = this;
@@ -476,7 +476,9 @@ $(function () {
 
                 // Initialize the profile.
                 var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
-                typeof onShow == 'function' && onShow();
+                if (typeof onShow == 'function') {
+                    onShow();
+                }
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {

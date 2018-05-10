@@ -235,7 +235,7 @@ $(function() {
             // Save the model into the addEditObservable
             addEditObservable(newProfile);
 
-            Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)), 'warning':warning },this,newProfile);
+            Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)), 'warning':warning },this);
         };
         /*
             Set data prior to bindings
