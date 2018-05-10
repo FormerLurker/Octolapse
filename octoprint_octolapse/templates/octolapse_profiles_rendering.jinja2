@@ -252,11 +252,12 @@
                         <span class="help-inline">
                           <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
                         </span>
-                        <table class="file-selector-list">
+                        <table class="table table-condensed table-hover file-selector-list">
                             <tbody data-bind="foreach: watermark_list">
-                                <tr>
+                                <tr data-bind="click: ()=>$parent.selectWatermark(filepath), css: { selected: filepath == $parent.selected_watermark() }">
                                     <td>
-                                        <div data-bind="text: filepath, click: $parent.selectWatermark, css: { selected: filepath == $parent.selected_watermark() }" ></div>
+                                        <div class="filename" data-bind="text: getFilename()"></div>
+                                        <div class="filepath" data-bind="text: filepath" ></div>
                                     </td>
                                 </tr>
                             </tbody>

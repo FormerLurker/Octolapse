@@ -24,8 +24,14 @@
 $(function() {
     WatermarkImage = function(filepath) {
         var self = this;
+        // The full file path on the OctoPrint server.
         self.filepath = filepath;
-        self.uploadDate;
+
+        // Returns just the filename portion from a full filepath.
+        self.getFilename = function() {
+            // Function stolen from https://stackoverflow.com/a/25221100.
+            return self.filepath.split('\\').pop().split('/').pop();
+        };
     }
 
     Octolapse.RenderingProfileViewModel = function (values) {
@@ -60,8 +66,8 @@ $(function() {
         };
 
         // Set a WatermarkImage as the selected watermark.
-        self.selectWatermark = function(watermark_image, event) {
-            self.selected_watermark(watermark_image.filepath);
+        self.selectWatermark = function(filepath) {
+            self.selected_watermark(filepath);
         };
 
         // Load watermark list from server-side Octolapse directory.

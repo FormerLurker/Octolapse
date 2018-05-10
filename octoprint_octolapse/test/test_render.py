@@ -119,7 +119,7 @@ class TestRender(unittest.TestCase):
     def test_watermark(self):
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Render with Watermark")
-        r.update({"watermark": True})
+        r.update({'enable_watermark': True, 'watermark_path': self.createWatermark().name})
         self.createRenderingJob(rendering=r)
 
         # Start the job.

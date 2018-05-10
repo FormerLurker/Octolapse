@@ -332,7 +332,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
         files = []
         if os.path.exists(full_watermarks_dir):
-            files = os.listdir(full_watermarks_dir)
+            files = [os.path.join(self.get_plugin_data_folder(), f) for f in os.listdir(full_watermarks_dir)]
         data = {'filepaths': files}
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 

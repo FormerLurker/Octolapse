@@ -3029,3 +3029,11 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
 .file-selector-list .selected {
     font-weight: bold;
 }
+
+.file-selector-list .filename {
+}
+
+.file-selector-list .filepath {
+    font-size: 10px;
+    color: #595959;
+}
