@@ -65,11 +65,6 @@ $(function() {
              initWatermarkUploadButton();
         };
 
-        // Set a WatermarkImage as the selected watermark.
-        self.selectWatermark = function(filepath) {
-            self.selected_watermark(filepath);
-        };
-
         // Load watermark list from server-side Octolapse directory.
         function updateWatermarkList() {
              OctoPrint.get('plugin/octolapse/rendering/watermark')
