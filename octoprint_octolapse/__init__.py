@@ -337,8 +337,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/upload", methods=["POST"])
-    # @restricted_access
-    # @admin_permission.require(403)
+    @restricted_access
+    @admin_permission.require(403)
     def upload_watermark(self):
         # TODO(Shadowen): Receive chunked uploads properly.
         # It seems like this function is called once PER CHUNK rather than when the entire upload has completed.
@@ -375,6 +375,26 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         shutil.move(watermark_temp_path, watermark_destination_path)
 
         return json.dumps({}, 200, {'ContentType': 'application/json'})
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/delete", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def delete_watermark(self):
+        """Delete the watermark given in the HTTP POST name field."""
+        # Parse the request.
+        filename = flask.request.values['name']
+        self._logger.debug("Deleting watermark {}.".format(filename))
+
+        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+        watermarks_directory_name = "watermarks"
+        # Ensure the watermarks directory exists.
+        full_filepath = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name, filename)
+        if not os.path.exists(full_filepath):
+            self._logger.error(
+                "Tried to delete watermark at {} but file already exists! Overwriting...".format(full_filepath))
+            return json.dumps({'error': 'No such file.'}, 501, {'ContentType': 'application/json'})
+
+        os.remove(full_filepath)
 
     # blueprint helpers
     @staticmethod
