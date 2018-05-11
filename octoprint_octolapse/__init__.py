@@ -332,7 +332,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
         files = []
         if os.path.exists(full_watermarks_dir):
-            files = [os.path.join(self.get_plugin_data_folder(), f) for f in os.listdir(full_watermarks_dir)]
+            files = [os.path.join(self.get_plugin_data_folder(), watermarks_directory_name, f) for f in os.listdir(full_watermarks_dir)]
         data = {'filepaths': files}
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
@@ -382,19 +382,31 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def delete_watermark(self):
         """Delete the watermark given in the HTTP POST name field."""
         # Parse the request.
-        filename = flask.request.values['name']
-        self._logger.debug("Deleting watermark {}.".format(filename))
+        filepath = flask.request.get_json()['path']
+        self._logger.debug("Deleting watermark {}.".format(filepath))
+
+        if not os.path.exists(filepath):
+            self._logger.error("Tried to delete watermark at {} but file doesn't exists!".format(filepath))
+            return json.dumps({'error': 'No such file.'}, 501, {'ContentType': 'application/json'})
+
+        def is_subdirectory(a, b):
+            """Returns true if a is (or is in) a subdirectory of b."""
+            real_a = os.path.join(os.path.realpath(a), '')
+            real_b = os.path.join(os.path.realpath(b), '')
+            return os.path.commonprefix([real_a, real_b]) == real_a
 
         # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
         watermarks_directory_name = "watermarks"
-        # Ensure the watermarks directory exists.
-        full_filepath = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name, filename)
-        if not os.path.exists(full_filepath):
-            self._logger.error(
-                "Tried to delete watermark at {} but file already exists! Overwriting...".format(full_filepath))
-            return json.dumps({'error': 'No such file.'}, 501, {'ContentType': 'application/json'})
+        # Ensure the file we are trying to delete is in the watermarks folder.
+        watermarks_directory = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+        if not is_subdirectory(watermarks_directory, filepath):
+            self._logger.error("Tried to delete watermark at {} but file doesn't exists!".format(filepath))
+            return json.dumps({'error': "Cannot delete file outside watermarks folder."}, 400,
+                              {'ContentType': 'application/json'})
 
-        os.remove(full_filepath)
+        os.remove(filepath)
+        return json.dumps({'success': "Deleted {} successfully.".format(filepath)}), 200, {
+            'ContentType': 'application/json'}
 
     # blueprint helpers
     @staticmethod

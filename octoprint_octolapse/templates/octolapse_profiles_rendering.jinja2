@@ -254,9 +254,14 @@
                         </span>
                         <table class="table table-condensed table-hover file-selector-list">
                             <tbody data-bind="foreach: watermark_list">
-                                <tr data-bind="click: ()=>$parent.selected_watermark(filepath), css: { selected: filepath == $parent.selected_watermark() }">
+                                <tr data-bind="click: $parent.selectWatermark, css: { selected: filepath == $parent.selected_watermark() }">
                                     <td>
-                                        <div class="filename" data-bind="text: getFilename()"></div>
+                                        <div>
+                                            <span class="filename" data-bind="text: getFilename()"></div>
+                                            <button type="button" class="close" aria-label="Close" data-bind="click: $parent.deleteWatermark">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
                                         <div class="filepath" data-bind="text: filepath" ></div>
                                     </td>
                                 </tr>
