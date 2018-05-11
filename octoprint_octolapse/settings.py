@@ -2029,7 +2029,8 @@ class OctolapseSettings(object):
                 dict(value='flv', name='FLV'),
                 dict(value='vob', name='VOB'),
                 dict(value='mp4', name='MP4'),
-                dict(value='mpeg', name='MPEG')
+                dict(value='mpeg', name='MPEG'),
+                dict(value='gif', name='GIF'),
             ],
             'rendering_file_templates': self.rendering_file_templates,
             'camera_powerline_frequency_options': [

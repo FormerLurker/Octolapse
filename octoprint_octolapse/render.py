@@ -621,11 +621,12 @@ class TimelapseRenderJob(object):
 
         if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
             ffmpeg = "\"{0}\"".format(ffmpeg)
-        command = [
-            ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(
-                input_file), '-vcodec', v_codec,
-            '-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate),
-            '-f', str(output_format)]
+        command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
+        # Umm yea, something about codecs and GIFS.
+        # See https://stackoverflow.com/a/47502141.
+        if output_format != 'GIF':
+            command.extend(['-vcodec', v_codec])
+        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(output_format)])
 
         filter_string = cls._create_filter_string(hflip=h_flip,
                                                   vflip=v_flip,
