@@ -26,22 +26,23 @@ from __future__ import absolute_import
 
 import json
 import os
+import shutil
+from distutils.version import LooseVersion
 
 import flask
 import octoprint.plugin
 import octoprint.server
-from distutils.version import LooseVersion, StrictVersion
-
 # Octoprint Imports
 # used to send messages to the web client for notifying it of new timelapses
 from octoprint.events import eventManager, Events
 from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
-from octoprint_octolapse.render import RenderingCallbackArgs
+
 import octoprint_octolapse.camera as camera
-import octoprint_octolapse.utility as utility
 import octoprint_octolapse.render as render
+import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
+from octoprint_octolapse.render import RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, \
     DebugProfile
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
@@ -71,7 +72,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def download_timelapse_request(self, filename):
         """Restricted access function to download a timelapse"""
         return self.get_download_file_response(self.get_timelapse_folder() + filename, filename)
-
 
     @octoprint.plugin.BlueprintPlugin.route("/snapshot/<filename>", methods=["GET"])
     def snapshot_request(self, filename):
@@ -134,7 +134,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
         self.Settings.show_real_snapshot_time = request_values["show_real_snapshot_time"]
 
-
         # save the updated settings to a file.
         self.save_settings()
 
@@ -151,7 +150,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         if (
             self.Timelapse is not None and
-            self.Timelapse.is_timelapse_active()and
+            self.Timelapse.is_timelapse_active() and
             self.Settings.is_octolapse_enabled and
             not enable_octolapse
         ):
@@ -323,6 +322,91 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         else:
             valid = result[1]
         return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
+    @restricted_access
+    @admin_permission.require(403)
+    def get_available_watermarks(self):
+        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+        watermarks_directory_name = "watermarks"
+        full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+        files = []
+        if os.path.exists(full_watermarks_dir):
+            files = [os.path.join(self.get_plugin_data_folder(), watermarks_directory_name, f) for f in os.listdir(full_watermarks_dir)]
+        data = {'filepaths': files}
+        return json.dumps(data), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/upload", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def upload_watermark(self):
+        # TODO(Shadowen): Receive chunked uploads properly.
+        # It seems like this function is called once PER CHUNK rather than when the entire upload has completed.
+
+        # Parse the request.
+        image_filename = flask.request.values['image.name']
+        # The path where the watermark file was saved by the uploader.
+        watermark_temp_path = flask.request.values['image.path']
+        self._logger.debug("Receiving uploaded watermark {}.".format(image_filename))
+
+        # Move the watermark from the (temp) upload location to a permanent location.
+        # Maybe it could be uploaded directly there, but I don't know how to do that.
+        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+        watermarks_directory_name = "watermarks"
+        # Ensure the watermarks directory exists.
+        full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+        if not os.path.exists(full_watermarks_dir):
+            self._logger.info("Creating watermarks directory at {}.".format(full_watermarks_dir))
+            os.makedirs(full_watermarks_dir)
+
+        # Move the image.
+        watermark_destination_path = os.path.join(full_watermarks_dir, image_filename)
+        if os.path.exists(watermark_destination_path):
+            if os.path.isdir(watermark_destination_path):
+                self._logger.error("Tried to upload watermark to {} but already contains a directory! Aborting!".format(
+                    watermark_destination_path))
+                return json.dumps({'error': 'Bad file name.'}, 501, {'ContentType': 'application/json'})
+            else:
+                # TODO(Shadowen): Maybe offer a config.yaml option for this.
+                self._logger.warning("Tried to upload watermark to {} but file already exists! Overwriting...".format(
+                    watermark_destination_path))
+                os.remove(watermark_destination_path)
+        self._logger.info("Moving watermark from {} to {}.".format(watermark_temp_path, watermark_destination_path))
+        shutil.move(watermark_temp_path, watermark_destination_path)
+
+        return json.dumps({}, 200, {'ContentType': 'application/json'})
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/delete", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def delete_watermark(self):
+        """Delete the watermark given in the HTTP POST name field."""
+        # Parse the request.
+        filepath = flask.request.get_json()['path']
+        self._logger.debug("Deleting watermark {}.".format(filepath))
+
+        if not os.path.exists(filepath):
+            self._logger.error("Tried to delete watermark at {} but file doesn't exists!".format(filepath))
+            return json.dumps({'error': 'No such file.'}, 501, {'ContentType': 'application/json'})
+
+        def is_subdirectory(a, b):
+            """Returns true if a is (or is in) a subdirectory of b."""
+            real_a = os.path.join(os.path.realpath(a), '')
+            real_b = os.path.join(os.path.realpath(b), '')
+            return os.path.commonprefix([real_a, real_b]) == real_a
+
+        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+        watermarks_directory_name = "watermarks"
+        # Ensure the file we are trying to delete is in the watermarks folder.
+        watermarks_directory = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+        if not is_subdirectory(watermarks_directory, filepath):
+            self._logger.error("Tried to delete watermark at {} but file doesn't exists!".format(filepath))
+            return json.dumps({'error': "Cannot delete file outside watermarks folder."}, 400,
+                              {'ContentType': 'application/json'})
+
+        os.remove(filepath)
+        return json.dumps({'success': "Deleted {} successfully.".format(filepath)}), 200, {
+            'ContentType': 'application/json'}
 
     # blueprint helpers
     @staticmethod
@@ -661,9 +745,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return
 
         if self.Timelapse.State != TimelapseState.Initializing:
-
             message = "Unable to start the timelapse when not in the Initializing state. StateId: " \
-                "{0}".format(self.Timelapse.State)
+                      "{0}".format(self.Timelapse.State)
             self.on_print_cancelled(message, True)
             return
 
@@ -697,7 +780,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # check for version 1.3.7 min
         if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.3.7"):
             return {'success': False,
-                    'error': "Octolapse requires Octoprint v1.3.7 or above, but version v{0} is installed."  
+                    'error': "Octolapse requires Octoprint v1.3.7 or above, but version v{0} is installed."
                              "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
                     'warning': False}
         try:
@@ -745,7 +828,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         ):
             return {
                 'success': False,
-                'error': "The rendering file template is invalid.  Please correct the token" 
+                'error': "The rendering file template is invalid.  Please correct the token"
                          " within the current rendering profile.",
                 'warning': False}
 
@@ -758,14 +841,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         # make sure that at least one profile is available
         if len(self.Settings.printers) == 0:
-            return {'success': False, 'error':  "There are no printer profiles.  Cannot start timelapse.  "
-                                                "Please create a printer profile in the octolapse settings pages and "
-                                                "restart the print."}
+            return {'success': False, 'error': "There are no printer profiles.  Cannot start timelapse.  "
+                                               "Please create a printer profile in the octolapse settings pages and "
+                                               "restart the print."}
         # check to make sure a printer is selected
         if self.Settings.current_printer() is None:
-            return {'success': False, 'error':  "No default printer profile was selected.  Cannot start timelapse.  "
-                                                "Please select a printer profile in the octolapse settings pages and "
-                                                "restart the print."}
+            return {'success': False, 'error': "No default printer profile was selected.  Cannot start timelapse.  "
+                                               "Please select a printer profile in the octolapse settings pages and "
+                                               "restart the print."}
 
         # make sure at least one trigger is enabled
         current_snapshot = self.Settings.current_snapshot()
@@ -784,7 +867,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if not results[0]:
             return {'success': False, 'warning': False,
                     'error': "The current camera profile did not pass testing.  You can "
-                    "adjust and test your camera in the profile settings page."}
+                             "adjust and test your camera in the profile settings page."}
 
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
@@ -862,7 +945,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_timelapse_end(self, *args, **kwargs):
-        self.send_state_changed_message({"Status":self.get_status_dict()})
+        self.send_state_changed_message({"Status": self.get_status_dict()})
 
     def on_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()
@@ -942,7 +1025,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         error_message = args[3]
         self.Settings.current_debug_profile().log_camera_settings_apply(
             "Camera Settings - Unable to apply {0} to the {1} settings!  Template:{2}, Details:{3}"
-            .format(setting_value, setting_name, template, error_message))
+                .format(setting_value, setting_name, template, error_message))
 
     def on_apply_camera_settings_complete(self, *args, **kwargs):
         self.Settings.current_debug_profile().log_camera_settings_apply(
@@ -963,7 +1046,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_print_canceled(self):
         self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
         self.Timelapse.on_print_canceled()
-
 
     def on_print_completed(self):
         self.Timelapse.on_print_completed()
@@ -1018,7 +1100,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_gcode_received(self, comm, line, *args, **kwargs):
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
-                self.Timelapse.on_gcode_received(comm,line,*args, **kwargs)
+                self.Timelapse.on_gcode_received(comm, line, *args, **kwargs)
         except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
@@ -1034,7 +1116,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the
         constructor. """
         payload = args[0]
-        assert(isinstance(payload, RenderingCallbackArgs))
+        assert (isinstance(payload, RenderingCallbackArgs))
         # Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this
         # later.
         self.IsRenderingSynchronized = False
@@ -1044,11 +1126,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         if payload.Synchronize:
             will_sync_message = "This timelapse will synchronized with the default timelapse module, and will be " \
-                              "available within the default timelapse plugin as '{0}' after rendering is " \
-                              "complete.".format(payload.get_synchronization_filename())
+                                "available within the default timelapse plugin as '{0}' after rendering is " \
+                                "complete.".format(payload.get_synchronization_filename())
         else:
             will_sync_message = "Due to your rendering settings, this timelapse will NOT be synchronized with the " \
-                              "default timelapse module.  You will be able to find on your octoprint server" \
+                                "default timelapse module.  You will be able to find on your octoprint server" \
                                 " here:<br/>{0}".format(payload.get_rendering_path())
 
         message = "{0}{1}".format(msg, will_sync_message)

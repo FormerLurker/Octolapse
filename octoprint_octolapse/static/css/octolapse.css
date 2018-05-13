@@ -3006,8 +3006,34 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
         border-bottom-color: #ebccd1;
     }
 
-
-
 .panel-body:after {
     clear: both;
+}
+
+.progress-bar-container {
+    display: inline-flex;
+    flex-grow: 1;
+}
+
+.progress-bar {
+    height: 100%;
+    background: green;
+    color: white;
+    text-align: center;
+}
+
+.progress-bar.failed {
+    background: red;
+}
+
+.file-selector-list .selected {
+    font-weight: bold;
+}
+
+.file-selector-list .filename {
+}
+
+.file-selector-list .filepath {
+    font-size: 10px;
+    color: #595959;
 }

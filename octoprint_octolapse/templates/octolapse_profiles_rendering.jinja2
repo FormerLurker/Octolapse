@@ -242,12 +242,43 @@
                     <label class="control-label">Embed watermark</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <input name="watermark" type="checkbox" data-bind="checked: watermark"
+                            <input name="watermark" type="checkbox" data-bind="checked: enable_watermark"
                                    title="Embed a watermark in the resulting timelapse"/>Enabled
                         </label>
                         <span class="help-inline">
                           <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
                         </span>
+
+                        <span class="help-inline">
+                          <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
+                        </span>
+                        <table class="table table-condensed table-hover file-selector-list">
+                            <tbody data-bind="foreach: watermark_list">
+                                <tr data-bind="click: $parent.selectWatermark, css: { selected: filepath == $parent.selected_watermark() }">
+                                    <td>
+                                        <div>
+                                            <span class="filename" data-bind="text: getFilename()"></div>
+                                            <button type="button" class="close" aria-label="Close" data-bind="click: $parent.deleteWatermark">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="filepath" data-bind="text: filepath" ></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="controls-row">
+                            <div class="input-group" style="display:flex; align-items:center">
+                                <span class="btn fileinput-button">
+                                    <span>Upload new...</span>
+                                    <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
+                                </span>
+                                <span id="octolapse-upload-watermark-progress" class="progress-bar-container">
+                                    <span class="progress-bar" style="width: 0%;"></div>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
