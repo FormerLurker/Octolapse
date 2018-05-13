@@ -560,7 +560,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_state_changed=self.on_timelapse_state_changed,
             on_timelapse_start=self.on_timelapse_start,
             on_snapshot_position_error=self.on_snapshot_position_error,
-            on_position_error=self.on_position_error
+            on_position_error=self.on_position_error,
+            on_plugin_message_sent=self.on_plugin_message_sent
         )
 
     def on_after_startup(self):
@@ -623,7 +624,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.on_print_paused()
             elif event == Events.HOME:
                 self.Settings.current_debug_profile().log_print_state_change(
-                    "homing to payload:{0}.".format(event))
+                    "homing to payload:{0}.".format(payload))
             elif event == Events.PRINT_RESUMED:
                 self.on_print_resumed()
             elif event == Events.PRINT_FAILED:
@@ -912,6 +913,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def on_plugin_message_sent(self, message_type, message):
+        if message_type == "error":
+            self.send_popup_error(message)
+        else:
+            self.send_plugin_message(message_type, message)
 
     def on_snapshot_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()

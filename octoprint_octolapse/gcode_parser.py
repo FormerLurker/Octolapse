@@ -113,7 +113,8 @@ class Command(object):
                 parameters[parameter] = parameter_value
                 additional_parameters = self.parse_parameters(parameters_string)
                 if any(filter(parameters.has_key, additional_parameters.keys())):
-                    raise ValueError("A parameter value was repeated, cannot parse gcode.")
+                    raise ValueError("Either a parameter value was repeated or an unexpected character was found, "
+                                     "cannot parse gcode.")
                 parameters.update(additional_parameters)
 
         return parameters
