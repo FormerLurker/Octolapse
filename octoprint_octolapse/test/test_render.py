@@ -22,6 +22,7 @@
 ##################################################################################
 import os
 import os.path
+import random
 import unittest
 import uuid
 from Queue import Queue
@@ -126,6 +127,20 @@ class TestRender(unittest.TestCase):
         watermark_file = self.createWatermark()
         r = Rendering(guid=uuid.uuid4(), name="Render with Watermark")
         r.update({'enable_watermark': True, 'selected_watermark': watermark_file.name})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+
+    def test_gif(self):
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Render to GIF")
+        r.update({'output_format': 'GIF'})
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
