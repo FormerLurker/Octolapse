@@ -44,8 +44,8 @@ class Timelapse(object):
             on_snapshot_start=None, on_snapshot_end=None,
             on_render_start=None, on_render_end=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
-            on_state_changed=None, on_timelapse_start=None, on_timelapse_end = None,
-            on_snapshot_position_error=None, on_position_error=None):
+            on_state_changed=None, on_timelapse_start=None, on_timelapse_end=None,
+            on_snapshot_position_error=None, on_position_error=None, on_plugin_message_sent=None):
         # config variables - These don't change even after a reset
         self.DataFolder = data_folder
         self.Settings = settings  # type: OctolapseSettings
@@ -64,6 +64,7 @@ class Timelapse(object):
         self.OnTimelapseEndCallback = on_timelapse_end
         self.OnSnapshotPositionErrorCallback = on_snapshot_position_error
         self.OnPositionErrorCallback = on_position_error
+        self.OnPluginMessageSentCallback = on_plugin_message_sent
         self.Commands = Commands()  # used to parse and generate gcode
         self.Triggers = None
         self.PrintEndStatus = "Unknown"
@@ -523,7 +524,7 @@ class Timelapse(object):
             try:
                 cmd, parameters = Commands.parse(command_string)
             except ValueError as e:
-                message = "An error was thrown by the gcode parser, stopping timelapse.  Details: {0}".format(e.message)
+                message = "An error was thrown by the gcode parser, stopping timelapse.  Details: {0}".format(str(e))
                 self.Settings.current_debug_profile().log_warning(
                     message
                 )
@@ -548,37 +549,59 @@ class Timelapse(object):
                 elif (self.State == TimelapseState.WaitingForTrigger
                         and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
 
-                    self.State = TimelapseState.AcquiringLocation
+                    if 'source:script' in tags:
+                        # warn user
+                        self._send_plugin_message_async(
+                            "warning",
+                            "Octolapse could not acquire a position while sending"
+                            " OctoPrint scripts (settings=>GCODE Scripts)."
+                            " A fix is in the works, but a modification to OctoPrint itself"
+                            " is required.  For now please move your start gcode into the"
+                            " actual gcode file.")
+                    else:
+                        self.State = TimelapseState.AcquiringLocation
 
-                    if self.OctoprintPrinter.set_job_on_hold(True):
-                        thread = threading.Thread(target=self.acquire_position, args=[command_string, cmd, parameters])
-                        thread.daemon = True
-                        thread.start()
-                        return None,
+                        if self.OctoprintPrinter.set_job_on_hold(True):
+                            thread = threading.Thread(target=self.acquire_position, args=[command_string, cmd, parameters])
+                            thread.daemon = True
+                            thread.start()
+                            return None,
                 elif (self.State == TimelapseState.WaitingForTrigger
                       and self.OctoprintPrinter.is_printing()
                       and not self.Position.has_position_error(0)):
                     # update the triggers with the current position
                     self.Triggers.update(self.Position, command_string)
+
                     # see if at least one trigger is triggering
                     _first_triggering = self.get_first_triggering()
 
                     if _first_triggering:
-                        # We are triggering, take a snapshot
-                        self.State = TimelapseState.TakingSnapshot
-                        # pause any timer triggers that are enabled
-                        self.Triggers.pause()
-
-                        # get the job lock
-                        if self.OctoprintPrinter.set_job_on_hold(True):
-                            # take the snapshot on a new thread
-                            thread = threading.Thread(
-                                target=self.acquire_snapshot, args=[command_string, cmd, parameters, _first_triggering]
+                        if 'source:script' in tags:
+                            # warn user
+                            self._send_plugin_message_async(
+                                "warning",
+                                "Octolapse could not take a snapshot while sending"
+                                " OctoLapse scripts (settings=>GCODE Scripts)."
+                                " A fix is in the works, but a modification to OctoPrint itself"
+                                " is required.  For now please move your start gcode into the"
+                                " actual gcode file."
                             )
-                            thread.daemon = True
-                            thread.start()
-                            # suppress the current command, we'll send it later
-                            return None,
+                        else:
+                            # We are triggering, take a snapshot
+                            self.State = TimelapseState.TakingSnapshot
+                            # pause any timer triggers that are enabled
+                            self.Triggers.pause()
+
+                            # get the job lock
+                            if self.OctoprintPrinter.set_job_on_hold(True):
+                                # take the snapshot on a new thread
+                                thread = threading.Thread(
+                                    target=self.acquire_snapshot, args=[command_string, cmd, parameters, _first_triggering]
+                                )
+                                thread.daemon = True
+                                thread.start()
+                                # suppress the current command, we'll send it later
+                                return None,
 
                 elif self.State == TimelapseState.TakingSnapshot:
                     # Don't do anything further to any commands unless we are
@@ -611,7 +634,8 @@ class Timelapse(object):
         if (
             self.Settings.is_octolapse_enabled and
             self.State == TimelapseState.Idle and
-            {'trigger:comm.start_print', 'fileline:1'} <= tags and
+            {'trigger:comm.start_print', 'trigger:comm.reset_line_numbers'} <= tags and
+            #  ({'trigger:comm.start_print', 'fileline:1'} <= tags or {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags) and
             self.OctoprintPrinter.is_printing()
         ):
             if self.OctoprintPrinter.set_job_on_hold(True):
@@ -876,6 +900,14 @@ class Timelapse(object):
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
             self.Settings.current_debug_profile().log_exception(e)
+
+    def _send_plugin_message(self, message_type, message):
+        self.OnPluginMessageSentCallback(message_type, message)
+
+    def _send_plugin_message_async(self, message_type, message):
+        warning_thread = threading.Thread(target=self._send_plugin_message, args=[message_type, message])
+        warning_thread.daemon = True
+        warning_thread.start()
 
     def _is_snapshot_command(self, command_string):
         return command_string == self.Printer.snapshot_command
