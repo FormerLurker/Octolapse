@@ -30,6 +30,7 @@ from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 
+import random
 from PIL import Image
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering

@@ -879,6 +879,16 @@ $(function () {
                         Octolapse.displayPopupForKey(options, "position-error");
                     }
                     break;
+                case "warning":
+                    //console.log("A warning was sent to the plugin.")
+                        var options = {
+                            title: 'Octolapse - Warning',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopup(options, "warning");
                 default:
                     {
                         //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);

@@ -897,29 +897,49 @@ class Position(object):
                 y = parameters["Y"] if "Y" in parameters else None
                 z = parameters["Z"] if "Z" in parameters else None
                 e = parameters["E"] if "E" in parameters else None
+                o = True if "O" in parameters else False
+
                 if x is None and y is None and z is None and e is None:
-                    pos.XOffset = pos.X
-                    pos.YOffset = pos.Y
-                    pos.ZOffset = pos.Z
-                    pos.EOffset = pos.E
+                    if pos.X is not None:
+                        pos.XOffset = pos.X
+                    if pos.Y is not None:
+                        pos.YOffset = pos.Y
+                    if pos.Z is not None:
+                        pos.ZOffset = pos.Z
+                    if pos.E is not None:
+                        pos.EOffset = pos.E
+
+                    if o:
+                        pos.XHomed = True
+                        pos.YHomed = True
+                        pos.ZHomed = True
+
                 # set the offsets if they are provided
                 if x is not None:
                     if pos.X is not None and pos.XHomed:
-                            pos.XOffset = pos.X - utility.get_float(x, 0)
+                        pos.XOffset = pos.X - utility.get_float(x, 0)
                     else:
                         pos.X = utility.get_float(x, 0)
 
+                    if o:
+                        pos.XHomed = True
                 if y is not None:
                     if pos.Y is not None and pos.YHomed:
                             pos.YOffset = pos.Y - utility.get_float(y, 0)
                     else:
                         pos.Y = utility.get_float(y, 0)
 
+                    if o:
+                        pos.YHomed = True
+
                 if z is not None:
                     if pos.Z is not None and pos.ZHomed:
                             pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     else:
                         pos.Z = utility.get_float(z, 0)
+
+                    if o:
+                        pos.ZHomed = True
 
                 if e is not None:
                     if pos.E is not None:

@@ -113,7 +113,8 @@ class Command(object):
                 parameters[parameter] = parameter_value
                 additional_parameters = self.parse_parameters(parameters_string)
                 if any(filter(parameters.has_key, additional_parameters.keys())):
-                    raise ValueError("A parameter value was repeated, cannot parse gcode.")
+                    raise ValueError("Either a parameter value was repeated or an unexpected character was found, "
+                                     "cannot parse gcode.")
                 parameters.update(additional_parameters)
 
         return parameters
@@ -221,6 +222,7 @@ class Commands(object):
             "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
             "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
             "E": CommandParameter("E", CommandParameter.parse_float, 4),
+            "O": CommandParameter("O", CommandParameter.parse_float, 5)
         }
     )
 
@@ -525,7 +527,9 @@ class Commands(object):
     @staticmethod
     def alter_for_test_mode(command_string, cmd, parameters, return_string=False):
         if cmd is None:
-            return command_string
+            if return_string:
+                return command_string
+            return None
 
         if cmd in Commands.TestModeSuppressExtrusionCommands and "E" in parameters:
             parameters.pop("E")
