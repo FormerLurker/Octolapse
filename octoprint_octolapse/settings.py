@@ -882,10 +882,11 @@ class Rendering(object):
         self.flip_h = False
         self.flip_v = False
         self.rotate_90 = False
-        self.watermark = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
+        self.enable_watermark = False
+        self.selected_watermark = ""
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -903,10 +904,11 @@ class Rendering(object):
                 self.flip_h = rendering.flip_h
                 self.flip_v = rendering.flip_v
                 self.rotate_90 = rendering.rotate_90
-                self.watermark = rendering.watermark
+                self.enable_watermark = rendering.enable_watermark
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
+                self.selected_watermark = rendering.selected_watermark
             else:
                 self.update(rendering)
 
@@ -947,9 +949,6 @@ class Rendering(object):
         if "rotate_90" in changes.keys():
             self.rotate_90 = utility.get_bool(
                 changes["rotate_90"], self.rotate_90)
-        if "watermark" in changes.keys():
-            self.watermark = utility.get_bool(
-                changes["watermark"], self.watermark)
 
         if "post_roll_seconds" in changes.keys():
             self.post_roll_seconds = utility.get_float(
@@ -960,6 +959,13 @@ class Rendering(object):
         if "output_template" in changes.keys():
             self.output_template = utility.get_string(
                 changes["output_template"], self.output_template)
+
+        if "enable_watermark" in changes.keys():
+            self.enable_watermark = utility.get_bool(
+                changes["enable_watermark"], self.enable_watermark)
+        if "selected_watermark" in changes.keys():
+            self.selected_watermark = utility.get_string(
+                changes["selected_watermark"], self.selected_watermark)
 
     def to_dict(self):
         return {
@@ -978,10 +984,11 @@ class Rendering(object):
             'flip_h': self.flip_h,
             'flip_v': self.flip_v,
             'rotate_90': self.rotate_90,
-            'watermark': self.watermark,
             'post_roll_seconds': self.post_roll_seconds,
             'pre_roll_seconds': self.pre_roll_seconds,
-            'output_template': self.output_template
+            'output_template': self.output_template,
+            'enable_watermark': self.enable_watermark,
+            'selected_watermark': self.selected_watermark,
         }
 
 
