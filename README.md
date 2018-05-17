@@ -81,6 +81,18 @@ Use caution and never leave your printer unattended.
 
 ## More Octolapses
 <div align="center">
+    <a href="https://youtu.be/uBeVbDJKHw0" title="Watch on youtube">
+        <img src="https://img.youtube.com/vi/uBeVbDJKHw0/0.jpg" alt="User Created Compilation"/>
+    </a>
+    <div>
+        <a href="https://www.youtube.com/channel/UCXRcs5H7Om8YbaNbaM5iOdg" alt="Link to WildRose builds channel" target="_blank">
+            <i>A user generated compilation created by WildRose Builds</i>
+        </a>
+    </div>
+    <br/>
+</div>
+
+<div align="center">
     <a href="https://youtu.be/dYbWfBCLNbI" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/dYbWfBCLNbI/0.jpg" alt="The Milennium Falcon"/>
     </a>
