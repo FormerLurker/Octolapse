@@ -235,12 +235,13 @@ class Timelapse(object):
             snapshot_thread.daemon = True
             snapshot_thread.start()
 
-        event_is_set = self._snapshot_signal.wait(self._snapshot_timeout)
+        snapshot_timeout = self._snapshot_timeout + (self.Settings.current_camera().delay/1000.0)
+        event_is_set = self._snapshot_signal.wait(snapshot_timeout)
         if not event_is_set:
             # we ran into a timeout while waiting for a fresh position
             snapshot_async_payload["success"] = False
             snapshot_async_payload["error"] = \
-                "Snapshot timed out in {0} seconds.".format(self._snapshot_timeout)
+                "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
             self._snapshot_signal.set()
         else:
             snapshot_async_payload["success"] = True

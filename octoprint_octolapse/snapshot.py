@@ -26,7 +26,7 @@ import threading
 import os
 from io import open as i_open
 from PIL import ImageFile, Image
-from time import sleep
+from time import sleep, clock
 
 import requests
 from PIL import Image
@@ -166,9 +166,13 @@ class SnapshotJob(object):
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job Immediately.")
         else:
+            t0 = clock()
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job in {0} seconds.".format(self.DelaySeconds))
             sleep(self.DelaySeconds)
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Starting Snapshot Download Job after waiting {0} seconds.".format(clock() - t0))
+
         with self.snapshot_job_lock:
 
             self.HasError = False
