@@ -22,12 +22,12 @@
 ##################################################################################
 
 import logging
+import math
 import os
 import shutil
 import sys
 import threading
 import time
-import math
 # sarge was added to the additional requirements for the plugin
 import uuid
 
@@ -475,16 +475,25 @@ class TimelapseRenderJob(object):
                     self.has_error = True
 
             if not self.has_error:
-                watermark = None
-                if self._rendering.watermark:
-                    watermark = os.path.join(os.path.dirname(
-                        __file__), "static", "img", "watermark.png")
+                watermark_path = None
+                if self._rendering.enable_watermark:
+                    watermark_path = self._rendering.selected_watermark
+                    if watermark_path == '':
+                        self.error_message = "Render - Watermark was enabled but no watermark file was selected."
+                        self.error_type = "watermark-path"
+                        self.has_error = True
+                    if not os.path.exists(watermark_path):
+                        self.error_message = "Render - Watermark file does not exist."
+                        self.error_type = "watermark-non-existent"
+                        self.has_error = True
+
                     if sys.platform == "win32":
                         # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
                         # path a special treatment. Yeah, I couldn't believe it either...
-                        watermark = watermark.replace(
+                        watermark_path = watermark_path.replace(
                             "\\", "/").replace(":", "\\\\:")
 
+            if not self.has_error:
                 vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
 
                 # prepare ffmpeg command
@@ -499,7 +508,7 @@ class TimelapseRenderJob(object):
                     h_flip=self._rendering.flip_h,
                     v_flip=self._rendering.flip_v,
                     rotate=self._rendering.rotate_90,
-                    watermark=watermark,
+                    watermark=watermark_path,
                     v_codec=vcodec
                 )
                 self._debug.log_render_start(
@@ -548,7 +557,7 @@ class TimelapseRenderJob(object):
                                              " to an unexpected exception.  Check plugin_octolapse.log for more " \
                                              " information.  You should be able to find your video within your " \
                                              " OctoPrint  server here:<br/> '{0}'" \
-                                             .format(self._rendering_output_file_path)
+                            .format(self._rendering_output_file_path)
 
                         self.has_error = True
                         self.error_type = "synchronizing-exception"
@@ -612,11 +621,12 @@ class TimelapseRenderJob(object):
 
         if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
             ffmpeg = "\"{0}\"".format(ffmpeg)
-        command = [
-            ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(
-                input_file), '-vcodec', v_codec,
-            '-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate),
-            '-f', str(output_format)]
+        command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
+        # Umm yea, something about codecs and GIFS.
+        # See https://stackoverflow.com/a/47502141.
+        if output_format != 'GIF':
+            command.extend(['-vcodec', v_codec])
+        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(output_format)])
 
         filter_string = cls._create_filter_string(hflip=h_flip,
                                                   vflip=v_flip,

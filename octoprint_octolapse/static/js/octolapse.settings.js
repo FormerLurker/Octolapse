@@ -224,7 +224,8 @@ $(function () {
             }
             Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
             settings.renderings.forEach(function (item, index) {
-                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(item));
+                var o = new Octolapse.RenderingProfileViewModel(item);
+                Octolapse.Renderings.profiles.push(o);
             });
 
             // Cameras
@@ -445,7 +446,7 @@ $(function () {
                     dialog.validator = null;
                 }
             });
-            // configure the dialog shown event
+            // configure the dialog show event
             dialog.$addEditDialog.on("show.bs.modal", function () {
                 Octolapse.Settings.AddEditProfile({
                     "profileObservable": dialog.profileObservable,
@@ -472,8 +473,14 @@ $(function () {
                         return -($(this).width() / 2);
                     }
                 });
+
+                // Initialize the profile.
+                var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
+                if (typeof onShow == 'function') {
+                    onShow();
+                }
             });
-            // Configure the show event
+            // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
                 dialog.validator = dialog.$addEditForm.validate(rules);
 
