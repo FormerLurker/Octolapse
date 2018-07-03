@@ -166,12 +166,33 @@ class SnapshotJob(object):
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job Immediately.")
         else:
-            t0 = clock()
+
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Starting Snapshot Download Job in {0} seconds.".format(self.DelaySeconds))
-            sleep(self.DelaySeconds)
+
+            # Pre-Snapshot Delay - Some users had issues just using sleep.  In one examined instance the time.sleep
+            # function was being called to sleep 0.250 S, but waited 0.005 S.  To deal with this a sleep loop was
+            # implemented that makes sure we've waited at least self.DelaySeconds seconds before continuing.
+
+            # record the time we started sleeping
+            t0 = clock()
+            # start the loop by setting is_sleeping to true
+            is_sleeping = True
+            # record the number of sleep attempts for debug purposes
+            sleep_tries = 0
+            while is_sleeping:
+                # calculate how long we should wait, taking into consideration we may have already been sleeping
+                delay_seconds = self.DelaySeconds - (clock() - t0)
+                # the delay seconds will be 0 or negative if we have slept long enough
+                if delay_seconds > 0.0:
+                    sleep_tries += 1  # increment the sleep try counter
+                    sleep(delay_seconds) # sleep the calculated amount
+                # If we have not waited long enough, try again
+                is_sleeping = clock() - t0 <= self.DelaySeconds
+
             self.Settings.current_debug_profile().log_snapshot_download(
-                "Starting Snapshot Download Job after waiting {0} seconds.".format(clock() - t0))
+                "Starting Snapshot Download Job after waiting {0} times for {1} seconds total."
+                .format(sleep_tries, clock() - t0))
 
         with self.snapshot_job_lock:
 
