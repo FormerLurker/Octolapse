@@ -26,7 +26,7 @@ import threading
 import os
 from io import open as i_open
 from PIL import ImageFile, Image
-from time import sleep, clock
+from time import sleep, time
 
 import requests
 from PIL import Image
@@ -164,40 +164,39 @@ class SnapshotJob(object):
     def process(self):
         with self.snapshot_job_lock:
 
-            if self.DelaySeconds == 0:
+            if self.DelaySeconds < 0.001:
                 self.Settings.current_debug_profile().log_snapshot_download(
                     "Starting Snapshot Download Job Immediately.")
             else:
-
-                self.Settings.current_debug_profile().log_snapshot_download(
-                    "Starting Snapshot Download Job in {0} seconds.".format(self.DelaySeconds))
 
                 # Pre-Snapshot Delay - Some users had issues just using sleep.  In one examined instance the time.sleep
                 # function was being called to sleep 0.250 S, but waited 0.005 S.  To deal with this a sleep loop was
                 # implemented that makes sure we've waited at least self.DelaySeconds seconds before continuing.
 
                 # record the time we started sleeping
-                t0 = clock()
+                t0 = time()
                 # start the loop by setting is_sleeping to true
                 is_sleeping = True
                 # record the number of sleep attempts for debug purposes
                 sleep_tries = 0
-                while is_sleeping:
-                    # calculate how long we should wait, taking into consideration we may have already been sleeping
-                    delay_seconds = self.DelaySeconds - (clock() - t0)
-                    # the delay seconds will be 0 or negative if we have slept long enough
-                    if delay_seconds > 0.0:
-                        # make sure the minimum sleep interval is 1MS
-                        if delay_seconds < 0.001:
-                            delay_seconds = 0.001
-                        sleep_tries += 1  # increment the sleep try counter
-                        sleep(delay_seconds)  # sleep the calculated amount
-                    # If we have not waited long enough, try again
-                    is_sleeping = clock() - t0 < self.DelaySeconds
+                delay_seconds = self.DelaySeconds - (time() - t0)
+                while delay_seconds >= 0.001:
+
+                    sleep_tries += 1  # increment the sleep try counter
+                    self.Settings.current_debug_profile().log_snapshot_download(
+                        "Snapshot Delay - {0} second delay - Waiting {1} seconds."
+                        .format(self.DelaySeconds, delay_seconds))
+
+                    sleep(delay_seconds)  # sleep the calculated amount
+
+                    self.Settings.current_debug_profile().log_snapshot_download(
+                        "Snapshot Delay - Waited {0} times for {1} seconds."
+                        .format(sleep_tries, delay_seconds))
+                    delay_seconds = self.DelaySeconds - (time() - t0)
 
                 self.Settings.current_debug_profile().log_snapshot_download(
-                    "Starting Snapshot Download Job after waiting {0} times for {1} seconds total."
-                    .format(sleep_tries, clock() - t0))
+                    "Snapshot Delay Expired - Waited {0} times for {1} seconds total."
+                    .format(sleep_tries, time() - t0))
 
             self.HasError = False
             self.ErrorMessage = "unknown"
