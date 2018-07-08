@@ -92,7 +92,7 @@ class Timelapse(object):
         self.SecondsAddedByOctolapse = 0
         # State tracking variables
         self.RequiresLocationDetectionAfterHome = False
-
+        self._position_request_sent = False
         # fetch position private variables
         self._position_payload = None
         self._position_timeout_long = 600.0
@@ -150,9 +150,18 @@ class Timelapse(object):
         self._on_timelapse_start()
 
     def on_position_received(self, payload):
-        if self.State != TimelapseState.Idle:
+        # added new position request sent flag so that we can prevent position requests NOT from Octolapse from
+        # triggering a snapshot.
+        if self.State != TimelapseState.Idle and self._position_request_sent:
+            # set flag to false so that it can be triggered again after the next M114 sent by Octolapse
+            self._position_request_sent = False
+            self.Settings.current_debug_profile().log_print_state_change(
+                "Octolapse has received an position request response.")
             self._position_payload = payload
             self._position_signal.set()
+        else:
+            self.Settings.current_debug_profile().log_print_state_change(
+                "Octolapse has received an position response but did not request one.  Ignoring.")
 
     def send_snapshot_gcode_array(self, gcode_array):
         self.OctoprintPrinter.commands(gcode_array, tags={"snapshot_gcode"})
@@ -799,6 +808,12 @@ class Timelapse(object):
                 # send a copy of the dict in case it gets changed by threads.
                 self._on_trigger_snapshot_complete(self._most_recent_snapshot_payload.copy())
 
+    def on_gcode_sending(self, cmd, cmd_type, gcode, tags):
+
+        if cmd == "M114" and 'plugin:octolapse' in tags:
+            self.Settings.current_debug_profile().log_print_state_change("The position request is being sent")
+            self._position_request_sent = True
+
     def on_gcode_sent(self, cmd, cmd_type, gcode, tags):
         self.Settings.current_debug_profile().log_gcode_sent(
             "Sent to printer: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(cmd_type, gcode, cmd, tags))
@@ -1053,8 +1068,8 @@ class Timelapse(object):
         self.SavedCommand = None
         self.PositionRequestAttempts = 0
         self.IsTestMode = False
+        self._position_request_sent = False
 
-        self.ReturnPositionReceivedTime = None
         # A list of callbacks who want to be informed when a timelapse ends
         self.TimelapseStopRequested = False
         self._snapshot_success = False
@@ -1084,7 +1099,6 @@ class Timelapse(object):
         self.PositionRequestAttempts = 0
         self._snapshot_success = False
         self.SnapshotError = ""
-
 
 class TimelapseState(object):
     Idle = 1

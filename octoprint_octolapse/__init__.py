@@ -1135,6 +1135,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             else:
                 self._logger.critical(utility.exception_to_string(e))
 
+    def on_gcode_sending(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+        try:
+            if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
+                self.Timelapse.on_gcode_sending(cmd, cmd_type, gcode, kwargs["tags"])
+        except Exception as e:
+            if self.Settings is not None:
+                self.Settings.current_debug_profile().log_exception(e)
+            else:
+                self._logger.critical(utility.exception_to_string(e))
+
     def on_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
@@ -1264,5 +1274,6 @@ def __plugin_load__():
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.on_gcode_queuing,
         "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.on_gcode_sent,
+        "octoprint.comm.protocol.gcode.sending": __plugin_implementation__.on_gcode_sending,
         "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received
     }

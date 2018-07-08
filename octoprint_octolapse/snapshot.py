@@ -180,22 +180,21 @@ class SnapshotJob(object):
                 # record the number of sleep attempts for debug purposes
                 sleep_tries = 0
                 delay_seconds = self.DelaySeconds - (time() - t0)
+
+                self.Settings.current_debug_profile().log_snapshot_download(
+                    "Snapshot Delay - Waiting {0} second(s) before acquiring a snapshot."
+                    .format(self.DelaySeconds))
+
                 while delay_seconds >= 0.001:
 
                     sleep_tries += 1  # increment the sleep try counter
-                    self.Settings.current_debug_profile().log_snapshot_download(
-                        "Snapshot Delay - {0} second delay - Waiting {1} seconds."
-                        .format(self.DelaySeconds, delay_seconds))
 
                     sleep(delay_seconds)  # sleep the calculated amount
 
-                    self.Settings.current_debug_profile().log_snapshot_download(
-                        "Snapshot Delay - Waited {0} times for {1} seconds."
-                        .format(sleep_tries, delay_seconds))
                     delay_seconds = self.DelaySeconds - (time() - t0)
 
                 self.Settings.current_debug_profile().log_snapshot_download(
-                    "Snapshot Delay Expired - Waited {0} times for {1} seconds total."
+                    "Snapshot Delay - Waited {0} times for {1} seconds total."
                     .format(sleep_tries, time() - t0))
 
             self.HasError = False
