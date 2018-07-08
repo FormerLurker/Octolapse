@@ -49,7 +49,7 @@ class CaptureSnapshot(object):
         self.DataDirectory = data_directory
         self.SnapshotTimeout = 5
 
-    def create_snapshot_job(self, printer_file_name, snapshot_number, snapshot_guid, task_queue, on_complete, on_success, on_fail):
+    def create_snapshot_job(self, printer_file_name, snapshot_number, snapshot_guid, on_complete, on_success, on_fail):
         info = SnapshotInfo(printer_file_name, self.PrintStartTime)
         # set the file name.  It will be a guid + the file extension
         info.FileName = "{0}.{1}".format(snapshot_guid, "jpg")
@@ -60,7 +60,7 @@ class CaptureSnapshot(object):
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
         new_snapshot_job = SnapshotJob(
             self.Settings, self.DataDirectory, snapshot_number, info, url,
-            snapshot_guid, task_queue, self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
+            snapshot_guid, self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
             on_success=on_success, on_fail=on_fail
         )
 
@@ -122,11 +122,9 @@ class CaptureSnapshot(object):
 
 
 class SnapshotJob(object):
-    snapshot_job_lock = threading.RLock()
-
     def __init__(
             self, settings, data_directory, snapshot_number,
-            snapshot_info, url, snapshot_guid, task_queue,
+            snapshot_info, url, snapshot_guid,
             delay_ms, timeout_seconds, on_complete, on_success, on_fail
     ):
 
@@ -147,7 +145,6 @@ class SnapshotJob(object):
         self.OnCompleteCallback = on_complete
         self.OnSuccessCallback = on_success
         self.OnFailCallback = on_fail
-        self.task_queue = task_queue
         self.HasError = False
         self.ErrorMessage = ""
         self.ErrorType = ""
@@ -162,66 +159,104 @@ class SnapshotJob(object):
         self.OnCompleteCallback()
 
     def process(self):
-        with self.snapshot_job_lock:
 
-            if self.DelaySeconds < 0.001:
-                self.Settings.current_debug_profile().log_snapshot_download(
-                    "Starting Snapshot Download Job Immediately.")
-            else:
 
-                # Pre-Snapshot Delay - Some users had issues just using sleep.  In one examined instance the time.sleep
-                # function was being called to sleep 0.250 S, but waited 0.005 S.  To deal with this a sleep loop was
-                # implemented that makes sure we've waited at least self.DelaySeconds seconds before continuing.
+        if self.DelaySeconds < 0.001:
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Starting Snapshot Download Job Immediately.")
+        else:
 
-                # record the time we started sleeping
-                t0 = time()
-                # start the loop by setting is_sleeping to true
-                is_sleeping = True
-                # record the number of sleep attempts for debug purposes
-                sleep_tries = 0
+            # Pre-Snapshot Delay - Some users had issues just using sleep.  In one examined instance the time.sleep
+            # function was being called to sleep 0.250 S, but waited 0.005 S.  To deal with this a sleep loop was
+            # implemented that makes sure we've waited at least self.DelaySeconds seconds before continuing.
+
+            # record the time we started sleeping
+            t0 = time()
+            # start the loop by setting is_sleeping to true
+            is_sleeping = True
+            # record the number of sleep attempts for debug purposes
+            sleep_tries = 0
+            delay_seconds = self.DelaySeconds - (time() - t0)
+
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Snapshot Delay - Waiting {0} second(s) before acquiring a snapshot."
+                .format(self.DelaySeconds))
+
+            while delay_seconds >= 0.001:
+
+                sleep_tries += 1  # increment the sleep try counter
+
+                sleep(delay_seconds)  # sleep the calculated amount
+
                 delay_seconds = self.DelaySeconds - (time() - t0)
 
+            self.Settings.current_debug_profile().log_snapshot_download(
+                "Snapshot Delay - Waited {0} times for {1} seconds total."
+                .format(sleep_tries, time() - t0))
+
+        self.HasError = False
+        self.ErrorMessage = "unknown"
+        snapshot_directory = "{0:s}{1:s}".format(
+            self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
+        r = None
+        try:
+            if len(self.Username) > 0:
+                message = (
+                    "Snapshot Download - Authenticating and "
+                    "downloading from {0:s} to {1:s}."
+                ).format(self.Url, snapshot_directory)
+                self.Settings.current_debug_profile().log_snapshot_download(message)
+                r = requests.get(
+                    self.Url,
+                    auth=HTTPBasicAuth(self.Username, self.Password),
+                    verify=not self.IgnoreSslError,
+                    timeout=float(self.TimeoutSeconds)
+                )
+            else:
                 self.Settings.current_debug_profile().log_snapshot_download(
-                    "Snapshot Delay - Waiting {0} second(s) before acquiring a snapshot."
-                    .format(self.DelaySeconds))
+                    "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, snapshot_directory))
+                r = requests.get(
+                    self.Url, verify=not self.IgnoreSslError,
+                    timeout=float(self.TimeoutSeconds)
+                )
+        except Exception as e:
+            # If we can't create the thumbnail, just log
+            self.Settings.current_debug_profile().log_exception(e)
+            self.ErrorMessage = (
+                "Snapshot Download - An unexpected exception occurred.  "
+                "Check the log file (plugin_octolapse.log) for details."
+            )
+            self.HasError = True
 
-                while delay_seconds >= 0.001:
+        if not self.HasError:
+            if r.status_code == requests.codes.ok:
+                try:
+                    # make the directory
+                    path = os.path.dirname(snapshot_directory)
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    # try to download the file.
+                except Exception as e:
+                    # If we can't create the thumbnail, just log
+                    self.Settings.current_debug_profile().log_exception(e)
+                    self.ErrorMessage = (
+                        "Snapshot Download - An unexpected exception occurred.  "
+                        "Check the log file (plugin_octolapse.log) for details."
+                    )
+                    self.HasError = True
+            else:
+                self.ErrorMessage = "Snapshot Download - failed with status code:{0}".format(
+                    r.status_code)
+                self.HasError = True
 
-                    sleep_tries += 1  # increment the sleep try counter
-
-                    sleep(delay_seconds)  # sleep the calculated amount
-
-                    delay_seconds = self.DelaySeconds - (time() - t0)
-
-                self.Settings.current_debug_profile().log_snapshot_download(
-                    "Snapshot Delay - Waited {0} times for {1} seconds total."
-                    .format(sleep_tries, time() - t0))
-
-            self.HasError = False
-            self.ErrorMessage = "unknown"
-            snapshot_directory = "{0:s}{1:s}".format(
-                self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
-            r = None
+        if not self.HasError:
             try:
-                if len(self.Username) > 0:
-                    message = (
-                        "Snapshot Download - Authenticating and "
-                        "downloading from {0:s} to {1:s}."
-                    ).format(self.Url, snapshot_directory)
-                    self.Settings.current_debug_profile().log_snapshot_download(message)
-                    r = requests.get(
-                        self.Url,
-                        auth=HTTPBasicAuth(self.Username, self.Password),
-                        verify=not self.IgnoreSslError,
-                        timeout=float(self.TimeoutSeconds)
-                    )
-                else:
-                    self.Settings.current_debug_profile().log_snapshot_download(
-                        "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, snapshot_directory))
-                    r = requests.get(
-                        self.Url, verify=not self.IgnoreSslError,
-                        timeout=float(self.TimeoutSeconds)
-                    )
+                with i_open(snapshot_directory, 'wb') as snapshot_file:
+                    for chunk in r.iter_content(1024):
+                        if chunk:
+                            snapshot_file.write(chunk)
+                    self.Settings.current_debug_profile().log_snapshot_save(
+                        "Snapshot - Snapshot saved to disk at {0}".format(snapshot_directory))
             except Exception as e:
                 # If we can't create the thumbnail, just log
                 self.Settings.current_debug_profile().log_exception(e)
@@ -231,125 +266,84 @@ class SnapshotJob(object):
                 )
                 self.HasError = True
 
-            if not self.HasError:
-                if r.status_code == requests.codes.ok:
-                    try:
-                        # make the directory
-                        path = os.path.dirname(snapshot_directory)
-                        if not os.path.exists(path):
-                            os.makedirs(path)
-                        # try to download the file.
-                    except Exception as e:
-                        # If we can't create the thumbnail, just log
-                        self.Settings.current_debug_profile().log_exception(e)
-                        self.ErrorMessage = (
-                            "Snapshot Download - An unexpected exception occurred.  "
-                            "Check the log file (plugin_octolapse.log) for details."
-                        )
-                        self.HasError = True
-                else:
-                    self.ErrorMessage = "Snapshot Download - failed with status code:{0}".format(
-                        r.status_code)
-                    self.HasError = True
+        # go ahead and report success or fail for the timelapse routine
+        if not self.HasError:
+            self.on_success()
+        else:
+            self.on_fail()
 
-            if not self.HasError:
-                try:
-                    with i_open(snapshot_directory, 'wb') as snapshot_file:
-                        for chunk in r.iter_content(1024):
-                            if chunk:
-                                snapshot_file.write(chunk)
-                        self.Settings.current_debug_profile().log_snapshot_save(
-                            "Snapshot - Snapshot saved to disk at {0}".format(snapshot_directory))
-                except Exception as e:
-                    # If we can't create the thumbnail, just log
-                    self.Settings.current_debug_profile().log_exception(e)
-                    self.ErrorMessage = (
-                        "Snapshot Download - An unexpected exception occurred.  "
-                        "Check the log file (plugin_octolapse.log) for details."
-                    )
-                    self.HasError = True
+        # transpose image if this is enabled.
+        if not self.HasError:
+            try:
+                transpose_method = None
+                if self.SnapshotTranspose is not None and self.SnapshotTranspose != "":
+                    if self.SnapshotTranspose == 'flip_left_right':
+                        transpose_method = Image.FLIP_LEFT_RIGHT
+                    elif self.SnapshotTranspose == 'flip_top_bottom':
+                        transpose_method = Image.FLIP_TOP_BOTTOM
+                    elif self.SnapshotTranspose == 'rotate_90':
+                        transpose_method = Image.ROTATE_90
+                    elif self.SnapshotTranspose == 'rotate_180':
+                        transpose_method = Image.ROTATE_180
+                    elif self.SnapshotTranspose == 'rotate_270':
+                        transpose_method = Image.ROTATE_270
+                    elif self.SnapshotTranspose == 'transpose':
+                        transpose_method = Image.TRANSPOSE
 
-            # go ahead and report success or fail for the timelapse routine
-            if not self.HasError:
-                self.on_success()
-            else:
-                self.on_fail()
+                    if transpose_method is not None:
+                        im = Image.open(snapshot_directory)
+                        im = im.transpose(transpose_method)
+                        im.save(snapshot_directory)
+            except IOError as e:
+                # If we can't create the thumbnail, just log
+                self.Settings.current_debug_profile().log_exception(e)
+                self.ErrorMessage = (
+                    "Snapshot transpose - An unexpected IOException occurred.  "
+                    "Check the log file (plugin_octolapse.log) for details."
+                )
+                self.HasError = True
 
-            # transpose image if this is enabled.
-            if not self.HasError:
-                try:
-                    transpose_method = None
-                    if self.SnapshotTranspose is not None and self.SnapshotTranspose != "":
-                        if self.SnapshotTranspose == 'flip_left_right':
-                            transpose_method = Image.FLIP_LEFT_RIGHT
-                        elif self.SnapshotTranspose == 'flip_top_bottom':
-                            transpose_method = Image.FLIP_TOP_BOTTOM
-                        elif self.SnapshotTranspose == 'rotate_90':
-                            transpose_method = Image.ROTATE_90
-                        elif self.SnapshotTranspose == 'rotate_180':
-                            transpose_method = Image.ROTATE_180
-                        elif self.SnapshotTranspose == 'rotate_270':
-                            transpose_method = Image.ROTATE_270
-                        elif self.SnapshotTranspose == 'transpose':
-                            transpose_method = Image.TRANSPOSE
+        if not self.HasError:
+            # this call renames the snapshot so that it is
+            # sequential (prob could just sort by create date
+            # instead, todo). returns true on success.
+            self.HasError = not self._move_rename_snapshot_sequential()
 
-                        if transpose_method is not None:
-                            im = Image.open(snapshot_directory)
-                            im = im.transpose(transpose_method)
-                            im.save(snapshot_directory)
-                except IOError as e:
-                    # If we can't create the thumbnail, just log
-                    self.Settings.current_debug_profile().log_exception(e)
-                    self.ErrorMessage = (
-                        "Snapshot transpose - An unexpected IOException occurred.  "
-                        "Check the log file (plugin_octolapse.log) for details."
-                    )
-                    self.HasError = True
+        # create a thumbnail and save the current snapshot as the most recent snapshot image
+        if not self.HasError:
 
-            if not self.HasError:
-                # this call renames the snapshot so that it is
-                # sequential (prob could just sort by create date
-                # instead, todo). returns true on success.
-                self.HasError = not self._move_rename_snapshot_sequential()
+            try:
+                # without this I get errors during load (happens in resize, where the image is actually loaded)
+                ImageFile.LOAD_TRUNCATED_IMAGES = True
+                #######################################
 
-            # create a thumbnail and save the current snapshot as the most recent snapshot image
-            if not self.HasError:
+                # create a copy to be used for the full sized latest snapshot image.
+                latest_snapshot_path = utility.get_latest_snapshot_download_path(
+                    self.DataDirectory
+                )
+                shutil.copy(self.SnapshotInfo.get_full_path(
+                    self.SnapshotNumber), latest_snapshot_path)
+                # create a thumbnail of the image
 
-                try:
-                    # without this I get errors during load (happens in resize, where the image is actually loaded)
-                    ImageFile.LOAD_TRUNCATED_IMAGES = True
-                    #######################################
+                basewidth = 300
+                img = Image.open(latest_snapshot_path)
+                wpercent = (basewidth / float(img.size[0]))
+                hsize = int((float(img.size[1]) * float(wpercent)))
+                img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+                img.save(utility.get_latest_snapshot_thumbnail_download_path(
+                    self.DataDirectory), "JPEG")
+            except Exception as e:
+                # If we can't create the thumbnail, just log
+                self.Settings.current_debug_profile().log_exception(e)
+                self.ErrorMessage = (
+                    "Create latest snapshot and thumbnail - An unexpected exception occurred.  "
+                    "Check the log file (plugin_octolapse.log) for details."
+                )
+                self.HasError = True
 
-                    # create a copy to be used for the full sized latest snapshot image.
-                    latest_snapshot_path = utility.get_latest_snapshot_download_path(
-                        self.DataDirectory
-                    )
-                    shutil.copy(self.SnapshotInfo.get_full_path(
-                        self.SnapshotNumber), latest_snapshot_path)
-                    # create a thumbnail of the image
-
-                    basewidth = 300
-                    img = Image.open(latest_snapshot_path)
-                    wpercent = (basewidth / float(img.size[0]))
-                    hsize = int((float(img.size[1]) * float(wpercent)))
-                    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-                    img.save(utility.get_latest_snapshot_thumbnail_download_path(
-                        self.DataDirectory), "JPEG")
-                except Exception as e:
-                    # If we can't create the thumbnail, just log
-                    self.Settings.current_debug_profile().log_exception(e)
-                    self.ErrorMessage = (
-                        "Create latest snapshot and thumbnail - An unexpected exception occurred.  "
-                        "Check the log file (plugin_octolapse.log) for details."
-                    )
-                    self.HasError = True
-
-            self.on_complete()
-            self.Settings.current_debug_profile().log_snapshot_download(
-                "Snapshot Download Job completed, signaling task queue.")
-            self.task_queue.get()
-            self.task_queue.task_done()
-
+        self.on_complete()
+        self.Settings.current_debug_profile().log_snapshot_download(
+            "Snapshot Download Job completed, signaling task queue.")
 
     def _move_rename_snapshot_sequential(self):
         # get the save path
