@@ -579,6 +579,8 @@ class TimelapseRenderJob(object):
             return "mpeg4"
         elif extension == "flv":
             return "flv1"
+        elif extension == "gif":
+            return "gif"
         else:
             return default_codec
 
