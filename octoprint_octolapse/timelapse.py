@@ -780,14 +780,9 @@ class Timelapse(object):
             if self.State == TimelapseState.TakingSnapshot:
                 self.State = TimelapseState.WaitingForTrigger
 
-            self.Settings.current_debug_profile().log_info("Resuming Job.")
-            while not self.OctoprintPrinter.set_job_on_hold(False):
-                self.Settings.current_debug_profile().log_info("Resuming Job Failed, trying again in 1 second.")
-                time.sleep(1)
-
-            self.Settings.current_debug_profile().log_info("Job Resumed.")
-
             self.Triggers.resume()
+
+            self.OctoprintPrinter.set_job_on_hold(False)
 
             # notify that we're finished, but only if we haven't just stopped the timelapse.
             if self._most_recent_snapshot_payload is not None:
