@@ -126,10 +126,10 @@ $(function () {
     Octolapse.SnapshotProfileValidationRules = {
         rules: {
             /*Layer Position Restrictions*/
-            new_position_restriction_x: { lessThan: "#octolapse_position_restriction_x2:visible" },
-            new_position_restriction_x2: { greaterThan: "#octolapse_position_restriction_x:visible" },
-            new_position_restriction_y: { lessThan: "#octolapse_position_restriction_y2:visible" },
-            new_position_restriction_y2: { greaterThan: "#octolapse_position_restriction_y:visible" },
+            new_position_restriction_x: { lessThan: "#octolapse_new_position_restriction_x2:visible" },
+            new_position_restriction_x2: { greaterThan: "#octolapse_new_position_restriction_x:visible" },
+            new_position_restriction_y: { lessThan: "#octolapse_new_position_restriction_y2:visible" },
+            new_position_restriction_y2: { greaterThan: "#octolapse_new_position_restriction_y:visible" },
             layer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
             gcode_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
             timer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},

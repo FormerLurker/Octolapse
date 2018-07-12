@@ -261,7 +261,7 @@ $(function () {
             var $target = $(param);
 
             // I we didn't find a target, return true
-            if ($target.size() === 0)
+            if ($target.length === 0)
                 return true;
             var j = parseFloat($target.val());
             return (i < j);
@@ -272,7 +272,7 @@ $(function () {
             var $target = $(param);
 
             // I we didn't find a target, return true
-            if ($target.size() === 0)
+            if ($target.length === 0)
                 return true;
             var j = parseFloat($target.val());
             return (i > j);
