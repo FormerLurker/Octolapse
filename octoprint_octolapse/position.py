@@ -761,11 +761,10 @@ class Position(object):
                     )
             elif cmd == "G28":
                 # Home
-
                 pos.HasReceivedHomeCommand = True
-                x = parameters["X"] if "X" in parameters else None
-                y = parameters["Y"] if "Y" in parameters else None
-                z = parameters["Z"] if "Z" in parameters else None
+                x = True if "X" in parameters else None
+                y = True if "Y" in parameters else None
+                z = True if "Z" in parameters else None
                 # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
                 #w = parameters["W"] if "W" in parameters else None
 
@@ -788,8 +787,7 @@ class Position(object):
                 home_strings = []
                 if x_homed:
                     pos.XHomed = True
-                    pos.X = self.Origin[
-                        "X"] if not self.Printer.auto_detect_position else None
+                    pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
                     if pos.X is None:
                         home_strings.append("Homing X to Unknown Origin.")
                     else:
