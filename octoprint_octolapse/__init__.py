@@ -820,9 +820,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def start_timelapse(self):
         # check for version 1.3.7 min
-        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.3.7"):
+        if LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8"):
             return {'success': False,
-                    'error': "Octolapse requires Octoprint v1.3.7 or above, but version v{0} is installed."
+                    'error': "Octolapse requires Octoprint v1.3.9 or above, but version v{0} is installed."
                              "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
                     'warning': False}
         try:
