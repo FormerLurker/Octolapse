@@ -197,8 +197,7 @@ class TimelapseRenderJob(object):
         self._input = os.path.join(self._capture_dir,
                                    self._capture_file_template)
 
-        self._synchronize = (
-            self._rendering.sync_with_timelapse and self._rendering.output_format in ["mp4"])
+        self._synchronize = self._rendering.sync_with_timelapse
         self._thread = threading.Thread(target=self._render,
                                         name=self._job_id)
         self._thread.daemon = True

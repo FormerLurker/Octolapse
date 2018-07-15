@@ -1255,6 +1255,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                                    # update method: pip
                                    pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip"))
 
+    def get_timelapse_extensions(*args, **kwargs):
+        return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
 
 # If you want your plugin to be registered within OctoPrint under a different
 # name than what you defined in setup.py
@@ -1275,5 +1277,6 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.on_gcode_queuing,
         "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.on_gcode_sent,
         "octoprint.comm.protocol.gcode.sending": __plugin_implementation__.on_gcode_sending,
-        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received
+        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received,
+        "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions
     }
