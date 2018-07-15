@@ -1999,7 +1999,7 @@ class OctolapseSettings(object):
                 dict(value='absolute', name='Default To Absolute')
             ],
             'units_default_options': [
-                dict(value='require-explicit', name='Require Explicit G90/G91'),
+                dict(value='require-explicit', name='Require Explicit G21'),
                 dict(value='inches', name='Inches'),
                 dict(value='millimeters', name='Millimeters')
             ],
