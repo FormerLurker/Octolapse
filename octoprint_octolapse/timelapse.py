@@ -854,7 +854,7 @@ class Timelapse(object):
                             trigger_change_list = self.Triggers.state_to_list()
                         if self.Settings.show_position_changes:
                             position_change_dict = self.Position.to_position_dict()
-                        if self.Settings.show_position_state_changes:
+                        if self.Settings.show_position_state_changes or self.Position.has_position_state_errors():
                             position_state_change_dict = self.Position.to_state_dict()
                         if self.Settings.show_extruder_state_changes:
                             extruder_change_dict = self.Position.Extruder.to_dict()

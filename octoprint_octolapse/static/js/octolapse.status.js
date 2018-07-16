@@ -649,6 +649,28 @@ $(function () {
                 });
             };
 
+            self.hasPositionStateErrors = function(){
+                if (Octolapse.Status.is_timelapse_active())
+                    if (!(self.XHomed() && self.YHomed() && self.ZHomed())
+                        || self.IsRelative() == null
+                        || self.IsExtruderRelative() == null
+                        || !self.IsMetric()
+                        || self.HasPositionError())
+                        return true;
+                return false;
+            }
+            self.getPositionStateSliderColor = ko.pureComputed(function () {
+                // The button is off and the timelapse is off
+                if(self.hasPositionStateErrors())
+                    return "red";
+
+                if (Octolapse.Globals.show_position_state_changes())
+                    return "greenyellow";
+
+                return "white";
+
+            }, self);
+
             self.getYHomedStateText = ko.pureComputed(function () {
                 if (self.YHomed())
                     return "Homed";

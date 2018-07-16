@@ -507,6 +507,16 @@ class Position(object):
             return None
         return pos.HasPositionError
 
+    def has_position_state_errors(self, index=0):
+        if (not self.has_homed_axes(index)
+            or self.is_relative(index) is None
+            or self.is_extruder_relative(index) is None
+            or not self.is_metric(index)
+            or self.has_position_error(index)
+        ):
+            return True
+        return False
+
     def position_error(self, index=0):
         pos = self.get_position(index)
         if pos is None:
