@@ -713,6 +713,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.on_print_resumed()
             elif event == Events.PRINT_FAILED:
                 self.on_print_failed()
+            elif event == Events.PRINT_CANCELLING:
+                self.on_print_cancelling()
             elif event == Events.PRINT_CANCELLED:
                 self.on_print_canceled()
             elif event == Events.PRINT_DONE:
@@ -1090,6 +1092,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_printer_disconnected(self):
         self.Timelapse.on_print_disconnected()
         self.Settings.current_debug_profile().log_print_state_change("Printer disconnected.")
+
+    def on_print_cancelling(self):
+        self.Settings.current_debug_profile().log_print_state_change("Print cancelling.")
+        self.Timelapse.on_print_cancelling()
 
     def on_print_canceled(self):
         self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
