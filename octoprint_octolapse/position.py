@@ -107,6 +107,13 @@ class Pos(object):
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
 
+        # Firmware Retraction Tracking
+        self.FirmwareRetractionLength = None if pos is None else pos.FirmwareRetractionLength
+        self.FirmwareUnretractionAdditionalLength = None if pos is None else pos.FirmwareUnretractionAdditionalLength
+        self.FirmwareRetractionFeedrate = None if pos is None else pos.FirmwareRetractionFeedrate
+        self.FirmwareUnretractionFeedrate = None if pos is None else pos.FirmwareUnretractionFeedrate
+        self.FirmwareZLift = None if pos is None else pos.FirmwareZLift
+
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
         self.IsHeightChange = False if pos is None else pos.IsHeightChange
@@ -743,6 +750,48 @@ class Position(object):
                         pos.Y, pos.Z, pos.E)
                 self.Settings.current_debug_profile().log_position_change(
                     message)
+            elif cmd == "G10":
+                if "P" not in parameters:
+                    self.Settings.current_debug_profile().log_position_command_received(
+                        "Received G10 - Received firmware retract."
+                    )
+
+                    e = 0 if pos.FirmwareRetractionLength is None else -1.0 * pos.FirmwareRetractionLength
+                    previous_extruder_relative = pos.IsExtruderRelative
+                    previous_relative = pos.IsRelative
+
+                    pos.IsRelative = True
+                    pos.IsExtruderRelative = True
+                    pos.update_position(self.BoundingBox, x=None, y=None, z=pos.FirmwareZLift, e=e, f=pos.FirmwareRetractionFeedrate)
+                    pos.IsRelative = previous_relative
+                    pos.IsExtruderRelative = previous_extruder_relative
+            elif cmd == "G11":
+
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received G11 - Received firmware detract."
+                )
+
+                lift_distance = 0 if pos.FirmwareZLift is None else -1.0*pos.FirmwareZLift
+                e = 0 if pos.FirmwareRetractionLength is None else pos.FirmwareRetractionLength
+
+                if pos.FirmwareUnretractionFeedrate is not None:
+                    f = pos.FirmwareUnretractionFeedrate
+                else:
+                    f = pos.FirmwareRetractionFeedrate
+
+                if pos.FirmwareUnretractionAdditionalLength:
+                    e = e + pos.FirmwareUnretractionAdditionalLength
+
+                previous_extruder_relative = pos.IsExtruderRelative
+                previous_relative = pos.IsRelative
+
+                pos.IsRelative = True
+                pos.IsExtruderRelative = True
+                pos.update_position(self.BoundingBox, x=None, y=None, z=lift_distance,
+                                    e=e, f=f)
+                pos.IsRelative = previous_relative
+                pos.IsExtruderRelative = previous_extruder_relative
+
             elif cmd == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:
@@ -898,6 +947,22 @@ class Position(object):
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
+            elif cmd == "M207":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware retraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in parameters:
+                    pos.FirmwareRetractionLength = parameters["S"]
+                if "R" in parameters:
+                    pos.FirmwareUnretractionAdditionalLength = parameters["R"]
+                if "F" in parameters:
+                    pos.FirmwareRetractionFeedrate = parameters["F"]
+                if "T" in parameters:
+                    pos.FirmwareUnretractionFeedrate = parameters["T"]
+                if "Z" in parameters:
+                    pos.FirmwareZLift = parameters["Z"]
+
             elif cmd == "G92":
                 # Set Position (offset)
 
