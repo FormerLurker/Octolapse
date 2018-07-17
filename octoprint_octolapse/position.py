@@ -1210,11 +1210,11 @@ class Position(object):
             if pos.LastExtrusionHeight is not None:
                 # calculate lift, taking into account floating point
                 # rounding
-                lift = pos.distance_to_zlift(self.Printer.z_hop)
+                distance_to_lift = pos.distance_to_zlift(self.Printer.z_hop)
 
                 # todo:  replace rounding with a call to is close or greater than utility function
-                lift = utility.round_to(lift, self.PrinterTolerance)
-                is_lifted = lift >= self.Printer.z_hop and not (
+                distance_to_lift = utility.round_to(distance_to_lift, self.PrinterTolerance)
+                is_lifted = distance_to_lift <= 0.0 and not (
                     self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
                 )
 
