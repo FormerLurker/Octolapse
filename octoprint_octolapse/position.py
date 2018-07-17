@@ -107,12 +107,25 @@ class Pos(object):
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
 
-        # Firmware Retraction Tracking
-        self.FirmwareRetractionLength = None if pos is None else pos.FirmwareRetractionLength
-        self.FirmwareUnretractionAdditionalLength = None if pos is None else pos.FirmwareUnretractionAdditionalLength
-        self.FirmwareRetractionFeedrate = None if pos is None else pos.FirmwareRetractionFeedrate
-        self.FirmwareUnretractionFeedrate = None if pos is None else pos.FirmwareUnretractionFeedrate
-        self.FirmwareZLift = None if pos is None else pos.FirmwareZLift
+        # default firmware retraction length and feedrate if default_firmware_retractions isenabled
+        if pos is None and printer.default_firmware_retractions:
+            self.FirmwareRetractionLength = printer.retract_length
+            self.FirmwareUnretractionAdditionalLength = None  # todo:  add this setting
+            self.FirmwareRetractionFeedrate = printer.retract_speed
+            self.FirmwareUnretractionFeedrate = printer.detract_speed
+
+        else:
+            self.FirmwareRetractionLength = None if pos is None else pos.FirmwareRetractionLength
+            self.FirmwareUnretractionAdditionalLength = None if pos is None else pos.FirmwareUnretractionAdditionalLength
+            self.FirmwareRetractionFeedrate = None if pos is None else pos.FirmwareRetractionFeedrate
+            self.FirmwareUnretractionFeedrate = None if pos is None else pos.FirmwareUnretractionFeedrate
+
+        # default firmware retraction zlift if default_firmware_retractions_zhop is enabled
+        if pos is None and printer.default_firmware_retractions_zhop:
+            self.FirmwareZLift = printer.z_hop
+        else:
+            self.FirmwareZLift = None if pos is None else pos.FirmwareZLift
+
 
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
@@ -1048,6 +1061,17 @@ class Position(object):
                     pos.FirmwareUnretractionFeedrate = parameters["T"]
                 if "Z" in parameters:
                     pos.FirmwareZLift = parameters["Z"]
+
+            elif cmd == "M208":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware detraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in parameters:
+                    pos.FirmwareUnretractionAdditionalLength = parameters["S"]
+                if "F" in parameters:
+                    pos.FirmwareUnretractionFeedrate = parameters["F"]
+
 
             elif cmd == "G92":
                 # Set Position (offset)

@@ -71,6 +71,8 @@ class Printer(object):
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.units_default = 'millimeters'
         self.axis_speed_display_units = 'mm-min'
+        self.default_firmware_retractions = False
+        self.default_firmware_retractions_zhop = False
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -103,6 +105,9 @@ class Printer(object):
                 self.xyz_axes_default_mode = printer.xyz_axes_default_mode
                 self.units_default = printer.units_default
                 self.axis_speed_display_units = printer.axis_speed_display_units
+                self.default_firmware_retractions = printer.default_firmware_retractions
+                self.default_firmware_retractions_zhop = printer.default_firmware_retractions_zhop
+
             else:
                 self.update(printer)
 
@@ -191,6 +196,14 @@ class Printer(object):
             self.axis_speed_display_units = utility.get_string(
                 changes["axis_speed_display_units"], self.axis_speed_display_units
             )
+        if "default_firmware_retractions" in changes.keys():
+            self.default_firmware_retractions = utility.get_bool(
+                changes["default_firmware_retractions"], self.default_firmware_retractions
+            )
+        if "default_firmware_retractions_zhop" in changes.keys():
+            self.default_firmware_retractions_zhop = utility.get_bool(
+                changes["default_firmware_retractions_zhop"], self.default_firmware_retractions_zhop
+            )
 
     def to_dict(self):
         return {
@@ -224,7 +237,8 @@ class Printer(object):
             'xyz_axes_default_mode': self.xyz_axes_default_mode,
             'units_default': self.units_default,
             'axis_speed_display_units': self.axis_speed_display_units,
-
+            'default_firmware_retractions': self.default_firmware_retractions,
+            'default_firmware_retractions_zhop': self.default_firmware_retractions_zhop
         }
 
 

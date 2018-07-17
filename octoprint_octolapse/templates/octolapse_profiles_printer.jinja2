@@ -397,7 +397,27 @@
         <span class="help-inline">Some slicers prime quite far from the printer bed.  This can adversly affect layer/height tracking.  This setting will prevent layer detection if extrusion has not happend BELOW the selected height.  Set to 0 to turn off.</span>
       </div>
     </div>
-
+  <div class="control-group">
+      <label class="control-label">Use Retraction/Detraction settings for Firmware Retract/Detract</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Detraction settings for Firmware Retract/Detract"/>Enabled
+        </label>
+        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/detraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
+      </div>
+    </div>
+  <div class="control-group">
+      <label class="control-label">Use Z-Hop (Z-Lift) settings for Firmware Retract/Detract</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Detraction settings for Firmware Retract/Detract"/>Enabled
+        </label>
+        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/detraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
+          <p>
+              <span class="label label-important">Attention</span>  If this setting ONLY if you are using firmware zlift!  If your gcode is performing zlift manually (g0/g1) using absolute coordinates, your nozzle may crash into your part.  When in doubt, leave this unchecked!.
+          </p>
+      </div>
+    </div>
   </div>
 
 </script>

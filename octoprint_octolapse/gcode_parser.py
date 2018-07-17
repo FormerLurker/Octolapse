@@ -394,7 +394,7 @@ class Commands(object):
 
     M207 = Command(
         "M207",
-        "Set retract listance"
+        "Set retract length"
         "M207 - Set retract length",
         parameters={
             "S": CommandParameter("S", CommandParameter.parse_float, 1),
@@ -402,6 +402,17 @@ class Commands(object):
             "F": CommandParameter("F", CommandParameter.parse_float, 3),
             "T": CommandParameter("T", CommandParameter.parse_float, 4),
             "Z": CommandParameter("Z", CommandParameter.parse_float, 5)
+        }
+    )
+
+    M208 = Command(
+        "M208",
+        "Set detract length"
+        "M208 - Set detract length",
+        parameters={
+            "S": CommandParameter("S", CommandParameter.parse_float, 1),
+            "F": CommandParameter("F", CommandParameter.parse_float, 2),
+
         }
     )
 
@@ -440,6 +451,7 @@ class Commands(object):
             M190.Command: M190,
             M191.Command: M191,
             M207.Command: M207,
+            M208.Command: M208,
             M400.Command: M400
         }
 
