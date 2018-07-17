@@ -684,6 +684,7 @@ class Position(object):
         pos.Parameters = parameters
         pos.GCode = gcode
 
+
         # apply the cmd to the position tracker
         # TODO: this should NOT be an else/if structure anymore..  Simplify
         if cmd is not None:
@@ -750,6 +751,91 @@ class Position(object):
                         pos.Y, pos.Z, pos.E)
                 self.Settings.current_debug_profile().log_position_change(
                     message)
+            elif cmd in ["G2", "G3"]:
+                # Movement Type
+                movement_type = ""
+                if cmd == "G2":
+                    movement_type = "clockwise"
+                    self.Settings.current_debug_profile().log_position_command_received("Received G2 - Clockwise Arc")
+                else:
+                    movement_type = "counter-clockwise"
+                    self.Settings.current_debug_profile().log_position_command_received("Received G3 - Counter-Clockwise Arc")
+
+                x = parameters["X"] if "X" in parameters else None
+                y = parameters["Y"] if "Y" in parameters else None
+                i = parameters["I"] if "I" in parameters else None
+                j = parameters["J"] if "J" in parameters else None
+                r = parameters["R"] if "R" in parameters else None
+                e = parameters["E"] if "E" in parameters else None
+                f = parameters["F"] if "F" in parameters else None
+
+                # If we're moving on the X/Y plane only, mark this position as travel only
+                pos.IsTravelOnly = e is None
+
+                can_update_position = False
+                if r is not None and (i is not None or j is not None):
+                    self.Settings.current_debug_profile().log_error(
+                        "Received {0} - but received R and either I or J, which is not allowed.".format(cmd))
+                elif i is not None or j is not None:
+                    # IJ Form
+                    if x is not None and y is not None:
+                        # not a circle, the position has changed
+                        can_update_position = True
+                        self.Settings.current_debug_profile().log_info(
+                            "Cannot yet calculate position restriction intersections when G2/G3.")
+                elif r is not None:
+                    # R Form
+                    if x is None and y is None:
+                        self.Settings.current_debug_profile().log_error(
+                            "Received {0} - but received R without x or y, which is not allowed.".format(cmd))
+                    else:
+                        can_update_position = True
+                        self.Settings.current_debug_profile().log_info(
+                            "Cannot yet calculate position restriction intersections when G2/G3.")
+
+                if can_update_position:
+                    if x is not None and  y is not None:
+                        if pos.IsRelative is not None:
+                            if pos.HasPositionError and not pos.IsRelative:
+                                pos.HasPositionError = False
+                                pos.PositionError = ""
+                            pos.update_position(self.BoundingBox, x, y, z=None, e=None, f=f)
+                        else:
+                            self.Settings.current_debug_profile().log_position_command_received(
+                                "Position - Unable to update the X/Y/Z axis position, the axis mode ("
+                                "relative/absolute) has not been explicitly set via G90/G91. "
+                            )
+                    if e is not None:
+                        if pos.IsExtruderRelative is not None:
+                            if pos.HasPositionError and not pos.IsExtruderRelative:
+                                pos.HasPositionError = False
+                                pos.PositionError = ""
+                            pos.update_position(
+                                self.BoundingBox,
+                                x=None,
+                                y=None,
+                                z=None,
+                                e=e,
+                                f=None)
+                        else:
+                            self.Settings.current_debug_profile().log_error(
+                                "Position - Unable to update the extruder position, the extruder mode ("
+                                "relative/absolute) has been selected (absolute/relative). "
+                            )
+                    message = "Position Change - {0} - {1} {2} Arc From(X:{3},Y:{4},Z:{5},E:{6}) - To(X:{7},Y:{8}," \
+                              "Z:{9},E:{10})"
+                    if previous_pos is None:
+                        message = message.format(
+                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type
+                            , "None", "None",
+                            "None", "None", pos.X, pos.Y, pos.Z, pos.E)
+                    else:
+                        message = message.format(
+                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type, previous_pos.X,
+                            previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
+                            pos.Y, pos.Z, pos.E)
+                    self.Settings.current_debug_profile().log_position_change(
+                        message)
             elif cmd == "G10":
                 if "P" not in parameters:
                     self.Settings.current_debug_profile().log_position_command_received(
@@ -1044,12 +1130,14 @@ class Position(object):
             (self.Extruder.has_changed(0) or pos.HasPositionChanged)
         ):
             if self.HasRestrictedPosition:
+                can_calculate_intersections = cmd in ["G0", "G1"]
                 _is_in_position, _intersections = self.calculate_path_intersections(
                     self.Snapshot.position_restrictions,
                     pos.X,
                     pos.Y,
                     previous_pos.X,
-                    previous_pos.Y
+                    previous_pos.Y,
+                    can_calculate_intersections
                 )
                 if _is_in_position:
                     pos.IsInPosition = _is_in_position
@@ -1229,7 +1317,7 @@ class Position(object):
         return get_formatted_coordinates(current_position.X, current_position.Y,
                                          current_position.Z, current_position.E)
 
-    def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y):
+    def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 
         if self.calculate_is_in_position(
             restrictions,
@@ -1241,6 +1329,9 @@ class Position(object):
 
         if previous_x is None or previous_y is None:
             return False, False
+
+        if not can_calculate_intersections:
+            return False, None
 
         return False, self.calculate_in_position_intersection(
             restrictions,

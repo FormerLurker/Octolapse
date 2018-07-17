@@ -157,6 +157,34 @@ class Commands(object):
             "F": CommandParameter("F", CommandParameter.parse_float_positive, 5)
         }
     )
+    G2 = Command(
+        "G2",
+        "Clockwise Arc Move",
+        "G2 - Clockwise arc move to X={X}, Y={Y}, I={I}, J={J}, R={R}, E={E}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "I": CommandParameter("I", CommandParameter.parse_float, 3),
+            "J": CommandParameter("J", CommandParameter.parse_float, 4),
+            "R": CommandParameter("R", CommandParameter.parse_float, 5),
+            "E": CommandParameter("E", CommandParameter.parse_float, 6),
+            "F": CommandParameter("F", CommandParameter.parse_float_positive, 7)
+        }
+    )
+    G3 = Command(
+        "G3",
+        "Counter-Clockwise Arc Move",
+        "G3 - Counter-clockwise arc move to X={X}, Y={Y}, I={I}, J={J}, R={R}, E={E}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "I": CommandParameter("I", CommandParameter.parse_float, 3),
+            "J": CommandParameter("J", CommandParameter.parse_float, 4),
+            "R": CommandParameter("R", CommandParameter.parse_float, 5),
+            "E": CommandParameter("E", CommandParameter.parse_float, 6),
+            "F": CommandParameter("F", CommandParameter.parse_float_positive, 7)
+        }
+    )
     G10 = Command(
         "G10",
         "Retract"
@@ -387,6 +415,8 @@ class Commands(object):
     CommandsDictionary = {
             G0.Command: G0,
             G1.Command: G1,
+            G2.Command: G2,
+            G3.Command: G3,
             G10.Command: G10,
             G11.Command: G11,
             G20.Command: G20,
@@ -416,8 +446,8 @@ class Commands(object):
     GcodeWords = {"G", "M"}
     SuppressedSavedCommands = [M105.Command, M400.Command]
     SuppressedSnapshotGcodeCommands = [M105.Command]
-    CommandsRequireMetric = [G0.Command, G1.Command, G28.Command, G92.Command]
-    TestModeSuppressExtrusionCommands = G0.Command, G1.Command
+    CommandsRequireMetric = [G0.Command, G1.Command, G2.Command, G3.Command, G28.Command, G92.Command]
+    TestModeSuppressExtrusionCommands = [G0.Command, G1.Command, G2.Command, G3.Command]
     TestModeSuppressCommands = [
         G10.Command, G11.Command,
         M104.Command, M140.Command, M141.Command,
