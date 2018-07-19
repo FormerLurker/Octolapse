@@ -1251,15 +1251,41 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # ~~ software update hook
     def get_update_information(self):
-        return dict(octolapse=dict(displayName="Octolapse",
-                                   displayVersion=self._plugin_version,
-                                   # version check: github repository
-                                   type="github_release",
-                                   user="FormerLurker",
-                                   repo="Octolapse",
-                                   current=self._plugin_version,
-                                   # update method: pip
-                                   pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip"))
+        branch = "master"
+        prerelease = self._settings.settings.get(
+            ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]
+        )
+        type = self._settings.settings.get(
+            ["plugins", "softwareupdate", "checks", "octoprint", "type"]
+        )
+        if prerelease:
+            prerelease_channel = self._settings.settings.get(
+                ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
+            )
+            if prerelease_channel == "rc/maintenance":
+                branch = "rc/maintenance"
+            elif prerelease_channel == "rc/devel":
+                branch = "rc/devel"
+
+        octolapse_info = dict(
+            displayName="Octolapse",
+            displayVersion=self._plugin_version,
+            # version check: github repository
+            type=type,
+            user="FormerLurker",
+            repo="Octolapse",
+            current=self._plugin_version,
+            branch=branch,
+            prerelease=prerelease,
+            # update method: pip
+            pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
+
+        )
+
+        update_info = dict(
+            octolapse=octolapse_info
+        )
+        return update_info
 
     def get_timelapse_extensions(*args, **kwargs):
         return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
