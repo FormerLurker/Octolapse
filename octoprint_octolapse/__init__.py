@@ -1251,41 +1251,51 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # ~~ software update hook
     def get_update_information(self):
+        # get the checkout type from the software updater
+        checkout_type = "github_release"
         branch = "master"
-        prerelease = self._settings.settings.get(
-            ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]
-        )
-        type = self._settings.settings.get(
+        # get this for reference.  Eventually I'll have to use it!
+        octoprint_checkout_type = self._settings.settings.get(
             ["plugins", "softwareupdate", "checks", "octoprint", "type"]
         )
-        if prerelease:
+        # is the software update set to prerelease?
+        is_prerelease = self._settings.settings.get(
+            ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]
+        )
+
+
+        if is_prerelease:
+            # If it's a prerelease, look at the channel and configure the proper branch for Octolapse
             prerelease_channel = self._settings.settings.get(
                 ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
             )
             if prerelease_channel == "rc/maintenance":
                 branch = "rc/maintenance"
+                checkout_type = "github_release"
             elif prerelease_channel == "rc/devel":
                 branch = "rc/devel"
+                # having problem with commit level tracking.  It says no update is available
+                checkout_type = "github_release"
 
         octolapse_info = dict(
             displayName="Octolapse",
             displayVersion=self._plugin_version,
             # version check: github repository
-            type=type,
+            type=checkout_type,
             user="FormerLurker",
             repo="Octolapse",
             current=self._plugin_version,
             branch=branch,
-            prerelease=prerelease,
+            prerelease=is_prerelease,
+            # is this the correct folder
+            checkout_folder="https://github.com/FromerLurker/Octolapse.git",
             # update method: pip
             pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
-
         )
-
-        update_info = dict(
+        # return the update config
+        return dict(
             octolapse=octolapse_info
         )
-        return update_info
 
     def get_timelapse_extensions(*args, **kwargs):
         return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
