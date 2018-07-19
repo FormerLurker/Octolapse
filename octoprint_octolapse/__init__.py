@@ -1251,27 +1251,43 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # ~~ software update hook
     def get_update_information(self):
-
+        # get the checkout type from the software updater
+        checkout_type = "github_release"
+        branch = "master"
+        # get this for reference.  Eventually I'll have to use it!
+        octoprint_checkout_type = self._settings.settings.get(
+            ["plugins", "softwareupdate", "checks", "octoprint", "type"]
+        )
         # is the software update set to prerelease?
-        is_prerelease = self._settings.global_get(
+        is_prerelease = self._settings.settings.get(
             ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]
         )
+
+        if is_prerelease:
+            # If it's a prerelease, look at the channel and configure the proper branch for Octolapse
+            prerelease_channel = self._settings.settings.get(
+                ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
+            )
+            if prerelease_channel == "rc/maintenance":
+                branch = "rc/maintenance"
+                checkout_type = "github_release"
+            elif prerelease_channel == "rc/devel":
+                branch = "rc/devel"
+                # having problem with commit level tracking.  It says no update is available
+                checkout_type = "github_release"
 
         octolapse_info = dict(
             displayName="Octolapse",
             displayVersion=self._plugin_version,
             # version check: github repository
-            type="github_release",
+            type=checkout_type,
             user="FormerLurker",
             repo="Octolapse",
             current=self._plugin_version,
-            branch="master",
-            method="pip",
+            branch=branch,
             prerelease=is_prerelease,
-            # is this the correct folder
-            # update method: pip
             pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
-            stable_branch= dict(branch="master", commitish=["master"], name="Stable"),
+            stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
             prerelease_branches=[
                 dict(
                     branch="rc/maintenance",
@@ -1283,7 +1299,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     commitish=["rc/maintenance", "rc/devel"],  # devel & maintenance RCs
                     name="Devel RCs"
                 )
-            ]
+            ],
         )
         # return the update config
         return dict(
@@ -1293,7 +1309,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def get_timelapse_extensions(*args, **kwargs):
         return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
 
-# If you want your plugin to be registered within OctoPrint under a different
+# If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here.  Same goes for the
 # other metadata derived from setup.py that
