@@ -2125,7 +2125,7 @@
       "powerline_frequency": 60
     }
   ],
-  "version": "0.3.3",
+  "version": "0.3.3rc2",
   "position_restriction_types": [
     {
       "name": "Must be inside",
