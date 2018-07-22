@@ -248,15 +248,18 @@ class ExternalScriptCameraJob(object):
                 download_filename,
                 download_full_path
             ], shell=True, stdin=PIPE, stdout=PIPE, bufsize=1, stderr=PIPE)
+
             p.wait()
             stdout, stderror = p.communicate()
+            self.Settings.current_debug_profile().log_info(
+                "The following console output was returned from the snapshot script: {0}".format(stdout))
             if stderror is not None:
                 self.Settings.current_debug_profile().log_error(
                     "Error output was returned from the snapshot script: {0}".format(stderror))
             if not p.returncode == 0:
                 self.ErrorMessage = (
                     "Snapshot Script Error - The {0} script returned {1}, which indicates an error.  Please check" +
-                    "your script and try again.".format(self.ScriptType)
+                    "your script and try again.".format(self.ScriptType, p.returncode)
                 )
                 self.HasError = True
         except CalledProcessError as e:

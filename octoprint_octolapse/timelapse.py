@@ -234,7 +234,7 @@ class Timelapse(object):
         }
         if self.Camera.camera_type == "external-script":
             job = self.CaptureSnapshot.create_snapshot_script_job(
-                "stabilization_start", self.Camera.external_camera_snapshot_script,
+                "snapshot", self.Camera.external_camera_snapshot_script,
                 utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
                 snapshot_guid, on_complete=None, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
             # run the job
