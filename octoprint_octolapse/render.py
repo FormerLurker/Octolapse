@@ -336,7 +336,7 @@ class TimelapseRenderJob(object):
         except ValueError as e:
             self._debug.log_exception(e)
             self._output_filename = "RenderingFilenameTemplateError"
-        self._output_extension = self._rendering.output_format
+        self._output_extension = self._get_extension_from_output_format(self._rendering.output_format)
 
         # check for a rendered timelapse file collision
         original_output_filename = self._output_filename
@@ -489,7 +489,7 @@ class TimelapseRenderJob(object):
                             "\\", "/").replace(":", "\\\\:")
 
             if not self.has_error:
-                vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
+                vcodec = self._get_vcodec_from_output_format(self._rendering.output_format)
 
                 # prepare ffmpeg command
                 command_str = self._create_ffmpeg_command_string(
@@ -499,7 +499,6 @@ class TimelapseRenderJob(object):
                     self._threads,
                     self._input,
                     self._rendering_output_file_path,
-                    self._rendering.output_format,
                     h_flip=self._rendering.flip_h,
                     v_flip=self._rendering.flip_v,
                     rotate=self._rendering.rotate_90,
@@ -569,24 +568,31 @@ class TimelapseRenderJob(object):
         self._on_complete()
 
     @staticmethod
-    def _get_vcodec_from_extension(extension):
-        default_codec = "mpeg2video"
+    def _get_extension_from_output_format(output_format):
+        EXTENSIONS = {"avi": "avi",
+                      "flv": "flv",
+                      "h264": "mp4",
+                      "vob": "vob",
+                      "mp4": "mp4",
+                      "mpeg": "mpeg",
+                      "gif": "gif"}
+        return EXTENSIONS.get(output_format.lower(), "mp4")
 
-        if extension in ["mpeg", "vob"]:
-            return "mpeg2video"
-        elif extension in ["mp4", "avi"]:
-            return "mpeg4"
-        elif extension == "flv":
-            return "flv1"
-        elif extension == "gif":
-            return "gif"
-        else:
-            return default_codec
+    @staticmethod
+    def _get_vcodec_from_output_format(output_format):
+        VCODECS = {"avi": "mpeg4",
+                   "flv": "flv1",
+                   "gif": "gif",
+                   "h264": "h264",
+                   "mp4": "mpeg4",
+                   "mpeg": "mpeg2video",
+                   "vob": "mpeg2video"}
+        return VCODECS.get(output_format.lower(), "mpeg2video")
 
     @classmethod
     def _create_ffmpeg_command_string(
         cls, ffmpeg, fps, bitrate, threads,
-        input_file, output_file, output_format='vob',
+        input_file, output_file,
         h_flip=False, v_flip=False,
         rotate=False, watermark=None, pix_fmt="yuv420p",
         v_codec="mpeg2video"
@@ -617,9 +623,9 @@ class TimelapseRenderJob(object):
         command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
         # Umm yea, something about codecs and GIFS.
         # See https://stackoverflow.com/a/47502141.
-        if output_format != 'GIF':
+        if v_codec != 'gif':
             command.extend(['-vcodec', v_codec])
-        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(output_format)])
+        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(v_codec)])
 
         filter_string = cls._create_filter_string(hflip=h_flip,
                                                   vflip=v_flip,

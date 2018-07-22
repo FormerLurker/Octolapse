@@ -2146,6 +2146,14 @@
       "value": "flv"
     },
     {
+      "name": "GIF",
+      "value": "gif"
+    },
+    {
+      "name": "H.264",
+      "value": "h264"
+    },
+    {
       "name": "VOB",
       "value": "vob"
     },

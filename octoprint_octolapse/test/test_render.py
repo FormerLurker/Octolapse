@@ -120,7 +120,9 @@ class TestRender(unittest.TestCase):
 
         # Assertions.
         output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
@@ -140,7 +142,9 @@ class TestRender(unittest.TestCase):
 
         # Assertions.
         output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
@@ -159,8 +163,31 @@ class TestRender(unittest.TestCase):
 
         # Assertions.
         output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.gif$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+
+    def test_h264_codec(self):
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Use H264 codec")
+        r.update({'output_format': 'h264'})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
