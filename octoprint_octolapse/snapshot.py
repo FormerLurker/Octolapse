@@ -239,6 +239,19 @@ class ExternalScriptCameraJob(object):
             download_directory = os.path.dirname(download_full_path)
             download_filename = os.path.basename(download_full_path)
 
+            self.Settings.current_debug_profile().log_info(
+                "Running the following snapshot script command: " +
+                " {0} {1} {2} {3} {4} {5} {6}"
+                .format(
+                    self.ScriptPath,
+                    str(self.SnapshotNumber),
+                    str(self.DelaySeconds),
+                    self.DataDirectory,
+                    download_directory,
+                    download_filename,
+                    download_full_path
+                )
+            )
             p = Popen([
                 self.ScriptPath,
                 str(self.SnapshotNumber),
