@@ -260,7 +260,7 @@ class ExternalScriptCameraJob(object):
                 download_directory,
                 download_filename,
                 download_full_path
-            ], shell=True, stdin=PIPE, stdout=PIPE, bufsize=1, stderr=PIPE)
+            ], stdin=PIPE, stdout=PIPE, bufsize=1, stderr=PIPE)
 
             p.wait()
             stdout, stderror = p.communicate()
