@@ -260,9 +260,9 @@ class ExternalScriptCameraJob(object):
                 download_directory,
                 download_filename,
                 download_full_path
-            ], stdout=PIPE, stderr=PIPE)
+            ], stdout=PIPE, stderr=PIPE, bufsize=1)
 
-            stdout, stderr = p.communicate()
+            (stdout, stderr) = p.communicate()
             self.Settings.current_debug_profile().log_info(
                 "The following console output was returned from the snapshot script: {0}".format(stdout))
             if stderr is not None:
