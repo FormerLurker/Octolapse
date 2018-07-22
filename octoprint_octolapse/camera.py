@@ -65,7 +65,6 @@ def test_camera(camera_profile, timeout_seconds=2):
             exception_type, value)
     return False, fail_reason
 
-
 class CameraControl(object):
     def __init__(self, camera, on_success=None, on_fail=None, on_complete=None, timeout_seconds=10):
         self.Camera = camera

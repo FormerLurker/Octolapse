@@ -235,7 +235,8 @@ $(function () {
                 'camera_powerline_frequency_options': settings.camera_powerline_frequency_options,
                 'camera_exposure_type_options': settings.camera_exposure_type_options,
                 'camera_led_1_mode_options': settings.camera_led_1_mode_options,
-                'snapshot_transpose_options': settings.snapshot_transpose_options
+                'snapshot_transpose_options': settings.snapshot_transpose_options,
+                'camera_type_options': settings.camera_type_options
 
             }
             Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid);

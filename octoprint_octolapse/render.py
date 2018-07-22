@@ -79,7 +79,6 @@ class Render(object):
         octoprint_timelapse_folder,
         ffmpeg_path,
         thread_count,
-        render_task_queue,
         job_id,
         print_name,
         print_start_time,
@@ -107,7 +106,6 @@ class Render(object):
             octoprint_timelapse_folder,
             ffmpeg_path,
             thread_count,
-            render_task_queue,
             time_added,
             on_render_start,
             on_complete,
@@ -152,7 +150,6 @@ class TimelapseRenderJob(object):
         octoprint_timelapse_folder,
         ffmpeg_path,
         threads,
-        rendering_task_queue,
         time_added,
         on_render_start,
         on_complete,
@@ -171,7 +168,6 @@ class TimelapseRenderJob(object):
         self._secondsAddedToPrint = time_added
         self._threads = threads
         self._ffmpeg = ffmpeg_path
-        self._rendering_task_queue = rendering_task_queue
         ###########
         # callbacks
         ###########
@@ -201,8 +197,7 @@ class TimelapseRenderJob(object):
         self._input = os.path.join(self._capture_dir,
                                    self._capture_file_template)
 
-        self._synchronize = (
-            self._rendering.sync_with_timelapse and self._rendering.output_format in ["mp4"])
+        self._synchronize = self._rendering.sync_with_timelapse
         self._thread = threading.Thread(target=self._render,
                                         name=self._job_id)
         self._thread.daemon = True
@@ -571,8 +566,6 @@ class TimelapseRenderJob(object):
             self.has_error = True
             self.error_type = "unexpected-exception"
 
-        self._rendering_task_queue.get()
-        self._rendering_task_queue.task_done()
         self._on_complete()
 
     @staticmethod
@@ -585,6 +578,8 @@ class TimelapseRenderJob(object):
             return "mpeg4"
         elif extension == "flv":
             return "flv1"
+        elif extension == "gif":
+            return "gif"
         else:
             return default_codec
 

@@ -28,6 +28,9 @@ $(function() {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
+
+        self.camera_type = ko.observable(values.camera_type);
+        self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
         self.delay = ko.observable(values.delay);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.address = ko.observable(values.address);

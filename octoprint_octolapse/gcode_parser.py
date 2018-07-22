@@ -157,7 +157,59 @@ class Commands(object):
             "F": CommandParameter("F", CommandParameter.parse_float_positive, 5)
         }
     )
+    G2 = Command(
+        "G2",
+        "Clockwise Arc Move",
+        "G2 - Clockwise arc move to X={X}, Y={Y}, I={I}, J={J}, R={R}, E={E}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "I": CommandParameter("I", CommandParameter.parse_float, 3),
+            "J": CommandParameter("J", CommandParameter.parse_float, 4),
+            "R": CommandParameter("R", CommandParameter.parse_float, 5),
+            "E": CommandParameter("E", CommandParameter.parse_float, 6),
+            "F": CommandParameter("F", CommandParameter.parse_float_positive, 7)
+        }
+    )
+    G3 = Command(
+        "G3",
+        "Counter-Clockwise Arc Move",
+        "G3 - Counter-clockwise arc move to X={X}, Y={Y}, I={I}, J={J}, R={R}, E={E}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "I": CommandParameter("I", CommandParameter.parse_float, 3),
+            "J": CommandParameter("J", CommandParameter.parse_float, 4),
+            "R": CommandParameter("R", CommandParameter.parse_float, 5),
+            "E": CommandParameter("E", CommandParameter.parse_float, 6),
+            "F": CommandParameter("F", CommandParameter.parse_float_positive, 7)
+        }
+    )
+    G10 = Command(
+        "G10",
+        "Retract"
+        "G10 - Retract or Tool Offset",
+        parameters={
+            "P": CommandParameter("P", CommandParameter.parse_float, 1),
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 1),
+            "U": CommandParameter("U", CommandParameter.parse_float, 1),
+            "V": CommandParameter("V", CommandParameter.parse_float, 1),
+            "W": CommandParameter("W", CommandParameter.parse_float, 1),
+            "Z": CommandParameter("Z", CommandParameter.parse_float, 1),
+            "R": CommandParameter("R", CommandParameter.parse_float, 1),
+            "S": CommandParameter("S", CommandParameter.parse_float, 1)
+        }
+    )
 
+    G11 = Command(
+        "G11",
+        "Retract"
+        "G11 - Unretract",
+        parameters={
+            "S": CommandParameter("S", CommandParameter.parse_float, 1)
+        }
+    )
     G20 = Command(
         "G20",
         "Set units to inches"
@@ -339,6 +391,31 @@ class Commands(object):
             "R": CommandParameter("R", CommandParameter.parse_float, 2)
         }
     )
+
+    M207 = Command(
+        "M207",
+        "Set retract length"
+        "M207 - Set retract length",
+        parameters={
+            "S": CommandParameter("S", CommandParameter.parse_float, 1),
+            "R": CommandParameter("R", CommandParameter.parse_float, 2),
+            "F": CommandParameter("F", CommandParameter.parse_float, 3),
+            "T": CommandParameter("T", CommandParameter.parse_float, 4),
+            "Z": CommandParameter("Z", CommandParameter.parse_float, 5)
+        }
+    )
+
+    M208 = Command(
+        "M208",
+        "Set detract length"
+        "M208 - Set detract length",
+        parameters={
+            "S": CommandParameter("S", CommandParameter.parse_float, 1),
+            "F": CommandParameter("F", CommandParameter.parse_float, 2),
+
+        }
+    )
+
     M400 = Command(
         "M400",
         "Wait for moves to finish",
@@ -349,6 +426,10 @@ class Commands(object):
     CommandsDictionary = {
             G0.Command: G0,
             G1.Command: G1,
+            G2.Command: G2,
+            G3.Command: G3,
+            G10.Command: G10,
+            G11.Command: G11,
             G20.Command: G20,
             G21.Command: G21,
             G28.Command: G28,
@@ -369,15 +450,18 @@ class Commands(object):
             M141.Command: M141,
             M190.Command: M190,
             M191.Command: M191,
+            M207.Command: M207,
+            M208.Command: M208,
             M400.Command: M400
         }
 
     GcodeWords = {"G", "M"}
     SuppressedSavedCommands = [M105.Command, M400.Command]
     SuppressedSnapshotGcodeCommands = [M105.Command]
-    CommandsRequireMetric = [G0.Command, G1.Command, G28.Command, G92.Command]
-    TestModeSuppressExtrusionCommands = G0.Command, G1.Command
+    CommandsRequireMetric = [G0.Command, G1.Command, G2.Command, G3.Command, G28.Command, G92.Command]
+    TestModeSuppressExtrusionCommands = [G0.Command, G1.Command, G2.Command, G3.Command]
     TestModeSuppressCommands = [
+        G10.Command, G11.Command,
         M104.Command, M140.Command, M141.Command,
         M109.Command, M190.Command, M191.Command,
         M116.Command, M106.Command

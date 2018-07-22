@@ -622,32 +622,55 @@ $(function () {
                 this.IsMetric(state.IsMetric);
             };
 
-            self.getCheckedIconClass = function (value) {
+            self.getCheckedIconClass = function (value, trueClass, falseClass, nullClass) {
                 return ko.computed({
                     read: function () {
                         if (value == null)
-                            return "fa-question";
+                            return nullClass;
                         else if (value)
-                            return "fa-check";
+                            return trueClass;
                         else
-                            return "fa-times-circle";
+                            return falseClass;
                     }
                 });
             };
 
-            self.getPossitionErrorColor = ko.pureComputed(function () {
-                if (this.HasPositionError())
-                    return "Red";
-                else
-                    return "";
+
+            self.getColor = function (value, trueColor, falseColor, nullColor) {
+                return ko.computed({
+                    read: function () {
+                        if (value == null)
+                            return nullColor;
+                        else if(!value)
+                            return falseColor;
+                        if (value)
+                            return trueColor;
+                    }
+                });
+            };
+
+            self.hasPositionStateErrors = function(){
+                if (Octolapse.Status.is_timelapse_active())
+                    if (!(self.XHomed() && self.YHomed() && self.ZHomed())
+                        || self.IsRelative() == null
+                        || self.IsExtruderRelative() == null
+                        || !self.IsMetric()
+                        || self.HasPositionError())
+                        return true;
+                return false;
+            }
+            self.getPositionStateSliderColor = ko.pureComputed(function () {
+                // The button is off and the timelapse is off
+                if(self.hasPositionStateErrors())
+                    return "red";
+
+                if (Octolapse.Globals.show_position_state_changes())
+                    return "greenyellow";
+
+                return "white";
+
             }, self);
 
-            self.getXHomedStateText = ko.pureComputed(function () {
-                if (self.XHomed())
-                    return "Homed";
-                else
-                    return "Not homed";
-            }, self);
             self.getYHomedStateText = ko.pureComputed(function () {
                 if (self.YHomed())
                     return "Homed";
@@ -670,7 +693,7 @@ $(function () {
             self.getIsInPositionStateText = ko.pureComputed(function () {
                 if (self.IsInPosition())
                     return "In position";
-                else if (self.InPathPosition)
+                else if (self.InPathPosition())
                     return "In path position"
                 else
                     return "Not in position";
@@ -693,6 +716,22 @@ $(function () {
                     return "Absolute";
             }, self);
 
+            self.getExtruderModeText = ko.pureComputed(function () {
+                if (self.IsExtruderRelative() == null)
+                    return "Mode";
+                else if (self.IsExtruderRelative())
+                    return "Relative";
+                else
+                    return "Absolute";
+            }, self);
+            self.getXYZModeText = ko.pureComputed(function () {
+                if (self.IsRelative() == null)
+                    return "Mode";
+                else if (self.IsRelative())
+                    return "Relative";
+                else
+                    return "Absolute";
+            }, self);
             self.getIsRelativeStateText = ko.pureComputed(function () {
                 if (self.IsRelative() == null)
                     return "Not Set";

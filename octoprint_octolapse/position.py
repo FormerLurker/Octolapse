@@ -107,6 +107,26 @@ class Pos(object):
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
 
+        # default firmware retraction length and feedrate if default_firmware_retractions isenabled
+        if pos is None and printer.default_firmware_retractions:
+            self.FirmwareRetractionLength = printer.retract_length
+            self.FirmwareUnretractionAdditionalLength = None  # todo:  add this setting
+            self.FirmwareRetractionFeedrate = printer.retract_speed
+            self.FirmwareUnretractionFeedrate = printer.detract_speed
+
+        else:
+            self.FirmwareRetractionLength = None if pos is None else pos.FirmwareRetractionLength
+            self.FirmwareUnretractionAdditionalLength = None if pos is None else pos.FirmwareUnretractionAdditionalLength
+            self.FirmwareRetractionFeedrate = None if pos is None else pos.FirmwareRetractionFeedrate
+            self.FirmwareUnretractionFeedrate = None if pos is None else pos.FirmwareUnretractionFeedrate
+
+        # default firmware retraction zlift if default_firmware_retractions_zhop is enabled
+        if pos is None and printer.default_firmware_retractions_zhop:
+            self.FirmwareZLift = printer.z_hop
+        else:
+            self.FirmwareZLift = None if pos is None else pos.FirmwareZLift
+
+
         # State Flags
         self.IsLayerChange = False if pos is None else pos.IsLayerChange
         self.IsHeightChange = False if pos is None else pos.IsHeightChange
@@ -507,6 +527,16 @@ class Position(object):
             return None
         return pos.HasPositionError
 
+    def has_position_state_errors(self, index=0):
+        if (not self.has_homed_axes(index)
+            or self.is_relative(index) is None
+            or self.is_extruder_relative(index) is None
+            or not self.is_metric(index)
+            or self.has_position_error(index)
+        ):
+            return True
+        return False
+
     def position_error(self, index=0):
         pos = self.get_position(index)
         if pos is None:
@@ -667,6 +697,7 @@ class Position(object):
         pos.Parameters = parameters
         pos.GCode = gcode
 
+
         # apply the cmd to the position tracker
         # TODO: this should NOT be an else/if structure anymore..  Simplify
         if cmd is not None:
@@ -733,6 +764,133 @@ class Position(object):
                         pos.Y, pos.Z, pos.E)
                 self.Settings.current_debug_profile().log_position_change(
                     message)
+            elif cmd in ["G2", "G3"]:
+                # Movement Type
+                movement_type = ""
+                if cmd == "G2":
+                    movement_type = "clockwise"
+                    self.Settings.current_debug_profile().log_position_command_received("Received G2 - Clockwise Arc")
+                else:
+                    movement_type = "counter-clockwise"
+                    self.Settings.current_debug_profile().log_position_command_received("Received G3 - Counter-Clockwise Arc")
+
+                x = parameters["X"] if "X" in parameters else None
+                y = parameters["Y"] if "Y" in parameters else None
+                i = parameters["I"] if "I" in parameters else None
+                j = parameters["J"] if "J" in parameters else None
+                r = parameters["R"] if "R" in parameters else None
+                e = parameters["E"] if "E" in parameters else None
+                f = parameters["F"] if "F" in parameters else None
+
+                # If we're moving on the X/Y plane only, mark this position as travel only
+                pos.IsTravelOnly = e is None
+
+                can_update_position = False
+                if r is not None and (i is not None or j is not None):
+                    self.Settings.current_debug_profile().log_error(
+                        "Received {0} - but received R and either I or J, which is not allowed.".format(cmd))
+                elif i is not None or j is not None:
+                    # IJ Form
+                    if x is not None and y is not None:
+                        # not a circle, the position has changed
+                        can_update_position = True
+                        self.Settings.current_debug_profile().log_info(
+                            "Cannot yet calculate position restriction intersections when G2/G3.")
+                elif r is not None:
+                    # R Form
+                    if x is None and y is None:
+                        self.Settings.current_debug_profile().log_error(
+                            "Received {0} - but received R without x or y, which is not allowed.".format(cmd))
+                    else:
+                        can_update_position = True
+                        self.Settings.current_debug_profile().log_info(
+                            "Cannot yet calculate position restriction intersections when G2/G3.")
+
+                if can_update_position:
+                    if x is not None and  y is not None:
+                        if pos.IsRelative is not None:
+                            if pos.HasPositionError and not pos.IsRelative:
+                                pos.HasPositionError = False
+                                pos.PositionError = ""
+                            pos.update_position(self.BoundingBox, x, y, z=None, e=None, f=f)
+                        else:
+                            self.Settings.current_debug_profile().log_position_command_received(
+                                "Position - Unable to update the X/Y/Z axis position, the axis mode ("
+                                "relative/absolute) has not been explicitly set via G90/G91. "
+                            )
+                    if e is not None:
+                        if pos.IsExtruderRelative is not None:
+                            if pos.HasPositionError and not pos.IsExtruderRelative:
+                                pos.HasPositionError = False
+                                pos.PositionError = ""
+                            pos.update_position(
+                                self.BoundingBox,
+                                x=None,
+                                y=None,
+                                z=None,
+                                e=e,
+                                f=None)
+                        else:
+                            self.Settings.current_debug_profile().log_error(
+                                "Position - Unable to update the extruder position, the extruder mode ("
+                                "relative/absolute) has been selected (absolute/relative). "
+                            )
+                    message = "Position Change - {0} - {1} {2} Arc From(X:{3},Y:{4},Z:{5},E:{6}) - To(X:{7},Y:{8}," \
+                              "Z:{9},E:{10})"
+                    if previous_pos is None:
+                        message = message.format(
+                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type
+                            , "None", "None",
+                            "None", "None", pos.X, pos.Y, pos.Z, pos.E)
+                    else:
+                        message = message.format(
+                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type, previous_pos.X,
+                            previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
+                            pos.Y, pos.Z, pos.E)
+                    self.Settings.current_debug_profile().log_position_change(
+                        message)
+            elif cmd == "G10":
+                if "P" not in parameters:
+                    self.Settings.current_debug_profile().log_position_command_received(
+                        "Received G10 - Received firmware retract."
+                    )
+
+                    e = 0 if pos.FirmwareRetractionLength is None else -1.0 * pos.FirmwareRetractionLength
+                    previous_extruder_relative = pos.IsExtruderRelative
+                    previous_relative = pos.IsRelative
+
+                    pos.IsRelative = True
+                    pos.IsExtruderRelative = True
+                    pos.update_position(self.BoundingBox, x=None, y=None, z=pos.FirmwareZLift, e=e, f=pos.FirmwareRetractionFeedrate)
+                    pos.IsRelative = previous_relative
+                    pos.IsExtruderRelative = previous_extruder_relative
+            elif cmd == "G11":
+
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received G11 - Received firmware detract."
+                )
+
+                lift_distance = 0 if pos.FirmwareZLift is None else -1.0*pos.FirmwareZLift
+                e = 0 if pos.FirmwareRetractionLength is None else pos.FirmwareRetractionLength
+
+                if pos.FirmwareUnretractionFeedrate is not None:
+                    f = pos.FirmwareUnretractionFeedrate
+                else:
+                    f = pos.FirmwareRetractionFeedrate
+
+                if pos.FirmwareUnretractionAdditionalLength:
+                    e = e + pos.FirmwareUnretractionAdditionalLength
+
+                previous_extruder_relative = pos.IsExtruderRelative
+                previous_relative = pos.IsRelative
+
+                pos.IsRelative = True
+                pos.IsExtruderRelative = True
+                pos.update_position(self.BoundingBox, x=None, y=None, z=lift_distance,
+                                    e=e, f=f)
+                pos.IsRelative = previous_relative
+                pos.IsExtruderRelative = previous_extruder_relative
+
             elif cmd == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:
@@ -761,11 +919,10 @@ class Position(object):
                     )
             elif cmd == "G28":
                 # Home
-
                 pos.HasReceivedHomeCommand = True
-                x = parameters["X"] if "X" in parameters else None
-                y = parameters["Y"] if "Y" in parameters else None
-                z = parameters["Z"] if "Z" in parameters else None
+                x = True if "X" in parameters else None
+                y = True if "Y" in parameters else None
+                z = True if "Z" in parameters else None
                 # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
                 #w = parameters["W"] if "W" in parameters else None
 
@@ -788,8 +945,7 @@ class Position(object):
                 home_strings = []
                 if x_homed:
                     pos.XHomed = True
-                    pos.X = self.Origin[
-                        "X"] if not self.Printer.auto_detect_position else None
+                    pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
                     if pos.X is None:
                         home_strings.append("Homing X to Unknown Origin.")
                     else:
@@ -890,6 +1046,33 @@ class Position(object):
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
+            elif cmd == "M207":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware retraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in parameters:
+                    pos.FirmwareRetractionLength = parameters["S"]
+                if "R" in parameters:
+                    pos.FirmwareUnretractionAdditionalLength = parameters["R"]
+                if "F" in parameters:
+                    pos.FirmwareRetractionFeedrate = parameters["F"]
+                if "T" in parameters:
+                    pos.FirmwareUnretractionFeedrate = parameters["T"]
+                if "Z" in parameters:
+                    pos.FirmwareZLift = parameters["Z"]
+
+            elif cmd == "M208":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware detraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in parameters:
+                    pos.FirmwareUnretractionAdditionalLength = parameters["S"]
+                if "F" in parameters:
+                    pos.FirmwareUnretractionFeedrate = parameters["F"]
+
+
             elif cmd == "G92":
                 # Set Position (offset)
 
@@ -971,12 +1154,14 @@ class Position(object):
             (self.Extruder.has_changed(0) or pos.HasPositionChanged)
         ):
             if self.HasRestrictedPosition:
+                can_calculate_intersections = cmd in ["G0", "G1"]
                 _is_in_position, _intersections = self.calculate_path_intersections(
                     self.Snapshot.position_restrictions,
                     pos.X,
                     pos.Y,
                     previous_pos.X,
-                    previous_pos.Y
+                    previous_pos.Y,
+                    can_calculate_intersections
                 )
                 if _is_in_position:
                     pos.IsInPosition = _is_in_position
@@ -1025,11 +1210,11 @@ class Position(object):
             if pos.LastExtrusionHeight is not None:
                 # calculate lift, taking into account floating point
                 # rounding
-                lift = pos.distance_to_zlift(self.Printer.z_hop)
+                distance_to_lift = pos.distance_to_zlift(self.Printer.z_hop)
 
                 # todo:  replace rounding with a call to is close or greater than utility function
-                lift = utility.round_to(lift, self.PrinterTolerance)
-                is_lifted = lift >= self.Printer.z_hop and not (
+                distance_to_lift = utility.round_to(distance_to_lift, self.PrinterTolerance)
+                is_lifted = distance_to_lift <= 0.0 and not (
                     self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
                 )
 
@@ -1156,7 +1341,7 @@ class Position(object):
         return get_formatted_coordinates(current_position.X, current_position.Y,
                                          current_position.Z, current_position.E)
 
-    def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y):
+    def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 
         if self.calculate_is_in_position(
             restrictions,
@@ -1168,6 +1353,9 @@ class Position(object):
 
         if previous_x is None or previous_y is None:
             return False, False
+
+        if not can_calculate_intersections:
+            return False, None
 
         return False, self.calculate_in_position_intersection(
             restrictions,

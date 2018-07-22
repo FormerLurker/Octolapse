@@ -71,6 +71,8 @@ class Printer(object):
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.units_default = 'millimeters'
         self.axis_speed_display_units = 'mm-min'
+        self.default_firmware_retractions = False
+        self.default_firmware_retractions_zhop = False
         if printer is not None:
             if isinstance(printer, Printer):
                 self.guid = printer.guid
@@ -103,6 +105,9 @@ class Printer(object):
                 self.xyz_axes_default_mode = printer.xyz_axes_default_mode
                 self.units_default = printer.units_default
                 self.axis_speed_display_units = printer.axis_speed_display_units
+                self.default_firmware_retractions = printer.default_firmware_retractions
+                self.default_firmware_retractions_zhop = printer.default_firmware_retractions_zhop
+
             else:
                 self.update(printer)
 
@@ -191,6 +196,14 @@ class Printer(object):
             self.axis_speed_display_units = utility.get_string(
                 changes["axis_speed_display_units"], self.axis_speed_display_units
             )
+        if "default_firmware_retractions" in changes.keys():
+            self.default_firmware_retractions = utility.get_bool(
+                changes["default_firmware_retractions"], self.default_firmware_retractions
+            )
+        if "default_firmware_retractions_zhop" in changes.keys():
+            self.default_firmware_retractions_zhop = utility.get_bool(
+                changes["default_firmware_retractions_zhop"], self.default_firmware_retractions_zhop
+            )
 
     def to_dict(self):
         return {
@@ -224,7 +237,8 @@ class Printer(object):
             'xyz_axes_default_mode': self.xyz_axes_default_mode,
             'units_default': self.units_default,
             'axis_speed_display_units': self.axis_speed_display_units,
-
+            'default_firmware_retractions': self.default_firmware_retractions,
+            'default_firmware_retractions_zhop': self.default_firmware_retractions_zhop
         }
 
 
@@ -998,6 +1012,8 @@ class Camera(object):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
+        self.camera_type = "webcam"
+        self.external_camera_snapshot_script = ""
         self.delay = 125
         self.apply_settings_before_print = False
         self.address = "http://127.0.0.1/webcam/"
@@ -1069,6 +1085,14 @@ class Camera(object):
         if "description" in changes.keys():
             self.description = utility.get_string(
                 changes["description"], self.description)
+
+        if "camera_type" in changes.keys():
+            self.camera_type = utility.get_string(
+                changes["camera_type"], self.camera_type)
+        if "external_camera_snapshot_script" in changes.keys():
+            self.external_camera_snapshot_script = utility.get_string(
+                changes["external_camera_snapshot_script"], self.external_camera_snapshot_script)
+
         if "delay" in changes.keys():
             self.delay = utility.get_int(
                 changes["delay"], self.delay)
@@ -1147,7 +1171,6 @@ class Camera(object):
             self.jpeg_quality = utility.get_int(
                 changes["jpeg_quality"], self.jpeg_quality)
 
-
         if "brightness_request_template" in changes.keys():
             self.brightness_request_template = utility.get_string(
                 changes["brightness_request_template"], self.brightness_request_template)
@@ -1218,6 +1241,10 @@ class Camera(object):
             'guid': self.guid,
             'name': self.name,
             'description': self.description,
+
+            'camera_type': self.camera_type,
+            'external_camera_snapshot_script': self.external_camera_snapshot_script,
+
             'delay': self.delay,
             'address': self.address,
             'snapshot_request_template': self.snapshot_request_template,
@@ -1999,7 +2026,7 @@ class OctolapseSettings(object):
                 dict(value='absolute', name='Default To Absolute')
             ],
             'units_default_options': [
-                dict(value='require-explicit', name='Require Explicit G90/G91'),
+                dict(value='require-explicit', name='Require Explicit G21'),
                 dict(value='inches', name='Inches'),
                 dict(value='millimeters', name='Millimeters')
             ],
@@ -2081,6 +2108,10 @@ class OctolapseSettings(object):
             'current_debug_profile_guid': utility.get_string(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
             ),
+            'camera_type_options': [
+                dict(value='webcam', name='Webcam'),
+                dict(value='external-script', name='External Camera - Script')
+            ],
             'debug_profiles': []
         }
 

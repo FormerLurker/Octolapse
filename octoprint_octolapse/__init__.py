@@ -713,6 +713,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.on_print_resumed()
             elif event == Events.PRINT_FAILED:
                 self.on_print_failed()
+            elif event == Events.PRINT_CANCELLING:
+                self.on_print_cancelling()
             elif event == Events.PRINT_CANCELLED:
                 self.on_print_canceled()
             elif event == Events.PRINT_DONE:
@@ -803,7 +805,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
-        if self.Settings.current_camera().apply_settings_before_print:
+        if (self.Settings.current_camera().apply_settings_before_print
+            and self.Settings.current_camera().camera_type == "webcam"
+        ):
             self.apply_camera_settings(self.Settings.current_camera())
 
     def on_print_cancelled(self, message, is_error):
@@ -820,9 +824,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def start_timelapse(self):
         # check for version 1.3.7 min
-        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.3.7"):
+        if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
             return {'success': False,
-                    'error': "Octolapse requires Octoprint v1.3.7 or above, but version v{0} is installed."
+                    'error': "Octolapse requires Octoprint v1.3.9 rc3 or above, but version v{0} is installed."
                              "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
                     'warning': False}
         try:
@@ -904,12 +908,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
             }
 
-        # test the camera and see if it works.
-        results = camera.test_camera(self.Settings.current_camera())
-        if not results[0]:
-            return {'success': False, 'warning': False,
-                    'error': "The current camera profile did not pass testing.  You can "
-                             "adjust and test your camera in the profile settings page."}
+        if self.Settings.current_camera().camera_type == "webcam":
+            # test the camera and see if it works.
+            results = camera.test_camera(self.Settings.current_camera())
+            if not results[0]:
+                return {'success': False, 'warning': False,
+                        'error': "The current camera profile did not pass testing.  You can "
+                                 "adjust and test your camera in the profile settings page."}
 
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
@@ -1091,6 +1096,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Timelapse.on_print_disconnected()
         self.Settings.current_debug_profile().log_print_state_change("Printer disconnected.")
 
+    def on_print_cancelling(self):
+        self.Settings.current_debug_profile().log_print_state_change("Print cancelling.")
+        self.Timelapse.on_print_cancelling()
+
     def on_print_canceled(self):
         self.Settings.current_debug_profile().log_print_state_change("Print cancelled.")
         self.Timelapse.on_print_canceled()
@@ -1129,6 +1138,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # only handle commands sent while printing
             if self.Timelapse is not None:
                 return self.Timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])
+        except Exception as e:
+            if self.Settings is not None:
+                self.Settings.current_debug_profile().log_exception(e)
+            else:
+                self._logger.critical(utility.exception_to_string(e))
+
+    def on_gcode_sending(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+        try:
+            if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
+                self.Timelapse.on_gcode_sending(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             if self.Settings is not None:
                 self.Settings.current_debug_profile().log_exception(e)
@@ -1235,18 +1254,62 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # ~~ software update hook
     def get_update_information(self):
-        return dict(octolapse=dict(displayName="Octolapse",
-                                   displayVersion=self._plugin_version,
-                                   # version check: github repository
-                                   type="github_release",
-                                   user="FormerLurker",
-                                   repo="Octolapse",
-                                   current=self._plugin_version,
-                                   # update method: pip
-                                   pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip"))
+        # get the checkout type from the software updater
+        prerelease_channel = None
+        is_prerelease = False
+        # get this for reference.  Eventually I'll have to use it!
+        # is the software update set to prerelease?
+
+        if self._settings.settings.get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
+            # If it's a prerelease, look at the channel and configure the proper branch for Octolapse
+            prerelease_channel = self._settings.settings.get(
+                ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
+            )
+            if prerelease_channel == "rc/maintenance":
+                is_prerelease = True
+                prerelease_channel = "rc/maintenance"
+            elif prerelease_channel == "rc/devel":
+                is_prerelease = True
+                prerelease_channel = "rc/devel"
 
 
-# If you want your plugin to be registered within OctoPrint under a different
+        octolapse_info = dict(
+            displayName="Octolapse",
+            displayVersion=self._plugin_version,
+            # version check: github repository
+            type="github_release",
+            user="FormerLurker",
+            repo="Octolapse",
+            current=self._plugin_version,
+            branch="master",
+            prerelease=is_prerelease,
+            pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
+            stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
+            prerelease_branches=[
+                dict(
+                    branch="rc/maintenance",
+                    commitish=["rc/maintenance"],  # maintenance RCs
+                    name="Maintenance RCs"
+                ),
+                dict(
+                    branch="rc/devel",
+                    commitish=["rc/maintenance", "rc/devel"],  # devel & maintenance RCs
+                    name="Devel RCs"
+                )
+            ],
+        )
+
+        if prerelease_channel is not None:
+            octolapse_info["prerelease_channel"] = prerelease_channel
+        # return the update config
+        return dict(
+            octolapse=octolapse_info
+        )
+
+    def get_timelapse_extensions(*args, **kwargs):
+        return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
+
+# If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here.  Same goes for the
 # other metadata derived from setup.py that
@@ -1264,5 +1327,7 @@ def __plugin_load__():
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.on_gcode_queuing,
         "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.on_gcode_sent,
-        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received
+        "octoprint.comm.protocol.gcode.sending": __plugin_implementation__.on_gcode_sending,
+        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received,
+        "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions
     }

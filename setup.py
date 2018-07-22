@@ -9,7 +9,7 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "v0.3.1"
+plugin_version = "v0.3.3rc2"
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
@@ -25,7 +25,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow", "sarge", "six"]
+plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8"]
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point

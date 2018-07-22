@@ -80,6 +80,8 @@ $(function() {
         self.xyz_axes_default_mode = ko.observable(values.xyz_axes_default_mode);
         self.units_default = ko.observable(values.units_default);
         self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
+        self.default_firmware_retractions = ko.observable(values.default_firmware_retractions);
+        self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
 
         // get the time component of the axis speed units (min/mm)
         self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
