@@ -78,6 +78,7 @@ class Timelapse(object):
         self.Snapshot = None
         self.Gcode = None
         self.Printer = None
+        self.Camera = None
         self.CaptureSnapshot = None
         self.Position = None
         self.Rendering = None
@@ -132,6 +133,7 @@ class Timelapse(object):
         self.Gcode = SnapshotGcodeGenerator(
             self.Settings, octoprint_printer_profile)
         self.Printer = Printer(self.Settings.current_printer())
+        self.Camera = self.Settings.current_camera()
         self.Rendering = Rendering(self.Settings.current_rendering())
         self.CaptureSnapshot = CaptureSnapshot(
             self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
@@ -225,41 +227,49 @@ class Timelapse(object):
         self._snapshot_signal.set()
 
     def _take_snapshot_async(self):
+        snapshot_guid = str(uuid.uuid4())
         snapshot_async_payload = {
             "success": False,
             "error": "Waiting on thread to signal, aborting"
         }
+        if self.Camera.camera_type == "external-script":
+            job = self.CaptureSnapshot.create_snapshot_script_job(
+                "stabilization_start", self.Camera.external_camera_snapshot_script,
+                utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
+                snapshot_guid, on_complete=None, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
+            # run the job
+            job()
+        elif self.Camera.camera_type == "webcam":
+            if self._snapshot_signal.is_set():
+                # only clear signal and send a new M114 if we haven't already done that from another thread
+                self._snapshot_signal.clear()
+                # start the snapshot
+                self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
 
-        if self._snapshot_signal.is_set():
-            # only clear signal and send a new M114 if we haven't already done that from another thread
-            self._snapshot_signal.clear()
-            # start the snapshot
-            self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
 
-            snapshot_guid = str(uuid.uuid4())
-            snapshot_job = self.CaptureSnapshot.create_snapshot_job(
-                utility.get_currently_printing_filename(self.OctoprintPrinter),
-                self.SnapshotCount,
-                snapshot_guid,
-                on_success=self._on_snapshot_success,
-                on_fail=self._on_snapshot_fail,
-                on_complete=self._on_snapshot_complete
-            )
-            snapshot_thread = threading.Thread(target=snapshot_job)
-            snapshot_thread.daemon = True
-            snapshot_thread.start()
+                snapshot_job = self.CaptureSnapshot.create_snapshot_job(
+                    utility.get_currently_printing_filename(self.OctoprintPrinter),
+                    self.SnapshotCount,
+                    snapshot_guid,
+                    on_success=self._on_snapshot_success,
+                    on_fail=self._on_snapshot_fail,
+                    on_complete=self._on_snapshot_complete
+                )
+                snapshot_thread = threading.Thread(target=snapshot_job)
+                snapshot_thread.daemon = True
+                snapshot_thread.start()
 
-        snapshot_timeout = self._snapshot_timeout + (self.Settings.current_camera().delay/1000.0)
-        event_is_set = self._snapshot_signal.wait(snapshot_timeout)
-        if not event_is_set:
-            # we ran into a timeout while waiting for a fresh position
-            snapshot_async_payload["success"] = False
-            snapshot_async_payload["error"] = \
-                "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
+            snapshot_timeout = self._snapshot_timeout + (self.Camera.delay/1000.0)
+            event_is_set = self._snapshot_signal.wait(snapshot_timeout)
+            if not event_is_set:
+                # we ran into a timeout while waiting for a fresh position
+                snapshot_async_payload["success"] = False
+                snapshot_async_payload["error"] = \
+                    "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
 
-        else:
-            snapshot_async_payload["success"] = True
-            snapshot_async_payload["error"] = ""
+            else:
+                snapshot_async_payload["success"] = True
+                snapshot_async_payload["error"] = ""
 
         return snapshot_async_payload
 

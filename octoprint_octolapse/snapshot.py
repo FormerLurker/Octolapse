@@ -27,7 +27,7 @@ import os
 from io import open as i_open
 from PIL import ImageFile, Image
 from time import sleep, time
-
+from subprocess import Popen, CalledProcessError, PIPE
 import requests
 from PIL import Image
 # PIL is in fact in setup.py.
@@ -60,6 +60,26 @@ class CaptureSnapshot(object):
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
         new_snapshot_job = SnapshotJob(
             self.Settings, self.DataDirectory, snapshot_number, info, url,
+            snapshot_guid, self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
+            on_success=on_success, on_fail=on_fail
+        )
+
+        return new_snapshot_job.process
+
+    def create_snapshot_script_job(
+        self, script_type, script_path, printer_file_name, snapshot_number, snapshot_guid,
+        on_complete=None, on_success=None, on_fail=None
+    ):
+        info = SnapshotInfo(printer_file_name, self.PrintStartTime)
+        # set the file name.  It will be a guid + the file extension
+        info.FileName = "{0}.{1}".format(snapshot_guid, "jpg")
+        info.DirectoryName = utility.get_snapshot_temp_directory(
+            self.DataDirectory)
+        url = camera.format_request_template(
+            self.Camera.address, self.Camera.snapshot_request_template, "")
+        # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
+        new_snapshot_job = ExternalScriptCameraJob(
+            script_type, script_path, self.Settings, self.DataDirectory, snapshot_number, info,
             snapshot_guid, self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
             on_success=on_success, on_fail=on_fail
         )
@@ -119,6 +139,134 @@ class CaptureSnapshot(object):
             self.Settings.current_debug_profile().log_snapshot_clean(
                 "Snapshot - No need to clean snapshots: they have already been removed."
             )
+
+
+class ExternalScriptCameraJob(object):
+
+    def __init__(
+        self, script_type, script_path, settings, data_directory, snapshot_number,
+        snapshot_info, snapshot_guid,
+        delay_ms, timeout_seconds, on_complete, on_success, on_fail
+    ):
+
+        self.ScriptType = script_type
+        self.ScriptPath = script_path
+        self.DelaySeconds = delay_ms / 1000.0
+        camera_settings = settings.current_camera()
+        self.SnapshotNumber = snapshot_number
+        self.DataDirectory = data_directory
+        self.Address = camera_settings.address
+        self.Username = camera_settings.username
+        self.Password = camera_settings.password
+        self.IgnoreSslError = camera_settings.ignore_ssl_error
+        self.SnapshotTranspose = camera_settings.snapshot_transpose
+        self.Settings = settings
+        self.SnapshotInfo = snapshot_info
+        self.TimeoutSeconds = timeout_seconds
+        self.SnapshotGuid = snapshot_guid
+        self.OnCompleteCallback = on_complete
+        self.OnSuccessCallback = on_success
+        self.OnFailCallback = on_fail
+        self.HasError = False
+        self.ErrorMessage = ""
+        self.ErrorType = ""
+
+    def on_success(self):
+        if self.OnSuccessCallback is not None:
+            self.OnSuccessCallback()
+
+    def on_fail(self):
+        if self.OnFailCallback is not None:
+            self.OnFailCallback(self.ErrorMessage)
+
+    def on_complete(self):
+        if self.OnCompleteCallback is not None:
+            self.OnCompleteCallback()
+
+    def process(self):
+
+        # execute the script and send the parameters
+        self.HasError = False
+        self.ErrorMessage = "unknown"
+        snapshot_directory = "{0:s}{1:s}".format(
+            self.SnapshotInfo.DirectoryName, self.SnapshotInfo.FileName)
+
+        self.Settings.current_debug_profile().log_snapshot_download(
+            "Snapshot - running external {0} script.".format(self.ScriptType))
+        self.execute_script()
+
+        if not self.HasError and self.ScriptType == "snapshot":
+            # process any delay after the script has executed if this is a snapshot script.
+            if self.DelaySeconds < 0.001:
+                self.Settings.current_debug_profile().log_snapshot_download(
+                    "Snapshot Delay - No post snapshot delay configured.")
+            else:
+                # start the post script delay
+                # record the time we started sleeping
+                t0 = time()
+                # start the loop by setting is_sleeping to true
+                is_sleeping = True
+                # record the number of sleep attempts for debug purposes
+                sleep_tries = 0
+                delay_seconds = self.DelaySeconds - (time() - t0)
+
+                self.Settings.current_debug_profile().log_snapshot_download(
+                    "Snapshot Delay - Waiting {0} second(s) after executing the snapshot script."
+                    .format(self.DelaySeconds))
+
+                while delay_seconds >= 0.001:
+
+                    sleep_tries += 1  # increment the sleep try counter
+
+                    sleep(delay_seconds)  # sleep the calculated amount
+
+                    delay_seconds = self.DelaySeconds - (time() - t0)
+
+        # go ahead and report success or fail for the timelapse routine
+        if not self.HasError:
+            self.on_success()
+        else:
+            self.on_fail()
+        self.on_complete()
+
+        self.Settings.current_debug_profile().log_snapshot_download(
+            "Snapshot {0} script Job completed, signaling task queue.".format(self.ScriptType))
+
+    def execute_script(self):
+
+        try:
+            download_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber);
+            download_directory = os.path.dirname(download_full_path)
+            download_filename = os.path.basename(download_full_path)
+
+            p = Popen([
+                self.ScriptPath,
+                str(self.SnapshotNumber),
+                str(self.DelaySeconds),
+                self.DataDirectory,
+                download_directory,
+                download_filename,
+                download_full_path
+            ], shell=True, stdin=PIPE, stdout=PIPE, bufsize=1, stderr=PIPE)
+            p.wait()
+            stdout, stderror = p.communicate()
+            if stderror is not None:
+                self.Settings.current_debug_profile().log_error(
+                    "Error output was returned from the snapshot script: {0}".format(stderror))
+            if not p.returncode == 0:
+                self.ErrorMessage = (
+                    "Snapshot Script Error - The {0} script returned {1}, which indicates an error.  Please check" +
+                    "your script and try again.".format(self.ScriptType)
+                )
+                self.HasError = True
+        except CalledProcessError as e:
+            # If we can't create the thumbnail, just log
+            self.Settings.current_debug_profile().log_exception(e)
+            self.ErrorMessage = (
+                "Snapshot Script Error - An unexpected exception occurred executing the {0} script.  "
+                "Check the log file (plugin_octolapse.log) for details.".format(self.ScriptType)
+            )
+            self.HasError = True
 
 
 class SnapshotJob(object):

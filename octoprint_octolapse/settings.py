@@ -1012,6 +1012,8 @@ class Camera(object):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
+        self.camera_type = "webcam"
+        self.external_camera_snapshot_script = ""
         self.delay = 125
         self.apply_settings_before_print = False
         self.address = "http://127.0.0.1/webcam/"
@@ -1083,6 +1085,14 @@ class Camera(object):
         if "description" in changes.keys():
             self.description = utility.get_string(
                 changes["description"], self.description)
+
+        if "camera_type" in changes.keys():
+            self.camera_type = utility.get_string(
+                changes["camera_type"], self.camera_type)
+        if "external_camera_snapshot_script" in changes.keys():
+            self.external_camera_snapshot_script = utility.get_string(
+                changes["external_camera_snapshot_script"], self.external_camera_snapshot_script)
+
         if "delay" in changes.keys():
             self.delay = utility.get_int(
                 changes["delay"], self.delay)
@@ -1161,7 +1171,6 @@ class Camera(object):
             self.jpeg_quality = utility.get_int(
                 changes["jpeg_quality"], self.jpeg_quality)
 
-
         if "brightness_request_template" in changes.keys():
             self.brightness_request_template = utility.get_string(
                 changes["brightness_request_template"], self.brightness_request_template)
@@ -1232,6 +1241,10 @@ class Camera(object):
             'guid': self.guid,
             'name': self.name,
             'description': self.description,
+
+            'camera_type': self.camera_type,
+            'external_camera_snapshot_script': self.external_camera_snapshot_script,
+
             'delay': self.delay,
             'address': self.address,
             'snapshot_request_template': self.snapshot_request_template,
@@ -2095,6 +2108,10 @@ class OctolapseSettings(object):
             'current_debug_profile_guid': utility.get_string(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
             ),
+            'camera_type_options': [
+                dict(value='webcam', name='Webcam'),
+                dict(value='external-script', name='External Camera - Script')
+            ],
             'debug_profiles': []
         }
 

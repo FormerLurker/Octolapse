@@ -805,7 +805,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
-        if self.Settings.current_camera().apply_settings_before_print:
+        if (self.Settings.current_camera().apply_settings_before_print
+            and self.Settings.current_camera().camera_type == "webcam"
+        ):
             self.apply_camera_settings(self.Settings.current_camera())
 
     def on_print_cancelled(self, message, is_error):
@@ -906,12 +908,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
             }
 
-        # test the camera and see if it works.
-        results = camera.test_camera(self.Settings.current_camera())
-        if not results[0]:
-            return {'success': False, 'warning': False,
-                    'error': "The current camera profile did not pass testing.  You can "
-                             "adjust and test your camera in the profile settings page."}
+        if self.Settings.current_camera().camera_type == "webcam":
+            # test the camera and see if it works.
+            results = camera.test_camera(self.Settings.current_camera())
+            if not results[0]:
+                return {'success': False, 'warning': False,
+                        'error': "The current camera profile did not pass testing.  You can "
+                                 "adjust and test your camera in the profile settings page."}
 
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
