@@ -609,8 +609,6 @@ class TimelapseRenderJob(object):
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
 
-        # See unit tests in test/timelapse/test_timelapse_renderjob.py
-
         logger = logging.getLogger(__name__)
         ffmpeg = ffmpeg.strip()
 

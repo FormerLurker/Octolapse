@@ -23,6 +23,7 @@
 import os
 import os.path
 import random
+import re
 import unittest
 import uuid
 from Queue import Queue
@@ -30,7 +31,6 @@ from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 
-import random
 from PIL import Image
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering
@@ -80,7 +80,6 @@ class TestRender(unittest.TestCase):
                                   octoprint_timelapse_folder=self.octoprint_timelapse_folder,
                                   ffmpeg_path=self.ffmpeg_path,
                                   threads=1,
-                                  rendering_task_queue=self.render_task_queue,
                                   time_added=0,
                                   on_render_start=lambda job_id, payload: None,
                                   on_complete=lambda job_id, payload: None,
@@ -120,6 +119,11 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_watermark(self):
@@ -135,6 +139,11 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_gif(self):
@@ -149,4 +158,9 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1, "Extra output files detected!")
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.gif$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
