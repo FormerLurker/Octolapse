@@ -260,14 +260,14 @@ class ExternalScriptCameraJob(object):
                 download_directory,
                 download_filename,
                 download_full_path
-            ])
+            ], stdout=PIPE, stderr=PIPE)
 
-            stdout, stderror = p.communicate()
+            stdout, stderr = p.communicate()
             self.Settings.current_debug_profile().log_info(
                 "The following console output was returned from the snapshot script: {0}".format(stdout))
-            if stderror is not None:
+            if stderr is not None:
                 self.Settings.current_debug_profile().log_error(
-                    "Error output was returned from the snapshot script: {0}".format(stderror))
+                    "Error output was returned from the snapshot script: {0}".format(stderr))
             if not p.returncode == 0:
                 self.ErrorMessage = (
                     "Snapshot Script Error - The {0} script returned {1}, which indicates an error.  Please check" +
