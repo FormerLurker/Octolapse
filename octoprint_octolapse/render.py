@@ -349,7 +349,7 @@ class TimelapseRenderJob(object):
         except ValueError as e:
             self._debug.log_exception(e)
             self._output_filename = "RenderingFilenameTemplateError"
-        self._output_extension = self._rendering.output_format
+        self._output_extension = self._get_extension_from_output_format(self._rendering.output_format)
 
         # check for a rendered timelapse file collision
         original_output_filename = self._output_filename
@@ -513,6 +513,8 @@ class TimelapseRenderJob(object):
                 self._preprocess_images(preprocessed_filepath_template)
 
             if not self.has_error:
+                vcodec = self._get_vcodec_from_output_format(self._rendering.output_format)
+
                 # prepare ffmpeg command
                 command_str = self._create_ffmpeg_command_string(
                     self._ffmpeg,
@@ -523,7 +525,7 @@ class TimelapseRenderJob(object):
                     self._rendering_output_file_path,
                     self._rendering.output_format,
                     watermark=watermark_path,
-                    v_codec=self._get_vcodec_from_extension(self._rendering.output_format)
+                    v_codec=vcodec
                 )
                 self._debug.log_render_start(
                     "Running ffmpeg with command string: {0}".format(command_str))
@@ -617,19 +619,26 @@ class TimelapseRenderJob(object):
 
 
     @staticmethod
-    def _get_vcodec_from_extension(extension):
-        default_codec = "mpeg2video"
+    def _get_extension_from_output_format(output_format):
+        EXTENSIONS = {"avi": "avi",
+                      "flv": "flv",
+                      "h264": "mp4",
+                      "vob": "vob",
+                      "mp4": "mp4",
+                      "mpeg": "mpeg",
+                      "gif": "gif"}
+        return EXTENSIONS.get(output_format.lower(), "mp4")
 
-        if extension in ["mpeg", "vob"]:
-            return "mpeg2video"
-        elif extension in ["mp4", "avi"]:
-            return "mpeg4"
-        elif extension == "flv":
-            return "flv1"
-        elif extension == "gif":
-            return "gif"
-        else:
-            return default_codec
+    @staticmethod
+    def _get_vcodec_from_output_format(output_format):
+        VCODECS = {"avi": "mpeg4",
+                   "flv": "flv1",
+                   "gif": "gif",
+                   "h264": "h264",
+                   "mp4": "mpeg4",
+                   "mpeg": "mpeg2video",
+                   "vob": "mpeg2video"}
+        return VCODECS.get(output_format.lower(), "mpeg2video")
 
     @classmethod
     def _create_ffmpeg_command_string(
@@ -648,11 +657,10 @@ class TimelapseRenderJob(object):
             output_file (str): Absolute path to output file
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use for output. Default of yuv420p should usually fit the bill.
+            v_codec (str): The video codec to use when encoding the video.
         Returns:
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
-
-        # See unit tests in test/timelapse/test_timelapse_renderjob.py
 
         logger = logging.getLogger(__name__)
         ffmpeg = ffmpeg.strip()
@@ -660,11 +668,7 @@ class TimelapseRenderJob(object):
         if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
             ffmpeg = "\"{0}\"".format(ffmpeg)
         command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
-        # Umm yea, something about codecs and GIFS.
-        # See https://stackoverflow.com/a/47502141.
-        if output_format != 'GIF':
-            command.extend(['-vcodec', v_codec])
-        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(output_format)])
+        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-vcodec', v_codec])
 
         filter_string = cls._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 

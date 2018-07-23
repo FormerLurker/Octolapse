@@ -89,26 +89,42 @@ class TestRender(unittest.TestCase):
                                   clean_after_success=True,
                                   clean_after_fail=True)
 
-    # Function to find the resolution of the input video file.
-    # Source: https://stackoverflow.com/a/34356719/5195629.
-    @staticmethod
-    def get_video_resolution(pathToInputVideo):
-        cmd = "ffprobe -v quiet -print_format json -show_entries stream=width,height -select_streams v:0"
-        args = shlex.split(cmd)
-        args.append(pathToInputVideo)
-        # run the ffprobe process, decode stdout into utf-8 & convert to JSON
-        ffprobeOutput = subprocess.check_output(args).decode('utf-8')
-        ffprobeOutput = json.loads(ffprobeOutput)
+    def doTestCodec(self, name, extension, codec_name):
+        """
+        Tests a particular codec setup.
+        :param name: The internal Octolapse name of the codec.
+        :param extension: The file extension we should expect out of this configuration.
+        :param codec_name: The expected name that ffprobe should return for this codec.
+        """
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Use {} codec".format(name))
+        r.update({'output_format': name})
+        job = self.createRenderingJob(rendering=r)
 
-        # find height and width
-        width = ffprobeOutput['streams'][0]['width']
-        height = ffprobeOutput['streams'][0]['height']
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
 
-        return width, height
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.{}$'.format(extension), re.IGNORECASE))
+        output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
+        self.assertGreater(os.path.getsize(output_filepath), 0)
+        # Check the codec using ffprobe to make sure it matches what we expect.
+        actual_codec = subprocess.check_output(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+             "-of", "default=noprint_wrappers=1:nokey=1", output_filepath]).strip()
+        self.assertEqual(actual_codec, codec_name)
 
     def setUp(self):
-        self.rendering_job_id = "job_id"
         self.octolapse_settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.rendering_job_id = "job_id"
 
         self.print_name = "print_name"
         self.print_start_time = 0
@@ -139,6 +155,13 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_watermark(self):
@@ -155,22 +178,45 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
-    def test_gif(self):
-        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
-        # Create the job.
-        r = Rendering(guid=uuid.uuid4(), name="Render to GIF")
-        r.update({'output_format': 'GIF'})
-        job = self.createRenderingJob(rendering=r)
+    # True parameterized testing in unittest seems pretty complicated.
+    # I'll just manually generate tests for items in this list.
+    CODECS_AND_EXTENSIONS = {'avi': dict(name='avi', extension='avi', codec_name='mpeg4'),
+                             'flv': dict(name='flv', extension='flv', codec_name='flv'),
+                             'gif': dict(name='gif', extension='gif', codec_name='gif'),
+                             'h264': dict(name='h264', extension='mp4', codec_name='h264'),
+                             'mp4': dict(name='mp4', extension='mp4', codec_name='mpeg4'),
+                             'mpeg': dict(name='mpeg', extension='mpeg', codec_name='mpeg2video'),
+                             'vob': dict(name='vob', extension='vob', codec_name='mpeg2video')}
 
-        # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+    def test_avi_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['avi'])
 
-        # Assertions.
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+    def test_flv_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['flv'])
+
+    def test_gif_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['gif'])
+
+    def test_h264_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['h264'])
+
+    def test_mp4_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['mp4'])
+
+    def test_mpeg_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['mpeg'])
+
+    def test_vob_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['vob'])
 
     def test_overlay(self):
         self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
