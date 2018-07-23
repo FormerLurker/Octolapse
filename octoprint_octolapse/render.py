@@ -630,8 +630,7 @@ class TimelapseRenderJob(object):
                                                   pix_fmt=pix_fmt)
 
         if filter_string is not None:
-            logger.debug(
-                "Applying video filter chain: {}".format(filter_string))
+            logger.debug("Applying video filter chain: {}".format(filter_string))
             command.extend(["-vf", sarge.shell_quote(filter_string)])
 
         # finalize command with output file
@@ -651,38 +650,34 @@ class TimelapseRenderJob(object):
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use, defaults to "yuv420p" which should usually fit the bill
         Returns:
-            (str or None): filter string or None if no filters are required
+            (str): filter string
         """
 
-        # See unit tests in test/timelapse/test_timelapse_renderjob.py
+        filters = []
 
         # apply pixel format
-        filters = ["format={}".format(pix_fmt)]
+        filters.append('[{{prev_filter}}] format={} [{{next_filter}}]'.format(pix_fmt))
 
         # flip video if configured
         if hflip:
-            filters.append('hflip')
+            filters.append('[{prev_filter}] hflip [{next_filter}]')
         if vflip:
-            filters.append('vflip')
+            filters.append('[{prev_filter}] vflip [{next_filter}]')
         if rotate:
-            filters.append('transpose=2')
+            filters.append('[{prev_filter}] transpose=2 [{next_filter}]')
 
         # add watermark if configured
-        watermark_filter = None
         if watermark is not None:
-            watermark_filter = "movie={} [wm]; [{{input_name}}][wm] overlay=10:main_h-overlay_h-10".format(
-                watermark)
+            filters.append(
+                'movie={} [wm]; [{{prev_filter}}][wm] overlay=10:main_h-overlay_h-10 [{{next_filter}}]'.format(
+                    watermark))
 
-        filter_string = None
-        if len(filters) > 0:
-            if watermark_filter is not None:
-                filter_string = "[in] {} [postprocessed]; {} [out]".format(
-                    ",".join(filters), watermark_filter.format(input_name="postprocessed")
-                )
-            else:
-                filter_string = "[in] {} [out]".format(",".join(filters))
-        elif watermark_filter is not None:
-            filter_string = watermark_filter.format(input_name="in") + " [out]"
+        # Apply string format to each filter to chain them together.
+        filter_names = ['f' + str(x) for x in range(len(filters))] + ['out']
+        for i, previous_filter_name, next_filter_name in zip(range(len(filters)), filter_names, filter_names[1:]):
+            filters[i] = filters[i].format(prev_filter=previous_filter_name, next_filter=next_filter_name)
+        # Build the final filter string.
+        filter_string = "; ".join(filters)
 
         return filter_string
 

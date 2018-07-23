@@ -23,6 +23,7 @@
 import os
 import os.path
 import random
+import re
 import unittest
 import uuid
 from Queue import Queue
@@ -30,7 +31,6 @@ from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 
-import random
 from PIL import Image
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering
@@ -40,7 +40,7 @@ from octoprint_octolapse.utility import get_snapshot_filename, SnapshotNumberFor
 
 class TestRender(unittest.TestCase):
     @staticmethod
-    def createSnapshotDir(n, capture_template):
+    def createSnapshotDir(n, capture_template=None, size=(50, 50)):
         """Create n random snapshots in a named temporary folder. Return the absolute path to the directory.
         The user is responsible for deleting the directory when done."""
         # Make the temp folder.
@@ -50,7 +50,7 @@ class TestRender(unittest.TestCase):
         # Make images and save them with the correct names.
         random.seed(0)
         for i in range(n):
-            image = Image.new('RGB', size=(50, 50), color=tuple(randint(0, 255) for _ in range(3)))
+            image = Image.new('RGB', size=size, color=tuple(randint(0, 255) for _ in range(3)))
             image_path = "{0}{1}".format(dir, capture_template) % i
             image.save(image_path, 'JPEG')
         return dir
@@ -80,7 +80,6 @@ class TestRender(unittest.TestCase):
                                   octoprint_timelapse_folder=self.octoprint_timelapse_folder,
                                   ffmpeg_path=self.ffmpeg_path,
                                   threads=1,
-                                  rendering_task_queue=self.render_task_queue,
                                   time_added=0,
                                   on_render_start=lambda job_id, payload: None,
                                   on_complete=lambda job_id, payload: None,
@@ -97,7 +96,6 @@ class TestRender(unittest.TestCase):
 
         # Create fake snapshots.
         self.capture_template = get_snapshot_filename(self.print_name, self.print_start_time, SnapshotNumberFormat)
-        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template)
         self.data_directory = mkdtemp()
         self.octoprint_timelapse_folder = mkdtemp()
 
@@ -111,6 +109,7 @@ class TestRender(unittest.TestCase):
         rmtree(self.octoprint_timelapse_folder)
 
     def test_basicRender(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         job = self.createRenderingJob(rendering=None)
 
@@ -123,6 +122,7 @@ class TestRender(unittest.TestCase):
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_watermark(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         watermark_file = self.createWatermark()
         r = Rendering(guid=uuid.uuid4(), name="Render with Watermark")
@@ -138,6 +138,7 @@ class TestRender(unittest.TestCase):
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_gif(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Render to GIF")
         r.update({'output_format': 'GIF'})
