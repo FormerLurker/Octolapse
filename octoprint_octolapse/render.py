@@ -599,8 +599,8 @@ class TimelapseRenderJob(object):
             input_path = "{0}{1}".format(self._capture_dir, self._capture_file_template) % i
             if not os.path.isfile(input_path):
                 break
-            # Get file creation time, or failing that, last file modification time.
-            timestamp = os.path.getctime(input_path) or os.path.getmtime(input_path)
+            # Get last file modification time.
+            timestamp = os.path.getmtime(input_path)
             if first_timestamp is None:
                 first_timestamp = timestamp
             current_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
