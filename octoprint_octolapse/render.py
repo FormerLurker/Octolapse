@@ -611,6 +611,7 @@ class TimelapseRenderJob(object):
             rotate (bool): Perform 90° CCW rotation on input material.
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use for output. Default of yuv420p should usually fit the bill.
+            v_codec (str): The video codec to use when encoding the video.
         Returns:
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
@@ -621,11 +622,7 @@ class TimelapseRenderJob(object):
         if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
             ffmpeg = "\"{0}\"".format(ffmpeg)
         command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
-        # Umm yea, something about codecs and GIFS.
-        # See https://stackoverflow.com/a/47502141.
-        if v_codec != 'gif':
-            command.extend(['-vcodec', v_codec])
-        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(v_codec)])
+        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-vcodec', v_codec])
 
         filter_string = cls._create_filter_string(hflip=h_flip,
                                                   vflip=v_flip,

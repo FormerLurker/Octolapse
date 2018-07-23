@@ -86,9 +86,30 @@ class TestRender(unittest.TestCase):
                                   clean_after_success=True,
                                   clean_after_fail=True)
 
+    def doTestCodec(self, codec, extension):
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Use {} codec".format(codec))
+        r.update({'output_format': codec})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.{}$'.format(extension), re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
+
     def setUp(self):
-        self.rendering_job_id = "job_id"
         self.octolapse_settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.rendering_job_id = "job_id"
 
         self.print_name = "print_name"
         self.print_start_time = 0
@@ -150,44 +171,33 @@ class TestRender(unittest.TestCase):
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
-    def test_gif(self):
-        # Create the job.
-        r = Rendering(guid=uuid.uuid4(), name="Render to GIF")
-        r.update({'output_format': 'GIF'})
-        job = self.createRenderingJob(rendering=r)
+    # True parameterized testing in unittest seems pretty complicated.
+    # I'll just manually generate tests for items in this list.
+    CODECS_AND_EXTENSIONS = {'avi': dict(codec='avi', extension='avi'),
+                             'flv': dict(codec='flv', extension='flv'),
+                             'gif': dict(codec='gif', extension='gif'),
+                             'h264': dict(codec='h264', extension='mp4'),
+                             'mp4': dict(codec='mp4', extension='mp4'),
+                             'mpeg': dict(codec='mpeg', extension='mpeg'),
+                             'vob': dict(codec='vob', extension='vob')}
 
-        # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+    def test_avi_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['avi'])
 
-        # Assertions.
-        output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 1,
-                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
-                             output_files))
-        output_filename = output_files[0]
-        self.assertRegexpMatches(output_filename, re.compile('.*\.gif$', re.IGNORECASE))
-        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+    def test_flv_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['flv'])
+
+    def test_gif_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['gif'])
 
     def test_h264_codec(self):
-        # Create the job.
-        r = Rendering(guid=uuid.uuid4(), name="Use H264 codec")
-        r.update({'output_format': 'h264'})
-        job = self.createRenderingJob(rendering=r)
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['h264'])
 
-        # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+    def test_mp4_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['mp4'])
 
-        # Assertions.
-        output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 1,
-                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
-                             output_files))
-        output_filename = output_files[0]
-        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
-        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+    def test_mpeg_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['mpeg'])
+
+    def test_vob_codec(self):
+        self.doTestCodec(**self.CODECS_AND_EXTENSIONS['vob'])

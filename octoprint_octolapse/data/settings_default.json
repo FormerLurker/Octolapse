@@ -2150,7 +2150,7 @@
       "value": "gif"
     },
     {
-      "name": "H.264",
+      "name": "H.264/MPEG-4 AVC",
       "value": "h264"
     },
     {
@@ -2158,7 +2158,7 @@
       "value": "vob"
     },
     {
-      "name": "MP4",
+      "name": "MP4 (libxvid)",
       "value": "mp4"
     },
     {
