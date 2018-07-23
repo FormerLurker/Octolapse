@@ -901,7 +901,7 @@ class Rendering(object):
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         self.enable_watermark = False
         self.selected_watermark = ""
-        self.overlay_text = None
+        self.overlay_text_template = ""
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -924,7 +924,7 @@ class Rendering(object):
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
                 self.selected_watermark = rendering.selected_watermark
-                self.overlay_text = rendering.overlay_text
+                self.overlay_text_template = rendering.overlay_text_template
             else:
                 self.update(rendering)
 
@@ -982,8 +982,8 @@ class Rendering(object):
         if "selected_watermark" in changes.keys():
             self.selected_watermark = utility.get_string(
                 changes["selected_watermark"], self.selected_watermark)
-        if "overlay_text" in changes.keys():
-            self.overlay_text = utility.get_string(changes["overlay_text"], self.overlay_text)
+        if "overlay_text_template" in changes.keys():
+            self.overlay_text_template = utility.get_string(changes["overlay_text_template"], self.overlay_text_template)
 
     def to_dict(self):
         return {
@@ -1007,7 +1007,7 @@ class Rendering(object):
             'output_template': self.output_template,
             'enable_watermark': self.enable_watermark,
             'selected_watermark': self.selected_watermark,
-            'overlay_text': self.overlay_text,
+            'overlay_text_template': self.overlay_text_template,
         }
 
 
@@ -1706,6 +1706,10 @@ class OctolapseSettings(object):
             "SNAPSHOTCOUNT",
             "FPS"
         ]
+        self.overlay_text_templates = [
+            "current_time",
+            "time_elapsed"
+        ]
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
         self.DefaultStabilization = Stabilization(
@@ -2065,6 +2069,7 @@ class OctolapseSettings(object):
                 dict(value='gif', name='GIF'),
             ],
             'rendering_file_templates': self.rendering_file_templates,
+            'overlay_text_templates': self.overlay_text_templates,
             'camera_powerline_frequency_options': [
                 dict(value='50', name='50 HZ (Europe, China, India, etc)'),
                 dict(value='60', name='60 HZ (North/South America, Japan, etc')

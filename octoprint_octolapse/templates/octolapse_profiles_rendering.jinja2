@@ -280,6 +280,20 @@
                             </div>
                         </div>
                     </div>
+                <div class="control-group">
+                    <label class="control-label">Overlay</label>
+                    <div class="controls">
+                        <textarea id="octolapse_overlay_text_template" name="overlay_text_template" class="input-block-level" data-bind="value: overlay_text_template"/>
+                        <div class="error_label_container text-error"></div>
+                        <p class="help-inline">
+                            Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
+                            <i>
+                                <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
+                                    <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}</span>
+                            </i>
+                        </p>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>

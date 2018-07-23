@@ -24,15 +24,15 @@
 import itertools
 import logging
 import math
-from datetime import timedelta
 import os
 import shutil
 import sys
-from tempfile import mkdtemp
 import threading
 import time
 # sarge was added to the additional requirements for the plugin
 import uuid
+from datetime import datetime, timedelta
+from tempfile import mkdtemp
 
 import sarge
 from PIL import Image, ImageDraw, ImageFont
@@ -72,6 +72,20 @@ def is_rendering_template_valid(template, options, data_directory):
 
     return True, ""
 
+
+def is_overlay_text_template_valid(template, options):
+    # make sure we have all the replacements we need
+    option_dict = {}
+    for option in options:
+        option_dict[option] = "F"  # use any valid file character, F seems ok
+    try:
+        template.format(**option_dict)
+    except KeyError as e:
+        return False, "The following token is invalid: {{{0}}}".format(e.args[0])
+    except ValueError:
+        return False, "A value error occurred when replacing the provided tokens."
+
+    return True, ""
 
 class Render(object):
     @staticmethod
@@ -592,7 +606,8 @@ class TimelapseRenderJob(object):
             timestamp = os.path.getctime(input_path) or os.path.getmtime(input_path)
             if first_timestamp is None:
                 first_timestamp = timestamp
-            text = str(timedelta(seconds=timestamp-first_timestamp))
+            current_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+            time_elapsed = str(timedelta(seconds=round(timestamp - first_timestamp)))
 
             image = Image.open(input_path)
             # Flip image if configured.
@@ -604,10 +619,11 @@ class TimelapseRenderJob(object):
                 image = image.transpose(Image.ROTATE_90)
 
             # Draw overlay text.
-            if self._rendering.overlay_text:
-                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
+            if self._rendering.overlay_text_template:
+                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
                 d = ImageDraw.Draw(image)
-                d.text((10, 10), text, font=fnt, fill=(255, 255, 255, 128))
+                text = self._rendering.overlay_text_template.format(current_time=current_time, time_elapsed=time_elapsed)
+                d.text((10, 10), text=text, font=fnt, fill=(255, 255, 255, 128))
 
             # Save processed image.
             image.save(processed_filepath % i)

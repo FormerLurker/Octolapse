@@ -58,6 +58,7 @@ $(function() {
         self.enable_watermark = ko.observable(values.enable_watermark);
         self.selected_watermark = ko.observable(values.selected_watermark); // Absolute filepath of the selected watermark.
         self.watermark_list = ko.observableArray(); // A list of WatermarkImages that are available for selection on the server.
+        self.overlay_text_template = ko.observable(values.overlay_text_template);
 
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
@@ -153,20 +154,27 @@ $(function() {
     Octolapse.RenderingProfileValidationRules = {
         rules: {
             bitrate: { required: true, ffmpegBitRate: true },
+            min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
+            max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' },
             output_template: {
                 remote: {
                     url: "./plugin/octolapse/validateRenderingTemplate",
                     type:"post"
                 }
             },
-            min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
-            max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' }
+            overlay_text_template: {
+                remote: {
+                    url: "./plugin/octolapse/validateOverlayTextTemplate",
+                    type:"post"
+                }
+            },
         },
         messages: {
             name: "Please enter a name for your profile",
             min_fps: { lessThanOrEqual: 'Must be less than or equal to the maximum fps.' },
             max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
-            output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' }
+            output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' },
+            overlay_text_template: { octolapseOverlayTextTemplate: 'Either there is an invalid token in the overlay text template, or the resulting file name is not valid.' },
         }
     };
 });

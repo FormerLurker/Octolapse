@@ -201,7 +201,7 @@ class TestRender(unittest.TestCase):
         self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
-        r.update({'overlay_text': ''})
+        r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}"})
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
