@@ -314,8 +314,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         template = flask.request.form['output_template']
         result = render.is_rendering_template_valid(
             template,
-            self.Settings.rendering_file_templates,
-            self.get_plugin_data_folder()
+            self.Settings.rendering_file_templates
         )
         if result[0]:
             valid = "true"

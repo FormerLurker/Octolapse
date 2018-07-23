@@ -49,9 +49,6 @@ $(function() {
         self.output_format = ko.observable(values.output_format);
         self.sync_with_timelapse = ko.observable(values.sync_with_timelapse);
         self.bitrate = ko.observable(values.bitrate);
-        self.flip_h = ko.observable(values.flip_h);
-        self.flip_v = ko.observable(values.flip_v);
-        self.rotate_90 = ko.observable(values.rotate_90);
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);

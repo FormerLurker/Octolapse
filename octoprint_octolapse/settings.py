@@ -893,9 +893,6 @@ class Rendering(object):
         self.output_format = 'mp4'
         self.sync_with_timelapse = True
         self.bitrate = "8000K"
-        self.flip_h = False
-        self.flip_v = False
-        self.rotate_90 = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
@@ -916,9 +913,6 @@ class Rendering(object):
                 self.output_format = rendering.output_format
                 self.sync_with_timelapse = rendering.sync_with_timelapse
                 self.bitrate = rendering.bitrate
-                self.flip_h = rendering.flip_h
-                self.flip_v = rendering.flip_v
-                self.rotate_90 = rendering.rotate_90
                 self.enable_watermark = rendering.enable_watermark
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
@@ -958,13 +952,6 @@ class Rendering(object):
                 changes["sync_with_timelapse"], self.sync_with_timelapse)
         if "bitrate" in changes.keys():
             self.bitrate = utility.get_bitrate(changes["bitrate"], self.bitrate)
-        if "flip_h" in changes.keys():
-            self.flip_h = utility.get_bool(changes["flip_h"], self.flip_h)
-        if "flip_v" in changes.keys():
-            self.flip_v = utility.get_bool(changes["flip_v"], self.flip_v)
-        if "rotate_90" in changes.keys():
-            self.rotate_90 = utility.get_bool(
-                changes["rotate_90"], self.rotate_90)
 
         if "post_roll_seconds" in changes.keys():
             self.post_roll_seconds = utility.get_float(
@@ -999,9 +986,6 @@ class Rendering(object):
             'output_format': self.output_format,
             'sync_with_timelapse': self.sync_with_timelapse,
             'bitrate': self.bitrate,
-            'flip_h': self.flip_h,
-            'flip_v': self.flip_v,
-            'rotate_90': self.rotate_90,
             'post_roll_seconds': self.post_roll_seconds,
             'pre_roll_seconds': self.pre_roll_seconds,
             'output_template': self.output_template,

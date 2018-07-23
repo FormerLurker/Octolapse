@@ -605,14 +605,6 @@ class TimelapseRenderJob(object):
             time_elapsed = str(timedelta(seconds=round(timestamp - first_timestamp)))
 
             image = Image.open(input_path)
-            # Flip image if configured.
-            if self._rendering.flip_h:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            if self._rendering.flip_v:
-                image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            if self._rendering.rotate_90:
-                image = image.transpose(Image.ROTATE_90)
-
             # Draw overlay text.
             if self._rendering.overlay_text_template:
                 fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
