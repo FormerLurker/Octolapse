@@ -96,6 +96,7 @@ class TestRender(unittest.TestCase):
         :param extension: The file extension we should expect out of this configuration.
         :param codec_name: The expected name that ffprobe should return for this codec.
         """
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Use {} codec".format(name))
         r.update({'output_format': name})

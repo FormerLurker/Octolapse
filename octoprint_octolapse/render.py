@@ -609,10 +609,10 @@ class TimelapseRenderJob(object):
             image = Image.open(input_path)
             # Draw overlay text.
             if self._rendering.overlay_text_template:
-                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
+                font = ImageFont.load_default()
                 d = ImageDraw.Draw(image)
                 text = self._rendering.overlay_text_template.format(current_time=current_time, time_elapsed=time_elapsed)
-                d.text((10, 10), text=text, font=fnt, fill=(255, 255, 255, 128))
+                d.text((10, 10), text=text, font=font, fill=(255, 255, 255, 128))
 
             # Save processed image.
             image.save(processed_filepath % i)
