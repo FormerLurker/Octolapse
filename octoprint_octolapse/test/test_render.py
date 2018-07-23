@@ -20,10 +20,12 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
+import json
 import os
 import os.path
 import random
 import re
+import shlex
 import subprocess
 import unittest
 import uuid
@@ -41,7 +43,7 @@ from octoprint_octolapse.utility import get_snapshot_filename, SnapshotNumberFor
 
 class TestRender(unittest.TestCase):
     @staticmethod
-    def createSnapshotDir(n, capture_template):
+    def createSnapshotDir(n, capture_template=None, size=(50, 50)):
         """Create n random snapshots in a named temporary folder. Return the absolute path to the directory.
         The user is responsible for deleting the directory when done."""
         # Make the temp folder.
@@ -51,7 +53,7 @@ class TestRender(unittest.TestCase):
         # Make images and save them with the correct names.
         random.seed(0)
         for i in range(n):
-            image = Image.new('RGB', size=(50, 50), color=tuple(randint(0, 255) for _ in range(3)))
+            image = Image.new('RGB', size=size, color=tuple(randint(0, 255) for _ in range(3)))
             image_path = "{0}{1}".format(dir, capture_template) % i
             image.save(image_path, 'JPEG')
         return dir
@@ -130,7 +132,6 @@ class TestRender(unittest.TestCase):
 
         # Create fake snapshots.
         self.capture_template = get_snapshot_filename(self.print_name, self.print_start_time, SnapshotNumberFormat)
-        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template)
         self.data_directory = mkdtemp()
         self.octoprint_timelapse_folder = mkdtemp()
 
@@ -144,6 +145,7 @@ class TestRender(unittest.TestCase):
         rmtree(self.octoprint_timelapse_folder)
 
     def test_basicRender(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         job = self.createRenderingJob(rendering=None)
 
@@ -163,6 +165,7 @@ class TestRender(unittest.TestCase):
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_watermark(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
         # Create the job.
         watermark_file = self.createWatermark()
         r = Rendering(guid=uuid.uuid4(), name="Render with Watermark")
@@ -214,3 +217,26 @@ class TestRender(unittest.TestCase):
 
     def test_vob_codec(self):
         self.doTestCodec(**self.CODECS_AND_EXTENSIONS['vob'])
+
+    def test_overlay(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
+        r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}"})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
+        self.assertGreater(os.path.getsize(output_filepath), 0)

@@ -21,6 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
+import itertools
 import logging
 import math
 import os
@@ -30,14 +31,17 @@ import threading
 import time
 # sarge was added to the additional requirements for the plugin
 import uuid
+from datetime import datetime, timedelta
+from tempfile import mkdtemp
 
 import sarge
+from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
 
 
-def is_rendering_template_valid(template, options, data_directory):
+def is_rendering_template_valid(template, options):
     # make sure we have all the replacements we need
     option_dict = {}
     for option in options:
@@ -48,13 +52,8 @@ def is_rendering_template_valid(template, options, data_directory):
         return False, "The following token is invalid: {{{0}}}".format(e.args[0])
     except ValueError:
         return False, "A value error occurred when replacing the provided tokens."
-    temp_directory = "{0}{1}{2}{3}".format(data_directory, os.sep, str(uuid.uuid4()), os.sep)
 
-    try:
-        os.makedirs(temp_directory)
-    except (IOError, OSError):
-        return False, "Could not create a temp directory at {0} to test the template.".format(temp_directory)
-
+    temp_directory = mkdtemp()
     file_path = "{0}{1}.{2}".format(temp_directory, filename, "mp4")
     # see if the filename is valid
     if not os.access(file_path, os.W_OK):
@@ -68,6 +67,20 @@ def is_rendering_template_valid(template, options, data_directory):
 
     return True, ""
 
+
+def is_overlay_text_template_valid(template, options):
+    # make sure we have all the replacements we need
+    option_dict = {}
+    for option in options:
+        option_dict[option] = "F"  # use any valid file character, F seems ok
+    try:
+        template.format(**option_dict)
+    except KeyError as e:
+        return False, "The following token is invalid: {{{0}}}".format(e.args[0])
+    except ValueError:
+        return False, "A value error occurred when replacing the provided tokens."
+
+    return True, ""
 
 class Render(object):
     @staticmethod
@@ -488,6 +501,17 @@ class TimelapseRenderJob(object):
                         watermark_path = watermark_path.replace(
                             "\\", "/").replace(":", "\\\\:")
 
+            # Make a temporary directory to store preprocessed images.
+            preprocessed_images_dir = mkdtemp()
+            preprocessed_filepath_template = os.path.join(preprocessed_images_dir, self._capture_file_template)
+            dir = os.path.dirname(preprocessed_filepath_template)
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+            if not self.has_error:
+                self._debug.log_render_start("Starting Pillow preprocessing.")
+                # Do Pillow preprocessing.
+                self._preprocess_images(preprocessed_filepath_template)
+
             if not self.has_error:
                 vcodec = self._get_vcodec_from_output_format(self._rendering.output_format)
 
@@ -497,11 +521,9 @@ class TimelapseRenderJob(object):
                     self._fps,
                     self._rendering.bitrate,
                     self._threads,
-                    self._input,
+                    preprocessed_filepath_template,
                     self._rendering_output_file_path,
-                    h_flip=self._rendering.flip_h,
-                    v_flip=self._rendering.flip_v,
-                    rotate=self._rendering.rotate_90,
+                    self._rendering.output_format,
                     watermark=watermark_path,
                     v_codec=vcodec
                 )
@@ -527,6 +549,10 @@ class TimelapseRenderJob(object):
                         )
                         self.error_type = "rendering-exception"
                         self.has_error = True
+
+            if (not self.has_error and self.cleanAfterSuccess) or (self.has_error and self.cleanAfterFail):
+                # Delete preprocessed images.
+                shutil.rmtree(preprocessed_images_dir)
 
             if not self.has_error:
                 if self._synchronize:
@@ -567,6 +593,31 @@ class TimelapseRenderJob(object):
 
         self._on_complete()
 
+    def _preprocess_images(self, processed_filepath):
+        first_timestamp = None
+        for i in itertools.count():
+            input_path = "{0}{1}".format(self._capture_dir, self._capture_file_template) % i
+            if not os.path.isfile(input_path):
+                break
+            # Get file creation time, or failing that, last file modification time.
+            timestamp = os.path.getctime(input_path) or os.path.getmtime(input_path)
+            if first_timestamp is None:
+                first_timestamp = timestamp
+            current_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+            time_elapsed = str(timedelta(seconds=round(timestamp - first_timestamp)))
+
+            image = Image.open(input_path)
+            # Draw overlay text.
+            if self._rendering.overlay_text_template:
+                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
+                d = ImageDraw.Draw(image)
+                text = self._rendering.overlay_text_template.format(current_time=current_time, time_elapsed=time_elapsed)
+                d.text((10, 10), text=text, font=fnt, fill=(255, 255, 255, 128))
+
+            # Save processed image.
+            image.save(processed_filepath % i)
+
+
     @staticmethod
     def _get_extension_from_output_format(output_format):
         EXTENSIONS = {"avi": "avi",
@@ -592,9 +643,7 @@ class TimelapseRenderJob(object):
     @classmethod
     def _create_ffmpeg_command_string(
         cls, ffmpeg, fps, bitrate, threads,
-        input_file, output_file,
-        h_flip=False, v_flip=False,
-        rotate=False, watermark=None, pix_fmt="yuv420p",
+        input_file, output_file, output_format='vob', watermark=None, pix_fmt="yuv420p",
         v_codec="mpeg2video"
     ):
         """
@@ -606,9 +655,6 @@ class TimelapseRenderJob(object):
             threads (int): Number of threads to use for rendering
             input_file (str): Absolute path to input files including file mask
             output_file (str): Absolute path to output file
-            h_flip (bool): Perform horizontal flip on input material.
-            v_flip (bool): Perform vertical flip on input material.
-            rotate (bool): Perform 90° CCW rotation on input material.
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use for output. Default of yuv420p should usually fit the bill.
             v_codec (str): The video codec to use when encoding the video.
@@ -624,15 +670,10 @@ class TimelapseRenderJob(object):
         command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
         command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-vcodec', v_codec])
 
-        filter_string = cls._create_filter_string(hflip=h_flip,
-                                                  vflip=v_flip,
-                                                  rotate=rotate,
-                                                  watermark=watermark,
-                                                  pix_fmt=pix_fmt)
+        filter_string = cls._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
         if filter_string is not None:
-            logger.debug(
-                "Applying video filter chain: {}".format(filter_string))
+            logger.debug("Applying video filter chain: {}".format(filter_string))
             command.extend(["-vf", sarge.shell_quote(filter_string)])
 
         # finalize command with output file
@@ -642,48 +683,33 @@ class TimelapseRenderJob(object):
         return " ".join(command)
 
     @classmethod
-    def _create_filter_string(cls, hflip=False, vflip=False, rotate=False, watermark=None, pix_fmt="yuv420p"):
+    def _create_filter_string(cls, watermark=None, pix_fmt="yuv420p"):
         """
         Creates an ffmpeg filter string based on input parameters.
         Arguments:
-            hflip (bool): Perform horizontal flip on input material.
-            vflip (bool): Perform vertical flip on input material.
-            rotate (bool): Perform 90° CCW rotation on input material.
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use, defaults to "yuv420p" which should usually fit the bill
         Returns:
-            (str or None): filter string or None if no filters are required
+            (str): filter string
         """
 
-        # See unit tests in test/timelapse/test_timelapse_renderjob.py
+        filters = []
 
         # apply pixel format
-        filters = ["format={}".format(pix_fmt)]
-
-        # flip video if configured
-        if hflip:
-            filters.append('hflip')
-        if vflip:
-            filters.append('vflip')
-        if rotate:
-            filters.append('transpose=2')
+        filters.append('[{{prev_filter}}] format={} [{{next_filter}}]'.format(pix_fmt))
 
         # add watermark if configured
-        watermark_filter = None
         if watermark is not None:
-            watermark_filter = "movie={} [wm]; [{{input_name}}][wm] overlay=10:main_h-overlay_h-10".format(
-                watermark)
+            filters.append(
+                'movie={} [wm]; [{{prev_filter}}][wm] overlay=10:main_h-overlay_h-10 [{{next_filter}}]'.format(
+                    watermark))
 
-        filter_string = None
-        if len(filters) > 0:
-            if watermark_filter is not None:
-                filter_string = "[in] {} [postprocessed]; {} [out]".format(
-                    ",".join(filters), watermark_filter.format(input_name="postprocessed")
-                )
-            else:
-                filter_string = "[in] {} [out]".format(",".join(filters))
-        elif watermark_filter is not None:
-            filter_string = watermark_filter.format(input_name="in") + " [out]"
+        # Apply string format to each filter to chain them together.
+        filter_names = ['f' + str(x) for x in range(len(filters))] + ['out']
+        for i, previous_filter_name, next_filter_name in zip(range(len(filters)), filter_names, filter_names[1:]):
+            filters[i] = filters[i].format(prev_filter=previous_filter_name, next_filter=next_filter_name)
+        # Build the final filter string.
+        filter_string = "; ".join(filters)
 
         return filter_string
 
