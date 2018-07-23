@@ -24,6 +24,7 @@ import os
 import os.path
 import random
 import re
+import subprocess
 import unittest
 import uuid
 from Queue import Queue
@@ -86,10 +87,16 @@ class TestRender(unittest.TestCase):
                                   clean_after_success=True,
                                   clean_after_fail=True)
 
-    def doTestCodec(self, codec, extension):
+    def doTestCodec(self, name, extension, codec_name):
+        """
+        Tests a particular codec setup.
+        :param name: The internal Octolapse name of the codec.
+        :param extension: The file extension we should expect out of this configuration.
+        :param codec_name: The expected name that ffprobe should return for this codec.
+        """
         # Create the job.
-        r = Rendering(guid=uuid.uuid4(), name="Use {} codec".format(codec))
-        r.update({'output_format': codec})
+        r = Rendering(guid=uuid.uuid4(), name="Use {} codec".format(name))
+        r.update({'output_format': name})
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
@@ -105,7 +112,13 @@ class TestRender(unittest.TestCase):
                              output_files))
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.{}$'.format(extension), re.IGNORECASE))
-        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
+        output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
+        self.assertGreater(os.path.getsize(output_filepath), 0)
+        # Check the codec using ffprobe to make sure it matches what we expect.
+        actual_codec = subprocess.check_output(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+             "-of", "default=noprint_wrappers=1:nokey=1", output_filepath]).strip()
+        self.assertEqual(actual_codec, codec_name)
 
     def setUp(self):
         self.octolapse_settings = OctolapseSettings(NamedTemporaryFile().name)
@@ -173,13 +186,13 @@ class TestRender(unittest.TestCase):
 
     # True parameterized testing in unittest seems pretty complicated.
     # I'll just manually generate tests for items in this list.
-    CODECS_AND_EXTENSIONS = {'avi': dict(codec='avi', extension='avi'),
-                             'flv': dict(codec='flv', extension='flv'),
-                             'gif': dict(codec='gif', extension='gif'),
-                             'h264': dict(codec='h264', extension='mp4'),
-                             'mp4': dict(codec='mp4', extension='mp4'),
-                             'mpeg': dict(codec='mpeg', extension='mpeg'),
-                             'vob': dict(codec='vob', extension='vob')}
+    CODECS_AND_EXTENSIONS = {'avi': dict(name='avi', extension='avi', codec_name='mpeg4'),
+                             'flv': dict(name='flv', extension='flv', codec_name='flv'),
+                             'gif': dict(name='gif', extension='gif', codec_name='gif'),
+                             'h264': dict(name='h264', extension='mp4', codec_name='h264'),
+                             'mp4': dict(name='mp4', extension='mp4', codec_name='mpeg4'),
+                             'mpeg': dict(name='mpeg', extension='mpeg', codec_name='mpeg2video'),
+                             'vob': dict(name='vob', extension='vob', codec_name='mpeg2video')}
 
     def test_avi_codec(self):
         self.doTestCodec(**self.CODECS_AND_EXTENSIONS['avi'])
