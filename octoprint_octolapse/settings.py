@@ -901,6 +901,7 @@ class Rendering(object):
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         self.enable_watermark = False
         self.selected_watermark = ""
+        self.overlay_text = None
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -923,6 +924,7 @@ class Rendering(object):
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
                 self.selected_watermark = rendering.selected_watermark
+                self.overlay_text = rendering.overlay_text
             else:
                 self.update(rendering)
 
@@ -980,6 +982,8 @@ class Rendering(object):
         if "selected_watermark" in changes.keys():
             self.selected_watermark = utility.get_string(
                 changes["selected_watermark"], self.selected_watermark)
+        if "overlay_text" in changes.keys():
+            self.overlay_text = utility.get_string(changes["overlay_text"], self.overlay_text)
 
     def to_dict(self):
         return {
@@ -1003,6 +1007,7 @@ class Rendering(object):
             'output_template': self.output_template,
             'enable_watermark': self.enable_watermark,
             'selected_watermark': self.selected_watermark,
+            'overlay_text': self.overlay_text,
         }
 
 

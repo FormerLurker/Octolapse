@@ -20,10 +20,13 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
+import json
 import os
 import os.path
 import random
 import re
+import shlex
+import subprocess
 import unittest
 import uuid
 from Queue import Queue
@@ -85,6 +88,23 @@ class TestRender(unittest.TestCase):
                                   on_complete=lambda job_id, payload: None,
                                   clean_after_success=True,
                                   clean_after_fail=True)
+
+    # Function to find the resolution of the input video file.
+    # Source: https://stackoverflow.com/a/34356719/5195629.
+    @staticmethod
+    def get_video_resolution(pathToInputVideo):
+        cmd = "ffprobe -v quiet -print_format json -show_entries stream=width,height -select_streams v:0"
+        args = shlex.split(cmd)
+        args.append(pathToInputVideo)
+        # run the ffprobe process, decode stdout into utf-8 & convert to JSON
+        ffprobeOutput = subprocess.check_output(args).decode('utf-8')
+        ffprobeOutput = json.loads(ffprobeOutput)
+
+        # find height and width
+        width = ffprobeOutput['streams']['width']
+        height = ffprobeOutput['streams']['height']
+
+        return width, height
 
     def setUp(self):
         self.rendering_job_id = "job_id"
@@ -151,3 +171,51 @@ class TestRender(unittest.TestCase):
 
         # Assertions.
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+
+    def test_rotate(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(100, self.capture_template, size=(640, 480))
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Rotate90")
+        r.update({'rotate_90': True})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
+        self.assertGreater(os.path.getsize(output_filepath), 0)
+        self.assertEqual((480, 640), self.get_video_resolution(output_filepath),
+                         "Incorrect output resolution. Expected a rotated video.")
+
+    def test_overlay(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
+        r.update({'overlay_text': ''})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job.process()
+        # Wait for the job to finish.
+        job._thread.join()
+
+        # Assertions.
+        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
+        self.assertGreater(os.path.getsize(output_filepath), 0)

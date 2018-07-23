@@ -21,8 +21,10 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
+import itertools
 import logging
 import math
+from datetime import timedelta
 import os
 import shutil
 import sys
@@ -32,6 +34,7 @@ import time
 import uuid
 
 import sarge
+from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
@@ -488,23 +491,27 @@ class TimelapseRenderJob(object):
                         watermark_path = watermark_path.replace(
                             "\\", "/").replace(":", "\\\\:")
 
+            # TODO(Shadowen): Use a temporary directory for this and clean up afterwards.
+            processed_filepath_template = os.path.join(self._capture_dir, self._capture_file_template)
+            dir = os.path.dirname(processed_filepath_template)
+            if not os.path.exists(dir):
+                os.makedirs(dir)
             if not self.has_error:
-                vcodec = self._get_vcodec_from_extension(self._rendering.output_format)
+                # Do Pillow preprocessing.
+                self._preprocess_images(processed_filepath_template)
 
+            if not self.has_error:
                 # prepare ffmpeg command
                 command_str = self._create_ffmpeg_command_string(
                     self._ffmpeg,
                     self._fps,
                     self._rendering.bitrate,
                     self._threads,
-                    self._input,
+                    processed_filepath_template,
                     self._rendering_output_file_path,
                     self._rendering.output_format,
-                    h_flip=self._rendering.flip_h,
-                    v_flip=self._rendering.flip_v,
-                    rotate=self._rendering.rotate_90,
                     watermark=watermark_path,
-                    v_codec=vcodec
+                    v_codec=self._get_vcodec_from_extension(self._rendering.output_format)
                 )
                 self._debug.log_render_start(
                     "Running ffmpeg with command string: {0}".format(command_str))
@@ -568,6 +575,37 @@ class TimelapseRenderJob(object):
 
         self._on_complete()
 
+    def _preprocess_images(self, processed_filepath):
+        first_timestamp = None
+        for i in itertools.count():
+            input_path = "{0}{1}".format(self._capture_dir, self._capture_file_template) % i
+            if not os.path.isfile(input_path):
+                break
+            # Get file creation time, or failing that, last file modification time.
+            timestamp = os.path.getctime(input_path) or os.path.getmtime(input_path)
+            if first_timestamp is None:
+                first_timestamp = timestamp
+            text = str(timedelta(seconds=timestamp-first_timestamp))
+
+            image = Image.open(input_path)
+            # Flip image if configured.
+            if self._rendering.flip_h:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
+            if self._rendering.flip_v:
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)
+            if self._rendering.rotate_90:
+                image = image.transpose(Image.ROTATE_90)
+
+            # Draw overlay text.
+            if self._rendering.overlay_text:
+                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
+                d = ImageDraw.Draw(image)
+                d.text((10, 10), text, font=fnt, fill=(255, 255, 255, 128))
+
+            # Save processed image.
+            image.save(processed_filepath % i)
+
+
     @staticmethod
     def _get_vcodec_from_extension(extension):
         default_codec = "mpeg2video"
@@ -586,9 +624,7 @@ class TimelapseRenderJob(object):
     @classmethod
     def _create_ffmpeg_command_string(
         cls, ffmpeg, fps, bitrate, threads,
-        input_file, output_file, output_format='vob',
-        h_flip=False, v_flip=False,
-        rotate=False, watermark=None, pix_fmt="yuv420p",
+        input_file, output_file, output_format='vob', watermark=None, pix_fmt="yuv420p",
         v_codec="mpeg2video"
     ):
         """
@@ -600,9 +636,6 @@ class TimelapseRenderJob(object):
             threads (int): Number of threads to use for rendering
             input_file (str): Absolute path to input files including file mask
             output_file (str): Absolute path to output file
-            h_flip (bool): Perform horizontal flip on input material.
-            v_flip (bool): Perform vertical flip on input material.
-            rotate (bool): Perform 90° CCW rotation on input material.
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use for output. Default of yuv420p should usually fit the bill.
         Returns:
@@ -623,11 +656,7 @@ class TimelapseRenderJob(object):
             command.extend(['-vcodec', v_codec])
         command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-f', str(output_format)])
 
-        filter_string = cls._create_filter_string(hflip=h_flip,
-                                                  vflip=v_flip,
-                                                  rotate=rotate,
-                                                  watermark=watermark,
-                                                  pix_fmt=pix_fmt)
+        filter_string = cls._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
         if filter_string is not None:
             logger.debug("Applying video filter chain: {}".format(filter_string))
@@ -640,13 +669,10 @@ class TimelapseRenderJob(object):
         return " ".join(command)
 
     @classmethod
-    def _create_filter_string(cls, hflip=False, vflip=False, rotate=False, watermark=None, pix_fmt="yuv420p"):
+    def _create_filter_string(cls, watermark=None, pix_fmt="yuv420p"):
         """
         Creates an ffmpeg filter string based on input parameters.
         Arguments:
-            hflip (bool): Perform horizontal flip on input material.
-            vflip (bool): Perform vertical flip on input material.
-            rotate (bool): Perform 90° CCW rotation on input material.
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use, defaults to "yuv420p" which should usually fit the bill
         Returns:
@@ -657,14 +683,6 @@ class TimelapseRenderJob(object):
 
         # apply pixel format
         filters.append('[{{prev_filter}}] format={} [{{next_filter}}]'.format(pix_fmt))
-
-        # flip video if configured
-        if hflip:
-            filters.append('[{prev_filter}] hflip [{next_filter}]')
-        if vflip:
-            filters.append('[{prev_filter}] vflip [{next_filter}]')
-        if rotate:
-            filters.append('[{prev_filter}] transpose=2 [{next_filter}]')
 
         # add watermark if configured
         if watermark is not None:
