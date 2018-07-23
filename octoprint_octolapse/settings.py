@@ -893,14 +893,12 @@ class Rendering(object):
         self.output_format = 'mp4'
         self.sync_with_timelapse = True
         self.bitrate = "8000K"
-        self.flip_h = False
-        self.flip_v = False
-        self.rotate_90 = False
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
         self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
         self.enable_watermark = False
         self.selected_watermark = ""
+        self.overlay_text_template = ""
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -915,14 +913,12 @@ class Rendering(object):
                 self.output_format = rendering.output_format
                 self.sync_with_timelapse = rendering.sync_with_timelapse
                 self.bitrate = rendering.bitrate
-                self.flip_h = rendering.flip_h
-                self.flip_v = rendering.flip_v
-                self.rotate_90 = rendering.rotate_90
                 self.enable_watermark = rendering.enable_watermark
                 self.post_roll_seconds = rendering.post_roll_seconds
                 self.pre_roll_seconds = rendering.pre_roll_seconds
                 self.output_template = rendering.output_template
                 self.selected_watermark = rendering.selected_watermark
+                self.overlay_text_template = rendering.overlay_text_template
             else:
                 self.update(rendering)
 
@@ -956,13 +952,6 @@ class Rendering(object):
                 changes["sync_with_timelapse"], self.sync_with_timelapse)
         if "bitrate" in changes.keys():
             self.bitrate = utility.get_bitrate(changes["bitrate"], self.bitrate)
-        if "flip_h" in changes.keys():
-            self.flip_h = utility.get_bool(changes["flip_h"], self.flip_h)
-        if "flip_v" in changes.keys():
-            self.flip_v = utility.get_bool(changes["flip_v"], self.flip_v)
-        if "rotate_90" in changes.keys():
-            self.rotate_90 = utility.get_bool(
-                changes["rotate_90"], self.rotate_90)
 
         if "post_roll_seconds" in changes.keys():
             self.post_roll_seconds = utility.get_float(
@@ -980,6 +969,8 @@ class Rendering(object):
         if "selected_watermark" in changes.keys():
             self.selected_watermark = utility.get_string(
                 changes["selected_watermark"], self.selected_watermark)
+        if "overlay_text_template" in changes.keys():
+            self.overlay_text_template = utility.get_string(changes["overlay_text_template"], self.overlay_text_template)
 
     def to_dict(self):
         return {
@@ -995,14 +986,12 @@ class Rendering(object):
             'output_format': self.output_format,
             'sync_with_timelapse': self.sync_with_timelapse,
             'bitrate': self.bitrate,
-            'flip_h': self.flip_h,
-            'flip_v': self.flip_v,
-            'rotate_90': self.rotate_90,
             'post_roll_seconds': self.post_roll_seconds,
             'pre_roll_seconds': self.pre_roll_seconds,
             'output_template': self.output_template,
             'enable_watermark': self.enable_watermark,
             'selected_watermark': self.selected_watermark,
+            'overlay_text_template': self.overlay_text_template,
         }
 
 
@@ -1701,6 +1690,10 @@ class OctolapseSettings(object):
             "SNAPSHOTCOUNT",
             "FPS"
         ]
+        self.overlay_text_templates = [
+            "current_time",
+            "time_elapsed"
+        ]
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
         self.DefaultStabilization = Stabilization(
@@ -2060,6 +2053,7 @@ class OctolapseSettings(object):
                 dict(value='gif', name='GIF'),
             ],
             'rendering_file_templates': self.rendering_file_templates,
+            'overlay_text_templates': self.overlay_text_templates,
             'camera_powerline_frequency_options': [
                 dict(value='50', name='50 HZ (Europe, China, India, etc)'),
                 dict(value='60', name='60 HZ (North/South America, Japan, etc')

@@ -314,8 +314,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         template = flask.request.form['output_template']
         result = render.is_rendering_template_valid(
             template,
-            self.Settings.rendering_file_templates,
-            self.get_plugin_data_folder()
+            self.Settings.rendering_file_templates
+        )
+        if result[0]:
+            valid = "true"
+        else:
+            valid = result[1]
+        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/validateOverlayTextTemplate", methods=["POST"])
+    def validate_overlay_text_template(self):
+        template = flask.request.form['overlay_text_template']
+        result = render.is_overlay_text_template_valid(
+            template,
+            self.Settings.overlay_text_templates
         )
         if result[0]:
             valid = "true"
