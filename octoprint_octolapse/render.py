@@ -41,7 +41,7 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Rendering
 
 
-def is_rendering_template_valid(template, options, data_directory):
+def is_rendering_template_valid(template, options):
     # make sure we have all the replacements we need
     option_dict = {}
     for option in options:
@@ -52,13 +52,8 @@ def is_rendering_template_valid(template, options, data_directory):
         return False, "The following token is invalid: {{{0}}}".format(e.args[0])
     except ValueError:
         return False, "A value error occurred when replacing the provided tokens."
-    temp_directory = "{0}{1}{2}{3}".format(data_directory, os.sep, str(uuid.uuid4()), os.sep)
 
-    try:
-        os.makedirs(temp_directory)
-    except (IOError, OSError):
-        return False, "Could not create a temp directory at {0} to test the template.".format(temp_directory)
-
+    temp_directory = mkdtemp()
     file_path = "{0}{1}.{2}".format(temp_directory, filename, "mp4")
     # see if the filename is valid
     if not os.access(file_path, os.W_OK):
