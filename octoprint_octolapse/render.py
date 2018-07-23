@@ -28,6 +28,7 @@ from datetime import timedelta
 import os
 import shutil
 import sys
+from tempfile import mkdtemp
 import threading
 import time
 # sarge was added to the additional requirements for the plugin
@@ -491,14 +492,16 @@ class TimelapseRenderJob(object):
                         watermark_path = watermark_path.replace(
                             "\\", "/").replace(":", "\\\\:")
 
-            # TODO(Shadowen): Use a temporary directory for this and clean up afterwards.
-            processed_filepath_template = os.path.join(self._capture_dir, self._capture_file_template)
-            dir = os.path.dirname(processed_filepath_template)
+            # Make a temporary directory to store preprocessed images.
+            preprocessed_images_dir = mkdtemp()
+            preprocessed_filepath_template = os.path.join(preprocessed_images_dir, self._capture_file_template)
+            dir = os.path.dirname(preprocessed_filepath_template)
             if not os.path.exists(dir):
                 os.makedirs(dir)
             if not self.has_error:
+                self._debug.log_render_start("Starting Pillow preprocessing.")
                 # Do Pillow preprocessing.
-                self._preprocess_images(processed_filepath_template)
+                self._preprocess_images(preprocessed_filepath_template)
 
             if not self.has_error:
                 # prepare ffmpeg command
@@ -507,7 +510,7 @@ class TimelapseRenderJob(object):
                     self._fps,
                     self._rendering.bitrate,
                     self._threads,
-                    processed_filepath_template,
+                    preprocessed_filepath_template,
                     self._rendering_output_file_path,
                     self._rendering.output_format,
                     watermark=watermark_path,
@@ -535,6 +538,10 @@ class TimelapseRenderJob(object):
                         )
                         self.error_type = "rendering-exception"
                         self.has_error = True
+
+            if (not self.has_error and self.cleanAfterSuccess) or (self.has_error and self.cleanAfterFail):
+                # Delete preprocessed images.
+                shutil.rmtree(preprocessed_images_dir)
 
             if not self.has_error:
                 if self._synchronize:

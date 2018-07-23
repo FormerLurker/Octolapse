@@ -101,8 +101,8 @@ class TestRender(unittest.TestCase):
         ffprobeOutput = json.loads(ffprobeOutput)
 
         # find height and width
-        width = ffprobeOutput['streams']['width']
-        height = ffprobeOutput['streams']['height']
+        width = ffprobeOutput['streams'][0]['width']
+        height = ffprobeOutput['streams'][0]['height']
 
         return width, height
 
@@ -173,7 +173,7 @@ class TestRender(unittest.TestCase):
         self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     def test_rotate(self):
-        self.snapshot_dir_path = TestRender.createSnapshotDir(100, self.capture_template, size=(640, 480))
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Rotate90")
         r.update({'rotate_90': True})
