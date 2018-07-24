@@ -353,10 +353,10 @@ class TimelapseRenderJob(object):
     def _render(self):
         """Rendering runnable."""
         try:
+            self._pre_render()
+
             # notify any listeners that we are rendering.
             self._on_start()
-
-            self._pre_render()
 
             # Temporary directory to store intermediate results of rendering.
             self.temp_rendering_dir = mkdtemp(prefix='octolapse_render')

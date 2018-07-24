@@ -186,7 +186,7 @@ class TestRender(unittest.TestCase):
         job._render()
 
         # Assertions.
-        self.on_render_start.assert_called_once()
+        self.on_render_start.assert_not_called()
         self.on_render_success.assert_not_called()
         self.on_render_error.assert_called_once()
         output_files = os.listdir(self.octoprint_timelapse_folder)
@@ -203,7 +203,7 @@ class TestRender(unittest.TestCase):
         job._render()
 
         # Assertions.
-        self.on_render_start.assert_called_once()
+        self.on_render_start.assert_not_called()
         self.on_render_success.assert_not_called()
         self.on_render_error.assert_called_once()
         output_files = os.listdir(self.octoprint_timelapse_folder)
