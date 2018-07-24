@@ -20,30 +20,31 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-import json
 import os
 import os.path
 import random
 import re
-import shlex
 import subprocess
 import unittest
 import uuid
 from Queue import Queue
+from csv import DictWriter
 from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 
 from PIL import Image
+from mock import Mock
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering
 from octoprint_octolapse.settings import OctolapseSettings
+from octoprint_octolapse.snapshot import METADATA_FILE_NAME, METADATA_FIELDS
 from octoprint_octolapse.utility import get_snapshot_filename, SnapshotNumberFormat
 
 
 class TestRender(unittest.TestCase):
     @staticmethod
-    def createSnapshotDir(n, capture_template=None, size=(50, 50)):
+    def createSnapshotDir(n, capture_template=None, size=(50, 50), write_metadata=True):
         """Create n random snapshots in a named temporary folder. Return the absolute path to the directory.
         The user is responsible for deleting the directory when done."""
         # Make the temp folder.
@@ -52,10 +53,16 @@ class TestRender(unittest.TestCase):
         os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
         # Make images and save them with the correct names.
         random.seed(0)
-        for i in range(n):
-            image = Image.new('RGB', size=size, color=tuple(randint(0, 255) for _ in range(3)))
-            image_path = "{0}{1}".format(dir, capture_template) % i
-            image.save(image_path, 'JPEG')
+
+        with open(os.path.join(dir, METADATA_FILE_NAME) if write_metadata else os.devnull, 'w') as f:
+            writer = DictWriter(f, METADATA_FIELDS)
+            for i in range(n):
+                image = Image.new('RGB', size=size, color=tuple(randint(0, 255) for _ in range(3)))
+                image_path = "{0}{1}".format(dir, capture_template) % i
+                image.save(image_path, 'JPEG')
+                writer.writerow(
+                    {'snapshot_number': i, 'file_name': os.path.basename(image_path), 'time_taken': i * 1000})
+
         return dir
 
     @staticmethod
@@ -70,6 +77,9 @@ class TestRender(unittest.TestCase):
         return watermark_file
 
     def createRenderingJob(self, rendering):
+        self.on_render_start = Mock(return_value=None)
+        self.on_render_success = Mock(return_value=None)
+        self.on_render_error = Mock(return_value=None)
         return TimelapseRenderJob(job_id=self.rendering_job_id,
                                   rendering=rendering,
                                   debug=self.octolapse_settings.current_debug_profile(),
@@ -84,8 +94,9 @@ class TestRender(unittest.TestCase):
                                   ffmpeg_path=self.ffmpeg_path,
                                   threads=1,
                                   time_added=0,
-                                  on_render_start=lambda job_id, payload: None,
-                                  on_complete=lambda job_id, payload: None,
+                                  on_render_start=self.on_render_start,
+                                  on_success=self.on_render_success,
+                                  on_error=self.on_render_error,
                                   clean_after_success=True,
                                   clean_after_fail=True)
 
@@ -103,12 +114,12 @@ class TestRender(unittest.TestCase):
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+        job._render()
 
         # Assertions.
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_called_once()
+        self.on_render_error.assert_not_called()
         output_files = os.listdir(self.octoprint_timelapse_folder)
         self.assertEqual(len(output_files), 1,
                          "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
@@ -151,11 +162,12 @@ class TestRender(unittest.TestCase):
         job = self.createRenderingJob(rendering=None)
 
         # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+        job._render()
 
         # Assertions.
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_called_once()
+        self.on_render_error.assert_not_called()
         output_files = os.listdir(self.octoprint_timelapse_folder)
         self.assertEqual(len(output_files), 1,
                          "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
@@ -163,7 +175,39 @@ class TestRender(unittest.TestCase):
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+
+    def test_noMetadata(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50),
+                                                              write_metadata=False)
+        # Create the job.
+        job = self.createRenderingJob(rendering=None)
+
+        # Start the job.
+        job._render()
+
+        # Assertions.
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_not_called()
+        self.on_render_error.assert_called_once()
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 0, "Expected no output files to be generated.".format(output_files))
+
+    def test_invalidffmpeg(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50),
+                                                              write_metadata=False)
+        # Create the job.
+        job = self.createRenderingJob(rendering=None)
+        job._ffmpeg = '/dev/null'
+
+        # Start the job.
+        job._render()
+
+        # Assertions.
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_not_called()
+        self.on_render_error.assert_called_once()
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 0, "Expected no output files to be generated.".format(output_files))
 
     def test_watermark(self):
         self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50))
@@ -179,6 +223,9 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_called_once()
+        self.on_render_error.assert_not_called()
         output_files = os.listdir(self.octoprint_timelapse_folder)
         self.assertEqual(len(output_files), 1,
                          "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
@@ -186,7 +233,6 @@ class TestRender(unittest.TestCase):
         output_filename = output_files[0]
         self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
 
     # True parameterized testing in unittest seems pretty complicated.
     # I'll just manually generate tests for items in this list.
@@ -232,7 +278,9 @@ class TestRender(unittest.TestCase):
         job._thread.join()
 
         # Assertions.
-        self.assertFalse(job.has_error, "{}: {}".format(job.error_type, job.error_message))
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_called_once()
+        self.on_render_error.assert_not_called()
         output_files = os.listdir(self.octoprint_timelapse_folder)
         self.assertEqual(len(output_files), 1,
                          "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(

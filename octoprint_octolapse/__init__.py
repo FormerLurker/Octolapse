@@ -647,7 +647,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_print_started=self.on_print_start,
             on_print_start_failed=self.on_print_start_failed,
             on_render_start=self.on_render_start,
-            on_render_end=self.on_render_end,
+            on_render_success=self.on_render_success,
+            on_render_error=self.on_render_error,
             on_snapshot_start=self.on_snapshot_start,
             on_snapshot_end=self.on_snapshot_end,
             on_timelapse_stopping=self.on_timelapse_stopping,
@@ -1190,10 +1191,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         state_change_dict = args[0]
         self.send_state_changed_message(state_change_dict)
 
-    def on_render_start(self, *args, **kwargs):
+    def on_render_start(self, payload):
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the
         constructor. """
-        payload = args[0]
         assert (isinstance(payload, RenderingCallbackArgs))
         # Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this
         # later.
@@ -1215,37 +1215,38 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # send a message to the client
         self.send_render_start_message(message)
 
-    def on_render_end(self, *args, **kwargs):
-        """Called after all rendering and synchronization attemps are complete."""
-        payload = args[0]
+    def on_render_success(self, payload):
+        """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
-        if payload.HasError:
-            self.send_plugin_message("synchronize-failed", payload.ErrorMessage)
-        else:
-            if payload.Synchronize:
-                # create a message that makes sense, since Octoprint will display its own popup message that already
-                # contains text
+        if payload.Synchronize:
+            # create a message that makes sense, since Octoprint will display its own popup message that already
+            # contains text
 
-                message = "from Octolapse has been synchronized and is now available within the default timelapse" \
-                          "plugin tab as '{0}'.  Octolapse ".format(payload.get_synchronization_filename())
-                # Here we create a special payload to notify the default timelapse plugin of a new timelapse
-                octoprint_payload = dict(gcode="unknown",
-                                         movie=payload.get_synchronization_path(),
-                                         movie_basename=payload.get_synchronization_filename(),
-                                         movie_prefix=message,
-                                         returncode=payload.ReturnCode,
-                                         reason=payload.Reason)
-                # notify Octoprint using the event manager.  Is there a way to do this that is more in the
-                # spirit of the API?
-                eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
-                # we've either successfully rendered or rendered and synchronized
-                self.send_render_end_message(True, True)
-            else:
-                message = "Octolapse has completed rendering a timelapse.  Due to your rendering settings," \
-                          " the timelapse was not synchronized with the OctoPrint plugin." \
-                          "  You should be able to find your video within your octoprint " \
-                          " server here:<br/> '{0}'".format(payload.get_rendering_path())
-                self.send_render_end_message(True, False, message)
+            message = "from Octolapse has been synchronized and is now available within the default timelapse" \
+                      "plugin tab as '{0}'.  Octolapse ".format(payload.get_synchronization_filename())
+            # Here we create a special payload to notify the default timelapse plugin of a new timelapse
+            octoprint_payload = dict(gcode="unknown",
+                                     movie=payload.get_synchronization_path(),
+                                     movie_basename=payload.get_synchronization_filename(),
+                                     movie_prefix=message,
+                                     returncode=payload.ReturnCode,
+                                     reason=payload.Reason)
+            # notify Octoprint using the event manager.  Is there a way to do this that is more in the
+            # spirit of the API?
+            eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
+            # we've either successfully rendered or rendered and synchronized
+            self.send_render_end_message(True, True)
+        else:
+            message = "Octolapse has completed rendering a timelapse.  Due to your rendering settings," \
+                      " the timelapse was not synchronized with the OctoPrint plugin." \
+                      "  You should be able to find your video within your octoprint " \
+                      " server here:<br/> '{0}'".format(payload.get_rendering_path())
+            self.send_render_end_message(True, False, message)
+
+    def on_render_error(self, error):
+        """Called after all rendering and synchronization attempts are complete."""
+        self.send_plugin_message(error.type, error.message)
+
 
     # ~~ AssetPlugin mixin
     def get_assets(self):

@@ -31,7 +31,7 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.position import Position
-from octoprint_octolapse.render import Render, RenderingCallbackArgs
+from octoprint_octolapse.render import Render, RenderingCallbackArgs, RenderError
 from octoprint_octolapse.settings import (Printer, Rendering, Snapshot, OctolapseSettings)
 from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
@@ -43,7 +43,7 @@ class Timelapse(object):
             self, settings, octoprint_printer, data_folder, timelapse_folder,
             on_print_started=None, on_print_start_failed=None,
             on_snapshot_start=None, on_snapshot_end=None,
-            on_render_start=None, on_render_end=None,
+            on_render_start=None, on_render_success=None, on_render_error=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
             on_state_changed=None, on_timelapse_start=None, on_timelapse_end=None,
             on_snapshot_position_error=None, on_position_error=None, on_plugin_message_sent=None):
@@ -55,7 +55,8 @@ class Timelapse(object):
         self.OnPrintStartCallback = on_print_started
         self.OnPrintStartFailedCallback = on_print_start_failed
         self.OnRenderStartCallback = on_render_start
-        self.OnRenderEndCallback = on_render_end
+        self.OnRenderSuccessCallback = on_render_success
+        self.OnRenderErrorCallback = on_render_error
         self.OnSnapshotStartCallback = on_snapshot_start
         self.OnSnapshotCompleteCallback = on_snapshot_end
         self.TimelapseStoppingCallback = on_timelapse_stopping
@@ -489,26 +490,10 @@ class Timelapse(object):
             ]:
 
                 if not self._render_timelapse(self.PrintEndStatus):
-                    if self.OnRenderEndCallback is not None:
-                        payload = RenderingCallbackArgs(
-                            "Could not start timelapse job.",
-                            -1,
-                            "unknown",
-                            "unknown",
-                            "unknown",
-                            "unknown",
-                            "unknown",
-                            "unknown",
-                            False,
-                            0,
-                            0,
-                            True,
-                            "timelapse_start",
-                            "The render_start function returned false"
-                        )
-
+                    if self.OnRenderErrorCallback is not None:
+                        error = RenderError('timelapse_start', "The render_start function returned false")
                         render_end_callback_thread = threading.Thread(
-                            target=self.OnRenderEndCallback, args=[payload]
+                            target=self.OnRenderErrorCallback, args=[error]
                         )
                         render_end_callback_thread.daemon = True
                         render_end_callback_thread.start()
@@ -994,7 +979,6 @@ class Timelapse(object):
             position_error_callback_thread.start()
 
     def _on_trigger_snapshot_complete(self, snapshot_payload):
-
         if self.OnSnapshotCompleteCallback is not None:
             payload = {
                 "success": snapshot_payload["success"],
@@ -1011,7 +995,6 @@ class Timelapse(object):
                 snapshot_complete_callback_thread.start()
 
     def _render_timelapse(self, print_end_state):
-
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
         if self.Rendering is not None and self.Rendering.enabled:
             job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
@@ -1034,7 +1017,8 @@ class Timelapse(object):
                 print_end_state,
                 self.SecondsAddedByOctolapse,
                 self._on_render_start,
-                self._on_render_end
+                self._on_render_success,
+                self._on_render_error
             )
             rendering_thread = threading.Thread(target=job, args=[])
             rendering_thread.daemon = True
@@ -1044,37 +1028,46 @@ class Timelapse(object):
             return True
         return False
 
-    def _on_render_start(self, *args, **kwargs):
-        job_id = args[0]
+    def _on_render_start(self, job_id, payload):
         self.Settings.current_debug_profile().log_render_start(
             "Started rendering/synchronizing the timelapse. JobId: {0}".format(job_id))
-        payload = args[1]
         # notify the caller
         if self.OnRenderStartCallback is not None:
             render_start_complete_callback_thread = threading.Thread(
-                target=self.OnRenderStartCallback, args=[payload]
+                target=self.OnRenderStartCallback, args=(payload,)
             )
             render_start_complete_callback_thread.daemon = True
             render_start_complete_callback_thread.start()
 
-    def _on_render_end(self, *args, **kwargs):
-        job_id = args[0]
-        payload = args[1]
-
+    def _on_render_success(self, job_id, payload):
         self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
         assert (isinstance(payload, RenderingCallbackArgs))
 
-        if not payload.HasError and self.Snapshot.cleanup_after_render_fail:
-            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
-        elif self.Snapshot.cleanup_after_render_complete:
+        if self.Snapshot.cleanup_after_render_complete:
             self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
 
-        if self.OnRenderEndCallback is not None:
-            render_end_complete_callback_thread = threading.Thread(
-                target=self.OnRenderEndCallback, args=[payload]
+        if self.OnRenderSuccessCallback is not None:
+            render_success_complete_callback_thread = threading.Thread(
+                target=self.OnRenderSuccessCallback, args=(payload,)
             )
-            render_end_complete_callback_thread.daemon = True
-            render_end_complete_callback_thread.start()
+            render_success_complete_callback_thread.daemon = True
+            render_success_complete_callback_thread.start()
+
+        self._rendering_task_queue.get()
+        self._rendering_task_queue.task_done()
+
+    def _on_render_error(self, job_id, error):
+        self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
+
+        if self.Snapshot.cleanup_after_render_fail:
+            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+
+        if self.OnRenderErrorCallback is not None:
+            render_error_complete_callback_thread = threading.Thread(
+                target=self.OnRenderErrorCallback, args=(error,)
+            )
+            render_error_complete_callback_thread.daemon = True
+            render_error_complete_callback_thread.start()
 
         self._rendering_task_queue.get()
         self._rendering_task_queue.task_done()
