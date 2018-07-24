@@ -75,7 +75,7 @@ class TestRender(unittest.TestCase):
                                   debug=self.octolapse_settings.current_debug_profile(),
                                   print_filename=self.print_name,
                                   capture_dir=self.snapshot_dir_path,
-                                  capture_template=self.capture_template,
+                                  snapshot_filename_format=self.capture_template,
                                   output_tokens=Render._get_output_tokens(self.data_directory, "COMPLETED",
                                                                           self.print_name,
                                                                           self.print_start_time,

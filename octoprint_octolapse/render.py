@@ -21,7 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-import itertools
 import logging
 import math
 import os
@@ -29,8 +28,8 @@ import shutil
 import sys
 import threading
 import time
+from csv import DictReader
 # sarge was added to the additional requirements for the plugin
-import uuid
 from datetime import datetime, timedelta
 from tempfile import mkdtemp
 
@@ -38,6 +37,7 @@ import sarge
 from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
+import snapshot
 from octoprint_octolapse.settings import Rendering
 
 
@@ -89,6 +89,7 @@ class Render(object):
         snapshot,
         rendering,
         data_directory,
+        capture_directory,
         octoprint_timelapse_folder,
         ffmpeg_path,
         thread_count,
@@ -102,9 +103,8 @@ class Render(object):
         on_complete
     ):
         # Get the capture file and directory info
-        snapshot_directory = utility.get_snapshot_temp_directory(data_directory)
-        snapshot_file_name_template = utility.get_snapshot_filename(
-            print_name, print_start_time, utility.SnapshotNumberFormat)
+        snapshot_file_name_template = os.path.basename(utility.get_snapshot_filename(
+            print_name, print_start_time, utility.SnapshotNumberFormat))
         output_tokens = Render._get_output_tokens(data_directory, print_state, print_name, print_start_time,
                                                   print_end_time)
 
@@ -113,7 +113,7 @@ class Render(object):
             rendering,
             settings.current_debug_profile(),
             print_name,
-            snapshot_directory,
+            capture_directory,
             snapshot_file_name_template,
             output_tokens,
             octoprint_timelapse_folder,
@@ -149,8 +149,6 @@ class Render(object):
 class TimelapseRenderJob(object):
     render_job_lock = threading.RLock()
 
-    # , capture_glob="{prefix}*.jpg", capture_format="{prefix}%d.jpg", output_format="{prefix}{postfix}.mpg",
-
     def __init__(
         self,
         job_id,
@@ -158,7 +156,7 @@ class TimelapseRenderJob(object):
         debug,
         print_filename,
         capture_dir,
-        capture_template,
+        snapshot_filename_format,
         output_tokens,
         octoprint_timelapse_folder,
         ffmpeg_path,
@@ -173,14 +171,16 @@ class TimelapseRenderJob(object):
         self._debug = debug
         self._printFileName = print_filename
         self._capture_dir = capture_dir
-        self._capture_file_template = capture_template
+        self._snapshot_filename_template = snapshot_filename_format
         self._output_tokens = output_tokens
         self._octoprintTimelapseFolder = octoprint_timelapse_folder
         self._fps = None
         self._imageCount = None
         self._secondsAddedToPrint = time_added
         self._threads = threads
-        self._ffmpeg = ffmpeg_path
+        self._ffmpeg = ffmpeg_path.strip()
+        if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
+            self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
         ###########
         # callbacks
         ###########
@@ -192,7 +192,6 @@ class TimelapseRenderJob(object):
         self.cleanAfterFail = clean_after_fail
         self._synchronize = False
         # full path of the input
-        self._input = ""
         self._output_directory = ""
         self._output_filename = ""
         self._output_extension = ""
@@ -207,9 +206,6 @@ class TimelapseRenderJob(object):
     def process(self):
         """Processes the job."""
         # do our file operations first, this seems to crash rendering if we do it inside the thread.  Of course.
-        self._input = os.path.join(self._capture_dir,
-                                   self._capture_file_template)
-
         self._synchronize = self._rendering.sync_with_timelapse
         self._thread = threading.Thread(target=self._render,
                                         name=self._job_id)
@@ -217,8 +213,8 @@ class TimelapseRenderJob(object):
         self._thread.start()
 
     def _pre_render(self):
-
         try:
+            self._read_snapshot_metadata()
             self._count_images()
             if self._imageCount == 0:
                 self._debug.log_render_fail(
@@ -237,9 +233,6 @@ class TimelapseRenderJob(object):
                     "as well as the number of snapshots captured."
                 )
                 return False
-            # apply pre and post roll
-            self._apply_pre_post_roll(
-                self._capture_dir, self._capture_file_template, self._fps, self._imageCount)
 
             # set the outputs - output directory, output filename, output extension
             self._set_outputs()
@@ -248,6 +241,20 @@ class TimelapseRenderJob(object):
         except Exception as e:
             self._debug.log_exception(e)
         return False
+
+    def _read_snapshot_metadata(self):
+        metadata_path = os.path.join(self._capture_dir, snapshot.METADATA_FILE_NAME)
+        self._debug.log_render_start('Reading snapshot metadata from {}'.format(metadata_path))
+        with open(metadata_path, 'r') as metadata_file:
+            dictreader = DictReader(metadata_file, snapshot.METADATA_FIELDS)
+            self._snapshot_metadata = list(dictreader)
+
+    def _count_images(self):
+        """Get the number of frames."""
+        self._imageCount = len(self._snapshot_metadata)
+        self._debug.log_render_start("Found {0} images.".format(self._imageCount))
+        # add the snapshot count to the output tokens
+        self._output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
 
     def _calculate_fps(self):
         self._fps = self._rendering.fps
@@ -278,67 +285,6 @@ class TimelapseRenderJob(object):
             self._debug.log_render_start(message)
         # Add the FPS to the output tokens
         self._output_tokens["FPS"] = "{0}".format(int(math.ceil(self._fps)))
-
-    def _count_images(self):
-        """get the number of frames"""
-
-        # we need to start with index 0, apparently.  Before I thought it was 1!
-        image_index = 0
-        while True:
-            image_path = "{0}{1}".format(
-                self._capture_dir, self._capture_file_template) % image_index
-
-            if os.path.isfile(image_path):
-                image_index += 1
-            else:
-                break
-        # since we're starting at 0 and incrementing after a file is found, the index here will be our count.
-        self._debug.log_render_start("Found {0} images.".format(image_index))
-        self._imageCount = image_index
-        # add the snapshot count to the output tokens
-        self._output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
-
-    def _apply_pre_post_roll(self, snapshot_directory, snapshot_filename_template, fps, image_count):
-        try:
-            # start with pre-roll, since it will require a bunch of renaming
-            pre_roll_frames = int(self._rendering.pre_roll_seconds * fps)
-            if pre_roll_frames > 0:
-
-                # create a variable to hold the new path of the first image
-                first_image_path = ""
-                # rename all of the current files. The snapshot number should be
-                # incremented by the number of pre-roll frames. Start with the last
-                # image and work backwards to avoid overwriting files we've already moved
-                for image_number in range(image_count - 1, -1, -1):
-                    current_image_path = "{0}{1}".format(
-                        snapshot_directory, snapshot_filename_template) % image_number
-                    new_image_path = "{0}{1}".format(
-                        snapshot_directory, snapshot_filename_template) % (image_number + pre_roll_frames)
-                    if image_number == 0:
-                        first_image_path = new_image_path
-                    shutil.move(current_image_path, new_image_path)
-                # get the path of the first image
-                # copy the first frame as many times as we need
-                for image_index in range(pre_roll_frames):
-                    # imageNumber = imageIndex + 1  I don't think we need this, because we're starting with 0
-                    new_image_path = "{0}{1}".format(
-                        snapshot_directory, snapshot_filename_template) % image_index
-                    shutil.copy(first_image_path, new_image_path)
-            # finish with post roll since it's pretty easy
-            post_roll_frames = int(self._rendering.post_roll_seconds * fps)
-            if post_roll_frames > 0:
-                last_frame_index = image_count + pre_roll_frames - 1
-                last_image_path = "{0}{1}".format(
-                    snapshot_directory, snapshot_filename_template) % last_frame_index
-                for image_index in range(post_roll_frames):
-                    image_number = image_index + image_count + pre_roll_frames
-                    new_image_path = "{0}{1}".format(
-                        snapshot_directory, snapshot_filename_template) % image_number
-                    shutil.copy(last_image_path, new_image_path)
-            return True
-        except Exception as e:
-            self._debug.log_exception(e)
-        return False
 
     def _set_outputs(self):
         self._output_directory = "{0}{1}{2}{3}".format(
@@ -477,12 +423,6 @@ class TimelapseRenderJob(object):
                     self.has_error = True
 
             if not self.has_error:
-                if not os.path.exists(self._input % 0):
-                    self.error_message = 'Cannot create a movie, no frames captured.'
-                    self.error_type = "no_frames_captured"
-                    self.has_error = True
-
-            if not self.has_error:
                 watermark_path = None
                 if self._rendering.enable_watermark:
                     watermark_path = self._rendering.selected_watermark
@@ -502,30 +442,20 @@ class TimelapseRenderJob(object):
                             "\\", "/").replace(":", "\\\\:")
 
             # Make a temporary directory to store preprocessed images.
-            preprocessed_images_dir = mkdtemp()
-            preprocessed_filepath_template = os.path.join(preprocessed_images_dir, self._capture_file_template)
-            dir = os.path.dirname(preprocessed_filepath_template)
-            if not os.path.exists(dir):
-                os.makedirs(dir)
+            temp_processing_dir = mkdtemp()
             if not self.has_error:
-                self._debug.log_render_start("Starting Pillow preprocessing.")
-                # Do Pillow preprocessing.
-                self._preprocess_images(preprocessed_filepath_template)
+                # Do image preprocessing.
+                self._preprocess_images(temp_processing_dir)
+
+                # Add pre and post roll.
+                self._apply_pre_post_roll(temp_processing_dir)
 
             if not self.has_error:
-                vcodec = self._get_vcodec_from_output_format(self._rendering.output_format)
-
                 # prepare ffmpeg command
                 command_str = self._create_ffmpeg_command_string(
-                    self._ffmpeg,
-                    self._fps,
-                    self._rendering.bitrate,
-                    self._threads,
-                    preprocessed_filepath_template,
+                    os.path.join(temp_processing_dir, self._snapshot_filename_template),
                     self._rendering_output_file_path,
-                    self._rendering.output_format,
-                    watermark=watermark_path,
-                    v_codec=vcodec
+                    watermark=watermark_path
                 )
                 self._debug.log_render_start(
                     "Running ffmpeg with command string: {0}".format(command_str))
@@ -552,7 +482,7 @@ class TimelapseRenderJob(object):
 
             if (not self.has_error and self.cleanAfterSuccess) or (self.has_error and self.cleanAfterFail):
                 # Delete preprocessed images.
-                shutil.rmtree(preprocessed_images_dir)
+                shutil.rmtree(temp_processing_dir)
 
             if not self.has_error:
                 if self._synchronize:
@@ -593,30 +523,71 @@ class TimelapseRenderJob(object):
 
         self._on_complete()
 
-    def _preprocess_images(self, processed_filepath):
-        first_timestamp = None
-        for i in itertools.count():
-            input_path = "{0}{1}".format(self._capture_dir, self._capture_file_template) % i
-            if not os.path.isfile(input_path):
-                break
-            # Get last file modification time.
-            timestamp = os.path.getmtime(input_path)
-            if first_timestamp is None:
-                first_timestamp = timestamp
-            current_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
-            time_elapsed = str(timedelta(seconds=round(timestamp - first_timestamp)))
+    def _preprocess_images(self, preprocessed_directory):
+        self._debug.log_render_start("Starting preprocessing of images.")
+        first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
+        for data in self._snapshot_metadata:
+            # Variables the user can use in overlay_text_template.format().
+            format_vars = {}
 
-            image = Image.open(input_path)
+            # Extra metadata according to snapshot.METADATA_FIELDS.
+            format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number'])
+            format_vars['file_name'] = file_name = data['file_name']
+            format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
+
+            # Verify that the file actually exists.
+            file_path = os.path.join(self._capture_dir, file_name)
+            if not os.path.isfile(file_path):
+                raise IOError("Cannot find file {}.".format(file_path))
+
+            # Calculate time elapsed since the beginning of the print.
+            format_vars['current_time'] = datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
+            format_vars['time_elapsed'] = str(timedelta(seconds=round(time_taken - first_timestamp)))
+
+            # Open the image in Pillow and do preprocessing operations.
+            image = Image.open(file_path)
             # Draw overlay text.
             if self._rendering.overlay_text_template:
-                font = ImageFont.load_default()
+                font = ImageFont.load_default()  # TODO(Shadowen): Allow user to select font.
                 d = ImageDraw.Draw(image)
-                text = self._rendering.overlay_text_template.format(current_time=current_time, time_elapsed=time_elapsed)
+                text = self._rendering.overlay_text_template.format(**format_vars)
+                # TODO(Shadowen): Allow user to select placement and colour.
                 d.text((10, 10), text=text, font=font, fill=(255, 255, 255, 128))
 
             # Save processed image.
-            image.save(processed_filepath % i)
+            image.save(os.path.join(preprocessed_directory, file_name))
 
+    def _apply_pre_post_roll(self, image_dir):
+        # start with pre-roll, since it will require a bunch of renaming
+        pre_roll_frames = int(self._rendering.pre_roll_seconds * self._fps)
+        if pre_roll_frames > 0:
+
+            # create a variable to hold the new path of the first image
+            first_image_path = ""
+            # rename all of the current files. The snapshot number should be
+            # incremented by the number of pre-roll frames. Start with the last
+            # image and work backwards to avoid overwriting files we've already moved
+            for image_number in range(self._imageCount - 1, -1, -1):
+                current_image_path = os.path.join(image_dir, self._snapshot_filename_template % image_number)
+                new_image_path = os.path.join(image_dir,
+                                              self._snapshot_filename_template % (image_number + pre_roll_frames))
+                if image_number == 0:
+                    first_image_path = new_image_path
+                shutil.move(current_image_path, new_image_path)
+            # get the path of the first image
+            # copy the first frame as many times as we need
+            for image_index in range(pre_roll_frames):
+                new_image_path = os.path.join(image_dir, self._snapshot_filename_template % image_index)
+                shutil.copy(first_image_path, new_image_path)
+        # finish with post roll since it's pretty easy
+        post_roll_frames = int(self._rendering.post_roll_seconds * self._fps)
+        if post_roll_frames > 0:
+            last_frame_index = self._imageCount + pre_roll_frames - 1
+            last_image_path = os.path.join(image_dir, self._snapshot_filename_template % last_frame_index)
+            for image_index in range(post_roll_frames):
+                image_number = image_index + self._imageCount + pre_roll_frames
+                new_image_path = os.path.join(image_dir, self._snapshot_filename_template % image_number)
+                shutil.copy(last_image_path, new_image_path)
 
     @staticmethod
     def _get_extension_from_output_format(output_format):
@@ -640,37 +611,26 @@ class TimelapseRenderJob(object):
                    "vob": "mpeg2video"}
         return VCODECS.get(output_format.lower(), "mpeg2video")
 
-    @classmethod
-    def _create_ffmpeg_command_string(
-        cls, ffmpeg, fps, bitrate, threads,
-        input_file, output_file, output_format='vob', watermark=None, pix_fmt="yuv420p",
-        v_codec="mpeg2video"
-    ):
+    def _create_ffmpeg_command_string(self,input_file_format, output_file, watermark=None, pix_fmt="yuv420p"):
         """
         Create ffmpeg command string based on input parameters.
         Arguments:
-            ffmpeg (str): Path to ffmpeg
-            fps (int): Frames per second for output
-            bitrate (str): Bitrate of output
-            threads (int): Number of threads to use for rendering
-            input_file (str): Absolute path to input files including file mask
+            input_file_format (str): Absolute path to input files including file mask
             output_file (str): Absolute path to output file
             watermark (str): Path to watermark to apply to lower left corner.
             pix_fmt (str): Pixel format to use for output. Default of yuv420p should usually fit the bill.
-            v_codec (str): The video codec to use when encoding the video.
         Returns:
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
 
         logger = logging.getLogger(__name__)
-        ffmpeg = ffmpeg.strip()
 
-        if sys.platform == "win32" and not (ffmpeg.startswith('"') and ffmpeg.endswith('"')):
-            ffmpeg = "\"{0}\"".format(ffmpeg)
-        command = [ffmpeg, '-framerate', str(fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file)]
-        command.extend(['-threads', str(threads), '-r', "25", '-y', '-b', str(bitrate), '-vcodec', v_codec])
+        v_codec = self._get_vcodec_from_output_format(self._rendering.output_format)
 
-        filter_string = cls._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
+        command = [self._ffmpeg, '-framerate', str(self._fps), '-loglevel', 'error', '-i', '"{}"'.format(input_file_format)]
+        command.extend(['-threads', str(self._threads), '-r', "25", '-y', '-b', str(self._rendering.bitrate), '-vcodec', v_codec])
+
+        filter_string = self._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
         if filter_string is not None:
             logger.debug("Applying video filter chain: {}".format(filter_string))

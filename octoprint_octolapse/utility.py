@@ -122,7 +122,7 @@ def get_snapshot_directory(data_directory):
 
 
 def get_snapshot_filename_template():
-    return "{0}{1}{2}".format("{FILENAME}_{PRINTSTARTTIME}", os.sep, "{FILENAME}")
+    return os.path.join("{FILENAME}_{PRINTSTARTTIME}", "{FILENAME}")
 
 
 def get_rendering_directory_from_data_directory(data_directory):
@@ -176,12 +176,11 @@ def get_rendering_base_filename(print_name, print_start_time, print_end_time=Non
 
 
 def get_snapshot_filename(print_name, print_start_time, snapshot_number):
-    file_template = get_snapshot_filename_template()
-    file_template = file_template.replace("{FILENAME}", get_string(print_name, ""))
-    file_template = file_template.replace(
-        "{DATETIMESTAMP}", "{0:d}".format(math.trunc(round(time.time(), 2) * 100)))
-    file_template = file_template.replace("{PRINTSTARTTIME}", "{0:d}".format(
-        math.trunc(round(print_start_time, 2) * 100)))
+    file_template = get_snapshot_filename_template().format(FILENAME=get_string(print_name, ""),
+                                                            DATETIMESTAMP="{0:d}".format(
+                                                                math.trunc(round(time.time(), 2) * 100)),
+                                                            PRINTSTARTTIME="{0:d}".format(
+                                                                math.trunc(round(print_start_time, 2) * 100)))
     return "{0}{1}.{2}".format(file_template, format_snapshot_number(snapshot_number), "jpg")
 
 

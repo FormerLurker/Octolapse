@@ -21,14 +21,15 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-import time
+import os
 import threading
+import time
 import uuid
-
 from Queue import Queue
+
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
+from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import Render, RenderingCallbackArgs
 from octoprint_octolapse.settings import (Printer, Rendering, Snapshot, OctolapseSettings)
@@ -227,7 +228,6 @@ class Timelapse(object):
         self._snapshot_signal.set()
 
     def _take_snapshot_async(self):
-        snapshot_guid = str(uuid.uuid4())
         snapshot_async_payload = {
             "success": False,
             "error": "Waiting on thread to signal, aborting"
@@ -236,7 +236,7 @@ class Timelapse(object):
             job = self.CaptureSnapshot.create_snapshot_script_job(
                 "snapshot", self.Camera.external_camera_snapshot_script,
                 utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                snapshot_guid, on_complete=None, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
+                on_complete=None, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
             # run the job
             job()
         elif self.Camera.camera_type == "webcam":
@@ -250,7 +250,6 @@ class Timelapse(object):
                 snapshot_job = self.CaptureSnapshot.create_snapshot_job(
                     utility.get_currently_printing_filename(self.OctoprintPrinter),
                     self.SnapshotCount,
-                    snapshot_guid,
                     on_success=self._on_snapshot_success,
                     on_fail=self._on_snapshot_fail,
                     on_complete=self._on_snapshot_complete
@@ -1021,6 +1020,10 @@ class Timelapse(object):
                 self.Snapshot,
                 self.Rendering,
                 self.DataFolder,
+                os.path.dirname(
+                    os.path.join(self.DataFolder, 'tempsnapshots', utility.get_snapshot_filename(
+                        utility.get_currently_printing_filename(self.OctoprintPrinter),
+                        self.PrintStartTime, 0))),
                 self.DefaultTimelapseDirectory,
                 self.FfMpegPath,
                 1,

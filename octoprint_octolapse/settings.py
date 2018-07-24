@@ -1691,8 +1691,9 @@ class OctolapseSettings(object):
             "FPS"
         ]
         self.overlay_text_templates = [
+            "snapshot_number",
             "current_time",
-            "time_elapsed"
+            "time_elapsed",
         ]
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
