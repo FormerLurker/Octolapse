@@ -1004,9 +1004,10 @@ class Timelapse(object):
                 self.Rendering,
                 self.DataFolder,
                 os.path.dirname(
-                    os.path.join(self.DataFolder, 'tempsnapshots', utility.get_snapshot_filename(
-                        utility.get_currently_printing_filename(self.OctoprintPrinter),
-                        self.PrintStartTime, 0))),
+                    os.path.join(utility.get_temp_snapshot_driectory_template().format(DATADIRECTORY=self.DataFolder),
+                                 utility.get_snapshot_filename(
+                                     utility.get_currently_printing_filename(self.OctoprintPrinter),
+                                     self.PrintStartTime, 0))),
                 self.DefaultTimelapseDirectory,
                 self.FfMpegPath,
                 1,

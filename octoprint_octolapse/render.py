@@ -492,7 +492,7 @@ class TimelapseRenderJob(object):
             # Extra metadata according to snapshot.METADATA_FIELDS.
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number'])
             assert (i == snapshot_number)
-            format_vars['file_name'] = file_name = data['file_name']
+            format_vars['file_name'] = data['file_name']
             format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
 
             # Verify that the file actually exists.
