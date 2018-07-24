@@ -186,24 +186,29 @@ class TestRender(unittest.TestCase):
         job._render()
 
         # Assertions.
-        self.on_render_start.assert_not_called()
-        self.on_render_success.assert_not_called()
-        self.on_render_error.assert_called_once()
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_called_once()
+        self.on_render_error.assert_not_called()
         output_files = os.listdir(self.octoprint_timelapse_folder)
-        self.assertEqual(len(output_files), 0, "Expected no output files to be generated.".format(output_files))
+        self.assertEqual(len(output_files), 1,
+                         "Incorrect amount of output files detected! Found {}. Expected only timelapse output.".format(
+                             output_files))
+        output_filename = output_files[0]
+        self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
+        self.assertGreater(os.path.getsize(os.path.join(self.octoprint_timelapse_folder, output_filename)), 0)
 
-    def test_invalidffmpeg(self):
+    def test_noffmpeg(self):
         self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(50, 50),
                                                               write_metadata=False)
         # Create the job.
         job = self.createRenderingJob(rendering=None)
-        job._ffmpeg = '/dev/null'
+        job._ffmpeg = None
 
         # Start the job.
         job._render()
 
         # Assertions.
-        self.on_render_start.assert_not_called()
+        self.on_render_start.assert_called_once()
         self.on_render_success.assert_not_called()
         self.on_render_error.assert_called_once()
         output_files = os.listdir(self.octoprint_timelapse_folder)

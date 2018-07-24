@@ -183,9 +183,11 @@ class TimelapseRenderJob(object):
         self._imageCount = None
         self._secondsAddedToPrint = time_added
         self._threads = threads
-        self._ffmpeg = ffmpeg_path.strip()
-        if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
-            self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
+        self._ffmpeg = None
+        if ffmpeg_path is not None:
+            self._ffmpeg = ffmpeg_path.strip()
+            if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
+                self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
         ###########
         # callbacks
         ###########
@@ -216,7 +218,14 @@ class TimelapseRenderJob(object):
         self._thread.start()
 
     def _pre_render(self):
-        self._read_snapshot_metadata()
+        try:
+            self._read_snapshot_metadata()
+        except RenderError as e:
+            self._debug.log_error("Failed to read image metadata.")
+            self._debug.log_exception(e)
+            # Alternate method of counting images.
+            self._imageCount = len(
+                os.listdir(os.path.dirname(os.path.join(self._capture_dir, self._snapshot_filename_template))))
         if self._imageCount == 0:
             raise RenderError('insufficient-images', "No images were captured, or they have been removed.")
         if self._imageCount == 1:
@@ -463,6 +472,18 @@ class TimelapseRenderJob(object):
 
     def _preprocess_images(self, preprocessed_directory):
         self._debug.log_render_start("Starting preprocessing of images.")
+        if self._snapshot_metadata is None:
+            self._debug.log_error("Snapshot metadata file missing; skipping preprocessing.")
+            # Just copy images over.
+            for i in range(self._imageCount):
+                file_path = os.path.join(self._capture_dir, self._snapshot_filename_template % i)
+                output_path = os.path.join(preprocessed_directory, self._snapshot_filename_template % i)
+                output_dir = os.path.dirname(output_path)
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+                shutil.move(file_path, output_path)
+            return
+
         first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
         for i, data in enumerate(self._snapshot_metadata):
             # Variables the user can use in overlay_text_template.format().

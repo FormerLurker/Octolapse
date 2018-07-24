@@ -183,7 +183,6 @@ class ExternalScriptCameraJob(object):
             self.OnCompleteCallback()
 
     def process(self):
-
         # execute the script and send the parameters
         self.HasError = False
         self.ErrorMessage = "unknown"
@@ -227,11 +226,9 @@ class ExternalScriptCameraJob(object):
             "Snapshot {0} script Job completed, signaling task queue.".format(self.ScriptType))
 
     def execute_script(self):
-
         try:
-            download_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber);
-            download_directory = os.path.dirname(download_full_path)
-            download_filename = os.path.basename(download_full_path)
+            download_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber)
+            download_directory, download_filename = os.path.split(download_full_path)
 
             self.Settings.current_debug_profile().log_info(
                 "Running the following snapshot script command: " +
@@ -268,6 +265,15 @@ class ExternalScriptCameraJob(object):
                     "your script and try again.".format(self.ScriptType, p.returncode)
                 )
                 self.HasError = True
+
+            # Write metadata about the snapshot.
+            with open(os.path.join(download_directory, METADATA_FILE_NAME), 'a') as metadata_file:
+                dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
+                dictwriter.writerow({
+                    'snapshot_number': str(self.SnapshotNumber),
+                    'file_name': download_filename,
+                    'time_taken': str(time()),
+                })
         except CalledProcessError as e:
             # If we can't create the thumbnail, just log
             self.Settings.current_debug_profile().log_exception(e)
