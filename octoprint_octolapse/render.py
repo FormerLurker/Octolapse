@@ -599,8 +599,8 @@ class TimelapseRenderJob(object):
             input_path = "{0}{1}".format(self._capture_dir, self._capture_file_template) % i
             if not os.path.isfile(input_path):
                 break
-            # Get file creation time, or failing that, last file modification time.
-            timestamp = os.path.getctime(input_path) or os.path.getmtime(input_path)
+            # Get last file modification time.
+            timestamp = os.path.getmtime(input_path)
             if first_timestamp is None:
                 first_timestamp = timestamp
             current_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
@@ -609,10 +609,10 @@ class TimelapseRenderJob(object):
             image = Image.open(input_path)
             # Draw overlay text.
             if self._rendering.overlay_text_template:
-                fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 20)
+                font = ImageFont.load_default()
                 d = ImageDraw.Draw(image)
                 text = self._rendering.overlay_text_template.format(current_time=current_time, time_elapsed=time_elapsed)
-                d.text((10, 10), text=text, font=fnt, fill=(255, 255, 255, 128))
+                d.text((10, 10), text=text, font=font, fill=(255, 255, 255, 128))
 
             # Save processed image.
             image.save(processed_filepath % i)

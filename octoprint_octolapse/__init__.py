@@ -882,7 +882,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if not render.is_rendering_template_valid(
             self.Settings.current_rendering().output_template,
             self.Settings.rendering_file_templates,
-            self.get_plugin_data_folder()
         ):
             return {
                 'success': False,
