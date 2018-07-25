@@ -27,7 +27,7 @@ from csv import DictWriter
 from io import open as i_open
 from subprocess import Popen, CalledProcessError, PIPE
 from time import sleep, time
-
+from threading import Thread
 import requests
 from PIL import Image
 from PIL import ImageFile
@@ -69,13 +69,11 @@ class CaptureSnapshot(object):
         return new_snapshot_job.process
 
     def create_snapshot_script_job(
-        self, script_type, script_path, printer_file_name, snapshot_number, snapshot_guid,
-        on_complete=None, on_success=None, on_fail=None
+        self, script_type, script_path, printer_file_name, snapshot_number, on_complete=None, on_success=None, on_fail=None
     ):
         info = SnapshotInfo(printer_file_name, self.PrintStartTime)
         info.DirectoryName = utility.get_snapshot_temp_directory(
             self.DataDirectory)
-        info.guid = snapshot_guid
         url = camera.format_request_template(
             self.Camera.address, self.Camera.snapshot_request_template, "")
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
@@ -243,7 +241,7 @@ class ExternalScriptCameraJob(object):
                     download_full_path
                 )
             )
-            p = Popen([
+            script_args = [
                 self.ScriptPath,
                 str(self.SnapshotNumber),
                 str(self.DelaySeconds),
@@ -251,29 +249,29 @@ class ExternalScriptCameraJob(object):
                 download_directory,
                 download_filename,
                 download_full_path
-            ], stdout=PIPE, stderr=PIPE, bufsize=1)
+            ]
 
-            (stdout, stderr) = p.communicate()
-            self.Settings.current_debug_profile().log_info(
-                "The following console output was returned from the snapshot script: {0}".format(stdout))
-            if stderr is not None:
+            (return_code, error_message) = self.run_command_with_timeout(script_args,self.TimeoutSeconds)
+
+            if error_message is not None:
                 self.Settings.current_debug_profile().log_error(
-                    "Error output was returned from the snapshot script: {0}".format(stderr))
-            if not p.returncode == 0:
+                    "Error output was returned from the snapshot script: {0}".format(error_message))
+            if not return_code == 0:
                 self.ErrorMessage = (
                     "Snapshot Script Error - The {0} script returned {1}, which indicates an error.  Please check" +
-                    "your script and try again.".format(self.ScriptType, p.returncode)
+                    "your script and try again.".format(self.ScriptType, return_code)
                 )
                 self.HasError = True
 
-            # Write metadata about the snapshot.
-            with open(os.path.join(download_directory, METADATA_FILE_NAME), 'a') as metadata_file:
-                dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
-                dictwriter.writerow({
-                    'snapshot_number': str(self.SnapshotNumber),
-                    'file_name': download_filename,
-                    'time_taken': str(time()),
-                })
+            # Make sure the expected snapshot exists.  If it doesn't, don't create any metadata
+            if not os.path.isfile(download_full_path):
+                with open(os.path.join(download_directory, METADATA_FILE_NAME), 'a') as metadata_file:
+                    dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
+                    dictwriter.writerow({
+                        'snapshot_number': str(self.SnapshotNumber),
+                        'file_name': download_filename,
+                        'time_taken': str(time()),
+                    })
         except CalledProcessError as e:
             # If we can't create the thumbnail, just log
             self.Settings.current_debug_profile().log_exception(e)
@@ -282,6 +280,29 @@ class ExternalScriptCameraJob(object):
                 "Check the log file (plugin_octolapse.log) for details.".format(self.ScriptType)
             )
             self.HasError = True
+
+    def run_command_with_timeout(self, args, timeout_sec):
+        """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
+
+        Return subprocess exit code on natural completion of the subprocess.
+        Raise an exception if timeout expires before subprocess completes."""
+        proc = Popen(args)
+        proc_thread = Thread(target=proc.communicate)
+        proc_thread.start()
+        proc_thread.join(timeout_sec)
+        if proc_thread.is_alive():
+            # Process still running - kill it and raise timeout error
+            try:
+                proc.kill()
+                timeout_error = "The process timed out in {0} seconds and was killed.".format(timeout_sec)
+            except OSError as e:
+                timeout_error = "The process timed out in {0} seconds and was killed and an os exception was" \
+                                "raised: {1}.".format(timeout_sec, utility.exception_to_string(e))
+            # not sure if proc.returncode would have a value here...
+            return 1, timeout_error
+
+        # Process completed naturally - return exit code
+        return proc.returncode, None
 
 
 class SnapshotJob(object):
