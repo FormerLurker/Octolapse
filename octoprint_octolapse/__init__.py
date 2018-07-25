@@ -216,15 +216,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @restricted_access
     @admin_permission.require(403)
     def add_update_profile_request(self):
-        request_values = flask.request.get_json()
-        profile_type = request_values["profileType"]
-        profile = request_values["profile"]
-        client_id = request_values["client_id"]
-        updated_profile = self.Settings.add_update_profile(profile_type, profile)
-        # save the updated settings to a file.
-        self.save_settings()
-        self.send_settings_changed_message(client_id)
-        return json.dumps(updated_profile.to_dict()), 200, {'ContentType': 'application/json'}
+        try:
+            request_values = flask.request.get_json()
+            profile_type = request_values["profileType"]
+            profile = request_values["profile"]
+            client_id = request_values["client_id"]
+            updated_profile = self.Settings.add_update_profile(profile_type, profile)
+            # save the updated settings to a file.
+            self.save_settings()
+            self.send_settings_changed_message(client_id)
+            return json.dumps(updated_profile.to_dict()), 200, {'ContentType': 'application/json'}
+        except Exception as e:
+            self._logger.error("Error encountered in /addUpdateProfile.")
+            self._logger.error(utility.exception_to_string(e))
+        return {}, 500, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/removeProfile", methods=["POST"])
     @restricted_access

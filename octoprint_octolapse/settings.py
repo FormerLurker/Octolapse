@@ -26,6 +26,7 @@ import math
 import sys
 import uuid
 from datetime import datetime
+import json
 
 import concurrent
 from octoprint.plugin import PluginSettings
@@ -980,12 +981,13 @@ class Rendering(object):
                                                             self.overlay_text_template)
         if "overlay_font_path" in changes.keys():
             self.overlay_font_path = utility.get_string(changes["overlay_font_path"], self.overlay_font_path)
-        if "overlay_font_size" in changes.keys():
-            self.overlay_font_size = utility.get_string(changes["overlay_font_size"], self.overlay_font_size)
-        if "overlay_text_pos" in changes.keys():
-            self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
-        if "overlay_text_color" in changes.keys():
-            self.overlay_text_color = changes.get("overlay_text_pos", self.overlay_text_color)
+        self.overlay_font_size = int(changes.get("overlay_font_size", self.overlay_font_size))
+        self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
+        if type(self.overlay_text_pos) == 'str':
+            self.overlay_text_pos = json.loads(self.overlay_text_pos)
+        self.overlay_text_color = changes.get("overlay_text_pos", self.overlay_text_color)
+        if type(self.overlay_text_color) == 'str':
+            self.overlay_text_color = json.loads(self.overlay_text_color)
 
     def to_dict(self):
         return {
