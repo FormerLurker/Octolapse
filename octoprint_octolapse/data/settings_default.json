@@ -917,7 +917,7 @@
     }
   ],
   "rendering_file_templates": [ "FAILEDFLAG", "FAILEDSTATE", "FAILEDSEPARATOR", "PRINTSTATE", "GCODEFILENAME", "DATETIMESTAMP", "PRINTENDTIME", "PRINTENDTIMESTAMP", "PRINTSTARTTIME", "PRINTSTARTTIMESTAMP", "SNAPSHOTCOUNT", "FPS" ],
-  "overlay_text_templates": [ "current_time", "time_elapsed" ],
+  "overlay_text_templates": [ "snapshot_number", "current_time", "time_elapsed" ],
   "rendering_fps_calculation_options": [
     {
       "name": "Static FPS",
