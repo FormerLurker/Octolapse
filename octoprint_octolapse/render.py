@@ -362,6 +362,7 @@ class TimelapseRenderJob(object):
     def _render(self):
         """Rendering runnable."""
         try:
+            self._debug.log_render_start("Starting render.")
             self._pre_render()
 
             # notify any listeners that we are rendering.
@@ -461,9 +462,16 @@ class TimelapseRenderJob(object):
                                       cause=e)
 
             self._on_success()
-        except RenderError as e:
-            self._debug.log_exception(e)
-            self._on_fail(e)
+        except Exception as e:
+            if isinstance(e, RenderError):
+                r_error = e
+            else:
+                r_error = RenderError('render-error',
+                                      "Unknown render error. Please check plugin_octolapse.log for more details.",
+                                      e)
+
+            self._debug.log_exception(r_error)
+            self._on_fail(r_error)
 
             if self.cleanAfterFail:
                 # Delete preprocessed images.
@@ -518,6 +526,7 @@ class TimelapseRenderJob(object):
             if not os.path.exists(os.path.dirname(output_path)):
                 os.makedirs(os.path.dirname(output_path))
             image.save(output_path)
+        self._debug.log_render_start("Preprocessing success!")
 
     def add_overlay(self, image, text_template, format_vars, font_path, font_size, overlay_location,
                     text_color):
@@ -531,9 +540,10 @@ class TimelapseRenderJob(object):
             font = ImageFont.truetype(font_path, size=font_size)
             d = ImageDraw.Draw(image)
             text = self._rendering.overlay_text_template.format(**format_vars)
-            d.text(overlay_location, text=text, font=font, fill=text_color)
+            d.text(xy=tuple(overlay_location), text=text, fill=tuple(text_color), font=font)
 
     def _apply_pre_post_roll(self, image_dir):
+        self._debug.log_render_start("Starting pre/post roll.")
         # start with pre-roll, since it will require a bunch of renaming
         pre_roll_frames = int(self._rendering.pre_roll_seconds * self._fps)
         if pre_roll_frames > 0:
@@ -564,6 +574,7 @@ class TimelapseRenderJob(object):
                 image_number = image_index + self._imageCount + pre_roll_frames
                 new_image_path = os.path.join(image_dir, self._snapshot_filename_template % image_number)
                 shutil.copy(last_image_path, new_image_path)
+        self._debug.log_render_start("Pre/post roll generated successfully.")
 
     @staticmethod
     def _get_extension_from_output_format(output_format):

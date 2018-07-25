@@ -21,12 +21,12 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
+import json
 import logging
 import math
 import sys
 import uuid
 from datetime import datetime
-import json
 
 import concurrent
 from octoprint.plugin import PluginSettings
@@ -900,8 +900,8 @@ class Rendering(object):
         self.overlay_text_template = ""
         self.overlay_font_path = ""
         self.overlay_font_size = 10
-        self.overlay_text_pos = (10, 10)
-        self.overlay_text_color = (255, 255, 255, 128)
+        self.overlay_text_pos = [10, 10]
+        self.overlay_text_color = [255, 255, 255, 128]
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -983,10 +983,10 @@ class Rendering(object):
             self.overlay_font_path = utility.get_string(changes["overlay_font_path"], self.overlay_font_path)
         self.overlay_font_size = int(changes.get("overlay_font_size", self.overlay_font_size))
         self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
-        if type(self.overlay_text_pos) == 'str':
+        if isinstance(self.overlay_text_pos, str) or isinstance(self.overlay_text_pos, unicode):
             self.overlay_text_pos = json.loads(self.overlay_text_pos)
-        self.overlay_text_color = changes.get("overlay_text_pos", self.overlay_text_color)
-        if type(self.overlay_text_color) == 'str':
+        self.overlay_text_color = changes.get("overlay_text_color", self.overlay_text_color)
+        if isinstance(self.overlay_text_color, str) or isinstance(self.overlay_text_color, unicode):
             self.overlay_text_color = json.loads(self.overlay_text_color)
 
     def to_dict(self):

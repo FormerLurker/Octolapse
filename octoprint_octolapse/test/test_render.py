@@ -292,3 +292,21 @@ class TestRender(unittest.TestCase):
         self.assertRegexpMatches(output_filename, re.compile('.*\.mp4$', re.IGNORECASE))
         output_filepath = os.path.join(self.octoprint_timelapse_folder, output_filename)
         self.assertGreater(os.path.getsize(output_filepath), 0)
+
+    def test_overlay_invalid_font(self):
+        self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
+        # Create the job.
+        r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
+        r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}",
+                  'overlay_font_path': '/dev/null'})
+        job = self.createRenderingJob(rendering=r)
+
+        # Start the job.
+        job._render()
+
+        # Assertions.
+        self.on_render_start.assert_called_once()
+        self.on_render_success.assert_not_called()
+        self.on_render_error.assert_called_once()
+        output_files = os.listdir(self.octoprint_timelapse_folder)
+        self.assertEqual(len(output_files), 0, "Expected no output files to be generated.".format(output_files))
