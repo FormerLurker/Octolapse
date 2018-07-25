@@ -3037,3 +3037,13 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
     font-size: 10px;
     color: #595959;
 }
+
+.scroll-table-container {
+    overflow-y: auto;
+    max-height: 200px;
+}
+
+.fixed-width-label {
+    width: 5em;
+    overflow-wrap: break-word;
+}

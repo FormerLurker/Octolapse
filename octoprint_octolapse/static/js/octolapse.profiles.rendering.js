@@ -32,7 +32,19 @@ $(function() {
             // Function stolen from https://stackoverflow.com/a/25221100.
             return self.filepath.split('\\').pop().split('/').pop();
         };
-    }
+    };
+
+    Font = function(filepath) {
+        var self = this;
+        // The full file path on the OctoPrint server.
+        self.filepath = filepath;
+
+        // Returns just the filename portion from a full filepath.
+        self.getFilename = function() {
+            // Function stolen from https://stackoverflow.com/a/25221100.
+            return self.filepath.split('\\').pop().split('/').pop();
+        };
+    };
 
     Octolapse.RenderingProfileViewModel = function (values) {
         var self = this;
@@ -56,10 +68,16 @@ $(function() {
         self.selected_watermark = ko.observable(values.selected_watermark); // Absolute filepath of the selected watermark.
         self.watermark_list = ko.observableArray(); // A list of WatermarkImages that are available for selection on the server.
         self.overlay_text_template = ko.observable(values.overlay_text_template);
+        self.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
+        self.overlay_font_path = ko.observable(values.overlay_font_path);
+        self.overlay_font_size = ko.observable(values.overlay_font_size);
+        self.overlay_text_pos = ko.observable(values.overlay_text_pos);
+        self.overlay_text_color = ko.observable(values.overlay_text_color);
 
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
              self.updateWatermarkList();
+             self.updateFontList();
              self.initWatermarkUploadButton();
         };
 
@@ -70,7 +88,7 @@ $(function() {
             }
             self.enable_watermark(true);
             self.selected_watermark(watermark_image.filepath);
-        }
+        };
 
         self.deleteWatermark = function(watermarkImage, event) {
             OctoPrint.postJson(OctoPrint.getBlueprintUrl('octolapse') +
@@ -103,7 +121,7 @@ $(function() {
                         // Hacky solution, but good enough. We shouldn't encounter this error too much anyways.
                         self.watermark_list.push(new WatermarkImage("Failed to load watermarks from Octolapse data directory."));
                      });
-        }
+        };
 
         self.initWatermarkUploadButton = function() {
              // Set up the file upload button.
@@ -146,7 +164,26 @@ $(function() {
                     $progressBar.animate({'width': '100%'}, {'queue':false});
                 }
              });
-        }
+        };
+
+        // Load font list from server-side.
+        self.updateFontList = function() {
+             return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/font')
+                    .then(function(response) {
+                        self.font_list.removeAll()
+                        for (let f of response) {
+                            self.font_list.push(new Font(f));
+                        }
+                     }, function(response) {
+                        // Failed to load any fonts.
+                        self.font_list.removeAll();
+                     });
+        };
+
+        // Select a specific font for the overlay.
+        self.selectOverlayFont = function(font) {
+            self.overlay_font_path(font.filepath);
+        };
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

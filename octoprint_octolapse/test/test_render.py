@@ -20,6 +20,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
+import fontconfig
 import os
 import os.path
 import random
@@ -223,9 +224,7 @@ class TestRender(unittest.TestCase):
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+        job._render()
 
         # Assertions.
         self.on_render_start.assert_called_once()
@@ -274,13 +273,12 @@ class TestRender(unittest.TestCase):
         self.snapshot_dir_path = TestRender.createSnapshotDir(10, self.capture_template, size=(640, 480))
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
-        r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}"})
+        r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}",
+                  'overlay_font_path': fontconfig.query()[0].file})
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
-        job.process()
-        # Wait for the job to finish.
-        job._thread.join()
+        job._render()
 
         # Assertions.
         self.on_render_start.assert_called_once()

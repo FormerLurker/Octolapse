@@ -506,19 +506,32 @@ class TimelapseRenderJob(object):
 
             # Open the image in Pillow and do preprocessing operations.
             image = Image.open(file_path)
-            # Draw overlay text.
-            if self._rendering.overlay_text_template:
-                font = ImageFont.load_default()  # TODO(Shadowen): Allow user to select font.
-                d = ImageDraw.Draw(image)
-                text = self._rendering.overlay_text_template.format(**format_vars)
-                # TODO(Shadowen): Allow user to select placement and colour.
-                d.text((10, 10), text=text, font=font, fill=(255, 255, 255, 128))
-
+            self.add_overlay(image,
+                             text_template=self._rendering.overlay_text_template,
+                             format_vars=format_vars,
+                             font_path=self._rendering.overlay_font_path,
+                             font_size=self._rendering.overlay_font_size,
+                             overlay_location=self._rendering.overlay_text_pos,
+                             text_color=self._rendering.overlay_text_color)
             # Save processed image.
             output_path = os.path.join(preprocessed_directory, self._snapshot_filename_template % snapshot_number)
             if not os.path.exists(os.path.dirname(output_path)):
                 os.makedirs(os.path.dirname(output_path))
             image.save(output_path)
+
+    def add_overlay(self, image, text_template, format_vars, font_path, font_size, overlay_location,
+                    text_color):
+        """Adds an overlay to an image with the given parameters. The overlay is added directly to the image, mutating it.
+        :param image: A Pillow image.
+        :returns The image with the overlay added."""
+        # Draw overlay text.
+        if text_template:
+            if not font_path:
+                raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
+            font = ImageFont.truetype(font_path, size=font_size)
+            d = ImageDraw.Draw(image)
+            text = self._rendering.overlay_text_template.format(**format_vars)
+            d.text(overlay_location, text=text, font=font, fill=text_color)
 
     def _apply_pre_post_roll(self, image_dir):
         # start with pre-roll, since it will require a bunch of renaming

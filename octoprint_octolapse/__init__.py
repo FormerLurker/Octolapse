@@ -28,6 +28,7 @@ import json
 import os
 import shutil
 from distutils.version import LooseVersion
+import fontconfig
 
 import flask
 import octoprint.plugin
@@ -334,6 +335,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         else:
             valid = result[1]
         return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/font", methods=["GET"])
+    @restricted_access
+    @admin_permission.require(403)
+    def get_available_fonts(self):
+        font_list = fontconfig.query()
+        return json.dumps(font_list), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
     @restricted_access

@@ -211,6 +211,7 @@
                         </p>
                     </div>
                 </div>
+
                 <div class="control-group">
                     <label class="control-label">Embed watermark</label>
                     <div class="controls">
@@ -248,25 +249,57 @@
                                     <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
                                 </span>
                                 <span id="octolapse-upload-watermark-progress" class="progress-bar-container">
-                                    <span class="progress-bar" style="width: 0%;"></div>
+                                    <span class="progress-bar" style="width: 0%;"></span>
                                 </span>
                             </div>
                         </div>
                     </div>
+                </div>
+
                 <div class="control-group">
                     <label class="control-label">Overlay</label>
                     <div class="controls">
-                        <textarea id="octolapse_overlay_text_template" name="overlay_text_template" class="input-block-level" data-bind="value: overlay_text_template"/>
-                        <div class="error_label_container text-error"></div>
-                        <p class="help-inline">
-                            Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
-                            <i>
-                                <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
-                                    <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}</span>
-                            </i>
-                        </p>
+                        <div class="form-inline">
+                            <label class="fixed-width-label">Text:</label>
+                            <textarea id="octolapse_overlay_text_template" name="overlay_text_template" class="col-lg" data-bind="value: overlay_text_template"/>
+                            <div class="error_label_container text-error"></div>
+                            <p class="help-inline">
+                                Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
+                                <i>
+                                    <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
+                                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}</span>
+                                </i>
+                            </p>
+                        </div>
+                        <div class="form-inline">
+                            <label class="fixed-width-label">Size:</label>
+                            <input type="text" class="col-sm" data-bind="value: overlay_font_size"/>
+                        </div>
+                        <div class="form-inline">
+                            <label class="fixed-width-label">Position:</label>
+                            <input type="text" class="col-sm" data-bind="value: overlay_text_pos" required="true"/>
+                        </div>
+                        <div class="form-inline">
+                            <label class="fixed-width-label">Color:</label>
+                            <input type="text" class="col-sm" data-bind="value: overlay_text_color" required="true"/>
+                        </div>
+                        <div><span class="label label-important">Warning</span>&nbsp;Only TrueType and OpenType fonts (<code>.otf</code>, <code>.otc</code>, <code>.ttf</code>, <code>.ttc</code>, <code>.tte</code>) are supported.</div>
+                        <p>Font:</p>
+                        <div class="scroll-table-container">
+                            <table class="table table-condensed table-hover file-selector-list">
+                                <tbody data-bind="foreach: font_list">
+                                    <tr data-bind="click: $parent.selectOverlayFont, css: { selected: filepath == $parent.overlay_font_path() }">
+                                        <td>
+                                            <div>
+                                                <span class="filename" data-bind="text: getFilename()"></div>
+                                            </div>
+                                            <div class="filepath" data-bind="text: filepath" ></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>

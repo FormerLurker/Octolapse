@@ -26,10 +26,8 @@ import math
 import sys
 import uuid
 from datetime import datetime
+
 import concurrent
-
-
-from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
 from octoprint.plugin import PluginSettings
 
 import octoprint_octolapse.utility as utility
@@ -899,6 +897,10 @@ class Rendering(object):
         self.enable_watermark = False
         self.selected_watermark = ""
         self.overlay_text_template = ""
+        self.overlay_font_path = ""
+        self.overlay_font_size = 10
+        self.overlay_text_pos = (10, 10)
+        self.overlay_text_color = (255, 255, 255, 128)
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -919,6 +921,10 @@ class Rendering(object):
                 self.output_template = rendering.output_template
                 self.selected_watermark = rendering.selected_watermark
                 self.overlay_text_template = rendering.overlay_text_template
+                self.overlay_font_path = rendering.overlay_font_path
+                self.overlay_font_size = rendering.overlay_font_size
+                self.overlay_text_pos = rendering.overlay_text_pos
+                self.overlay_text_color = rendering.overlay_text_color
             else:
                 self.update(rendering)
 
@@ -970,7 +976,16 @@ class Rendering(object):
             self.selected_watermark = utility.get_string(
                 changes["selected_watermark"], self.selected_watermark)
         if "overlay_text_template" in changes.keys():
-            self.overlay_text_template = utility.get_string(changes["overlay_text_template"], self.overlay_text_template)
+            self.overlay_text_template = utility.get_string(changes["overlay_text_template"],
+                                                            self.overlay_text_template)
+        if "overlay_font_path" in changes.keys():
+            self.overlay_font_path = utility.get_string(changes["overlay_font_path"], self.overlay_font_path)
+        if "overlay_font_size" in changes.keys():
+            self.overlay_font_size = utility.get_string(changes["overlay_font_size"], self.overlay_font_size)
+        if "overlay_text_pos" in changes.keys():
+            self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
+        if "overlay_text_color" in changes.keys():
+            self.overlay_text_color = changes.get("overlay_text_pos", self.overlay_text_color)
 
     def to_dict(self):
         return {
@@ -992,6 +1007,10 @@ class Rendering(object):
             'enable_watermark': self.enable_watermark,
             'selected_watermark': self.selected_watermark,
             'overlay_text_template': self.overlay_text_template,
+            'overlay_font_path': self.overlay_font_path,
+            'overlay_font_size': self.overlay_font_size,
+            'overlay_text_pos': str(self.overlay_text_pos),
+            'overlay_text_color': str(self.overlay_text_color),
         }
 
 
