@@ -25,6 +25,7 @@ import math
 import ntpath
 import os
 import re
+import subprocess
 import sys
 import time
 import traceback
@@ -477,3 +478,16 @@ def exception_to_string(e):
         return str(e)
     tb_lines = traceback.format_exception(e.__class__, e, trace_back)
     return ''.join(tb_lines)
+
+
+def get_system_fonts():
+    """Retrieves a list of fonts for any operating system. Note that this may not be a complete list of fonts discoverable on the system.
+    :returns A list of filepaths to fonts available on the system."""
+    if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
+        # Linux and OS X.
+        return subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
+    elif sys.platform == "win32" or sys.platform == "cygwin":
+        # Windows.
+        return [os.path.join(os.environ['WINDIR'], f) for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts"))]
+    else:
+        raise NotImplementedError('Unsupported operating system.')

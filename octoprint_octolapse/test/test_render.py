@@ -20,7 +20,6 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-import fontconfig
 import os
 import os.path
 import random
@@ -40,7 +39,7 @@ from mock import Mock
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.snapshot import METADATA_FILE_NAME, METADATA_FIELDS
-from octoprint_octolapse.utility import get_snapshot_filename, SnapshotNumberFormat
+from octoprint_octolapse.utility import get_snapshot_filename, SnapshotNumberFormat, get_system_fonts
 
 
 class TestRender(unittest.TestCase):
@@ -274,7 +273,7 @@ class TestRender(unittest.TestCase):
         # Create the job.
         r = Rendering(guid=uuid.uuid4(), name="Render with overlay")
         r.update({'overlay_text_template': "Current Time: {current_time}\nTime elapsed: {time_elapsed}",
-                  'overlay_font_path': fontconfig.query()[0].file})
+                  'overlay_font_path': get_system_fonts()[0]})
         job = self.createRenderingJob(rendering=r)
 
         # Start the job.
