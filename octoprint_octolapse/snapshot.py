@@ -25,15 +25,15 @@ import os
 import shutil
 from csv import DictWriter
 from io import open as i_open
-from subprocess import Popen, CalledProcessError, PIPE
+from subprocess import CalledProcessError
 from time import sleep, time
-from threading import Timer
 import requests
 from PIL import Image
 from PIL import ImageFile
 # PIL is in fact in setup.py.
 from requests.auth import HTTPBasicAuth
 
+import utility
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.settings import *
 
@@ -60,7 +60,7 @@ class CaptureSnapshot(object):
         url = camera.format_request_template(
             self.Camera.address, self.Camera.snapshot_request_template, "")
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
-        new_snapshot_job = SnapshotJob(
+        new_snapshot_job = WebcamSnapshotJob(
             self.Settings, self.DataDirectory, snapshot_number, info, url,
             self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
             on_success=on_success, on_fail=on_fail
@@ -77,7 +77,7 @@ class CaptureSnapshot(object):
         url = camera.format_request_template(
             self.Camera.address, self.Camera.snapshot_request_template, "")
         # TODO:  TURN THE SNAPSHOT REQUIRE TIMEOUT INTO A SETTING
-        new_snapshot_job = ExternalScriptCameraJob(
+        new_snapshot_job = ExternalScriptSnapshotJob(
             script_type, script_path, self.Settings, self.DataDirectory, snapshot_number, info,
             self.Camera.delay, self.SnapshotTimeout, on_complete=on_complete,
             on_success=on_success, on_fail=on_fail
@@ -140,23 +140,16 @@ class CaptureSnapshot(object):
             )
 
 
-class ExternalScriptCameraJob(object):
-
+class SnapshotJob(object):
     def __init__(
-        self, script_type, script_path, settings, data_directory, snapshot_number,
+        self, settings, data_directory, snapshot_number,
         snapshot_info, delay_ms, timeout_seconds, on_complete, on_success, on_fail
     ):
 
-        self.ScriptType = script_type
-        self.ScriptPath = script_path
         self.DelaySeconds = delay_ms / 1000.0
         camera_settings = settings.current_camera()
         self.SnapshotNumber = snapshot_number
         self.DataDirectory = data_directory
-        self.Address = camera_settings.address
-        self.Username = camera_settings.username
-        self.Password = camera_settings.password
-        self.IgnoreSslError = camera_settings.ignore_ssl_error
         self.SnapshotTranspose = camera_settings.snapshot_transpose
         self.Settings = settings
         self.SnapshotInfo = snapshot_info
@@ -176,6 +169,96 @@ class ExternalScriptCameraJob(object):
     def on_complete(self):
         if self.OnCompleteCallback is not None:
             self.OnCompleteCallback()
+
+    def write_metadata(self):
+        try:
+            snapshot_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber)
+            snapshot_path = os.path.dirname(snapshot_full_path)
+            snapshot_file_name = os.path.basename(snapshot_full_path)
+            with open(os.path.join(snapshot_path, METADATA_FILE_NAME), 'a') as metadata_file:
+                dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
+                dictwriter.writerow({
+                    'snapshot_number': str(self.SnapshotNumber),
+                    'file_name': snapshot_file_name,
+                    'time_taken': str(time()),
+                })
+        except Exception as e:
+            raise SnapshotError(
+                'snapshot-metadata-error',
+                "Snapshot Download - An unexpected exception occurred while writing snapshot metadata.  "
+                "Check the log file (plugin_octolapse.log) for details.",
+                cause=e
+            )
+
+    def transpose_image(self):
+        try:
+            transpose_method = None
+            snapshot_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber)
+
+            if self.SnapshotTranspose is not None and self.SnapshotTranspose != "":
+                if self.SnapshotTranspose == 'flip_left_right':
+                    transpose_method = Image.FLIP_LEFT_RIGHT
+                elif self.SnapshotTranspose == 'flip_top_bottom':
+                    transpose_method = Image.FLIP_TOP_BOTTOM
+                elif self.SnapshotTranspose == 'rotate_90':
+                    transpose_method = Image.ROTATE_90
+                elif self.SnapshotTranspose == 'rotate_180':
+                    transpose_method = Image.ROTATE_180
+                elif self.SnapshotTranspose == 'rotate_270':
+                    transpose_method = Image.ROTATE_270
+                elif self.SnapshotTranspose == 'transpose':
+                    transpose_method = Image.TRANSPOSE
+
+                if transpose_method is not None:
+                    im = Image.open(snapshot_full_path)
+                    im = im.transpose(transpose_method)
+                    im.save(snapshot_full_path)
+        except IOError as e:
+            raise SnapshotError(
+                'snapshot-transpose-error',
+                "Snapshot transpose - An unexpected IOException occurred while transposing the image.  "
+                "Check the log file (plugin_octolapse.log) for details.",
+                cause=e
+            )
+    def create_thumbnail(self):
+        try:
+            # without this I get errors during load (happens in resize, where the image is actually loaded)
+            ImageFile.LOAD_TRUNCATED_IMAGES = True
+            #######################################
+
+            # create a copy to be used for the full sized latest snapshot image.
+            latest_snapshot_path = utility.get_latest_snapshot_download_path(self.DataDirectory)
+            shutil.copy(self.SnapshotInfo.get_full_path(self.SnapshotNumber), latest_snapshot_path)
+
+            # create a thumbnail of the image
+            basewidth = 300
+            img = Image.open(latest_snapshot_path)
+            wpercent = (basewidth / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
+            img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+            img.save(utility.get_latest_snapshot_thumbnail_download_path(
+                self.DataDirectory), "JPEG")
+        except Exception as e:
+            # If we can't create the thumbnail, just log
+            raise SnapshotError(
+                'snapshot-thumbnail-create-error',
+                "Create Thumbnail - An unexpected exception occurred while creating a snapshot thumbnail.  "
+                "Check the log file (plugin_octolapse.log) for details.",
+                cause=e
+            )
+
+
+class ExternalScriptSnapshotJob(SnapshotJob):
+    def __init__(
+        self, script_type, script_path, settings, data_directory, snapshot_number,
+        snapshot_info, delay_ms, timeout_seconds, on_complete, on_success, on_fail
+    ):
+        super(ExternalScriptSnapshotJob, self).__init__(
+            settings, data_directory, snapshot_number,
+            snapshot_info, delay_ms, timeout_seconds, on_complete, on_success, on_fail
+        )
+        self.ScriptType = script_type
+        self.ScriptPath = script_path
 
     def process(self):
         try:
@@ -207,6 +290,15 @@ class ExternalScriptCameraJob(object):
                         delay_seconds = self.DelaySeconds - (time() - t0)
             # go ahead and report success or fail for the timelapse routine
             self.on_success()
+
+            # Make sure the expected snapshot exists before we start working with the snapshot file.
+            download_full_path = self.SnapshotInfo.get_full_path(self.SnapshotNumber)
+            if os.path.isfile(download_full_path):
+                # Post Processing and Meta Data Creation
+                self.write_metadata()
+                self.transpose_image()
+                self.create_thumbnail()
+
         except SnapshotError as e:
             self.on_fail(e)
         finally:
@@ -242,7 +334,7 @@ class ExternalScriptCameraJob(object):
                 download_full_path
             ]
 
-            (return_code, console_output, error_message) = self.run_command_with_timeout(
+            (return_code, console_output, error_message) = utility.run_command_with_timeout(
                 script_args, self.TimeoutSeconds
             )
 
@@ -260,15 +352,6 @@ class ExternalScriptCameraJob(object):
                     )
                 raise SnapshotError('snapshot_error', error_message)
 
-            # Make sure the expected snapshot exists.  If it doesn't, don't create any metadata
-            if not os.path.isfile(download_full_path):
-                with open(os.path.join(download_directory, METADATA_FILE_NAME), 'a') as metadata_file:
-                    dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
-                    dictwriter.writerow({
-                        'snapshot_number': str(self.SnapshotNumber),
-                        'file_name': download_filename,
-                        'time_taken': str(time()),
-                    })
         except CalledProcessError as e:
 
             # If we can't create the thumbnail, just log
@@ -278,55 +361,23 @@ class ExternalScriptCameraJob(object):
             )
             raise SnapshotError('snapshot_error', error_message)
 
-    def run_command_with_timeout(self, args, timeout_sec):
-        """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
 
-        Return subprocess exit code on natural completion of the subprocess.
-        Raise an exception if timeout expires before subprocess completes."""
-        proc = Popen(args, stdout=PIPE, stderr=PIPE)
-        timer = Timer(timeout_sec, proc.kill)
-
-        try:
-            timer.start()
-            (stdout, stderr) = proc.communicate()
-        finally:
-            timer.cancel()
-
-        # Process completed naturally - return exit code
-        return proc.returncode, stdout, stderr
-
-
-class SnapshotJob(object):
+class WebcamSnapshotJob(SnapshotJob):
 
     def __init__(
         self, settings, data_directory, snapshot_number,
         snapshot_info, url, delay_ms, timeout_seconds, on_complete, on_success, on_fail
     ):
-        self.DelaySeconds = delay_ms / 1000.0
+        super(WebcamSnapshotJob, self).__init__(
+            settings, data_directory, snapshot_number,
+            snapshot_info, delay_ms, timeout_seconds, on_complete, on_success, on_fail
+        )
         camera_settings = settings.current_camera()
-        self.SnapshotNumber = snapshot_number
-        self.DataDirectory = data_directory
         self.Address = camera_settings.address
         self.Username = camera_settings.username
         self.Password = camera_settings.password
         self.IgnoreSslError = camera_settings.ignore_ssl_error
-        self.SnapshotTranspose = camera_settings.snapshot_transpose
-        self.Settings = settings
-        self.SnapshotInfo = snapshot_info
         self.Url = url
-        self.TimeoutSeconds = timeout_seconds
-        self.OnCompleteCallback = on_complete
-        self.OnSuccessCallback = on_success
-        self.OnFailCallback = on_fail
-
-    def on_success(self):
-        self.OnSuccessCallback()
-
-    def on_fail(self, e):
-        self.OnFailCallback(e)
-
-    def on_complete(self):
-        self.OnCompleteCallback()
 
     def process(self):
         try:
@@ -417,14 +468,6 @@ class SnapshotJob(object):
                             snapshot_file.write(chunk)
                     self.Settings.current_debug_profile().log_snapshot_save(
                         "Snapshot - Snapshot saved to disk at {0}".format(snapshot_directory))
-                # Write metadata about the snapshot.
-                with open(os.path.join(path, METADATA_FILE_NAME), 'a') as metadata_file:
-                    dictwriter = DictWriter(metadata_file, METADATA_FIELDS)
-                    dictwriter.writerow({
-                        'snapshot_number': str(self.SnapshotNumber),
-                        'file_name': os.path.basename(snapshot_directory),
-                        'time_taken': str(time()),
-                    })
             except Exception as e:
                 raise SnapshotError(
                     'snapshot-save-error',
@@ -435,62 +478,11 @@ class SnapshotJob(object):
             # we downloaded the snapshot, send success now so that the print can continue
             self.on_success()
 
-            # transpose image if this is enabled.
+            # Post Processing and Meta Data Creation
+            self.write_metadata()
+            self.transpose_image()
+            self.create_thumbnail()
 
-            try:
-                transpose_method = None
-                if self.SnapshotTranspose is not None and self.SnapshotTranspose != "":
-                    if self.SnapshotTranspose == 'flip_left_right':
-                        transpose_method = Image.FLIP_LEFT_RIGHT
-                    elif self.SnapshotTranspose == 'flip_top_bottom':
-                        transpose_method = Image.FLIP_TOP_BOTTOM
-                    elif self.SnapshotTranspose == 'rotate_90':
-                        transpose_method = Image.ROTATE_90
-                    elif self.SnapshotTranspose == 'rotate_180':
-                        transpose_method = Image.ROTATE_180
-                    elif self.SnapshotTranspose == 'rotate_270':
-                        transpose_method = Image.ROTATE_270
-                    elif self.SnapshotTranspose == 'transpose':
-                        transpose_method = Image.TRANSPOSE
-
-                    if transpose_method is not None:
-                        im = Image.open(snapshot_directory)
-                        im = im.transpose(transpose_method)
-                        im.save(snapshot_directory)
-            except IOError as e:
-                raise SnapshotError(
-                    'snapshot-transpose-error',
-                    "Snapshot transpose - An unexpected IOException occurred.  "
-                    "Check the log file (plugin_octolapse.log) for details.",
-                    cause=e
-                )
-
-            # create a thumbnail and save the current snapshot as the most recent snapshot image
-            try:
-                # without this I get errors during load (happens in resize, where the image is actually loaded)
-                ImageFile.LOAD_TRUNCATED_IMAGES = True
-                #######################################
-
-                # create a copy to be used for the full sized latest snapshot image.
-                latest_snapshot_path = utility.get_latest_snapshot_download_path(self.DataDirectory)
-                shutil.copy(self.SnapshotInfo.get_full_path(self.SnapshotNumber), latest_snapshot_path)
-
-                # create a thumbnail of the image
-                basewidth = 300
-                img = Image.open(latest_snapshot_path)
-                wpercent = (basewidth / float(img.size[0]))
-                hsize = int((float(img.size[1]) * float(wpercent)))
-                img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-                img.save(utility.get_latest_snapshot_thumbnail_download_path(
-                    self.DataDirectory), "JPEG")
-            except Exception as e:
-                # If we can't create the thumbnail, just log
-                raise SnapshotError(
-                    'snapshot-thumbnail-create-error',
-                    "Create latest snapshot and thumbnail - An unexpected exception occurred.  "
-                    "Check the log file (plugin_octolapse.log) for details.",
-                    cause=e
-                )
         except SnapshotError as e:
             self.Settings.current_debug_profile().log_exception(e)
             self.on_fail(e)
@@ -513,9 +505,10 @@ class SnapshotInfo(object):
 
 class SnapshotError(Exception):
     def __init__(self, error_type, message, cause=None):
-        super(Exception, self).__init__(message)
+        super(SnapshotError, self).__init__()
         self.error_type = error_type
         self.cause = cause if cause is not None else None
+        self.message = message
 
     def __str__(self):
         if self.cause is None:

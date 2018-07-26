@@ -29,6 +29,7 @@ import subprocess
 import sys
 import time
 import traceback
+from threading import Timer
 
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
 
@@ -491,3 +492,20 @@ def get_system_fonts():
         return [os.path.join(os.environ['WINDIR'], f) for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts"))]
     else:
         raise NotImplementedError('Unsupported operating system.')
+
+def run_command_with_timeout(args, timeout_sec):
+    """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
+
+    Return subprocess exit code on natural completion of the subprocess.
+    Raise an exception if timeout expires before subprocess completes."""
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    timer = Timer(timeout_sec, proc.kill)
+
+    try:
+        timer.start()
+        (stdout, stderr) = proc.communicate()
+    finally:
+        timer.cancel()
+
+    # Process completed naturally - return exit code
+    return proc.returncode, stdout, stderr
