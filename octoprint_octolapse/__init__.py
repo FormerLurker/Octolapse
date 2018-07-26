@@ -1071,15 +1071,24 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
+
     def on_snapshot_end(self, *args, **kwargs):
         payload = args[0]
 
         status_dict = self.get_status_dict()
         success = payload["success"]
         error = payload["error"]
+        snapshot_payload = payload["snapshot_payload"]
+        snapshot_success = False
+        snapshot_error = "No information available."
+        if snapshot_payload:
+            snapshot_success = snapshot_payload["success"]
+            snapshot_error = snapshot_payload["error"]
+
         data = {
             "type": "snapshot-complete", "msg": "Octolapse has completed the current snapshot.", "Status": status_dict,
-            "MainSettings": self.Settings.get_main_settings_dict(), 'success': success, 'error': error
+            "MainSettings": self.Settings.get_main_settings_dict(), 'success': success, 'error': error,
+            "snapshot_success": snapshot_success, "snapshot_error": snapshot_error
 
         }
         state_data = self.Timelapse.to_state_dict()
@@ -1257,7 +1266,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_render_error(self, error):
         """Called after all rendering and synchronization attempts are complete."""
-        self.send_plugin_message(error.type, error.message)
+        self.send_plugin_message('render-failed', error.message)
 
 
     # ~~ AssetPlugin mixin

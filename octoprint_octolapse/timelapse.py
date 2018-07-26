@@ -214,12 +214,11 @@ class Timelapse(object):
         # Increment the number of snapshots received
         self.SnapshotCount += 1
         self._snapshot_success = True
+        self.SnapshotError = ""
 
     def _on_snapshot_fail(self, *args, **kwargs):
-        reason = args[0]
-        message = "Failed to download the snapshot.  Reason: {0}".format(
-            reason)
-
+        error = args[0]
+        message = "Failed to download the snapshot.  Reason: {0}".format(error)
         self.Settings.current_debug_profile().log_snapshot_download(message)
         self._snapshot_success = False
         self.SnapshotError = message
@@ -233,21 +232,19 @@ class Timelapse(object):
             "success": False,
             "error": "Waiting on thread to signal, aborting"
         }
-        if self.Camera.camera_type == "external-script":
-            job = self.CaptureSnapshot.create_snapshot_script_job(
-                "snapshot", self.Camera.external_camera_snapshot_script,
-                utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                on_complete=None, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
-            # run the job
-            job()
-        elif self.Camera.camera_type == "webcam":
-            if self._snapshot_signal.is_set():
-                # only clear signal and send a new M114 if we haven't already done that from another thread
-                self._snapshot_signal.clear()
-                # start the snapshot
-                self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
+        if self._snapshot_signal.is_set():
+            # only clear signal and send a new M114 if we haven't already done that from another thread
+            self._snapshot_signal.clear()
+            # start the snapshot
+            self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
 
-
+            if self.Camera.camera_type == "external-script":
+                snapshot_job = self.CaptureSnapshot.create_snapshot_script_job(
+                    "snapshot", self.Camera.external_camera_snapshot_script,
+                    utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
+                    on_complete=self._on_snapshot_complete, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
+                # run the job
+            elif self.Camera.camera_type == "webcam":
                 snapshot_job = self.CaptureSnapshot.create_snapshot_job(
                     utility.get_currently_printing_filename(self.OctoprintPrinter),
                     self.SnapshotCount,
@@ -255,21 +252,24 @@ class Timelapse(object):
                     on_fail=self._on_snapshot_fail,
                     on_complete=self._on_snapshot_complete
                 )
-                snapshot_thread = threading.Thread(target=snapshot_job)
-                snapshot_thread.daemon = True
-                snapshot_thread.start()
+            snapshot_thread = threading.Thread(target=snapshot_job)
+            snapshot_thread.daemon = True
+            snapshot_thread.start()
+        snapshot_timeout = self._snapshot_timeout + (self.Camera.delay/1000.0)
+        event_is_set = self._snapshot_signal.wait(snapshot_timeout)
+        if not event_is_set:
+            # we ran into a timeout while waiting for a fresh position
+            snapshot_async_payload["success"] = False
+            snapshot_async_payload["error"] = \
+                "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
+            return snapshot_async_payload
 
-            snapshot_timeout = self._snapshot_timeout + (self.Camera.delay/1000.0)
-            event_is_set = self._snapshot_signal.wait(snapshot_timeout)
-            if not event_is_set:
-                # we ran into a timeout while waiting for a fresh position
-                snapshot_async_payload["success"] = False
-                snapshot_async_payload["error"] = \
-                    "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
-
-            else:
-                snapshot_async_payload["success"] = True
-                snapshot_async_payload["error"] = ""
+        if self._snapshot_success:
+            snapshot_async_payload["success"] = True
+            snapshot_async_payload["error"] = ""
+        else:
+            snapshot_async_payload["success"] = False
+            snapshot_async_payload["error"] = self.SnapshotError
 
         return snapshot_async_payload
 
@@ -984,6 +984,7 @@ class Timelapse(object):
                 "success": snapshot_payload["success"],
                 "error": snapshot_payload["error"],
                 "snapshot_count": self.SnapshotCount,
+                "snapshot_payload": snapshot_payload["snapshot_payload"],
                 "total_snapshot_time": snapshot_payload["total_snapshot_time"],
                 "current_snapshot_time": snapshot_payload["total_snapshot_time"]
             }

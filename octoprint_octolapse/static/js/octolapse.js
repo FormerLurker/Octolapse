@@ -629,7 +629,7 @@ $(function () {
                     break;
                 case "state-changed":
                     {
-                        //console.log('octolapse.js - state-changed');
+                        console.log('octolapse.js - state-changed');
                         self.updateState(data);
                     }
                     break;
@@ -692,10 +692,18 @@ $(function () {
                     break;
                 case "snapshot-complete":
                     {
-                        //console.log('octolapse.js - snapshot-complete');
+                        console.log('octolapse.js - snapshot-complete');
                         self.updateState(data);
-                        Octolapse.Status.snapshot_error(!data.success);
-                        Octolapse.Status.snapshot_error_message(data.error);
+                        if(!data.snapshot_success && data.success)
+                        {
+                            // If only the camera image acquisition failed, use the camera error message
+                            Octolapse.Status.snapshot_error(!data.snapshot_success);
+                            Octolapse.Status.snapshot_error_message(data.snapshot_error);
+                        }
+                        else {
+                            Octolapse.Status.snapshot_error(!data.success);
+                            Octolapse.Status.snapshot_error_message(data.error);
+                        }
                         if (!Octolapse.HasTakenFirstSnapshot) {
                             Octolapse.HasTakenFirstSnapshot = true;
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
@@ -730,7 +738,7 @@ $(function () {
                     break;
                 case "render-failed":
                     {
-                        //console.log('octolapse.js - render-failed');
+                        console.log('octolapse.js - render-failed');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Rendering Failed',
