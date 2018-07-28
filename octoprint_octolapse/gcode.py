@@ -30,8 +30,8 @@ from octoprint_octolapse.trigger import Triggers
 class SnapshotGcode(object):
     CommandsDictionary = Commands()
     START_GCODE = 'start-gcode'
-    SNAPSHOT_COMMANDS = 'snapshot_commands'
-    RETURN_COMMANDS = 'return_commands'
+    SNAPSHOT_COMMANDS = 'snapshot-commands'
+    RETURN_COMMANDS = 'return-commands'
     END_GCODE = 'end-gcode'
 
     def __init__(self, is_test_mode):
@@ -40,12 +40,6 @@ class SnapshotGcode(object):
         self.SnapshotCommands = []
         self.ReturnCommands = []
         self.EndGcode = []
-
-        self.__OriginalStartGcode = []
-        self.__OriginalSnapshotCommands = []
-        self.__OriginalReturnCommands = []
-        self.__OriginalEndGcode = []
-
         self.X = None
         self.ReturnX = None
         self.Y = None
@@ -60,30 +54,14 @@ class SnapshotGcode(object):
         return self.StartGcode + self.SnapshotCommands + self.ReturnCommands + self.EndGcode
 
     def append(self, command_type, command):
-        original_command = command
-
-        if self.IsTestMode:
-            # todo:  remove the need to re-parse this!
-            cmd, parameters = self.CommandsDictionary.parse(command)
-            if cmd is not None and parameters is not None:
-                command = self.CommandsDictionary.alter_for_test_mode(
-                    original_command, cmd, parameters, return_string=True
-                )
-            if len(command) == 0:
-                return
-
         if command_type == self.START_GCODE:
             self.StartGcode.append(command)
-            self.__OriginalStartGcode.append(original_command)
         elif command_type == self.SNAPSHOT_COMMANDS:
             self.SnapshotCommands.append(command)
-            self.__OriginalSnapshotCommands.append(original_command)
         elif command_type == self.RETURN_COMMANDS:
             self.ReturnCommands.append(command)
-            self.__OriginalReturnCommands.append(original_command)
         elif command_type == self.END_GCODE:
             self.EndGcode.append(command)
-            self.__OriginalEndGcode.append(original_command)
 
     def end_index(self):
         return len(self.StartGcode) + len(self.SnapshotCommands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
@@ -261,8 +239,11 @@ class SnapshotGcodeGenerator(object):
         return ((float(max_value) - float(min_value)) * (percent / 100.0)) + float(min_value)
 
     def create_snapshot_gcode(
-        self, position, trigger, gcode, cmd, parameters, triggering_command_position, triggering_extruder_position
+        self, position, trigger, parsed_command
     ):
+        # undo the most recent position update since we haven't yet executed the most recent gcode command
+        # Capture and undo the last position update, we're not going to be using it!
+        triggering_command_position, triggering_extruder_position = position.undo_update()
 
         assert (isinstance(triggering_command_position, Pos))
 
@@ -283,7 +264,7 @@ class SnapshotGcodeGenerator(object):
                     "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(pos.Z, pos.LastExtrusionHeight)
                 )
         length_to_retract = position.Extruder.length_to_retract()
-        final_command = gcode
+        final_command = parsed_command.gcode
 
         self.reset()
         if x_return is None or y_return is None or z_return is None:
@@ -325,6 +306,7 @@ class SnapshotGcodeGenerator(object):
         # Flag to indicate that we should make sure the final feedrate = self.FOriginal
         # by default we want to change the feedrate if FCurrent != FOriginal
         reset_feedrate_before_end_gcode = True
+
         triggered_type = trigger.triggered_type(0)
         if triggered_type is None:
             triggered_type = trigger.triggered_type(1)
@@ -340,8 +322,8 @@ class SnapshotGcodeGenerator(object):
                 self.ReturnWhenComplete = False
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
             # see if the snapshot command is a g1 or g0
-            if cmd:
-                if cmd not in ["G0", "G1"]:
+            if parsed_command.cmd:
+                if parsed_command.cmd not in ["G0", "G1"]:
                     # if this isn't a g0 or g1, I don't know what's up!
                     return None
                 # get the data necessary to split the command up
@@ -352,11 +334,11 @@ class SnapshotGcodeGenerator(object):
 
                 _x1 = intersection[0]  # will be in absolute coordinates
                 _y1 = intersection[1]  # will be in absolute coordinates
-                _x2 = parameters["X"] if "X" in parameters else None  # should remain in the original coordinate system
-                _y2 = parameters["Y"] if "Y" in parameters else None  # should remain in the original coordinate system
-                _z = parameters["Z"] if "Z" in parameters else None  # should remain in the original coordinate system
-                _e = parameters["E"] if "E" in parameters else None
-                _f = parameters["F"] if "F" in parameters else None
+                _x2 = parsed_command.parameters["X"] if "X" in parsed_command.parameters else None  # should remain in the original coordinate system
+                _y2 = parsed_command.parameters["Y"] if "Y" in parsed_command.parameters else None  # should remain in the original coordinate system
+                _z = parsed_command.parameters["Z"] if "Z" in parsed_command.parameters else None  # should remain in the original coordinate system
+                _e = parsed_command.parameters["E"] if "E" in parsed_command.parameters else None
+                _f = parsed_command.parameters["F"] if "F" in parsed_command.parameters else None
                 # if the command has an F parameter, update FCurrent
 
                 if _f:
@@ -397,13 +379,13 @@ class SnapshotGcodeGenerator(object):
                 if _f:
                     _f = float(_f)
 
-                if(self.IsTestMode):
+                if self.IsTestMode:
                     _e1 = None
                     _e2 = None
 
-                gcode1 = self.get_g_command(cmd, _x1, _y1, _z, _e1, _f)
+                gcode1 = self.get_g_command(parsed_command.cmd, _x1, _y1, _z, _e1, _f)
                 # create the second command
-                gcode2 = self.get_g_command(cmd, _x2, _y2, _z, _e2, _f)
+                gcode2 = self.get_g_command(parsed_command.cmd, _x2, _y2, _z, _e2, _f)
 
                 # append both commands
                 new_snapshot_gcode.append(SnapshotGcode.START_GCODE, gcode1)
@@ -415,8 +397,8 @@ class SnapshotGcodeGenerator(object):
                 y_return = intersection[1]  # will be in absolute coordinates
 
                 # recalculate z_lift and retract distance since we have moved a bit
-                cmd1, cmd1_parameters = Commands.parse(gcode1)
-                position.update(gcode, cmd1, cmd1_parameters)
+                command_1 = Commands.parse(gcode1)
+                position.update(command_1)
                 # set z_return to the new z position
                 # must be absolute
                 z_return = position.z()
@@ -628,7 +610,7 @@ class SnapshotGcodeGenerator(object):
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
                 new_snapshot_gcode.snapshot_index(),
                 new_snapshot_gcode.end_index(),
-                gcode
+                parsed_command.gcode
             )
         )
         for gcode in new_snapshot_gcode.snapshot_gcode():

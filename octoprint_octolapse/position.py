@@ -59,9 +59,7 @@ def get_formatted_coordinate(coord):
 class Pos(object):
     def __init__(self, printer, octoprint_printer_profile, pos=None):
         self.OctoprintPrinterProfile = octoprint_printer_profile
-        self.GCode = None if pos is None else pos.GCode
-        self.Command = None if pos is None else pos.Command
-        self.Parameters = None if pos is None else pos.Parameters
+        self.parsed_command = None if pos is None else pos.parsed_command
         # F
         self.F = None if pos is None else pos.F
         # X
@@ -172,6 +170,19 @@ class Pos(object):
 
         return False
 
+    # Returns true if either the X Y Z or E axis has changed
+    def should_update_extruder_state(self, pos, tolerance):
+        if not self.is_position_equal(pos, tolerance):
+            return True
+
+        if pos.E is None or self.E is None:
+            return False
+
+        if tolerance == 0:
+             return pos.E != self.E
+        else:
+             return utility.round_to(pos.E, tolerance) != utility.round_to(self.E, tolerance)
+
     def is_position_equal(self, pos, tolerance):
         if tolerance == 0:
             return (pos.X is not None and self.X is not None and pos.X == self.X
@@ -190,7 +201,7 @@ class Pos(object):
 
     def to_state_dict(self):
         return {
-            "GCode": self.GCode,
+            "GCode": self.parsed_command.gcode,
             "XHomed": self.XHomed,
             "YHomed": self.YHomed,
             "ZHomed": self.ZHomed,
@@ -228,7 +239,7 @@ class Pos(object):
 
     def to_dict(self):
         return {
-            "GCode": self.GCode,
+            "GCode": self.parsed_command.gcode,
             "F": self.F,
             "X": self.X,
             "XOffset": self.XOffset,
@@ -656,7 +667,7 @@ class Position(object):
         if pos is None:
             return False
 
-        if self.command_requires_location_detection(pos.Command):
+        if self.command_requires_location_detection(pos.parsed_command.cmd):
             return True
         return False
 
@@ -675,7 +686,7 @@ class Position(object):
             return self.Positions[index]
         return None
 
-    def update(self, gcode, cmd, parameters):
+    def update(self, parsed_command):
         # a new position
         pos = None
         previous_pos = None
@@ -693,28 +704,27 @@ class Position(object):
         # new position)
         pos.reset_state()
         # set the pos gcode cmd
-        pos.Command = cmd
-        pos.Parameters = parameters
-        pos.GCode = gcode
-
+        pos.parsed_command = parsed_command
 
         # apply the cmd to the position tracker
         # TODO: this should NOT be an else/if structure anymore..  Simplify
-        if cmd is not None:
+        if pos.parsed_command.cmd is not None:
 
-            if cmd in Commands.CommandsRequireMetric and not pos.IsMetric:
+            if pos.parsed_command.cmd in Commands.CommandsRequireMetric and not pos.IsMetric:
                 pos.HasPositionError = True
                 pos.PositionError = "Units are not metric.  Unable to continue print."
-            elif cmd in ["G0", "G1"]:
+            elif pos.parsed_command.cmd in ["G0", "G1"]:
                 # Movement
 
-                self.Settings.current_debug_profile().log_position_command_received("Received {0}".format(cmd))
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received {0}".format(pos.parsed_command.cmd)
+                )
 
-                x = parameters["X"] if "X" in parameters else None
-                y = parameters["Y"] if "Y" in parameters else None
-                z = parameters["Z"] if "Z" in parameters else None
-                e = parameters["E"] if "E" in parameters else None
-                f = parameters["F"] if "F" in parameters else None
+                x = pos.parsed_command.parameters["X"] if "X" in pos.parsed_command.parameters else None
+                y = pos.parsed_command.parameters["Y"] if "Y" in pos.parsed_command.parameters else None
+                z = pos.parsed_command.parameters["Z"] if "Z" in pos.parsed_command.parameters else None
+                e = pos.parsed_command.parameters["E"] if "E" in pos.parsed_command.parameters else None
+                f = pos.parsed_command.parameters["F"] if "F" in pos.parsed_command.parameters else None
 
                 # If we're moving on the X/Y plane only, mark this position as travel only
                 pos.IsTravelOnly = e is None and (
@@ -753,34 +763,34 @@ class Position(object):
                           "E:{9}) "
                 if previous_pos is None:
                     message = message.format(
-                        gcode, "Relative"
+                        parsed_command.gcode, "Relative"
                         if pos.IsRelative else "Absolute", "None", "None",
                         "None", "None", pos.X, pos.Y, pos.Z, pos.E)
                 else:
                     message = message.format(
-                        gcode, "Relative"
+                        parsed_command.gcode, "Relative"
                         if pos.IsRelative else "Absolute", previous_pos.X,
                         previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
                         pos.Y, pos.Z, pos.E)
                 self.Settings.current_debug_profile().log_position_change(
                     message)
-            elif cmd in ["G2", "G3"]:
+            elif pos.parsed_command.cmd in ["G2", "G3"]:
                 # Movement Type
                 movement_type = ""
-                if cmd == "G2":
+                if pos.parsed_command.cmd == "G2":
                     movement_type = "clockwise"
                     self.Settings.current_debug_profile().log_position_command_received("Received G2 - Clockwise Arc")
                 else:
                     movement_type = "counter-clockwise"
                     self.Settings.current_debug_profile().log_position_command_received("Received G3 - Counter-Clockwise Arc")
 
-                x = parameters["X"] if "X" in parameters else None
-                y = parameters["Y"] if "Y" in parameters else None
-                i = parameters["I"] if "I" in parameters else None
-                j = parameters["J"] if "J" in parameters else None
-                r = parameters["R"] if "R" in parameters else None
-                e = parameters["E"] if "E" in parameters else None
-                f = parameters["F"] if "F" in parameters else None
+                x = pos.parsed_command.parameters["X"] if "X" in pos.parsed_command.parameters else None
+                y = pos.parsed_command.parameters["Y"] if "Y" in pos.parsed_command.parameters else None
+                i = pos.parsed_command.parameters["I"] if "I" in pos.parsed_command.parameters else None
+                j = pos.parsed_command.parameters["J"] if "J" in pos.parsed_command.parameters else None
+                r = pos.parsed_command.parameters["R"] if "R" in pos.parsed_command.parameters else None
+                e = pos.parsed_command.parameters["E"] if "E" in pos.parsed_command.parameters else None
+                f = pos.parsed_command.parameters["F"] if "F" in pos.parsed_command.parameters else None
 
                 # If we're moving on the X/Y plane only, mark this position as travel only
                 pos.IsTravelOnly = e is None
@@ -788,7 +798,7 @@ class Position(object):
                 can_update_position = False
                 if r is not None and (i is not None or j is not None):
                     self.Settings.current_debug_profile().log_error(
-                        "Received {0} - but received R and either I or J, which is not allowed.".format(cmd))
+                        "Received {0} - but received R and either I or J, which is not allowed.".format(pos.parsed_command.cmd))
                 elif i is not None or j is not None:
                     # IJ Form
                     if x is not None and y is not None:
@@ -800,7 +810,9 @@ class Position(object):
                     # R Form
                     if x is None and y is None:
                         self.Settings.current_debug_profile().log_error(
-                            "Received {0} - but received R without x or y, which is not allowed.".format(cmd))
+                            "Received {0} - but received R without x or y, which is not allowed."
+                            .format(pos.parsed_command.cmd)
+                        )
                     else:
                         can_update_position = True
                         self.Settings.current_debug_profile().log_info(
@@ -839,18 +851,18 @@ class Position(object):
                               "Z:{9},E:{10})"
                     if previous_pos is None:
                         message = message.format(
-                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type
+                            parsed_command.gcode, "Relative" if pos.IsRelative else "Absolute", movement_type
                             , "None", "None",
                             "None", "None", pos.X, pos.Y, pos.Z, pos.E)
                     else:
                         message = message.format(
-                            gcode, "Relative" if pos.IsRelative else "Absolute", movement_type, previous_pos.X,
+                            parsed_command.gcode, "Relative" if pos.IsRelative else "Absolute", movement_type, previous_pos.X,
                             previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
                             pos.Y, pos.Z, pos.E)
                     self.Settings.current_debug_profile().log_position_change(
                         message)
-            elif cmd == "G10":
-                if "P" not in parameters:
+            elif pos.parsed_command.cmd == "G10":
+                if "P" not in pos.parsed_command.parameters:
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received G10 - Received firmware retract."
                     )
@@ -864,7 +876,7 @@ class Position(object):
                     pos.update_position(self.BoundingBox, x=None, y=None, z=pos.FirmwareZLift, e=e, f=pos.FirmwareRetractionFeedrate)
                     pos.IsRelative = previous_relative
                     pos.IsExtruderRelative = previous_extruder_relative
-            elif cmd == "G11":
+            elif pos.parsed_command.cmd == "G11":
 
                 self.Settings.current_debug_profile().log_position_command_received(
                     "Received G11 - Received firmware detract."
@@ -890,8 +902,7 @@ class Position(object):
                                     e=e, f=f)
                 pos.IsRelative = previous_relative
                 pos.IsExtruderRelative = previous_extruder_relative
-
-            elif cmd == "G20":
+            elif pos.parsed_command.cmd == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:
                     self.Settings.current_debug_profile(
@@ -904,7 +915,7 @@ class Position(object):
                     ).log_position_command_received(
                         "Received G20 - Already in inches."
                     )
-            elif cmd == "G21":
+            elif pos.parsed_command.cmd == "G21":
                 # change units to millimeters
                 if pos.IsMetric is None or not pos.IsMetric:
                     self.Settings.current_debug_profile(
@@ -917,12 +928,12 @@ class Position(object):
                     ).log_position_command_received(
                         "Received G21 - Already in millimeters."
                     )
-            elif cmd == "G28":
+            elif pos.parsed_command.cmd == "G28":
                 # Home
                 pos.HasReceivedHomeCommand = True
-                x = True if "X" in parameters else None
-                y = True if "Y" in parameters else None
-                z = True if "Z" in parameters else None
+                x = True if "X" in pos.parsed_command.parameters else None
+                y = True if "Y" in pos.parsed_command.parameters else None
+                z = True if "Z" in pos.parsed_command.parameters else None
                 # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
                 #w = parameters["W"] if "W" in parameters else None
 
@@ -976,7 +987,7 @@ class Position(object):
                 pos.PositionError = None
                 # we must do this in case we have more than one home command
                 previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
-            elif cmd == "G90":
+            elif pos.parsed_command.cmd == "G90":
                 # change x,y,z to absolute
                 if pos.IsRelative is None or pos.IsRelative:
                     self.Settings.current_debug_profile(
@@ -1006,7 +1017,7 @@ class Position(object):
                         ).log_position_command_received(
                             "Received G90 - Already using absolute extruder coordinates"
                         )
-            elif cmd == "G91":
+            elif pos.parsed_command.cmd == "G91":
                 # change x,y,z to relative
                 if pos.IsRelative is None or not pos.IsRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
@@ -1032,55 +1043,52 @@ class Position(object):
                         self.Settings.current_debug_profile().log_position_command_received(
                             "Received G91 - Already using relative extruder coordinates"
                         )
-            elif cmd == "M83":
+            elif pos.parsed_command.cmd == "M83":
                 # Extruder - Set Relative
                 if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received M83 - Switching Extruder to Relative Coordinates"
                     )
                     pos.IsExtruderRelative = True
-            elif cmd == "M82":
+            elif pos.parsed_command.cmd == "M82":
                 # Extruder - Set Absolute
                 if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
                     self.Settings.current_debug_profile().log_position_command_received(
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
-            elif cmd == "M207":
+            elif pos.parsed_command.cmd == "M207":
                 self.Settings.current_debug_profile().log_position_command_received(
                     "Received M207 - setting firmware retraction values"
                 )
                 # Firmware Retraction Tracking
-                if "S" in parameters:
-                    pos.FirmwareRetractionLength = parameters["S"]
-                if "R" in parameters:
-                    pos.FirmwareUnretractionAdditionalLength = parameters["R"]
-                if "F" in parameters:
-                    pos.FirmwareRetractionFeedrate = parameters["F"]
-                if "T" in parameters:
-                    pos.FirmwareUnretractionFeedrate = parameters["T"]
-                if "Z" in parameters:
-                    pos.FirmwareZLift = parameters["Z"]
-
-            elif cmd == "M208":
+                if "S" in pos.parsed_command.parameters:
+                    pos.FirmwareRetractionLength = pos.parsed_command.parameters["S"]
+                if "R" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["R"]
+                if "F" in pos.parsed_command.parameters:
+                    pos.FirmwareRetractionFeedrate = pos.parsed_command.parameters["F"]
+                if "T" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["T"]
+                if "Z" in pos.parsed_command.parameters:
+                    pos.FirmwareZLift = pos.parsed_command.parameters["Z"]
+            elif pos.parsed_command.cmd == "M208":
                 self.Settings.current_debug_profile().log_position_command_received(
                     "Received M207 - setting firmware detraction values"
                 )
                 # Firmware Retraction Tracking
-                if "S" in parameters:
-                    pos.FirmwareUnretractionAdditionalLength = parameters["S"]
-                if "F" in parameters:
-                    pos.FirmwareUnretractionFeedrate = parameters["F"]
-
-
-            elif cmd == "G92":
+                if "S" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["S"]
+                if "F" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["F"]
+            elif pos.parsed_command.cmd == "G92":
                 # Set Position (offset)
 
-                x = parameters["X"] if "X" in parameters else None
-                y = parameters["Y"] if "Y" in parameters else None
-                z = parameters["Z"] if "Z" in parameters else None
-                e = parameters["E"] if "E" in parameters else None
-                o = True if "O" in parameters else False
+                x = pos.parsed_command.parameters["X"] if "X" in pos.parsed_command.parameters else None
+                y = pos.parsed_command.parameters["Y"] if "Y" in pos.parsed_command.parameters else None
+                z = pos.parsed_command.parameters["Z"] if "Z" in pos.parsed_command.parameters else None
+                e = pos.parsed_command.parameters["E"] if "E" in pos.parsed_command.parameters else None
+                o = True if "O" in pos.parsed_command.parameters else False
 
                 if x is None and y is None and z is None and e is None:
                     if pos.X is not None:
@@ -1133,18 +1141,15 @@ class Position(object):
                 self.Settings.current_debug_profile().log_position_command_received(
                     "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                     "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
-                        gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
+                        parsed_command.gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
 
         ########################################
         # Update the extruder monitor.
-        self.Extruder.update(self.e_relative_pos(pos))
+        # todo: should we use 0 as a tolerance here?
+        if pos.should_update_extruder_state(previous_pos, 0):
+            self.Extruder.update(self.e_relative_pos(pos))
 
-        ########################################
-        # If we have a homed axis, detect changes.
-        ########################################
-        # for now we're going to ignore extruder changes and just run calculations every time.
-        # has_extruder_changed = self.Extruder.HasChanged()
-
+        # Have the XYZ positions or states changed?
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
         pos.HasStateChanged = not pos.is_state_equal(previous_pos, self.PrinterTolerance)
 
@@ -1153,8 +1158,11 @@ class Position(object):
             previous_pos.has_homed_position() and
             (self.Extruder.has_changed(0) or pos.HasPositionChanged)
         ):
+            # If we have a homed for the current and previous position, and either the exturder or position has changed
+
             if self.HasRestrictedPosition:
-                can_calculate_intersections = cmd in ["G0", "G1"]
+                # If we're using restricted positions, calculate intersections and determine if we are in position
+                can_calculate_intersections = pos.parsed_command.cmd in ["G0", "G1"]
                 _is_in_position, _intersections = self.calculate_path_intersections(
                     self.Snapshot.position_restrictions,
                     pos.X,
@@ -1176,13 +1184,15 @@ class Position(object):
             if self.Extruder.is_extruding():
                 pos.LastExtrusionHeight = pos.Z
 
-                # see if we have primed yet
-                if self.Printer.priming_height > 0:
-                    if not pos.IsPrimed and pos.LastExtrusionHeight < self.Printer.priming_height:
-                        pos.IsPrimed = True
-                else:
-                    # if we have no priming height set, just set IsPrimed = true.
-                    pos.IsPrimed = True
+                if not pos.IsPrimed:
+                    # We haven't primed yet, check to see if we have priming height restrictions
+                    if self.Printer.priming_height > 0:
+                        # if a priming height is configured, see if we've extruded below the  height
+                        if pos.LastExtrusionHeight < self.Printer.priming_height:
+                            pos.IsPrimed = True
+                        else:
+                            # if we have no priming height set, just set IsPrimed = true.
+                            pos.IsPrimed = True
 
                 # make sure we are primed before calculating height/layers
                 if pos.IsPrimed:

@@ -188,7 +188,10 @@ class TestParsing(unittest.TestCase):
         gcode = "g28 xxz"
         with self.assertRaises(Exception) as context:
             Commands.parse(gcode)
-        self.assertTrue('A parameter value was repeated, cannot parse gcode.' in context.exception)
+        self.assertTrue(
+            "Either a parameter value was repeated or an unexpected character was found, cannot parse gcode."
+            in context.exception
+        )
 
         # test parameter repetition wrapped in comments
         gcode = "(comment in the front)g(comment in middle)2()8x(another comment in middle)x(comment between" \

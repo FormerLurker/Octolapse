@@ -27,13 +27,13 @@ from tempfile import NamedTemporaryFile
 from octoprint_octolapse.extruder import Extruder
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.settings import OctolapseSettings
+from octoprint_octolapse.position import Position
 
 
 class TestSnapshotGcode(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
         self.Extruder = Extruder(self.Settings)
-
     def tearDown(self):
         del self.Settings
         del self.Extruder
@@ -263,6 +263,11 @@ class TestSnapshotGcode(unittest.TestCase):
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True
+
+        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
+
+        self, position, trigger, gcode, cmd, parameters, triggering_command_position, triggering_extruder_position
+
         snapshot_gcode = snapshot_gcode_generator.create_snapshot_gcode(
             0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
         # verify the created gcode
@@ -356,6 +361,7 @@ class TestSnapshotGcode(unittest.TestCase):
         self.Extruder.is_retracted = lambda: True
         snapshot_gcode = snapshot_gcode_generator.create_snapshot_gcode(
             100, 50, 0, 3600, True, False, self.Extruder, 0.5, "SavedCommand")
+
         # verify the created gcode
         self.assertEqual(snapshot_gcode.GcodeCommands[0], "G1 F6000")
         self.assertEqual(snapshot_gcode.GcodeCommands[1], "G1 Z0.500")

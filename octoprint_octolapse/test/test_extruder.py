@@ -150,18 +150,18 @@ class TestExtruder(unittest.TestCase):
         # test updating with no movement
         self.Extruder.update(0)
         self.assertTrue(self.Extruder.has_changed())
-        # test updating with slight movement (below printer tolerance)
+        # test updating with slight movement
         self.Extruder.update(.0001)
-        self.assertFalse(self.Extruder.has_changed())
-        # test updating with slight movement (below printer tolerance)
+        self.assertTrue(self.Extruder.has_changed())
+        # test updating with slight movement
         self.Extruder.update(.0001)
+        self.assertTrue(self.Extruder.has_changed())
+        # test updating with slight movement
+        self.Extruder.update(.01)
         self.assertFalse(self.Extruder.has_changed())
-        # test updating with slight movement (above printer tolerance)
+        # test updating with slight movement
         self.Extruder.update(.01)
-        self.assertTrue(self.Extruder.has_changed())
-        # test updating with slight movement (above printer tolerance)
-        self.Extruder.update(.01)
-        self.assertTrue(self.Extruder.has_changed())
+        self.assertFalse(self.Extruder.has_changed())
         # test updating with no movement
         self.Extruder.update(0)
         self.assertTrue(self.Extruder.has_changed())

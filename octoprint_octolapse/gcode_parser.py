@@ -82,6 +82,14 @@ class CommandParameter(object):
         return value, parameter_string
 
 
+class ParsedCommand(object):
+    def __init__(self, cmd, parameters, gcode, error=None):
+        self.cmd = cmd
+        self.parameters = parameters
+        self.gcode = gcode
+        self.error = error
+
+
 class Command(object):
 
     def __init__(self, command, name, display_template=None, parameters=None, text_only_parameter=False):
@@ -475,7 +483,7 @@ class Commands(object):
             if ix <= len(gcode) - 1:
                 gcode = gcode[0:ix]
             else:
-                return None, None
+                return ParsedCommand(None, None, gcode)
 
         # remove any comments from ('s
         start_comment_index = None
@@ -519,15 +527,15 @@ class Commands(object):
 
         # ignore blank lines
         if len(gcode) < 1:
-            return None, None
+            return ParsedCommand(None, None, gcode)
 
         # ignore any lines that start with a %
         if gcode[0] == "%":
-            return None, None
+            return ParsedCommand(None, None, gcode)
 
         # make sure our string is greater than 2 characters
         if len(gcode) < 2:
-            return None, None
+            return ParsedCommand(None, None, gcode)
 
         # extract any line numbers
         if gcode[0] == "N":
@@ -549,12 +557,12 @@ class Commands(object):
         # Now we should be left with the command and any parameters
         # Make sure our command is a valid one
         if len(gcode) < 2:
-            return None, None
+            return ParsedCommand(None, None, gcode)
 
         # get the command letter
         command_letter = gcode[0].upper()
         if command_letter not in Commands.GcodeWords:
-            return None, None
+            return ParsedCommand(None, None, gcode)
 
         # search for decimals or periods to build the command address
         command_address = ""
@@ -572,7 +580,9 @@ class Commands(object):
                     command_address += c
                     has_seen_period = True
                 else:
-                    raise ValueError("Cannot parse the gcode address, multiple periods seen.")
+
+                    return ParsedCommand(None, None, gcode, error="Cannot parse the gcode address, multiple periods "
+                                                                  "seen.")
             else:
                 break
         # If we've not seen any periods, strip any leading 0s from the gcode
@@ -582,7 +592,7 @@ class Commands(object):
         # make sure the command is in the dictionary
         command_to_search = command_letter + command_address
         if command_to_search not in Commands.CommandsDictionary.keys():
-            return command_to_search, None
+            return ParsedCommand(command_to_search, None, gcode)
 
         cmd = Commands.CommandsDictionary[command_to_search]
 
@@ -593,41 +603,34 @@ class Commands(object):
             parameters = ""
 
         if not cmd.TextOnlyParameter:
-            parameters = cmd.parse_parameters(parameters)
-
-        return command_to_search, parameters
+            try:
+                parameters = cmd.parse_parameters(parameters)
+            except ValueError as e:
+                ParsedCommand(command_to_search, None, gcode, error=str(e))
+        return ParsedCommand(command_to_search, parameters, gcode)
 
     @staticmethod
-    def to_string(cmd, parameters):
-        if cmd is None:
+    def to_string(parsed_command):
+        if parsed_command.cmd is None:
             return ""
-        gcode = cmd
+        gcode = parsed_command.cmd
 
-        if parameters is not None:
-            for key, value in parameters.items():
+        if parsed_command.parameters is not None:
+            for key, value in parsed_command.parameters.items():
                 gcode += " " + key + str(value)
         return gcode
 
     @staticmethod
-    def alter_for_test_mode(command_string, cmd, parameters, return_string=False):
-        if cmd is None:
-            if return_string:
-                return command_string
+    def alter_for_test_mode(parsed_command):
+        if parsed_command.cmd is None:
             return None
 
-        if cmd in Commands.TestModeSuppressExtrusionCommands and "E" in parameters:
-            parameters.pop("E")
+        if parsed_command.cmd in Commands.TestModeSuppressExtrusionCommands and "E" in parsed_command.parameters:
+            parsed_command.parameters.pop("E")
             # reform the gcode
-            gcode = Commands.to_string(cmd, parameters)
-            if return_string:
-                return gcode
+            gcode = Commands.to_string(parsed_command)
             return gcode,
-        elif cmd in Commands.TestModeSuppressCommands:
-            if return_string:
-                return ""
+        elif parsed_command.cmd in Commands.TestModeSuppressCommands:
             return None,
         else:
-            if return_string:
-                # reform the gcode
-                return command_string
             return None

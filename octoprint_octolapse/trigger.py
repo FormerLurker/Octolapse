@@ -85,14 +85,14 @@ class Triggers(object):
         except Exception, e:
             self.Settings.current_debug_profile().log_exception(e)
 
-    def update(self, position, cmd):
+    def update(self, position, parsed_command):
         """Update all triggers and return any that are triggering"""
         try:
             # Loop through all of the active currentTriggers
             for currentTrigger in self._triggers:
                 # determine what type the current trigger is and update appropriately
                 if isinstance(currentTrigger, GcodeTrigger):
-                    currentTrigger.update(position, cmd)
+                    currentTrigger.update(position, parsed_command)
                 elif isinstance(currentTrigger, TimerTrigger):
                     currentTrigger.update(position)
                 elif isinstance(currentTrigger, LayerTrigger):
@@ -348,7 +348,7 @@ class GcodeTrigger(Trigger):
         # add an initial state
         self.add_state(GcodeTriggerState())
 
-    def update(self, position, command_name):
+    def update(self, position, parsed_command):
         """If the provided command matches the trigger command, sets IsTriggered to true, else false"""
         try:
             # get the last state to use as a starting point for the update
@@ -375,7 +375,7 @@ class GcodeTrigger(Trigger):
                 state.IsInPosition = position.is_in_position(0)
                 state.InPathPosition = position.in_path_position(0)
 
-                if self.SnapshotCommand == command_name:
+                if self.SnapshotCommand == parsed_command.gcode:
                     state.IsWaiting = True
                 if state.IsWaiting:
                     if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
