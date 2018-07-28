@@ -21,11 +21,11 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
+import json
 import logging
 import math
 import sys
 import uuid
-import json
 from datetime import datetime
 
 import concurrent
@@ -488,8 +488,7 @@ class SnapshotPositionRestrictions(object):
             return False
 
         if self.Shape == 'rect':
-            intersections = utility.get_intersections_rectangle(previous_x, previous_y, x, y, self.X, self.Y, self.X2,
-                                                                self.Y2)
+            intersections = utility.get_intersections_rectangle(previous_x, previous_y, x, y, self.X, self.Y, self.X2, self.Y2)
         elif self.Shape == 'circle':
             intersections = utility.get_intersections_circle(previous_x, previous_y, x, y, self.X, self.Y, self.R)
         else:
@@ -509,7 +508,7 @@ class SnapshotPositionRestrictions(object):
         elif self.Shape == 'circle':
             lsq = math.pow(x - self.X, 2) + math.pow(y - self.Y, 2)
             rsq = math.pow(self.R, 2)
-            return utility.is_close(lsq, rsq, tolerance) or lsq < rsq
+            return utility.is_close(lsq, rsq , tolerance) or lsq < rsq
         else:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
@@ -879,71 +878,10 @@ class Snapshot(object):
         }
 
 
-class Settings(object):
-    def __init__(self, guid, name):
+class Rendering(object):
+    def __init__(self, rendering=None, guid=None, name="Default Rendering"):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
-
-    def update(self, changes):
-        """
-        :param changes: a partial dictionary reflecting the schema of the Settings object.
-        """
-        if not isinstance(changes, self.__class__):
-            # Verify all changes have valid keys.
-            for k, v in changes.items():
-                if k not in vars(self).keys():
-                    raise InvalidSettingsKeyException(self.__class__, k, v)
-
-        # Apply changes.
-        vars(self).update(changes)
-
-    class JSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if hasattr(obj, 'to_json'):
-                return obj.to_json()
-            # Let the base class default method raise the TypeError
-            return json.JSONEncoder.default(self, obj)
-
-    def to_json(self):
-        return json.dumps(vars(self), cls=Settings.JSONEncoder)
-
-    def __copy__(self):
-        cp = self.__new__(self.__class__)
-        cp.update(self)
-        return cp
-
-
-class InvalidSettingsKeyException(Exception):
-    def __init__(self, settings_class, key, value=None):
-        super(InvalidSettingsKeyException, self).__init__()
-        self.settings_class = settings_class
-        self.key = key
-        self.value = value
-
-    def __str__(self):
-        return repr(self)
-
-    def __repr__(self):
-        return "Tried to set {} in {} to {}.".format(self.key, self.settings_class, self.value)
-
-
-class InvalidSettingsValueException(Exception):
-    def __init__(self, settings_class, key, value=None):
-        super(InvalidSettingsValueException, self).__init__()
-        self.settings_class = settings_class
-        self.key = key
-        self.value = value
-
-    def __str__(self):
-        return repr(self)
-
-    def __repr__(self):
-        return "Tried to set {} in {} to {}.".format(self.key, self.settings_class, self.value)
-
-
-class Rendering(Settings):
-    def __init__(self, guid=None, name="Default Rendering"):
-        super(Rendering, self).__init__(guid, name)
         self.description = ""
         self.enabled = True
         self.fps_calculation_type = 'duration'
@@ -964,6 +902,118 @@ class Rendering(Settings):
         self.overlay_font_size = 10
         self.overlay_text_pos = [10, 10]
         self.overlay_text_color = [255, 255, 255, 128]
+        if rendering is not None:
+            if isinstance(rendering, Rendering):
+                self.guid = rendering.guid
+                self.name = rendering.name
+                self.description = rendering.description
+                self.enabled = rendering.enabled
+                self.fps_calculation_type = rendering.fps_calculation_type
+                self.run_length_seconds = rendering.run_length_seconds
+                self.fps = rendering.fps
+                self.max_fps = rendering.max_fps
+                self.min_fps = rendering.min_fps
+                self.output_format = rendering.output_format
+                self.sync_with_timelapse = rendering.sync_with_timelapse
+                self.bitrate = rendering.bitrate
+                self.enable_watermark = rendering.enable_watermark
+                self.post_roll_seconds = rendering.post_roll_seconds
+                self.pre_roll_seconds = rendering.pre_roll_seconds
+                self.output_template = rendering.output_template
+                self.selected_watermark = rendering.selected_watermark
+                self.overlay_text_template = rendering.overlay_text_template
+                self.overlay_font_path = rendering.overlay_font_path
+                self.overlay_font_size = rendering.overlay_font_size
+                self.overlay_text_pos = rendering.overlay_text_pos
+                self.overlay_text_color = rendering.overlay_text_color
+            else:
+                self.update(rendering)
+
+    def update(self, changes):
+        if "guid" in changes.keys():
+            self.guid = utility.get_string(changes["guid"], self.guid)
+        if "name" in changes.keys():
+            self.name = utility.get_string(changes["name"], self.name)
+        if "description" in changes.keys():
+            self.description = utility.get_string(
+                changes["description"], self.description)
+        if "enabled" in changes.keys():
+            self.enabled = utility.get_bool(changes["enabled"], self.enabled)
+        if "fps_calculation_type" in changes.keys():
+            self.fps_calculation_type = changes["fps_calculation_type"]
+        if "run_length_seconds" in changes.keys():
+            self.run_length_seconds = utility.get_float(
+                changes["run_length_seconds"], self.run_length_seconds)
+        if "fps" in changes.keys():
+            self.fps = utility.get_float(changes["fps"], self.fps)
+        if "max_fps" in changes.keys():
+            self.max_fps = utility.get_float(changes["max_fps"], self.max_fps)
+        if "min_fps" in changes.keys():
+            self.min_fps = utility.get_float(changes["min_fps"], self.min_fps)
+        if "output_format" in changes.keys():
+            self.output_format = utility.get_string(
+                changes["output_format"], self.output_format)
+
+        if "sync_with_timelapse" in changes.keys():
+            self.sync_with_timelapse = utility.get_bool(
+                changes["sync_with_timelapse"], self.sync_with_timelapse)
+        if "bitrate" in changes.keys():
+            self.bitrate = utility.get_bitrate(changes["bitrate"], self.bitrate)
+
+        if "post_roll_seconds" in changes.keys():
+            self.post_roll_seconds = utility.get_float(
+                changes["post_roll_seconds"], self.post_roll_seconds)
+        if "pre_roll_seconds" in changes.keys():
+            self.pre_roll_seconds = utility.get_float(
+                changes["pre_roll_seconds"], self.pre_roll_seconds)
+        if "output_template" in changes.keys():
+            self.output_template = utility.get_string(
+                changes["output_template"], self.output_template)
+
+        if "enable_watermark" in changes.keys():
+            self.enable_watermark = utility.get_bool(
+                changes["enable_watermark"], self.enable_watermark)
+        if "selected_watermark" in changes.keys():
+            self.selected_watermark = utility.get_string(
+                changes["selected_watermark"], self.selected_watermark)
+        if "overlay_text_template" in changes.keys():
+            self.overlay_text_template = utility.get_string(changes["overlay_text_template"],
+                                                            self.overlay_text_template)
+        if "overlay_font_path" in changes.keys():
+            self.overlay_font_path = utility.get_string(changes["overlay_font_path"], self.overlay_font_path)
+        self.overlay_font_size = int(changes.get("overlay_font_size", self.overlay_font_size))
+        self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
+        if isinstance(self.overlay_text_pos, str) or isinstance(self.overlay_text_pos, unicode):
+            self.overlay_text_pos = json.loads(self.overlay_text_pos)
+        self.overlay_text_color = changes.get("overlay_text_color", self.overlay_text_color)
+        if isinstance(self.overlay_text_color, str) or isinstance(self.overlay_text_color, unicode):
+            self.overlay_text_color = json.loads(self.overlay_text_color)
+
+    def to_dict(self):
+        return {
+            'guid': self.guid,
+            'name': self.name,
+            'description': self.description,
+            'enabled': self.enabled,
+            'fps_calculation_type': self.fps_calculation_type,
+            'run_length_seconds': self.run_length_seconds,
+            'fps': self.fps,
+            'max_fps': self.max_fps,
+            'min_fps': self.min_fps,
+            'output_format': self.output_format,
+            'sync_with_timelapse': self.sync_with_timelapse,
+            'bitrate': self.bitrate,
+            'post_roll_seconds': self.post_roll_seconds,
+            'pre_roll_seconds': self.pre_roll_seconds,
+            'output_template': self.output_template,
+            'enable_watermark': self.enable_watermark,
+            'selected_watermark': self.selected_watermark,
+            'overlay_text_template': self.overlay_text_template,
+            'overlay_font_path': self.overlay_font_path,
+            'overlay_font_size': self.overlay_font_size,
+            'overlay_text_pos': str(self.overlay_text_pos),
+            'overlay_text_color': str(self.overlay_text_color),
+        }
 
 
 class Camera(object):
@@ -1863,20 +1913,20 @@ class OctolapseSettings(object):
                 "None Selected" if self.current_printer() is None
                 else self.current_printer().name,
             "stabilization": "None Selected"
-            if self.current_stabilization() is None
-            else self.current_stabilization().name,
+                if self.current_stabilization() is None
+                else self.current_stabilization().name,
             "snapshot": "None Selected"
-            if self.current_snapshot() is None
-            else self.current_snapshot().name,
+                if self.current_snapshot() is None
+                else self.current_snapshot().name,
             "rendering": "None Selected"
-            if self.current_rendering() is None
-            else self.current_rendering().name,
+                if self.current_rendering() is None
+                else self.current_rendering().name,
             "camera": "None Selected"
-            if self.current_camera() is None
-            else self.current_camera().name,
+                if self.current_camera() is None
+                else self.current_camera().name,
             "debug_profile": "None Selected"
-            if self.current_debug_profile() is None
-            else self.current_debug_profile().name,
+                if self.current_debug_profile() is None
+                else self.current_debug_profile().name,
         }
 
     def get_profiles_dict(self):
