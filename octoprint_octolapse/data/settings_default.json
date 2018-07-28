@@ -785,13 +785,13 @@
       "auto_detect_position": true
     },
     {
-      "movement_speed": 7200,
+      "movement_speed": 10800,
       "guid": "42d2f5ec-7cc8-4d65-aec8-9015ecff7db6",
       "min_x": 0.0,
       "min_y": 0.0,
       "min_z": 0.0,
       "detract_speed": 3000,
-      "z_hop": 0.5,
+      "z_hop": 0.6,
       "max_z": 0.0,
       "max_x": 0.0,
       "max_y": 0.0,

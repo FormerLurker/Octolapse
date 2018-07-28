@@ -499,33 +499,42 @@ class TimelapseRenderJob(object):
 
             # Extra metadata according to snapshot.METADATA_FIELDS.
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number'])
-            assert (i == snapshot_number)
-            format_vars['file_name'] = data['file_name']
-            format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
+            if i == snapshot_number:
+                assert (i == snapshot_number)
+                format_vars['file_name'] = data['file_name']
+                format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
 
-            # Verify that the file actually exists.
-            file_path = os.path.join(self._capture_dir, self._snapshot_filename_template % snapshot_number)
-            if not os.path.isfile(file_path):
-                raise IOError("Cannot find file {}.".format(file_path))
+                # Verify that the file actually exists.
+                file_path = os.path.join(self._capture_dir, self._snapshot_filename_template % snapshot_number)
+                if not os.path.isfile(file_path):
+                    raise IOError("Cannot find file {}.".format(file_path))
 
-            # Calculate time elapsed since the beginning of the print.
-            format_vars['current_time'] = datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
-            format_vars['time_elapsed'] = str(timedelta(seconds=round(time_taken - first_timestamp)))
+                # Calculate time elapsed since the beginning of the print.
+                format_vars['current_time'] = datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
+                format_vars['time_elapsed'] = str(timedelta(seconds=round(time_taken - first_timestamp)))
 
-            # Open the image in Pillow and do preprocessing operations.
-            image = Image.open(file_path)
-            self.add_overlay(image,
-                             text_template=self._rendering.overlay_text_template,
-                             format_vars=format_vars,
-                             font_path=self._rendering.overlay_font_path,
-                             font_size=self._rendering.overlay_font_size,
-                             overlay_location=self._rendering.overlay_text_pos,
-                             text_color=self._rendering.overlay_text_color)
-            # Save processed image.
-            output_path = os.path.join(preprocessed_directory, self._snapshot_filename_template % snapshot_number)
-            if not os.path.exists(os.path.dirname(output_path)):
-                os.makedirs(os.path.dirname(output_path))
-            image.save(output_path)
+                # Open the image in Pillow and do preprocessing operations.
+                image = Image.open(file_path)
+                self.add_overlay(image,
+                                 text_template=self._rendering.overlay_text_template,
+                                 format_vars=format_vars,
+                                 font_path=self._rendering.overlay_font_path,
+                                 font_size=self._rendering.overlay_font_size,
+                                 overlay_location=self._rendering.overlay_text_pos,
+                                 text_color=self._rendering.overlay_text_color)
+                # Save processed image.
+                output_path = os.path.join(preprocessed_directory, self._snapshot_filename_template % snapshot_number)
+                if not os.path.exists(os.path.dirname(output_path)):
+                    os.makedirs(os.path.dirname(output_path))
+                image.save(output_path)
+            else:
+                file_path = os.path.join(self._capture_dir, self._snapshot_filename_template % i)
+                output_path = os.path.join(preprocessed_directory, self._snapshot_filename_template % i)
+                output_dir = os.path.dirname(output_path)
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+                shutil.move(file_path, output_path)
+
         self._debug.log_render_start("Preprocessing success!")
 
     def add_overlay(self, image, text_template, format_vars, font_path, font_size, overlay_location,
