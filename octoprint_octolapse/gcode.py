@@ -306,10 +306,12 @@ class SnapshotGcodeGenerator(object):
         # Flag to indicate that we should make sure the final feedrate = self.FOriginal
         # by default we want to change the feedrate if FCurrent != FOriginal
         reset_feedrate_before_end_gcode = True
-
-        triggered_type = trigger.triggered_type(0)
-        if triggered_type is None:
-            triggered_type = trigger.triggered_type(1)
+        if trigger is None:
+            triggered_type = Triggers.TRIGGER_TYPE_DEFAULT
+        else:
+            triggered_type = trigger.triggered_type(0)
+            if triggered_type is None:
+                triggered_type = trigger.triggered_type(1)
 
         # handle the trigger types
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:

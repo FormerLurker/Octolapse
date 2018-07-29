@@ -220,7 +220,7 @@ class Extruder(object):
         return self.StateHistory.popleft()
 
     # Update the extrusion monitor.  E (extruder delta) must be relative, not absolute!
-    def update(self, e_relative):
+    def update(self, e_relative, update_state=True):
         if e_relative is None:
             return
 
@@ -237,36 +237,41 @@ class Extruder(object):
             previous_state = ExtruderState()
 
         state.E = e
-        # Update RetractionLength and ExtrusionLength
-        state.RetractionLength -= e
 
-        # do not round the retraction length
-        # state.RetractionLength = utility.round_to(state.RetractionLength, self.PrinterTolerance)
+        if update_state:
+            # we want to update the state before adding it to the queue
+            # do that here
 
-        if state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE:
-            # we can use the negative retraction length to calculate our extrusion length!
-            state.ExtrusionLength = abs(state.RetractionLength)
-            # set the retraction length to 0 since we are extruding
-            state.RetractionLength = 0
-        else:
-            state.ExtrusionLength = 0
-        # Update extrusion length
-        state.ExtrusionLengthTotal += state.ExtrusionLength
+            # Update RetractionLength and ExtrusionLength
+            state.RetractionLength -= e
 
-        # calculate detraction length
-        if previous_state.RetractionLength > state.RetractionLength:
+            # do not round the retraction length
+            # state.RetractionLength = utility.round_to(state.RetractionLength, self.PrinterTolerance)
 
-            state.DetractionLength = previous_state.RetractionLength - state.RetractionLength
+            if state.RetractionLength <= utility.FLOAT_MATH_EQUALITY_RANGE:
+                # we can use the negative retraction length to calculate our extrusion length!
+                state.ExtrusionLength = abs(state.RetractionLength)
+                # set the retraction length to 0 since we are extruding
+                state.RetractionLength = 0
+            else:
+                state.ExtrusionLength = 0
+            # Update extrusion length
+            state.ExtrusionLengthTotal += state.ExtrusionLength
 
-            # do not round the detraction length
-            # state.DetractionLength = utility.round_to(state.DetractionLength,self.PrinterTolerance)
+            # calculate detraction length
+            if previous_state.RetractionLength > state.RetractionLength:
 
-        else:
-            state.DetractionLength = 0
-        # round our lengths to the nearest .05mm to avoid some floating point math errors
+                state.DetractionLength = previous_state.RetractionLength - state.RetractionLength
 
-        self._update_state(state, previous_state)
-        # Add the current position, remove positions if we have more than 5 from the end
+                # do not round the detraction length
+                # state.DetractionLength = utility.round_to(state.DetractionLength,self.PrinterTolerance)
+
+            else:
+                state.DetractionLength = 0
+            # round our lengths to the nearest .05mm to avoid some floating point math errors
+
+            self._update_state(state, previous_state)
+            # Add the current position, remove positions if we have more than 5 from the end
         self.add_state(state)
 
     def _update_state(self, state, state_previous):

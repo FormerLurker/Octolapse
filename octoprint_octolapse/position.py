@@ -1146,8 +1146,7 @@ class Position(object):
         ########################################
         # Update the extruder monitor.
         # todo: should we use 0 as a tolerance here?
-        if pos.should_update_extruder_state(previous_pos, 0):
-            self.Extruder.update(self.e_relative_pos(pos))
+        self.Extruder.update(self.e_relative_pos(pos), update_state=pos.should_update_extruder_state(previous_pos, 0))
 
         # Have the XYZ positions or states changed?
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
