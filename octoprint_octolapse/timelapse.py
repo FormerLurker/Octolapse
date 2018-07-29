@@ -115,7 +115,9 @@ class Timelapse(object):
         self.CurrentFileLine = 0
 
         # snapshot thread queue
-        self._rendering_task_queue = Queue(maxsize=0)
+        self._rendering_task_queue = Queue(maxsize=1)
+        self._snapshot_task_queue = Queue(maxsize=0)
+
         self._reset()
 
     def start_timelapse(
@@ -216,6 +218,8 @@ class Timelapse(object):
         self.SnapshotCount += 1
         self._snapshot_success = True
         self.SnapshotError = ""
+        self._snapshot_task_queue.get()
+        self._snapshot_task_queue.task_done()
 
     def _on_snapshot_fail(self, *args, **kwargs):
         error = args[0]
@@ -255,6 +259,8 @@ class Timelapse(object):
                 )
             snapshot_thread = threading.Thread(target=snapshot_job)
             snapshot_thread.daemon = True
+            self._snapshot_task_queue.put("snapshot_job")
+
             snapshot_thread.start()
         snapshot_timeout = self._snapshot_timeout + (self.Camera.delay/1000.0)
         event_is_set = self._snapshot_signal.wait(snapshot_timeout)
@@ -536,6 +542,9 @@ class Timelapse(object):
 
     def get_is_rendering(self):
         return self._rendering_task_queue.qsize() > 0
+
+    def get_is_taking_snapshot(self):
+        return self._snapshot_task_queue.qsize() > 0
 
     def on_print_start(self, tags):
         self.OnPrintStartCallback(tags)
@@ -1000,7 +1009,19 @@ class Timelapse(object):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
         if self.Rendering is not None and self.Rendering.enabled:
             job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
-            job = Render.create_render_job(
+
+            # If we are still taking snapshots, wait for them all to finish
+            if self.get_is_taking_snapshot():
+                self.Settings.current_debug_profile().log_render_start(
+                    "Snapshot jobs are running, waiting for them to finish before rendering.")
+                self._snapshot_task_queue.join()
+                self.Settings.current_debug_profile().log_render_start(
+                    "Snapshot jobs queue has completed, starting to render.")
+
+            # Add the rendering job to the queue and start it up!
+            self._rendering_task_queue.put(job_id)
+
+            Render.start_rendering_thread(
                 self.Settings,
                 self.Snapshot,
                 self.Rendering,
@@ -1023,11 +1044,6 @@ class Timelapse(object):
                 self._on_render_success,
                 self._on_render_error
             )
-            rendering_thread = threading.Thread(target=job, args=[])
-            rendering_thread.daemon = True
-            job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
-            self._rendering_task_queue.put(job_id)
-            rendering_thread.start()
             return True
         return False
 

@@ -85,9 +85,9 @@ def is_overlay_text_template_valid(template, options):
 
 class Render(object):
     @staticmethod
-    def create_render_job(
+    def start_rendering_thread(
         settings,
-        snapshot,
+        snapshot_settings,
         rendering,
         data_directory,
         capture_directory,
@@ -125,10 +125,10 @@ class Render(object):
             on_render_start,
             on_success,
             on_error,
-            snapshot.cleanup_after_render_complete,
-            snapshot.cleanup_after_render_complete
+            snapshot_settings.cleanup_after_render_complete,
+            snapshot_settings.cleanup_after_render_complete
         )
-        return job.process
+        job.process()
 
     @staticmethod
     def _get_output_tokens(data_directory, print_state, print_name, print_start_time, print_end_time):
