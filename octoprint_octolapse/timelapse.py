@@ -599,63 +599,61 @@ class Timelapse(object):
                 self.Position.update(parsed_command)
 
             # if this code is snapshot gcode, simply return it to the printer.
-            if {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
-                return None
+            if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
+                if not self.check_for_non_metric_errors():
+                    if self.Position.has_position_error(0):
+                        # There are position errors, report them!
+                        self._on_position_error()
+                    elif (self.State == TimelapseState.WaitingForTrigger
+                            and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
+                        # there is no longer a need to detect Octoprint start/end script, so
+                        # we can put the job on hold without fear!
+                        self.State = TimelapseState.AcquiringLocation
 
-            if not self.check_for_non_metric_errors():
-                if self.Position.has_position_error(0):
-                    # There are position errors, report them!
-                    self._on_position_error()
-                elif (self.State == TimelapseState.WaitingForTrigger
-                        and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
-                    # there is no longer a need to detect Octoprint start/end script, so
-                    # we can put the job on hold without fear!
-                    self.State = TimelapseState.AcquiringLocation
-
-                    if self.OctoprintPrinter.set_job_on_hold(True):
-                        thread = threading.Thread(target=self.acquire_position, args=[parsed_command])
-                        thread.daemon = True
-                        thread.start()
-                        return None,
-                elif (self.State == TimelapseState.WaitingForTrigger
-                      and self.OctoprintPrinter.is_printing()
-                      and not self.Position.has_position_error(0)):
-                    # update the triggers with the current position
-                    self.Triggers.update(self.Position, parsed_command)
-
-                    # see if at least one trigger is triggering
-                    _first_triggering = self.get_first_triggering()
-
-                    if _first_triggering:
-                        # get the job lock
                         if self.OctoprintPrinter.set_job_on_hold(True):
-                            # We are triggering, take a snapshot
-                            self.State = TimelapseState.TakingSnapshot
-                            # pause any timer triggers that are enabled
-                            self.Triggers.pause()
-
-                            # take the snapshot on a new thread
-                            thread = threading.Thread(
-                                target=self.acquire_snapshot, args=[parsed_command, _first_triggering]
-                            )
+                            thread = threading.Thread(target=self.acquire_position, args=[parsed_command])
                             thread.daemon = True
                             thread.start()
-                            # suppress the current command, we'll send it later
                             return None,
+                    elif (self.State == TimelapseState.WaitingForTrigger
+                          and self.OctoprintPrinter.is_printing()
+                          and not self.Position.has_position_error(0)):
+                        # update the triggers with the current position
+                        self.Triggers.update(self.Position, parsed_command)
 
-                elif self.State == TimelapseState.TakingSnapshot:
-                    # Don't do anything further to any commands unless we are
-                    # taking a timelapse , or if octolapse paused the print.
-                    # suppress any commands we don't, under any cirumstances,
-                    # to execute while we're taking a snapshot
+                        # see if at least one trigger is triggering
+                        _first_triggering = self.get_first_triggering()
 
-                    if parsed_command.cmd in self.Commands.SuppressedSnapshotGcodeCommands:
-                        suppress_command = True  # suppress the command
+                        if _first_triggering:
+                            # get the job lock
+                            if self.OctoprintPrinter.set_job_on_hold(True):
+                                # We are triggering, take a snapshot
+                                self.State = TimelapseState.TakingSnapshot
+                                # pause any timer triggers that are enabled
+                                self.Triggers.pause()
 
-            if is_snapshot_gcode_command:
-                # in all cases do not return the snapshot command to the printer.
-                # It is NOT a real gcode and could cause errors.
-                suppress_command = True
+                                # take the snapshot on a new thread
+                                thread = threading.Thread(
+                                    target=self.acquire_snapshot, args=[parsed_command, _first_triggering]
+                                )
+                                thread.daemon = True
+                                thread.start()
+                                # suppress the current command, we'll send it later
+                                return None,
+
+                    elif self.State == TimelapseState.TakingSnapshot:
+                        # Don't do anything further to any commands unless we are
+                        # taking a timelapse , or if octolapse paused the print.
+                        # suppress any commands we don't, under any cirumstances,
+                        # to execute while we're taking a snapshot
+
+                        if parsed_command.cmd in self.Commands.SuppressedSnapshotGcodeCommands:
+                            suppress_command = True  # suppress the command
+
+                if is_snapshot_gcode_command:
+                    # in all cases do not return the snapshot command to the printer.
+                    # It is NOT a real gcode and could cause errors.
+                    suppress_command = True
 
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)

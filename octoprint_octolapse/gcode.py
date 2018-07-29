@@ -34,7 +34,7 @@ class SnapshotGcode(object):
     RETURN_COMMANDS = 'return-commands'
     END_GCODE = 'end-gcode'
 
-    def __init__(self, is_test_mode):
+    def __init__(self):
 
         self.StartGcode = []
         self.SnapshotCommands = []
@@ -47,8 +47,6 @@ class SnapshotGcode(object):
         self.Z = None
         self.ReturnZ = None
         self.SnapshotIndex = -1
-
-        self.IsTestMode = is_test_mode
 
     def snapshot_gcode(self):
         return self.StartGcode + self.SnapshotCommands + self.ReturnCommands + self.EndGcode
@@ -83,8 +81,6 @@ class SnapshotGcodeGenerator(object):
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprint_printer_profile)
-        self.IsTestMode = self.Settings.current_debug_profile().is_test_mode
-
         self.RetractedBySnapshotStartGcode = None
         self.ZhopBySnapshotStartGcode = None
         self.IsRelativeOriginal = None
@@ -298,7 +294,7 @@ class SnapshotGcodeGenerator(object):
             return None
 
         # create our gcode object
-        new_snapshot_gcode = SnapshotGcode(self.IsTestMode)
+        new_snapshot_gcode = SnapshotGcode()
 
         # create the start and end gcode, which would include any split gcode (position restriction intersection)
         # or any saved command that needs to be appended
@@ -380,10 +376,6 @@ class SnapshotGcodeGenerator(object):
                     _z = float(_z)
                 if _f:
                     _f = float(_f)
-
-                if self.IsTestMode:
-                    _e1 = None
-                    _e2 = None
 
                 gcode1 = self.get_g_command(parsed_command.cmd, _x1, _y1, _z, _e1, _f)
                 # create the second command
@@ -594,7 +586,7 @@ class SnapshotGcodeGenerator(object):
                     self.get_gcode_extruder_absolute())
 
         # Make sure we return to the original feedrate
-        if reset_feedrate_before_end_gcode and self.FOriginal != self.FCurrent:
+        if reset_feedrate_before_end_gcode and self.FOriginal is not None and self.FOriginal != self.FCurrent:
             # we can't count on the end gcode to set f, set it here
             new_snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
@@ -604,10 +596,6 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.END_GCODE,
             final_command)
 
-        if self.IsTestMode:
-            self.Settings.current_debug_profile().log_snapshot_gcode(
-                "The print is in test mode, so all extrusion has been stripped from the following gcode."
-            )
         self.Settings.current_debug_profile().log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
                 new_snapshot_gcode.snapshot_index(),
