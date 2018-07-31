@@ -124,7 +124,7 @@ def get_snapshot_directory(data_directory):
 
 
 def get_snapshot_filename_template():
-    return os.path.join("{FILENAME}_{PRINTSTARTTIME}", "{FILENAME}")
+    return os.path.join("{FILENAME}")
 
 
 def get_rendering_directory_from_data_directory(data_directory):
@@ -509,3 +509,17 @@ def run_command_with_timeout(args, timeout_sec):
 
     # Process completed naturally - return exit code
     return proc.returncode, stdout, stderr
+
+
+class TimelapseJobInfo(object):
+    def __init__(self, job_info=None, job_guid=None, print_start_time=None, print_file_name=None):
+        if job_info is None:
+            self.JobGuid = str(job_guid)
+            self.PrintEndTime = None
+            self.PrintStartTime = print_start_time
+            self.PrintFileName = print_file_name
+        else:
+            self.JobGuid = job_info.JobGuid
+            self.PrintEndTime = job_info.PrintEndTime
+            self.PrintStartTime = job_info.PrintStartTime
+            self.PrintFileName = job_info.PrintFileName

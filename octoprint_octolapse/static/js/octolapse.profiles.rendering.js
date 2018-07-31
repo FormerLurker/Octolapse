@@ -101,8 +101,8 @@ $(function() {
                         self.updateWatermarkList();
                     }, function(response) {
                         // TODO: Display error message in UI.
-                        console.log("Failed to delete " + watermarkImage.filepath);
-                        console.log(response);
+                        //console.log("Failed to delete " + watermarkImage.filepath);
+                        //console.log(response);
                     });
             event.stopPropagation();
         };
@@ -150,11 +150,11 @@ $(function() {
                         // Find the new watermark in the list and select it.
                         var matchingWatermarks = self.watermark_list().filter(w=>w.getFilename() == data.files[0].name);
                         if (matchingWatermarks.length == 0) {
-                            console.log("Error: No matching watermarks found!");
+                            //console.log("Error: No matching watermarks found!");
                             return
                         }
                         if (matchingWatermarks > 1){
-                            console.log("Error: More than one matching watermark found! Selecting best guess.");
+                            //console.log("Error: More than one matching watermark found! Selecting best guess.");
                         }
                         self.selectWatermark(matchingWatermarks[0]);
                     });

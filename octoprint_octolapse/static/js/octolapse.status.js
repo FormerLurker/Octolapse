@@ -42,7 +42,6 @@ $(function () {
             self.current_stabilization_profile_guid = ko.observable();
             self.current_snapshot_profile_guid = ko.observable();
             self.current_rendering_profile_guid = ko.observable();
-            self.current_camera_profile_guid = ko.observable();
             self.current_debug_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
@@ -50,7 +49,7 @@ $(function () {
                 'stabilizations': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'snapshots': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'renderings': ko.observableArray([{name: "Unknown", guid: ""}]),
-                'cameras': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'cameras': ko.observableArray([{name: "Unknown", guid: "", enabled: false}]),
                 'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
             self.PositionState = new Octolapse.positionStateViewModel();
@@ -417,7 +416,6 @@ $(function () {
                 self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
                 self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
                 self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
-                self.current_camera_profile_guid(settings.profiles.current_camera_profile_guid);
                 self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
             };
 
@@ -544,10 +542,17 @@ $(function () {
 
             // Camera Profile Settings
             self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras) });
-            self.openCurrentCameraProfile = function () {
+
+            self.openCameraProfile = function (guid) {
                 //console.log("Opening current camera profile from tab.")
-                Octolapse.Cameras.showAddEditDialog(self.current_camera_profile_guid(), false);
+                Octolapse.Cameras.showAddEditDialog(guid, false);
             };
+
+            self.toggleCamera = function (guid) {
+                //console.log("Opening current camera profile from tab.")
+                Octolapse.Cameras.getProfileByGuid(guid).toggleCamera();
+            };
+
             self.defaultCameraChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {

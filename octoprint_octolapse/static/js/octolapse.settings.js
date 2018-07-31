@@ -149,6 +149,7 @@ $(function () {
                     'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Cameras = new Octolapse.ProfilesViewModel(cameraSettings);
+
             /*
                 Create our debug view model
             */
@@ -240,7 +241,7 @@ $(function () {
                 'camera_type_options': settings.camera_type_options
 
             }
-            Octolapse.Cameras.current_profile_guid(settings.current_camera_profile_guid);
+
             settings.cameras.forEach(function (item, index) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
             });
@@ -375,7 +376,7 @@ $(function () {
         // show the modal dialog
         self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
-            console.log("octolapse.settings.js - Showing add edit dialog.");
+            //console.log("octolapse.settings.js - Showing add edit dialog.");
             var dialog = this;
             dialog.sender = sender;
             dialog.profileObservable = options.profileObservable;
@@ -544,6 +545,8 @@ $(function () {
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();
         };
+
+
 
     };
     // Bind the settings view model to the plugin settings element

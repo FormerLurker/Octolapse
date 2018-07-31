@@ -42,6 +42,15 @@
             </div>
         </div>
         <div class="control-group">
+            <label class="control-label">Enabled</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: enabled" />Enabled
+                </label>
+                <span class="help-inline">Octolapse will only acquire images from this camera if it is enabled.</span>
+            </div>
+        </div>
+        <div class="control-group">
             <label class="control-label">Camera Type</label>
             <div class="controls">
                 <select data-bind="options: Octolapse.Cameras.profileOptions.camera_type_options,
@@ -111,8 +120,18 @@
                 <span class="add-on">MS</span>
             </div>
             <div class="error_label_container text-error"></div>
-            <br />
             <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Snapshot Timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input name="timeout_ms" type="number" class="input-block-level" data-bind="value: timeout_ms" min="0" max="25000" step="1" required="true" />
+                <span class="add-on">MS</span>
+            </div>
+            <div class="error_label_container text-error"></div>
+            <span class="help-inline">If an image takes longer than the allowed time (in milliseconds) to acquire, it will timeout and the print will continue.</span>
         </div>
     </div>
     <div class="control-group">

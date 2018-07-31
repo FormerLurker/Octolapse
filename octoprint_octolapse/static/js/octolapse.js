@@ -629,7 +629,7 @@ $(function () {
                     break;
                 case "state-changed":
                     {
-                        console.log('octolapse.js - state-changed');
+                        //console.log('octolapse.js - state-changed');
                         self.updateState(data);
                     }
                     break;
@@ -692,7 +692,8 @@ $(function () {
                     break;
                 case "snapshot-complete":
                     {
-                        console.log('octolapse.js - snapshot-complete');
+                        //console.log('octolapse.js - snapshot-complete');
+                        //console.log(data);
                         self.updateState(data);
                         if(!data.snapshot_success && data.success)
                         {
@@ -738,7 +739,7 @@ $(function () {
                     break;
                 case "render-failed":
                     {
-                        console.log('octolapse.js - render-failed');
+                        //console.log('octolapse.js - render-failed');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Rendering Failed',

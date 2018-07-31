@@ -26,10 +26,16 @@
         <p class="text-error" data-bind="visible: profiles().length == 0">Before starting a timelapse you must
             create a <span data-bind="text: profileTypeName().toLowerCase()"></span> profile. Please click 'Add
             Profile' to begin.</p>
-        <p class="text-error" data-bind="visible: profiles().length > 0 && current_profile_guid() == null">
+        <p class="text-error" data-bind="visible: profiles().length > 0 && current_profile_guid() == null && profileTypeName() != 'Camera'">
             Before starting a timelapse you must choose a default <span
                 data-bind="text: profileTypeName().toLowerCase()"></span> profile by clicking on a star icon from
             the profile list below.</p>
+        <p class="text-error" data-bind="visible: profiles().length > 0 && !Octolapse.Cameras.hasOneEnabled() && profileTypeName() == 'Camera'">
+            Before starting a timelapse you must enable at least one  <span
+                data-bind="text: profileTypeName().toLowerCase()"></span> profile by clicking on a blue square from
+            the profile list below.  Alternatively you can edit the profile and check 'enabled'.</p>
+
+
     </div>
     <div class="panel-body">
 
@@ -55,8 +61,15 @@
                             <span data-bind="text: description(), style: { 'font-weight': guid() == $parent.current_profile_guid() ? 'bold' : 'normal' }"></span>
                         </td>
                         <td class="profile_action text-center" align="center">
+                            <span data-bind="visible: $parent.profileTypeName() == 'Camera'">
+                                <!-- ko if: $data.hasOwnProperty("enabled") -->
+                                    <a href="#" class="fa" title="Enable Camera" data-bind="click: function() { toggleCamera(); }, css: { 'fa-square': !enabled(), 'fa-check-square': enabled()} "></a>
+                                <!-- /ko -->
+
+                            </span>
+
                             <a href="#" class="fa fa-star" title="Set as default profile"
-                               data-bind="click: function() { if (guid() != $parent.current_profile_guid()) { $parent.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $parent.current_profile_guid())}, enabled: (guid() != $parent.current_profile_guid())"></a>
+                               data-bind="visible: profileTypeName() != 'Camera', click: function() { if (guid() != $parent.current_profile_guid()) { $parent.setCurrentProfile(guid()); } }, css: {disabled: (guid() == $parent.current_profile_guid())}, enabled: (guid() != $parent.current_profile_guid())"></a>
                             &nbsp;|&nbsp;<a href="#" class="fa icon-copy" title="Copy profile"
                                             data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
                             &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile"

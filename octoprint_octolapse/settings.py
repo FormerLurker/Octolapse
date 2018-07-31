@@ -1021,10 +1021,12 @@ class Camera(object):
     def __init__(self, camera=None, guid=None, name="Default Camera"):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
+        self.enabled = False
         self.description = ""
         self.camera_type = "webcam"
         self.external_camera_snapshot_script = ""
         self.delay = 125
+        self.timeout_ms = 5000
         self.apply_settings_before_print = False
         self.address = "http://127.0.0.1/webcam/"
         self.snapshot_request_template = "{camera_address}?action=snapshot"
@@ -1074,7 +1076,64 @@ class Camera(object):
         self.jpeg_quality_request_template = self.template_to_string(0, 0, 1, 3)
 
         if camera is not None:
-            self.update(camera)
+            if isinstance(camera, Camera):
+                self.guid = camera.guid
+                self.name = camera.name
+                self.enabled = camera.enabled
+                self.description = camera.description
+                self.camera_type = camera.camera_type
+                self.external_camera_snapshot_script = camera.external_camera_snapshot_script
+                self.delay = camera.delay
+                self.timeout_ms = camera.timeout_ms
+                self.apply_settings_before_print = camera.apply_settings_before_print
+                self.address = camera.address
+                self.snapshot_request_template = camera.snapshot_request_template
+                self.snapshot_transpose = camera.snapshot_transpose
+                self.ignore_ssl_error = camera.ignore_ssl_error
+                self.username = camera.username
+                self.password = camera.password
+                self.brightness = camera.brightness
+                self.brightness_request_template = camera.brightness_request_template
+                self.contrast = camera.contrast
+                self.contrast_request_template = camera.contrast_request_template
+                self.saturation = camera.saturation
+                self.saturation_request_template = camera.saturation_request_template
+                self.white_balance_auto = camera.white_balance_auto
+                self.white_balance_auto_request_template = camera.white_balance_auto_request_template
+                self.gain = camera.gain
+                self.gain_request_template = camera.gain_request_template
+                self.powerline_frequency = camera.powerline_frequency
+                self.powerline_frequency_request_template = camera.powerline_frequency_request_template
+                self.white_balance_temperature = camera.white_balance_temperature
+                self.white_balance_temperature_request_template = camera.white_balance_temperature_request_template
+                self.sharpness = camera.sharpness
+                self.sharpness_request_template = camera.sharpness_request_template
+                self.backlight_compensation_enabled = camera.backlight_compensation_enabled
+                self.backlight_compensation_enabled_request_template = camera.backlight_compensation_enabled_request_template
+                self.exposure_type = camera.exposure_type
+                self.exposure_type_request_template = camera.exposure_type_request_template
+                self.exposure = camera.exposure
+                self.exposure_request_template = camera.exposure_request_template
+                self.exposure_auto_priority_enabled = camera.exposure_auto_priority_enabled
+                self.exposure_auto_priority_enabled_request_template = camera.exposure_auto_priority_enabled_request_template
+                self.pan = camera.pan
+                self.pan_request_template = camera.pan_request_template
+                self.tilt = camera.tilt
+                self.tilt_request_template = camera.tilt_request_template
+                self.autofocus_enabled = camera.autofocus_enabled
+                self.autofocus_enabled_request_template = camera.autofocus_enabled_request_template
+                self.focus = camera.focus
+                self.focus_request_template = camera.focus_request_template
+                self.zoom = camera.zoom
+                self.zoom_request_template = camera.zoom_request_template
+                self.led1_mode = camera.led1_mode
+                self.led1_mode_request_template = camera.led1_mode_request_template
+                self.led1_frequency = camera.led1_frequency
+                self.led1_frequency_request_template = camera.led1_frequency_request_template
+                self.jpeg_quality = camera.jpeg_quality
+                self.jpeg_quality_request_template = camera.jpeg_quality_request_template
+            else:
+                self.update(camera)
 
     @staticmethod
     def template_to_string(destination, plugin, setting_id, group):
@@ -1092,6 +1151,8 @@ class Camera(object):
             self.guid = utility.get_string(changes["guid"], self.guid)
         if "name" in changes.keys():
             self.name = utility.get_string(changes["name"], self.name)
+        if "enabled" in changes.keys():
+            self.enabled = utility.get_bool(changes["enabled"], self.enabled)
         if "description" in changes.keys():
             self.description = utility.get_string(
                 changes["description"], self.description)
@@ -1106,6 +1167,9 @@ class Camera(object):
         if "delay" in changes.keys():
             self.delay = utility.get_int(
                 changes["delay"], self.delay)
+        if "timeout_ms" in changes.keys():
+            self.timeout_ms = utility.get_int(
+                changes["timeout_ms"], self.timeout_ms)
         if "address" in changes.keys():
             self.address = utility.get_string(changes["address"], self.address)
         if "snapshot_request_template" in changes.keys():
@@ -1250,12 +1314,12 @@ class Camera(object):
         return {
             'guid': self.guid,
             'name': self.name,
+            'enabled': self.enabled,
             'description': self.description,
-
             'camera_type': self.camera_type,
             'external_camera_snapshot_script': self.external_camera_snapshot_script,
-
             'delay': self.delay,
+            'timeout_ms': self.timeout_ms,
             'address': self.address,
             'snapshot_request_template': self.snapshot_request_template,
             'snapshot_transpose': self.snapshot_transpose,
@@ -1757,7 +1821,7 @@ class OctolapseSettings(object):
         self.renderings = {rendering.guid: rendering}
 
         camera = self.DefaultCamera
-        self.current_camera_profile_guid = camera.guid
+        # there is no current camera profile guid.
         self.cameras = {camera.guid: camera}
 
         debug_profile = self.DefaultDebugProfile
@@ -1766,6 +1830,15 @@ class OctolapseSettings(object):
 
         if settings is not None:
             self.update(settings)
+
+    def active_cameras(self):
+        _active_cameras = []
+        for key in self.cameras:
+            _current_camera = self.cameras[key]
+            if _current_camera.enabled:
+                _active_cameras.append(_current_camera)
+
+        return _active_cameras
 
     def current_stabilization(self):
         if len(self.stabilizations.keys()) == 0:
@@ -1792,13 +1865,6 @@ class OctolapseSettings(object):
         if self.current_printer_profile_guid is None or self.current_printer_profile_guid not in self.printers:
             return None
         return self.printers[self.current_printer_profile_guid]
-
-    def current_camera(self):
-        if len(self.cameras.keys()) == 0:
-            camera = Camera(camera=None)
-            self.cameras[camera.guid] = camera
-            self.current_camera_profile_guid = camera.guid
-        return self.cameras[self.current_camera_profile_guid]
 
     def current_debug_profile(self):
         if len(self.debug_profiles.keys()) == 0:
@@ -1849,9 +1915,6 @@ class OctolapseSettings(object):
         if has_key(changes, "current_rendering_profile_guid"):
             self.current_rendering_profile_guid = str(get_value(
                 changes, "current_rendering_profile_guid", self.current_rendering_profile_guid))
-        if has_key(changes, "current_camera_profile_guid"):
-            self.current_camera_profile_guid = str(get_value(
-                changes, "current_camera_profile_guid", self.current_camera_profile_guid))
         if has_key(changes, "current_debug_profile_guid"):
             self.current_debug_profile_guid = str(get_value(
                 changes, "current_debug_profile_guid", self.current_debug_profile_guid))
@@ -1907,35 +1970,12 @@ class OctolapseSettings(object):
                 self.debug_profiles.update(
                     {debugProfile["guid"]: DebugProfile(self.LogFilePath, debug_profile=debugProfile)})
 
-    def get_current_profiles_description(self):
-        return {
-            "printer":
-                "None Selected" if self.current_printer() is None
-                else self.current_printer().name,
-            "stabilization": "None Selected"
-                if self.current_stabilization() is None
-                else self.current_stabilization().name,
-            "snapshot": "None Selected"
-                if self.current_snapshot() is None
-                else self.current_snapshot().name,
-            "rendering": "None Selected"
-                if self.current_rendering() is None
-                else self.current_rendering().name,
-            "camera": "None Selected"
-                if self.current_camera() is None
-                else self.current_camera().name,
-            "debug_profile": "None Selected"
-                if self.current_debug_profile() is None
-                else self.current_debug_profile().name,
-        }
-
     def get_profiles_dict(self):
         profiles_dict = {
             'current_printer_profile_guid': self.current_printer_profile_guid,
             'current_stabilization_profile_guid': self.current_stabilization_profile_guid,
             'current_snapshot_profile_guid': self.current_snapshot_profile_guid,
             'current_rendering_profile_guid': self.current_rendering_profile_guid,
-            'current_camera_profile_guid': self.current_camera_profile_guid,
             'current_debug_profile_guid': self.current_debug_profile_guid,
             'printers': [],
             'stabilizations': [],
@@ -1972,7 +2012,8 @@ class OctolapseSettings(object):
         for key, camera in self.cameras.items():
             profiles_dict["cameras"].append({
                 "name": camera.name,
-                "guid": camera.guid
+                "guid": camera.guid,
+                "enabled": camera.enabled
             })
 
         for key, debugProfile in self.debug_profiles.items():
@@ -2118,9 +2159,6 @@ class OctolapseSettings(object):
                 self.current_rendering_profile_guid, defaults.current_rendering_profile_guid
             ),
             'renderings': [],
-            'current_camera_profile_guid': utility.get_string(
-                self.current_camera_profile_guid, defaults.current_camera_profile_guid
-            ),
             'cameras': [],
             'current_debug_profile_guid': utility.get_string(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
@@ -2227,8 +2265,6 @@ class OctolapseSettings(object):
                 return False
             del self.renderings[guid]
         elif profile_type == "Camera":
-            if self.current_camera_profile_guid == guid:
-                return False
             del self.cameras[guid]
         elif profile_type == "Debug":
             if self.current_debug_profile_guid == guid:
@@ -2250,8 +2286,6 @@ class OctolapseSettings(object):
             self.current_snapshot_profile_guid = guid
         elif profile_type == "Rendering":
             self.current_rendering_profile_guid = guid
-        elif profile_type == "Camera":
-            self.current_camera_profile_guid = guid
         elif profile_type == "Debug":
             self.current_debug_profile_guid = guid
         else:

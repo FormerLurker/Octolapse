@@ -111,30 +111,18 @@
                                 event: {change: Octolapse.Status.defaultRenderingChanged},
                                 value: Octolapse.Status.current_rendering_profile_guid"></select>
                 </td>
-                <td>
+                <td class="text-right">
                     <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null, click: openCurrentRenderingProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>
             </tr>
             <tr>
-                <td>Camera</td>
                 <td>
-                    <select id="octolapse_tab_camera_profile"
-                            class="input-block-level"
-                            data-bind="
-                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
-                                options: Octolapse.Status.cameras_sorted,
-                                optionsText: 'name',
-                                optionsValue: 'guid',
-                                event: {change: Octolapse.Status.defaultCameraChanged},
-                                value: Octolapse.Status.current_camera_profile_guid"></select>
+                    Cameras
                 </td>
-                <td>
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin()  && Octolapse.Status.current_camera_profile_guid() != null, click: openCurrentCameraProfile">
-                        <i class="fa fa-gear fa-2x"></i>
-                    </a>
-
+                <td colspan="2">
+                    <div data-bind="template:'octolapse-tab-settings-current-cameras'"></div>
                 </td>
             </tr>
             <tr>
@@ -192,3 +180,5 @@
         </div>
     </div>
 </script>
+
+{% include "octolapse_tab_settings_current_cameras.jinja2" %}

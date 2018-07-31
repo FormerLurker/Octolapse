@@ -31,8 +31,8 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.gcode_parser import Commands, ParsedCommand
 from octoprint_octolapse.position import Position
-from octoprint_octolapse.render import Render, RenderingCallbackArgs, RenderError
-from octoprint_octolapse.settings import (Printer, Rendering, Snapshot, OctolapseSettings)
+from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs
+from octoprint_octolapse.settings import Printer, Snapshot, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot
 from octoprint_octolapse.trigger import Triggers
 
@@ -75,20 +75,18 @@ class Timelapse(object):
         # Settings that may be different after StartTimelapse is called
 
         self.OctoprintPrinterProfile = None
-        self.PrintStartTime = None
+
+        self.CurrentJobInfo = None
         self.FfMpegPath = None
         self.Snapshot = None
         self.Gcode = None
         self.Printer = None
-        self.Camera = None
         self.CaptureSnapshot = None
+        self.RenderingProcessor = None
         self.Position = None
-        self.Rendering = None
         self.State = TimelapseState.Idle
         self.IsTestMode = False
         # State Tracking that should only be reset when starting a timelapse
-        self.SnapshotCount = 0
-
         self.HasBeenStopped = False
         self.TimelapseStopRequested = False
         self.SavedCommand = None
@@ -115,8 +113,8 @@ class Timelapse(object):
         self.CurrentFileLine = 0
 
         # snapshot thread queue
-        self._rendering_task_queue = Queue(maxsize=1)
-        self._snapshot_task_queue = Queue(maxsize=0)
+        self._snapshot_task_queue = Queue(maxsize=1)
+        self._rendering_task_queue = Queue(maxsize=0)
 
         self._reset()
 
@@ -127,20 +125,41 @@ class Timelapse(object):
         # in case the settings have been destroyed and recreated
         self.Settings = settings
         # time tracking - how much time did we add to the print?
-        self.SnapshotCount = 0
         self.SecondsAddedByOctolapse = 0
         self.RequiresLocationDetectionAfterHome = False
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.FfMpegPath = ffmpeg_path
-        self.PrintStartTime = time.time()
+        self.CurrentJobInfo = utility.TimelapseJobInfo(
+            job_guid=uuid.uuid4(),
+            print_start_time=time.time(),
+            print_file_name=utility.get_currently_printing_filename(self.OctoprintPrinter)
+        )
+        # Note that the RenderingProcessor makes copies of all objects sent to it
         self.Snapshot = Snapshot(self.Settings.current_snapshot())
+
+        self.RenderingProcessor = RenderingProcessor(
+            self._rendering_task_queue,
+            self.Settings.current_debug_profile,
+            self.CurrentJobInfo,
+            self.Settings.current_rendering(),
+            self.Settings.active_cameras(),
+            self.DataFolder,
+            self.DefaultTimelapseDirectory,
+            self.FfMpegPath,
+            1,
+            self._on_render_start,
+            self._on_render_success,
+            self._on_render_error,
+            self.Snapshot.cleanup_after_render_complete,
+            self.Snapshot.cleanup_after_render_fail,
+        )
+
         self.Gcode = SnapshotGcodeGenerator(
             self.Settings, octoprint_printer_profile)
         self.Printer = Printer(self.Settings.current_printer())
-        self.Camera = self.Settings.current_camera()
-        self.Rendering = Rendering(self.Settings.current_rendering())
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, print_start_time=self.PrintStartTime)
+            self.Settings, self.DataFolder, self.Settings.active_cameras(), self.CurrentJobInfo
+        )
         self.Position = Position(
             self.Settings, octoprint_printer_profile, g90_influences_extruder)
         self.State = TimelapseState.WaitingForTrigger
@@ -213,70 +232,26 @@ class Timelapse(object):
 
         return self._position_payload
 
-    def _on_snapshot_success(self, *args, **kwargs):
-        # Increment the number of snapshots received
-        self.SnapshotCount += 1
-        self._snapshot_success = True
-        self.SnapshotError = ""
-        self._snapshot_task_queue.get()
-        self._snapshot_task_queue.task_done()
-
-    def _on_snapshot_fail(self, *args, **kwargs):
-        error = args[0]
-        message = "Failed to download the snapshot.  Reason: {0}".format(error)
-        self.Settings.current_debug_profile().log_snapshot_download(message)
-        self._snapshot_success = False
-        self.SnapshotError = message
-
-    def _on_snapshot_complete(self, *args, **kwargs):
-        self.Settings.current_debug_profile().log_snapshot_download("Snapshot download complete.")
-        self._snapshot_signal.set()
-
     def _take_snapshot_async(self):
         snapshot_async_payload = {
             "success": False,
             "error": "Waiting on thread to signal, aborting"
         }
-        if self._snapshot_signal.is_set():
-            # only clear signal and send a new M114 if we haven't already done that from another thread
-            self._snapshot_signal.clear()
-            # start the snapshot
-            self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
 
-            if self.Camera.camera_type == "external-script":
-                snapshot_job = self.CaptureSnapshot.create_snapshot_script_job(
-                    "snapshot", self.Camera.external_camera_snapshot_script,
-                    utility.get_currently_printing_filename(self.OctoprintPrinter), self.SnapshotCount,
-                    on_complete=self._on_snapshot_complete, on_success=self._on_snapshot_success, on_fail=self._on_snapshot_fail)
-                # run the job
-            elif self.Camera.camera_type == "webcam":
-                snapshot_job = self.CaptureSnapshot.create_snapshot_job(
-                    utility.get_currently_printing_filename(self.OctoprintPrinter),
-                    self.SnapshotCount,
-                    on_success=self._on_snapshot_success,
-                    on_fail=self._on_snapshot_fail,
-                    on_complete=self._on_snapshot_complete
-                )
-            snapshot_thread = threading.Thread(target=snapshot_job)
-            snapshot_thread.daemon = True
-            self._snapshot_task_queue.put("snapshot_job")
+        # start the snapshot
+        self.Settings.current_debug_profile().log_snapshot_download("Taking a snapshot.")
+        self._snapshot_task_queue.join()
+        self._snapshot_task_queue.put("snapshot_job")
+        try:
+            results = self.CaptureSnapshot.take_snapshots()
+        finally:
+            self._snapshot_task_queue.get()
+            self._snapshot_task_queue.task_done()
+        # todo - notify client here
+        # todo - maintain snapshot number separately for each camera!
 
-            snapshot_thread.start()
-        snapshot_timeout = self._snapshot_timeout + (self.Camera.delay/1000.0)
-        event_is_set = self._snapshot_signal.wait(snapshot_timeout)
-        if not event_is_set:
-            # we ran into a timeout while waiting for a fresh position
-            snapshot_async_payload["success"] = False
-            snapshot_async_payload["error"] = \
-                "Snapshot timed out in {0} seconds.".format(snapshot_timeout)
-            return snapshot_async_payload
-
-        if self._snapshot_success:
-            snapshot_async_payload["success"] = True
-            snapshot_async_payload["error"] = ""
-        else:
-            snapshot_async_payload["success"] = False
-            snapshot_async_payload["error"] = self.SnapshotError
+        snapshot_async_payload["success"] = True
+        snapshot_async_payload["error"] = ""
 
         return snapshot_async_payload
 
@@ -485,9 +460,9 @@ class Timelapse(object):
     def end_timelapse(self, print_status):
         self.PrintEndStatus = print_status
         try:
-            if self.PrintStartTime is None:
+            if self.CurrentJobInfo is None or self.CurrentJobInfo.PrintStartTime is None:
                 self._reset()
-            elif self.PrintStartTime is not None and self.State in [
+            elif self.State in [
                 TimelapseState.WaitingForTrigger, TimelapseState.WaitingToRender, TimelapseState.WaitingToEndTimelapse
                 , TimelapseState.Cancelling
             ]:
@@ -993,7 +968,7 @@ class Timelapse(object):
             payload = {
                 "success": snapshot_payload["success"],
                 "error": snapshot_payload["error"],
-                "snapshot_count": self.SnapshotCount,
+                "snapshot_count":  self.CaptureSnapshot.SnapshotsTotal,
                 "snapshot_payload": snapshot_payload["snapshot_payload"],
                 "total_snapshot_time": snapshot_payload["total_snapshot_time"],
                 "current_snapshot_time": snapshot_payload["total_snapshot_time"]
@@ -1007,7 +982,7 @@ class Timelapse(object):
 
     def _render_timelapse(self, print_end_state):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
-        if self.Rendering is not None and self.Rendering.enabled:
+        if self.RenderingProcessor is not None and self.RenderingProcessor.enabled:
             job_id = "TimelapseRenderJob_{0}".format(str(uuid.uuid4()))
 
             # If we are still taking snapshots, wait for them all to finish
@@ -1018,32 +993,12 @@ class Timelapse(object):
                 self.Settings.current_debug_profile().log_render_start(
                     "Snapshot jobs queue has completed, starting to render.")
 
-            # Add the rendering job to the queue and start it up!
-            self._rendering_task_queue.put(job_id)
-
-            Render.start_rendering_thread(
-                self.Settings,
-                self.Snapshot,
-                self.Rendering,
-                self.DataFolder,
-                os.path.dirname(
-                    os.path.join(utility.get_temp_snapshot_driectory_template().format(DATADIRECTORY=self.DataFolder),
-                                 utility.get_snapshot_filename(
-                                     utility.get_currently_printing_filename(self.OctoprintPrinter),
-                                     self.PrintStartTime, 0))),
-                self.DefaultTimelapseDirectory,
-                self.FfMpegPath,
-                1,
-                job_id,
-                utility.get_currently_printing_filename(self.OctoprintPrinter),
-                self.PrintStartTime,
-                time.time(),
+            self.RenderingProcessor.start_rendering(
                 print_end_state,
-                self.SecondsAddedByOctolapse,
-                self._on_render_start,
-                self._on_render_success,
-                self._on_render_error
+                time.time(),
+                self.SecondsAddedByOctolapse
             )
+
             return True
         return False
 
@@ -1072,9 +1027,6 @@ class Timelapse(object):
             render_success_complete_callback_thread.daemon = True
             render_success_complete_callback_thread.start()
 
-        self._rendering_task_queue.get()
-        self._rendering_task_queue.task_done()
-
     def _on_render_error(self, job_id, error):
         self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
 
@@ -1087,9 +1039,6 @@ class Timelapse(object):
             )
             render_error_complete_callback_thread.daemon = True
             render_error_complete_callback_thread.start()
-
-        self._rendering_task_queue.get()
-        self._rendering_task_queue.task_done()
 
     def _on_timelapse_start(self):
         if self.OnTimelapseStartCallback is None:
@@ -1104,7 +1053,7 @@ class Timelapse(object):
         self.CommandIndex = -1
 
         self.LastStateChangeMessageTime = None
-        self.PrintStartTime = None
+        self.CurrentJobInfo = None
         self.SnapshotGcodes = None
         self.SavedCommand = None
         self.PositionRequestAttempts = 0
@@ -1128,6 +1077,7 @@ class Timelapse(object):
         self._position_payload = None
         self._position_signal.set()
         self._snapshot_signal.set()
+        self.CurrentJobInfo = None;
 
     def _reset_snapshot(self):
         self.State = TimelapseState.WaitingForTrigger
@@ -1138,6 +1088,7 @@ class Timelapse(object):
         self._snapshot_success = False
         self.SnapshotError = ""
 
+
 class TimelapseState(object):
     Idle = 1
     Initializing = 2
@@ -1147,4 +1098,9 @@ class TimelapseState(object):
     WaitingToRender = 6
     WaitingToEndTimelapse = 7
     Cancelling = 8
+
+
+
+
+
 

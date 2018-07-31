@@ -39,8 +39,21 @@ $(function() {
         self.removeProfilePath = settings.removeProfilePath;
         self.setCurrentProfilePath = settings.setCurrentProfilePath;
 
+        // Specialty function to return true if at least one camera is enabled
+        self.hasOneEnabled = ko.pureComputed(function () {
+            // The button is off and the timelapse is off
+            console.log("Calling has one enabled")
+            for (var i = 0; i < self.profiles().length; i++)
+            {
+                if(self.profiles()[i].enabled())
+                    return true;
+            }
+            return false;
+
+        }, Octolapse.Cameras);
         // Created a sorted observable
         self.profiles_sorted = ko.computed(function() { return Octolapse.nameSort(self.profiles) });
+
         /*
             Octoprint Viewmodel Events
         */
@@ -195,7 +208,7 @@ $(function() {
         self.toggle = Octolapse.Toggle;
 
         self.showAddEditDialog = function(guid, isCopy) {
-            console.log("octolapse.profiles.js - Showing add edit dialog.")
+            //console.log("octolapse.profiles.js - Showing add edit dialog.")
             isCopy = isCopy || false;
             var title = null;
             var addEditObservable = ko.observable();

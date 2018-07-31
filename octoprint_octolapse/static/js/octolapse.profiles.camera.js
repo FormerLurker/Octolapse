@@ -27,11 +27,13 @@ $(function() {
         self.profileTypeName = ko.observable("Camera")
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
+        self.enabled = ko.observable(values.enabled);
         self.description = ko.observable(values.description);
 
         self.camera_type = ko.observable(values.camera_type);
         self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
         self.delay = ko.observable(values.delay);
+        self.timeout_ms = ko.observable(values.timeout_ms);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.address = ko.observable(values.address);
         self.snapshot_request_template = ko.observable(values.snapshot_request_template);
@@ -98,6 +100,30 @@ $(function() {
                 }
             });
         };
+
+        self.toggleCamera = function(){
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("Running camera request.");
+            var data = { 'guid': self.guid(), "client_id": Octolapse.Globals.client_id };
+            $.ajax({
+                url: "./plugin/octolapse/toggleCamera",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success)
+                        self.enabled(results.enabled);
+                    else {
+                        alert(results.error);
+                    }
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown);
+                }
+            });
+        }
 
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array

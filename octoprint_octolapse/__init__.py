@@ -314,6 +314,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         else:
             return json.dumps({'success': False, 'error': results[1]}), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def toggle_camera(self):
+        request_values = flask.request.get_json()
+        guid = request_values["guid"]
+        client_id = request_values["client_id"]
+        new_value = not self.Settings.cameras[guid].enabled
+        self.Settings.cameras[guid].enabled = new_value
+        self.save_settings()
+        self.send_settings_changed_message(client_id)
+        return json.dumps({'success': True, 'enabled': new_value}), 200, {'ContentType': 'application/json'}
+
     @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
     def validate_rendering_template(self):
         template = flask.request.form['output_template']
@@ -614,7 +627,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             profiles_dict = self.Settings.get_profiles_dict()
             debug_dict = profiles_dict["debug_profiles"]
             if self.Timelapse is not None:
-                snapshot_count = self.Timelapse.SnapshotCount
+                if self.Timelapse.CaptureSnapshot is None:
+                    snapshot_count = 0
+                else:
+                    snapshot_count = self.Timelapse.CaptureSnapshot.SnapshotsTotal
 
                 total_snapshot_time = self.Timelapse.SecondsAddedByOctolapse
                 is_timelapse_active = self.Timelapse.is_timelapse_active()
@@ -830,10 +846,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
-        if (self.Settings.current_camera().apply_settings_before_print
-            and self.Settings.current_camera().camera_type == "webcam"
-        ):
-            self.apply_camera_settings(self.Settings.current_camera())
+
+        for current_camera in self.Settings.cameras:
+            if (
+                current_camera.enabled and
+                current_camera.camera_type == "webcam"
+                and current_camera.apply_settings_before_print
+            ):
+                self.apply_camera_settings(current_camera)
 
     def on_print_cancelled(self, message, is_error):
         self._printer.cancel_print()
@@ -848,6 +868,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._printer.cancel_print()
 
     def start_timelapse(self):
+
         # check for version 1.3.7 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
             return {'success': False,
@@ -932,14 +953,24 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
             }
 
-        if self.Settings.current_camera().camera_type == "webcam":
-            # test the camera and see if it works.
-            results = camera.test_camera(self.Settings.current_camera())
-            if not results[0]:
-                return {'success': False, 'warning': False,
-                        'error': "The current camera profile did not pass testing.  You can "
-                                 "adjust and test your camera in the profile settings page."}
+        found_camera = False
+        for key in self.Settings.cameras:
+            current_camera = self.Settings.cameras[key]
+            if current_camera.enabled:
+                found_camera = True
+                if current_camera.camera_type == "webcam":
+                    # test the camera and see if it works.
+                    results = camera.test_camera(current_camera)
+                    if not results[0]:
+                        return {'success': False, 'warning': False,
+                                'error': "The current camera profile did not pass testing.  You can "
+                                         "adjust and test your camera in the profile settings page."}
 
+        if not found_camera:
+            return {
+                'success': False, 'warning': False,
+                'error': "There are no enabled cameras.  Enable at least one camera and try again."
+            }
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
 
