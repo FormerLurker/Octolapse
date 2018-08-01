@@ -131,12 +131,12 @@ def get_rendering_directory_from_data_directory(data_directory):
     return get_rendering_directory_template().replace("{DATADIRECTORY}", data_directory)
 
 
-def get_latest_snapshot_download_path(data_directory):
-    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_snapshot.jpeg")
+def get_latest_snapshot_download_path(data_directory, camera_guid):
+    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_{0}.jpeg".format(camera_guid))
 
 
-def get_latest_snapshot_thumbnail_download_path(data_directory):
-    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_snapshot_thumbnail_300px.jpeg")
+def get_latest_snapshot_thumbnail_download_path(data_directory, camera_guid):
+    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_thumb_{0}.jpeg".format(camera_guid))
 
 
 def get_images_download_path(base_folder, file_name):

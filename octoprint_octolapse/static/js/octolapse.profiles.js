@@ -101,7 +101,7 @@ $(function() {
         };
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
-            currentProfile = self.getProfileByGuid(guid)
+            var currentProfile = self.getProfileByGuid(guid)
             if (confirm("Are you sure you want to permanently erase the profile:'" + currentProfile.name() + "'?")) {
                 var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
                 $.ajax({
@@ -127,7 +127,7 @@ $(function() {
         };
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
-            currentProfile = self.getProfileByGuid(guid)
+            var currentProfile = self.getProfileByGuid(guid)
             var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
             $.ajax({
                 url: "./plugin/octolapse/" + self.setCurrentProfilePath,

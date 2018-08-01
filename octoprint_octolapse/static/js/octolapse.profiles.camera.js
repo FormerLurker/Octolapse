@@ -112,8 +112,9 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (results) {
-                    if (results.success)
+                    if (results.success) {
                         self.enabled(results.enabled);
+                    }
                     else {
                         alert(results.error);
                     }

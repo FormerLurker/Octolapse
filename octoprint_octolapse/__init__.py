@@ -73,24 +73,27 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         """Restricted access function to download a timelapse"""
         return self.get_download_file_response(self.get_timelapse_folder() + filename, filename)
 
-    @octoprint.plugin.BlueprintPlugin.route("/snapshot/<filename>", methods=["GET"])
-    def snapshot_request(self, filename):
+    @octoprint.plugin.BlueprintPlugin.route("/snapshot", methods=["GET"])
+    def snapshot_request(self):
+        file_type = flask.request.args.get('file_type')
+        guid = flask.request.args.get('camera_guid')
+
         """Public access function to get the latest snapshot image"""
-        if filename == 'latest-snapshot.jpeg':
+        if file_type == 'snapshot':
             # get the latest snapshot image
             mime_type = 'image/jpeg'
             filename = utility.get_latest_snapshot_download_path(
-                self.get_plugin_data_folder())
+                self.get_plugin_data_folder(), guid)
             if not os.path.isfile(filename):
                 # we haven't captured any images, return the built in png.
                 mime_type = 'image/png'
                 filename = utility.get_no_snapshot_image_download_path(
                     self._basefolder)
-        elif filename == 'latest_snapshot_thumbnail_300px.jpeg':
+        elif file_type == 'thumbnail':
             # get the latest snapshot image
             mime_type = 'image/jpeg'
             filename = utility.get_latest_snapshot_thumbnail_download_path(
-                self.get_plugin_data_folder())
+                self.get_plugin_data_folder(), guid)
             if not os.path.isfile(filename):
                 # we haven't captured any images, return the built in png.
                 mime_type = 'image/png'
@@ -260,6 +263,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.set_current_profile(profile_type, guid)
         self.save_settings()
         self.send_settings_changed_message(client_id)
+        return json.dumps({'success': True, 'guid': request_values["guid"]}), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/setCurrentCameraProfile", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def set_current_camera_profile(self):
+        # this setting will only determine which profile will be the default within
+        # the snapshot preview if a new instance is loaded.  Save the settings, but
+        # do not notify other clients
+        request_values = flask.request.get_json()
+        guid = request_values["guid"]
+        self.Settings.current_camera_profile_guid = guid
+        self.save_settings()
         return json.dumps({'success': True, 'guid': request_values["guid"]}), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/restoreDefaults", methods=["POST"])
@@ -641,6 +657,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # running.
                 profiles_dict["current_debug_profile_guid"] = self.Settings.current_debug_profile_guid
                 profiles_dict["debug_profiles"] = debug_dict
+                # always get the latest current camera profile guid.
+                profiles_dict["current_camera_profile_guid"] = self.Settings.current_camera_profile_guid
+
                 is_rendering = self.Timelapse.get_is_rendering()
                 is_taking_snapshot = TimelapseState.TakingSnapshot == self.Timelapse.State
                 timelapse_state = self.Timelapse.State

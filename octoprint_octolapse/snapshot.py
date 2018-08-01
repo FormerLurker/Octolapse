@@ -215,7 +215,9 @@ class SnapshotThread(Thread):
             #######################################
 
             # create a copy to be used for the full sized latest snapshot image.
-            latest_snapshot_path = utility.get_latest_snapshot_download_path(self.snapshot_job_info.DataDirectory)
+            latest_snapshot_path = utility.get_latest_snapshot_download_path(
+                self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
+            )
             shutil.copy(self.snapshot_job_info.full_path, latest_snapshot_path)
 
             # create a thumbnail of the image
@@ -224,7 +226,9 @@ class SnapshotThread(Thread):
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))
             img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-            img.save(utility.get_latest_snapshot_thumbnail_download_path(self.snapshot_job_info.DataDirectory), "JPEG")
+            img.save(utility.get_latest_snapshot_thumbnail_download_path(
+                self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid), "JPEG"
+            )
         except Exception as e:
             # If we can't create the thumbnail, just log
             raise SnapshotError(

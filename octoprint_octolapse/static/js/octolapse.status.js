@@ -52,6 +52,8 @@ $(function () {
                 'cameras': ko.observableArray([{name: "Unknown", guid: "", enabled: false}]),
                 'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
+
+            self.current_camera_guid = ko.observable()
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -175,7 +177,7 @@ $(function () {
 
             self.updateLatestSnapshotThumbnail = function (force) {
                 force = force || false;
-                //console.log("Trying to update the latest snapshot thumbnail.");
+                console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
                     if (!self.IsTabShowing) {
                         //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
@@ -186,7 +188,7 @@ $(function () {
                         return
                     }
                 }
-                self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl()
+                self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
                     + "&time=" + new Date().getTime());
 
             };
@@ -333,7 +335,8 @@ $(function () {
                         return
                     }
                 }
-                self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl() + "&time=" + new Date().getTime());
+                console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
+                self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
 
             };
 
@@ -417,6 +420,9 @@ $(function () {
                 self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
                 self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
                 self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
+                // Only update the current camera guid if there is no value
+                if(self.current_camera_guid() == null)
+                    self.current_camera_guid(settings.profiles.current_camera_profile_guid);
             };
 
             self.onTimelapseStart = function () {
@@ -548,22 +554,46 @@ $(function () {
                 Octolapse.Cameras.showAddEditDialog(guid, false);
             };
 
+            self.addNewCameraProfile = function () {
+                //console.log("Opening current camera profile from tab.")
+                Octolapse.Cameras.showAddEditDialog(null, false);
+            };
+
             self.toggleCamera = function (guid) {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.getProfileByGuid(guid).toggleCamera();
             };
-
-            self.defaultCameraChanged = function (obj, event) {
-                if (Octolapse.Globals.is_admin()) {
-                    if (event.originalEvent) {
-                        // Get the current guid
-                        var guid = $("#octolapse_tab_camera_profile").val();
-                        //console.log("Default Camera is changing to " + guid);
-                        Octolapse.Cameras.setCurrentProfile(guid);
-                        return true;
+            self.snapshotCameraChanged = function(obj, event) {
+                // Update the current camera profile
+                var guid = $("#octolapse_current_snapshot_camera").val();
+                console.log("Updating current snapshot camera preview: " + guid)
+                if(event.originalEvent) {
+                    if (Octolapse.Globals.is_admin()) {
+                        var data = {'guid': guid};
+                        $.ajax({
+                            url: "./plugin/octolapse/setCurrentCameraProfile",
+                            type: "POST",
+                            data: JSON.stringify(data),
+                            contentType: "application/json",
+                            dataType: "json",
+                            success: function (result) {
+                                // Set the current profile guid observable.  This will cause the UI to react to the change.
+                                console.log("current profile guid updated: " + result.guid)
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                alert("Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                            }
+                        });
                     }
                 }
-            };
+
+                console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
+                Octolapse.Status.current_camera_guid(guid);
+                self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
+                self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
+                self.updateLatestSnapshotThumbnail(self.current_camera_guid());
+                self.updateLatestSnapshotImage(self.current_camera_guid());
+            }
 
             // Debug Profile Settings
             self.debug_sorted = ko.computed(function() { return self.nameSort(self.profiles().debug_profiles) });

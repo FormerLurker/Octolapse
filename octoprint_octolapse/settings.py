@@ -1822,6 +1822,7 @@ class OctolapseSettings(object):
 
         camera = self.DefaultCamera
         # there is no current camera profile guid.
+        self.current_camera_profile_guid = camera.guid
         self.cameras = {camera.guid: camera}
 
         debug_profile = self.DefaultDebugProfile
@@ -1865,6 +1866,13 @@ class OctolapseSettings(object):
         if self.current_printer_profile_guid is None or self.current_printer_profile_guid not in self.printers:
             return None
         return self.printers[self.current_printer_profile_guid]
+
+    def current_camera_profile(self):
+        if len(self.cameras.keys()) == 0:
+            camera = Camera(None)
+            self.cameras[camera.guid] = camera
+            self.current_camera_profile_guid = camera.guid
+        return self.debug_profiles[self.current_camera_profile_guid]
 
     def current_debug_profile(self):
         if len(self.debug_profiles.keys()) == 0:
@@ -1915,6 +1923,9 @@ class OctolapseSettings(object):
         if has_key(changes, "current_rendering_profile_guid"):
             self.current_rendering_profile_guid = str(get_value(
                 changes, "current_rendering_profile_guid", self.current_rendering_profile_guid))
+        if has_key(changes, "current_camera_profile_guid"):
+            self.current_camera_profile_guid = str(get_value(
+                changes, "current_camera_profile_guid", self.current_camera_profile_guid))
         if has_key(changes, "current_debug_profile_guid"):
             self.current_debug_profile_guid = str(get_value(
                 changes, "current_debug_profile_guid", self.current_debug_profile_guid))
@@ -1944,6 +1955,7 @@ class OctolapseSettings(object):
                 if snapshot["guid"] == "":
                     snapshot["guid"] = str(uuid.uuid4())
                 self.snapshots.update({snapshot["guid"]: Snapshot(snapshot=snapshot)})
+
         if has_key(changes, "renderings"):
             self.renderings = {}
             renderings = get_value(changes, "renderings", None)
@@ -1976,6 +1988,7 @@ class OctolapseSettings(object):
             'current_stabilization_profile_guid': self.current_stabilization_profile_guid,
             'current_snapshot_profile_guid': self.current_snapshot_profile_guid,
             'current_rendering_profile_guid': self.current_rendering_profile_guid,
+            'current_camera_profile_guid': self.current_camera_profile_guid,
             'current_debug_profile_guid': self.current_debug_profile_guid,
             'printers': [],
             'stabilizations': [],
@@ -2160,6 +2173,9 @@ class OctolapseSettings(object):
             ),
             'renderings': [],
             'cameras': [],
+            'current_camera_profile_guid': utility.get_string(
+                self.current_camera_profile_guid, defaults.current_camera_profile_guid
+            ),
             'current_debug_profile_guid': utility.get_string(
                 self.current_debug_profile_guid, defaults.current_debug_profile_guid
             ),
@@ -2286,6 +2302,8 @@ class OctolapseSettings(object):
             self.current_snapshot_profile_guid = guid
         elif profile_type == "Rendering":
             self.current_rendering_profile_guid = guid
+        elif profile_type == "Camera":
+            self.current_camera_profile_guid = guid
         elif profile_type == "Debug":
             self.current_debug_profile_guid = guid
         else:

@@ -27,11 +27,14 @@
 
 <div id="octolapse_tab">
     <script>
-        getLatestSnapshotUrl = function () {
-            return "{{ url_for('plugin.octolapse.snapshot_request',filename='latest-snapshot.jpeg', apikey='') }}" + UI_API_KEY;
+        getLatestSnapshotUrl = function (camera_guid) {
+
+            return "{{ url_for('plugin.octolapse.snapshot_request',file_type='snapshot') }}" + "&camera_guid=" + camera_guid + "&apikey=" + UI_API_KEY;
+            //return "{{ url_for('plugin.octolapse.snapshot_request',file_type='snapshot',camera_guid=camera_guid, apikey='') }}" + UI_API_KEY;
         }
-        getLatestSnapshotThumbnailUrl = function () {
-            return "{{ url_for('plugin.octolapse.snapshot_request',filename='latest_snapshot_thumbnail_300px.jpeg', apikey='') }}" + UI_API_KEY;
+        getLatestSnapshotThumbnailUrl = function (camera_guid) {
+            return "{{ url_for('plugin.octolapse.snapshot_request',file_type='thumbnail') }}" + "&camera_guid=" + camera_guid + "&apikey=" + UI_API_KEY;
+            //return "{{ url_for('plugin.octolapse.snapshot_request',file_type='thumbnail', camera_guid=camera_guid, apikey='') }}" + UI_API_KEY;
         }
     </script>
     <div data-bind="visible:snapshot_error" class="text-danger">
@@ -96,13 +99,14 @@
                         <div class="snapshot_container">
                             <a id="show_latest_snapshot" href="#" data-bind="click:showLatestSnapshotDialog"
                                title="View a larger image">
-                <span class="previous-snapshots">
+                                <span class="previous-snapshots">
                 </span>
                                 <span class="latest-snapshot">
-                  <img class="latest" src=""></img>
-                </span>
+                                  <img class="latest" src=""></img>
+                                </span>
                             </a>
                         </div>
+
 
                         <div class="snapshot_refresh_container ">
                             <a class="start-animation"
@@ -123,6 +127,17 @@
                             </a>
                         </div>
 
+                    </div>
+                    <div>
+                        <select id="octolapse_current_snapshot_camera"
+                            class="input-block-level"
+                            data-bind="
+                                options: Octolapse.Status.cameras_sorted,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.snapshotCameraChanged},
+                                value: Octolapse.Status.current_camera_guid">
+                        </select>
                     </div>
                 </div>
             </div>
