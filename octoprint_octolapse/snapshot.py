@@ -94,17 +94,21 @@ class CaptureSnapshot(object):
 
         return results
 
-    def clean_snapshots(self, snapshot_directory):
+    def clean_snapshots(self, snapshot_directory, job_directory):
 
         # get snapshot directory
         self.Settings.current_debug_profile().log_snapshot_clean(
             "Cleaning snapshots from: {0}".format(snapshot_directory))
 
         path = os.path.dirname(snapshot_directory + os.sep)
+        job_path = os.path.dirname(job_directory + os.sep)
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
                 self.Settings.current_debug_profile().log_snapshot_clean("Snapshots cleaned.")
+                if not os.listdir(job_path):
+                    shutil.rmtree(job_path)
+                    self.Settings.current_debug_profile().log_snapshot_clean("The job directory was empty, removing.")
             except Exception:
                 # Todo:  What exceptions do I catch here?
                 exception_type = sys.exc_info()[0]
@@ -121,7 +125,7 @@ class CaptureSnapshot(object):
             )
 
     def clean_all_snapshots(self):
-
+        #TODO:  FIX THIS.  IT NEEDS TO REMOVE ALL SUBDIRECTORIES IN THE SNAPSHOT FOLDER.
         # get snapshot directory
         snapshot_directory = utility.get_snapshot_temp_directory(
             self.DataDirectory)

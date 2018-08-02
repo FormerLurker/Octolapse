@@ -1013,12 +1013,14 @@ class Timelapse(object):
             render_start_complete_callback_thread.daemon = True
             render_start_complete_callback_thread.start()
 
-    def _on_render_success(self, job_id, payload):
-        self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
+    def _on_render_success(self, render_job_info, payload):
+        self.Settings.current_debug_profile().log_render_complete(
+            "Completed rendering. JobId: {0}".format(render_job_info.job_id)
+        )
         assert (isinstance(payload, RenderingCallbackArgs))
 
         if self.Snapshot.cleanup_after_render_complete:
-            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+            self.CaptureSnapshot.clean_snapshots(render_job_info.snapshot_directory, render_job_info.job_directory)
 
         if self.OnRenderSuccessCallback is not None:
             render_success_complete_callback_thread = threading.Thread(
@@ -1027,11 +1029,11 @@ class Timelapse(object):
             render_success_complete_callback_thread.daemon = True
             render_success_complete_callback_thread.start()
 
-    def _on_render_error(self, job_id, error):
-        self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(job_id))
+    def _on_render_error(self, render_job_info, error):
+        self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(render_job_info.job_id))
 
         if self.Snapshot.cleanup_after_render_fail:
-            self.CaptureSnapshot.clean_snapshots(utility.get_snapshot_temp_directory(self.DataFolder))
+            self.CaptureSnapshot.clean_snapshots(render_job_info.snapshot_directory, render_job_info.job_directory)
 
         if self.OnRenderErrorCallback is not None:
             render_error_complete_callback_thread = threading.Thread(

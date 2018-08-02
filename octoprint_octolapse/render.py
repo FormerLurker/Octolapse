@@ -124,6 +124,7 @@ class RenderJobInfo(object):
     def __init__(self, timelapse_job_info, data_directory, current_camera, print_state):
         self.job_id = timelapse_job_info.JobGuid
         self.camera = current_camera
+        self.job_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid)
         self.snapshot_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
         self.snapshot_filename_format = os.path.basename(utility.get_snapshot_filename(
             timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat)
@@ -433,10 +434,10 @@ class TimelapseRenderJob(object):
 
     def _on_success(self):
         payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
-        self._on_success_callback(self.render_job_info.job_id, payload)
+        self._on_success_callback(self.render_job_info, payload)
 
     def _on_fail(self, error):
-        self._on_error_callback(self.render_job_info.job_id, error)
+        self._on_error_callback(self.render_job_info, error)
 
     def _render(self):
         """Rendering runnable."""
