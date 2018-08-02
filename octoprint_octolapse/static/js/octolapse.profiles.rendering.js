@@ -74,11 +74,24 @@ $(function() {
         self.overlay_text_pos = ko.observable(values.overlay_text_pos);
         self.overlay_text_color = ko.observable(values.overlay_text_color);
 
+        self.overlay_preview_image = ko.observable('');
+        self.overlay_preview_image_error = ko.observable('');
+        self.overlay_preview_image_src = ko.computed(function() {
+            return 'data:image/jpeg;base64,' + self.overlay_preview_image();
+        });
+        self.overlay_preview_image_alt_text = ko.computed(function() {
+            if (self.overlay_preview_image_error.length == 0) {
+                return 'A preview of the overlay text.'
+            }
+            return 'Image could not be retrieved from server. The error returned was: ' + self.overlay_preview_image_error() + '.';
+        });
+
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
              self.updateWatermarkList();
              self.updateFontList();
              self.initWatermarkUploadButton();
+             self.requestOverlayPreview();
         };
 
         self.selectWatermark = function(watermark_image) {
@@ -183,6 +196,29 @@ $(function() {
         // Select a specific font for the overlay.
         self.selectOverlayFont = function(font) {
             self.overlay_font_path(font.filepath);
+        };
+
+        // Request a preview of the overlay from the server.
+        self.requestOverlayPreview = function() {
+            data = {
+                    'overlay_text_template': self.overlay_text_template(),
+                    'overlay_font_path': self.overlay_font_path(),
+                    'overlay_font_size': self.overlay_font_size(),
+                    'overlay_text_pos': self.overlay_text_pos(),
+                    'overlay_text_color': self.overlay_text_color()
+            };
+            OctoPrint.post(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay', data)
+                .then(function(response, success_name, response_status) {
+                    // Loaded the overlay!
+                    self.overlay_preview_image(response.image);
+                    self.overlay_preview_image_error('');
+                },
+                function(response_status, error_name, stack_trace) {
+                    // Failed to load an overlay.
+                    console.log('Failed to load overlay preview from server.')
+                    console.log(stack_trace);
+                    self.overlay_preview_image_error(error_name);
+                });
         };
     };
     Octolapse.RenderingProfileValidationRules = {
