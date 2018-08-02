@@ -28,7 +28,6 @@ import shutil
 import sys
 import threading
 import time
-from Queue import Queue
 from csv import DictReader
 # sarge was added to the additional requirements for the plugin
 from datetime import datetime, timedelta
@@ -40,6 +39,7 @@ from PIL import Image, ImageDraw, ImageFont
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import Camera, Rendering
 from octoprint_octolapse.snapshot import SnapshotMetadata
+
 
 def is_rendering_template_valid(template, options):
     # make sure we have all the replacements we need
@@ -82,6 +82,43 @@ def is_overlay_text_template_valid(template, options):
 
     return True, ""
 
+
+def preview_overlay(rendering_profile):
+    # Create an image with background color inverse to the text color.
+    image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color))
+
+    font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
+    d = ImageDraw.Draw(image)
+
+    def draw_center(t, dx=0, dy=0):
+        """
+        Draws the text centered in the image, offsets by (dx, dy).
+        :param t:
+        :param dx:
+        :param dy:
+        :return:
+        """
+        iw, ih = image.size
+        tw, th = d.textsize(t, font=font)
+        d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
+               fill=tuple(rendering_profile.overlay_text_color), font=font)
+
+    draw_center("Preview", dy=-20)
+    draw_center("Click to refresh", dy=20)
+
+    format_vars = {'snapshot_number': 1234,
+                   'file_name': 'image.jpg',
+                   'time_taken': time.time(),
+                   'current_time': datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
+                   'time_elapsed': str(timedelta(seconds=round(9001)))}
+    TimelapseRenderJob.add_overlay(image,
+                                   text_template=rendering_profile.overlay_text_template,
+                                   format_vars=format_vars,
+                                   font_path=rendering_profile.overlay_font_path,
+                                   font_size=rendering_profile.overlay_font_size,
+                                   overlay_location=rendering_profile.overlay_text_pos,
+                                   text_color=rendering_profile.overlay_text_color)
+    return image
 
 class RenderJobInfo(object):
     def __init__(self, timelapse_job_info, data_directory, current_camera, print_state):
@@ -585,7 +622,8 @@ class TimelapseRenderJob(object):
 
         self._debug().log_render_start("Preprocessing success!")
 
-    def add_overlay(self, image, text_template, format_vars, font_path, font_size, overlay_location,
+    @staticmethod
+    def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location,
                     text_color):
         """Adds an overlay to an image with the given parameters. The overlay is added directly to the image, mutating it.
         :param image: A Pillow image.
@@ -596,7 +634,7 @@ class TimelapseRenderJob(object):
                 raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
             font = ImageFont.truetype(font_path, size=font_size)
             d = ImageDraw.Draw(image)
-            text = self._rendering.overlay_text_template.format(**format_vars)
+            text = text_template.format(**format_vars)
             d.text(xy=tuple(overlay_location), text=text, fill=tuple(text_color), font=font)
 
     def _apply_pre_post_roll(self, image_dir):

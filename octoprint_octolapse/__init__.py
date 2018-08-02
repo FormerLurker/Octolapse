@@ -24,10 +24,12 @@
 
 from __future__ import absolute_import
 
+import base64
 import json
 import os
 import shutil
 from distutils.version import LooseVersion
+from io import BytesIO
 
 import flask
 import octoprint.plugin
@@ -42,7 +44,7 @@ import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
-from octoprint_octolapse.render import RenderingCallbackArgs
+from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, \
     DebugProfile
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
@@ -375,6 +377,22 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def get_available_fonts(self):
         font_list = utility.get_system_fonts()
         return json.dumps(font_list), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
+    def preview_overlay(self):
+        # Render a preview image.
+        profile = Rendering()
+        profile.update(flask.request.form)
+        preview_image = render.preview_overlay(profile)
+
+        # Use a buffer to base64 encode the image.
+        img_io = BytesIO()
+        preview_image.save(img_io, 'JPEG')
+        img_io.seek(0)
+        base64_encoded_image = base64.b64encode(img_io.getvalue())
+
+        # Return a response. We have to return JSON because jQuery only knows how to parse JSON.
+        return json.dumps({'image': base64_encoded_image}), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
     @restricted_access
