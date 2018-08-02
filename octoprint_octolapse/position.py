@@ -1189,9 +1189,9 @@ class Position(object):
                         # if a priming height is configured, see if we've extruded below the  height
                         if pos.LastExtrusionHeight < self.Printer.priming_height:
                             pos.IsPrimed = True
-                        else:
-                            # if we have no priming height set, just set IsPrimed = true.
-                            pos.IsPrimed = True
+                    else:
+                        # if we have no priming height set, just set IsPrimed = true.
+                        pos.IsPrimed = True
 
                 # make sure we are primed before calculating height/layers
                 if pos.IsPrimed:

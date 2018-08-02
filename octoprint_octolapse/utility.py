@@ -489,7 +489,11 @@ def get_system_fonts():
         return subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
     elif sys.platform == "win32" or sys.platform == "cygwin":
         # Windows.
-        return [os.path.join(os.environ['WINDIR'], f) for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts"))]
+        fonts = []
+        for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts")):
+            if f.endswith(".ttf"):
+                fonts.append(os.path.join(os.environ['WINDIR'], f))
+        return fonts
     else:
         raise NotImplementedError('Unsupported operating system.')
 
