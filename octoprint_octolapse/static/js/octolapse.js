@@ -428,6 +428,7 @@ $(function () {
         self.navbar_enabled = ko.observable(false);
         self.show_navbar_when_not_printing = ko.observable(false);
         self.show_real_snapshot_time = ko.observable(false);
+        self.cancel_print_on_startup_error = ko.observable(true);
 
         self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
@@ -594,6 +595,12 @@ $(function () {
                 self.show_real_snapshot_time(settings.show_real_snapshot_time());
             else
                 self.show_real_snapshot_time(settings.show_real_snapshot_time)
+
+            if (ko.isObservable(settings.cancel_print_on_startup_error))
+                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
+            else
+                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error)
+
 
 
         };

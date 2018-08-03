@@ -1806,6 +1806,7 @@ class OctolapseSettings(object):
         self.show_trigger_state_changes = False
         self.current_printer_profile_guid = None
         self.show_real_snapshot_time = False
+        self.cancel_print_on_startup_error = True
         self.printers = {}
 
         stabilization = self.DefaultStabilization
@@ -1932,6 +1933,10 @@ class OctolapseSettings(object):
         if has_key(changes, "show_real_snapshot_time"):
             self.show_real_snapshot_time = bool(
                 get_value(changes, "show_real_snapshot_time", self.show_real_snapshot_time))
+        if has_key(changes, "cancel_print_on_startup_error"):
+            self.cancel_print_on_startup_error = bool(
+                get_value(changes, "cancel_print_on_startup_error", self.cancel_print_on_startup_error))
+
 
         if has_key(changes, "printers"):
             self.printers = {}
@@ -2072,6 +2077,9 @@ class OctolapseSettings(object):
             ),
             "show_real_snapshot_time": utility.get_bool(
                 self.show_real_snapshot_time, defaults.show_real_snapshot_time
+            ),
+            "cancel_print_on_startup_error": utility.get_bool(
+                self.cancel_print_on_startup_error, defaults.cancel_print_on_startup_error
             ),
             "platform": sys.platform,
             'e_axis_default_mode_options': [
@@ -2224,7 +2232,8 @@ class OctolapseSettings(object):
             'show_position_changes': self.show_position_changes,
             'show_extruder_state_changes': self.show_extruder_state_changes,
             'show_trigger_state_changes': self.show_trigger_state_changes,
-            'show_real_snapshot_time': self.show_real_snapshot_time
+            'show_real_snapshot_time': self.show_real_snapshot_time,
+            'cancel_print_on_startup_error': self.cancel_print_on_startup_error
         }
 
     # Add/Update/Remove/set current profile

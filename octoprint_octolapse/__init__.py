@@ -138,7 +138,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.show_extruder_state_changes = request_values["show_extruder_state_changes"]
         self.Settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
         self.Settings.show_real_snapshot_time = request_values["show_real_snapshot_time"]
-
+        self.Settings.cancel_print_on_startup_error = request_values["cancel_print_on_startup_error"]
         # save the updated settings to a file.
         self.save_settings()
 
@@ -823,10 +823,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         printer_data = self._printer.get_current_data()
         current_job = printer_data.get("job", None)
         if not current_job:
-            message = "An unexpected error occurred:" \
-                      "  Octolapse was unable to acquire job start information from Octoprint." \
+            message = "Octolapse was unable to acquire job start information from Octoprint." \
                       "  Please see octolapse_log for details.  Cancelling Print."
-            self.on_print_cancelled(message, True)
+            self.on_print_start_failed(message)
 
             log_message = "Failed to get current job data on_print_start:" \
                           "  Current printer data: {0}".format(printer_data)
@@ -835,11 +834,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         current_file = current_job.get("file", None)
         if not current_file:
-            message = "An unexpected error occurred:" \
-                      "  Octolapse was unable to acquire file information from the current job." \
-                      "  Please see octolapse_log for details.  Cancelling Print."
+            message = "Octolapse was unable to acquire file information from the current job." \
+                      "  Please see octolapse_log for details."
 
-            self.on_print_cancelled(message, True)
+            self.on_print_start_failed(message)
             log_message = "Failed to get current file data on_print_start:" \
                           "  Current job data: {0}".format(current_job)
             self.Settings.current_debug_profile().log_error(log_message)
@@ -847,10 +845,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         current_origin = current_file.get("origin", "unknown")
         if not current_origin:
-            message = "An unexpected error occurred:" \
-                      "  Octolapse was unable to acquire the current origin information from the current file." \
-                      "  Please see octolapse_log for details.  Cancelling Print."
-            self.on_print_cancelled(message, True)
+            message = "Octolapse was unable to acquire the current origin information from the current file." \
+                      "  Please see octolapse_log for details."
+            self.on_print_start_failed(message)
             log_message = "Failed to get current origin data on_print_start:" \
                 "Current file data: {0}".format(current_file)
 
@@ -859,23 +856,21 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         if current_origin != "local":
             message = "Octolapse only works when printing locally.  The current source ({0}) is incompatible.  " \
-                      "Disable octolapse if you want to print from the SD card." \
-                      "  Cancelling print".format(current_origin)
-            self.on_print_cancelled(message, True)
-            log_message = "Unable to start Octolapse when printing from {0}.  Cancelling print.".format(current_origin)
+                      "Disable octolapse if you want to print from the SD card.".format(current_origin)
+            self.on_print_start_failed(message)
+            log_message = "Unable to start Octolapse when printing from {0}.".format(current_origin)
             self.Settings.current_debug_profile().log_warning(log_message)
             return
 
         if self.Timelapse.State != TimelapseState.Initializing:
             message = "Unable to start the timelapse when not in the Initializing state. StateId: " \
                       "{0}".format(self.Timelapse.State)
-            self.on_print_cancelled(message, True)
+            self.on_print_start_failed(message)
             return
 
         result = self.start_timelapse()
         if not result["success"]:
-            message = "Unable to start the timelapse.  Canceling print.  {0}: {1}".format("Error", result["error"])
-            self.on_print_cancelled(message, result["error"])
+            self.on_print_start_failed(result["error"])
             return
 
         if result["warning"]:
@@ -892,17 +887,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             ):
                 self.apply_camera_settings(current_camera)
 
-    def on_print_cancelled(self, message, is_error):
-        self._printer.cancel_print()
-        self.Settings.current_debug_profile().log_print_state_change(message)
-        if is_error:
-            self.send_popup_error(message)
+    def on_print_start_failed(self, error):
+        if(self.Settings.cancel_print_on_startup_error):
+            message = "Unable to start the timelapse.  Cancelling print.  Error:  {0}".format(error)
+            self._printer.cancel_print()
         else:
-            self.send_popup_message(message)
+            message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
 
-    def on_print_start_failed(self, message):
+        self.Settings.current_debug_profile().log_print_state_change(message)
         self.send_popup_error(message)
-        self._printer.cancel_print()
+
 
     def start_timelapse(self):
 

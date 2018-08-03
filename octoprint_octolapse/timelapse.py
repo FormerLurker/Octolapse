@@ -466,7 +466,6 @@ class Timelapse(object):
                 TimelapseState.WaitingForTrigger, TimelapseState.WaitingToRender, TimelapseState.WaitingToEndTimelapse
                 , TimelapseState.Cancelling
             ]:
-
                 if not self._render_timelapse(self.PrintEndStatus):
                     if self.OnRenderErrorCallback is not None:
                         error = RenderError('timelapse_start', "The render_start function returned false")
@@ -476,6 +475,7 @@ class Timelapse(object):
                         render_end_callback_thread.daemon = True
                         render_end_callback_thread.start()
                 self._reset()
+
             if self.State != TimelapseState.Idle:
                 self.State = TimelapseState.WaitingToEndTimelapse
 
@@ -1100,6 +1100,7 @@ class TimelapseState(object):
     WaitingToRender = 6
     WaitingToEndTimelapse = 7
     Cancelling = 8
+
 
 
 

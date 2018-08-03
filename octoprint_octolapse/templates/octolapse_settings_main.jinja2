@@ -37,6 +37,13 @@
       <span data-bind="text: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'"></span>
     </div>
     <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'}">
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.cancel_print_on_startup_error()  ), 'fa-close': (!Octolapse.Globals.cancel_print_on_startup_error() ) },style: { color: (Octolapse.Globals.cancel_print_on_startup_error()  ) ? 'limegreen' : '' }"></span>
+      </span>
+      <span data-bind="text: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'"></span>
+    </div>
+
+    <div>
       <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.'  : 'Auto snapshot reload is disabled'}">
 
         <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></span>
@@ -117,6 +124,21 @@
               </div>
             </div>
             <div data-bind="visible:is_octolapse_enabled">
+              <hr/>
+                <div>
+                <h4>Octolapse Startup</h4>
+                <p>By default Octolapse will cancel your print immediately if any startup problems are detected.  Disable this opotion if you would like the print to continue even if obvious problems with Octolapse are detected.</p>
+                  <p>Note:  An error message will still be displayed if this option is disabled.  Disable Octolapse to prevent this</p>
+              </div>
+              <div class="control-group">
+                  <label class="control-label">Cancel if startup errors are detected</label>
+                <div class="controls">
+                  <label class="checkbox">
+                    <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
+                  </label>
+                </div>
+              </div>
+
               <hr/>
               <div>
                 <h4>Snapshot Time</h4>
