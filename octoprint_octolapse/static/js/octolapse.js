@@ -178,12 +178,41 @@ $(function () {
         new PNotify(options);
     };
 
+
+
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, key) {
         if (key in Octolapse.Popups) {
             Octolapse.Popups[key].remove();
         }
         Octolapse.Popups[key] = new PNotify(options);
+    };
+
+    Octolapse.ConfirmDialogs = {};
+    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel)
+    {
+        if (key in Octolapse.ConfirmDialogs) {
+            Octolapse.ConfirmDialogs[key].remove();
+        }
+        Octolapse.ConfirmDialogs[key] = (
+            new PNotify({
+                title: title,
+                text: text,
+                icon: 'fa fa-question',
+                hide: false,
+                addclass: "octolapse",
+                confirm: {
+                    confirm: true
+                },
+                buttons: {
+                    closer: false,
+                    sticker: false
+                },
+                history: {
+                    history: false
+                }
+            })
+        ).get().on('pnotify.confirm', onConfirm).on('pnotify.cancel', onCancel);
     };
 
     Octolapse.ToggleElement = function (element) {
@@ -605,6 +634,7 @@ $(function () {
 
 
         };
+
         // Handle Plugin Messages from Server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "octolapse") {
@@ -616,15 +646,13 @@ $(function () {
                         // Was this from us?
                         if (self.client_id !== data.client_id && self.is_admin())
                         {
-                            if (!Octolapse.IsShowingSettingsChangedPopup)
-                            {
-                                Octolapse.IsShowingSettingsChangedPopup = true;
-                                if (confirm("A settings change was detected from another client.  Reload settings?"))
-                                {
+                            Octolapse.showConfirmDialog(
+                                "reload-settings",
+                                "Reload Settings",
+                                "A settings change was detected from another client.  Reload settings?",
+                                function(){
                                     Octolapse.Settings.loadSettings();
-                                }
-                                Octolapse.IsShowingSettingsChangedPopup = false;
-                            }
+                                });
                         }
                         self.updateState(data);
                     }

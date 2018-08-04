@@ -41,8 +41,6 @@ $(function() {
 
         // Specialty function to return true if at least one camera is enabled
         self.hasOneEnabled = ko.pureComputed(function () {
-            // The button is off and the timelapse is off
-            console.log("Calling has one enabled")
             for (var i = 0; i < self.profiles().length; i++)
             {
                 if(self.profiles()[i].enabled())
@@ -255,26 +253,7 @@ $(function() {
         */
         ko.applyBindings(self, document.getElementById(self.bindingElementId));
     };
-    Octolapse.restoreDefaultSettings = function () {
-        if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
-            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            $.ajax({
-                url: "./plugin/octolapse/restoreDefaults",
-                type: "POST",
-                contentType: "application/json",
-                success: function () {
-                    //load settings from the provided data
-                    alert("The default settings have been restored.  Please reload your browser window to load the new default settings.");
 
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
-                }
-            });
-        }
-
-
-    }
 });
 
 

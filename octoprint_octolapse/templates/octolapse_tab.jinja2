@@ -70,7 +70,6 @@
                                   <i class="fa fa-cog fa-stack-1x fa-inverse"
                                      data-bind="style: { color: hasConfigIssues() ? 'red': 'greenyellow' }"></i>
                                 </span>
-
                                 <span class="fa-stack fa-2x"
                                       data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
                                   <i class="fa fa-square fa-stack-2x"
@@ -79,14 +78,12 @@
                                      data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
                                 </span>
                                 <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: PositionState.hasPositionStateErrors() ? 'Waiting to initialize' : 'Octolapse is initialized and ready to go!'}">
+                                      data-bind="attr: { title: getPositionStateIconTitle}">
                                   <i class="fa fa-square fa-stack-2x"
                                      data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
                                   <i class="fa fa-exclamation-triangle fa-stack-1x fa-inverse"
-                                     data-bind="style: { color: !is_timelapse_active() ? '' : (PositionState.hasPositionStateErrors() ? 'red': 'greenyellow'), css: { 'fa-exclamation-triangle': PositionState.hasPositionStateErrors(), 'fa-check': !PositionState.hasPositionStateErrors() } }"></i>
+                                     data-bind="style: { color: getPositionStateIconColor, css: { 'fa-exclamation-triangle': PositionState.hasPositionStateErrors(), 'fa-check': !PositionState.hasPositionStateErrors() } }"></i>
                                 </span>
-
-
                                 <span class="fa-stack fa-2x"
                                       data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot' : 'Snapshot is idle'}">
                                   <i class="fa fa-square fa-stack-2x"

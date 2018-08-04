@@ -121,8 +121,10 @@ def preview_overlay(rendering_profile):
     return image
 
 class RenderJobInfo(object):
-    def __init__(self, timelapse_job_info, data_directory, current_camera, print_state):
+    def __init__(self, timelapse_job_info, data_directory, current_camera, print_state, job_number, total_jobs):
         self.job_id = timelapse_job_info.JobGuid
+        self.job_number = job_number
+        self.total_jobs = total_jobs
         self.camera = current_camera
         self.job_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid)
         self.snapshot_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
@@ -223,9 +225,17 @@ class RenderingProcessor(object):
         # we need to loop through all of the cameras and fire off a rendering process, one after the next, for all of
         # the cameras....
         job_infos = []
+
         for current_camera in self.cameras:
             job_infos.append(
-                RenderJobInfo(self.timelapse_job_info, self.data_directory, current_camera, print_state)
+                RenderJobInfo(
+                    self.timelapse_job_info,
+                    self.data_directory,
+                    current_camera,
+                    print_state,
+                    len(job_infos) + 1,
+                    len(self.cameras)
+                )
             )
 
         rendering_thread = threading.Thread(
@@ -425,7 +435,9 @@ class TimelapseRenderJob(object):
             self._synchronized_filename,
             self._synchronize,
             self._imageCount,
-            self._secondsAddedToPrint
+            self._secondsAddedToPrint,
+            self.render_job_info.job_number,
+            self.render_job_info.total_jobs
         )
 
     def _on_start(self):
@@ -789,6 +801,8 @@ class RenderingCallbackArgs(object):
         synchronize,
         snapshot_count,
         seconds_added_to_print,
+        job_number,
+        total_jobs
     ):
         self.Reason = reason
         self.ReturnCode = return_code
@@ -801,6 +815,8 @@ class RenderingCallbackArgs(object):
         self.Synchronize = synchronize
         self.SnapshotCount = snapshot_count
         self.SecondsAddedToPrint = seconds_added_to_print
+        self.JobNumber = job_number
+        self.TotalJobs = total_jobs
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

@@ -384,15 +384,15 @@ class Timelapse(object):
             position_state_dict = None
             extruder_dict = None
             trigger_state = None
+
+
             if self.Settings is not None:
 
-                if self.Settings.show_position_changes and self.Position is not None:
+                if self.Position is not None:
                     position_dict = self.Position.to_position_dict()
-                if self.Settings.show_position_state_changes and self.Position is not None:
                     position_state_dict = self.Position.to_state_dict()
-                if self.Settings.show_extruder_state_changes and self.Position is not None:
                     extruder_dict = self.Position.Extruder.to_dict()
-                if self.Settings.show_trigger_state_changes and self.Triggers is not None:
+                if self.Triggers is not None:
                     trigger_state = {
                         "Name": self.Triggers.Name,
                         "Triggers": self.Triggers.state_to_list()

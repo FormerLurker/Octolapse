@@ -201,7 +201,7 @@ $(function () {
 
             self.updateLatestSnapshotThumbnail = function (force) {
                 force = force || false;
-                console.log("Trying to update the latest snapshot thumbnail.");
+                //console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
                     if (!self.IsTabShowing) {
                         //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
@@ -359,7 +359,7 @@ $(function () {
                         return
                     }
                 }
-                console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
+                //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
                 self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
 
             };
@@ -393,8 +393,25 @@ $(function () {
                 }
             };
 
+            self.getPositionStateIconTitle =  ko.pureComputed(function () {
+                if(!self.is_timelapse_active())
+                    return 'Waiting for octolapse to start';
+                if(!self.PositionState.IsInitialized())
+                    return 'Waiting for update from server.  You may have to turn on the "Position State Info Panel" from the "Current Settings" below to receive an update.';
+                if( self.PositionState.hasPositionStateErrors())
+                    return 'Waiting to initialize';
+                return 'Octolapse is initialized and ready to go!';
+            }, self);
 
-
+            self.getPositionStateIconColor =  ko.pureComputed(function () {
+                if(!self.is_timelapse_active())
+                    return '';
+                if(!self.PositionState.IsInitialized())
+                    return 'orange';
+                if( self.PositionState.hasPositionStateErrors())
+                    return 'red'
+                return 'greenyellow';
+            }, self);
 
 
             self.getStatusText = ko.pureComputed(function () {
@@ -455,6 +472,7 @@ $(function () {
 
             self.onTimelapseStart = function () {
                 self.TriggerState.removeAll();
+                self.PositionState.IsInitialized(false);
             };
 
             self.onTimelapseStop = function () {
@@ -617,8 +635,8 @@ $(function () {
 
                 console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
                 Octolapse.Status.current_camera_guid(guid);
-                self.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
-                self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
+                self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
+                self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
                 self.updateLatestSnapshotThumbnail(self.current_camera_guid());
                 self.updateLatestSnapshotImage(self.current_camera_guid());
             }
@@ -664,6 +682,7 @@ $(function () {
             self.HasPositionError = ko.observable(false);
             self.PositionError = ko.observable(false);
             self.IsMetric = ko.observable(null);
+            self.IsInitialized = ko.observable(false);
 
             self.update = function (state) {
                 this.GCode(state.GCode);
@@ -683,6 +702,7 @@ $(function () {
                 this.HasPositionError(state.HasPositionError);
                 this.PositionError(state.PositionError);
                 this.IsMetric(state.IsMetric);
+                this.IsInitialized(true);
             };
 
             self.getCheckedIconClass = function (value, trueClass, falseClass, nullClass) {
@@ -713,7 +733,8 @@ $(function () {
             };
 
             self.hasPositionStateErrors = ko.pureComputed(function(){
-                if (Octolapse.Status.is_timelapse_active())
+                if (Octolapse.Status.is_timelapse_active() && self.IsInitialized())
+
                     if (!(self.XHomed() && self.YHomed() && self.ZHomed())
                         || self.IsRelative() == null
                         || self.IsExtruderRelative() == null

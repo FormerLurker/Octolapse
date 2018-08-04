@@ -1111,6 +1111,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "Status": self.get_status_dict(),
         }
         data.update(self.Timelapse.to_state_dict())
+
+
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_timelapse_complete(self):
@@ -1281,8 +1283,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # later.
         self.IsRenderingSynchronized = False
         # Generate a notification message
-        msg = "Octolapse captured {0} frames in {1} seconds, and has started rendering your timelapse file.".format(
-            payload.SnapshotCount, utility.seconds_to_hhmmss(payload.SecondsAddedToPrint))
+        job_message = ""
+        if payload.TotalJobs > 1:
+            job_message = "Rendering {0} of {1} - ".format(payload.JobNumber, payload.TotalJobs)
+
+        if payload.SecondsAddedToPrint > 0:
+            msg = "Octolapse captured {0} frames in {1} seconds and has started rendering your timelapse file.".format(
+                payload.SnapshotCount, utility.seconds_to_hhmmss(payload.SecondsAddedToPrint))
+        else:
+            msg = "Octolapse captured {0} frames and has started rendering your timelapse file.".format(
+                payload.SnapshotCount)
 
         if payload.Synchronize:
             will_sync_message = "This timelapse will synchronized with the default timelapse module, and will be " \
@@ -1293,7 +1303,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                                 "default timelapse module.  You will be able to find on your octoprint server" \
                                 " here:<br/>{0}".format(payload.get_rendering_path())
 
-        message = "{0}{1}".format(msg, will_sync_message)
+        message = "{0}{1}{2}".format(job_message, msg, will_sync_message)
         # send a message to the client
         self.send_render_start_message(message)
 

@@ -261,26 +261,30 @@ $(function () {
             reload the default settings
         */
         self.restoreDefaultSettings = function () {
-            if (confirm("You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?")) {
-                // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-                var data = {"client_id": Octolapse.Globals.client_id};
-                $.ajax({
-                    url: "./plugin/octolapse/restoreDefaults",
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (newSettings) {
+            Octolapse.showConfirmDialog(
+                "restore-defaults",
+                "Restore Default Settings",
+                "You will lose ALL of your octolapse settings by restoring the defaults!  Are you SURE?",
+                function(){
+                    var data = {"client_id": Octolapse.Globals.client_id};
+                    $.ajax({
+                        url: "./plugin/octolapse/restoreDefaults",
+                        type: "POST",
+                        data: JSON.stringify(data),
+                        contentType: "application/json",
+                        dataType: "json",
+                        success: function (newSettings) {
 
-                        self.updateSettings(newSettings);
-                        Octolapse.Globals.update(newSettings);
-                        alert("The default settings have been restored.  It is recommended that you restart the OctoPrint server now.");
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
-                    }
-                });
-            }
+                            self.updateSettings(newSettings);
+                            Octolapse.Globals.update(newSettings);
+                            alert("The default settings have been restored.  It is recommended that you restart the OctoPrint server now.");
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        }
+                    });
+                }
+            );
         };
         /*
             load all settings default settings
@@ -298,7 +302,7 @@ $(function () {
                     //console.log("Settings have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    alert("Octolapse was unable to load the current settings.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
 
