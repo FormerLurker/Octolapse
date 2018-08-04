@@ -28,15 +28,28 @@ from octoprint_octolapse.extruder import Extruder
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.position import Position
+from octoprint_octolapse.trigger import Triggers
+from octoprint_octolapse.gcode_parser import ParsedCommand, Commands
+from octoprint_octolapse.settings import Printer
+from octoprint_octolapse.test.testing_utilities import get_printer_profile
 
 
 class TestSnapshotGcode(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
+        self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
+        printer = get_printer_profile()
+        self.Settings.printers.update({printer["guid"]: Printer(printer=printer)})
+        self.Settings.current_printer_profile_guid = printer["guid"]
         self.Extruder = Extruder(self.Settings)
+        self.Position = Position(self.Settings, self.OctoprintPrinterProfile, False)
+        # set starting position
+
+
     def tearDown(self):
         del self.Settings
         del self.Extruder
+
 
     @staticmethod
     def create_octoprint_printer_profile():
@@ -264,37 +277,32 @@ class TestSnapshotGcode(unittest.TestCase):
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True
 
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-
-        self, position, trigger, gcode, cmd, parameters, triggering_command_position, triggering_extruder_position
-
+        self.Position.update(Commands.parse("G90"))
+        self.Position.update(Commands.parse("M83"))
+        self.Position.update(Commands.parse("G28"))
+        self.Position.update(Commands.parse("G0 X95 Y95 Z0.2 F3600"))
+        parsed_command = Commands.parse("G0 X100 Y100")
+        self.Position.update(parsed_command)
         snapshot_gcode = snapshot_gcode_generator.create_snapshot_gcode(
-            0, 0, 0, 3600, False, True, self.Extruder, 0.5, "SavedCommand")
-        # verify the created gcode
-        self.assertEqual(snapshot_gcode.GcodeCommands[0], "G91")
-        self.assertEqual(snapshot_gcode.GcodeCommands[1], "G1 F6000")
-        self.assertEqual(snapshot_gcode.GcodeCommands[2], "G1 Z0.500")
-        self.assertEqual(snapshot_gcode.GcodeCommands[3], "G90")
-        self.assertEqual(snapshot_gcode.GcodeCommands[4], "G1 F6000")
-        self.assertEqual(snapshot_gcode.GcodeCommands[5], "G1 X10.000 Y20.000")
-        self.assertEqual(snapshot_gcode.GcodeCommands[6], "M400")
-        self.assertEqual(snapshot_gcode.GcodeCommands[7], "M114")
-        self.assertEqual(snapshot_gcode.GcodeCommands[8], "G1 X0.000 Y0.000")
-        self.assertEqual(snapshot_gcode.GcodeCommands[9], "G91")
-        self.assertEqual(snapshot_gcode.GcodeCommands[10], "G1 F6000")
-        self.assertEqual(snapshot_gcode.GcodeCommands[11], "G1 Z-0.500")
-        self.assertEqual(snapshot_gcode.GcodeCommands[12], "G90")
-        self.assertEqual(snapshot_gcode.GcodeCommands[13], "G1 F3600")
-        self.assertEqual(snapshot_gcode.GcodeCommands[14], "SAVEDCOMMAND")
-        self.assertEqual(snapshot_gcode.GcodeCommands[15], "M400")
-        self.assertEqual(snapshot_gcode.GcodeCommands[16], "M114")
-        # verify the indexes of the generated gcode
-        self.assertEqual(snapshot_gcode.SnapshotIndex, 7)
-        self.assertEqual(snapshot_gcode.end_index(), 16)
+            self.Position, None, parsed_command)
+        gcode_commands = snapshot_gcode.snapshot_gcode()
+
+        # verify the created gcodegcode_commands
+        self.assertEqual(gcode_commands[0], "G1 E-4.00000 F4800")
+        self.assertEqual(gcode_commands[1], "G1 X10.000 Y20.000 F10800")
+        self.assertEqual(gcode_commands[2], "G1 X100.000 Y100.000")
+        self.assertEqual(gcode_commands[3], "G1 E4.00000 F3000")
+        self.assertEqual(gcode_commands[4], "G1 F3600")
+        self.assertEqual(gcode_commands[5], parsed_command.gcode)
+
         # verify the return coordinates
-        self.assertEqual(snapshot_gcode.ReturnX, 0)
-        self.assertEqual(snapshot_gcode.ReturnY, 0)
-        self.assertEqual(snapshot_gcode.ReturnZ, 0)
+        self.assertEqual(snapshot_gcode.ReturnX, 100)
+        self.assertEqual(snapshot_gcode.ReturnY, 100)
+        self.assertEqual(snapshot_gcode.ReturnZ, 0.2)
+
+        self.assertEqual(snapshot_gcode.X, 10)
+        self.assertEqual(snapshot_gcode.Y, 20)
+        self.assertEqual(snapshot_gcode.Z, None)
 
     def test_GetSnapshotGcode_RelativePath_RelativeCoordinates_ExtruderAbsolute_ZHop_Retraction(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
