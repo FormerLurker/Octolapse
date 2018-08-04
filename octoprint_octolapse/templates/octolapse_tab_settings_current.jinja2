@@ -24,7 +24,7 @@
 <script type="text/html" id="octolapse-settings-current">
     <a href="#"
        data-bind="css: {'muted': !hasConfigIssues(), 'text-error': hasConfigIssues()}, octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
-        <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"></i>Current Settings <i class="fa fa-caret-down"></i>
+        <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Settings <i class="fa fa-caret-down"></i>
     </a>
     <div id="octolapse_status_settings_current_panel">
 
@@ -50,8 +50,10 @@
                                value: Octolapse.Status.current_printer_profile_guid,
                                event: {change: Octolapse.Status.defaultPrinterChanged},
                                optionsCaption: 'Please select...'">
-
                     </select>
+                    <div data-bind="visible: !hasPrinterSelected()" class="text-error">
+                        <p>No printer is selected.</p>
+                    </div>
                 </td>
                 <td>
                     <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null, click: openCurrentPrinterProfile">

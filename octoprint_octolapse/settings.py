@@ -1021,7 +1021,7 @@ class Camera(object):
     def __init__(self, camera=None, guid=None, name="Default Camera"):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
-        self.enabled = False
+        self.enabled = True
         self.description = ""
         self.camera_type = "webcam"
         self.external_camera_snapshot_script = ""

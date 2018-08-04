@@ -31,6 +31,7 @@ $(function () {
 
     Octolapse.toggleContentFunction = function ($elm, options, updateObservable)
     {
+
         if(options.toggle_observable){
             //console.log("Toggling element.");
             if(updateObservable) {
@@ -103,14 +104,14 @@ $(function () {
                         }
                     }, valueAccessor());
 
-                    if(options.toggle_observable)
-                        Octolapse.toggleContentFunction($elm,options, false);
+                    if(options.toggle_observable) {
+                        Octolapse.toggleContentFunction($elm, options, false);
+                    }
 
 
                 $elm.on("click", function(e) {
                     e.preventDefault();
                     Octolapse.toggleContentFunction($elm,options, true);
-
 
                 });
             }

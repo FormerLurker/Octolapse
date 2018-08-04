@@ -64,12 +64,29 @@
                         <div class="octolapse_status">
                             <div>
                                 <span class="fa-stack fa-2x"
+                                      data-bind="attr: { title: hasConfigIssues() ? 'Configuration issues detected' : 'No configuration issues detected'}">
+                                  <i class="fa fa-square fa-stack-2x"
+                                     data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+                                  <i class="fa fa-cog fa-stack-1x fa-inverse"
+                                     data-bind="style: { color: hasConfigIssues() ? 'red': 'greenyellow' }"></i>
+                                </span>
+
+                                <span class="fa-stack fa-2x"
                                       data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
                                   <i class="fa fa-square fa-stack-2x"
                                      data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
                                   <i class="fa fa-play-circle fa-stack-1x fa-inverse"
                                      data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
                                 </span>
+                                <span class="fa-stack fa-2x"
+                                      data-bind="attr: { title: PositionState.hasPositionStateErrors() ? 'Waiting to initialize' : 'Octolapse is initialized and ready to go!'}">
+                                  <i class="fa fa-square fa-stack-2x"
+                                     data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+                                  <i class="fa fa-exclamation-triangle fa-stack-1x fa-inverse"
+                                     data-bind="style: { color: !is_timelapse_active() ? '' : (PositionState.hasPositionStateErrors() ? 'red': 'greenyellow'), css: { 'fa-exclamation-triangle': PositionState.hasPositionStateErrors(), 'fa-check': !PositionState.hasPositionStateErrors() } }"></i>
+                                </span>
+
+
                                 <span class="fa-stack fa-2x"
                                       data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot' : 'Snapshot is idle'}">
                                   <i class="fa fa-square fa-stack-2x"
@@ -182,7 +199,7 @@
         </div>
         <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
         </div>
-        <div data-bind="visible: Octolapse.Globals.show_position_state_changes || (Octolapse.Status.is_timelapse_active() && self.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
+        <div data-bind="visible: Octolapse.Globals.show_position_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
         </div>
         <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
         </div>

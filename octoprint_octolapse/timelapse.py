@@ -877,7 +877,7 @@ class Timelapse(object):
             # Notify any callbacks
             if self.OnStateChangedCallback is not None:
 
-                    def send_change_message():
+                    def send_change_message(has_position_state_error):
                         trigger_change_list = None
                         position_change_dict = None
                         position_state_change_dict = None
@@ -889,7 +889,13 @@ class Timelapse(object):
                             trigger_change_list = self.Triggers.state_to_list()
                         if self.Settings.show_position_changes:
                             position_change_dict = self.Position.to_position_dict()
-                        if self.Settings.show_position_state_changes or self.Position.has_position_state_errors():
+
+                        update_position_state = (
+                            self.Settings.show_position_state_changes
+                            or has_position_state_error
+                        )
+
+                        if update_position_state:
                             position_state_change_dict = self.Position.to_state_dict()
                         if self.Settings.show_extruder_state_changes:
                             extruder_change_dict = self.Position.Extruder.to_dict()
@@ -922,10 +928,22 @@ class Timelapse(object):
                             self.OnStateChangedCallback(change_dict)
                             self.LastStateChangeMessageTime = time.time()
 
+                    current_position_errors = self.Position.has_position_state_errors(0)
+                    previous_position_errors = self.Position.has_position_state_errors(1)
+                    position_state_error_update = (
+                        current_position_errors
+                        or (current_position_errors != previous_position_errors)
+                    )
+
+                    if position_state_error_update:
+                        delay_seconds = 0
+
                     # Send a delayed message
                     self.StateChangeMessageThread = threading.Timer(
                         delay_seconds,
-                        send_change_message
+                        send_change_message,
+                        [position_state_error_update]
+
                     )
                     self.StateChangeMessageThread.daemon = True
                     self.StateChangeMessageThread.start()

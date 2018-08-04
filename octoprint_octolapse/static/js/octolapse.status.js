@@ -140,10 +140,10 @@ $(function () {
                 return ! (Octolapse.Status.current_printer_profile_guid() == null || Octolapse.Status.current_printer_profile_guid()=="");
             },this);
 
-            self.hasConfigIssues = ko.pureComputed(function(){
-                return !self.hasOneCameraEnabled() || !self.hasPrinterSelected();
+            self.hasConfigIssues = ko.computed(function(){
+                var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected();
+                return hasConfigIssues;
             },this);
-
 
 
             self.onTabChange = function (current, previous) {
@@ -451,8 +451,6 @@ $(function () {
                 // Only update the current camera guid if there is no value
                 if(self.current_camera_guid() == null)
                     self.current_camera_guid(settings.profiles.current_camera_profile_guid);
-
-
             };
 
             self.onTimelapseStart = function () {

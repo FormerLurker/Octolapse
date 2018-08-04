@@ -1,11 +1,5 @@
 
 <script type="text/html" id="octolapse-tab-settings-current-cameras">
-    <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
-        <span class="text-error">You must add at least one camera profile to use octolapse.  </span>
-        <a style="float:right;" href="#" data-bind="visible: Octolapse.Globals.is_admin(), click: function() { Octolapse.Status.addNewCameraProfile(); } ">
-            <i class="fa fa-plus fa-2x"></i>
-        </a>
-    </div>
 
     <div data-bind="foreach: Octolapse.Status.cameras_sorted">
         <div style="padding: 6px 3px;">
@@ -22,6 +16,15 @@
                     <i class="fa fa-gear fa-2x"></i>
                 </a>
         </div>
+    </div>
+    <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
+        <span class="text-error">You must add at least one camera profile.  </span>
+        <a style="float:right;" href="#" data-bind="visible: Octolapse.Globals.is_admin(), click: function() { Octolapse.Status.addNewCameraProfile(); } ">
+            <i class="fa fa-plus fa-2x"></i>
+        </a>
+    </div>
+    <div data-bind="visible: Octolapse.Status.cameras_sorted().length > 0 && !Octolapse.Status.hasOneCameraEnabled()" class="text-error">
+        <p>You must enable at least one camera profile.</p>
     </div>
 
 </script>
