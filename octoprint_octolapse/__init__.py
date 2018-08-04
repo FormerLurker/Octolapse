@@ -762,13 +762,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     payload["origin"] != "local"
                 ):
                     self.Timelapse.end_timelapse("FAILED")
-                    self.send_popup_error(
-                        "Octolapse does not work when printing from SD the card.  Disable octolapse if you want to "
-                        "print from the SD card.  Cancelling print")
+                    message = "Octolapse does not work when printing from SD the card."
                     self.Settings.current_debug_profile().log_print_state_change(
                         "Octolapse cannot start the timelapse when printing from SD."
                     )
-                    self._printer.cancel_print()
+                    self.on_print_start_failed(message)
                     return
             if event == Events.PRINTER_STATE_CHANGED:
                 self.send_state_changed_message({"Status": self.get_status_dict()})
@@ -879,7 +877,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
 
-        for current_camera in self.Settings.cameras:
+        for key in self.Settings.cameras:
+            current_camera = self.Settings.cameras[key]
             if (
                 current_camera.enabled and
                 current_camera.camera_type == "webcam"
@@ -888,9 +887,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.apply_camera_settings(current_camera)
 
     def on_print_start_failed(self, error):
-        if(self.Settings.cancel_print_on_startup_error):
+        if self.Settings.cancel_print_on_startup_error:
             message = "Unable to start the timelapse.  Cancelling print.  Error:  {0}".format(error)
-            self._printer.cancel_print()
+            self._printer.cancel_print(tags={'startup-failed'})
         else:
             message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
 
@@ -1355,9 +1354,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # get this for reference.  Eventually I'll have to use it!
         # is the software update set to prerelease?
 
-        if self._settings.settings.get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
+        if self._settings.global_get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
             # If it's a prerelease, look at the channel and configure the proper branch for Octolapse
-            prerelease_channel = self._settings.settings.get(
+            prerelease_channel = self._settings.global_get(
                 ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
             )
             if prerelease_channel == "rc/maintenance":
@@ -1367,7 +1366,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 is_prerelease = True
                 prerelease_channel = "rc/devel"
 
-
         octolapse_info = dict(
             displayName="Octolapse",
             displayVersion=self._plugin_version,
@@ -1376,10 +1374,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             user="FormerLurker",
             repo="Octolapse",
             current=self._plugin_version,
-            branch="master",
+           # branch="master",
             prerelease=is_prerelease,
             pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
             stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
+            release_compare='semantic_version',
             prerelease_branches=[
                 dict(
                     branch="rc/maintenance",

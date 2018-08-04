@@ -182,7 +182,7 @@
         </div>
         <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
         </div>
-        <div data-bind="visible: Octolapse.Globals.show_position_state_changes, template:'position-state-status-template'">
+        <div data-bind="visible: Octolapse.Globals.show_position_state_changes || (Octolapse.Status.is_timelapse_active() && self.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
         </div>
         <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
         </div>

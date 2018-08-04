@@ -532,6 +532,8 @@ class Timelapse(object):
         # a flag indicating that we should suppress the command (prevent it from being sent to the printer)
         suppress_command = False
 
+        #if {'plugin:octolapse', 'startup-failed'} in tags:
+        #    return None,
         self.detect_timelapse_start(command_string, tags)
 
         if not self.is_timelapse_active():

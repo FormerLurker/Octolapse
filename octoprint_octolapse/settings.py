@@ -2304,6 +2304,8 @@ class OctolapseSettings(object):
     def set_current_profile(self, profile_type, guid):
 
         if profile_type == "Printer":
+            if guid == "":
+                guid = None
             self.current_printer_profile_guid = guid
         elif profile_type == "Stabilization":
             self.current_stabilization_profile_guid = guid

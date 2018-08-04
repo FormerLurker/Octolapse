@@ -120,7 +120,31 @@ $(function () {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
                     Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY,newData)
                 });
+
+
             }
+
+            self.hasOneCameraEnabled = ko.pureComputed(function(){
+                var hasConfigIssue = true;
+                for (var i = 0; i < self.profiles().cameras().length; i++)
+                {
+                    if(self.profiles().cameras()[i].enabled)
+                    {
+                        return true
+                    }
+                }
+                return false;
+
+            },this);
+            self.hasPrinterSelected = ko.pureComputed(function(){
+                return ! (Octolapse.Status.current_printer_profile_guid() == null || Octolapse.Status.current_printer_profile_guid()=="");
+            },this);
+
+            self.hasConfigIssues = ko.pureComputed(function(){
+                return !self.hasOneCameraEnabled() || !self.hasPrinterSelected();
+            },this);
+
+
 
             self.onTabChange = function (current, previous) {
                 if (current != null && current === "#tab_plugin_octolapse") {
@@ -369,6 +393,10 @@ $(function () {
                 }
             };
 
+
+
+
+
             self.getStatusText = ko.pureComputed(function () {
                 if (self.is_timelapse_active())
                     return 'Octolapse - Running';
@@ -423,6 +451,8 @@ $(function () {
                 // Only update the current camera guid if there is no value
                 if(self.current_camera_guid() == null)
                     self.current_camera_guid(settings.profiles.current_camera_profile_guid);
+
+
             };
 
             self.onTimelapseStart = function () {
@@ -684,7 +714,7 @@ $(function () {
                 });
             };
 
-            self.hasPositionStateErrors = function(){
+            self.hasPositionStateErrors = ko.pureComputed(function(){
                 if (Octolapse.Status.is_timelapse_active())
                     if (!(self.XHomed() && self.YHomed() && self.ZHomed())
                         || self.IsRelative() == null
@@ -693,7 +723,7 @@ $(function () {
                         || self.HasPositionError())
                         return true;
                 return false;
-            }
+            },self);
             self.getPositionStateSliderColor = ko.pureComputed(function () {
                 // The button is off and the timelapse is off
                 if(self.hasPositionStateErrors())
