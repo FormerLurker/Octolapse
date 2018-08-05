@@ -39,6 +39,12 @@
             </div>
         </div>
         <div class="panel-body text-center">
+            <div class="row-fluid" data-bind="visible: PositionState.hasPositionStateErrors">
+                <div class="span12 text-left">
+                    <span>Waiting for initialization.  If errors remain on this panel after your first layer has printed, there might be a problem with your start gcode.  <a href="https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting">See this troubleshooting page for details.</a></span>
+                </div>
+
+            </div>
             <div class="row-fluid">
                 <div class="span6 octolapse-container">
                     <div class="margin-small">
@@ -92,38 +98,39 @@
                         <div class="span2 octolapse-container">
                             <div class="margin-small">
                                 <div>Extruder</div>
+                                <div class="ol-text-status-1">
+                                    <span data-bind="text:PositionState.getExtruderModeText()"></span>
+                                </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsExtruderRelativeStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
                                     <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass( PositionState.IsExtruderRelative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.IsExtruderRelative(),'greenyellow','greenyellow','red')}"></span>
                                 </span>
-                                <div class="ol-text-status-1">
-                                    <span data-bind="text:PositionState.getExtruderModeText()"></span>
-                                </div>
+
                             </div>
                         </div>
                         <div class="span2 octolapse-container">
                             <div class="margin-small">
                                 <div>XYZ</div>
+                                <div class="ol-text-status-1">
+                                    <span data-bind="text:PositionState.getXYZModeText()"></span>
+                                </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsRelativeStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
                                     <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.IsRelative(),'greenyellow','greenyellow','red')}"></span>
                                 </span>
-                                <div class="ol-text-status-1">
-                                    <span data-bind="text:PositionState.getXYZModeText()"></span>
-                                </div>
                             </div>
                         </div>
                         <div class="span2 octolapse-container">
                             <div class="margin-small">
                                 <div>
                                     <div>Metric</div>
+                                    <div class="ol-text-status-1">
+                                        Units
+                                    </div>
                                     <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsMetricStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
                                         <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsMetric(),'icon-ok-circle','icon-ban-circle','fa-question'),style: {color:PositionState.getColor(PositionState.IsMetric(),'greenyellow','red','red')}"></span>
                                     </span>
-                                    <div class="ol-text-status-1">
-                                        Units
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -131,13 +138,13 @@
                             <div class="margin-small">
                                 <div>
                                     <div>In</div>
+                                    <div class="ol-text-status-1">
+                                        Position
+                                    </div>
                                     <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsInPositionStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
                                         <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsInPosition() || PositionState.InPathPosition(), 'icon-ok-circle', 'icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.IsInPosition() || PositionState.InPathPosition(),'greenyellow','orange','orange')}"></span>
                                     </span>
-                                    <div class="ol-text-status-1">
-                                        Position
-                                    </div>
                                 </div>
 
                             </div>
@@ -146,26 +153,28 @@
                             <div class="margin-small">
                                 <div>
                                     <div>Layer</div>
+                                    <div class="ol-text-status-1">
+                                        Change
+                                    </div>
                                     <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsLayerChangeStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
                                         <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
                                     </span>
-                                    <div class="ol-text-status-1">
-                                        Change
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
                         <div class="span2 octolapse-container">
                             <div class="margin-small">
                                 <div>ZHop</div>
+                                <div class="ol-text-status-1">
+                                    &nbsp;
+                                </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsZHopStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
                                     <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
                                 </span>
-                                <div class="ol-text-status-1">
-                                    &nbsp;
-                                </div>
+
                             </div>
                         </div>
                     </div>

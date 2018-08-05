@@ -167,7 +167,7 @@
                 <div>Position State</div>
                 <label class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.show_position_state_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
                   <input type="checkbox" data-bind="checked: Octolapse.Globals.show_position_state_changes(), click: function() {toggleInfoPanel('show_position_state_changes');}" >
-                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray'}" ><i class="fa icon-circle fa-inverse" data-bind="style: { color: PositionState.getPositionStateSliderColor()}"></i></span>
+                  <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.enabled() && is_timelapse_active()) ? '' : 'lightgray'}" ><i class="fa icon-circle fa-inverse"></i></span>
                 </label>
             </div>
             <div class="span3 text-center">

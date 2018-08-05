@@ -21,7 +21,9 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
-
+.text-left{
+    text-align:left;
+}
 #octolapse_settings .row {
     margin-left: 0;
 }
@@ -112,7 +114,7 @@ table.octolapse-profiles td.profile_action {
     align-items: center;
     flex-direction: row;
     display: flex;
-    height: 150px;
+    height: 110px;
 }
 
 .octolapse_status {

@@ -393,26 +393,43 @@ $(function () {
                 }
             };
 
-            self.getPositionStateIconTitle =  ko.pureComputed(function () {
+            self.getStateSummaryText = ko.pureComputed(function () {
+                if(!self.is_timelapse_active()) {
+                    if(self.waiting_to_render())
+                        return "Octolapse is waiting for print to complete.";
+                    if( self.is_rendering())
+                        return "Octolapse is rendering a timelapse.";
+                    return 'Octolapse is enabled and idle.';
+                }
+                if(!Octolapse.Globals.enabled())
+                    return 'Octolapse is disabled.';
+                if(!self.PositionState.IsInitialized())
+                    return 'Octolapse is waiting for more information from the server.';
+                if( self.PositionState.hasPositionStateErrors())
+                    return 'Octolapse is waiting to initialize.';
+                if( self.is_taking_snapshot())
+                    return "Octolapse is taking a snapshot.";
+                return "Octolapse is waiting to take snapshot.";
+
+            }, self);
+            self.getTimelapseStateText =  ko.pureComputed(function () {
+                console.log("GettingTimelapseStateText")
                 if(!self.is_timelapse_active())
-                    return 'Waiting for octolapse to start';
+                    return 'Octolapse is not running';
                 if(!self.PositionState.IsInitialized())
                     return 'Waiting for update from server.  You may have to turn on the "Position State Info Panel" from the "Current Settings" below to receive an update.';
                 if( self.PositionState.hasPositionStateErrors())
                     return 'Waiting to initialize';
-                return 'Octolapse is initialized and ready to go!';
+                return 'Octolapse is initialized and running';
             }, self);
 
-            self.getPositionStateIconColor =  ko.pureComputed(function () {
+            self.getTimelapseStateColor =  ko.pureComputed(function () {
                 if(!self.is_timelapse_active())
                     return '';
-                if(!self.PositionState.IsInitialized())
+                if(!self.PositionState.IsInitialized() || self.PositionState.hasPositionStateErrors())
                     return 'orange';
-                if( self.PositionState.hasPositionStateErrors())
-                    return 'red'
                 return 'greenyellow';
             }, self);
-
 
             self.getStatusText = ko.pureComputed(function () {
                 if (self.is_timelapse_active())
@@ -743,17 +760,6 @@ $(function () {
                         return true;
                 return false;
             },self);
-            self.getPositionStateSliderColor = ko.pureComputed(function () {
-                // The button is off and the timelapse is off
-                if(self.hasPositionStateErrors())
-                    return "red";
-
-                if (Octolapse.Globals.show_position_state_changes())
-                    return "greenyellow";
-
-                return "white";
-
-            }, self);
 
             self.getYHomedStateText = ko.pureComputed(function () {
                 if (self.YHomed())

@@ -58,8 +58,12 @@
             </div>
         </div>
         <div class="panel-body">
+
             <div class="row-fluid">
                 <div class="span6 text-center">
+                    <div class="text-left" style="height:40px; overflow:hidden;">
+                        Status: <span data-bind="text: getStateSummaryText"></span>
+                    </div>
                     <div class="octolapse_status_container">
                         <div class="octolapse_status">
                             <div>
@@ -71,18 +75,11 @@
                                      data-bind="style: { color: hasConfigIssues() ? 'red': 'greenyellow' }"></i>
                                 </span>
                                 <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: is_timelapse_active() ? 'Octolapse is running' : 'Octolapse is not running'}">
+                                      data-bind="attr: { title: getTimelapseStateText }">
                                   <i class="fa fa-square fa-stack-2x"
                                      data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-                                  <i class="fa fa-play-circle fa-stack-1x fa-inverse"
-                                     data-bind="style: { color: is_timelapse_active() ? 'greenyellow' : '' }"></i>
-                                </span>
-                                <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: getPositionStateIconTitle}">
-                                  <i class="fa fa-square fa-stack-2x"
-                                     data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-                                  <i class="fa fa-exclamation-triangle fa-stack-1x fa-inverse"
-                                     data-bind="style: { color: getPositionStateIconColor, css: { 'fa-exclamation-triangle': PositionState.hasPositionStateErrors(), 'fa-check': !PositionState.hasPositionStateErrors() } }"></i>
+                                  <i class="fa fa-tachometer fa-stack-1x fa-inverse"
+                                     data-bind="style: { color: getTimelapseStateColor }"></i>
                                 </span>
                                 <span class="fa-stack fa-2x"
                                       data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot' : 'Snapshot is idle'}">
