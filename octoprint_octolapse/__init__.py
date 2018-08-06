@@ -572,7 +572,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # move some octoprint defaults if they exist for the webcam
             # specifically the address, the bitrate and the ffmpeg directory.
             # Attempt to get the camera address and snapshot template from Octoprint settings
-            snapshot_url = self._settings.settings.get(["webcam", "snapshot"])
+            snapshot_url = self._settings.global_get(["webcam", "snapshot"])
             from urlparse import urlparse
             # we are doing some templating so we have to try to separate the
             # camera base address from the querystring.  This will probably not work
@@ -601,7 +601,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
                 self.Settings.current_debug_profile().log_exception(e)
 
-            bitrate = self._settings.settings.get(["webcam", "bitrate"])
+            bitrate = self._settings.global_get(["webcam", "bitrate"])
             self.Settings.DefaultRendering.bitrate = bitrate
             if apply_to_current_profile:
                 for profile in self.Settings.renderings.values():
@@ -906,8 +906,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                              "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
                     'warning': False}
         try:
-            ffmpeg_path = self._settings.settings.get(["webcam", "ffmpeg"])
-            if self.Settings.current_rendering().enabled and ffmpeg_path == "":
+            ffmpeg_path = self._settings.global_get(["webcam", "ffmpeg"])
+            if self.Settings.current_rendering().enabled and (ffmpeg_path == "" or ffmpeg_path is None):
                 self.Settings.current_debug_profile().log_error(
                     "A timelapse was started, but there is no ffmpeg path set!")
                 return {'success': False,
@@ -932,7 +932,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                              "settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path "
                              "to FFMPEG.".format(ffmpeg_path), 'warning': False}
         try:
-            g90_influences_extruder = self._settings.settings.get(["feature", "g90InfluencesExtruder"])
+            g90_influences_extruder = self._settings.global_get(["feature", "g90InfluencesExtruder"])
 
         except Exception as e:
             if self.Settings is not None:

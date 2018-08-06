@@ -72,6 +72,9 @@ class Timelapse(object):
         self.PrintEndStatus = "Unknown"
         self.LastStateChangeMessageTime = None
         self.StateChangeMessageThread = None
+        self.LastPositionErrorMessageTime = None
+        self.PositionErrorMessageThread = None
+
         # Settings that may be different after StartTimelapse is called
 
         self.OctoprintPrinterProfile = None
@@ -587,10 +590,8 @@ class Timelapse(object):
             # if this code is snapshot gcode, simply return it to the printer.
             if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
                 if not self.check_for_non_metric_errors():
-                    if self.Position.has_position_error(0):
-                        # There are position errors, report them!
-                        self._on_position_error()
-                    elif (self.State == TimelapseState.WaitingForTrigger
+
+                    if (self.State == TimelapseState.WaitingForTrigger
                             and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
                         # there is no longer a need to detect Octoprint start/end script, so
                         # we can put the job on hold without fear!
@@ -601,6 +602,9 @@ class Timelapse(object):
                             thread.daemon = True
                             thread.start()
                             return None,
+                    elif self.Position.has_position_error(0) and self.State != TimelapseState.AcquiringLocation:
+                        # There are position errors, report them!
+                        self._on_position_error()
                     elif (self.State == TimelapseState.WaitingForTrigger
                           and self.OctoprintPrinter.is_printing()
                           and not self.Position.has_position_error(0)):
@@ -974,14 +978,36 @@ class Timelapse(object):
         return False
 
     def _on_position_error(self):
+        # rate limited position error notification
+        delay_seconds = 0
+        # if another thread is trying to send the message, stop it
+        if self.PositionErrorMessageThread is not None and self.PositionErrorMessageThread.isAlive():
+            self.PositionErrorMessageThread.cancel()
+
+        if self.LastPositionErrorMessageTime is not None:
+            # do not send more than 1 per second
+            time_since_last_update = time.time() - self.LastPositionErrorMessageTime
+            if time_since_last_update < 1:
+                delay_seconds = 1 - time_since_last_update
+                if delay_seconds < 0:
+                    delay_seconds = 0
+
         message = self.Position.position_error(0)
         self.Settings.current_debug_profile().log_error(message)
-        if self.OnPositionErrorCallback is not None:
-            position_error_callback_thread = threading.Thread(
-                target=self.OnPositionErrorCallback, args=[message]
-            )
-            position_error_callback_thread.daemon = True
-            position_error_callback_thread.start()
+
+        def _send_position_error(message):
+            self.OnPositionErrorCallback(message)
+            self.LastPositionErrorMessageTime = time.time()
+
+        # Send a delayed message
+        self.PositionErrorMessageThread = threading.Timer(
+            delay_seconds,
+            _send_position_error,
+            [message]
+
+        )
+        self.PositionErrorMessageThread.daemon = True
+        self.PositionErrorMessageThread.start()
 
     def _on_trigger_snapshot_complete(self, snapshot_payload):
         if self.OnSnapshotCompleteCallback is not None:
