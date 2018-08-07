@@ -71,7 +71,31 @@ $(function() {
         self.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
-        self.overlay_text_pos = ko.observable(values.overlay_text_pos);
+        // Text position as a JSON string.
+        self.overlay_text_pos = ko.pureComputed({
+            read: function() {
+                var x = +self.overlay_text_pos_x();
+                var y = +self.overlay_text_pos_y();
+                // Validate x and y.
+                // Ensure they are integers.
+                if (self.overlay_text_pos_x().length == 0 || x % 1 != 0 || self.overlay_text_pos_y().length == 0 || y % 1 != 0) {
+                    return "";
+                }
+
+                return JSON.stringify([x, y]);
+            },
+            write: function(value) {
+                if (value === undefined) {
+                    return;
+                }
+                xy = JSON.parse(value);
+                self.overlay_text_pos_x(xy[0]);
+                self.overlay_text_pos_y(xy[1]);
+            },
+        });
+        self.overlay_text_pos_x = values.overlay_text_pos_x === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_x);
+        self.overlay_text_pos_y = values.overlay_text_pos_y === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_y);
+        self.overlay_text_pos(values.overlay_text_pos);
         self.overlay_text_alignment = ko.observable(values.overlay_text_alignment);
         self.overlay_text_valign = ko.observable(values.overlay_text_valign);
         self.overlay_text_halign = ko.observable(values.overlay_text_halign);
@@ -95,9 +119,8 @@ $(function() {
                 // Multiply alpha by 255 and round.
                 rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.
-                this.overlay_text_color(JSON.stringify(rgba));
+                self.overlay_text_color(JSON.stringify(rgba));
             },
-            owner: this,
         });
 
         self.overlay_preview_image = ko.observable('');
@@ -271,6 +294,7 @@ $(function() {
                 }
             },
             octolapse_overlay_font_size: { required: true, integerPositive: true },
+            octolapse_overlay_text_pos: { required: true },
         },
         messages: {
             name: "Please enter a name for your profile",
@@ -278,6 +302,7 @@ $(function() {
             max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
             output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' },
             overlay_text_template: { octolapseOverlayTextTemplate: 'Either there is an invalid token in the overlay text template, or the resulting file name is not valid.' },
+            octolapse_overlay_text_pos: { required: 'Position offsets must be valid integers.' },
         }
     };
 });
