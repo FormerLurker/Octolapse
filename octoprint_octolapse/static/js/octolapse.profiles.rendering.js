@@ -72,6 +72,9 @@ $(function() {
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
         self.overlay_text_pos = ko.observable(values.overlay_text_pos);
+        self.overlay_text_alignment = ko.observable(values.overlay_text_alignment);
+        self.overlay_text_valign = ko.observable(values.overlay_text_valign);
+        self.overlay_text_halign = ko.observable(values.overlay_text_halign);
         // The overlay text colour in as a 4-element array, represented in a string. Note values vary from 0-255.
         // ie. [57, 64, 32, 25]
         self.overlay_text_color = ko.observable(values.overlay_text_color);
@@ -230,7 +233,10 @@ $(function() {
                     'overlay_font_path': self.overlay_font_path(),
                     'overlay_font_size': self.overlay_font_size(),
                     'overlay_text_pos': self.overlay_text_pos(),
-                    'overlay_text_color': self.overlay_text_color()
+                    'overlay_text_alignment': self.overlay_text_alignment(),
+                    'overlay_text_valign': self.overlay_text_valign(),
+                    'overlay_text_halign': self.overlay_text_halign(),
+                    'overlay_text_color': self.overlay_text_color(),
             };
             OctoPrint.post(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay', data)
                 .then(function(response, success_name, response_status) {
@@ -242,7 +248,7 @@ $(function() {
                     // Failed to load an overlay.
                     console.log('Failed to load overlay preview from server.')
                     console.log(stack_trace);
-                    self.overlay_preview_image_error(error_name);
+                    self.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });
         };
     };

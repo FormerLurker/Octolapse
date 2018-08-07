@@ -380,9 +380,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
+        try:
+            profile = Rendering()
+            # Extract the profile from the request.
+            profile.update(flask.request.form)
+        except Exception as e:
+            self._logger.error('Preview overlay request did not provide valid Rendering profile.')
+            self._logger.error(str(e))
+            return {
+                       'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}, 400, {}
+
         # Render a preview image.
-        profile = Rendering()
-        profile.update(flask.request.form)
         preview_image = render.preview_overlay(profile)
 
         # Use a buffer to base64 encode the image.

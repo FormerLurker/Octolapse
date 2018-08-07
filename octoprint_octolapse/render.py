@@ -113,6 +113,9 @@ def preview_overlay(rendering_profile):
                                            font_path=rendering_profile.overlay_font_path,
                                            font_size=rendering_profile.overlay_font_size,
                                            overlay_location=rendering_profile.overlay_text_pos,
+                                           overlay_text_alignment=rendering_profile.overlay_text_alignment,
+                                           overlay_text_valign=rendering_profile.overlay_text_valign,
+                                           overlay_text_halign=rendering_profile.overlay_text_halign,
                                            text_color=rendering_profile.overlay_text_color)
     return image
 
@@ -613,6 +616,9 @@ class TimelapseRenderJob(object):
                                  font_path=self._rendering.overlay_font_path,
                                  font_size=self._rendering.overlay_font_size,
                                  overlay_location=self._rendering.overlay_text_pos,
+                                 overlay_text_alignment=self._rendering.overlay_text_alignment,
+                                 overlay_text_valign=self._rendering.overlay_text_valign,
+                                 overlay_text_halign=self._rendering.overlay_text_halign,
                                  text_color=self._rendering.overlay_text_color)
                 # Save processed image.
                 output_path = os.path.join(
@@ -632,25 +638,54 @@ class TimelapseRenderJob(object):
         self._debug().log_render_start("Preprocessing success!")
 
     @staticmethod
-    def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location,
-                    text_color):
+    def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location, overlay_text_alignment,
+                    overlay_text_valign, overlay_text_halign, text_color):
         """Adds an overlay to an image with the given parameters. The image is not mutated.
         :param image: A Pillow RGB image.
         :returns The image with the overlay added."""
         # No text to draw.
         if not text_template:
             return image
+        text = text_template.format(**format_vars)
 
         # Retrieve the correct font.
         if not font_path:
             raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
         font = ImageFont.truetype(font_path, size=font_size)
 
-        # Draw overlay text.
+        # Create the image to draw on.
         text_image = Image.new('RGBA', image.size, (255, 255, 255, 0))
         d = ImageDraw.Draw(text_image)
-        text = text_template.format(**format_vars)
-        d.text(xy=tuple(overlay_location), text=text, fill=tuple(text_color), font=font)
+
+        # Process the text position to improve the alignment.
+        x, y = tuple(overlay_location)
+        # valign.
+        if overlay_text_valign == 'top':
+            pass
+        elif overlay_text_valign == 'middle':
+            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            y += + image.size[1] / 2 - textsize[1] / 2
+        elif overlay_text_valign == 'bottom':
+            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            y += + image.size[1] - textsize[1]
+        else:
+            raise RenderError('overlay-text-valign',
+                              "An invalid overlay text valign ({}) was specified.".format(overlay_text_valign))
+        # halign.
+        if overlay_text_halign == 'left':
+            pass
+        elif overlay_text_halign == 'center':
+            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            x += image.size[0] / 2 - textsize[0] / 2
+        elif overlay_text_halign == 'right':
+            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            x += + image.size[0] - textsize[0]
+        else:
+            raise RenderError('overlay-text-halign',
+                              "An invalid overlay text halign ({}) was specified.".format(overlay_text_halign))
+
+        # Draw overlay text.
+        d.multiline_text(xy=(x, y), text=text, fill=tuple(text_color), font=font, align=overlay_text_alignment)
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self, image_dir):
