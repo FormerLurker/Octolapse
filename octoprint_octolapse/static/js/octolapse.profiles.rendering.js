@@ -72,7 +72,30 @@ $(function() {
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
         self.overlay_text_pos = ko.observable(values.overlay_text_pos);
+        // The overlay text colour in as a 4-element array, represented in a string. Note values vary from 0-255.
+        // ie. [57, 64, 32, 25]
         self.overlay_text_color = ko.observable(values.overlay_text_color);
+        // The overlay text color formatted as a CSS value. Note RGB vary from 0-255, but A varies from 0-1.
+        // ie. rgba(57, 64, 32, 0.1).
+        self.overlay_text_color_as_css = ko.pureComputed({
+            read: function () {
+                // Convert to js.
+                rgba = JSON.parse(self.overlay_text_color());
+                // Divide alpha by 255.
+                rgba[3] = rgba[3] / 255;
+                // Build the correct string.
+                return 'rgba(' + rgba.join(', ') + ')'
+            },
+            write: function (value) {
+                // Extract values.
+                rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1,).map(Number);
+                // Multiply alpha by 255 and round.
+                rgba[3] = Math.round(rgba[3] * 255);
+                // Write to variable.
+                this.overlay_text_color(JSON.stringify(rgba));
+            },
+            owner: this,
+        });
 
         self.overlay_preview_image = ko.observable('');
         self.overlay_preview_image_error = ko.observable('');
@@ -88,10 +111,12 @@ $(function() {
 
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
+             $('#overlay_color').minicolors({format: 'rgb', opacity: true});
              self.updateWatermarkList();
              self.updateFontList();
              self.initWatermarkUploadButton();
              self.requestOverlayPreview();
+
         };
 
         self.selectWatermark = function(watermark_image) {

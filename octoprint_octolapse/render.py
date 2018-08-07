@@ -85,39 +85,35 @@ def is_overlay_text_template_valid(template, options):
 
 def preview_overlay(rendering_profile):
     # Create an image with background color inverse to the text color.
-    image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color))
+    image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color[0:3]))
 
     font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
-    d = ImageDraw.Draw(image)
 
-    def draw_center(t, dx=0, dy=0):
-        """
-        Draws the text centered in the image, offsets by (dx, dy).
-        :param t:
-        :param dx:
-        :param dy:
-        :return:
-        """
-        iw, ih = image.size
+    def draw_center(i, t, dx=0, dy=0):
+        """Draws the text centered in the image, offsets by (dx, dy)."""
+        text_image = Image.new('RGBA', i.size, (255, 255, 255, 0))
+        d = ImageDraw.Draw(text_image)
+        iw, ih = i.size
         tw, th = d.textsize(t, font=font)
         d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
                fill=tuple(rendering_profile.overlay_text_color), font=font)
+        return Image.alpha_composite(i.convert('RGBA'), text_image).convert('RGB')
 
-    draw_center("Preview", dy=-20)
-    draw_center("Click to refresh", dy=20)
+    image = draw_center(image, "Preview", dy=-20)
+    image = draw_center(image, "Click to refresh", dy=20)
 
     format_vars = {'snapshot_number': 1234,
                    'file_name': 'image.jpg',
                    'time_taken': time.time(),
                    'current_time': datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
                    'time_elapsed': str(timedelta(seconds=round(9001)))}
-    TimelapseRenderJob.add_overlay(image,
-                                   text_template=rendering_profile.overlay_text_template,
-                                   format_vars=format_vars,
-                                   font_path=rendering_profile.overlay_font_path,
-                                   font_size=rendering_profile.overlay_font_size,
-                                   overlay_location=rendering_profile.overlay_text_pos,
-                                   text_color=rendering_profile.overlay_text_color)
+    image = TimelapseRenderJob.add_overlay(image,
+                                           text_template=rendering_profile.overlay_text_template,
+                                           format_vars=format_vars,
+                                           font_path=rendering_profile.overlay_font_path,
+                                           font_size=rendering_profile.overlay_font_size,
+                                           overlay_location=rendering_profile.overlay_text_pos,
+                                           text_color=rendering_profile.overlay_text_color)
     return image
 
 class RenderJobInfo(object):
@@ -638,17 +634,24 @@ class TimelapseRenderJob(object):
     @staticmethod
     def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location,
                     text_color):
-        """Adds an overlay to an image with the given parameters. The overlay is added directly to the image, mutating it.
-        :param image: A Pillow image.
+        """Adds an overlay to an image with the given parameters. The image is not mutated.
+        :param image: A Pillow RGB image.
         :returns The image with the overlay added."""
+        # No text to draw.
+        if not text_template:
+            return image
+
+        # Retrieve the correct font.
+        if not font_path:
+            raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
+        font = ImageFont.truetype(font_path, size=font_size)
+
         # Draw overlay text.
-        if text_template:
-            if not font_path:
-                raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
-            font = ImageFont.truetype(font_path, size=font_size)
-            d = ImageDraw.Draw(image)
-            text = text_template.format(**format_vars)
-            d.text(xy=tuple(overlay_location), text=text, fill=tuple(text_color), font=font)
+        text_image = Image.new('RGBA', image.size, (255, 255, 255, 0))
+        d = ImageDraw.Draw(text_image)
+        text = text_template.format(**format_vars)
+        d.text(xy=tuple(overlay_location), text=text, fill=tuple(text_color), font=font)
+        return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self, image_dir):
         self._debug().log_render_start("Starting pre/post roll.")

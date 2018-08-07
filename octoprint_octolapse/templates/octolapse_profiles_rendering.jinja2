@@ -282,9 +282,9 @@
                             <input type="text" class="col-sm" data-bind="value: overlay_text_pos" required="true"/>
                         </div>
                         <div class="form-inline">
-                            <label class="fixed-width-label">Color:</label>
-                            <div><span class="label label-important">Info</span>&nbsp;Colour must be in [R,G,B,A] format.</div>
-                            <input type="text" class="col-sm" data-bind="value: overlay_text_color" required="true"/>
+                            <label for="rgba">Color:</label>
+                            <br>
+                            <input type="text" id="overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css">
                         </div>
                         <p>Font:</p>
                         <div><span class="label label-important">Warning</span>&nbsp;Only TrueType and OpenType fonts (<code>.otf</code>, <code>.otc</code>, <code>.ttf</code>, <code>.ttc</code>, <code>.tte</code>) are supported.</div>
