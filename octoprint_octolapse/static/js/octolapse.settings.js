@@ -222,7 +222,10 @@ $(function () {
                 'rendering_fps_calculation_options': settings.rendering_fps_calculation_options,
                 'rendering_output_format_options': settings.rendering_output_format_options,
                 'rendering_file_templates': settings.rendering_file_templates,
-                'overlay_text_templates': settings.overlay_text_templates
+                'overlay_text_templates': settings.overlay_text_templates,
+                'overlay_text_alignment_options': settings.overlay_text_alignment_options,
+                'overlay_text_valign_options': settings.overlay_text_valign_options,
+                'overlay_text_halign_options': settings.overlay_text_halign_options,
             }
             Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
             settings.renderings.forEach(function (item, index) {

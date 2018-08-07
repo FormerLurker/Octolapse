@@ -3046,6 +3046,6 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
 }
 
 .fixed-width-label {
-    width: 5em;
+    width: 10em;
     overflow-wrap: break-word;
 }

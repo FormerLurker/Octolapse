@@ -267,7 +267,13 @@ $(function () {
     // Add a custom validator for positive
     $.validator.addMethod('integerPositive',
         function (value) {
-            return /^\d+$/.test(value);
+            try {
+                var r = /^\d+$/.test(value); // Check the number against a regex to ensure it contains only digits.
+                var n = +value; // Try to convert to number.
+                return r && !isNaN(n) && n > 0 && n % 1 == 0;
+            } catch (e) {
+                return false;
+            }
         }, 'Please enter a positive integer value.');
     $.validator.addMethod('ffmpegBitRate',
         function (value) {
