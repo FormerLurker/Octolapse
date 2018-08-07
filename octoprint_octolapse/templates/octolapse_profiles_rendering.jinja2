@@ -261,8 +261,10 @@
                     <div class="controls">
                         <div class="form-inline">
                             <label class="fixed-width-label">Text:</label>
-                            <textarea id="octolapse_overlay_text_template" name="overlay_text_template" class="col-lg" data-bind="value: overlay_text_template"/>
-                            <div class="error_label_container text-error"></div>
+                            <div>
+                                <textarea id="octolapse_overlay_text_template" class="input-block-level" name="overlay_text_template" class="col-lg" data-bind="value: overlay_text_template"/>
+                                <div class="error_label_container text-error"></div>
+                            </div>
                             <p class="help-inline">
                                 Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
                                 <i>
@@ -273,8 +275,12 @@
                         </div>
                         <div class="form-inline">
                             <label class="fixed-width-label">Size:</label>
-                            <div><span class="label label-important">Info</span>&nbsp;Size is a single integer.</div>
-                            <input type="text" class="col-sm" data-bind="value: overlay_font_size"/>
+                            <div>
+                                <input name="octolapse_overlay_font_size" type="number" class="input-small" data-bind="value: overlay_font_size"
+                                       min="1" required="true"/>
+                                <span class="add-on">pt</span>
+                                <div class="error_label_container text-error"></div>
+                            </div>
                         </div>
                         <div class="form-inline">
                             <label for="overlay_text_valign" class="fixed-width-label">Vertical Alignment:</label>

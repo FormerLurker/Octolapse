@@ -50,6 +50,8 @@ def is_rendering_template_valid(template, options):
         filename = template.format(**option_dict)
     except KeyError as e:
         return False, "The following token is invalid: {{{0}}}".format(e.args[0])
+    except IndexError as e:
+        return False, "Integers as tokens are not allowed."
     except ValueError:
         return False, "A value error occurred when replacing the provided tokens."
 
@@ -77,6 +79,8 @@ def is_overlay_text_template_valid(template, options):
         template.format(**option_dict)
     except KeyError as e:
         return False, "The following token is invalid: {{{0}}}".format(e.args[0])
+    except IndexError as e:
+        return False, "Integers as tokens are not allowed."
     except ValueError:
         return False, "A value error occurred when replacing the provided tokens."
 

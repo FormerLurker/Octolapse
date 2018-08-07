@@ -248,6 +248,7 @@ $(function() {
                     // Failed to load an overlay.
                     console.log('Failed to load overlay preview from server.')
                     console.log(stack_trace);
+                    self.overlay_preview_image('');
                     self.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });
         };
@@ -269,6 +270,7 @@ $(function() {
                     type:"post"
                 }
             },
+            overlay_font_size: { integerPositive: true },
         },
         messages: {
             name: "Please enter a name for your profile",

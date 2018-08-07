@@ -387,8 +387,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         except Exception as e:
             self._logger.error('Preview overlay request did not provide valid Rendering profile.')
             self._logger.error(str(e))
-            return {
-                       'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}, 400, {}
+            return json.dumps({
+                'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}), 400, {}
 
         # Render a preview image.
         preview_image = render.preview_overlay(profile)
