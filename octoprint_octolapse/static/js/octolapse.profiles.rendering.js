@@ -270,7 +270,7 @@ $(function() {
                     type:"post"
                 }
             },
-            overlay_font_size: { integerPositive: true },
+            octolapse_overlay_font_size: { required: true, integerPositive: true },
         },
         messages: {
             name: "Please enter a name for your profile",
