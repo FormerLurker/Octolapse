@@ -761,7 +761,7 @@ class Timelapse(object):
             assert (isinstance(parsed_command, ParsedCommand))
             self.Settings.current_debug_profile().log_print_state_change(
                 "A position altering command has been detected.  Fetching and updating position.  "
-                "Position Command: {0}".format(parsed_command.cmd))
+                "Position Command: {0}".format(parsed_command.gcode))
             # Undo the last position update, we will be resending the command
             self.Position.undo_update()
             current_position = self.get_position_async()

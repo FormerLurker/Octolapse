@@ -300,8 +300,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         try:
 
             self.Settings.current_debug_profile().log_snapshot_download(
-                "Running the following snapshot script command with a timeout of {0}: " +
-                " {1} {2} {3} {4} {5} {6} {7}"
+                "Running the following snapshot script command with a timeout of {0}: {1} {2} {3} {4} {5} {6} {7}"
                 .format(
                     self.snapshot_job_info.TimeoutSeconds,
                     self.ScriptPath,

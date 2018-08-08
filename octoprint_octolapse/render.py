@@ -614,7 +614,7 @@ class TimelapseRenderJob(object):
 
                 # Open the image in Pillow and do preprocessing operations.
                 image = Image.open(file_path)
-                self.add_overlay(image,
+                image = self.add_overlay(image,
                                  text_template=self._rendering.overlay_text_template,
                                  format_vars=format_vars,
                                  font_path=self._rendering.overlay_font_path,
