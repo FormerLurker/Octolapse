@@ -87,9 +87,10 @@ def is_overlay_text_template_valid(template, options):
     return True, ""
 
 
-def preview_overlay(rendering_profile):
-    # Create an image with background color inverse to the text color.
-    image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color[0:3]))
+def preview_overlay(rendering_profile, image=None):
+    if image is None:
+        # Create an image with background color inverse to the text color.
+        image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color[0:3]))
 
     font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
 
