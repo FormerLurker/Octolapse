@@ -42,6 +42,7 @@ from octoprint.server.util.flask import restricted_access
 
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
+from octoprint_octolapse.snapshot import take_in_memory_snapshot
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
@@ -380,10 +381,18 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
+        # Take a snapshot from the current camera.
+        camera_image = None
+        try:
+            camera_image = take_in_memory_snapshot(self.Settings, self.Settings.active_cameras()[0])
+        except Exception as e:
+            self._logger.warning("Failed to take a snapshot. Falling back to solid color.")
+            self._logger.warning(e.message)
+
         # Render a preview image.
-        profile = Rendering()
-        profile.update(flask.request.form)
-        preview_image = render.preview_overlay(profile)
+        rendering_profile = Rendering()
+        rendering_profile.update(flask.request.form)
+        preview_image = render.preview_overlay(rendering_profile, image=camera_image)
 
         # Use a buffer to base64 encode the image.
         img_io = BytesIO()
