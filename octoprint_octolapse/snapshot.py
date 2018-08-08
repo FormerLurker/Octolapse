@@ -28,7 +28,6 @@ from io import open as i_open
 from subprocess import CalledProcessError
 from time import sleep, time
 import requests
-from PIL import Image
 from PIL import ImageFile
 import sys
 # PIL is in fact in setup.py.
@@ -64,11 +63,13 @@ def take_in_memory_snapshot(settings, current_camera):
             snapshot_job = WebcamSnapshotJob(snapshot_job_info, settings)
         snapshot_job.start()
         snapshot_job.join()
-
-        return Image.open(snapshot_job_info.full_path)
+        # Copy the image into memory so that we can delete the original file.
+        with Image.open(snapshot_job_info.full_path) as image_file:
+            return image_file.copy()
     finally:
         # Cleanup.
         shutil.rmtree(temp_snapshot_dir)
+
 
 class CaptureSnapshot(object):
 

@@ -382,34 +382,43 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
         # Take a snapshot from the current camera.
-        camera_image = None
         try:
-            camera_image = take_in_memory_snapshot(self.Settings, self.Settings.active_cameras()[0])
-        except Exception as e:
-            self._logger.warning("Failed to take a snapshot. Falling back to solid color.")
-            self._logger.warning(e.message)
+            active_cameras = self.Settings.active_cameras()
+            camera_image = None
+            if len(active_cameras) > 0:
+                try:
+                    camera_image = take_in_memory_snapshot(self.Settings, active_cameras[0])
+                except Exception as e:
+                    self._logger.warning("Failed to take a snapshot. Falling back to solid color.")
+                    self._logger.warning(e.message)
 
-        # Extract the profile from the request.
-        try:
-            rendering_profile = Rendering()
-            rendering_profile.update(flask.request.form)
-        except Exception as e:
-            self._logger.error('Preview overlay request did not provide valid Rendering profile.')
-            self._logger.error(str(e))
-            return json.dumps({
-                'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}), 400, {}
+            # Extract the profile from the request.
+            try:
+                rendering_profile = Rendering()
+                rendering_profile.update(flask.request.form)
+            except Exception as e:
+                self._logger.error('Preview overlay request did not provide valid Rendering profile.')
+                self._logger.error(str(e))
+                return json.dumps({
+                    'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}), 400, {}
 
-        # Render a preview image.
-        preview_image = render.preview_overlay(rendering_profile, image=camera_image)
+            # Render a preview image.
+            preview_image = render.preview_overlay(rendering_profile, image=camera_image)
 
-        # Use a buffer to base64 encode the image.
-        img_io = BytesIO()
-        preview_image.save(img_io, 'JPEG')
-        img_io.seek(0)
-        base64_encoded_image = base64.b64encode(img_io.getvalue())
+            # Use a buffer to base64 encode the image.
+            img_io = BytesIO()
+            preview_image.save(img_io, 'JPEG')
+            img_io.seek(0)
+            base64_encoded_image = base64.b64encode(img_io.getvalue())
 
-        # Return a response. We have to return JSON because jQuery only knows how to parse JSON.
-        return json.dumps({'image': base64_encoded_image}), 200, {'ContentType': 'application/json'}
+            # Return a response. We have to return JSON because jQuery only knows how to parse JSON.
+            return json.dumps({'image': base64_encoded_image}), 200, {'ContentType': 'application/json'}
+        finally:
+            # cleanup
+            if camera_image is not None:
+                camera_image.close()
+            if preview_image is not None:
+                preview_image.close()
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
     @restricted_access
