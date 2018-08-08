@@ -389,9 +389,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self._logger.warning("Failed to take a snapshot. Falling back to solid color.")
             self._logger.warning(e.message)
 
+        # Extract the profile from the request.
+        try:
+            rendering_profile = Rendering()
+            rendering_profile.update(flask.request.form)
+        except Exception as e:
+            self._logger.error('Preview overlay request did not provide valid Rendering profile.')
+            self._logger.error(str(e))
+            return json.dumps({
+                'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'}), 400, {}
+
         # Render a preview image.
-        rendering_profile = Rendering()
-        rendering_profile.update(flask.request.form)
         preview_image = render.preview_overlay(rendering_profile, image=camera_image)
 
         # Use a buffer to base64 encode the image.
@@ -1356,13 +1364,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # core UI here.
         return dict(
             js=[
-                "js/jquery.validate.min.js", "js/octolapse.js", "js/octolapse.settings.js",
-                "js/octolapse.settings.main.js", "js/octolapse.profiles.js", "js/octolapse.profiles.printer.js",
-                "js/octolapse.profiles.stabilization.js", "js/octolapse.profiles.snapshot.js",
-                "js/octolapse.profiles.rendering.js", "js/octolapse.profiles.camera.js",
-                "js/octolapse.profiles.debug.js", "js/octolapse.status.js"
+                "js/jquery.minicolors.min.js", "js/jquery.validate.min.js", "js/octolapse.js",
+                "js/octolapse.settings.js", "js/octolapse.settings.main.js", "js/octolapse.profiles.js",
+                "js/octolapse.profiles.printer.js", "js/octolapse.profiles.stabilization.js",
+                "js/octolapse.profiles.snapshot.js", "js/octolapse.profiles.rendering.js",
+                "js/octolapse.profiles.camera.js", "js/octolapse.profiles.debug.js", "js/octolapse.status.js"
             ],
-            css=["css/octolapse.css"],
+            css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"])
 
     # ~~ software update hook

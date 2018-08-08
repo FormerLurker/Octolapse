@@ -901,6 +901,9 @@ class Rendering(object):
         self.overlay_font_path = ""
         self.overlay_font_size = 10
         self.overlay_text_pos = [10, 10]
+        self.overlay_text_alignment = "left"  # Text alignment between lines in the overlay.
+        self.overlay_text_valign = "top"  # Overall alignment of text box vertically.
+        self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
         self.overlay_text_color = [255, 255, 255, 128]
         if rendering is not None:
             if isinstance(rendering, Rendering):
@@ -925,6 +928,9 @@ class Rendering(object):
                 self.overlay_font_path = rendering.overlay_font_path
                 self.overlay_font_size = rendering.overlay_font_size
                 self.overlay_text_pos = rendering.overlay_text_pos
+                self.overlay_text_alignment = rendering.overlay_text_alignment
+                self.overlay_text_valign = rendering.overlay_text_valign
+                self.overlay_text_halign = rendering.overlay_text_halign
                 self.overlay_text_color = rendering.overlay_text_color
             else:
                 self.update(rendering)
@@ -985,6 +991,9 @@ class Rendering(object):
         self.overlay_text_pos = changes.get("overlay_text_pos", self.overlay_text_pos)
         if isinstance(self.overlay_text_pos, str) or isinstance(self.overlay_text_pos, unicode):
             self.overlay_text_pos = json.loads(self.overlay_text_pos)
+        self.overlay_text_alignment = changes.get("overlay_text_alignment", self.overlay_text_alignment)
+        self.overlay_text_valign = changes.get("overlay_text_valign", self.overlay_text_valign)
+        self.overlay_text_halign = changes.get("overlay_text_halign", self.overlay_text_halign)
         self.overlay_text_color = changes.get("overlay_text_color", self.overlay_text_color)
         if isinstance(self.overlay_text_color, str) or isinstance(self.overlay_text_color, unicode):
             self.overlay_text_color = json.loads(self.overlay_text_color)
@@ -1012,6 +1021,9 @@ class Rendering(object):
             'overlay_font_path': self.overlay_font_path,
             'overlay_font_size': self.overlay_font_size,
             'overlay_text_pos': str(self.overlay_text_pos),
+            'overlay_text_alignment': self.overlay_text_alignment,
+            'overlay_text_valign': self.overlay_text_valign,
+            'overlay_text_halign': self.overlay_text_halign,
             'overlay_text_color': str(self.overlay_text_color),
         }
 
@@ -1780,6 +1792,21 @@ class OctolapseSettings(object):
             "current_time",
             "time_elapsed",
         ]
+        self.overlay_text_alignment_options = [
+            "left",
+            "center",
+            "right",
+        ]
+        self.overlay_text_valign_options = [
+            "top",
+            "middle",
+            "bottom",
+        ]
+        self.overlay_text_halign_options = [
+            "left",
+            "center",
+            "right",
+        ]
         self.DefaultPrinter = Printer(
             name="Default Printer", guid="5d39248f-5e11-4c42-b7f4-810c7acc287e")
         self.DefaultStabilization = Stabilization(
@@ -2139,6 +2166,9 @@ class OctolapseSettings(object):
             ],
             'rendering_file_templates': self.rendering_file_templates,
             'overlay_text_templates': self.overlay_text_templates,
+            'overlay_text_alignment_options': self.overlay_text_alignment_options,
+            'overlay_text_valign_options': self.overlay_text_valign_options,
+            'overlay_text_halign_options': self.overlay_text_halign_options,
             'camera_powerline_frequency_options': [
                 dict(value='50', name='50 HZ (Europe, China, India, etc)'),
                 dict(value='60', name='60 HZ (North/South America, Japan, etc')
