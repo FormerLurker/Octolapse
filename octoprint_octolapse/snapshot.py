@@ -37,12 +37,38 @@ from threading import Thread
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.settings import Camera
 import octoprint_octolapse.utility as utility
-
+from tempfile import mkdtemp
+from octoprint_octolapse.utility import TimelapseJobInfo
+from uuid import uuid4
+from time import time
+from PIL import Image
 
 class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
     METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken']
 
+
+def take_in_memory_snapshot(settings, current_camera):
+    """Takes a snapshot from the given camera in a temporary directory, loads the image into memory, and then deletes the file."""
+
+    temp_snapshot_dir = None
+    try:
+        temp_snapshot_dir = mkdtemp()
+
+        snapshot_job_info = SnapshotJobInfo(
+            TimelapseJobInfo(job_guid=uuid4(), print_start_time=time(), print_file_name='overlay_preview'),
+            temp_snapshot_dir, 0, current_camera)
+        if current_camera.camera_type == "external-script":
+            snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)
+        else:
+            snapshot_job = WebcamSnapshotJob(snapshot_job_info, settings)
+        snapshot_job.start()
+        snapshot_job.join()
+
+        return Image.open(snapshot_job_info.full_path)
+    finally:
+        # Cleanup.
+        shutil.rmtree(temp_snapshot_dir)
 
 class CaptureSnapshot(object):
 
