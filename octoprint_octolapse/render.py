@@ -161,7 +161,7 @@ class RenderJobInfo(object):
 class RenderingProcessor(object):
     def __init__(
         self, rendering_task_queue, get_debug_profile, timelapse_job_info, rendering, cameras, data_directory, octoprint_timelapse_folder,
-        ffmpeg_path, thread_count, on_start, on_success, on_error, cleanup_on_success, cleanup_on_fail
+        ffmpeg_path, on_start, on_success, on_error, cleanup_on_success, cleanup_on_fail
     ):
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
@@ -170,7 +170,7 @@ class RenderingProcessor(object):
         self.data_directory = data_directory
         self.octoprint_timelapse_folder = octoprint_timelapse_folder
         self.ffmpeg_path = ffmpeg_path
-        self.thread_count = thread_count
+        self.thread_count = self.rendering.thread_count
         self.on_start = on_start
         self.on_success = on_success
         self.on_error = on_error

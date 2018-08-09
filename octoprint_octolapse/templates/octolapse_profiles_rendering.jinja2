@@ -358,6 +358,18 @@
                     </span>
                 </div>
             </div>
+            <div class="control-group">
+                <label class="control-label">Rendering Thread Count</label>
+                <div class="controls">
+                    <input id="rendering_profile_thread_count" name="thread_count" type="number"
+                           class="ignore_hidden_errors input-small" data-bind="value: thread_count" min="1" step="1"
+                           required="true" />
+                    <div class="error_label_container text-error" data-error-for="rendering_profile_thread_count"></div>
+                    <span class="help-inline">
+                        Increasing the amount of threads will improve rendering performance as long as your processor has idle cores.  It may HURT performance if you do not.
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 </script>

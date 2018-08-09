@@ -905,6 +905,8 @@ class Rendering(object):
         self.overlay_text_valign = "top"  # Overall alignment of text box vertically.
         self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
         self.overlay_text_color = [255, 255, 255, 128]
+        self.thread_count = 1
+
         if rendering is not None:
             if isinstance(rendering, Rendering):
                 self.guid = rendering.guid
@@ -932,6 +934,7 @@ class Rendering(object):
                 self.overlay_text_valign = rendering.overlay_text_valign
                 self.overlay_text_halign = rendering.overlay_text_halign
                 self.overlay_text_color = rendering.overlay_text_color
+                self.thread_count = rendering.thread_count
             else:
                 self.update(rendering)
 
@@ -997,6 +1000,9 @@ class Rendering(object):
         self.overlay_text_color = changes.get("overlay_text_color", self.overlay_text_color)
         if isinstance(self.overlay_text_color, str) or isinstance(self.overlay_text_color, unicode):
             self.overlay_text_color = json.loads(self.overlay_text_color)
+        if "thread_count" in changes.keys():
+            self.thread_count = utility.get_int(
+                changes["thread_count"], self.thread_count)
 
     def to_dict(self):
         return {
@@ -1025,6 +1031,7 @@ class Rendering(object):
             'overlay_text_valign': self.overlay_text_valign,
             'overlay_text_halign': self.overlay_text_halign,
             'overlay_text_color': str(self.overlay_text_color),
+            'thread_count': self.thread_count
         }
 
 

@@ -125,6 +125,7 @@ $(function() {
 
         self.overlay_preview_image = ko.observable('');
         self.overlay_preview_image_error = ko.observable('');
+        self.thread_count = ko.observable(values.thread_count)
         self.overlay_preview_image_src = ko.computed(function() {
             return 'data:image/jpeg;base64,' + self.overlay_preview_image();
         });

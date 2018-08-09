@@ -149,7 +149,6 @@ class Timelapse(object):
             self.DataFolder,
             self.DefaultTimelapseDirectory,
             self.FfMpegPath,
-            1,
             self._on_render_start,
             self._on_render_success,
             self._on_render_error,
