@@ -407,24 +407,29 @@ $(function () {
                 messages: options.validationRules.messages,
                 ignore: ".ignore_hidden_errors:hidden",
                 errorPlacement: function (error, element) {
-                    var $field_error = $(element).parent().parent().find(".error_label_container");
+                    var error_id = $(element).attr("id");
+                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    console.log("Placing Error, element:" + error_id + ", Error: " + $(error).html());
                     $field_error.html(error);
-                    $field_error.removeClass("checked");
-
-                },
-                highlight: function (element, errorClass) {
-                    //$(element).parent().parent().addClass(errorClass);
-                    var $field_error = $(element).parent().parent().find(".error_label_container");
-                    $field_error.removeClass("checked");
-                    $field_error.addClass(errorClass);
                 },
                 unhighlight: function (element, errorClass) {
                     //$(element).parent().parent().removeClass(errorClass);
-                    var $field_error = $(element).parent().parent().find(".error_label_container");
+                    var error_id = $(element).attr("id");
+                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    console.log("Unhighlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
                     $field_error.addClass("checked");
                     $field_error.removeClass(errorClass);
                 },
+                highlight: function (element, errorClass) {
+                    //$(element).parent().parent().addClass(errorClass);
+                    var error_id = $(element).attr("id");
+                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    console.log("Highlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
+                    $field_error.removeClass("checked");
+                    $field_error.addClass(errorClass);
+                },
                 invalidHandler: function () {
+                    console.log("Invalid!");
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
                     var numErrors = dialog.validator.numberOfInvalids();
@@ -441,7 +446,23 @@ $(function () {
                 },
                 onfocusout: function (element, event) {
                     dialog.validator.form();
+                    /*
+                    return;
+
+                    var also_validate = $(element).attr("data-also-validate");
+                    if(also_validate)
+                    {
+                        var fields_to_validate = also_validate.split(" ");
+                        fields_to_validate.forEach(function(item){
+                           $("#"+item).valid();
+                        });
+                    }
+
+                    $.validator.defaults.onfocusout.call(this, element, event);
+                    //
+                    */
                 }
+
             };
             dialog.validator = null;
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
@@ -493,7 +514,7 @@ $(function () {
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
                 dialog.validator = dialog.$addEditForm.validate(rules);
-
+                dialog.validator.form()
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog

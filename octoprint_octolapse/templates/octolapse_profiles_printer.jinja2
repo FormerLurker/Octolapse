@@ -29,15 +29,15 @@
     <div class="control-group">
       <label class="control-label">Name:</label>
       <div class="controls">
-        <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="True"/>
-        <div class="error_label_container text-error" ></div>
+        <input id="printer_profile_name" name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="True"/>
+        <div class="error_label_container text-error" data-error-for="printer_profile_name"></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Description</label>
       <div class="controls">
-        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" ></div>
+        <textarea id="printer_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" data-error-for="printer_profile_description"></div>
       </div>
     </div>
   </div>
@@ -51,20 +51,20 @@
       <label class="control-label">Retraction Length</label>
       <div class="controls">
         <div class="input-append form-inline">
-          <input name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
+          <input id="printer_profile_retract_length" name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="printer_profile_retract_length"></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Z-Hop Height</label>
       <div class="controls">
         <div class="input-append form-inline">
-          <input name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".00" max="100.0" required="true" />
+          <input id="printer_profile_z_hop" name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".00" max="100.0" required="true" />
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="printer_profile_z_hop"></div>
       </div>
     </div>
   </div>
@@ -87,7 +87,7 @@
                                    optionsValue: 'value',
                                     event: {change: axisSpeedDisplayUnitsChanged},
                                    value: axis_speed_display_units"></select>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="octolapse_axis_speed_display_unit_options"></div>
             <span class="help-inline">
                 Here you can change your axis speeds from mm/min to mm/sec so you don't have to do any conversions.
             </span>
@@ -100,11 +100,11 @@
         <label class="control-label">Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input  id="printer_profile_movement_speed" name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_movement_speed"></div>
           <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
@@ -112,11 +112,11 @@
         <label class="control-label">Retraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_retract_speed" name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_retract_speed"></div>
           <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
@@ -124,11 +124,11 @@
         <label class="control-label">Detraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_detract_speed" name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_detract_speed"></div>
           <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
@@ -136,11 +136,11 @@
         <label class="control-label">Z Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_z_hop_speed" name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.01" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_z_hop_speed"></div>
           <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
       </div>
@@ -156,47 +156,46 @@
       <div class="control-group">
         <label class="control-label" >X/Y/Z Axis Mode</label>
         <div class="controls">
-          <select data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
+          <select id="printer_profile_xyz_axes_default_mode" data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: xyz_axes_default_mode"></select>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" >E Axis Mode</label>
         <div class="controls">
-          <select data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
+          <select id="printer_profile_e_axis_default_mode_options" data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: e_axis_default_mode"></select>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" >G90/G91 Influences Extruder</label>
         <div class="controls">
-          <select data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
+          <select id="printer_profile_g90_influences_extruder_options" data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: g90_influences_extruder"></select>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
         </div>
       </div>
     <div class="control-group">
         <label class="control-label" >Default Units</label>
         <div class="controls">
-          <select data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
+          <select id="printer_profile_units_default" data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: units_default"></select>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
             <span class="help-inline">
                 <span class="label label-important">Attention</span>&nbsp;Do not change from 'Millimeters' unless you have a good reason to do this.  Octolapse is not compatible with non-metric units.  UNTESTED FUNCTIONALITY:  If the units are set to 'Inches' or 'Require Explicit', Octolapse will attempt to detect a G21 command before automatically stopping a timelapse.
             </span>
         </div>
       </div>
-
     </div>
   </div>
   <hr/>
@@ -222,10 +221,10 @@
       <label class="control-label">Additional location detection commands</label>
       <div class="controls">
         <div class="input-append input-block-level">
-          <input name="auto_position_detection_commands" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: auto_position_detection_commands"/>
+          <input id="printer_profile_auto_position_detection_commands" name="auto_position_detection_commands" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: auto_position_detection_commands"/>
           <span class="add-on">csv</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="printer_profile_auto_position_detection_commands"></div>
         <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28 or G29 in the list.</span>
       </div>
     </div>
@@ -236,10 +235,10 @@
         <label class="control-label">X Origin</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
+            <input id="printer_profile_origin_x" name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
             <span class="add-on">mm</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_origin_x"></div>
         </div>
       </div>
 
@@ -247,10 +246,10 @@
         <label class="control-label">Y Origin</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
+            <input id="printer_profile_origin_y" name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
             <span class="add-on">mm</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_origin_y"></div>
         </div>
       </div>
 
@@ -258,10 +257,10 @@
         <label class="control-label">Z Origin</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
+            <input id="printer_profile_origin_z" name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
             <span class="add-on">mm</span>
           </div>
-          <div class="error_label_container text-error" ></div>
+          <div class="error_label_container text-error" data-error-for="printer_profile_origin_z"></div>
         </div>
       </div>
 
@@ -294,7 +293,7 @@
               <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
           </div>
           <div class="span6">
             <div class="input-prepend input-append">
@@ -302,7 +301,7 @@
               <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_x"></div>
           </div>
         </div>
       </div>
@@ -317,7 +316,7 @@
               <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_y"></div>
           </div>
           <div class="span6">
             <div class="input-prepend input-append">
@@ -325,7 +324,7 @@
               <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_y"></div>
           </div>
         </div>
       </div>
@@ -340,7 +339,7 @@
               <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_z"></div>
           </div>
           <div class="span6">
             <div class="input-prepend input-append">
@@ -348,7 +347,7 @@
               <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required="true" />
               <span class="add-on">mm</span>
             </div>
-            <div class="error_label_container text-error" ></div>
+            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_z"></div>
           </div>
         </div>
       </div>
@@ -372,28 +371,28 @@
       <label class="control-label">Printer Position Tolerance</label>
       <div class="controls">
         <div class="input-append form-inline">
-          <input name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" step="any" min="0" />
+          <input id="printer_profile_printer_position_confirmation_tolerance" name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" step="any" min="0" />
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="printer_profile_printer_position_confirmation_tolerance"></div>
         <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Snapshot Command</label>
       <div class="controls">
-        <input name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
-        <div class="error_label_container text-error" ></div>
+        <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
+        <div class="error_label_container text-error" data-error-for="printer_profile_snapshot_command"></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Priming Height</label>
       <div class="controls">
         <div class="input-append form-inline">
-          <input name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required="true" min="0.0" step="0.01" />
+          <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required="true" min="0.0" step="0.01" />
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
         <span class="help-inline">Some slicers prime quite far from the printer bed.  This can adversly affect layer/height tracking.  This setting will prevent layer detection if extrusion has not happend BELOW the selected height.  Set to 0 to turn off.</span>
       </div>
     </div>

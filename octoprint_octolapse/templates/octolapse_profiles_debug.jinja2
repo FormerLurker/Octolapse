@@ -29,15 +29,15 @@
     <div class="control-group">
       <label class="control-label">Name:</label>
       <div class="controls">
-        <input name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
-        <div class="error_label_container text-error" ></div>
+        <input id="debug_profile_name" name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
+        <div class="error_label_container text-error" data-error-for=""></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Description</label>
       <div class="controls">
-        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" ></div>
+        <textarea id="debug_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" data-error-for=""></div>
       </div>
     </div>
   </div>

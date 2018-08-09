@@ -152,6 +152,10 @@ $(function() {
     };
     Octolapse.CameraProfileValidationRules = {
         rules: {
+            camera_type: { required: true },
+            exposure_type: { required: true },
+            led_1_mode: { required: true},
+            powerline_frequency: { required: true},
             snapshot_request_template: { octolapseSnapshotTemplate: true },
             brightness_request_template: { octolapseCameraRequestTemplate: true },
             contrast_request_template: { octolapseCameraRequestTemplate: true },

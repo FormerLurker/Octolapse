@@ -58,8 +58,15 @@ $(function() {
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            console.log("add/update profile")
             var isNewProfile = profile().guid() === "";
-            var data = { "client_id": Octolapse.Globals.client_id, 'profile': ko.toJS(profile), 'profileType': self.profileTypeName() };
+            var profile_js = null;
+            if(profile().toJS)
+                profile_js = profile().toJS();
+            else
+                profile_js = ko.toJS(profile);
+
+            var data = { "client_id": Octolapse.Globals.client_id, 'profile': profile_js, 'profileType': self.profileTypeName() };
             $.ajax({
                 url: "./plugin/octolapse/" + self.addUpdatePath,
                 type: "POST",
@@ -93,7 +100,7 @@ $(function() {
 
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to add/update the " + settings.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    alert("Unable to add/update the " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
                 }
             });
         };

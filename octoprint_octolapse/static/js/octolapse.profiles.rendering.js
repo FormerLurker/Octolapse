@@ -275,12 +275,26 @@ $(function() {
                     self.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });
         };
+
+        self.toJS = function()
+        {
+            var copy = ko.toJS(self);
+            delete copy.font_list;
+            delete copy.overlay_preview_image;
+            delete copy.overlay_preview_image_src;
+            return copy;
+        }
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {
             bitrate: { required: true, ffmpegBitRate: true },
-            min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
-            max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' },
+            output_format : {required: true},
+            fps_calculation_type: {required: true},
+            min_fps: { lessThanOrEqual: '#rendering_profile_max_fps' },
+            max_fps: { greaterThanOrEqual: '#rendering_profile_min_fps' },
+            overlay_text_valign: {required: true},
+            overlay_text_halign: {required: true},
+            overlay_text_alignment: {required: true},
             output_template: {
                 remote: {
                     url: "./plugin/octolapse/validateRenderingTemplate",

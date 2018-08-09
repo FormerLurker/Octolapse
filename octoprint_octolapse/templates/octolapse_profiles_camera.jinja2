@@ -30,15 +30,15 @@
         <div class="control-group">
             <label class="control-label">Name</label>
             <div class="controls">
-                <input name="name" type="text" class="input-block-level" data-bind="value: name" required="true" />
-                <div class="error_label_container text-error"></div>
+                <input id="camera_profile_name" name="name" type="text" class="input-block-level" data-bind="value: name" required="true" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_name"></div>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">Description</label>
             <div class="controls">
-                <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
-                <div class="error_label_container text-error"></div>
+                <textarea id="camera_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_description"></div>
             </div>
         </div>
         <div class="control-group">
@@ -53,12 +53,12 @@
         <div class="control-group">
             <label class="control-label">Camera Type</label>
             <div class="controls">
-                <select data-bind="options: Octolapse.Cameras.profileOptions.camera_type_options,
+                <select id="camera_profile_camera_type" name="camera_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_type_options,
                              optionsText: 'name',
                              optionsValue: 'value',
                              optionsCaption: 'Select One...',
                              value: camera_type"></select>
-                <div class="error_label_container text-error"></div>
+                <div class="error_label_container text-error" data-error-for="camera_profile_camera_type"></div>
             </div>
         </div>
     </div>
@@ -71,8 +71,9 @@
         <div class="control-group">
             <label class="control-label">Snapshot Acquire Script</label>
             <div class="controls">
-                <input name="external_camera_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: external_camera_snapshot_script" required="true" />
-                <div class="error_label_container text-error"></div>
+                <input id="camera_profile_external_camera_snapshot_script" name="external_camera_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: external_camera_snapshot_script" required="true" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_external_camera_snapshot_script"></div>
+
                 <span class="help-inline">The full path and file name of a script that will be run executed after the printer is in the stabilization position.  Should be used to take a snapshot.</span>
             </div>
         </div>
@@ -84,16 +85,16 @@
         <div class="control-group">
             <label class="control-label">Base Address</label>
             <div class="controls">
-                <input name="address" class="input-block-level ignore_hidden_errors" data-bind="value: address" required="true" />
-                <div class="error_label_container text-error"></div>
+                <input id="camera_profile_address" name="address" class="input-block-level ignore_hidden_errors" data-bind="value: address" required="true" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_address"></div>
                 <span class="help-inline">The full address to the camera, including http:// or https://</span>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">Snapshot Address Template</label>
             <div class="controls">
-                <input name="snapshot_request_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: snapshot_request_template" required="true" />
-                <div class="error_label_container text-error"></div>
+                <input id="camera_profile_snapshot_request_template" name="snapshot_request_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: snapshot_request_template" required="true" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_request_template"></div>
                 <span class="help-inline">
                     Enter a full url for accessing a snapshot image from your webcam.  The token <i>{camera_address}</i> will be replaced with the camera address above.
                 </span>
@@ -116,10 +117,10 @@
         <label class="control-label">Snapshot Delay</label>
         <div class="controls">
             <div class="input-append">
-                <input name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
+                <input id="camera_profile_delay" name="delay" type="number" class="input-block-level" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
                 <span class="add-on">MS</span>
             </div>
-            <div class="error_label_container text-error"></div>
+            <div class="error_label_container text-error" data-error-for="camera_profile_delay"></div>
             <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
         </div>
     </div>
@@ -127,22 +128,22 @@
         <label class="control-label">Snapshot Timeout</label>
         <div class="controls">
             <div class="input-append">
-                <input name="timeout_ms" type="number" class="input-block-level" data-bind="value: timeout_ms" min="0" max="25000" step="1" required="true" />
+                <input id="camera_profile_timeout_ms" name="timeout_ms" type="number" class="input-block-level" data-bind="value: timeout_ms" min="0" max="25000" step="1" required="true" />
                 <span class="add-on">MS</span>
             </div>
-            <div class="error_label_container text-error"></div>
+            <div class="error_label_container text-error" data-error-for="camera_profile_timeout_ms"></div>
             <span class="help-inline">If an image takes longer than the allowed time (in milliseconds) to acquire, it will timeout and the print will continue.</span>
         </div>
     </div>
     <div class="control-group">
         <label class="control-label">Snapshot Transposition Options</label>
         <div class="controls">
-            <select data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
+            <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
                              optionsText: 'name',
                              optionsValue: 'value',
                              optionsCaption: 'Select One...',
                              value: snapshot_transpose"></select>
-            <div class="error_label_container text-error"></div>
+            <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_transpose"></div>
             <span class="help-inline">Beta Feature - Optionally rotate, mirror, or flip or transpose your snapshots.  Requires some additional power from your CPU.  Not recommended for slower hardware.</span>
         </div>
     </div>
@@ -180,36 +181,36 @@
                 <div class="control-group">
                     <label class="control-label">Brightness (0-255)</label>
                     <div class="controls">
-                        <input name="brightness" type="number" class="input-small" data-bind="value: brightness" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_brightness" name="brightness" type="number" class="input-small" data-bind="value: brightness" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_brightness"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Contrast (0-255)</label>
                     <div class="controls">
-                        <input name="contrast" type="number" class="input-small" data-bind="value: contrast" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_contrast" name="contrast" type="number" class="input-small" data-bind="value: contrast" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_contrast"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Saturation (0-255)</label>
                     <div class="controls">
-                        <input name="saturation" type="number" class="input-small" data-bind="value: saturation" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_saturation" name="saturation" type="number" class="input-small" data-bind="value: saturation" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_saturation"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Sharpness (0-255)</label>
                     <div class="controls">
-                        <input name="sharpness" type="number" class="input-small" data-bind="value: sharpness" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_sharpness" name="sharpness" type="number" class="input-small" data-bind="value: sharpness" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_sharpness"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">JPEG Quality (1-100)</label>
                     <div class="controls">
-                        <input name="jpeg_quality" type="number" class="input-small" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_jpeg_quality" name="jpeg_quality" type="number" class="input-small" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality"></div>
                         <span class="help-inline">There are known issues with this setting, which is availiable within the /webcam/control.htm screen, but doesn't appear to do anything to the image quality/size.</span>
                     </div>
                 </div>
@@ -231,10 +232,10 @@
                     <label class="control-label">White Balance Temeprature (2000-6500)</label>
                     <div class="controls">
                         <div class="input-append">
-                            <input name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
+                            <input id="camera_profile_white_balance_temperature" name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
                             <span class="add-on">K</span>
                         </div>
-                        <div class="error_label_container text-error"></div>
+                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature"></div>
                     </div>
                 </div>
             </div>
@@ -254,12 +255,12 @@
                 <div class="control-group">
                     <label class="control-label">Exposure Type</label>
                     <div class="controls">
-                        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
+                        <select id="camera_profile_exposure_type" name="exposure_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
                                  optionsText: 'name',
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: exposure_type"></select>
-                        <div class="error_label_container text-error"></div>
+                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type"></div>
                     </div>
                 </div>
                 <div data-bind="visible:exposure_type() == '1'">
@@ -267,15 +268,15 @@
                         <div class="control-group">
                             <label class="control-label">Exposure (3-2047)</label>
                             <div class="controls">
-                                <input name="exposure" type="number" class="input-small" data-bind="value: exposure" min="3" max="2047" step="1" required="true" />
-                                <div class="error_label_container text-error"></div>
+                                <input id="camera_profile_exposure" name="exposure" type="number" class="input-small" data-bind="value: exposure" min="3" max="2047" step="1" required="true" />
+                                <div class="error_label_container text-error" data-error-for="camera_profile_exposure"></div>
                             </div>
                         </div>
                         <div class="control-group">
                             <label class="control-label">Gain (0-255)</label>
                             <div class="controls">
-                                <input name="gain" type="number" class="input-small" data-bind="value: gain" min="0" max="255" step="1" required="true" />
-                                <div class="error_label_container text-error"></div>
+                                <input id="camera_profile_gain" name="gain" type="number" class="input-small" data-bind="value: gain" min="0" max="255" step="1" required="true" />
+                                <div class="error_label_container text-error" data-error-for="camera_profile_gain"></div>
                             </div>
                         </div>
                         <div class="control-group">
@@ -299,22 +300,22 @@
                 <div class="control-group">
                     <label class="control-label">Pan (0-255)</label>
                     <div class="controls">
-                        <input name="pan" type="number" class="input-small" data-bind="value: pan" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_pan" name="pan" type="number" class="input-small" data-bind="value: pan" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_pan"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Tilt (0-255)</label>
                     <div class="controls">
-                        <input name="tilt" type="number" class="input-small" data-bind="value: tilt" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_tilt" name="tilt" type="number" class="input-small" data-bind="value: tilt" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_tilt"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Zoom (0-255)</label>
                     <div class="controls">
-                        <input name="zoom" type="number" class="input-small" data-bind="value: zoom" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_zoom" name="zoom" type="number" class="input-small" data-bind="value: zoom" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_zoom"></div>
                     </div>
                 </div>
             </div>
@@ -334,8 +335,8 @@
                 <div class="control-group" data-bind="visible:!autofocus_enabled()">
                     <label class="control-label">Absolute Focus (0-255)</label>
                     <div class="controls">
-                        <input name="focus" type="number" class="input-small" data-bind="value: focus" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_focus" name="focus" type="number" class="input-small" data-bind="value: focus" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_focus"></div>
 
                     </div>
                 </div>
@@ -349,18 +350,19 @@
                 <div class="control-group">
                     <label class="control-label">LED 1 Mode</label>
                     <div class="controls">
-                        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
+                        <select id="camera_profile_led_1_mode" name="led_1_mode" data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
                                  optionsText: 'name',
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: led1_mode"></select>
+                        <div class="error_label_container text-error" data-error-for="camera_profile_led_1_mode"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">LED 1 Frequency</label>
                     <div class="controls">
-                        <input name="led1_frequency" type="number" class="input-small" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error"></div>
+                        <input id="camera_profile_led1_frequency" name="led1_frequency" type="number" class="input-small" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency"></div>
                     </div>
                 </div>
             </div>
@@ -372,12 +374,12 @@
                 <div class="control-group">
                     <label class="control-label">Powerline Frequency</label>
                     <div class="controls">
-                        <select data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
+                        <select id="camera_profile_camera_powerline_frequency"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
                                  optionsText: 'name',
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: powerline_frequency"></select>
-                        <div class="error_label_container text-error"></div>
+                        <div class="error_label_container text-error" data-error-for="camera_profile_camera_powerline_frequency"></div>
                         <span class="help-inline">I did not notice any difference when testing this setting.  Please let me know if it affects your image quality.</span>
                     </div>
                 </div>
@@ -415,7 +417,6 @@
                         <span class="help-inline">
                             Enter a username to be sent with the camera snapshot request.  If you leave this blank, no sign-in credentials will be sent
                         </span>
-                        <div class="error_label_container text-error"></div>
                     </div>
                 </div>
                 <div class="control-group">
@@ -425,7 +426,6 @@
                         <input type="text" style="display:none" />
                         <input type="password" style="display:none" />
                         <input name="camera_profile_password" type="password" autocomplete="off" class="input" data-bind="value: password" />
-                        <div class="error_label_container text-error"></div>
                         <span class="help-inline">
                             If required, enter a password to be sent with the camera snapshot request.  <span class="label label-important">Attention</span>&nbsp;Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
                         </span>
@@ -441,158 +441,158 @@
                 <div class="control-group">
                     <label class="control-label">Brightness Request Template</label>
                     <div class="controls">
-                        <textarea name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_brightness_request_template" name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_brightness_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Contrast Request Template</label>
                     <div class="controls">
-                        <textarea name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_contrast_request_template" name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_contrast_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Saturation Request Template</label>
                     <div class="controls">
-                        <textarea name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_saturation_request_template" name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_saturation_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">White Balance Request Template</label>
                     <div class="controls">
-                        <textarea name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_white_balance_auto_request_template" name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_auto_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Gain Request Template</label>
                     <div class="controls">
-                        <textarea name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_gain_request_template" name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_gain_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Powerline Frequency Request Template</label>
                     <div class="controls">
-                        <textarea name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_powerline_frequency_request_template" name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_powerline_frequency_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">White Balance Temperature Request Template</label>
                     <div class="controls">
-                        <textarea name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_white_balance_temperature_request_template" name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Sharpness Request Template</label>
                     <div class="controls">
-                        <textarea name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_sharpness_request_template" name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_sharpness_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Backlight Compensation Enabled Request Template</label>
                     <div class="controls">
-                        <textarea name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_backlight_compensation_enabled_request_template" name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_backlight_compensation_enabled_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Exposure Type Request Template</label>
                     <div class="controls">
-                        <textarea name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_exposure_type_request_template" name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Exposure Request Template</label>
                     <div class="controls">
-                        <textarea name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_exposure_request_template" name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Auto Priority Enabled Request Template</label>
                     <div class="controls">
-                        <textarea name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_exposure_auto_priority_enabled_request_template" name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_auto_priority_enabled_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Pan Request Template</label>
                     <div class="controls">
-                        <textarea name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_pan_request_template" name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_pan_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Tilt Request Template</label>
                     <div class="controls">
-                        <textarea name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_tilt_request_template" name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_tilt_request_template"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Autofocus Enabled Request Template</label>
                     <div class="controls">
-                        <textarea name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_autofocus_enabled_request_template" name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_autofocus_enabled_request_template"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Focus Request Template</label>
                     <div class="controls">
-                        <textarea name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_focus_request_template" name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_focus_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Zoom Request Template</label>
                     <div class="controls">
-                        <textarea name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_zoom_request_template" name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_zoom_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">LED 1 Mode Request Template</label>
                     <div class="controls">
-                        <textarea name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_led1_mode_request_template" name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_mode_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">LED 1 Frequency Request Template</label>
                     <div class="controls">
-                        <textarea name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_led1_frequency_request_template" name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency_request_template"></div>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">JPEG Quality Request Template</label>
                     <div class="controls">
-                        <textarea name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template" />
-                        <div class="error_label_container text-error"></div>
+                        <textarea id="camera_profile_jpeg_quality_request_template" name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template" required="true" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality_request_template"></div>
                         <span class="help-inline">This setting does not appear to work with my camera.  If anyone knows how to solve this, please let me know!</span>
                     </div>
                 </div>

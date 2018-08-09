@@ -30,15 +30,15 @@
     <div class="control-group">
       <label class="control-label">Name</label>
       <div class="controls">
-        <input type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
-        <div class="error_label_container text-error" ></div>
+        <input id="stabilization_profile_name" type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_name"></div>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">Description</label>
       <div class="controls">
-        <textarea name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" ></div>
+        <textarea id="stabilization_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_description"></div>
       </div>
     </div>
   </div>
@@ -50,33 +50,33 @@
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
-        <select name ="x_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
+        <select id="stabilization_profile_x_type" name ="x_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    optionsCaption: 'Select One...',
                                    value: x_type"></select>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_type"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
         <div class="input-append">
-          <input name ="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
+          <input id="stabilization_profile_x_fixed_coordinate" name ="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_coordinate"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
         <div class="input-append input-block-level">
-          <input name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
+          <input id="stabilization_profile_x_fixed_path" name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
           <span class="add-on">mm</span>
           <span class="add-on">csv</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_path"></div>
         <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
       </div>
     </div>
@@ -100,21 +100,21 @@
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
         <div class="input-append">
-          <input name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative"/>
+          <input id="stabilization_profile_x_relative" name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative"/>
           <span class="add-on">%</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
       <label class="control-label">Relative Path</label>
       <div class="controls">
         <div class="input-append input-block-level">
-          <input name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
+          <input id="stabilization_profile_x_relative_path" name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
           <span class="add-on">%</span>
           <span class="add-on">csv</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative_path"></div>
         <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
       </div>
     </div>
@@ -143,33 +143,33 @@
     <div class="control-group">
       <label class="control-label">Stabilization Type</label>
       <div class="controls">
-        <select name="y_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
+        <select id="stabilization_profile_y_type" name="y_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    optionsCaption: 'Select One...',
                                    value: y_type"></select>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_type"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
       <label class="control-label">Fixed Coordinate</label>
       <div class="controls">
         <div class="input-append">
-          <input name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
+          <input id="stabilization_profile_y_fixed_coordinate" name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
           <span class="add-on">mm</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_coordinate"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
       <label class="control-label">Fixed Path</label>
       <div class="controls">
         <div class="input-append input-block-level">
-          <input name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
+          <input id="stabilization_profile_y_fixed_path" name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
           <span class="add-on">mm</span>
           <span class="add-on">csv</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_path"></div>
         <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
       </div>
     </div>
@@ -193,21 +193,21 @@
       <label class="control-label">Relative Coordinate</label>
       <div class="controls">
         <div class="input-append">
-          <input name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative"/>
+          <input id="stabilization_profile_y_relative" name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative"/>
           <span class="add-on">%</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative"></div>
       </div>
     </div>
     <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
       <label class="control-label">Relative Path</label>
       <div class="controls">
         <div class="input-append input-block-level">
-          <input name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
+          <input id="stabilization_profile_y_relative_path" name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
           <span class="add-on">%</span>
           <span class="add-on">csv</span>
         </div>
-        <div class="error_label_container text-error" ></div>
+        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative_path"></div>
         <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
       </div>
     </div>

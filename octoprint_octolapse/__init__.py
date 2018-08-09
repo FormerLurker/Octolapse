@@ -381,8 +381,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
-        # Take a snapshot from the current camera.
         try:
+            # Take a snapshot from the first active camera.
             active_cameras = self.Settings.active_cameras()
             camera_image = None
             if len(active_cameras) > 0:
