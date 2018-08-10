@@ -497,6 +497,7 @@ def get_system_fonts():
     else:
         raise NotImplementedError('Unsupported operating system.')
 
+
 def run_command_with_timeout(args, timeout_sec):
     """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
 

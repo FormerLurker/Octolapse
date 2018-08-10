@@ -349,32 +349,39 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                 self.snapshot_job_info.full_path
             ]
 
-            (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                script_args, self.snapshot_job_info.TimeoutSeconds
-            )
-
+            try:
+                (return_code, console_output, error_message) = utility.run_command_with_timeout(
+                    script_args, self.snapshot_job_info.TimeoutSeconds
+                )
+            except OSError as e:
+                raise SnapshotError(
+                    'snapshot_script_error',
+                    "An OS Error error occurred while executing the snapshot script",
+                    cause=e
+                )
             if error_message is not None:
+                if error_message.endswith("\r\n"):
+                    error_message = error_message[:-2]
                 self.Settings.current_debug_profile().log_error(
                     "Error output was returned from the snapshot script: {0}".format(error_message))
             if not return_code == 0:
                 if error_message is not None:
-                    error_message = "Snapshot Script Error - The download script returned {0}, which indicates an " \
-                                    "error. Error Message: {1}".format(return_code, error_message)
+                    error_message = "The snapshot script failed with the following error message: {0}"\
+                        .format(error_message)
                 else:
                     error_message = (
-                        "Snapshot Script Error - The download script returned {0}, which indicates an error. Please "
-                        "check your script and try again.".format(return_code)
+                        "The snapshot script returned {0},"
+                        " which indicates an error.".format(return_code)
                     )
-                raise SnapshotError('snapshot_error', error_message)
-
+                raise SnapshotError('snapshot_script_error', error_message)
         except CalledProcessError as e:
 
             # If we can't create the thumbnail, just log
             error_message = (
-                "Snapshot Script Error - An unexpected exception occurred executing the download script.  "
-                "Check the log file (plugin_octolapse.log) for details."
+                "Snapshot Script Error - An unexpected exception occurred executing the download script."
             )
-            raise SnapshotError('snapshot_error', error_message)
+            raise SnapshotError('snapshot_error', error_message, cause=e)
+
 
 
 class WebcamSnapshotJob(SnapshotThread):
@@ -423,8 +430,7 @@ class WebcamSnapshotJob(SnapshotThread):
             except Exception as e:
                 raise SnapshotError(
                     'snapshot-download-error',
-                    "Snapshot Download - An unexpected exception occurred.  "
-                    "Check the log file (plugin_octolapse.log) for details.",
+                    "An unexpected exception occurred.",
                     cause=e
                 )
 
@@ -437,14 +443,13 @@ class WebcamSnapshotJob(SnapshotThread):
                 except Exception as e:
                     raise SnapshotError(
                         'snapshot-download-error',
-                        "Snapshot Download - An unexpected exception occurred.  "
-                        "Check the log file (plugin_octolapse.log) for details.",
+                        "An unexpected exception occurred.",
                         cause=e
                     )
             else:
                 raise SnapshotError(
                     'snapshot-download-error',
-                    "Snapshot Download - failed with status code:{0}".format(r.status_code)
+                    "failed with status code:{0}".format(r.status_code)
                 )
 
             try:
@@ -457,8 +462,7 @@ class WebcamSnapshotJob(SnapshotThread):
             except Exception as e:
                 raise SnapshotError(
                     'snapshot-save-error',
-                    "Snapshot Download - An unexpected exception occurred.  "
-                    "Check the log file (plugin_octolapse.log) for details.",
+                    "An unexpected exception occurred.",
                     cause=e
                 )
 
@@ -485,7 +489,7 @@ class SnapshotError(Exception):
     def __str__(self):
         if self.cause is None:
             return "{}: {}".format(self.error_type, self.message, str(self.cause))
-        return "{}: {}\nCaused by: {}".format(self.error_type, self.message, str(self.cause))
+        return "{}: {} - Inner Exception: {}".format(self.error_type, self.message, str(self.cause))
 
 
 class SnapshotJobInfo(object):

@@ -491,7 +491,7 @@ $(function () {
             self.loadState();
             // reset snapshot error state
             Octolapse.Status.snapshot_error(false);
-            Octolapse.Status.snapshot_error_message("");
+
         }
 
         self.loadState = function () {
@@ -716,6 +716,7 @@ $(function () {
                         // let the status tab know that a timelapse is starting
                         Octolapse.Status.onTimelapseStart();
                         self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
                     }
                     break;
                 case "timelapse-complete":
@@ -726,10 +727,9 @@ $(function () {
                     break;
                 case "snapshot-start":
                     {
-                        //console.log('octolapse.js - snapshot-start');
+                        console.log('octolapse.js - snapshot-start');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(false);
-                        Octolapse.Status.snapshot_error_message("");
                     }
                     break;
                 case "snapshot-complete":
@@ -737,16 +737,33 @@ $(function () {
                         //console.log('octolapse.js - snapshot-complete');
                         //console.log(data);
                         self.updateState(data);
-                        if(!data.snapshot_success && data.success)
+
+                        Octolapse.Status.snapshot_error(data.error || data.snapshot_error);
+                        if(!data.snapshot_success)
                         {
                             // If only the camera image acquisition failed, use the camera error message
-                            Octolapse.Status.snapshot_error(!data.snapshot_success);
-                            Octolapse.Status.snapshot_error_message(data.snapshot_error);
+                            Octolapse.Status.snapshot_error(true);
+                            var options = {
+                                title: 'Octolapse - Camera Error',
+                                text: data.snapshot_error,
+                                type: 'error',
+                                hide: true,
+                                addclass: "octolapse"
+                            };
+                            Octolapse.displayPopupForKey(options, "snapshot_error")
                         }
-                        else {
-                            Octolapse.Status.snapshot_error(!data.success);
-                            Octolapse.Status.snapshot_error_message(data.error);
+                        else if(!data.success)
+                        {
+                            var options = {
+                                title: 'Octolapse - Stabilization Error',
+                                text: data.error,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse"
+                            };
+                            Octolapse.displayPopupForKey(options, "stabilization_error")
                         }
+
                         if (!Octolapse.HasTakenFirstSnapshot) {
                             Octolapse.HasTakenFirstSnapshot = true;
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);

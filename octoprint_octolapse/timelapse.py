@@ -33,7 +33,7 @@ from octoprint_octolapse.gcode_parser import Commands, ParsedCommand
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs
 from octoprint_octolapse.settings import Printer, Snapshot, OctolapseSettings
-from octoprint_octolapse.snapshot import CaptureSnapshot
+from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
 from octoprint_octolapse.trigger import Triggers
 
 
@@ -99,8 +99,8 @@ class Timelapse(object):
         self._position_request_sent = False
         # fetch position private variables
         self._position_payload = None
-        self._position_timeout_long = 60.0
-        self._position_timeout_short = 10.0
+        self._position_timeout_long = 600.0
+        self._position_timeout_short = 60.0
         self._position_signal = threading.Event()
         self._position_signal.set()
 
@@ -234,8 +234,8 @@ class Timelapse(object):
 
         return self._position_payload
 
-    def _take_snapshot_async(self):
-        snapshot_async_payload = {
+    def _take_snapshots(self):
+        snapshot_payload = {
             "success": False,
             "error": "Waiting on thread to signal, aborting"
         }
@@ -252,10 +252,27 @@ class Timelapse(object):
         # todo - notify client here
         # todo - maintain snapshot number separately for each camera!
 
-        snapshot_async_payload["success"] = True
-        snapshot_async_payload["error"] = ""
+        succeeded = len(results) > 0
+        errors = []
+        for result in results:
+            assert(isinstance(result, SnapshotJobInfo))
+            if not result.success:
+                succeeded = False
+                errors.append(result.error)
+        snapshot_payload["success"] = succeeded
+        # todo:  format this so the errors look better
 
-        return snapshot_async_payload
+        error_message = ""
+        if len(errors) == 1:
+            error_message = errors[0]
+        if len(errors) > 1:
+            error_message = "There were {0} snapshot errors:".format(len(errors))
+            for num, error in enumerate(errors):
+                error_message += "\n\nError {0} - {1}".format(num+1, error)
+
+        snapshot_payload["error"] = error_message
+
+        return snapshot_payload
 
     def _take_timelapse_snapshot(
         self, trigger, parsed_command
@@ -330,8 +347,8 @@ class Timelapse(object):
             # record the snapshot position
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
             # by now we should be ready to take a snapshot
-            snapshot_async_payload = self._take_snapshot_async()
-            timelapse_snapshot_payload["snapshot_payload"] = snapshot_async_payload
+            snapshot_payload = self._take_snapshots()
+            timelapse_snapshot_payload["snapshot_payload"] = snapshot_payload
 
             if not show_real_snapshot_time:
                 # return the printhead to the start position

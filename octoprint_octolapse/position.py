@@ -742,6 +742,13 @@ class Position(object):
                             "Position - Unable to update the X/Y/Z axis position, the axis mode ("
                             "relative/absolute) has not been explicitly set via G90/G91. "
                         )
+                        pos.HasPositionError = True
+                        pos.PositionError="XYZ movement was detected, but the axis mode has not been set.  Please add" \
+                                          " a G90 or G91 to the top of your start gcode.  " \
+                                          "<a href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting" \
+                                          "#for-xyz-choose-one-of-the-following-options\" target=\"_blank\">See this " \
+                                          "guide for details:  </a>"
+
                 if e is not None:
                     if pos.IsExtruderRelative is not None:
                         if pos.HasPositionError and not pos.IsExtruderRelative:
@@ -830,6 +837,12 @@ class Position(object):
                                 "Position - Unable to update the X/Y/Z axis position, the axis mode ("
                                 "relative/absolute) has not been explicitly set via G90/G91. "
                             )
+                            pos.HasPositionError = True
+                            pos.PositionError = "XYZ movement was detected, but the axis mode has not been set.  Please add" \
+                                                " a G90 or G91 to the top of your start gcode.  " \
+                                                "<a href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting" \
+                                                "#for-xyz-choose-one-of-the-following-options\" target=\"_blank\">See this " \
+                                                "guide for details:  </a>"
                     if e is not None:
                         if pos.IsExtruderRelative is not None:
                             if pos.HasPositionError and not pos.IsExtruderRelative:
@@ -847,6 +860,7 @@ class Position(object):
                                 "Position - Unable to update the extruder position, the extruder mode ("
                                 "relative/absolute) has been selected (absolute/relative). "
                             )
+
                     message = "Position Change - {0} - {1} {2} Arc From(X:{3},Y:{4},Z:{5},E:{6}) - To(X:{7},Y:{8}," \
                               "Z:{9},E:{10})"
                     if previous_pos is None:

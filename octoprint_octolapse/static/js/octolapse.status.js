@@ -36,7 +36,6 @@ $(function () {
             self.total_snapshot_time = ko.observable(0);
             self.snapshot_count = ko.observable(0);
             self.snapshot_error = ko.observable(false);
-            self.snapshot_error_message = ko.observable("");
             self.waiting_to_render = ko.observable();
             self.current_printer_profile_guid = ko.observable();
             self.current_stabilization_profile_guid = ko.observable();
