@@ -1311,7 +1311,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # Generate a notification message
         job_message = ""
         if payload.TotalJobs > 1:
-            job_message = "Rendering {0} of {1} - ".format(payload.JobNumber, payload.TotalJobs)
+            job_message = "Rendering {0} of {1} for camera '{2}' - ".format(
+                payload.JobNumber, payload.TotalJobs, payload.CameraName
+            )
 
         if payload.SecondsAddedToPrint > 0:
             msg = "Octolapse captured {0} frames in {1} seconds and has started rendering your timelapse file.".format(
@@ -1340,8 +1342,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # create a message that makes sense, since Octoprint will display its own popup message that already
             # contains text
 
-            message = "from Octolapse has been synchronized and is now available within the default timelapse" \
-                      "plugin tab as '{0}'.  Octolapse ".format(payload.get_synchronization_filename())
+            message = "from Octolapse for camera '{0}' has been synchronized and is now available within the default " \
+                      "timelapse plugin tab as '{1}'.  Octolapse ".format(payload.CameraName,
+                                                                          payload.get_synchronization_filename())
             # Here we create a special payload to notify the default timelapse plugin of a new timelapse
             octoprint_payload = dict(gcode="unknown",
                                      movie=payload.get_synchronization_path(),
@@ -1355,15 +1358,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # we've either successfully rendered or rendered and synchronized
             self.send_render_end_message(True, True)
         else:
-            message = "Octolapse has completed rendering a timelapse.  Due to your rendering settings," \
-                      " the timelapse was not synchronized with the OctoPrint plugin." \
-                      "  You should be able to find your video within your octoprint " \
-                      " server here:<br/> '{0}'".format(payload.get_rendering_path())
+            message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Due to your rendering " \
+                      "settings, the timelapse was not synchronized with the OctoPrint plugin.  You should be able to " \
+                      "find your video within your octoprint server here:<br/> '{1}'".format(payload.CameraName,
+                                                                                             payload.get_rendering_path())
             self.send_render_end_message(True, False, message)
 
-    def on_render_error(self, error):
+    def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
-        self.send_plugin_message('render-failed', error.message)
+        assert (isinstance(payload, RenderingCallbackArgs))
+        message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
+        self.send_plugin_message('render-failed', str(error))
 
 
     # ~~ AssetPlugin mixin

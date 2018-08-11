@@ -74,11 +74,9 @@ class Timelapse(object):
         self.StateChangeMessageThread = None
         self.LastPositionErrorMessageTime = None
         self.PositionErrorMessageThread = None
-
         # Settings that may be different after StartTimelapse is called
 
         self.OctoprintPrinterProfile = None
-
         self.CurrentJobInfo = None
         self.FfMpegPath = None
         self.Snapshot = None
@@ -551,11 +549,20 @@ class Timelapse(object):
         # a flag indicating that we should suppress the command (prevent it from being sent to the printer)
         suppress_command = False
 
-        #if {'plugin:octolapse', 'startup-failed'} in tags:
-        #    return None,
         self.detect_timelapse_start(command_string, tags)
 
         if not self.is_timelapse_active():
+            if self._is_snapshot_command(self.Settings.current_printer(), command_string):
+                if self.Settings.current_printer().suppress_snapshot_command_always:
+                    self.Settings.current_debug_profile().log_info(
+                        "Snapshot command {0} detected while octolapse was disabled.  Suppressing.".format(command_string)
+                    )
+                    return None,
+                else:
+                    self.Settings.current_debug_profile().log_info(
+                        "Snapshot command {0} detected while octolapse was disabled.  Not suppressing since "
+                        "'suppress_snapshot_command_always' is false.".format(command_string)
+                    )
             # if the timelapse is not active, exit without changing any gcode
             return None
 
@@ -564,7 +571,7 @@ class Timelapse(object):
         # update the position tracker so that we know where all of the axis are.
         # We will need this later when generating snapshot gcode so that we can return to the previous
         # position
-        is_snapshot_gcode_command = self._is_snapshot_command(command_string)
+        is_snapshot_gcode_command = self._is_snapshot_command(self.Printer, command_string)
 
         try:
             self.Settings.current_debug_profile().log_gcode_queuing(
@@ -980,8 +987,9 @@ class Timelapse(object):
         warning_thread.daemon = True
         warning_thread.start()
 
-    def _is_snapshot_command(self, command_string):
-        return command_string == self.Printer.snapshot_command
+    def _is_snapshot_command(self, printer, command_string):
+        # note that self.Printer.snapshot_command is stripped of comments.
+        return command_string == printer.snapshot_command
 
     def _is_trigger_waiting(self):
         # make sure we're in a state that could want to check for triggers
@@ -1064,9 +1072,11 @@ class Timelapse(object):
             return True
         return False
 
-    def _on_render_start(self, job_id, payload):
+    def _on_render_start(self, payload):
+        assert (isinstance(payload, RenderingCallbackArgs))
         self.Settings.current_debug_profile().log_render_start(
-            "Started rendering/synchronizing the timelapse. JobId: {0}".format(job_id))
+            "Started rendering/synchronizing the timelapse. JobId: {0}".format(payload.JobId))
+
         # notify the caller
         if self.OnRenderStartCallback is not None:
             render_start_complete_callback_thread = threading.Thread(
@@ -1075,14 +1085,13 @@ class Timelapse(object):
             render_start_complete_callback_thread.daemon = True
             render_start_complete_callback_thread.start()
 
-    def _on_render_success(self, render_job_info, payload):
-        self.Settings.current_debug_profile().log_render_complete(
-            "Completed rendering. JobId: {0}".format(render_job_info.job_id)
-        )
+    def _on_render_success(self, payload):
         assert (isinstance(payload, RenderingCallbackArgs))
-
+        self.Settings.current_debug_profile().log_render_complete(
+            "Completed rendering. JobId: {0}".format(payload.JobId)
+        )
         if self.Snapshot.cleanup_after_render_complete:
-            self.CaptureSnapshot.clean_snapshots(render_job_info.snapshot_directory, render_job_info.job_directory)
+            self.CaptureSnapshot.clean_snapshots(payload.SnapshotDirectory, payload.JobDirectory)
 
         if self.OnRenderSuccessCallback is not None:
             render_success_complete_callback_thread = threading.Thread(
@@ -1091,15 +1100,18 @@ class Timelapse(object):
             render_success_complete_callback_thread.daemon = True
             render_success_complete_callback_thread.start()
 
-    def _on_render_error(self, render_job_info, error):
-        self.Settings.current_debug_profile().log_render_complete("Completed rendering. JobId: {0}".format(render_job_info.job_id))
+    def _on_render_error(self, payload, error):
+        assert (isinstance(payload, RenderingCallbackArgs))
+        self.Settings.current_debug_profile().log_render_complete(
+            "Completed rendering. JobId: {0}".format(payload.JobId)
+        )
 
         if self.Snapshot.cleanup_after_render_fail:
-            self.CaptureSnapshot.clean_snapshots(render_job_info.snapshot_directory, render_job_info.job_directory)
+            self.CaptureSnapshot.clean_snapshots(payload.SnapshotDirectory, payload.JobDirectory)
 
         if self.OnRenderErrorCallback is not None:
             render_error_complete_callback_thread = threading.Thread(
-                target=self.OnRenderErrorCallback, args=(error,)
+                target=self.OnRenderErrorCallback, args=(payload, error)
             )
             render_error_complete_callback_thread.daemon = True
             render_error_complete_callback_thread.start()

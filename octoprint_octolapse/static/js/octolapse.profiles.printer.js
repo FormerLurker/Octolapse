@@ -82,7 +82,7 @@ $(function() {
         self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
         self.default_firmware_retractions = ko.observable(values.default_firmware_retractions);
         self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
-
+        self.suppress_snapshot_command_always = ko.observable(values.suppress_snapshot_command_always);
         // get the time component of the axis speed units (min/mm)
         self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
                 if (self.axis_speed_display_units() === "mm-min")

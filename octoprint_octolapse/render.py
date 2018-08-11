@@ -308,20 +308,14 @@ class TimelapseRenderJob(object):
         self._render()
 
     def _pre_render(self):
-        try:
-            self._read_snapshot_metadata()
-        except RenderError as e:
-            self._debug().log_error("Failed to read image metadata.")
-            self._debug().log_exception(e)
-            # Alternate method of counting images.
-            self._imageCount = len(
-                os.listdir(
-                    os.path.dirname(
-                        os.path.join(
-                            self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format))))
+        self._read_snapshot_metadata()
+
 
         if self._imageCount == 0:
-            raise RenderError('insufficient-images', "No images were captured, or they have been removed.")
+            raise RenderError(
+                'insufficient-images',
+                "No snapshots were found for the '{0}' camera profile.".format(self.render_job_info.camera.name)
+              )
         if self._imageCount == 1:
             raise RenderError('insufficient-images',
                               "Only 1 frame was captured, cannot make a timelapse with a single frame.")
@@ -342,14 +336,48 @@ class TimelapseRenderJob(object):
             with open(metadata_path, 'r') as metadata_file:
                 dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
                 self._snapshot_metadata = list(dictreader)
-        except Exception as e:
-            raise RenderError('invalid-metadata', "Failed to read metadata file at {}".format(metadata_path), cause=e)
+                """Get the number of frames."""
+                self._imageCount = len(self._snapshot_metadata)
+                self._debug().log_render_start("Found {0} images with metadata.".format(self._imageCount))
+                # add the snapshot count to the output tokens
+                self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
+                return
+        except IOError as e:
+            # If we fail to read the metadata, it could be that no snapshots were taken.
+            # Let's not throw an error and just render without the metadata
+            pass
 
-        """Get the number of frames."""
-        self._imageCount = len(self._snapshot_metadata)
-        self._debug().log_render_start("Found {0} images.".format(self._imageCount))
-        # add the snapshot count to the output tokens
+        # alternative method of counting images without metadata
+
+        if os.path.exists(self.render_job_info.snapshot_directory):
+            self._imageCount = len(
+                os.listdir(
+                    os.path.dirname(
+                        os.path.join(
+                            self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format))))
+        else:
+            self._imageCount = 0
+
         self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
+        self._debug().log_render_start("Found {0} images via a manual search.".format(self._imageCount))
+        return
+        # we need to start with index 0, apparently.  Before I thought it was 1!
+        image_index = 0
+        while True:
+            image_path = os.path.join(
+                self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format % image_index
+            )
+            if os.path.isfile(image_path):
+                image_index += 1
+            else:
+                break
+        # since we're starting at 0 and incrementing after a file is found, the index here will be our count.
+        self._debug().log_render_start("Found {0} images via a manual search.".format(image_index))
+        self._imageCount = image_index
+        # add the snapshot count to the output tokens
+
+
+
 
     def _calculate_fps(self):
         self._fps = self._rendering.fps
@@ -431,6 +459,8 @@ class TimelapseRenderJob(object):
         return RenderingCallbackArgs(
             reason,
             return_code,
+            self.render_job_info.job_id,
+            self.render_job_info.job_directory,
             self.render_job_info.snapshot_directory,
             self._output_directory,
             self._output_filename,
@@ -441,19 +471,23 @@ class TimelapseRenderJob(object):
             self._imageCount,
             self._secondsAddedToPrint,
             self.render_job_info.job_number,
-            self.render_job_info.total_jobs
+            self.render_job_info.total_jobs,
+            self.render_job_info.camera.name
+
         )
 
     def _on_start(self):
         payload = self._create_callback_payload(0, "The rendering has started.")
-        self._render_start_callback(self.render_job_info.job_id, payload)
+        self._render_start_callback(payload)
 
     def _on_success(self):
         payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
-        self._on_success_callback(self.render_job_info, payload)
+        self._on_success_callback(payload)
 
     def _on_fail(self, error):
-        self._on_error_callback(self.render_job_info, error)
+        self._debug().log_render_fail(error)
+        payload = self._create_callback_payload(0, "Timelapse rendering has failed.")
+        self._on_error_callback(payload, error )
 
     def _render(self):
         """Rendering runnable."""
@@ -565,8 +599,6 @@ class TimelapseRenderJob(object):
                 r_error = RenderError('render-error',
                                       "Unknown render error. Please check plugin_octolapse.log for more details.",
                                       e)
-
-            self._debug().log_exception(r_error)
             self._on_fail(r_error)
 
             if self.cleanAfterFail:
@@ -822,19 +854,24 @@ class TimelapseRenderJob(object):
 
 class RenderError(Exception):
     def __init__(self, type, message, cause=None):
-        super(Exception, self).__init__(message)
+        super(Exception, self).__init__()
         self.type = type
         self.cause = cause if cause is not None else None
+        self.message = message
 
     def __str__(self):
-        return "{}: {}\nCaused by: {}".format(self.type, self.message, str(self.cause))
+        if self.cause is None:
+            return "{}: {}".format(self.type, self.message, str(self.cause))
 
+        return "{}: {}.  Inner Exception: {}".format(self.type, self.message, str(self.cause))
 
 class RenderingCallbackArgs(object):
     def __init__(
         self,
         reason,
         return_code,
+        job_id,
+        job_directory,
         snapshot_directory,
         rendering_directory,
         rendering_filename,
@@ -845,10 +882,13 @@ class RenderingCallbackArgs(object):
         snapshot_count,
         seconds_added_to_print,
         job_number,
-        total_jobs
+        total_jobs,
+        camera_name
     ):
         self.Reason = reason
         self.ReturnCode = return_code
+        self.JobId = job_id
+        self.JobDirectory = job_directory
         self.SnapshotDirectory = snapshot_directory
         self.RenderingDirectory = rendering_directory
         self.RenderingFilename = rendering_filename
@@ -860,6 +900,7 @@ class RenderingCallbackArgs(object):
         self.SecondsAddedToPrint = seconds_added_to_print
         self.JobNumber = job_number
         self.TotalJobs = total_jobs
+        self.CameraName = camera_name
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

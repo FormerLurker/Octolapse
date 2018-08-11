@@ -476,14 +476,14 @@ class Commands(object):
     ]
 
     @staticmethod
-    def parse(gcode):
+    def strip_comments(gcode):
         # strip off any trailing comments
         ix = gcode.find(";")
         if ix > -1:
             if ix <= len(gcode) - 1:
                 gcode = gcode[0:ix]
             else:
-                return ParsedCommand(None, None, gcode)
+                return None
 
         # remove any comments from ('s
         start_comment_index = None
@@ -523,7 +523,14 @@ class Commands(object):
                 break
 
         # strip whitespace
-        gcode = gcode.strip()
+        return gcode.strip()
+
+    @staticmethod
+    def parse(gcode):
+
+        stripped_gcode = Commands.strip_comments(gcode)
+        if stripped_gcode is None:
+            return ParsedCommand(None, None, gcode)
 
         # ignore blank lines
         if len(gcode) < 1:

@@ -32,7 +32,7 @@ import concurrent
 from octoprint.plugin import PluginSettings
 
 import octoprint_octolapse.utility as utility
-
+from octoprint_octolapse.gcode_parser import Commands
 PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
@@ -50,6 +50,7 @@ class Printer(object):
         self.z_hop_speed = 6000
         self.retract_speed = 4000
         self.snapshot_command = "snap"
+        self.suppress_snapshot_command_always = True
         self.printer_position_confirmation_tolerance = 0.001
         self.auto_detect_position = True
         self.origin_x = None
@@ -84,6 +85,7 @@ class Printer(object):
                 self.z_hop = printer.z_hop
                 self.z_hop_speed = printer.z_hop_speed
                 self.snapshot_command = printer.snapshot_command
+                self.suppress_snapshot_command_always = printer.suppress_snapshot_command_always
                 self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
                 self.auto_detect_position = printer.auto_detect_position
                 self.auto_position_detection_commands = printer.auto_position_detection_commands
@@ -131,8 +133,12 @@ class Printer(object):
             self.movement_speed = utility.get_float(
                 changes["movement_speed"], self.movement_speed)
         if "snapshot_command" in changes.keys():
+            # note that the snapshot command is stripped of comments.
             self.snapshot_command = utility.get_string(
-                changes["snapshot_command"], self.snapshot_command)
+                Commands.strip_comments(changes["snapshot_command"]), self.snapshot_command)
+        if "suppress_snapshot_command_always" in changes.keys():
+            self.suppress_snapshot_command_always = utility.get_bool(
+                changes["suppress_snapshot_command_always"], self.suppress_snapshot_command_always)
         if "z_hop" in changes.keys():
             self.z_hop = utility.get_float(changes["z_hop"], self.z_hop)
         if "z_hop_speed" in changes.keys():
@@ -141,7 +147,6 @@ class Printer(object):
         if "printer_position_confirmation_tolerance" in changes.keys():
             self.printer_position_confirmation_tolerance = utility.get_float(
                 changes["printer_position_confirmation_tolerance"], self.printer_position_confirmation_tolerance)
-
         if "auto_position_detection_commands" in changes.keys():
             self.auto_position_detection_commands = utility.get_string(
                 changes["auto_position_detection_commands"], self.auto_position_detection_commands)
@@ -163,7 +168,6 @@ class Printer(object):
         if "override_octoprint_print_volume" in changes.keys():
             self.override_octoprint_print_volume = utility.get_bool(
                 changes["override_octoprint_print_volume"], self.override_octoprint_print_volume)
-
         if "min_x" in changes.keys():
             self.min_x = utility.get_float(changes["min_x"], self.min_x)
         if "max_x" in changes.keys():
@@ -216,6 +220,7 @@ class Printer(object):
             'z_hop': self.z_hop,
             'z_hop_speed': self.z_hop_speed,
             'snapshot_command': self.snapshot_command,
+            'suppress_snapshot_command_always': self.suppress_snapshot_command_always,
             'printer_position_confirmation_tolerance': self.printer_position_confirmation_tolerance,
             'auto_detect_position': self.auto_detect_position,
             'auto_position_detection_commands': self.auto_position_detection_commands,

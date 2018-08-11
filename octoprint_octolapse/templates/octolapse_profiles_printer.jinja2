@@ -383,6 +383,16 @@
       <div class="controls">
         <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
         <div class="error_label_container text-error" data-error-for="printer_profile_snapshot_command"></div>
+          <span class="help-inline">This custom command can be used in conjunction with the gcode trigger to initiate a snapshot.  All comments will be stripped from the command entered here after saving.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">Suppress Snapshot Command When Disabled</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input name="suppress_snapshot_command_always" type="checkbox" data-bind="checked: suppress_snapshot_command_always" title="Abort snapshots when the position is out-of-bounds"/>Enabled
+        </label>
+        <span class="help-inline">When checked, Octolapse will prevent the snapshot command above from being sent to the printer even when Octolapse it is disabled.</span>
       </div>
     </div>
     <div class="control-group">
