@@ -101,7 +101,7 @@ $(function() {
                         var options = {
                             title: 'Success',
                             text: 'Camera settings were applied with no errors.',
-                            type: 'info',
+                            type: 'success',
                             hide: true,
                             addclass: "octolapse"
                         };
@@ -158,15 +158,38 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (results) {
-                    if (results.success)
-                        alert("A request for a snapshot came back OK.  The camera seems to be working!");
-                    else {
-                        alert(results.error);
-                    }
+                    if (results.success){
 
+                        var options = {
+                            title: 'Camera Test Success',
+                            text: 'A request for a snapshot came back OK.  The camera seems to be working!',
+                            type: 'success',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "camera_settings_success");
+                    }
+                    else {
+                        var options = {
+                            title: 'Camera Test Failed',
+                            text: 'Errors were detected - ' + results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("The camera test failed :(  Status: " + textStatus + ".  Error: " + errorThrown);
+
+                    var options = {
+                        title: 'Camera Test Failed',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "camera_settings_failed");
                 }
             });
         };
