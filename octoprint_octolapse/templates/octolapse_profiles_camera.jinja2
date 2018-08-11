@@ -78,6 +78,20 @@
             </div>
         </div>
     </div>
+
+    <div data-bind="visible: camera_type() == 'printer-gcode'">
+        <div>
+            <h4>Gcode Script Camera - Send gcode to your printer to take a snapshot</h4>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Gcode</label>
+            <div class="controls">
+                <textarea id="camera_profile_gcode_camera_script" name="gcode_camera_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: gcode_camera_script" required="true" />
+                <div class="error_label_container text-error" data-error-for="camera_profile_gcode_camera_script"></div>
+                <span class="help-inline">Gcode to send to the printer in order to capture a snapshot.</span>
+            </div>
+        </div>
+    </div>
     <div data-bind="visible: camera_type() == 'webcam'">
         <div>
             <h4>Webcam Setup</h4>
@@ -136,6 +150,24 @@
         </div>
     </div>
     <div class="control-group">
+        <label class="control-label">Custom Camera Initialization Script</label>
+        <div class="controls">
+            <input id="camera_profile_camera_initialize_script" name="camera_initialize_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: camera_initialize_script" />
+            <button class="btn btn-default " data-bind="click: function() {$data.applySettingsToCamera('script');}">Test Script</button>
+            <div class="error_label_container text-error" data-error-for="camera_profile_camera_initialize_script"></div>
+            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">Custom Camera Pre-Render Script</label>
+        <div class="controls">
+            <input id="camera_profile_camera_pre_render_script" name="camera_pre_render_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: camera_pre_render_script" />
+            <div class="error_label_container text-error" data-error-for="camera_profile_camera_pre_render_script"></div>
+            <span class="help-inline">Octolapse will execute any script path entered here right before rendering.  This is useful to transfer images from a remote location (DSLR or printer), or to apply custom filters.</span>
+        </div>
+    </div>
+    <div class="control-group">
         <label class="control-label">Snapshot Transposition Options</label>
         <div class="controls">
             <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
@@ -147,7 +179,7 @@
             <span class="help-inline">Beta Feature - Optionally rotate, mirror, or flip or transpose your snapshots.  Requires some additional power from your CPU.  Not recommended for slower hardware.</span>
         </div>
     </div>
-    </div>
+
     <hr />
     <div>
         <div>
@@ -172,7 +204,7 @@
                 <div class="control-group">
                     <label class="control-label">Apply Camera Settings</label>
                     <div class="controls">
-                        <button class="btn btn-default btn-block" data-bind="click: function() {$data.applySettingsToCamera();}">Apply Now</button>
+                        <button class="btn btn-default btn-block" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
                         <span class="help-inline">
                             Click to apply all settings to your camera right now so you can see the results without starting a print or saving your changes.
                         </span>

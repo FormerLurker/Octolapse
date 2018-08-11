@@ -430,6 +430,12 @@ class Commands(object):
         "M400 - Wait for moves to finish",
         parameters={}
     )
+    M240 = Command(
+        "M240",
+        "Trigger camera",
+        "M240 - trigger camera",
+        parameters={}
+    )
 
     CommandsDictionary = {
             G0.Command: G0,
@@ -460,6 +466,7 @@ class Commands(object):
             M191.Command: M191,
             M207.Command: M207,
             M208.Command: M208,
+            M240.Command: M240,
             M400.Command: M400
         }
 
@@ -641,3 +648,12 @@ class Commands(object):
             return None,
         else:
             return None
+
+    @staticmethod
+    def string_to_gcode_array(gcode_string):
+        lines = []
+        for line in gcode_string.splitlines():
+            lines.append(Commands.strip_comments(line))
+
+        return lines
+

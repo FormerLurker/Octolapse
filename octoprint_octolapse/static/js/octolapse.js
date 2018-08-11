@@ -725,6 +725,17 @@ $(function () {
                         self.updateState(data)
                     }
                     break;
+                case "camera-settings-error":
+                    // If only the camera image acquisition failed, use the camera error message
+                    var options = {
+                        title: 'Octolapse - Camera Settings Error',
+                        text: data.msg,
+                        type: 'error',
+                        hide: true,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "snapshot_error");
+                    break;
                 case "snapshot-start":
                     {
                         console.log('octolapse.js - snapshot-start');
@@ -796,8 +807,7 @@ $(function () {
                         Octolapse.displayPopup(options);
                     }
                     break;
-                case "render-failed":
-                    {
+                case "render-failed":{
                         //console.log('octolapse.js - render-failed');
                         self.updateState(data);
                         var options = {
@@ -812,7 +822,19 @@ $(function () {
                         };
                         Octolapse.displayPopup(options);
                         break;
-                    }
+                }
+                case "pre-render-error": {
+                    // If only the camera image acquisition failed, use the camera error message
+                    var options = {
+                        title: 'Octolapse - Pre-Render Script Error',
+                        text: data.msg,
+                        type: 'error',
+                        hide: true,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "snapshot_error");
+                    break;
+                }
                 case "render-complete":
                     {
                         //console.log('octolapse.js - render-complete');

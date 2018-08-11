@@ -36,7 +36,9 @@ from threading import Thread
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.settings import Camera
 import octoprint_octolapse.utility as utility
+from octoprint_octolapse.gcode_parser import Commands
 from tempfile import mkdtemp
+
 from octoprint_octolapse.utility import TimelapseJobInfo
 from uuid import uuid4
 from time import time
@@ -73,7 +75,7 @@ def take_in_memory_snapshot(settings, current_camera):
 
 class CaptureSnapshot(object):
 
-    def __init__(self, settings, data_directory, cameras, timelapse_job_info):
+    def __init__(self, settings, data_directory, cameras, timelapse_job_info, send_gcode_array_callback=None):
         self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
@@ -88,23 +90,32 @@ class CaptureSnapshot(object):
         self.TimelapseJobInfo = utility.TimelapseJobInfo(timelapse_job_info)
         self.SnapshotsTotal = 0
         self.ErrorsTotal = 0
+        self.SendGcodeArrayCallback = send_gcode_array_callback
 
     def take_snapshots(self):
         threads = []
         results = []
         for current_camera in self.Cameras:
             camera_info = self.CameraInfos[str(current_camera.guid)]
+            snapshot_job = None
             snapshot_job_info = SnapshotJobInfo(
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
             )
             if current_camera.camera_type == "external-script":
                 snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, self.Settings)
-            else:
+            elif current_camera.camera_type == "webcam":
                 snapshot_job = WebcamSnapshotJob(snapshot_job_info, self.Settings)
-            threads.append(snapshot_job)
+            if snapshot_job is not None:
+                threads.append(snapshot_job)
 
         for t in threads:
             t.start()
+
+        # now send any gcode for gcode cameras
+        for current_camera in self.Cameras:
+            if current_camera.camera_type == "printer-gcode":
+                # just send the gcode now so it all goes in order
+                self.SendGcodeArrayCallback(Commands.string_to_gcode_array(current_camera.gcode_camera_script))
 
         for t in threads:
             result = t.join()
@@ -324,22 +335,10 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                 "Snapshot download script job completed, signaling task queue.")
 
     def execute_script(self):
-        try:
-
-            self.Settings.current_debug_profile().log_snapshot_download(
-                "Running the following snapshot script command with a timeout of {0}: {1} {2} {3} {4} {5} {6} {7}"
-                .format(
-                    self.snapshot_job_info.TimeoutSeconds,
-                    self.ScriptPath,
-                    str(self.snapshot_job_info.SnapshotNumber),
-                    str(self.snapshot_job_info.DelaySeconds),
-                    self.snapshot_job_info.DataDirectory,
-                    self.snapshot_job_info.directory,
-                    self.snapshot_job_info.file_name,
-                    self.snapshot_job_info.full_path
-                )
-            )
-            script_args = [
+        self.Settings.current_debug_profile().log_snapshot_download(
+            "Running the following snapshot script command with a timeout of {0}: {1} {2} {3} {4} {5} {6} {7}"
+            .format(
+                self.snapshot_job_info.TimeoutSeconds,
                 self.ScriptPath,
                 str(self.snapshot_job_info.SnapshotNumber),
                 str(self.snapshot_job_info.DelaySeconds),
@@ -347,41 +346,51 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                 self.snapshot_job_info.directory,
                 self.snapshot_job_info.file_name,
                 self.snapshot_job_info.full_path
-            ]
+            )
+        )
+        script_args = [
+            self.ScriptPath,
+            str(self.snapshot_job_info.SnapshotNumber),
+            str(self.snapshot_job_info.DelaySeconds),
+            self.snapshot_job_info.DataDirectory,
+            self.snapshot_job_info.directory,
+            self.snapshot_job_info.file_name,
+            self.snapshot_job_info.full_path
+        ]
 
-            try:
-                (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, self.snapshot_job_info.TimeoutSeconds
-                )
-            except OSError as e:
-                raise SnapshotError(
-                    'snapshot_script_error',
-                    "An OS Error error occurred while executing the snapshot script",
-                    cause=e
-                )
-            if error_message is not None:
-                if error_message.endswith("\r\n"):
-                    error_message = error_message[:-2]
-                self.Settings.current_debug_profile().log_error(
-                    "Error output was returned from the snapshot script: {0}".format(error_message))
-            if not return_code == 0:
-                if error_message is not None:
-                    error_message = "The snapshot script failed with the following error message: {0}"\
-                        .format(error_message)
-                else:
-                    error_message = (
-                        "The snapshot script returned {0},"
-                        " which indicates an error.".format(return_code)
-                    )
-                raise SnapshotError('snapshot_script_error', error_message)
+        try:
+            (return_code, console_output, error_message) = utility.run_command_with_timeout(
+                script_args, self.snapshot_job_info.TimeoutSeconds
+            )
+        except OSError as e:
+            raise SnapshotError(
+                'snapshot_script_error',
+                "An OS Error error occurred while executing the snapshot script",
+                cause=e
+            )
         except CalledProcessError as e:
 
             # If we can't create the thumbnail, just log
             error_message = (
                 "Snapshot Script Error - An unexpected exception occurred executing the download script."
             )
-            raise SnapshotError('snapshot_error', error_message, cause=e)
+            raise SnapshotError('snapshot_script_error', error_message, cause=e)
 
+        if error_message is not None:
+            if error_message.endswith("\r\n"):
+                error_message = error_message[:-2]
+            self.Settings.current_debug_profile().log_error(
+                "Error output was returned from the snapshot script: {0}".format(error_message))
+        if not return_code == 0:
+            if error_message is not None:
+                error_message = "The snapshot script failed with the following error message: {0}"\
+                    .format(error_message)
+            else:
+                error_message = (
+                    "The snapshot script returned {0},"
+                    " which indicates an error.".format(return_code)
+                )
+            raise SnapshotError('snapshot_script_error', error_message)
 
 
 class WebcamSnapshotJob(SnapshotThread):

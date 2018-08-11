@@ -315,10 +315,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def apply_camera_settings_request(self):
         request_values = flask.request.get_json()
         profile = request_values["profile"]
+        settings_type = request_values["settings_type"]
         camera_profile = Camera(profile)
-        self.apply_camera_settings(camera_profile)
+        success = self.apply_camera_settings(camera_profile=camera_profile, force=True, settings_type=settings_type)
 
-        return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
+        return json.dumps({'success': success}, 200, {'ContentType': 'application/json'})
 
     @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
     @restricted_access
@@ -526,14 +527,24 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return response
         return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
 
-    def apply_camera_settings(self, camera_profile):
-        camera_control = camera.CameraControl(
-            camera_profile,
-            self.on_apply_camera_settings_success,
-            self.on_apply_camera_settings_fail,
-            self.on_apply_camera_settings_complete
-        )
-        camera_control.apply_settings()
+    def apply_camera_settings(self, camera_profile=None, force=False, settings_type=None):
+
+        if camera_profile is not None:
+            camera_control = camera.CameraControl([camera_profile])
+        else:
+            camera_control = camera.CameraControl(self.Settings.cameras.values())
+
+        success, errors = camera_control.apply_settings(force, settings_type)
+        if not success:
+            error_message = "There were {0} errors while applying custom camera settings/scripts:".format(len(errors))
+            for error in errors:
+                error_message += "\n{0}".format(error)
+                self.Settings.current_debug_profile().log_camera_settings_apply(error)
+            self.send_plugin_message('camera-settings-error', error_message)
+            return False
+        else:
+            self.Settings.current_debug_profile().log_camera_settings_apply("Camera settings applied without error.")
+            return True
 
     def get_timelapse_folder(self):
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())
@@ -892,6 +903,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.on_print_start_failed(message)
             return
 
+        if not self.apply_camera_settings():
+            message = "There were errors applying camera settings."
+            self.on_print_start_failed(message)
+            return
         result = self.start_timelapse()
         if not result["success"]:
             self.on_print_start_failed(result["error"])
@@ -902,15 +917,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
-
-        for key in self.Settings.cameras:
-            current_camera = self.Settings.cameras[key]
-            if (
-                current_camera.enabled and
-                current_camera.camera_type == "webcam"
-                and current_camera.apply_settings_before_print
-            ):
-                self.apply_camera_settings(current_camera)
 
     def on_print_start_failed(self, error):
         if self.Settings.cancel_print_on_startup_error:
@@ -1184,28 +1190,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def on_apply_camera_settings_success(self, *args, **kwargs):
-        setting_value = args[0]
-        setting_name = args[1]
-        template = args[2]
-        self.Settings.current_debug_profile().log_camera_settings_apply(
-            "Camera Settings - Successfully applied {0} to the {1} setting.  Template:{2}".format(setting_value,
-                                                                                                  setting_name,
-                                                                                                  template))
-
-    def on_apply_camera_settings_fail(self, *args, **kwargs):
-        setting_value = args[0]
-        setting_name = args[1]
-        template = args[2]
-        error_message = args[3]
-        self.Settings.current_debug_profile().log_camera_settings_apply(
-            "Camera Settings - Unable to apply {0} to the {1} settings!  Template:{2}, Details:{3}"
-                .format(setting_value, setting_name, template, error_message))
-
-    def on_apply_camera_settings_complete(self, *args, **kwargs):
-        self.Settings.current_debug_profile().log_camera_settings_apply(
-            "Camera Settings - Completed")
-
     def on_print_failed(self):
         self.Timelapse.on_print_failed()
         self.Settings.current_debug_profile().log_print_state_change("Print failed.")
@@ -1338,10 +1322,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_success(self, payload):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
+        if payload.PreRenderError:
+            pre_render_message = "Rendering completed and was successful, but errors were returned during " \
+                                 "pre-rendeing.  {0}".format(payload.PreRenderError)
+            self.send_plugin_message('pre-render-error', pre_render_message)
         if payload.Synchronize:
             # create a message that makes sense, since Octoprint will display its own popup message that already
             # contains text
-
             message = "from Octolapse for camera '{0}' has been synchronized and is now available within the default " \
                       "timelapse plugin tab as '{1}'.  Octolapse ".format(payload.CameraName,
                                                                           payload.get_synchronization_filename())
@@ -1367,7 +1354,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
+        if payload.PreRenderError:
+            pre_render_message = "The pre-render script failed for camera {0}.  " \
+                                 "{1}".format(payload.CameraName, payload.PreRenderError)
+            self.send_plugin_message('pre-render-error', pre_render_message)
+
         message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
+
         self.send_plugin_message('render-failed', str(error))
 
 

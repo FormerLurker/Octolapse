@@ -29,9 +29,11 @@ $(function() {
         self.name = ko.observable(values.name);
         self.enabled = ko.observable(values.enabled);
         self.description = ko.observable(values.description);
-
         self.camera_type = ko.observable(values.camera_type);
         self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
+        self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+        self.camera_initialize_script = ko.observable(values.camera_initialize_script);
+        self.camera_pre_render_script = ko.observable(values.camera_pre_render_script);
         self.delay = ko.observable(values.delay);
         self.timeout_ms = ko.observable(values.timeout_ms);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
@@ -82,21 +84,40 @@ $(function() {
         self.jpeg_quality = ko.observable(values.jpeg_quality);
         self.jpeg_quality_request_template = ko.observable(values.jpeg_quality_request_template);
 
-        self.applySettingsToCamera = function () {
+        self.applySettingsToCamera = function (settings_type) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            var data = { 'profile': ko.toJS(self) };
+            var data = {
+                'profile': ko.toJS(self),
+                'settings_type':settings_type
+            };
             $.ajax({
                 url: "./plugin/octolapse/applyCameraSettings",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",
                 dataType: "json",
-                success: function () {
-                    alert("The settings are being applied.  It may take a few seconds for the settings to be visible within the stream.  Be sure to save the profile if you intend to keep any unsaved changes.");
-
+                success: function (results) {
+                    if(results.success) {
+                        var options = {
+                            title: 'Success',
+                            text: 'Camera settings were applied with no errors.',
+                            type: 'info',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "camera_settings_success");
+                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to update the camera settings!  Status: " + textStatus + ".  Error: " + errorThrown);
+                    var options = {
+                        title: 'Error',
+                        text: "Unable to update the camera settings!  Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: true,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options,"camera_settings_success");
+
                 }
             });
         };

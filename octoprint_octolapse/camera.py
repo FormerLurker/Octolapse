@@ -24,7 +24,9 @@
 import sys
 import threading
 import uuid
-
+import utility
+from threading import Thread
+from subprocess import CalledProcessError
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import requests
@@ -66,204 +68,283 @@ def test_camera(camera_profile, timeout_seconds=2):
     return False, fail_reason
 
 class CameraControl(object):
-    def __init__(self, camera, on_success=None, on_fail=None, on_complete=None, timeout_seconds=10):
-        self.Camera = camera
-        self.TimeoutSeconds = timeout_seconds
-        self.OnSuccess = on_success
-        self.OnFail = on_fail
-        self.OnComplete = on_complete
+    def __init__(self, cameras):
+        self.Cameras = cameras
+        self.Errors = []
 
-    def apply_settings(self):
-        camera_settings_requests = [
-            {
-                'template': self.Camera.brightness_request_template,
-                'value': self.Camera.brightness,
-                'name': 'brightness'
-            },
-            {
-                'template': self.Camera.contrast_request_template,
-                'value': self.Camera.contrast,
-                'name': 'contrast'
-            },
-            {
-                'template': self.Camera.saturation_request_template,
-                'value': self.Camera.saturation,
-                'name': 'saturation'
-            },
-            {
-                'template': self.Camera.white_balance_auto_request_template,
-                'value': 1 if self.Camera.white_balance_auto else 0,
-                'name': 'auto white balance'
-            },
-            {
-                'template': self.Camera.powerline_frequency_request_template,
-                'value': self.Camera.powerline_frequency,
-                'name': 'powerline frequency'
-            },
-            {
-                'template': self.Camera.sharpness_request_template,
-                'value': self.Camera.sharpness,
-                'name': 'sharpness'
-            },
-            {
-                'template': self.Camera.backlight_compensation_enabled_request_template,
-                'value': 1 if self.Camera.backlight_compensation_enabled else 0,
-                'name': 'set backlight compensation enabled'
-            },
-            {
-                'template': self.Camera.exposure_type_request_template,
-                'value': self.Camera.exposure_type,
-                'name': 'exposure type'
-            },
-            {
-                'template': self.Camera.pan_request_template,
-                'value': self.Camera.pan,
-                'name': 'pan'
-            },
-            {
-                'template': self.Camera.tilt_request_template,
-                'value': self.Camera.tilt,
-                'name': 'tilt'
-            },
-            {
-                'template': self.Camera.autofocus_enabled_request_template,
-                'value': 1 if self.Camera.autofocus_enabled else 0,
-                'name': 'set autofocus enabled'
-            },
-            {
-                'template': self.Camera.zoom_request_template,
-                'value': self.Camera.zoom,
-                'name': 'zoom'
-            },
-            {
-                'template': self.Camera.led1_mode_request_template,
-                'value': self.Camera.led1_mode,
-                'name': 'led 1 mode'
-            },
-            {
-                'template': self.Camera.led1_frequency_request_template,
-                'value': self.Camera.led1_frequency,
-                'name': 'led 1 frequency'
-            },
-            {
-                'template': self.Camera.jpeg_quality_request_template,
-                'value': self.Camera.jpeg_quality,
-                'name': 'jpeg quality'
-            }
-        ]
+    def apply_settings(self, force, settings_type):
 
-        if not self.Camera.white_balance_auto:
-            camera_settings_requests.append({
-                'template': self.Camera.white_balance_temperature_request_template,
-                'value': self.Camera.white_balance_temperature,
-                'name': 'white balance temperature'
-            })
+        errors = []
+        threads = []
+        if settings_type is None or settings_type == 'web-request':
+            threads += self._get_web_request_threads(force=force)
+        if settings_type is None or settings_type == 'script':
+            threads += self._get_script_threads(force=force)
+        for thread in threads:
+            thread.start()
 
-        # These settings only work when the exposure type is set to manual, I think.
-        if self.Camera.exposure_type == 1:
-            camera_settings_requests.extend([
+        for thread in threads:
+            success, camera_name, error = thread.join()
+            if not success:
+                errors.append(error)
+
+        return len(errors) == 0, errors
+
+    def _get_web_request_threads(self, force):
+        threads = []
+        for current_camera in self.Cameras:
+            if not force and (not current_camera.enabled or not current_camera.apply_settings_before_print):
+                continue
+            camera_settings_requests = [
                 {
-                    'template': self.Camera.exposure_request_template,
-                    'value': self.Camera.exposure,
-                    'name': 'exposure'
+                    'template': current_camera.brightness_request_template,
+                    'value': current_camera.brightness,
+                    'name': 'brightness'
                 },
                 {
-                    'template': self.Camera.exposure_auto_priority_enabled_request_template,
-                    'value': 1 if self.Camera.exposure_auto_priority_enabled else 0,
-                    'name': 'set auto priority enabled'
+                    'template': current_camera.contrast_request_template,
+                    'value': current_camera.contrast,
+                    'name': 'contrast'
                 },
                 {
-                    'template': self.Camera.gain_request_template,
-                    'value': self.Camera.gain,
-                    'name': 'gain'
+                    'template': current_camera.saturation_request_template,
+                    'value': current_camera.saturation,
+                    'name': 'saturation'
+                },
+                {
+                    'template': current_camera.white_balance_auto_request_template,
+                    'value': 1 if current_camera.white_balance_auto else 0,
+                    'name': 'auto white balance'
+                },
+                {
+                    'template': current_camera.powerline_frequency_request_template,
+                    'value': current_camera.powerline_frequency,
+                    'name': 'powerline frequency'
+                },
+                {
+                    'template': current_camera.sharpness_request_template,
+                    'value': current_camera.sharpness,
+                    'name': 'sharpness'
+                },
+                {
+                    'template': current_camera.backlight_compensation_enabled_request_template,
+                    'value': 1 if current_camera.backlight_compensation_enabled else 0,
+                    'name': 'set backlight compensation enabled'
+                },
+                {
+                    'template': current_camera.exposure_type_request_template,
+                    'value': current_camera.exposure_type,
+                    'name': 'exposure type'
+                },
+                {
+                    'template': current_camera.pan_request_template,
+                    'value': current_camera.pan,
+                    'name': 'pan'
+                },
+                {
+                    'template': current_camera.tilt_request_template,
+                    'value': current_camera.tilt,
+                    'name': 'tilt'
+                },
+                {
+                    'template': current_camera.autofocus_enabled_request_template,
+                    'value': 1 if current_camera.autofocus_enabled else 0,
+                    'name': 'set autofocus enabled'
+                },
+                {
+                    'template': current_camera.zoom_request_template,
+                    'value': current_camera.zoom,
+                    'name': 'zoom'
+                },
+                {
+                    'template': current_camera.led1_mode_request_template,
+                    'value': current_camera.led1_mode,
+                    'name': 'led 1 mode'
+                },
+                {
+                    'template': current_camera.led1_frequency_request_template,
+                    'value': current_camera.led1_frequency,
+                    'name': 'led 1 frequency'
+                },
+                {
+                    'template': current_camera.jpeg_quality_request_template,
+                    'value': current_camera.jpeg_quality,
+                    'name': 'jpeg quality'
                 }
-            ])
+            ]
 
-        if not self.Camera.autofocus_enabled:
-            camera_settings_requests.append({
-                'template': self.Camera.focus_request_template,
-                'value': self.Camera.focus,
-                'name': 'focus'
-            })
+            if not current_camera.white_balance_auto:
+                camera_settings_requests.append({
+                    'template': current_camera.white_balance_temperature_request_template,
+                    'value': current_camera.white_balance_temperature,
+                    'name': 'white balance temperature'
+                })
 
-        # TODO:  Move the static timeout value to settings
-        for request in camera_settings_requests:
-            CameraSettingJob(
-                self.Camera, request,
-                self.TimeoutSeconds,
-                on_success=self.OnSuccess,
-                on_fail=self.OnFail,
-                on_complete=self.OnComplete
-            ).process_async()
+            # These settings only work when the exposure type is set to manual, I think.
+            if current_camera.exposure_type == 1:
+                camera_settings_requests.extend([
+                    {
+                        'template': current_camera.exposure_request_template,
+                        'value': current_camera.exposure,
+                        'name': 'exposure'
+                    },
+                    {
+                        'template': current_camera.exposure_auto_priority_enabled_request_template,
+                        'value': 1 if current_camera.exposure_auto_priority_enabled else 0,
+                        'name': 'set auto priority enabled'
+                    },
+                    {
+                        'template': current_camera.gain_request_template,
+                        'value': current_camera.gain,
+                        'name': 'gain'
+                    }
+                ])
+
+            if not current_camera.autofocus_enabled:
+                camera_settings_requests.append({
+                    'template': current_camera.focus_request_template,
+                    'value': current_camera.focus,
+                    'name': 'focus'
+                })
+
+            for request in camera_settings_requests:
+                threads.append(CameraSettingWebRequestThread(current_camera, request))
+        return threads
+
+    def _get_script_threads(self, force):
+        threads = []
+        for current_camera in self.Cameras:
+            if not force and (not current_camera.enabled or not current_camera.camera_initialize_script):
+                continue
+            threads.append(CameraSettingScriptThread(current_camera))
+        return threads
 
 
-class CameraSettingJob(object):
-    # camera_job_lock = threading.RLock()
+class CameraSettingScriptThread(Thread):
+    def __init__(self, camera):
+        super(CameraSettingScriptThread, self).__init__()
+        self.Camera = camera
+        self.Error = None
 
-    def __init__(self, camera, camera_settings_request, timeout, on_success=None, on_fail=None, on_complete=None):
+    def run(self):
+        try:
+            script = self.Camera.camera_initialize_script.strip()
+            if not script:
+                raise CameraError('no_camera_script_path', "The Camera Initialization script is empty")
+            try:
+                script_args = [
+                    script,
+                    self.Camera.name
+                ]
+                (return_code, console_output, error_message) = utility.run_command_with_timeout(
+                    script_args, self.Camera.timeout_ms / 1000.0
+                )
+            except OSError as e:
+                raise CameraError(
+                    'camera_initialization_error',
+                    "An OS Error error occurred while executing the custom camera initialization script",
+                    cause=e
+                )
+            except CalledProcessError as e:
+
+                # If we can't create the thumbnail, just log
+                error_message = (
+                    "An unexpected exception occurred executing the camera initialization script."
+                )
+                raise CameraError('camera_initialization_error', error_message, cause=e)
+
+            if error_message is not None:
+                if error_message.endswith("\r\n"):
+                    error_message = error_message[:-2]
+                self.Settings.current_debug_profile().log_error(
+                    "Error output was returned from the custom camera initialization script: {0}".format(error_message))
+            if not return_code == 0:
+                if error_message is not None:
+                    error_message = "The custom camera initialization script failed with the following error message: {0}" \
+                        .format(error_message)
+                else:
+                    error_message = (
+                        "The custom camera initialization script returned {0},"
+                        " which indicates an error.".format(return_code)
+                    )
+                raise CameraError('camera_initialization_error', error_message)
+        except CameraError as e:
+            self.Error = e
+
+    def join(self, timeout=None):
+        super(CameraSettingScriptThread, self).join(timeout=timeout)
+        return self.Error is None, self.Camera.name, self.Error
+
+class CameraSettingWebRequestThread(Thread):
+
+    def __init__(self, camera, camera_settings_request):
+        super(CameraSettingWebRequestThread, self).__init__()
         camera = camera
+        self.CameraName = camera.name
         self.Request = camera_settings_request
         self.Address = camera.address
         self.Username = camera.username
         self.Password = camera.password
         self.IgnoreSslError = camera.ignore_ssl_error
-        self.TimeoutSeconds = timeout
-        self._on_success = on_success
-        self._on_fail = on_fail
-        self._on_complete = on_complete
+        self.TimeoutSeconds = camera.timeout_ms/1000.0
+        self.Error = None
         self._thread = None
 
-    def process_async(self):
-        self._thread = threading.Thread(
-            target=self._process, name="CameraSettingChangeJob_{name}".format(name=str(uuid.uuid4())))
-        self._thread.daemon = True
-        self._thread.start()
-
-    def _process(self):
-        # with self.camera_job_lock:
-
-        error_messages = []
-        success = False
-
-        template = self.Request['template']
-        value = self.Request['value']
-        setting_name = self.Request['name']
-        url = format_request_template(self.Address, template, value)
+    def run(self):
         try:
-            if len(self.Username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),
-                                 verify=not self.IgnoreSslError, timeout=float(self.TimeoutSeconds))
-            else:
-                r = requests.get(url, verify=not self.IgnoreSslError,
-                                 timeout=float(self.TimeoutSeconds))
+            # with self.camera_job_lock:
+            error_messages = []
+            success = False
+            template = self.Request['template']
+            value = self.Request['value']
+            setting_name = self.Request['name']
+            url = format_request_template(self.Address, template, value)
+            try:
+                if len(self.Username) > 0:
+                    r = requests.get(url, auth=HTTPBasicAuth(self.Username, self.Password),
+                                     verify=not self.IgnoreSslError, timeout=float(self.TimeoutSeconds))
+                else:
+                    r = requests.get(url, verify=not self.IgnoreSslError,
+                                     timeout=float(self.TimeoutSeconds))
 
-            if r.status_code == requests.codes.ok:
-                success = True
-            else:
-                error_messages.append(
-                    "Camera - Updated Settings - {0}:{1}, status code received was not OK.  "
-                    "StatusCode:{2}, URL:{3}".format(
-                        setting_name, value, r.status_code, url))
-        except (SSLError, Exception):
-            # Todo:  Figure out which exceptions to catch here
-            exception_type = sys.exc_info()[0]
-            value = sys.exc_info()[1]
-            error_messages.append(
-                "Camera Settings Apply- An exception of type:{0} was raised while adjusting camera {1} at the "
-                "following URL:{2}, Error:{3}".format(
-                    exception_type, setting_name, url, value))
+                if r.status_code == requests.codes.ok:
+                    success = True
+                else:
+                    raise CameraError(
+                        'webcam_settings_apply_error',
+                        "Status code received was not OK.  Setting:{0}, Value:{1},"
+                        "StatusCode:{2}, URL:{3}".format(setting_name, value, r.status_code, url)
+                    )
+            except SSLError as e:
+                raise CameraError(
+                    'webcam_settings_apply_error',
+                    "An SSL error was raised while applying camera settings.  Setting:{0}, Value:{1}, "
+                    "URL:{2}".format(setting_name, value, url),
+                    cause=e
+                )
+            except Exception as e:
+                raise CameraError(
+                    'webcam_settings_apply_error',
+                    "An unexpected error was raised while applying camera settings.  Setting:{0}, Value:{1}, "
+                    "URL:{2}".format(setting_name, value, url),
+                    cause=e
+                )
+        except CameraError as e:
+            self.Error = e
 
-        if success:
-            self._notify_callback("success", value, setting_name, template)
-        else:
-            self._notify_callback(
-                "fail", value, setting_name, template, error_messages)
+    def join(self, timeout=None):
+        super(CameraSettingWebRequestThread, self).join(timeout=timeout)
+        return self.Error is None, self.CameraName, self.Error
 
-        self._notify_callback("complete")
 
-    def _notify_callback(self, callback, *args, **kwargs):
-        """Notifies registered callbacks of type `callback`."""
-        name = "_on_{}".format(callback)
-        method = getattr(self, name, None)
-        if method is not None and callable(method):
-            method(*args, **kwargs)
+class CameraError(Exception):
+    def __init__(self, error_type, message, cause=None):
+        super(CameraError, self).__init__()
+        self.error_type = error_type
+        self.cause = cause if cause is not None else None
+        self.message = message
+
+    def __str__(self):
+        if self.cause is None:
+            return "{}: {}".format(self.error_type, self.message, str(self.cause))
+        return "{}: {} - Inner Exception: {}".format(self.error_type, self.message, str(self.cause))
