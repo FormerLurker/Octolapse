@@ -4,7 +4,7 @@
     <div data-bind="foreach: Octolapse.Status.cameras_sorted">
         <div style="padding: 6px 3px;">
                 <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(), click: function() { Octolapse.Status.toggleCamera(guid); }">
-                    <i class="fa" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
+                    <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
                     <span data-bind="text: name"></span>
                 </a>
                 <span href="#" data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())">
