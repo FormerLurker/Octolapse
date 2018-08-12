@@ -256,8 +256,6 @@ class CameraSettingScriptThread(Thread):
             if error_message is not None:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
-                self.Settings.current_debug_profile().log_error(
-                    "Error output was returned from the custom camera initialization script: {0}".format(error_message))
             if not return_code == 0:
                 if error_message is not None:
                     error_message = "The custom camera initialization script failed with the following error message: {0}" \
