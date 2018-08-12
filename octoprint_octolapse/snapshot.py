@@ -376,13 +376,11 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             )
             raise SnapshotError('snapshot_script_error', error_message, cause=e)
 
-        if error_message is not None:
-            if error_message.endswith("\r\n"):
-                error_message = error_message[:-2]
-            self.Settings.current_debug_profile().log_error(
-                "Error output was returned from the snapshot script: {0}".format(error_message))
+        if error_message and error_message.endswith("\r\n"):
+            error_message = error_message[:-2]
+
         if not return_code == 0:
-            if error_message is not None:
+            if error_message:
                 error_message = "The snapshot script failed with the following error message: {0}"\
                     .format(error_message)
             else:
@@ -391,6 +389,9 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                     " which indicates an error.".format(return_code)
                 )
             raise SnapshotError('snapshot_script_error', error_message)
+        elif error_message:
+            self.Settings.current_debug_profile().log_error(
+                "Error output was returned from the snapshot script: {0}".format(error_message))
 
 
 class WebcamSnapshotJob(SnapshotThread):

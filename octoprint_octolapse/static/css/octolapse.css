@@ -2474,10 +2474,10 @@ input.error {
     border-bottom: none;
     font-weight: 400;
 }
-
 #octolapse_tab i.fa, #octolapse_tab span.fa {
-	text-shadow: 0px 0px 1px #000;
+	text-shadow: 0 0 black;
 }
+
 #octolapse_tab i.fa-no-shadow, #octolapse_tab span.fa-no-shadow {
     text-shadow:none;
 }

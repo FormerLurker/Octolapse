@@ -347,8 +347,18 @@ class TimelapseRenderJob(object):
                     os.path.join(self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
                 ]
 
+                self._debug().log_render_start(
+                    "Running the following pre-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
+                        script_args[0],
+                        script_args[1],
+                        script_args[2],
+                        script_args[3],
+                        script_args[4]
+                    )
+                )
+
                 (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, self.render_job_info.camera.timeout_ms / 1000.0
+                    script_args, None
                 )
             except OSError as e:
                 raise RenderError(
@@ -364,13 +374,13 @@ class TimelapseRenderJob(object):
                 )
                 raise RenderError('pre_render_script_error', error_message, cause=e)
 
-            if error_message is not None:
+            if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
                 self._debug().log_error(
                     "Error output was returned from the pre-rendering script: {0}".format(error_message))
             if not return_code == 0:
-                if error_message is not None:
+                if error_message:
                     error_message = "The pre-render script failed with the following error message: {0}" \
                         .format(error_message)
                 else:

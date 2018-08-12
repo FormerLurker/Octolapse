@@ -504,14 +504,17 @@ def run_command_with_timeout(args, timeout_sec):
     Return subprocess exit code on natural completion of the subprocess.
     Raise an exception if timeout expires before subprocess completes."""
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    timer = Timer(timeout_sec, proc.kill)
 
-    try:
-        timer.start()
+    if timeout_sec is not None:
+        timer = Timer(timeout_sec, proc.kill)
+
+        try:
+            timer.start()
+            (stdout, stderr) = proc.communicate()
+        finally:
+            timer.cancel()
+    else:
         (stdout, stderr) = proc.communicate()
-    finally:
-        timer.cancel()
-
     # Process completed naturally - return exit code
     return proc.returncode, stdout, stderr
 
