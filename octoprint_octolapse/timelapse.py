@@ -119,8 +119,7 @@ class Timelapse(object):
 
         self._reset()
 
-    def start_timelapse(
-            self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
+    def start_timelapse(self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
         # we must supply the settings first!  Else reset won't work properly.
         self._reset()
         # in case the settings have been destroyed and recreated
@@ -1023,8 +1022,8 @@ class Timelapse(object):
         message = self.Position.position_error(0)
         self.Settings.current_debug_profile().log_error(message)
 
-        def _send_position_error(message):
-            self.OnPositionErrorCallback(message)
+        def _send_position_error(position_error_message):
+            self.OnPositionErrorCallback(position_error_message)
             self.LastPositionErrorMessageTime = time.time()
 
         # Send a delayed message

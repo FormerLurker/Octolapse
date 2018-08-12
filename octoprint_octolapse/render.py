@@ -125,6 +125,7 @@ def preview_overlay(rendering_profile, image=None):
                                            text_color=rendering_profile.overlay_text_color)
     return image
 
+
 class RenderJobInfo(object):
     def __init__(self, timelapse_job_info, data_directory, current_camera, print_state, job_number, total_jobs):
         self.job_id = timelapse_job_info.JobGuid
@@ -205,16 +206,20 @@ class RenderingProcessor(object):
                 self.thread_count,
                 self.time_added,
                 self.on_start,
-                self.on_success,
-                self.on_error,
                 self.cleanup_on_success,
                 self.cleanup_on_fail
             )
             try:
-                job.process()
+                payload, error = job.process()
             finally:
                 self.rendering_task_queue.get()
                 self.rendering_task_queue.task_done()
+
+            if error is None:
+                self.on_success(payload)
+            else:
+                self.get_debug_profile().log_render_fail(error)
+                self.on_error(payload, error)
 
     def start_rendering(
         self,
@@ -263,8 +268,6 @@ class TimelapseRenderJob(object):
         threads,
         time_added,
         on_render_start,
-        on_success,
-        on_error,
         cleanup_on_success,
         cleanup_on_fail
     ):
@@ -288,9 +291,6 @@ class TimelapseRenderJob(object):
         # callbacks
         ###########
         self._render_start_callback = on_render_start
-        self._on_success_callback = on_success
-        self._on_error_callback = on_error
-
         self._thread = None
         self.cleanAfterSuccess = cleanup_on_success
         self.cleanAfterFail = cleanup_on_fail
@@ -307,7 +307,7 @@ class TimelapseRenderJob(object):
         # pre render errors
         self.pre_render_error = None
     def process(self):
-        self._render()
+        return self._render()
 
     def _pre_render(self):
         self._pre_render_script()
@@ -541,18 +541,12 @@ class TimelapseRenderJob(object):
         payload = self._create_callback_payload(0, "The rendering has started.")
         self._render_start_callback(payload)
 
-    def _on_success(self):
-        payload = self._create_callback_payload(0, "Timelapse rendering is complete.")
-        self._on_success_callback(payload)
-
-    def _on_fail(self, error):
-        self._debug().log_render_fail(error)
-        payload = self._create_callback_payload(0, "Timelapse rendering has failed.")
-        self._on_error_callback(payload, error)
-
     def _render(self):
         """Rendering runnable."""
+        # set an error variable to None, we will return None if there are no problems
+        r_error = None
         try:
+
             self._debug().log_render_start("Starting render.")
 
             self._pre_render()
@@ -652,8 +646,6 @@ class TimelapseRenderJob(object):
                                       " information.  You should be able to find your video within your "
                                       " OctoPrint  server here:<br/> '{0}'".format(self._rendering_output_file_path),
                                       cause=e)
-
-            self._on_success()
         except Exception as e:
             if isinstance(e, RenderError):
                 r_error = e
@@ -661,12 +653,14 @@ class TimelapseRenderJob(object):
                 r_error = RenderError('render-error',
                                       "Unknown render error. Please check plugin_octolapse.log for more details.",
                                       e)
-            self._on_fail(r_error)
-
             if self.cleanAfterFail:
                 # Delete preprocessed images.
                 if self.temp_rendering_dir is not None:
                     shutil.rmtree(self.temp_rendering_dir)
+
+        message = "Timelapse rendering is complete." if r_error is None else "The render process failed."
+
+        return self._create_callback_payload(self.render_job_info.job_id, message), r_error
 
     def _preprocess_images(self, preprocessed_directory):
         self._debug().log_render_start("Starting preprocessing of images.")
