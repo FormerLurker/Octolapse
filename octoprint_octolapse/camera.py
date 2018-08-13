@@ -237,7 +237,7 @@ class CameraSettingScriptThread(Thread):
                     self.Camera.name
                 ]
                 (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, self.Camera.timeout_ms / 1000.0
+                    script_args, None
                 )
             except OSError as e:
                 raise CameraError(
