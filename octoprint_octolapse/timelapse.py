@@ -307,44 +307,35 @@ class Timelapse(object):
 
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
-            if not show_real_snapshot_time:
-                gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
-                if len(gcodes_to_send) > 0:
-                    self.Settings.current_debug_profile().log_snapshot_gcode(
-                        "Sending snapshot start gcode and snapshot commands.")
-                    snapshot_position = self.get_position_async(
-                        start_gcode=snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
-                    )
-                    if snapshot_position is None:
-                        self.Settings.current_debug_profile().log_error(
-                            "The snapshot position is None.  Either the print has cancelled or a timeout has been reached."
-                        )
-                        return None
-            else:
+
+            if show_real_snapshot_time:
+                # wait for commands to finish before recording start time - this will give us a very accurate
+                # snapshot time, but requires an m400 + m114
                 self.Settings.current_debug_profile().log_snapshot_gcode(
-                    "Sending snapshot start gcode.")
-                # send start commands and zhop/retract if they exist
-                if len(snapshot_gcode.StartGcode) > 0:
-                    start_position = self.get_position_async(start_gcode=snapshot_gcode.StartGcode)
-
-                    if start_position is None:
-                        self.Settings.current_debug_profile().log_error(
-                            "The start_position is None.  Either the print has cancelled or a timeout has been reached."
-                        )
-                        return None
-                # park the printhead in the snapshot position and wait for the movement to complete
+                    "Waiting for commands to finish to calculate snapshot time accurately.")
+                start_position = self.get_position_async()
                 snapshot_start_time = time.time()
-                if len(snapshot_gcode.SnapshotCommands) > 0:
-                    self.Settings.current_debug_profile().log_snapshot_gcode("Sending snapshot commands.")
-                    snapshot_position = self.get_position_async(
-                        start_gcode=snapshot_gcode.SnapshotCommands, timeout=self._position_timeout_short
+                if start_position is None:
+                    self.Settings.current_debug_profile().log_error(
+                        "Unable to acquire the starting position.  Either the print has cancelled or a timeout has been reached."
                     )
+                    return None
+            # Combine the start gcode with the snapshot commands
+            gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
 
-                    if snapshot_position is None:
-                        self.Settings.current_debug_profile().log_error(
-                            "The snapshot_position is None.  Either the print has cancelled or a timeout has been reached."
-                        )
-                        return None
+            # If we have any Start/Snapshot commands to send, do it!
+            if len(gcodes_to_send) > 0:
+                self.Settings.current_debug_profile().log_snapshot_gcode(
+                    "Sending snapshot start gcode and snapshot commands.")
+                snapshot_position = self.get_position_async(
+                    start_gcode=gcodes_to_send
+                )
+                if snapshot_position is None:
+                    self.Settings.current_debug_profile().log_error(
+                        "The snapshot position is None.  Either the print has cancelled or a timeout has been reached."
+                    )
+                    return None
+
             # record the snapshot position
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
             # by now we should be ready to take a snapshot
