@@ -67,6 +67,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Timelapse = None  # type: Timelapse
         self.IsRenderingSynchronized = False
 
+    def get_sorting_key(self, sorting_context):
+        return 1
+
     # Blueprint Plugin Mixin Requests
 
     @octoprint.plugin.BlueprintPlugin.route("/downloadTimelapse/<filename>", methods=["GET"])
@@ -811,8 +814,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.send_state_changed_message({"Status": self.get_status_dict()})
             if event == Events.CLIENT_OPENED:
                 self.send_state_changed_message({"Status": self.get_status_dict()})
-            if event == Events.POSITION_UPDATE:
-                self.Timelapse.on_position_received(payload)
+            #if event == Events.POSITION_UPDATE:
+            #    self.Timelapse.on_position_received(payload)
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:
@@ -1453,9 +1456,9 @@ def __plugin_load__():
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-        "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.on_gcode_queuing,
-        "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.on_gcode_sent,
-        "octoprint.comm.protocol.gcode.sending": __plugin_implementation__.on_gcode_sending,
-        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.on_gcode_received,
+        "octoprint.comm.protocol.gcode.queuing": (__plugin_implementation__.on_gcode_queuing, -1),
+        "octoprint.comm.protocol.gcode.sent": (__plugin_implementation__.on_gcode_sent, -1),
+        "octoprint.comm.protocol.gcode.sending": (__plugin_implementation__.on_gcode_sending, -1),
+        "octoprint.comm.protocol.gcode.received": (__plugin_implementation__.on_gcode_received, -1),
         "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions
     }

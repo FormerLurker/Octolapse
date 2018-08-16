@@ -27,6 +27,7 @@ import time
 import uuid
 from Queue import Queue
 
+import octoprint.util.comm as OctoprintComm
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.gcode_parser import Commands, ParsedCommand
@@ -367,6 +368,7 @@ class Timelapse(object):
                 # calculate the total snapshot time
                 snapshot_end_time = time.time()
                 snapshot_time = snapshot_end_time - snapshot_start_time
+                self.Settings.current_debug_profile().log_snapshot_gcode("Stabilization and snapshot process compleated in {0} seconds".format(snapshot_time))
                 self.SecondsAddedByOctolapse += snapshot_time
                 timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
                 timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
@@ -871,7 +873,32 @@ class Timelapse(object):
         self.Settings.current_debug_profile().log_gcode_received(
             "Received from printer: line:{0}".format(line)
         )
+        if self._position_request_sent:
+            payload = self.check_for_position_request(line)
+            if payload:
+                self.on_position_received(payload)
+
         return line
+
+    def check_for_position_request(self, line):
+        ##~~ position report processing
+        if 'X:' in line and 'Y:' in line and 'Z:' in line:
+            parsed = OctoprintComm.parse_position_line(line)
+            if parsed:
+                # we don't know T or F when printing from SD since
+                # there's no way to query it from the firmware and
+                # no way to track it ourselves when not streaming
+                # the file - this all sucks sooo much
+
+                x = parsed.get("x")
+                y = parsed.get("y")
+                z = parsed.get("z")
+                e = None
+                if "e" in parsed:
+                    e = parsed.get("e")
+                return {'x': x, 'y': y, 'z': z, 'e': e, }
+
+        return False
 
     # internal functions
     ####################

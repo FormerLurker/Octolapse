@@ -1096,6 +1096,7 @@ $(function () {
             }, self);
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
+                //console.log("Calculating trigger state text.");
                 if (!self.IsHomed())
                     return "Idle until all axes are homed";
                 else if (self.IsTriggered())
@@ -1162,6 +1163,7 @@ $(function () {
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
             self.InPathPosition = ko.observable(state.IsInPathPosition);
+            self.IsWaitingOnFeature = ko.observable(state.IsWaitingOnFeature);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1175,6 +1177,7 @@ $(function () {
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
                 self.InPathPosition(state.InPathPosition);
+                self.IsWaitingOnFeature(state.IsWaitingOnFeature);
             };
 
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
@@ -1204,6 +1207,8 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
+                    if (self.IsWaitingOnFeature())
+                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";
@@ -1261,6 +1266,7 @@ $(function () {
             self.Layer = ko.observable(state.Layer);
             self.IsInPosition = ko.observable(state.IsInPosition);
             self.InPathPosition = ko.observable(state.IsInPathPosition);
+            self.IsWaitingOnFeature = ko.observable(state.IsWaitingOnFeature);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1280,6 +1286,7 @@ $(function () {
                 self.Layer(state.Layer);
                 self.IsInPosition(state.IsInPosition);
                 self.InPathPosition(state.InPathPosition);
+                self.IsWaitingOnFeature(state.IsWaitingOnFeature);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.IsHomed())
@@ -1310,6 +1317,8 @@ $(function () {
                         waitList.push("position");
                         //console.log("Waiting on position.");
                     }
+                    if (self.IsWaitingOnFeature())
+                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";
@@ -1381,6 +1390,7 @@ $(function () {
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
             self.InPathPosition = ko.observable(state.IsInPathPosition);
+            self.IsWaitingOnFeature = ko.observable(state.IsWaitingOnFeature);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1397,6 +1407,7 @@ $(function () {
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
                 self.InPathPosition(state.InPathPosition);
+                self.IsWaitingOnFeature(state.IsWaitingOnFeature);
             };
 
 
@@ -1418,6 +1429,8 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
+                    if (self.IsWaitingOnFeature())
+                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";

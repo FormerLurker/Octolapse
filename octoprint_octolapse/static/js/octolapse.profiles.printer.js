@@ -110,7 +110,7 @@ $(function() {
                     // Get the current guid
                     var newUnit = $("#octolapse_axis_speed_display_unit_options").val();
                     var previousUnit = self.axis_speed_display_units();
-                    var precision = 4;
+                    var precision = 3;
                     var precision_multiplier = Math.pow(10, precision);
                     if(newUnit === previousUnit) {
                         //console.log("Axis speed display units, no change detected!")

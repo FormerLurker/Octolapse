@@ -1385,7 +1385,6 @@ class Position(object):
         if self.Printer.axis_speed_display_units == "mm-sec":
             speed = speed / 60.0
 
-
         if utility.is_close(speed, self.Printer.detract_speed, self.Printer.speed_tolerance):
             features.append(Printer.PrintFeatureNames.Detract)
         if utility.is_close(speed, self.Printer.retract_speed, self.Printer.speed_tolerance):
