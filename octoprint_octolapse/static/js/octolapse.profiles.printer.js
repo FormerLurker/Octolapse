@@ -159,10 +159,10 @@ $(function() {
                         case "mm-sec":
                             if(newUnit === "mm-min")
                             {
-                                self.retract_speed(Math.round(self.retract_speed()*60.0) / precision_multiplier);
-                                self.detract_speed(Math.round(self.detract_speed()*60.0) / precision_multiplier);
-                                self.movement_speed(Math.round(self.movement_speed()*60.0) / precision_multiplier);
-                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0) / precision_multiplier);
+                                self.retract_speed(Math.round(self.retract_speed()*60.0 * precision_multiplier) / precision_multiplier);
+                                self.detract_speed(Math.round(self.detract_speed()*60.0 * precision_multiplier) / precision_multiplier);
+                                self.movement_speed(Math.round(self.movement_speed()*60.0 * precision_multiplier) / precision_multiplier);
+                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0 * precision_multiplier) / precision_multiplier);
                                 // Optional values
                                 if(self.perimeter_speed())
                                     self.perimeter_speed(Math.round(self.perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
