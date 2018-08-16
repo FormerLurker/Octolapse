@@ -738,7 +738,7 @@ $(function () {
                     break;
                 case "snapshot-start":
                     {
-                        console.log('octolapse.js - snapshot-start');
+                        //console.log('octolapse.js - snapshot-start');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(false);
                     }

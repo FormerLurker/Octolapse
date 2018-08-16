@@ -86,6 +86,37 @@ $(function () {
             self.position_restrictions.push(
                 ko.observable(values.position_restrictions[index]));
         }
+
+        /*
+        * Quaity Settiings
+        */
+        self.feature_restrictions_enabled  = ko.observable(values.feature_restrictions_enabled);
+
+        self.trigger_on_detract = ko.observable(values.trigger_on_detract);
+        self.trigger_on_retract = ko.observable(values.trigger_on_retract);
+        self.trigger_on_movement = ko.observable(values.trigger_on_movement);
+        self.trigger_on_z_movement = ko.observable(values.trigger_on_z_movement);
+
+        self.trigger_on_perimeters = ko.observable(values.trigger_on_perimeters);
+        self.trigger_on_small_perimeters = ko.observable(values.trigger_on_small_perimeters);
+        self.trigger_on_external_perimeters = ko.observable(values.trigger_on_external_perimeters);
+        self.trigger_on_infill = ko.observable(values.trigger_on_infill);
+        self.trigger_on_solid_infill = ko.observable(values.trigger_on_solid_infill);
+        self.trigger_on_top_solid_infill = ko.observable(values.trigger_on_top_solid_infill);
+        self.trigger_on_supports = ko.observable(values.trigger_on_supports);
+        self.trigger_on_bridges = ko.observable(values.trigger_on_bridges);
+        self.trigger_on_gap_fills = ko.observable(values.trigger_on_gap_fills);
+        self.trigger_on_first_layer = ko.observable(values.trigger_on_first_layer);
+
+        self.lift_before_move = ko.observable(values.lift_before_move);
+        self.retract_before_move = ko.observable(values.retract_before_move);
+        /*
+        * Snapshot Cleanup Settings
+        */
+        self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
+        self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
+
+
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');
         self.new_position_restriction_shape = ko.observable('rect');
@@ -96,10 +127,7 @@ $(function () {
         self.new_position_restriction_r = ko.observable(1);
         self.new_calculate_intersections = ko.observable(false);
 
-        self.lift_before_move = ko.observable(values.lift_before_move);
-        self.retract_before_move = ko.observable(values.retract_before_move);
-        self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
-        self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
+
 
 
         self.addPositionRestriction = function () {

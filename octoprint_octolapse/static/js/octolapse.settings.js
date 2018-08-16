@@ -409,14 +409,14 @@ $(function () {
                 errorPlacement: function (error, element) {
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    console.log("Placing Error, element:" + error_id + ", Error: " + $(error).html());
+                    //console.log("Placing Error, element:" + error_id + ", Error: " + $(error).html());
                     $field_error.html(error);
                 },
                 unhighlight: function (element, errorClass) {
                     //$(element).parent().parent().removeClass(errorClass);
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    console.log("Unhighlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
+                    //console.log("Unhighlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
                     $field_error.addClass("checked");
                     $field_error.removeClass(errorClass);
                 },
@@ -424,12 +424,12 @@ $(function () {
                     //$(element).parent().parent().addClass(errorClass);
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    console.log("Highlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
+                    //console.log("Highlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
                 },
                 invalidHandler: function () {
-                    console.log("Invalid!");
+                    //console.log("Invalid!");
                     dialog.$errorCount.empty();
                     dialog.$summary.show();
                     var numErrors = dialog.validator.numberOfInvalids();

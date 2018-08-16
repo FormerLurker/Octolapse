@@ -104,6 +104,7 @@ class Pos(object):
         self.IsInPosition = False if pos is None else pos.IsInPosition
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
+        self.Features = [] if pos is None else list(pos.Features)
 
         # default firmware retraction length and feedrate if default_firmware_retractions isenabled
         if pos is None and printer.default_firmware_retractions:
@@ -144,6 +145,7 @@ class Pos(object):
         self.HasPositionChanged = False
         self.HasStateChanged = False
         self.HasReceivedHomeCommand = False
+        self.Features = []
 
     def is_state_equal(self, pos, tolerance):
         if (self.XHomed == pos.XHomed and self.YHomed == pos.YHomed
@@ -215,6 +217,7 @@ class Pos(object):
             "Height": self.Height,
             "LastExtrusionHeight": self.LastExtrusionHeight,
             "IsInPosition": self.IsInPosition,
+            "Features": self.Features,
             "InPathPosition": self.InPathPosition,
             "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
@@ -233,7 +236,8 @@ class Pos(object):
             "Z": self.Z,
             "ZOffset": self.ZOffset,
             "E": self.E,
-            "EOffset": self.EOffset
+            "EOffset": self.EOffset,
+            "Features": self.Features
 
         }
 
@@ -259,6 +263,7 @@ class Pos(object):
             "IsLayerChange": self.IsLayerChange,
             "IsZHop": self.IsZHop,
             "IsInPosition": self.IsInPosition,
+            "Features": self.Features,
             "InPathPosition": self.InPathPosition,
             "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
@@ -525,6 +530,12 @@ class Position(object):
         if pos is None:
             return None
         return pos.InPathPosition
+
+    def features(self, index=0):
+        pos = self.get_position(index)
+        if pos is None:
+            return None
+        return pos.Features
 
     def has_position_changed(self, index=0):
         pos = self.get_position(index)
@@ -1173,6 +1184,9 @@ class Position(object):
         ):
             # If we have a homed for the current and previous position, and either the exturder or position has changed
 
+            # discover currently printing features
+            pos.Features = self.currently_printing_features(pos.F)
+
             if self.HasRestrictedPosition:
                 # If we're using restricted positions, calculate intersections and determine if we are in position
                 can_calculate_intersections = pos.parsed_command.cmd in ["G0", "G1"]
@@ -1363,6 +1377,55 @@ class Position(object):
         current_position = self.Positions[index]
         return get_formatted_coordinates(current_position.X, current_position.Y,
                                          current_position.Z, current_position.E)
+
+    def currently_printing_features(self, speed):
+        features = []
+
+        # convert the speed to the current printer speed units
+        if self.Printer.axis_speed_display_units == "mm-sec":
+            speed = speed / 60.0
+
+
+        if utility.is_close(speed, self.Printer.detract_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Detract)
+        if utility.is_close(speed, self.Printer.retract_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Perimeters)
+        if utility.is_close(speed, self.Printer.movement_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Movement)
+        if utility.is_close(speed, self.Printer.z_hop_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.ZMovement)
+
+        if self.Printer.perimeter_speed and utility.is_close(speed, self.Printer.perimeter_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Perimeters)
+
+        if self.Printer.small_perimeter_speed and utility.is_close(speed, self.Printer.small_perimeter_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.SmallPerimeters)
+
+        if self.Printer.external_perimeter_speed and utility.is_close(speed, self.Printer.external_perimeter_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.ExternalPerimeters)
+
+        if self.Printer.infill_speed and utility.is_close(speed, self.Printer.infill_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Infill)
+
+        if self.Printer.solid_infill_speed and utility.is_close(speed, self.Printer.solid_infill_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.SolidInfill)
+
+        if self.Printer.top_solid_infill_speed and utility.is_close(speed, self.Printer.top_solid_infill_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.TopSolidInfill)
+
+        if self.Printer.support_speed and utility.is_close(speed, self.Printer.support_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Support)
+
+        if self.Printer.support_speed and utility.is_close(speed, self.Printer.bridge_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.Bridge)
+
+        if self.Printer.gap_fill_speed and utility.is_close(speed, self.Printer.gap_fill_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.GapFill)
+
+        if self.Printer.first_layer_speed and utility.is_close(speed, self.Printer.first_layer_speed, self.Printer.speed_tolerance):
+            features.append(Printer.PrintFeatureNames.FirstLayer)
+
+        return features
 
     def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 

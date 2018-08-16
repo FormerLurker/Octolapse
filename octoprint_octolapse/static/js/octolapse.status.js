@@ -412,7 +412,7 @@ $(function () {
 
             }, self);
             self.getTimelapseStateText =  ko.pureComputed(function () {
-                console.log("GettingTimelapseStateText")
+                //console.log("GettingTimelapseStateText")
                 if(!self.is_timelapse_active())
                     return 'Octolapse is not running';
                 if(!self.PositionState.IsInitialized())
@@ -628,7 +628,7 @@ $(function () {
             self.snapshotCameraChanged = function(obj, event) {
                 // Update the current camera profile
                 var guid = $("#octolapse_current_snapshot_camera").val();
-                console.log("Updating current snapshot camera preview: " + guid)
+                //console.log("Updating current snapshot camera preview: " + guid)
                 if(event.originalEvent) {
                     if (Octolapse.Globals.is_admin()) {
                         var data = {'guid': guid};
@@ -640,7 +640,7 @@ $(function () {
                             dataType: "json",
                             success: function (result) {
                                 // Set the current profile guid observable.  This will cause the UI to react to the change.
-                                console.log("current profile guid updated: " + result.guid)
+                                //console.log("current profile guid updated: " + result.guid)
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 alert("Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
@@ -649,7 +649,7 @@ $(function () {
                     }
                 }
 
-                console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
+                //console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
                 Octolapse.Status.current_camera_guid(guid);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
@@ -854,6 +854,7 @@ $(function () {
             self.ZOffset = ko.observable(0).extend({numeric: 2});
             self.E = ko.observable(0).extend({numeric: 2});
             self.EOffset = ko.observable(0).extend({numeric: 2});
+            self.Features = ko.observableArray([]);
             self.update = function (state) {
                 this.F(state.F);
                 this.X(state.X);
@@ -864,6 +865,8 @@ $(function () {
                 this.ZOffset(state.ZOffset);
                 this.E(state.E);
                 this.EOffset(state.EOffset);
+                this.Features(state.Features);
+                //console.log(this.Features());
                 //self.plotPosition(state.X, state.Y, state.Z);
             };
             /*
@@ -1066,6 +1069,8 @@ $(function () {
             self.IsHomed = ko.observable(state.IsHomed);
             self.IsInPosition = ko.observable(state.IsInPosition);
             self.InPathPosition = ko.observable(state.IsInPathPosition);
+            self.IsFeatureAllowed = ko.observable(state.IsFeatureAllowed);
+            self.IsWaitingOnFeature = ko.observable(state.IsWaitingOnFeature);
             self.update = function (state) {
                 self.Type(state.Type);
                 self.Name(state.Name);
@@ -1078,6 +1083,8 @@ $(function () {
                 self.IsHomed(state.IsHomed);
                 self.IsInPosition(state.IsInPosition);
                 self.InPathPosition(state.InPathPosition);
+                self.IsFeatureAllowed(state.IsFeatureAllowed);
+                self.IsWaitingOnFeature(state.IsWaitingOnFeature);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.IsHomed())
@@ -1105,6 +1112,8 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.IsInPosition() && !self.InPathPosition())
                         waitList.push("position");
+                    if (self.IsWaitingOnFeature())
+                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";

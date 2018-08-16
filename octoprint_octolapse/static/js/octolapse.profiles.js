@@ -58,7 +58,7 @@ $(function() {
         // Adds or updats a profile via ajax
         self.addUpdateProfile = function(profile, onSuccess) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-            console.log("add/update profile")
+            //console.log("add/update profile")
             var isNewProfile = profile().guid() === "";
             var profile_js = null;
             if(profile().toJS)

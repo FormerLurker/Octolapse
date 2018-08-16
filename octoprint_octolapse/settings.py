@@ -37,6 +37,23 @@ PROFILE_SNAPSHOT_GCODE_TYPE = "gcode"
 
 
 class Printer(object):
+    # Globals
+    # feture names
+    class PrintFeatureNames(object):
+        Detract = 'Detract'
+        Retract = 'Retract'
+        Movement = 'Movement'
+        ZMovement = 'Z Movement'
+        Perimeters = 'Perimeters'
+        ExternalPerimeters = 'External Perimeters'
+        SmallPerimeters = 'Small Perimeters'
+        Infill = 'Infill'
+        SolidInfill = 'Solid Infill'
+        TopSolidInfill = 'Top Solid Infill'
+        Support = 'Support'
+        Bridge = 'Bridge'
+        GapFill = 'Gap Fill'
+        FirstLayer = 'First Layer'
 
     def __init__(self, printer=None, name="New Printer", guid=None):
         self.guid = guid if guid else str(uuid.uuid4())
@@ -49,6 +66,18 @@ class Printer(object):
         self.z_hop = .5
         self.z_hop_speed = 6000
         self.retract_speed = 4000
+        # misc speeds
+        self.perimeter_speed = None
+        self.small_perimeter_speed = None
+        self.external_perimeter_speed = None
+        self.infill_speed = None
+        self.solid_infill_speed = None
+        self.top_solid_infill_speed = None
+        self.support_speed = None
+        self.bridge_speed = None
+        self.gap_fill_speed = None
+        self.first_layer_speed = None
+        self.speed_tolerance = 0.6
         self.snapshot_command = "snap"
         self.suppress_snapshot_command_always = True
         self.printer_position_confirmation_tolerance = 0.001
@@ -84,6 +113,17 @@ class Printer(object):
                 self.movement_speed = printer.movement_speed
                 self.z_hop = printer.z_hop
                 self.z_hop_speed = printer.z_hop_speed
+                self.perimeter_speed = printer.perimeter_speed
+                self.small_perimeter_speed = printer.small_perimeter_speed
+                self.external_perimeter_speed = printer.external_perimeter_speed
+                self.infill_speed = printer.infill_speed
+                self.solid_infill_speed = printer.solid_infill_speed
+                self.top_solid_infill_speed = printer.top_solid_infill_speed
+                self.support_speed = printer.support_speed
+                self.bridge_speed = printer.bridge_speed
+                self.gap_fill_speed = printer.gap_fill_speed
+                self.first_layer_speed = printer.first_layer_speed
+                self.speed_tolerance = printer.speed_tolerance
                 self.snapshot_command = printer.snapshot_command
                 self.suppress_snapshot_command_always = printer.suppress_snapshot_command_always
                 self.printer_position_confirmation_tolerance = printer.printer_position_confirmation_tolerance
@@ -132,6 +172,40 @@ class Printer(object):
         if "movement_speed" in changes.keys():
             self.movement_speed = utility.get_float(
                 changes["movement_speed"], self.movement_speed)
+
+        if "perimeter_speed" in changes.keys():
+            self.perimeter_speed = utility.get_float(
+                changes["perimeter_speed"], self.perimeter_speed)
+        if "small_perimeter_speed" in changes.keys():
+            self.small_perimeter_speed = utility.get_float(
+                changes["small_perimeter_speed"], self.small_perimeter_speed)
+        if "external_perimeter_speed" in changes.keys():
+            self.external_perimeter_speed = utility.get_float(
+                changes["external_perimeter_speed"], self.external_perimeter_speed)
+        if "infill_speed" in changes.keys():
+            self.infill_speed = utility.get_float(
+                changes["infill_speed"], self.infill_speed)
+        if "solid_infill_speed" in changes.keys():
+            self.solid_infill_speed = utility.get_float(
+                changes["solid_infill_speed"], self.solid_infill_speed)
+        if "top_solid_infill_speed" in changes.keys():
+            self.top_solid_infill_speed = utility.get_float(
+                changes["top_solid_infill_speed"], self.top_solid_infill_speed)
+        if "support_speed" in changes.keys():
+            self.support_speed = utility.get_float(
+                changes["support_speed"], self.support_speed)
+        if "bridge_speed" in changes.keys():
+            self.bridge_speed = utility.get_float(
+                changes["bridge_speed"], self.bridge_speed)
+        if "gap_fill_speed" in changes.keys():
+            self.gap_fill_speed = utility.get_float(
+                changes["gap_fill_speed"], self.gap_fill_speed)
+        if "first_layer_speed" in changes.keys():
+            self.first_layer_speed = utility.get_float(
+                changes["first_layer_speed"], self.first_layer_speed)
+        if "speed_tolerance" in changes.keys():
+            self.speed_tolerance = utility.get_float(
+                changes["speed_tolerance"], self.speed_tolerance)
         if "snapshot_command" in changes.keys():
             # note that the snapshot command is stripped of comments.
             self.snapshot_command = utility.get_string(
@@ -219,6 +293,17 @@ class Printer(object):
             'movement_speed': self.movement_speed,
             'z_hop': self.z_hop,
             'z_hop_speed': self.z_hop_speed,
+            'perimeter_speed': self.perimeter_speed,
+            'small_perimeter_speed': self.small_perimeter_speed,
+            'external_perimeter_speed': self.external_perimeter_speed,
+            'infill_speed': self.infill_speed,
+            'solid_infill_speed': self.solid_infill_speed,
+            'top_solid_infill_speed': self.top_solid_infill_speed,
+            'support_speed': self.support_speed,
+            'bridge_speed': self.bridge_speed,
+            'gap_fill_speed': self.gap_fill_speed,
+            'first_layer_speed': self.first_layer_speed,
+            'speed_tolerance': self.speed_tolerance,
             'snapshot_command': self.snapshot_command,
             'suppress_snapshot_command_always': self.suppress_snapshot_command_always,
             'printer_position_confirmation_tolerance': self.printer_position_confirmation_tolerance,
@@ -576,11 +661,30 @@ class Snapshot(object):
         self.layer_trigger_on_detracting_start = True
         self.layer_trigger_on_detracting = False
         self.layer_trigger_on_detracted = False
-        # other settings
+        # Position Restrictions
         self.position_restrictions = []
+
+        # Quality Settings
+        self.feature_restrictions_enabled = False
+        self.trigger_on_detract = True
+        self.trigger_on_retract = True
+        self.trigger_on_movement = True
+        self.trigger_on_z_movement = True
+        self.trigger_on_perimeters = True
+        self.trigger_on_small_perimeters = True
+        self.trigger_on_external_perimeters = True
+        self.trigger_on_infill = True
+        self.trigger_on_solid_infill = True
+        self.trigger_on_top_solid_infill = True
+        self.trigger_on_supports = True
+        self.trigger_on_bridges = True
+        self.trigger_on_gap_fills = True
+        self.trigger_on_first_layer = True
+
         self.lift_before_move = True
         self.retract_before_move = True
 
+        # Snapshot Cleanup
         self.cleanup_after_render_complete = True
         self.cleanup_after_render_fail = False
 
@@ -629,10 +733,28 @@ class Snapshot(object):
                 self.layer_trigger_on_detracting_start = snapshot.layer_trigger_on_detracting_start
                 self.layer_trigger_on_detracting = snapshot.layer_trigger_on_detracting
                 self.layer_trigger_on_detracted = snapshot.layer_trigger_on_detracted
-
+                # position restrictions
                 self.position_restrictions = snapshot.position_restrictions
+                # quality settings
+                self.feature_restrictions_enabled = snapshot.feature_restrictions_enabled
+                self.trigger_on_detract = snapshot.trigger_on_detract
+                self.trigger_on_retract = snapshot.trigger_on_retract
+                self.trigger_on_movement = snapshot.trigger_on_movement
+                self.trigger_on_z_movement = snapshot.trigger_on_z_movement
+                self.trigger_on_perimeters = snapshot.trigger_on_perimeters
+                self.trigger_on_small_perimeters = snapshot.trigger_on_small_perimeters
+                self.trigger_on_external_perimeters = snapshot.trigger_on_external_perimeters
+                self.trigger_on_infill = snapshot.trigger_on_infill
+                self.trigger_on_solid_infill = snapshot.trigger_on_solid_infill
+                self.trigger_on_top_solid_infill = snapshot.trigger_on_top_solid_infill
+                self.trigger_on_supports = snapshot.trigger_on_supports
+                self.trigger_on_bridges = snapshot.trigger_on_bridges
+                self.trigger_on_gap_fills = snapshot.trigger_on_gap_fills
+                self.trigger_on_first_layer = snapshot.trigger_on_first_layer
                 self.lift_before_move = snapshot.lift_before_move
                 self.retract_before_move = snapshot.retract_before_move
+
+                # Snapshot Cleanup
                 self.cleanup_after_render_complete = snapshot.cleanup_after_render_complete
                 self.cleanup_after_render_fail = snapshot.cleanup_after_render_fail
 
@@ -766,16 +888,65 @@ class Snapshot(object):
         if "layer_trigger_on_detracted" in changes.keys():
             self.layer_trigger_on_detracted = self.get_extruder_trigger_value(
                 changes["layer_trigger_on_detracted"])
-        # other settings
+        # position restrictions
         if "position_restrictions" in changes.keys():
             self.position_restrictions = self.get_trigger_position_restrictions(
                 changes["position_restrictions"])
+        # quality settiings
+        if "feature_restrictions_enabled" in changes.keys():
+            self.feature_restrictions_enabled = utility.get_bool(
+                changes["feature_restrictions_enabled"], self.feature_restrictions_enabled)
+        if "trigger_on_detract" in changes.keys():
+            self.trigger_on_detract = utility.get_bool(
+                changes["trigger_on_detract"], self.trigger_on_detract)
+        if "trigger_on_retract" in changes.keys():
+            self.trigger_on_retract = utility.get_bool(
+                changes["trigger_on_retract"], self.trigger_on_retract)
+        if "trigger_on_movement" in changes.keys():
+            self.trigger_on_movement = utility.get_bool(
+                changes["trigger_on_movement"], self.trigger_on_movement)
+        if "trigger_on_z_movement" in changes.keys():
+            self.trigger_on_z_movement = utility.get_bool(
+                changes["trigger_on_z_movement"], self.trigger_on_z_movement)
+
+        if "trigger_on_perimeters" in changes.keys():
+            self.trigger_on_perimeters = utility.get_bool(
+                changes["trigger_on_perimeters"], self.trigger_on_perimeters)
+        if "trigger_on_small_perimeters" in changes.keys():
+            self.trigger_on_small_perimeters = utility.get_bool(
+                changes["trigger_on_small_perimeters"], self.trigger_on_small_perimeters)
+        if "trigger_on_external_perimeters" in changes.keys():
+            self.trigger_on_external_perimeters = utility.get_bool(
+                changes["trigger_on_external_perimeters"], self.trigger_on_external_perimeters)
+        if "trigger_on_infill" in changes.keys():
+            self.trigger_on_infill = utility.get_bool(
+                changes["trigger_on_infill"], self.trigger_on_infill)
+        if "trigger_on_solid_infill" in changes.keys():
+            self.trigger_on_solid_infill = utility.get_bool(
+                changes["trigger_on_solid_infill"], self.trigger_on_solid_infill)
+        if "trigger_on_top_solid_infill" in changes.keys():
+            self.trigger_on_top_solid_infill = utility.get_bool(
+                changes["trigger_on_top_solid_infill"], self.trigger_on_top_solid_infill)
+        if "trigger_on_supports" in changes.keys():
+            self.trigger_on_supports = utility.get_bool(
+                changes["trigger_on_supports"], self.trigger_on_supports)
+        if "trigger_on_bridges" in changes.keys():
+            self.trigger_on_bridges = utility.get_bool(
+                changes["trigger_on_bridges"], self.trigger_on_bridges)
+        if "trigger_on_gap_fills" in changes.keys():
+            self.trigger_on_gap_fills = utility.get_bool(
+                changes["trigger_on_gap_fills"], self.trigger_on_gap_fills)
+        if "trigger_on_first_layer" in changes.keys():
+            self.trigger_on_first_layer = utility.get_bool(
+                changes["trigger_on_first_layer"], self.trigger_on_first_layer)
+
         if "lift_before_move" in changes.keys():
             self.lift_before_move = utility.get_bool(
                 changes["lift_before_move"], self.lift_before_move)
         if "retract_before_move" in changes.keys():
             self.retract_before_move = utility.get_bool(
                 changes["retract_before_move"], self.retract_before_move)
+        #Snapshot Cleanup
         if "cleanup_after_render_complete" in changes.keys():
             self.cleanup_after_render_complete = utility.get_bool(
                 changes["cleanup_after_render_complete"], self.cleanup_after_render_complete)
@@ -872,12 +1043,28 @@ class Snapshot(object):
             'layer_trigger_on_detracting_start': get_vr(self.layer_trigger_on_detracting_start),
             'layer_trigger_on_detracting': get_vr(self.layer_trigger_on_detracting),
             'layer_trigger_on_detracted': get_vr(self.layer_trigger_on_detracted),
-
-            # Other Settings
+            # Position Restrictions
             'position_restrictions': self.get_trigger_position_restrictions_value_string(
                 self.position_restrictions),
+            # quality settings
+            'feature_restrictions_enabled': self.feature_restrictions_enabled,
+            'trigger_on_detract': self.trigger_on_detract,
+            'trigger_on_retract': self.trigger_on_retract,
+            'trigger_on_movement': self.trigger_on_movement,
+            'trigger_on_z_movement': self.trigger_on_z_movement,
+            'trigger_on_perimeters': self.trigger_on_perimeters,
+            'trigger_on_small_perimeters': self.trigger_on_small_perimeters,
+            'trigger_on_external_perimeters': self.trigger_on_external_perimeters,
+            'trigger_on_infill': self.trigger_on_infill,
+            'trigger_on_solid_infill': self.trigger_on_solid_infill,
+            'trigger_on_top_solid_infill': self.trigger_on_top_solid_infill,
+            'trigger_on_supports': self.trigger_on_supports,
+            'trigger_on_bridges': self.trigger_on_bridges,
+            'trigger_on_gap_fills': self.trigger_on_gap_fills,
+            'trigger_on_first_layer': self.trigger_on_first_layer,
             'lift_before_move': self.lift_before_move,
             'retract_before_move': self.retract_before_move,
+            # snapshot cleanup
             'cleanup_after_render_complete': self.cleanup_after_render_complete,
             'cleanup_after_render_fail': self.cleanup_after_render_fail,
         }

@@ -270,8 +270,8 @@ $(function() {
                 },
                 function(response_status, error_name, stack_trace) {
                     // Failed to load an overlay.
-                    console.log('Failed to load overlay preview from server.')
-                    console.log(stack_trace);
+                    //console.log('Failed to load overlay preview from server.')
+                    //console.log(stack_trace);
                     self.overlay_preview_image('');
                     self.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });

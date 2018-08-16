@@ -111,10 +111,22 @@
           </div>
         </span>
         <span class="span4">
-          <strong>Speed</strong>
-          <br/>
-          <span data-bind="text: Position.F"/>
-          <i>mm/min</i>
+            <strong>Speed and Features</strong>
+            <br/>
+            <div class="row-fluid ol-compact-row">
+                <div class="span2">Speed:</div>
+                <div class="span6 text-right">
+                  <span data-bind="text: Position.F"/>
+                </div>
+                <div class="span2">
+                  <i>&nbsp;mm/min</i>
+                </div>
+            </div>
+            <div>Features:&nbsp;&nbsp;
+                <!-- ko if: Position.Features().length === 0 -->Unknown<!-- /ko -->
+                <span data-bind="foreach: Position.Features"><!-- ko if: $index() !== 0 -->&#44;&nbsp;<!-- /ko --><span data-bind="text: $data"/></span>
+            </div>
+
         </span>
       </div>
 

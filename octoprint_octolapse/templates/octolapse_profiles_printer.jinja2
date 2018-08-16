@@ -100,7 +100,7 @@
         <label class="control-label">Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input  id="printer_profile_movement_speed" name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input  id="printer_profile_movement_speed" name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.001" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
@@ -112,7 +112,7 @@
         <label class="control-label">Retraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input id="printer_profile_retract_speed" name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_retract_speed" name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.001" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
@@ -124,7 +124,7 @@
         <label class="control-label">Detraction Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input id="printer_profile_detract_speed" name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_detract_speed" name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.001" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
@@ -136,7 +136,7 @@
         <label class="control-label">Z Movement Speed</label>
         <div class="controls">
           <div class="input-append form-inline">
-            <input id="printer_profile_z_hop_speed" name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.01" min="0" max="9999999" required="true" />
+            <input id="printer_profile_z_hop_speed" name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.001" min="0" max="9999999" required="true" />
             <span class="add-on">mm</span>
             <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
           </div>
@@ -145,6 +145,140 @@
         </div>
       </div>
     </div>
+      <div>
+          <div>
+            <h5>Other Speeds</h5>
+            <p>
+              It's recommended that these speeds are entered if available, and that each is different (can even be a slight difference) so that octolapse can detect what is being printed.  This used within the snapshot 'quality' settings.
+            </p>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Perimeter Speed</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_perimeter_speed" name="perimeter_speed" type="number" class="input-small text-right" data-bind="value: perimeter_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_perimeter_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Small Perimeters</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_small_perimeter_speed" name="small_perimeter_speed" type="number" class="input-small text-right" data-bind="value: small_perimeter_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_small_perimeter_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">External Perimeters</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_external_perimeter_speed" name="external_perimeter_speed" type="number" class="input-small text-right" data-bind="value: external_perimeter_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_external_perimeter_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Infill</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_infill_speed" name="infill_speed" type="number" class="input-small text-right" data-bind="value: infill_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_infill_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Solid Infill</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_solid_infill_speed" name="solid_infill_speed" type="number" class="input-small text-right" data-bind="value: solid_infill_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_solid_infill_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Top Solid Infill</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_top_solid_infill_speed" name="top_solid_infill_speed" type="number" class="input-small text-right" data-bind="value: top_solid_infill_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_top_solid_infill_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Support</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_support_speed" name="support_speed" type="number" class="input-small text-right" data-bind="value: support_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_support_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Bridge</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_bridge_speed" name="bridge_speed" type="number" class="input-small text-right" data-bind="value: bridge_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_bridge_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Gaps</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_gap_fill_speed" name="gap_fill_speed" type="number" class="input-small text-right" data-bind="value: gap_fill_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_gap_fill_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">First Layer</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_first_layer_speed" name="first_layer_speed" type="number" class="input-small text-right" data-bind="value: first_layer_speed" step="0.001" min="0" max="9999999" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_first_layer_speed"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Speed Tolerance</label>
+            <div class="controls">
+              <div class="input-append form-inline">
+                <input id="printer_profile_speed_tolerance" name="speed_tolerance" type="number" class="input-small text-right" data-bind="value: speed_tolerance" step="0.001" min="0" max="9999999" required="true" />
+                <span class="add-on">mm</span>
+                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+              </div>
+              <div class="error_label_container text-error" data-error-for="printer_profile_speed_tolerance"></div>
+                <span class="help-inline">
+                    How closely the speed within the gcode must match the speeds above in order for Octolapse to detect the feature.
+                </span>
+            </div>
+          </div>
+
+
+      </div>
     <div>
       <div>
         <h5>Axis Mode</h5>

@@ -59,6 +59,17 @@ $(function() {
         self.movement_speed = ko.observable(values.movement_speed);
         self.z_hop = ko.observable(values.z_hop);
         self.z_hop_speed = ko.observable(values.z_hop_speed);
+        self.perimeter_speed = ko.observable(values.perimeter_speed);
+        self.small_perimeter_speed = ko.observable(values.small_perimeter_speed);
+        self.external_perimeter_speed = ko.observable(values.external_perimeter_speed);
+        self.infill_speed = ko.observable(values.infill_speed);
+        self.solid_infill_speed = ko.observable(values.solid_infill_speed);
+        self.top_solid_infill_speed = ko.observable(values.top_solid_infill_speed);
+        self.support_speed = ko.observable(values.support_speed);
+        self.bridge_speed = ko.observable(values.bridge_speed);
+        self.gap_fill_speed = ko.observable(values.gap_fill_speed);
+        self.first_layer_speed = ko.observable(values.first_layer_speed);
+        self.speed_tolerance = ko.observable(values.speed_tolerance);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
         self.auto_detect_position = ko.observable(values.auto_detect_position);
@@ -93,12 +104,14 @@ $(function() {
             }, self);
 
         self.axisSpeedDisplayUnitsChanged = function (obj, event) {
+
             if (Octolapse.Globals.is_admin()) {
                 if (event.originalEvent) {
                     // Get the current guid
                     var newUnit = $("#octolapse_axis_speed_display_unit_options").val();
                     var previousUnit = self.axis_speed_display_units();
-
+                    var precision = 4;
+                    var precision_multiplier = Math.pow(10, precision);
                     if(newUnit === previousUnit) {
                         //console.log("Axis speed display units, no change detected!")
                         return false;
@@ -111,11 +124,34 @@ $(function() {
                         case "mm-min":
                             if(newUnit === "mm-sec")
                             {
-                                self.retract_speed(Math.round(self.retract_speed()/60.0 * 100) / 100);
-                                self.detract_speed(Math.round(self.detract_speed()/60.0 * 100) / 100);
-                                self.movement_speed(Math.round(self.movement_speed()/60.0 * 100) / 100);
-                                self.z_hop_speed(Math.round(self.z_hop_speed()/60.0 * 100) / 100);
                                 // Convert all from mm-min to mm-sec
+                                self.retract_speed(Math.round(self.retract_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                self.detract_speed(Math.round(self.detract_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                self.movement_speed(Math.round(self.movement_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                self.z_hop_speed(Math.round(self.z_hop_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                // Optional values
+                                if(self.perimeter_speed())
+                                    self.perimeter_speed(Math.round(self.perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.small_perimeter_speed())
+                                    self.small_perimeter_speed(Math.round(self.small_perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.external_perimeter_speed())
+                                    self.external_perimeter_speed(Math.round(self.external_perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.infill_speed())
+                                    self.infill_speed(Math.round(self.infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.solid_infill_speed())
+                                    self.solid_infill_speed(Math.round(self.solid_infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.top_solid_infill_speed())
+                                    self.top_solid_infill_speed(Math.round(self.top_solid_infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.support_speed())
+                                    self.support_speed(Math.round(self.support_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.bridge_speed())
+                                    self.bridge_speed(Math.round(self.bridge_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.gap_fill_speed())
+                                    self.gap_fill_speed(Math.round(self.gap_fill_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.first_layer_speed())
+                                    self.first_layer_speed(Math.round(self.first_layer_speed()/60.0 * precision_multiplier) /precision_multiplier);
+                                self.speed_tolerance(Math.round(self.speed_tolerance()/60.0 * precision_multiplier) /precision_multiplier);
+
                             }
                             else
                                 return false;
@@ -123,10 +159,33 @@ $(function() {
                         case "mm-sec":
                             if(newUnit === "mm-min")
                             {
-                                self.retract_speed(Math.round(self.retract_speed()*60.0 * 100) / 100);
-                                self.detract_speed(Math.round(self.detract_speed()*60.0 * 100) / 100);
-                                self.movement_speed(Math.round(self.movement_speed()*60.0 * 100) / 100);
-                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0 * 100) / 100);
+                                self.retract_speed(Math.round(self.retract_speed()*60.0) / precision_multiplier);
+                                self.detract_speed(Math.round(self.detract_speed()*60.0) / precision_multiplier);
+                                self.movement_speed(Math.round(self.movement_speed()*60.0) / precision_multiplier);
+                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0) / precision_multiplier);
+                                // Optional values
+                                if(self.perimeter_speed())
+                                    self.perimeter_speed(Math.round(self.perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.small_perimeter_speed())
+                                    self.small_perimeter_speed(Math.round(self.small_perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.external_perimeter_speed())
+                                    self.external_perimeter_speed(Math.round(self.external_perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.infill_speed())
+                                    self.infill_speed(Math.round(self.infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.solid_infill_speed())
+                                    self.solid_infill_speed(Math.round(self.solid_infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.top_solid_infill_speed())
+                                    self.top_solid_infill_speed(Math.round(self.top_solid_infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.support_speed())
+                                    self.support_speed(Math.round(self.support_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.bridge_speed())
+                                    self.bridge_speed(Math.round(self.bridge_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.gap_fill_speed())
+                                    self.gap_fill_speed(Math.round(self.gap_fill_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                if(self.first_layer_speed())
+                                    self.first_layer_speed(Math.round(self.first_layer_speed()*60.0 * precision_multiplier) /precision_multiplier);
+                                self.speed_tolerance(Math.round(self.speed_tolerance()*60.0 * precision_multiplier) /precision_multiplier);
+
                             }
                             else
                                 return false;

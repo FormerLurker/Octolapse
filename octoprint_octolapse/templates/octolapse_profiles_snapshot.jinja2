@@ -548,8 +548,146 @@
     </div>
     <hr />
     <div>
+      <h4>Print Quality Settings</h4>
+      <p>Options to enhance your print quality with Octolapse.  Your printer profile MUST be properly configured for these features to work properly.  Ensure that all of your speed and retraction settings match your slicer values EXACTLY!</p>
+    </div>
+    <hr />
+    <div>
         <div>
-            <div><h5>Lift and Retract</h5></div>
+            <div>
+                <h5>Feature Detection</h5>
+                <p>Allow snapshots to be taken while printing certain types of features.  The detection is performed by matching the current gcode speeds with your printer profile settings.  They must match exactly in order to work!</p>
+                <p>If your printer profile uses the same speed for any of the following options, octolapse may take snapshots where you did not intend.  Make sure all print speeds are distinct, even if by only a small amount.</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Enable Feature Detection</label>
+                <div class="controls">
+                    <label class="checkbox" title="Enable or disable feature detection and restriction">
+                        <input type="checkbox" data-bind="checked: feature_restrictions_enabled" /> Enabled
+                    </label>
+                </div>
+            </div>
+            <div data-bind="visible: feature_restrictions_enabled">
+                <div class="control-group">
+                    <label class="control-label">Movement (travel)</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots while printing at movement (travel) speed">
+                            <input type="checkbox" data-bind="checked: trigger_on_movement" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Z Movement (z-lift)</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots while printing at z-lift speed">
+                            <input type="checkbox" data-bind="checked: trigger_on_z_movement" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Retract</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots while printing at retraction speed">
+                            <input type="checkbox" data-bind="checked: trigger_on_retract" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Detract</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots while printing at detraction speed">
+                            <input type="checkbox" data-bind="checked: trigger_on_detract" /> Enabled
+                        </label>
+                    </div>
+                </div>
+
+
+                <div class="control-group">
+                    <label class="control-label">Perimeters</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+                            <input type="checkbox" data-bind="checked: trigger_on_perimeters" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Small Perimeters</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to be taken while printing at small perimeter speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_small_perimeters" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">External Perimeters</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing at external perimeter speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_external_perimeters" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Infill</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing at infill speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_infill" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Solid Infill</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing at solid infill speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_solid_infill" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Top Solid Infill</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing at top solid infill speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_top_solid_infill" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Supports</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing with support speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_supports" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Bridges</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while printing at bridging speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_bridges" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Gap Fills</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to trigger while filling gaps.">
+                            <input type="checkbox" data-bind="checked: trigger_on_gap_fills" /> Enabled
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">First Layer</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Allow snapshots to be taken while printing at the first layer speed.">
+                            <input type="checkbox" data-bind="checked: trigger_on_first_layer" /> Enabled
+                        </label>
+                        <span class="help-inline">Currently this option works by matching the first layer speed ONLY on the first layer.</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h5>LIft and Retract</h5>
+                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
+            </div>
             <div class="control-group">
                 <label class="control-label">Retract Before Move</label>
                 <div class="controls">
