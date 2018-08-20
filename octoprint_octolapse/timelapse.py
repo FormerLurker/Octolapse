@@ -177,15 +177,19 @@ class Timelapse(object):
     def on_position_received(self, payload):
         # added new position request sent flag so that we can prevent position requests NOT from Octolapse from
         # triggering a snapshot.
-        if (
-            self.State in [TimelapseState.AcquiringLocation, TimelapseState.TakingSnapshot]
-            and self._position_request_sent
-        ):
-            # set flag to false so that it can be triggered again after the next M114 sent by Octolapse
+        if self._position_request_sent:
             self._position_request_sent = False
             self.Settings.current_debug_profile().log_print_state_change(
                 "Octolapse has received an position request response.")
-            self._position_payload = payload
+            if self.State in [TimelapseState.AcquiringLocation, TimelapseState.TakingSnapshot, TimelapseState.WaitingToEndTimelapse, TimelapseState.WaitingToRender]:
+                # set flag to false so that it can be triggered again after the next M114 sent by Octolapse
+                self._position_payload = payload
+            else:
+                self._position_payload = None
+                self.Settings.current_debug_profile().log_print_state_change(
+                    "Octolapse was not in the correct state to receive a position update.  StateId:{0}"
+                    .format(self.State)
+                )
             self._position_signal.set()
         else:
             self.Settings.current_debug_profile().log_print_state_change(
@@ -216,7 +220,7 @@ class Timelapse(object):
             if start_gcode is not None and len(start_gcode) > 0:
                 commands_to_send = start_gcode + commands_to_send
 
-            if self.State in [TimelapseState.TakingSnapshot, TimelapseState.AcquiringLocation]:
+            if self.State in [TimelapseState.TakingSnapshot, TimelapseState.AcquiringLocation, TimelapseState.WaitingToEndTimelapse, TimelapseState.WaitingToRender]:
                 self.send_snapshot_gcode_array(commands_to_send)
             else:
                 self.Settings.current_debug_profile().log_warning(
@@ -291,6 +295,7 @@ class Timelapse(object):
         }
         try:
 
+            has_error = False
             show_real_snapshot_time = self.Settings.show_real_snapshot_time
             # create the GCode for the timelapse and store it
             snapshot_gcode = self.Gcode.create_snapshot_gcode(
@@ -317,10 +322,13 @@ class Timelapse(object):
                 start_position = self.get_position_async()
                 snapshot_start_time = time.time()
                 if start_position is None:
+                    has_error = True
                     self.Settings.current_debug_profile().log_error(
                         "Unable to acquire the starting position.  Either the print has cancelled or a timeout has been reached."
                     )
-                    return None
+                    # don't send any more gcode if we're cancelling
+                    if self.OctoprintPrinter.get_state_id() == "CANCELLING":
+                        return None
             # Combine the start gcode with the snapshot commands
             gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
 
@@ -332,16 +340,23 @@ class Timelapse(object):
                     start_gcode=gcodes_to_send
                 )
                 if snapshot_position is None:
+                    has_error = True
                     self.Settings.current_debug_profile().log_error(
                         "The snapshot position is None.  Either the print has cancelled or a timeout has been reached."
                     )
-                    return None
+
+                    # don't send any more gcode if we're cancelling
+                    if self.OctoprintPrinter.get_state_id() == "CANCELLING":
+                        return None
 
             # record the snapshot position
             timelapse_snapshot_payload["snapshot_position"] = snapshot_position
             # by now we should be ready to take a snapshot
-            snapshot_payload = self._take_snapshots()
-            timelapse_snapshot_payload["snapshot_payload"] = snapshot_payload
+            if not has_error:
+                snapshot_payload = self._take_snapshots()
+                timelapse_snapshot_payload["snapshot_payload"] = snapshot_payload
+            else:
+                snapshot_payload = None
 
             if not show_real_snapshot_time:
                 # return the printhead to the start position
@@ -364,7 +379,9 @@ class Timelapse(object):
                         self.Settings.current_debug_profile().log_error(
                             "The snapshot_position is None.  Either the print has cancelled or a timeout has been reached."
                         )
-                        return None
+                        # don't send any more gcode if we're cancelling
+                        if self.OctoprintPrinter.get_state_id() == "CANCELLING":
+                            return None
                 # calculate the total snapshot time
                 snapshot_end_time = time.time()
                 snapshot_time = snapshot_end_time - snapshot_start_time
@@ -380,13 +397,14 @@ class Timelapse(object):
                             self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
 
             # we've completed the procedure, set success
-            timelapse_snapshot_payload["success"] = True
+            timelapse_snapshot_payload["success"] = not has_error
 
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
             timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \
                                                   "snapshot procedure. "
-
+        if has_error:
+            return None
         return timelapse_snapshot_payload
 
     # public functions
@@ -873,32 +891,32 @@ class Timelapse(object):
         self.Settings.current_debug_profile().log_gcode_received(
             "Received from printer: line:{0}".format(line)
         )
-        if self._position_request_sent:
-            payload = self.check_for_position_request(line)
-            if payload:
-                self.on_position_received(payload)
+        #if self._position_request_sent:
+        #    payload = self.check_for_position_request(line)
+        #    if payload:
+        #        self.on_position_received(payload)
 
         return line
 
-    def check_for_position_request(self, line):
-        ##~~ position report processing
-        if 'X:' in line and 'Y:' in line and 'Z:' in line:
-            parsed = OctoprintComm.parse_position_line(line)
-            if parsed:
-                # we don't know T or F when printing from SD since
-                # there's no way to query it from the firmware and
-                # no way to track it ourselves when not streaming
-                # the file - this all sucks sooo much
-
-                x = parsed.get("x")
-                y = parsed.get("y")
-                z = parsed.get("z")
-                e = None
-                if "e" in parsed:
-                    e = parsed.get("e")
-                return {'x': x, 'y': y, 'z': z, 'e': e, }
-
-        return False
+    #def check_for_position_request(self, line):
+    #    ##~~ position report processing
+    #    if 'X:' in line and 'Y:' in line and 'Z:' in line:
+    #        parsed = OctoprintComm.parse_position_line(line)
+    #        if parsed:
+    #            # we don't know T or F when printing from SD since
+    #            # there's no way to query it from the firmware and
+    #            # no way to track it ourselves when not streaming
+    #            # the file - this all sucks sooo much
+    #
+    #            x = parsed.get("x")
+    #            y = parsed.get("y")
+    #            z = parsed.get("z")
+    #            e = None
+    #            if "e" in parsed:
+    #                e = parsed.get("e")
+    #            return {'x': x, 'y': y, 'z': z, 'e': e, }
+    #
+    #    return False
 
     # internal functions
     ####################

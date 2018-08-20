@@ -1173,6 +1173,10 @@ class Position(object):
         # todo: should we use 0 as a tolerance here?
         self.Extruder.update(self.e_relative_pos(pos), update_state=pos.should_update_extruder_state(previous_pos, 0))
 
+        if pos.F is not None:
+            # discover currently printing features
+            pos.Features = self.currently_printing_features(pos.F)
+
         # Have the XYZ positions or states changed?
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
         pos.HasStateChanged = not pos.is_state_equal(previous_pos, self.PrinterTolerance)
@@ -1183,9 +1187,6 @@ class Position(object):
             (self.Extruder.has_changed(0) or pos.HasPositionChanged)
         ):
             # If we have a homed for the current and previous position, and either the exturder or position has changed
-
-            # discover currently printing features
-            pos.Features = self.currently_printing_features(pos.F)
 
             if self.HasRestrictedPosition:
                 # If we're using restricted positions, calculate intersections and determine if we are in position

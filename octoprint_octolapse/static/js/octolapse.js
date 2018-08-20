@@ -793,6 +793,7 @@ $(function () {
                     {
                         //console.log('octolapse.js - render-start');
                         self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
 
                         var options = {
                             title: 'Octolapse Rendering Started',
@@ -823,16 +824,16 @@ $(function () {
                         Octolapse.displayPopup(options);
                         break;
                 }
-                case "pre-render-error": {
+                case "before-after-render-error": {
                     // If only the camera image acquisition failed, use the camera error message
                     var options = {
-                        title: 'Octolapse - Pre-Render Script Error',
+                        title: 'Octolapse - Before/After Render Script Error',
                         text: data.msg,
                         type: 'error',
                         hide: true,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "snapshot_error");
+                    Octolapse.displayPopupForKey(options, "before_after_render_script_error");
                     break;
                 }
                 case "render-complete":
@@ -900,7 +901,7 @@ $(function () {
                     {
                         //console.log('octolapse.js - timelapse-stopped');
                         Octolapse.Status.onTimelapseStop();
-
+                        Octolapse.Status.snapshot_error(false);
                         var options = {
                             title: 'Octolapse Timelapse Stopped',
                             text: data.msg,

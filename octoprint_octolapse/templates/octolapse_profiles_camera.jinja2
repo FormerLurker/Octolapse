@@ -150,21 +150,44 @@
         </div>
     </div>
     <div class="control-group">
-        <label class="control-label">Custom Camera Initialization Script</label>
+        <label class="control-label">Before Print Start Script</label>
         <div class="controls">
-            <input id="camera_profile_camera_initialize_script" name="camera_initialize_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: camera_initialize_script" />
+            <input id="camera_profile_on_print_start_script" name="on_print_start_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_print_start_script" />
             <button class="btn btn-default " data-bind="click: function() {$data.applySettingsToCamera('script');}">Test Script</button>
-            <div class="error_label_container text-error" data-error-for="camera_profile_camera_initialize_script"></div>
+            <div class="error_label_container text-error" data-error-for="camera_profile_on_print_start_script"></div>
             <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
         </div>
     </div>
-
     <div class="control-group">
-        <label class="control-label">Custom Camera Pre-Render Script</label>
+        <label class="control-label">Before Snapshot Script</label>
         <div class="controls">
-            <input id="camera_profile_camera_pre_render_script" name="camera_pre_render_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: camera_pre_render_script" />
-            <div class="error_label_container text-error" data-error-for="camera_profile_camera_pre_render_script"></div>
+            <input id="camera_profile_on_before_snapshot_script" name="on_before_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_before_snapshot_script" />
+            <div class="error_label_container text-error" data-error-for="camera_profile_on_before_snapshot_script"></div>
+            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After Snapshot Script</label>
+        <div class="controls">
+            <input id="camera_profile_on_after_snapshot_script" name="on_after_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_after_snapshot_script" />
+            <div class="error_label_container text-error" data-error-for="camera_profile_on_after_snapshot_script"></div>
+            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Before Render Script</label>
+        <div class="controls">
+            <input id="camera_profile_on_before_render_script" name="on_before_render_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_before_render_script" />
+            <div class="error_label_container text-error" data-error-for="camera_profile_on_before_render_script"></div>
             <span class="help-inline">Octolapse will execute any script path entered here right before rendering.  This is useful to transfer images from a remote location (DSLR or printer), or to apply custom filters.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After Render Script</label>
+        <div class="controls">
+            <input id="camera_profile_on_after_render_script" name="on_after_render_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_after_render_script" />
+            <div class="error_label_container text-error" data-error-for="camera_profile_on_after_render_script"></div>
+            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
         </div>
     </div>
     <div class="control-group">

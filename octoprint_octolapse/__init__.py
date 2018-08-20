@@ -814,8 +814,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.send_state_changed_message({"Status": self.get_status_dict()})
             if event == Events.CLIENT_OPENED:
                 self.send_state_changed_message({"Status": self.get_status_dict()})
-            #if event == Events.POSITION_UPDATE:
-            #    self.Timelapse.on_position_received(payload)
+            if event == Events.POSITION_UPDATE:
+                self.Timelapse.on_position_received(payload)
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:
@@ -1255,7 +1255,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_gcode_sending(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
-            if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
+            if self.Timelapse:
+                # we always want to send this event, else we may get stuck waiting for a position request!
                 self.Timelapse.on_gcode_sending(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             if self.Settings is not None:
@@ -1325,10 +1326,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_success(self, payload):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
-        if payload.PreRenderError:
-            pre_render_message = "Rendering completed and was successful, but errors were returned during " \
-                                 "pre-rendeing.  {0}".format(payload.PreRenderError)
-            self.send_plugin_message('pre-render-error', pre_render_message)
+        if payload.BeforeRenderError or payload.AfterRenderError:
+            pre_post_render_message = "Rendering completed and was successful, but there were some script errors: "
+            if payload.BeforeRenderError:
+                pre_post_render_message += " The before script failed with the following error:" \
+                                 "  {0}".format(payload.BeforeRenderError)
+            if payload.AfterRenderError:
+                pre_post_render_message += " The after script failed with the following error:" \
+                                           "  {0}".format(payload.AfterRenderError)
+            self.send_plugin_message('before-after-render-error', pre_post_render_message)
+
         if payload.Synchronize:
             # create a message that makes sense, since Octoprint will display its own popup message that already
             # contains text
@@ -1357,10 +1364,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
-        if payload.PreRenderError:
-            pre_render_message = "The pre-render script failed for camera {0}.  " \
-                                 "{1}".format(payload.CameraName, payload.PreRenderError)
-            self.send_plugin_message('pre-render-error', pre_render_message)
+        if payload.BeforeRenderError or payload.AfterRenderError:
+            pre_post_render_message = "There were problems running the before/after rendering script: "
+            if payload.BeforeRenderError:
+                pre_post_render_message += " The before script failed with the following error:" \
+                                 "  {0}".format(payload.BeforeRenderError)
+            if payload.AfterRenderError:
+                pre_post_render_message += " The after script failed with the following error:" \
+                                           "  {0}".format(payload.AfterRenderError)
+            self.send_plugin_message('before-after-render-error', pre_post_render_message)
 
         message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
 

@@ -304,8 +304,9 @@ class TimelapseRenderJob(object):
         self._synchronized_directory = ""
         self._synchronized_filename = ""
         self._synchronize = self._rendering.sync_with_timelapse
-        # pre render errors
-        self.pre_render_error = None
+        # render script errors
+        self.before_render_error = None
+        self.after_render_error = None
     def process(self):
         return self._render()
 
@@ -335,7 +336,7 @@ class TimelapseRenderJob(object):
 
     def _pre_render_script(self):
         try:
-            script = self.render_job_info.camera.camera_pre_render_script.strip()
+            script = self.render_job_info.camera.on_before_render_script.strip()
             if not script:
                 return
             try:
@@ -348,7 +349,7 @@ class TimelapseRenderJob(object):
                 ]
 
                 self._debug().log_render_start(
-                    "Running the following pre-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
+                    "Running the following before-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
                         script_args[0],
                         script_args[1],
                         script_args[2],
@@ -362,35 +363,94 @@ class TimelapseRenderJob(object):
                 )
             except OSError as e:
                 raise RenderError(
-                    'pre_render_script_error',
-                    "An OS Error error occurred while executing the pre-render script",
+                    'before_render_script_error',
+                    "An OS Error error occurred while executing the before-render script",
                     cause=e
                 )
             except CalledProcessError as e:
 
                 # If we can't create the thumbnail, just log
                 error_message = (
-                    "An unexpected exception occurred executing the pre-render script."
+                    "An unexpected exception occurred executing the before-render script."
                 )
-                raise RenderError('pre_render_script_error', error_message, cause=e)
+                raise RenderError('before_render_script_error', error_message, cause=e)
 
             if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
                 self._debug().log_error(
-                    "Error output was returned from the pre-rendering script: {0}".format(error_message))
+                    "Error output was returned from the before-rendering script: {0}".format(error_message))
             if not return_code == 0:
                 if error_message:
-                    error_message = "The pre-render script failed with the following error message: {0}" \
+                    error_message = "The before-render script failed with the following error message: {0}" \
                         .format(error_message)
                 else:
                     error_message = (
-                        "The pre-render script returned {0},"
+                        "The before-render script returned {0},"
                         " which indicates an error.".format(return_code)
                     )
-                raise RenderError('pre_render_script_error', error_message)
+                raise RenderError('before_render_script_error', error_message)
         except RenderError as e:
-            self.pre_render_error = e
+            self.before_render_error = e
+
+    def _post_render_script(self):
+        try:
+            script = self.render_job_info.camera.on_after_render_script.strip()
+            if not script:
+                return
+            try:
+                script_args = [
+                    script,
+                    self.render_job_info.camera.name,
+                    self.render_job_info.snapshot_directory,
+                    self.render_job_info.snapshot_filename_format,
+                    os.path.join(self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
+                ]
+
+                self._debug().log_render_start(
+                    "Running the following after-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
+                        script_args[0],
+                        script_args[1],
+                        script_args[2],
+                        script_args[3],
+                        script_args[4]
+                    )
+                )
+
+                (return_code, console_output, error_message) = utility.run_command_with_timeout(
+                    script_args, None
+                )
+            except OSError as e:
+                raise RenderError(
+                    'after_render_script_error',
+                    "An OS Error error occurred while executing the after-render script",
+                    cause=e
+                )
+            except CalledProcessError as e:
+
+                # If we can't create the thumbnail, just log
+                error_message = (
+                    "An unexpected exception occurred executing the after-render script."
+                )
+                raise RenderError('after_render_script_error', error_message, cause=e)
+
+            if error_message:
+                if error_message.endswith("\r\n"):
+                    error_message = error_message[:-2]
+                self._debug().log_error(
+                    "Error output was returned from the after-rendering script: {0}".format(error_message))
+            if not return_code == 0:
+                if error_message:
+                    error_message = "The after-render script failed with the following error message: {0}" \
+                        .format(error_message)
+                else:
+                    error_message = (
+                        "The after-render script returned {0},"
+                        " which indicates an error.".format(return_code)
+                    )
+                raise RenderError('after_render_script_error', error_message)
+        except RenderError as e:
+            self.after_render_error = e
 
     def _read_snapshot_metadata(self):
         metadata_path = os.path.join(self.render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
@@ -533,7 +593,8 @@ class TimelapseRenderJob(object):
             self.render_job_info.job_number,
             self.render_job_info.total_jobs,
             self.render_job_info.camera.name,
-            self.pre_render_error
+            self.before_render_error,
+            self.after_render_error
 
         )
 
@@ -620,6 +681,9 @@ class TimelapseRenderJob(object):
                     stderr_text = p.stderr.text
                     raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
                         return_code, stderr_text))
+
+            # run any post rendering scripts
+            self._post_render_script()
 
             # Delete preprocessed images.
             if self.cleanAfterSuccess:
@@ -941,7 +1005,8 @@ class RenderingCallbackArgs(object):
         job_number,
         total_jobs,
         camera_name,
-        pre_render_error
+        before_render_error,
+        after_render_error
     ):
         self.Reason = reason
         self.ReturnCode = return_code
@@ -959,7 +1024,8 @@ class RenderingCallbackArgs(object):
         self.JobNumber = job_number
         self.TotalJobs = total_jobs
         self.CameraName = camera_name
-        self.PreRenderError = pre_render_error
+        self.BeforeRenderError = before_render_error
+        self.AfterRenderError = after_render_error
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

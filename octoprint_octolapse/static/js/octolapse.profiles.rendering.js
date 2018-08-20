@@ -107,7 +107,7 @@ $(function() {
         self.overlay_text_color_as_css = ko.pureComputed({
             read: function () {
                 // Convert to js.
-                rgba = JSON.parse(self.overlay_text_color());
+                var rgba = JSON.parse(self.overlay_text_color());
                 // Divide alpha by 255.
                 rgba[3] = rgba[3] / 255;
                 // Build the correct string.
@@ -115,7 +115,7 @@ $(function() {
             },
             write: function (value) {
                 // Extract values.
-                rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1,).map(Number);
+                var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1,).map(Number);
                 // Multiply alpha by 255 and round.
                 rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.

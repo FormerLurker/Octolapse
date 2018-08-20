@@ -214,7 +214,7 @@ class CameraControl(object):
     def _get_script_threads(self, force):
         threads = []
         for current_camera in self.Cameras:
-            if not force and (not current_camera.enabled or not current_camera.camera_initialize_script):
+            if not force and (not current_camera.enabled or not current_camera.on_print_start_script):
                 continue
             threads.append(CameraSettingScriptThread(current_camera))
         return threads
@@ -228,7 +228,7 @@ class CameraSettingScriptThread(Thread):
 
     def run(self):
         try:
-            script = self.Camera.camera_initialize_script.strip()
+            script = self.Camera.on_print_start_script.strip()
             if not script:
                 raise CameraError('no_camera_script_path', "The Camera Initialization script is empty")
             try:

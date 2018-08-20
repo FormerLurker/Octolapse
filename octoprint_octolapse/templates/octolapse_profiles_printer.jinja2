@@ -22,546 +22,564 @@
 ##################################################################################
 -->
 <script type="text/html" id="printer-template">
-  <div>
     <div>
-      <h4>Profile</h4>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Name:</label>
-      <div class="controls">
-        <input id="printer_profile_name" name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="True"/>
-        <div class="error_label_container text-error" data-error-for="printer_profile_name"></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Description</label>
-      <div class="controls">
-        <textarea id="printer_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" data-error-for="printer_profile_description"></div>
-      </div>
-    </div>
-  </div>
-  <hr/>
-  <div>
-    <div>
-      <h4>Retract/Z-Hop Distance</h4>
-      <p>Used both to detect retraction/detraction and to control snapshot GCode generation for lift and retract.</p>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Retraction Length</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input id="printer_profile_retract_length" name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0" required="true" />
-          <span class="add-on">mm</span>
+        <div>
+            <h4>Profile</h4>
         </div>
-        <div class="error_label_container text-error" data-error-for="printer_profile_retract_length"></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Z-Hop Height</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input id="printer_profile_z_hop" name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".00" max="100.0" required="true" />
-          <span class="add-on">mm</span>
-        </div>
-        <div class="error_label_container text-error" data-error-for="printer_profile_z_hop"></div>
-      </div>
-    </div>
-  </div>
-  <hr/>
-  <div>
-    <div>
-      <h4>Axis Settings</h4>
-      <p>Set the default axis mode, control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
-    </div>
-    <div>
-      <div>
-        <h5>Axis Speeds</h5>
-        <p>The axis speeds should be acquired from your slicer settings.  If your slicer doesn't have separate settings for movement (travel) speed and z-movement speed, use the movement speed for both.  Similarly, if your slicer doesn't have separate settings for retraction/detraction speed, use retraction speed for both.</p>
-      </div>
         <div class="control-group">
-        <label class="control-label" >Axis Speed Display Units</label>
-        <div class="controls">
-          <select id="octolapse_axis_speed_display_unit_options" data-bind="options: Octolapse.Printers.profileOptions.axis_speed_display_unit_options,
+            <label class="control-label" for="printer_profile_name">Name:</label>
+            <div class="controls">
+                <input id="printer_profile_name" name="name" type="text" class="input-block-level form-input" data-bind="value: name" required />
+                <div class="error_label_container text-error" data-error-for="printer_profile_name"></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_description">Description</label>
+            <div class="controls">
+                <textarea id="printer_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"></textarea>
+                <div class="error_label_container text-error" data-error-for="printer_profile_description"></div>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div >
+        <h3>Current Slicer Settings</h3>
+        <p>These settings must be copied from your slicer and be kept up-to-date.  Some features of Octolapse will fail to work or will result in lower print quality if they do not match your slicer settings exactly.</p>
+    </div>
+    <div>
+        <div>
+            <h4>Slicer Retract/Z-Hop Distance</h4>
+            <p>Used both to detect retraction/detraction and to control snapshot GCode generation for lift and retract.</p>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_retract_length">Retraction Length</label>
+            <div class="controls">
+                <div class="input-append form-inline">
+                    <input id="printer_profile_retract_length" name="retract_length" type="number" class="input-small text-right" data-bind="value: retract_length" step="0.05" min="0.05" max="100.0"/>
+                    <span class="add-on">mm</span>
+                </div>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="printer_profile_retract_length"></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_z_hop">Z-Hop Height</label>
+            <div class="controls">
+                <div class="input-append form-inline">
+                    <input id="printer_profile_z_hop" name="z_hop" type="number" class="input-small text-right" data-bind="value: z_hop" step="0.05" min=".00" max="100.0" required />
+                    <span class="add-on">mm</span>
+                </div>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="printer_profile_z_hop"></div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div>
+            <h4>Slicer Speed Settings</h4>
+            <p>Set the default axis mode, control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
+        </div>
+        <div>
+            <div class="control-group">
+                <label class="control-label" for="octolapse_axis_speed_display_unit_options">Speed Display Units</label>
+                <div class="controls">
+                    <select id="octolapse_axis_speed_display_unit_options" data-bind="options: Octolapse.Printers.profileOptions.axis_speed_display_unit_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                     event: {change: axisSpeedDisplayUnitsChanged},
                                    value: axis_speed_display_units"></select>
-          <div class="error_label_container text-error" data-error-for="octolapse_axis_speed_display_unit_options"></div>
-            <span class="help-inline">
-                Here you can change your axis speeds from mm/min to mm/sec so you don't have to do any conversions.
-            </span>
-        </div>
-      </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#axis-speed-display-units" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="octolapse_axis_speed_display_unit_options"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_movement_speed">Movement Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_movement_speed" name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.001" min="0" max="9999999" required />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#movement-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_movement_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_retract_speed">Retraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_retract_speed" name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.001" min="0" max="9999999" required />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_retract_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_detract_speed">Detraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_detract_speed" name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.001" min="0" max="9999999" required />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_detract_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_z_hop_speed">Z Movement Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_z_hop_speed" name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.001" min="0" max="9999999" required />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#z-movement-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_z_hop_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_perimeter_speed">Perimeter Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_perimeter_speed" name="perimeter_speed" type="number" class="input-small text-right" data-bind="value: perimeter_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#perimeter-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_small_perimeter_speed">Small Perimeters</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_small_perimeter_speed" name="small_perimeter_speed" type="number" class="input-small text-right" data-bind="value: small_perimeter_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#small-perimeter-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_small_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_external_perimeter_speed">External Perimeters</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_external_perimeter_speed" name="external_perimeter_speed" type="number" class="input-small text-right" data-bind="value: external_perimeter_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#external-perimeter-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_external_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_infill_speed">Infill</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_infill_speed" name="infill_speed" type="number" class="input-small text-right" data-bind="value: infill_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#infill-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_solid_infill_speed">Solid Infill</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_solid_infill_speed" name="solid_infill_speed" type="number" class="input-small text-right" data-bind="value: solid_infill_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#solid-infill-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_solid_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Top Solid Infill</label>
+                <div class="controls" for="printer_profile_top_solid_infill_speed">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_top_solid_infill_speed" name="top_solid_infill_speed" type="number" class="input-small text-right" data-bind="value: top_solid_infill_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#top-solid-infill-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_top_solid_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_support_speed">Support</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_support_speed" name="support_speed" type="number" class="input-small text-right" data-bind="value: support_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#support-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_support_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_bridge_speed">Bridge</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_bridge_speed" name="bridge_speed" type="number" class="input-small text-right" data-bind="value: bridge_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#bridging-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_bridge_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_gap_fill_speed">Gaps</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_gap_fill_speed" name="gap_fill_speed" type="number" class="input-small text-right" data-bind="value: gap_fill_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#gap-fill-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_gap_fill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_first_layer_speed">First Layer</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_first_layer_speed" name="first_layer_speed" type="number" class="input-small text-right" data-bind="value: first_layer_speed" step="0.001" min="0" max="9999999" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#first-layer-speed" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_first_layer_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_speed_tolerance">Speed Tolerance</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_speed_tolerance" name="speed_tolerance" type="number" class="input-small text-right" data-bind="value: speed_tolerance" step="0.001" min="0" max="9999999" required />
+                        <span class="add-on">mm</span>
+                        <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#speed-tolerance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_speed_tolerance"></div>
+                    <span class="help-inline">
+                        How closely the speed within the gcode must match the speeds above in order for Octolapse to detect the feature.
+                    </span>
+                </div>
+            </div>
 
 
-
-      <div class="control-group">
-        <label class="control-label">Movement Speed</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input  id="printer_profile_movement_speed" name="movement_speed" type="number" class="input-small text-right" data-bind="value: movement_speed" step="0.001" min="0" max="9999999" required="true" />
-            <span class="add-on">mm</span>
-            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_movement_speed"></div>
-          <span class="help-inline">Use 0 to use the previous axis speed.</span>
         </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Retraction Speed</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_retract_speed" name="retract_speed" type="number" class="input-small text-right" data-bind="value: retract_speed" step="0.001" min="0" max="9999999" required="true" />
-            <span class="add-on">mm</span>
-            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_retract_speed"></div>
-          <span class="help-inline">Use 0 to use the previous axis speed.</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Detraction Speed</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_detract_speed" name="detract_speed" type="number" class="input-small text-right" data-bind="value: detract_speed" step="0.001" min="0" max="9999999" required="true" />
-            <span class="add-on">mm</span>
-            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_detract_speed"></div>
-          <span class="help-inline">Use 0 to use the previous axis speed.</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Z Movement Speed</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_z_hop_speed" name="z_hop_speed" type="number" class="input-small text-right" data-bind="value: z_hop_speed" step="0.001" min="0" max="9999999" required="true" />
-            <span class="add-on">mm</span>
-            <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_z_hop_speed"></div>
-          <span class="help-inline">Use 0 to use the previous axis speed.</span>
-        </div>
-      </div>
     </div>
-      <div>
-          <div>
-            <h5>Other Speeds</h5>
-            <p>
-              It's recommended that these speeds are entered if available, and that each is different (can even be a slight difference) so that octolapse can detect what is being printed.  This used within the snapshot 'quality' settings.
-            </p>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Perimeter Speed</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_perimeter_speed" name="perimeter_speed" type="number" class="input-small text-right" data-bind="value: perimeter_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_perimeter_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Small Perimeters</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_small_perimeter_speed" name="small_perimeter_speed" type="number" class="input-small text-right" data-bind="value: small_perimeter_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_small_perimeter_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">External Perimeters</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_external_perimeter_speed" name="external_perimeter_speed" type="number" class="input-small text-right" data-bind="value: external_perimeter_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_external_perimeter_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Infill</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_infill_speed" name="infill_speed" type="number" class="input-small text-right" data-bind="value: infill_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_infill_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Solid Infill</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_solid_infill_speed" name="solid_infill_speed" type="number" class="input-small text-right" data-bind="value: solid_infill_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_solid_infill_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Top Solid Infill</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_top_solid_infill_speed" name="top_solid_infill_speed" type="number" class="input-small text-right" data-bind="value: top_solid_infill_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_top_solid_infill_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Support</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_support_speed" name="support_speed" type="number" class="input-small text-right" data-bind="value: support_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_support_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Bridge</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_bridge_speed" name="bridge_speed" type="number" class="input-small text-right" data-bind="value: bridge_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_bridge_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Gaps</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_gap_fill_speed" name="gap_fill_speed" type="number" class="input-small text-right" data-bind="value: gap_fill_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_gap_fill_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">First Layer</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_first_layer_speed" name="first_layer_speed" type="number" class="input-small text-right" data-bind="value: first_layer_speed" step="0.001" min="0" max="9999999" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_first_layer_speed"></div>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label">Speed Tolerance</label>
-            <div class="controls">
-              <div class="input-append form-inline">
-                <input id="printer_profile_speed_tolerance" name="speed_tolerance" type="number" class="input-small text-right" data-bind="value: speed_tolerance" step="0.001" min="0" max="9999999" required="true" />
-                <span class="add-on">mm</span>
-                <span class="add-on" data-bind="text: getAxisSpeedTimeUnit">?</span>
-              </div>
-              <div class="error_label_container text-error" data-error-for="printer_profile_speed_tolerance"></div>
-                <span class="help-inline">
-                    How closely the speed within the gcode must match the speeds above in order for Octolapse to detect the feature.
-                </span>
-            </div>
-          </div>
-
-
-      </div>
     <div>
-      <div>
-        <h5>Axis Mode</h5>
-        <p>
-          Set the default axis relative/absolute mode.  It is highly recommended that you require explicit commands to set the axis modes, but some slicers do not do this by default.  Use caution when settings a default mode.
-        </p>
-      </div>
+        <div>
+            <div>
+                <h4>Slicer/Octoprint Start Gcode</h4>
+                <p>
+                    The following settings depend on your printer's start gcode.  By default Octolapse requires certain commands to be in your starting gcode in order to properly track your printer's position and to issue stabilization commands.  Use caution when switching from 'Require Explicit' to 'Absolute' or 'Relative' modes.
+                </p>
+            </div>
 
-      <div class="control-group">
-        <label class="control-label" >X/Y/Z Axis Mode</label>
-        <div class="controls">
-          <select id="printer_profile_xyz_axes_default_mode" data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_xyz_axes_default_mode">X/Y/Z Axis Mode</label>
+                <div class="controls">
+                    <select id="printer_profile_xyz_axes_default_mode" data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: xyz_axes_default_mode"></select>
-          <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >E Axis Mode</label>
-        <div class="controls">
-          <select id="printer_profile_e_axis_default_mode_options" data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#xyz-axis-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_e_axis_default_mode_options">E Axis Mode</label>
+                <div class="controls">
+                    <select id="printer_profile_e_axis_default_mode_options" data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: e_axis_default_mode"></select>
-          <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label" >G90/G91 Influences Extruder</label>
-        <div class="controls">
-          <select id="printer_profile_g90_influences_extruder_options" data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#e-axis-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_g90_influences_extruder_options">G90/G91 Influences Extruder</label>
+                <div class="controls">
+                    <select id="printer_profile_g90_influences_extruder_options" data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: g90_influences_extruder"></select>
-          <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
-        </div>
-      </div>
-    <div class="control-group">
-        <label class="control-label" >Default Units</label>
-        <div class="controls">
-          <select id="printer_profile_units_default" data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#g90g91-influences-extruder" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_units_default">Default Units</label>
+                <div class="controls">
+                    <select id="printer_profile_units_default" data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: units_default"></select>
-          <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
-            <span class="help-inline">
-                <span class="label label-important">Attention</span>&nbsp;Do not change from 'Millimeters' unless you have a good reason to do this.  Octolapse is not compatible with non-metric units.  UNTESTED FUNCTIONALITY:  If the units are set to 'Inches' or 'Require Explicit', Octolapse will attempt to detect a G21 command before automatically stopping a timelapse.
-            </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#default-units" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
+                    <span class="help-inline">
+                        <span class="label label-important">Attention</span>&nbsp;Currently octolapse does not support any units besides Millimeters and will fail if movement is detected while using Inches.
+                    </span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_priming_height">Priming Height</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required min="0.0" step="0.01" />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#priming-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
+                    <span class="help-inline">Some start gcode is configured to prime quite far from the printer bed.  This setting will prevent layer detection until extrusion is detected BELOW a current height.  If the 'Position State' info panel displays a current layer height that is higher than you expect, and no snapshots are being taken, you may need to adjust this setting.  Set to 0 to turn off.</span>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-  <hr/>
-  <div>
+    <hr />
     <div>
-      <h4>Home/Mesh Bed Leveling Position</h4>
-      <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
-    </div>
-
-    <div class="control-group">
-      <label class="control-label">Auto-Detect Position</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="auto_detect_position" type="checkbox" data-bind="checked: auto_detect_position" title="Auto-detect the current position after receiving a home command"/>Enabled
-        </label>
-        <span class="help-inline">
-          Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
-        </span>
-      </div>
-    </div>
-    <div data-bind="visible:auto_detect_position">
-    <div class="control-group">
-      <label class="control-label">Additional location detection commands</label>
-      <div class="controls">
-        <div class="input-append input-block-level">
-          <input id="printer_profile_auto_position_detection_commands" name="auto_position_detection_commands" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: auto_position_detection_commands"/>
-          <span class="add-on">csv</span>
+        <div>
+            <h4>Automatic Position Detection</h4>
+            <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
         </div>
-        <div class="error_label_container text-error" data-error-for="printer_profile_auto_position_detection_commands"></div>
-        <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28 or G29 in the list.</span>
-      </div>
-    </div>
-    </div>
-    <div data-bind="visible:!auto_detect_position()">
-      <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
-      <div class="control-group">
-        <label class="control-label">X Origin</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_origin_x" name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any"/>
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_origin_x"></div>
-        </div>
-      </div>
 
-      <div class="control-group">
-        <label class="control-label">Y Origin</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_origin_y" name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_origin_y"></div>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_auto_detect_position">Auto-Detect Position</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input id="printer_profile_auto_detect_position" name="auto_detect_position" type="checkbox" data-bind="checked: auto_detect_position" title="Auto-detect the current position after receiving a home command" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">
+                    Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
+                </span>
+            </div>
         </div>
-      </div>
+        <div data-bind="visible:auto_detect_position">
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_auto_position_detection_commands">Additional location detection commands</label>
+                <div class="controls">
+                    <span class="input-append">
+                        <input id="printer_profile_auto_position_detection_commands" name="auto_position_detection_commands" type="text" class="ignore_hidden_errors" data-bind="value: auto_position_detection_commands" />
+                        <span class="add-on">csv</span>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#additional-location-detection-commands" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
 
-      <div class="control-group">
-        <label class="control-label">Z Origin</label>
-        <div class="controls">
-          <div class="input-append form-inline">
-            <input id="printer_profile_origin_z" name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
-            <span class="add-on">mm</span>
-          </div>
-          <div class="error_label_container text-error" data-error-for="printer_profile_origin_z"></div>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_auto_position_detection_commands"></div>
+                    <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28 or G29 in the list.</span>
+                </div>
+            </div>
         </div>
-      </div>
+        <div data-bind="visible:!auto_detect_position()">
+            <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_origin_x">X Origin</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_origin_x" name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any" />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_x"></div>
+                </div>
+            </div>
 
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_origin_y">Y Origin</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_origin_y" name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_y"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_origin_z">Z Origin</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_origin_z" name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_z"></div>
+                </div>
+            </div>
+
+        </div>
     </div>
-  </div>
-  <hr/>
-  <div>
+    <hr />
     <div>
-      <h4>Print Volume</h4>
-      <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Override Octoprint Printer Profile</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="auto_detect_position" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles."/>Enabled
-        </label>
-        <span class="help-inline">
-          When enabled the print volume within your current Octoprint Printer Profile will be overridden.  This does not affect the function of Octoprint, only the Octolapse plugin.
-        </span>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-      <label class="control-label">X - Width</label>
-      <div class="controls">
-        <div class="row-fluid">
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Min</span>
-              <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required="true" />
-              <span class="add-on">mm</span>
-            </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
-          </div>
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Max</span>
-              <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required="true" />
-              <span class="add-on">mm</span>
-            </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_x"></div>
-          </div>
+        <div>
+            <h4>Print Volume</h4>
+            <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
         </div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-      <label class="control-label">Y - Depth</label>
-      <div class="controls">
-        <div class="row-fluid">
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Min</span>
-              <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required="true" />
-              <span class="add-on">mm</span>
+        <div class="control-group">
+            <label class="control-label" for="auto_detect_position">Override Octoprint Printer Profile</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="auto_detect_position" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#override-octoprint-printer-profile" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">
+                    When enabled the print volume within your current Octoprint Printer Profile will be overridden.  This does not affect the function of Octoprint, only the Octolapse plugin.
+                </span>
             </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_y"></div>
-          </div>
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Max</span>
-              <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required="true" />
-              <span class="add-on">mm</span>
-            </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_y"></div>
-          </div>
         </div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-      <label class="control-label">Z - Height</label>
-      <div class="controls">
-        <div class="row-fluid">
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Min</span>
-              <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required="true" />
-              <span class="add-on">mm</span>
+        <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+            <label class="control-label" for="octolapse_printer_min_x">X - Width</label>
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Min</span>
+                            <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required />
+                            <span class="add-on">mm</span>
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#override-octoprint-printer-profile" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
+                    </div>
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Max</span>
+                            <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required />
+                            <span class="add-on">mm</span>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_max_x"></div>
+                    </div>
+                </div>
             </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_z"></div>
-          </div>
-          <div class="span6">
-            <div class="input-prepend input-append">
-              <span class="add-on">Max</span>
-              <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required="true" />
-              <span class="add-on">mm</span>
-            </div>
-            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_z"></div>
-          </div>
         </div>
-      </div>
+        <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+            <label class="control-label" for="octolapse_printer_min_y">Y - Depth</label>
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Min</span>
+                            <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required />
+                            <span class="add-on">mm</span>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_min_y"></div>
+                    </div>
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Max</span>
+                            <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required />
+                            <span class="add-on">mm</span>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_max_y"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible:override_octoprint_print_volume">
+            <label class="control-label" for="octolapse_printer_min_z">Z - Height</label>
+            <div class="controls">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Min</span>
+                            <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required />
+                            <span class="add-on">mm</span>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_min_z"></div>
+                    </div>
+                    <div class="span6">
+                        <div class="input-prepend input-append">
+                            <span class="add-on">Max</span>
+                            <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required />
+                            <span class="add-on">mm</span>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_printer_max_z"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="abort_out_of_bounds">Abort Snapshot When Out-Of-Bounds</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds" />Enabled <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#abort-snapshot-when-out-of-bounds" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
+            </div>
+        </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Abort Snapshot When Out-Of-Bounds</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds"/>Enabled
-        </label>
-        <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
-      </div>
-    </div>
-  </div>
-  <hr/>
-  <div>
+    <hr />
     <div>
-      <h4>Miscellaneous Settings</h4>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Printer Position Tolerance</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input id="printer_profile_printer_position_confirmation_tolerance" name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required="true" step="any" min="0" />
-          <span class="add-on">mm</span>
+        <div>
+            <h4>Miscellaneous Settings</h4>
         </div>
-        <div class="error_label_container text-error" data-error-for="printer_profile_printer_position_confirmation_tolerance"></div>
-        <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Snapshot Command</label>
-      <div class="controls">
-        <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required="true" />
-        <div class="error_label_container text-error" data-error-for="printer_profile_snapshot_command"></div>
-          <span class="help-inline">This custom command can be used in conjunction with the gcode trigger to initiate a snapshot.  All comments will be stripped from the command entered here after saving.</span>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Suppress Snapshot Command When Disabled</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="suppress_snapshot_command_always" type="checkbox" data-bind="checked: suppress_snapshot_command_always" title="Abort snapshots when the position is out-of-bounds"/>Enabled
-        </label>
-        <span class="help-inline">When checked, Octolapse will prevent the snapshot command above from being sent to the printer even when Octolapse it is disabled.</span>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Priming Height</label>
-      <div class="controls">
-        <div class="input-append form-inline">
-          <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required="true" min="0.0" step="0.01" />
-          <span class="add-on">mm</span>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_printer_position_confirmation_tolerance">Printer Position Tolerance</label>
+            <div class="controls">
+                <div class="input-append form-inline">
+                    <input id="printer_profile_printer_position_confirmation_tolerance" name="printer_position_confirmation_tolerance" type="number" class="input-small text-right" data-bind="value: printer_position_confirmation_tolerance" required step="any" min="0" />
+                    <span class="add-on">mm</span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#printer-position-tolerance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </div>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#printer-position-tolerance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="printer_profile_printer_position_confirmation_tolerance"></div>
+                <span class="help-inline">Used when rounding values and checking for equality.  If you are unsure, please leave this alone.</span>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
-        <span class="help-inline">Some slicers prime quite far from the printer bed.  This can adversly affect layer/height tracking.  This setting will prevent layer detection if extrusion has not happend BELOW the selected height.  Set to 0 to turn off.</span>
-      </div>
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_snapshot_command">Snapshot Command</label>
+            <div class="controls">
+                <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required />
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#snapshot-command" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="printer_profile_snapshot_command"></div>
+                <span class="help-inline">This custom command can be used in conjunction with the gcode trigger to initiate a snapshot.  All comments will be stripped from the command entered here after saving.</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="suppress_snapshot_command_always">Suppress Snapshot Command When Disabled</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="suppress_snapshot_command_always" type="checkbox" data-bind="checked: suppress_snapshot_command_always" title="Abort snapshots when the position is out-of-bounds" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#suppress-snapshot-command-when-disabled" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">When checked, Octolapse will prevent the snapshot command above from being sent to the printer even when Octolapse it is disabled.</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="default_firmware_retractions">Use Retraction/Detraction settings for Firmware Retract/Detract</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Detraction settings for Firmware Retract/Detract" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-retractiondetraction-settings-for-firmware-retractdetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/detraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="default_firmware_retractions_zhop">Use Z-Hop (Z-Lift) settings for Firmware Retract/Detract</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Detraction settings for Firmware Retract/Detract" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-z-hop-z-lift-settings-for-firmware-retractdetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/detraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
+                <p>
+                    <span class="label label-important">Attention</span>  If this setting ONLY if you are using firmware zlift!  If your gcode is performing zlift manually (g0/g1) using absolute coordinates, your nozzle may crash into your part.  When in doubt, leave this unchecked!.
+                </p>
+            </div>
+        </div>
     </div>
-  <div class="control-group">
-      <label class="control-label">Use Retraction/Detraction settings for Firmware Retract/Detract</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Detraction settings for Firmware Retract/Detract"/>Enabled
-        </label>
-        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/detraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
-      </div>
-    </div>
-  <div class="control-group">
-      <label class="control-label">Use Z-Hop (Z-Lift) settings for Firmware Retract/Detract</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Detraction settings for Firmware Retract/Detract"/>Enabled
-        </label>
-        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/detraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/detract so that Octolapse knows what values to use when tracking position.</span>
-          <p>
-              <span class="label label-important">Attention</span>  If this setting ONLY if you are using firmware zlift!  If your gcode is performing zlift manually (g0/g1) using absolute coordinates, your nozzle may crash into your part.  When in doubt, leave this unchecked!.
-          </p>
-      </div>
-    </div>
-  </div>
 
 </script>
 

@@ -1235,10 +1235,13 @@ class Camera(object):
         self.enabled = True
         self.description = ""
         self.camera_type = "webcam"
-        self.external_camera_snapshot_script = ""
         self.gcode_camera_script = ""
-        self.camera_initialize_script = ""
-        self.camera_pre_render_script = ""
+        self.on_print_start_script = ""
+        self.on_before_snapshot_script = ""
+        self.external_camera_snapshot_script = ""
+        self.on_after_snapshot_script = ""
+        self.on_before_render_script = ""
+        self.on_after_render_script = ""
         self.delay = 125
         self.timeout_ms = 5000
         self.apply_settings_before_print = False
@@ -1296,10 +1299,13 @@ class Camera(object):
                 self.enabled = camera.enabled
                 self.description = camera.description
                 self.camera_type = camera.camera_type
-                self.external_camera_snapshot_script = camera.external_camera_snapshot_script
                 self.gcode_camera_script = camera.gcode_camera_script
-                self.camera_initialize_script = camera.camera_initialize_script
-                self.camera_pre_render_script = camera.camera_pre_render_script
+                self.on_print_start_script = camera.on_print_start_script
+                self.on_before_snapshot_script = camera.on_before_snapshot_script
+                self.external_camera_snapshot_script = camera.external_camera_snapshot_script
+                self.on_after_snapshot_script = camera.on_after_snapshot_script
+                self.on_before_render_script = camera.on_before_render_script
+                self.on_after_render_script = camera.on_after_render_script
                 self.delay = camera.delay
                 self.timeout_ms = camera.timeout_ms
                 self.apply_settings_before_print = camera.apply_settings_before_print
@@ -1376,18 +1382,27 @@ class Camera(object):
         if "camera_type" in changes.keys():
             self.camera_type = utility.get_string(
                 changes["camera_type"], self.camera_type)
-        if "external_camera_snapshot_script" in changes.keys():
-            self.external_camera_snapshot_script = utility.get_string(
-                changes["external_camera_snapshot_script"], self.external_camera_snapshot_script)
         if "gcode_camera_script" in changes.keys():
             self.gcode_camera_script = utility.get_string(
                 changes["gcode_camera_script"], self.gcode_camera_script)
-        if "camera_initialize_script" in changes.keys():
-            self.camera_initialize_script = utility.get_string(
-                changes["camera_initialize_script"], self.camera_initialize_script)
-        if "camera_pre_render_script" in changes.keys():
-            self.camera_pre_render_script = utility.get_string(
-                changes["camera_pre_render_script"], self.camera_pre_render_script)
+        if "on_print_start_script" in changes.keys():
+            self.on_print_start_script = utility.get_string(
+                changes["on_print_start_script"], self.on_print_start_script)
+        if "on_before_snapshot_script" in changes.keys():
+            self.on_before_snapshot_script = utility.get_string(
+                changes["on_before_snapshot_script"], self.on_before_snapshot_script)
+        if "external_camera_snapshot_script" in changes.keys():
+            self.external_camera_snapshot_script = utility.get_string(
+                changes["external_camera_snapshot_script"], self.external_camera_snapshot_script)
+        if "on_after_snapshot_script" in changes.keys():
+            self.on_after_snapshot_script = utility.get_string(
+                changes["on_after_snapshot_script"], self.on_after_snapshot_script)
+        if "on_before_render_script" in changes.keys():
+            self.on_before_render_script = utility.get_string(
+                changes["on_before_render_script"], self.on_before_render_script)
+        if "on_after_render_script" in changes.keys():
+            self.on_after_render_script = utility.get_string(
+                changes["on_after_render_script"], self.on_after_render_script)
         if "delay" in changes.keys():
             self.delay = utility.get_int(
                 changes["delay"], self.delay)
@@ -1541,10 +1556,13 @@ class Camera(object):
             'enabled': self.enabled,
             'description': self.description,
             'camera_type': self.camera_type,
-            'external_camera_snapshot_script': self.external_camera_snapshot_script,
             'gcode_camera_script': self.gcode_camera_script,
-            'camera_initialize_script': self.camera_initialize_script,
-            'camera_pre_render_script': self.camera_pre_render_script,
+            'on_print_start_script': self.on_print_start_script,
+            'on_before_snapshot_script': self.on_before_snapshot_script,
+            'external_camera_snapshot_script': self.external_camera_snapshot_script,
+            'on_after_snapshot_script': self.on_after_snapshot_script,
+            'on_before_render_script': self.on_before_render_script,
+            'on_after_render_script': self.on_after_render_script,
             'delay': self.delay,
             'timeout_ms': self.timeout_ms,
             'address': self.address,
