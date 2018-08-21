@@ -14,11 +14,8 @@ then
   mkdir -p "${SNAPSHOT_DIRECTORY}"
 fi
 
-# If this command fails with a permissions error, you may need to comment it out and use the sudo version below
-gphoto2 --capture-image-and-download --filename "${SNAPSHOT_FULL_PATH}"
-
-# if sudo is required uncomment this line and comment out the previous one
-# echo "PUT_YOUR_PASSWORD_HERE" | sudo -S gphoto2 --capture-image-and-download --filename "${SNAPSHOT_FULL_PATH}"
+# SUDO seems to be required to make this work.  If you can find a way to make it work without sudo LET ME KNOW!!!
+echo "PUT_YOUR_PASSWORD_HERE" | sudo -S gphoto2 --capture-image-and-download --filename "${SNAPSHOT_FULL_PATH}"
 
 if [ ! -f "${SNAPSHOT_FULL_PATH}" ];
 then
