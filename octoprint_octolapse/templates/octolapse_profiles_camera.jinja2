@@ -163,7 +163,7 @@
         <div class="controls">
             <input id="camera_profile_on_before_snapshot_script" name="on_before_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_before_snapshot_script" />
             <div class="error_label_container text-error" data-error-for="camera_profile_on_before_snapshot_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+            <span class="help-inline">Octolapse will execute any script path entered here after the printer has stabilized but before taking a snapshot.</span>
         </div>
     </div>
     <div class="control-group">
@@ -171,7 +171,7 @@
         <div class="controls">
             <input id="camera_profile_on_after_snapshot_script" name="on_after_snapshot_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_after_snapshot_script" />
             <div class="error_label_container text-error" data-error-for="camera_profile_on_after_snapshot_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+            <span class="help-inline">Octolapse will execute any script path entered here after a snapshot is complete.</span>
         </div>
     </div>
     <div class="control-group">
@@ -187,7 +187,7 @@
         <div class="controls">
             <input id="camera_profile_on_after_render_script" name="on_after_render_script" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: on_after_render_script" />
             <div class="error_label_container text-error" data-error-for="camera_profile_on_after_render_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+            <span class="help-inline">Octolapse will execute any script path entered here after rendering is complete.</span>
         </div>
     </div>
     <div class="control-group">
@@ -204,238 +204,246 @@
     </div>
 
     <hr />
-    <div>
+    <div >
         <div>
             <h4>Custom Image Preferences</h4>
-            <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
-            <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
-        </div>
+            <div data-bind="visible: camera_type()=='webcam'">
+                <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
+                <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
+            </div>
+            <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
+                <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
+            </div>
 
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: apply_settings_before_print" title="Auto-apply camera settings before print" />Enabled
-                </label>
-
-            </div>
         </div>
-        <div data-bind="visible: apply_settings_before_print">
-            <div>
-                <div>
-                    <h5>General Image Preferences</h5>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Apply Camera Settings</label>
-                    <div class="controls">
-                        <button class="btn btn-default btn-block" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
-                        <span class="help-inline">
-                            Click to apply all settings to your camera right now so you can see the results without starting a print or saving your changes.
-                        </span>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Brightness (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_brightness" name="brightness" type="number" class="input-small" data-bind="value: brightness" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_brightness"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Contrast (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_contrast" name="contrast" type="number" class="input-small" data-bind="value: contrast" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_contrast"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Saturation (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_saturation" name="saturation" type="number" class="input-small" data-bind="value: saturation" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_saturation"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Sharpness (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_sharpness" name="sharpness" type="number" class="input-small" data-bind="value: sharpness" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_sharpness"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">JPEG Quality (1-100)</label>
-                    <div class="controls">
-                        <input id="camera_profile_jpeg_quality" name="jpeg_quality" type="number" class="input-small" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality"></div>
-                        <span class="help-inline">There are known issues with this setting, which is availiable within the /webcam/control.htm screen, but doesn't appear to do anything to the image quality/size.</span>
-                    </div>
+        <div data-bind="visible: camera_type()=='webcam'">
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <a href="#" data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
+                        <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
+                    </label>
+                    <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
                 </div>
             </div>
-            <hr />
-            <div>
+            <div data-bind="visible: apply_settings_before_print">
                 <div>
-                    <h5>White Balance</h5>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Auto White Balance Temperature</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance" />Enabled
-                        </label>
-                    </div>
-                </div>
-                <div class="control-group" data-bind="visible:! white_balance_auto()">
-                    <label class="control-label">White Balance Temeprature (2000-6500)</label>
-                    <div class="controls">
-                        <div class="input-append">
-                            <input id="camera_profile_white_balance_temperature" name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
-                            <span class="add-on">K</span>
-                        </div>
-                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature"></div>
-                    </div>
-                </div>
-            </div>
-            <hr />
-            <div>
-                <div>
-                    <h5>Exposure and Gain</h5>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Backlight Compensation</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation" />Enabled
-                        </label>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Exposure Type</label>
-                    <div class="controls">
-                        <select id="camera_profile_exposure_type" name="exposure_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: exposure_type"></select>
-                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type"></div>
-                    </div>
-                </div>
-                <div data-bind="visible:exposure_type() == '1'">
                     <div>
-                        <div class="control-group">
-                            <label class="control-label">Exposure (3-2047)</label>
-                            <div class="controls">
-                                <input id="camera_profile_exposure" name="exposure" type="number" class="input-small" data-bind="value: exposure" min="3" max="2047" step="1" required="true" />
-                                <div class="error_label_container text-error" data-error-for="camera_profile_exposure"></div>
-                            </div>
+                        <h5>General Image Preferences</h5>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Apply Camera Settings</label>
+                        <div class="controls">
+                            <button class="btn btn-default btn-block" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
+                            <span class="help-inline">
+                                Click to apply all settings to your camera right now so you can see the results without starting a print or saving your changes.
+                            </span>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">Gain (0-255)</label>
-                            <div class="controls">
-                                <input id="camera_profile_gain" name="gain" type="number" class="input-small" data-bind="value: gain" min="0" max="255" step="1" required="true" />
-                                <div class="error_label_container text-error" data-error-for="camera_profile_gain"></div>
-                            </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Brightness (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_brightness" name="brightness" type="number" class="input-small" data-bind="value: brightness" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_brightness"></div>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">Exposure Auto Priority</label>
-                            <div class="controls">
-                                <label class="checkbox">
-                                    <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
-                                </label>
-                            </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Contrast (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_contrast" name="contrast" type="number" class="input-small" data-bind="value: contrast" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_contrast"></div>
                         </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Saturation (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_saturation" name="saturation" type="number" class="input-small" data-bind="value: saturation" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_saturation"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Sharpness (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_sharpness" name="sharpness" type="number" class="input-small" data-bind="value: sharpness" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_sharpness"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">JPEG Quality (1-100)</label>
+                        <div class="controls">
+                            <input id="camera_profile_jpeg_quality" name="jpeg_quality" type="number" class="input-small" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality"></div>
+                            <span class="help-inline">There are known issues with this setting, which is availiable within the /webcam/control.htm screen, but doesn't appear to do anything to the image quality/size.</span>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div>
+                    <div>
+                        <h5>White Balance</h5>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Auto White Balance Temperature</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance" />Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group" data-bind="visible:! white_balance_auto()">
+                        <label class="control-label">White Balance Temeprature (2000-6500)</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input id="camera_profile_white_balance_temperature" name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
+                                <span class="add-on">K</span>
+                            </div>
+                            <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature"></div>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div>
+                    <div>
+                        <h5>Exposure and Gain</h5>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Backlight Compensation</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation" />Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Exposure Type</label>
+                        <div class="controls">
+                            <select id="camera_profile_exposure_type" name="exposure_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
+                                     optionsText: 'name',
+                                     optionsValue: 'value',
+                                     optionsCaption: 'Select One...',
+                                     value: exposure_type"></select>
+                            <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type"></div>
+                        </div>
+                    </div>
+                    <div data-bind="visible:exposure_type() == '1'">
+                        <div>
+                            <div class="control-group">
+                                <label class="control-label">Exposure (3-2047)</label>
+                                <div class="controls">
+                                    <input id="camera_profile_exposure" name="exposure" type="number" class="input-small" data-bind="value: exposure" min="3" max="2047" step="1" required="true" />
+                                    <div class="error_label_container text-error" data-error-for="camera_profile_exposure"></div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Gain (0-255)</label>
+                                <div class="controls">
+                                    <input id="camera_profile_gain" name="gain" type="number" class="input-small" data-bind="value: gain" min="0" max="255" step="1" required="true" />
+                                    <div class="error_label_container text-error" data-error-for="camera_profile_gain"></div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Exposure Auto Priority</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
+                                    </label>
+                                </div>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
-            <hr />
-            <div>
+                <hr />
                 <div>
-                    <h5>Pan, Tilt, and Zoom</h5>
-                </div>
+                    <div>
+                        <h5>Pan, Tilt, and Zoom</h5>
+                    </div>
 
-                <div class="control-group">
-                    <label class="control-label">Pan (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_pan" name="pan" type="number" class="input-small" data-bind="value: pan" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_pan"></div>
+                    <div class="control-group">
+                        <label class="control-label">Pan (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_pan" name="pan" type="number" class="input-small" data-bind="value: pan" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_pan"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Tilt (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_tilt" name="tilt" type="number" class="input-small" data-bind="value: tilt" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_tilt"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Zoom (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_zoom" name="zoom" type="number" class="input-small" data-bind="value: zoom" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_zoom"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label">Tilt (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_tilt" name="tilt" type="number" class="input-small" data-bind="value: tilt" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_tilt"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Zoom (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_zoom" name="zoom" type="number" class="input-small" data-bind="value: zoom" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_zoom"></div>
-                    </div>
-                </div>
-            </div>
-            <hr />
-            <div>
+                <hr />
                 <div>
-                    <h5>Focus</h5>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Autofocus Enabled</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus" />Enabled
-                        </label>
+                    <div>
+                        <h5>Focus</h5>
                     </div>
-                </div>
-                <div class="control-group" data-bind="visible:!autofocus_enabled()">
-                    <label class="control-label">Absolute Focus (0-255)</label>
-                    <div class="controls">
-                        <input id="camera_profile_focus" name="focus" type="number" class="input-small" data-bind="value: focus" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_focus"></div>
+                    <div class="control-group">
+                        <label class="control-label">Autofocus Enabled</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus" />Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group" data-bind="visible:!autofocus_enabled()">
+                        <label class="control-label">Absolute Focus (0-255)</label>
+                        <div class="controls">
+                            <input id="camera_profile_focus" name="focus" type="number" class="input-small" data-bind="value: focus" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_focus"></div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
-            <hr />
-            <div>
+                <hr />
                 <div>
-                    <h5>LEDs</h5>
-                    <p>My camera does not have an LED, so I was unable to test LED settings.  If you get this to work, please let me know.</p>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">LED 1 Mode</label>
-                    <div class="controls">
-                        <select id="camera_profile_led_1_mode" name="led_1_mode" data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: led1_mode"></select>
-                        <div class="error_label_container text-error" data-error-for="camera_profile_led_1_mode"></div>
+                    <div>
+                        <h5>LEDs</h5>
+                        <p>My camera does not have an LED, so I was unable to test LED settings.  If you get this to work, please let me know.</p>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">LED 1 Mode</label>
+                        <div class="controls">
+                            <select id="camera_profile_led_1_mode" name="led_1_mode" data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
+                                     optionsText: 'name',
+                                     optionsValue: 'value',
+                                     optionsCaption: 'Select One...',
+                                     value: led1_mode"></select>
+                            <div class="error_label_container text-error" data-error-for="camera_profile_led_1_mode"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">LED 1 Frequency</label>
+                        <div class="controls">
+                            <input id="camera_profile_led1_frequency" name="led1_frequency" type="number" class="input-small" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label">LED 1 Frequency</label>
-                    <div class="controls">
-                        <input id="camera_profile_led1_frequency" name="led1_frequency" type="number" class="input-small" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency"></div>
-                    </div>
-                </div>
-            </div>
-            <hr />
-            <div>
+                <hr />
                 <div>
-                    <h5>Misc</h5>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Powerline Frequency</label>
-                    <div class="controls">
-                        <select id="camera_profile_camera_powerline_frequency"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: powerline_frequency"></select>
-                        <div class="error_label_container text-error" data-error-for="camera_profile_camera_powerline_frequency"></div>
-                        <span class="help-inline">I did not notice any difference when testing this setting.  Please let me know if it affects your image quality.</span>
+                    <div>
+                        <h5>Misc</h5>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Powerline Frequency</label>
+                        <div class="controls">
+                            <select id="camera_profile_camera_powerline_frequency"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
+                                     optionsText: 'name',
+                                     optionsValue: 'value',
+                                     optionsCaption: 'Select One...',
+                                     value: powerline_frequency"></select>
+                            <div class="error_label_container text-error" data-error-for="camera_profile_camera_powerline_frequency"></div>
+                            <span class="help-inline">I did not notice any difference when testing this setting.  Please let me know if it affects your image quality.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -488,7 +496,7 @@
 
                 </div>
             </div>
-            <div>
+            <div data-bind="visible: camera_type()=='webcam'">
                 <div>
                     <h4>Camera Settings Request Templates</h4>
                     <p>I'm pretty sure the defaults will not work for all cameras, but hopefully these templates will allow image control on a wider group of cameras.  I used Firebug to inspect the request URL while changing webcam settings from the /webcam/control.html page to determine what templates to use for my camera.</p>

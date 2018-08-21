@@ -312,6 +312,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data.update(self.Settings.to_dict())
         return json.dumps(data), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/testCameraSettingsApply", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def test_camera_settings_apply(self):
+        request_values = flask.request.get_json()
+        profile = request_values["profile"]
+        camera_profile = Camera(profile)
+        try:
+            camera.test_web_camera_image_preferences(camera_profile)
+            return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
+        except camera.CameraError as e:
+            return json.dumps({'success': False, 'error': str(e)}, 200, {'ContentType': 'application/json'})
+
     @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
@@ -320,8 +333,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         profile = request_values["profile"]
         settings_type = request_values["settings_type"]
         camera_profile = Camera(profile)
-        success = self.apply_camera_settings(camera_profile=camera_profile, force=True, settings_type=settings_type)
-
+        success, errors = self.apply_camera_settings(camera_profile=camera_profile, force=True, settings_type=settings_type)
+        if not success:
+            self.send_plugin_message('camera-settings-error', errors)
         return json.dumps({'success': success}, 200, {'ContentType': 'application/json'})
 
     @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
@@ -331,11 +345,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         request_values = flask.request.get_json()
         profile = request_values["profile"]
         camera_profile = Camera(profile)
-        results = camera.test_camera(camera_profile)
-        if results[0]:
+        try:
+            camera.test_web_camera(camera_profile)
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-        else:
-            return json.dumps({'success': False, 'error': results[1]}), 200, {'ContentType': 'application/json'}
+        except camera.CameraError as e:
+            self.Settings.current_debug_profile().log_error(e)
+            return json.dumps({'success': False, 'error': str(e)}), 200, {'ContentType': 'application/json'}
+        except Exception as e:
+            self.Settings.current_debug_profile().log_error(e)
+            raise e
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
     @restricted_access
@@ -542,14 +560,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         success, errors = camera_control.apply_settings(force, settings_type)
         if not success:
             error_message = "There were {0} errors while applying custom camera settings/scripts:".format(len(errors))
+            error_message += "\n{0}".format(errors[0])
+            if len(errors) > 1:
+                error_message += "\n+ {0} more errors.  See plugin_octolapse.log for details.".format(len(errors)-1)
             for error in errors:
-                error_message += "\n{0}".format(error)
-                self.Settings.current_debug_profile().log_camera_settings_apply(error)
-            self.send_plugin_message('camera-settings-error', error_message)
-            return False
+                self.Settings.current_debug_profile().log_error(error)
+            return False, error_message
         else:
             self.Settings.current_debug_profile().log_camera_settings_apply("Camera settings applied without error.")
-            return True
+            return True, None
 
     def get_timelapse_folder(self):
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())
@@ -915,10 +934,48 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.on_print_start_failed(message)
             return
 
-        if not self.apply_camera_settings():
-            message = "There were errors applying camera settings."
+        # test all cameras and look for at least one enabled camera
+        found_camera = False
+        for key in self.Settings.cameras:
+            current_camera = self.Settings.cameras[key]
+            if current_camera.enabled:
+                found_camera = True
+                if current_camera.camera_type == "webcam":
+                    # test the camera and see if it works.
+
+                    try:
+                        camera.test_web_camera(current_camera)
+                    except camera.CameraError as e:
+                        self.Settings.current_debug_profile().log_exception(e)
+                        self.on_print_start_failed(str(e))
+                        return
+                    except Exception as e:
+                        self.Settings.current_debug_profile().log_exception(e)
+                        message = "An unknown exception occurred while testing the '{0}' camera profile.  Check " \
+                                  "plugin_octolapse.log for details.".format(current_camera.name)
+                        self.on_print_start_failed(message)
+                        raise e
+        if not found_camera:
+            message = "There are no enabled cameras.  Enable at least one camera profile and try again."
+            self.on_print_start_failed(message)
+
+        success, errors = self.apply_camera_settings(settings_type="web-request")
+        if not success:
+            message = "Octolapse could not apply custom image perferences to your webcam.  Please see <a " \
+                      "href=\"https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" \
+                      "\" target=\"_blank\">this link</a> for assistance with this error.  Details:" \
+                      " {0}".format(errors)
             self.on_print_start_failed(message)
             return
+
+        success, errors = self.apply_camera_settings(settings_type="script")
+        if not success:
+            message = "There were some errors running your custom camera initialization script.  Please correct your " \
+                      "script and try again, or remove the initialization script from your camera profile. Error " \
+                      "Details: {0}".format(errors)
+            self.on_print_start_failed(message)
+            return
+
         result = self.start_timelapse()
         if not result["success"]:
             self.on_print_start_failed(result["error"])
@@ -938,9 +995,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
 
         self.Settings.current_debug_profile().log_print_state_change(message)
-        self.send_popup_error(message)
-
-
+        self.send_plugin_message("print-start-error", message)
     def start_timelapse(self):
 
         # check for version 1.3.7 min
@@ -1025,24 +1080,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
             }
 
-        found_camera = False
-        for key in self.Settings.cameras:
-            current_camera = self.Settings.cameras[key]
-            if current_camera.enabled:
-                found_camera = True
-                if current_camera.camera_type == "webcam":
-                    # test the camera and see if it works.
-                    results = camera.test_camera(current_camera)
-                    if not results[0]:
-                        return {'success': False, 'warning': False,
-                                'error': "The current camera profile did not pass testing.  You can "
-                                         "adjust and test your camera in the profile settings page."}
-
-        if not found_camera:
-            return {
-                'success': False, 'warning': False,
-                'error': "There are no enabled cameras.  Enable at least one camera and try again."
-            }
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
 
@@ -1175,7 +1212,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
-
 
     def on_snapshot_end(self, *args, **kwargs):
         payload = args[0]
@@ -1384,7 +1420,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
 
         self.send_plugin_message('render-failed', str(error))
-
 
     # ~~ AssetPlugin mixin
     def get_assets(self):

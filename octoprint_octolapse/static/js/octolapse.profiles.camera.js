@@ -87,6 +87,7 @@ $(function() {
         self.jpeg_quality = ko.observable(values.jpeg_quality);
         self.jpeg_quality_request_template = ko.observable(values.jpeg_quality_request_template);
 
+        self.is_testing_custom_image_preferences = ko.observable(false)
         self.applySettingsToCamera = function (settings_type) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
@@ -193,6 +194,58 @@ $(function() {
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                }
+            });
+        };
+
+        self.toggleApplySettingsBeforePrint = function () {
+
+
+            if(self.apply_settings_before_print())
+            {
+                self.apply_settings_before_print(false)
+                return;
+            }
+
+            self.is_testing_custom_image_preferences(true);
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("Running camera request.");
+            var data = { 'profile': ko.toJS(self) };
+            $.ajax({
+                url: "./plugin/octolapse/testCameraSettingsApply",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success){
+                        self.apply_settings_before_print(true);
+                        $('#camera_profile_apply_settings_before_print').prop("checked",true);
+                    }
+                    else {
+                        var options = {
+                            title: 'Unable To Enable Custom Preferences',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    var options = {
+                        title: 'Unable To Apply Custom Preferences',
+                        text: "An unexpected error occurred.  Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                },
+                complete: function (){
+                    self.is_testing_custom_image_preferences(false);
                 }
             });
         };

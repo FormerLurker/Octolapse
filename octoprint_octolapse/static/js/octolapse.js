@@ -696,7 +696,7 @@ $(function () {
                         //console.log('octolapse.js - popup-error');
                         self.updateState(data);
                         var options = {
-                            title: 'Octolapse Startup Failed',
+                            title: 'Error',
                             text: data.msg,
                             type: 'error',
                             hide: false,
@@ -706,6 +706,23 @@ $(function () {
                             }
                         };
                         Octolapse.displayPopup(options);
+                        break;
+                    }
+                case "print-start-error":
+                    {
+                        //console.log('octolapse.js - popup-error');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Startup Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"print-start-error")
                         break;
                     }
                 case "timelapse-start":
@@ -731,7 +748,7 @@ $(function () {
                         title: 'Octolapse - Camera Settings Error',
                         text: data.msg,
                         type: 'error',
-                        hide: true,
+                        hide: false,
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options, "snapshot_error");
