@@ -50,6 +50,7 @@
             <label class="checkbox">
                 <input name="rendering_enabled" type="checkbox" data-bind="checked: enabled"
                        title="Enable or disable timelapse generation" />Enabled
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#timelapse-generation" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
             </label>
             <span class="help-inline">
                 When disabled, no timelapse will be generated.  This can be useful if you want to manually generate your own timelapse.
@@ -70,6 +71,7 @@
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: output_format"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#output-file-format" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_output_format"></div>
                     <span class="help-inline" data-bind="visible:output_format() != 'mp4'">
                         <span class="label label-important">Attention</span>&nbsp;Sync Output may not work correctly unless you have selected mp4.
@@ -82,6 +84,7 @@
                     <label class="checkbox">
                         <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse"
                                title="Automatically move the finished timelapse into the standard octoprint timelapse directory" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#sync-output" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
                     <span class="help-inline">
                         When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
@@ -106,6 +109,9 @@
                                 optionsValue: 'value',
                                 optionsCaption: 'Select One...',
                                 value: fps_calculation_type"></select>
+                    <span data-bind="visible: fps_calculation_type == 'duration'">
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-type---fixed-run-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    </span>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_fps_calculation_type"></div>
                 </div>
             </div>
@@ -114,17 +120,19 @@
                 <div class="controls">
                     <input id="rendering_profile_fps" name="fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: fps"
                            min="1" required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-type---fixed-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_fps"></div>
                 </div>
             </div>
             <div class="control-group" data-bind="visible: fps_calculation_type() === 'duration'">
                 <label class="control-label">Fixed Run Length</label>
                 <div class="controls">
-                    <div class="input-append form-inline">
+                    <span class="input-append">
                         <input id="octolapse_run_length_seconds" name="run_length_seconds" type="number" class="input-small ignore_hidden_errors"
                                data-bind="value: run_length_seconds" min="0.5" step="0.5" required="true" />
                         <span class="add-on">seconds</span>
-                    </div>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fixed-run-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="octolapse_run_length_seconds"></div>
 
                 </div>
@@ -135,6 +143,7 @@
                     <input id="rendering_profile_min_fps" name="min_fps" type="number"
                            class="ignore_hidden_errors input-small" data-bind="value: min_fps" min="0.5" step="0.5"
                            required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#minimum-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_min_fps"></div>
                     <span class="help-inline">
                         When using <i>Fixed Length</i> rendering, the calculated FPS can be no less than this value.
@@ -147,6 +156,7 @@
                     <input id="rendering_profile_max_fps" name="max_fps" type="number"
                            class="input-small ignore_hidden_errors" data-bind="value: max_fps" min="0.5" step="0.5"
                            required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#maximum-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_max_fps"></div>
                     <span class="help-inline">
                         When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
@@ -156,12 +166,12 @@
             <div class="control-group">
                 <label class="control-label">Pre-Roll</label>
                 <div class="controls">
-                    <div class="input-append form-inline">
+                    <span class="input-append">
                         <input id="rendering_profile_pre_roll_seconds" name="pre_roll_seconds" type="number" class="input-small ignore_hidden_errors"
                                data-bind="value: pre_roll_seconds" min="0" max="60" required="true" />
                         <span class="add-on">seconds</span>
-                    </div>
-
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#pre-roll" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_pre_roll_seconds"></div>
                     <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
                 </div>
@@ -169,11 +179,12 @@
             <div class="control-group">
                 <label class="control-label">Post-Roll</label>
                 <div class="controls">
-                    <div class="input-append form-inline">
+                    <span class="input-append">
                         <input id="rendering_profile_post_roll_seconds" name="post_roll_seconds" type="number" class="input-small ignore_hidden_errors"
-                               data-bind="value: post_roll_seconds" min="0" max="60" required="true" />
+                           data-bind="value: post_roll_seconds" min="0" max="60" required="true" />
                         <span class="add-on">seconds</span>
-                    </div>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#post-roll" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_post_roll_seconds"></div>
                     <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
                 </div>
@@ -181,12 +192,13 @@
             <div class="control-group">
                 <label class="control-label">Bitrate</label>
                 <div class="controls">
-                    <div class="input-append">
+                    <span class="input-append">
                         <input id="rendering_profile_bitrate" name="bitrate" type="text" class="input-small ignore_hidden_errors" data-bind="value: bitrate"
                                required="true" />
                         <span class="add-on">kbps</span>
                         <span class="add-on">mbps</span>
-                    </div>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#bitrate" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_bitrate"></div>
                     <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
                 </div>

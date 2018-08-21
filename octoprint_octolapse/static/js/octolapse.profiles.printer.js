@@ -122,18 +122,49 @@ $(function() {
             ];
 
             for (var index = 0, size = speed_array.length; index < size; index++) {
-                console.log("Finding duplicates...")
-                var cur_speed = speed_array[index]
+                //console.log("Finding duplicates...");
+                var cur_speed = speed_array[index];
+                if(!cur_speed.speed)
+                    continue;
                 if (duplicate_map[cur_speed.speed]) {
                     // Add the duplicate we found
-                    duplicates[cur_speed.type] = cur_speed.speed
+                    duplicates[cur_speed.type] = cur_speed.speed;
                     // Add the original item, since it is also a duplicate
-                    duplicates[duplicate_map[cur_speed.speed]] = duplicate_map[cur_speed.speed]
+                    duplicates[duplicate_map[cur_speed.speed]] = duplicate_map[cur_speed.speed];
                 }
                 duplicate_map[cur_speed.speed] = cur_speed.type;
             }
 
             return Object.keys(duplicates);
+        });
+
+        self.getMissingSpeeds = ko.pureComputed(function () {
+            // Add all speeds to an array
+            var missingSpeeds = [];
+            var speed_array = [
+                {speed: self.movement_speed(), type: "Movement Speed"},
+                {speed: self.retract_speed(), type: "Retraction Speed"},
+                {speed: self.detract_speed(), type: "Detraction Speed"},
+                {speed: self.z_hop_speed(), type: "Z Movement Speed"},
+                {speed: self.perimeter_speed(), type: "Perimeter Speed"},
+                {speed: self.small_perimeter_speed(), type: "Small Perimeter Speed"},
+                {speed: self.external_perimeter_speed(), type: "External Perimeter Speed"},
+                {speed: self.infill_speed(), type: "Infill Speed"},
+                {speed: self.solid_infill_speed(), type: "Solid Infill Speed"},
+                {speed: self.top_solid_infill_speed(), type: "Top Solid Infill Speed"},
+                {speed: self.support_speed(), type: "Support Speed"},
+                {speed: self.bridge_speed(), type: "Bridge Speed"},
+                {speed: self.gap_fill_speed(), type: "Gap Fill Speed"},
+                {speed: self.first_layer_speed(), type: "First Layer Speed"}
+            ];
+
+            for (var index = 0, size = speed_array.length; index < size; index++) {
+                var cur_speed = speed_array[index];
+                if(!cur_speed.speed)
+                    missingSpeeds.push(cur_speed.type);
+            }
+
+            return missingSpeeds;
         });
 
         self.axisSpeedDisplayUnitsChanged = function (obj, event) {

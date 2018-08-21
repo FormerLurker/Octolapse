@@ -77,7 +77,17 @@
     <div>
         <div>
             <h4>Slicer Speed Settings</h4>
-            <p>Set the default axis mode, control detraction/retraction speed and length.  Used for both snapshot GCode generation and position/state detection.</p>
+            <p>Match all of the speed settings in your current slicer profile with all of the settings below.  In order to use feature detection (used in the 'high quality' snapshot profiles), it is best if each speed is unique.  Make sure to use the correct units!</p>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds are non-unique, and will be indistinguishable when using 'Feature Detection' print quality settings within the snapshot profile: <span data-bind="text: getNonUniqueSpeeds"></span>
+                </p>
+            </div>
+            <div data-bind="visible: getMissingSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not work when using 'Feature Detection' print quality settings within the snapshot profile: <span data-bind="text: getMissingSpeeds"></span>
+                </p>
+            </div>
         </div>
         <div>
             <div class="control-group">
@@ -274,6 +284,16 @@
                         How closely the speed within the gcode must match the speeds above in order for Octolapse to detect the feature.
                     </span>
                 </div>
+            </div>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print quality settings within the snapshot profile: <span data-bind="text: getNonUniqueSpeeds"></span>
+                </p>
+            </div>
+            <div data-bind="visible: getMissingSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not work when using 'Feature Detection' print quality settings within the snapshot profile: <span data-bind="text: getMissingSpeeds"></span>
+                </p>
             </div>
 
 

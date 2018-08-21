@@ -72,6 +72,7 @@ span.octolapse-icon-text {
     font-size: 16px;
     font-weight: 600;
     color: greenyellow;
+    text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
 }
 
 table.octolapse-profiles td {
@@ -2475,7 +2476,7 @@ input.error {
     font-weight: 400;
 }
 #octolapse_tab i.fa, #octolapse_tab span.fa {
-	text-shadow: 0 0 black;
+	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
 }
 
 #octolapse_tab i.fa-no-shadow, #octolapse_tab span.fa-no-shadow {

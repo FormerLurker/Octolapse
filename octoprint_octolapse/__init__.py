@@ -49,7 +49,7 @@ from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, Printer, Stabilization, Camera, Rendering, Snapshot, \
     DebugProfile
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
-
+import octoprint_octolapse.settings_migration as settings_migration
 
 # Octolapse imports
 
@@ -385,10 +385,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
+        preview_image = None
+        camera_image = None
         try:
             # Take a snapshot from the first active camera.
             active_cameras = self.Settings.active_cameras()
-            camera_image = None
+
             if len(active_cameras) > 0:
                 try:
                     camera_image = take_in_memory_snapshot(self.Settings, active_cameras[0])
@@ -588,16 +590,22 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 )
             with open(self.get_settings_file_path()) as settingsJson:
                 data = json.load(settingsJson)
-            if self.Settings is None:
-                #  create a new settings object
-                self.Settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
-                self.Settings.current_debug_profile().log_settings_load("Settings loaded.")
-            else:
-                # update an existing settings object
-                self.Settings.current_debug_profile().log_settings_load(
-                    "Settings loaded.  Updating existing settings object."
-                )
-                self.Settings.update(data)
+                # do the settings need to be migrated?
+                if LooseVersion(data["version"]) != LooseVersion(self._plugin_version):
+                    data = settings_migration.migrate_settings(
+                        self._plugin_version, data, self.get_log_file_path(), self.get_default_settings_path()
+                    )
+                    create_new_settings = True
+                if self.Settings is None:
+                    #  create a new settings object
+                    self.Settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
+                    self.Settings.current_debug_profile().log_settings_load("Settings loaded.")
+                else:
+                    # update an existing settings object
+                    self.Settings.current_debug_profile().log_settings_load(
+                        "Settings loaded.  Updating existing settings object."
+                    )
+                    self.Settings.update(data)
         # Extract any settings from octoprint that would be useful to our users.
         self.copy_octoprint_default_settings(
             apply_to_current_profile=create_new_settings)
@@ -605,6 +613,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if create_new_settings:
             # No file existed, so we must have created default settings.  Save them!
             self.save_settings()
+
         return self.Settings.to_dict()
 
     def copy_octoprint_default_settings(self, apply_to_current_profile=False):
@@ -659,7 +668,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "Saving Settings.")
 
         with open(self.get_settings_file_path(), 'w') as outfile:
-            json.dump(settings_dict, outfile)
+            json.dump(settings_dict, outfile, indent=2)
         self.Settings.current_debug_profile().log_settings_save(
             "Settings saved.".format(settings_dict))
 
@@ -1009,9 +1018,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # make sure at least one trigger is enabled
         current_snapshot = self.Settings.current_snapshot()
         if not (
-            current_snapshot.layer_trigger_enabled or
-            current_snapshot.timer_trigger_enabled or
-            current_snapshot.gcode_trigger_enabled
+            current_snapshot.enabled
         ):
             return {
                 'success': False,

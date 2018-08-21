@@ -336,6 +336,10 @@ class Extruder(object):
         return None
 
     def is_triggered(self, options, index=0):
+        # if there are no extruder trigger options, return true.
+        if options is None:
+            return True
+
         state = self.get_state(index)
         if state is None:
             return False

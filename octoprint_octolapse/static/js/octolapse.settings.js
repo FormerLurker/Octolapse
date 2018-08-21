@@ -206,6 +206,7 @@ $(function () {
             Octolapse.Snapshots.profiles([]);
             Octolapse.Snapshots.default_profile(settings.default_snapshot_profile);
             Octolapse.Snapshots.profileOptions ={
+                'trigger_types': settings.trigger_types,
                 'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options,
                 'position_restriction_shapes': settings.position_restriction_shapes,
                 'position_restriction_types': settings.position_restriction_types

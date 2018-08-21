@@ -57,14 +57,14 @@ class Triggers(object):
             self.Name = self.Snapshot.name
             # create the triggers
             # If the gcode trigger is enabled, add it
-            if self.Snapshot.gcode_trigger_enabled:
+            if self.Snapshot.trigger_type == Snapshot.GcodeTriggerType:
                 # Add the trigger to the list
                 self._triggers.append(GcodeTrigger(self.Settings))
             # If the layer trigger is enabled, add it
-            if self.Snapshot.layer_trigger_enabled:
+            elif self.Snapshot.trigger_type == Snapshot.LayerTriggerType:
                 self._triggers.append(LayerTrigger(self.Settings))
             # If the layer trigger is enabled, add it
-            if self.Snapshot.timer_trigger_enabled:
+            elif self.Snapshot.trigger_type == Snapshot.TimerTriggerType:
                 self._triggers.append(TimerTrigger(self.Settings))
         except Exception as e:
             self.Settings.current_debug_profile().log_exception(e)
@@ -359,43 +359,45 @@ class GcodeTrigger(Trigger):
             self.Settings.current_debug_profile().log_exception(e)
 
         self.Type = "gcode"
-        self.RequireZHop = self.Snapshot.gcode_trigger_require_zhop
+        self.RequireZHop = self.Snapshot.require_zhop
 
-        self.ExtruderTriggers = ExtruderTriggers(
-            self.Snapshot.gcode_trigger_on_extruding_start,
-            self.Snapshot.gcode_trigger_on_extruding,
-            self.Snapshot.gcode_trigger_on_primed,
-            self.Snapshot.gcode_trigger_on_retracting_start,
-            self.Snapshot.gcode_trigger_on_retracting,
-            self.Snapshot.gcode_trigger_on_partially_retracted,
-            self.Snapshot.gcode_trigger_on_retracted,
-            self.Snapshot.gcode_trigger_on_detracting_start,
-            self.Snapshot.gcode_trigger_on_detracting,
-            self.Snapshot.gcode_trigger_on_detracted
-        )
+        if self.Snapshot.extruder_state_requirements_enabled:
+            self.ExtruderTriggers = ExtruderTriggers(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            message = (
+                "Extruder Triggers - OnExtrudingStart:{0}, OnExtruding:{1}, OnPrimed:{2}, "
+                "OnRetractingStart:{3} OnRetracting:{4}, OnPartiallyRetracted:{5}, OnRetracted:{6}, "
+                "ONDetractingStart:{7}, OnDetracting:{8}, OnDetracted:{9}"
+            ).format(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            self.Settings.current_debug_profile().log_trigger_create(message)
 
         # Logging
         message = "Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}"
-        message = message.format(self.Printer.snapshot_command, self.Snapshot.gcode_trigger_require_zhop)
+        message = message.format(self.Printer.snapshot_command, self.Snapshot.require_zhop)
         self.Settings.current_debug_profile().log_trigger_create(message)
 
-        message = (
-            "Extruder Triggers - OnExtrudingStart:{0}, OnExtruding:{1}, OnPrimed:{2}, "
-            "OnRetractingStart:{3} OnRetracting:{4}, OnPartiallyRetracted:{5}, OnRetracted:{6}, "
-            "ONDetractingStart:{7}, OnDetracting:{8}, OnDetracted:{9}"
-        ).format(
-            self.Snapshot.gcode_trigger_on_extruding_start,
-            self.Snapshot.gcode_trigger_on_extruding,
-            self.Snapshot.gcode_trigger_on_primed,
-            self.Snapshot.gcode_trigger_on_retracting_start,
-            self.Snapshot.gcode_trigger_on_retracting,
-            self.Snapshot.gcode_trigger_on_partially_retracted,
-            self.Snapshot.gcode_trigger_on_retracted,
-            self.Snapshot.gcode_trigger_on_detracting_start,
-            self.Snapshot.gcode_trigger_on_detracting,
-            self.Snapshot.gcode_trigger_on_detracted
-        )
-        self.Settings.current_debug_profile().log_trigger_create(message)
+
         # add an initial state
         self.add_state(GcodeTriggerState())
 
@@ -519,20 +521,40 @@ class LayerTrigger(Trigger):
     def __init__(self, octolapse_settings):
         super(LayerTrigger, self).__init__(octolapse_settings)
         self.Type = "layer"
-        self.ExtruderTriggers = ExtruderTriggers(
-            self.Snapshot.layer_trigger_on_extruding_start,
-            self.Snapshot.layer_trigger_on_extruding,
-            self.Snapshot.layer_trigger_on_primed,
-            self.Snapshot.layer_trigger_on_retracting_start,
-            self.Snapshot.layer_trigger_on_retracting,
-            self.Snapshot.layer_trigger_on_partially_retracted,
-            self.Snapshot.layer_trigger_on_retracted,
-            self.Snapshot.layer_trigger_on_detracting_start,
-            self.Snapshot.layer_trigger_on_detracting,
-            self.Snapshot.layer_trigger_on_detracted
-        )
+        if self.Snapshot.extruder_state_requirements_enabled:
+            self.ExtruderTriggers = ExtruderTriggers(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            message = (
+                "Extruder Triggers - OnExtrudingStart:{0}, "
+                "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
+                "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
+                "OnRetracted:{6}, ONDetractingStart:{7}, "
+                "OnDetracting:{8}, OnDetracted:{9}"
+            ).format(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            self.Settings.current_debug_profile().log_trigger_create(message)
         # Configuration Variables
-        self.RequireZHop = self.Snapshot.layer_trigger_require_zhop
+        self.RequireZHop = self.Snapshot.require_zhop
         self.HeightIncrement = self.Snapshot.layer_trigger_height
         if self.HeightIncrement == 0:
             self.HeightIncrement = None
@@ -541,29 +563,10 @@ class LayerTrigger(Trigger):
             "Creating Layer Trigger - TriggerHeight:{0} (none = layer change), RequiresZHop:{1}"
         ).format(
             self.Snapshot.layer_trigger_height,
-            self.Snapshot.layer_trigger_require_zhop
+            self.Snapshot.require_zhop
         )
         self.Settings.current_debug_profile().log_trigger_create(message)
 
-        message = (
-            "Extruder Triggers - OnExtrudingStart:{0}, "
-            "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
-            "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
-            "OnRetracted:{6}, ONDetractingStart:{7}, "
-            "OnDetracting:{8}, OnDetracted:{9}"
-        ).format(
-            self.Snapshot.layer_trigger_on_extruding_start,
-            self.Snapshot.layer_trigger_on_extruding,
-            self.Snapshot.layer_trigger_on_primed,
-            self.Snapshot.layer_trigger_on_retracting_start,
-            self.Snapshot.layer_trigger_on_retracting,
-            self.Snapshot.layer_trigger_on_partially_retracted,
-            self.Snapshot.layer_trigger_on_retracted,
-            self.Snapshot.layer_trigger_on_detracting_start,
-            self.Snapshot.layer_trigger_on_detracting,
-            self.Snapshot.layer_trigger_on_detracted
-        )
-        self.Settings.current_debug_profile().log_trigger_create(message)
         self.add_state(LayerTriggerState())
 
     def update(self, position):
@@ -733,50 +736,51 @@ class TimerTrigger(Trigger):
     def __init__(self, octolapse_settings):
         super(TimerTrigger, self).__init__(octolapse_settings)
         self.Type = "timer"
-        self.ExtruderTriggers = ExtruderTriggers(
-            self.Snapshot.timer_trigger_on_extruding_start,
-            self.Snapshot.timer_trigger_on_extruding,
-            self.Snapshot.timer_trigger_on_primed,
-            self.Snapshot.timer_trigger_on_retracting_start,
-            self.Snapshot.timer_trigger_on_retracting,
-            self.Snapshot.timer_trigger_on_partially_retracted,
-            self.Snapshot.timer_trigger_on_retracted,
-            self.Snapshot.timer_trigger_on_detracting_start,
-            self.Snapshot.timer_trigger_on_detracting,
-            self.Snapshot.timer_trigger_on_detracted
-        )
+        if self.Snapshot.extruder_state_requirements_enabled:
+            self.ExtruderTriggers = ExtruderTriggers(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            message = (
+                "Extruder Triggers - OnExtrudingStart:{0}, "
+                "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
+                "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
+                "OnRetracted:{6}, ONDetractingStart:{7}, "
+                "OnDetracting:{8}, OnDetracted:{9}"
+            ).format(
+                self.Snapshot.trigger_on_extruding_start,
+                self.Snapshot.trigger_on_extruding,
+                self.Snapshot.trigger_on_primed,
+                self.Snapshot.trigger_on_retracting_start,
+                self.Snapshot.trigger_on_retracting,
+                self.Snapshot.trigger_on_partially_retracted,
+                self.Snapshot.trigger_on_retracted,
+                self.Snapshot.trigger_on_detracting_start,
+                self.Snapshot.trigger_on_detracting,
+                self.Snapshot.trigger_on_detracted
+            )
+            self.Settings.current_debug_profile().log_trigger_create(message)
+
         self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
-        self.RequireZHop = self.Snapshot.timer_trigger_require_zhop
+        self.RequireZHop = self.Snapshot.require_zhop
 
         # Log output
         message = (
             "Creating Timer Trigger - Seconds:{0}, RequireZHop:{1}"
         ).format(
             self.Snapshot.timer_trigger_seconds,
-            self.Snapshot.timer_trigger_require_zhop
+            self.Snapshot.require_zhop
         )
         self.Settings.current_debug_profile().log_trigger_create(message)
 
-        message = (
-            "Extruder Triggers - OnExtrudingStart:{0}, "
-            "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
-            "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
-            "OnRetracted:{6}, ONDetractingStart:{7}, "
-            "OnDetracting:{8}, OnDetracted:{9}"
-        ).format(
-            self.Snapshot.timer_trigger_on_extruding_start,
-            self.Snapshot.timer_trigger_on_extruding,
-            self.Snapshot.timer_trigger_on_primed,
-            self.Snapshot.timer_trigger_on_retracting_start,
-            self.Snapshot.timer_trigger_on_retracting,
-            self.Snapshot.timer_trigger_on_partially_retracted,
-            self.Snapshot.timer_trigger_on_retracted,
-            self.Snapshot.timer_trigger_on_detracting_start,
-            self.Snapshot.timer_trigger_on_detracting,
-            self.Snapshot.timer_trigger_on_detracted
-        )
-
-        self.Settings.current_debug_profile().log_trigger_create(message)
         # add initial state
         initial_state = TimerTriggerState()
         self.add_state(initial_state)

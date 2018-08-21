@@ -469,8 +469,6 @@ class WebcamSnapshotJob(SnapshotThread):
 
     def run(self):
         try:
-            start_time = time()
-
             if self.snapshot_job_info.DelaySeconds < 0.001:
                 self.Settings.current_debug_profile().log_snapshot_download(
                     "Starting Snapshot Download Job Immediately.")
@@ -479,7 +477,6 @@ class WebcamSnapshotJob(SnapshotThread):
                 self.apply_camera_delay()
 
             r = None
-            download_start_time = time()
             try:
                 if len(self.Username) > 0:
                     message = (
@@ -538,17 +535,10 @@ class WebcamSnapshotJob(SnapshotThread):
                     "An unexpected exception occurred.",
                     cause=e
                 )
-            download_end_time = time()
             # Post Processing and Meta Data Creation
-            metadata_start_time = time()
             self.write_metadata()
-            metadata_end_time = time()
-            transpose_start_time = time()
             self.transpose_image()
-            transpose_end_time = time()
-            thumbnail_start_time = time()
             self.create_thumbnail()
-            thumbnail_end_time = time()
             self.snapshot_job_info.success = True
         except SnapshotError as e:
             self.Settings.current_debug_profile().log_exception(e)
@@ -556,13 +546,7 @@ class WebcamSnapshotJob(SnapshotThread):
         finally:
             self.Settings.current_debug_profile().log_snapshot_download(
                 "Snapshot Download Job completed, signaling task queue.")
-        total_time = time() - start_time
-        download_time = download_end_time - download_start_time
-        metadata_time = metadata_end_time - metadata_start_time
-        transpose_time = transpose_end_time - transpose_start_time
-        thumbnail_time = thumbnail_end_time - thumbnail_start_time
 
-        self.Settings.current_debug_profile().log_snapshot_download("Snapshot Time info - DownloadTime: {0}, MetadataTime:{1}, TransposeTime: {2}, ThumbnailTime: {3}, TotalTime: {4}".format(download_time, metadata_time, transpose_time, thumbnail_time, total_time))
 
 class SnapshotError(Exception):
     def __init__(self, error_type, message, cause=None):
