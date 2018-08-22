@@ -404,16 +404,32 @@ class TimelapseRenderJob(object):
                     self.render_job_info.camera.name,
                     self.render_job_info.snapshot_directory,
                     self.render_job_info.snapshot_filename_format,
-                    os.path.join(self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
+                    os.path.join(
+                        self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format
+                    ),
+                    self._output_directory,
+                    self._output_filename,
+                    self._output_extension,
+                    self._rendering_output_file_path,
+                    self._synchronized_directory,
+                    self._synchronized_filename,
+
                 ]
 
                 self._debug().log_render_start(
-                    "Running the following after-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
+                    'Running the following after-render script command: {0} "{1}" "{2}" "{3}" "{4}" "{5}" "{6}" "{7}" '
+                    '"{8}" "{9}" "{10}"'.format(
                         script_args[0],
                         script_args[1],
                         script_args[2],
                         script_args[3],
-                        script_args[4]
+                        script_args[4],
+                        script_args[5],
+                        script_args[6],
+                        script_args[7],
+                        script_args[8],
+                        script_args[9],
+                        script_args[10]
                     )
                 )
 

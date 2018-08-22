@@ -198,9 +198,9 @@ class Timelapse(object):
     def send_snapshot_gcode_array(self, gcode_array):
         self.OctoprintPrinter.commands(gcode_array, tags={"snapshot_gcode"})
 
-    def send_gcode_for_camera(self, gcode_array):
+    def send_gcode_for_camera(self, gcode_array, timeout):
         self.get_position_async(
-            start_gcode=gcode_array, timeout=self._position_timeout_short
+            start_gcode=gcode_array, timeout=timeout
         )
     # requests a position from the printer (m400-m114), and can send optional gcode before the position request.
     # this ensures any gcode sent in the start_gcode parameter will be executed before the function returns.

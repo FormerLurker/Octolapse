@@ -100,7 +100,6 @@ class CaptureSnapshot(object):
 
         for current_camera in self.Cameras:
             camera_info = self.CameraInfos[str(current_camera.guid)]
-            snapshot_job = None
 
             # pre_snapshot threads
             if current_camera.on_before_snapshot_script:
@@ -150,7 +149,9 @@ class CaptureSnapshot(object):
         for current_camera in self.Cameras:
             if current_camera.camera_type == "printer-gcode":
                 # just send the gcode now so it all goes in order
-                self.SendGcodeArrayCallback(Commands.string_to_gcode_array(current_camera.gcode_camera_script))
+                self.SendGcodeArrayCallback(
+                    Commands.string_to_gcode_array(current_camera.gcode_camera_script), current_camera.timeout_ms/1000.0
+                )
 
         for t in snapshot_threads:
             result = t.join()
