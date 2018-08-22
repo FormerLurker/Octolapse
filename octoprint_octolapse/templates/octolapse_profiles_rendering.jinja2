@@ -218,11 +218,8 @@
                     <label class="checkbox">
                         <input name="watermark" type="checkbox" data-bind="checked: enable_watermark"
                                title="Embed a watermark in the resulting timelapse" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#embed-watermark" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
-                    <span class="help-inline">
-                        <span class="label label-important">Warning</span>&nbsp;There are known issues with this option.
-                    </span>
-
                     <span class="help-inline">
                         <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
                     </span>
@@ -267,6 +264,7 @@
                 <label class="control-label">Text:</label>
                 <div class="controls">
                     <textarea id="octolapse_overlay_text_template" class="input-block-level ignore_hidden_errors" name="overlay_text_template" data-bind="value: overlay_text_template" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-and-replacement-tokens" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="octolapse_overlay_text_template"></div>
                     <p class="help-inline">
                         Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
@@ -279,10 +277,11 @@
                 </div>
                 <label class="control-label">Size:</label>
                 <div class="controls">
-                    <div class="input-append" style="display:inline-block">
+                    <span class="input-append" style="display:inline-block">
                         <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" />
                         <span class="add-on">pt</span>
-                    </div>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-size" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_font_size"></div>
                 </div>
                 <label for="rendering_profile_overlay_text_valign" class="control-label">Vertical alignment:</label>
@@ -290,6 +289,7 @@
                     <select id="rendering_profile_overlay_text_valign" name="overlay_text_valign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
                                     optionsCaption: 'Select One...',
                                     value: overlay_text_valign"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-vertical-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_valign"></div>
                 </div>
                 <label for="rendering_profile_overlay_text_halign" class="control-label">Horizontal alignment:</label>
@@ -297,6 +297,7 @@
                     <select id="rendering_profile_overlay_text_halign" name="overlay_text_halign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
                                     optionsCaption: 'Select One...',
                                     value: overlay_text_halign"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-horizontal-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_halign"></div>
                 </div>
                 <label for="rendering_profile_overlay_text_alignment" class="control-label">Text Alignment:</label>
@@ -304,15 +305,20 @@
                     <select id="rendering_profile_overlay_text_alignment" name="overlay_text_alignment" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
                                     optionsCaption: 'Select One...',
                                     value: overlay_text_alignment"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_alignment"></div>
                 </div>
                 <label class="control-label">Position offset:</label>
                 <div class="controls">
-
-                    <input type="number" class="input-small" data-bind="value: overlay_text_pos_x" required="true" />
-                    <span class="add-on">x</span>
-                    <input type="number" class="input-small" data-bind="value: overlay_text_pos_y" required="true" />
-                    <span class="add-on">y</span>
+                    <span class="input-append">
+                        <input type="number" class="input-small" data-bind="value: overlay_text_pos_x" required="true" />
+                        <span class="add-on">x</span>
+                    </span>
+                    <span class="input-append">
+                        <input type="number" class="input-small" data-bind="value: overlay_text_pos_y" required="true" />
+                        <span class="add-on">y</span>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-position-offset" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="input-append" style="display:inline-block">
                         <input type="hidden" id="rendering_profile_overlay_text_pos" name="octolapse_overlay_text_pos" data-bind="value: overlay_text_pos()"/>
                     </div>
@@ -322,9 +328,10 @@
                 <label for="overlay_color" class="control-label">Color:</label>
                 <div class="controls">
                     <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-color" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
                 </div>
-                <label class="control-label">Font:</label>
+                <label class="control-label">Font: <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-font-selection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></label>
                 <div class="controls">
                     <div class="scroll-table-container">
                         <table class="table table-condensed table-hover file-selector-list">
@@ -342,7 +349,9 @@
                         </table>
                     </div>
                 </div>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-image-preview" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: overlay_preview_image_src, alt: overlay_preview_image_error}" />
+
                 <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
             </div>
 
@@ -359,6 +368,7 @@
                 <label class="control-label">Filename Template</label>
                 <div class="controls">
                     <input id="octolapse_output_template" name="output_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: output_template" required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#filename-template" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="octolapse_output_template"></div>
                     <span class="help-inline">
                         Determines the rendering file name.  You can use the following replacement tokens:
@@ -376,6 +386,7 @@
                     <input id="rendering_profile_thread_count" name="thread_count" type="number"
                            class="ignore_hidden_errors input-small" data-bind="value: thread_count" min="1" step="1"
                            required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#rendering-thread-count" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_thread_count"></div>
                     <span class="help-inline">
                         Increasing the amount of threads will improve rendering performance as long as your processor has idle cores.  It may HURT performance if you do not.
