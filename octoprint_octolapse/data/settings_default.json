@@ -1649,7 +1649,7 @@
       "trigger_on_partially_retracted": "forbidden",
       "trigger_on_extruding_start": "trigger_on",
       "trigger_on_retracted": "trigger_on",
-      "layer_trigger_height": 0.05,
+      "layer_trigger_height": 0.0,
       "cleanup_after_render_complete": true,
       "guid": "80c49818-d4ca-455c-a464-18f1f7c8d648",
       "trigger_on_z_movement": true,
