@@ -2293,7 +2293,7 @@ class OctolapseSettings(object):
             'overlay_text_halign_options': self.overlay_text_halign_options,
             'camera_powerline_frequency_options': [
                 dict(value='50', name='50 HZ (Europe, China, India, etc)'),
-                dict(value='60', name='60 HZ (North/South America, Japan, etc')
+                dict(value='60', name='60 HZ (North/South America, Japan, etc)')
             ],
             'camera_exposure_type_options': [
                 dict(value='0', name='Unknown - Let me know if you know what this option does.'),

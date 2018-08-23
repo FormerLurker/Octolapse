@@ -252,7 +252,7 @@
                     <div class="control-group">
                         <label class="control-label">Apply Camera Settings</label>
                         <div class="controls">
-                            <button class="btn btn-default btn-block" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
+                            <button class="btn btn-default input-xxl" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
                             <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#apply-now" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                             <span class="help-inline">
                                 Click to apply all settings to your camera right now so you can see the results without starting a print or saving your changes.
@@ -301,7 +301,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>White Balance</h5>
@@ -327,7 +326,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>Exposure and Gain</h5>
@@ -384,7 +382,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>Pan, Tilt, and Zoom</h5>
@@ -416,7 +413,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>Focus</h5>
@@ -440,7 +436,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>LEDs</h5>
@@ -467,7 +462,6 @@
                         </div>
                     </div>
                 </div>
-                <hr />
                 <div>
                     <div>
                         <h5>Misc</h5>
@@ -475,7 +469,7 @@
                     <div class="control-group">
                         <label class="control-label">Powerline Frequency</label>
                         <div class="controls">
-                            <select id="camera_profile_camera_powerline_frequency"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
+                            <select id="camera_profile_camera_powerline_frequency" class="input-xlg"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
                                      optionsText: 'name',
                                      optionsValue: 'value',
                                      optionsCaption: 'Select One...',

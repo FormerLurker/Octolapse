@@ -109,9 +109,9 @@
                                 optionsValue: 'value',
                                 optionsCaption: 'Select One...',
                                 value: fps_calculation_type"></select>
-                    <span data-bind="visible: fps_calculation_type == 'duration'">
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-type---fixed-run-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    </span>
+
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-types" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+
                     <div class="error_label_container text-error" data-error-for="rendering_profile_fps_calculation_type"></div>
                 </div>
             </div>
@@ -220,37 +220,60 @@
                                title="Embed a watermark in the resulting timelapse" />Enabled
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#embed-watermark" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
-                    <span class="help-inline">
-                        <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
-                    </span>
-                    <table class="table table-condensed table-hover file-selector-list">
-                        <tbody data-bind="foreach: watermark_list">
-                            <tr data-bind="click: $parent.selectWatermark, css: { selected: filepath == $parent.selected_watermark() }">
-                                <td>
-                                    <div>
-                                        <span class="filename" data-bind="text: getFilename()" />
-                                    </div>
-                                    <button type="button" class="close" aria-label="Close" data-bind="click: $parent.deleteWatermark">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                    <div class="filepath" data-bind="text: filepath"></div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
-                <div class="controls-row">
-                    <div class="input-group" style="display:flex; align-items:center">
-                        <span class="btn fileinput-button">
-                            <span>Upload new...</span>
-                            <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
-                        </span>
-                        <span id="octolapse-upload-watermark-progress" class="progress-bar-container">
-                            <span class="progress-bar" style="width: 0%;"></span>
+            </div>
+            <div data-bind="visible: enable_watermark">
+                <div class="control-group">
+                    <div class="controls">
+                        <table data-bind="visible: watermark_list().length > 0" class="table table-condensed table-hover file-selector-list">
+                            <tbody data-bind="foreach: watermark_list">
+                                <tr data-bind="css: { selected: filepath == $parent.selected_watermark() }">
+                                    <td>
+                                        <div class="row-fluid">
+                                            <div class="span11" data-bind="click: $parent.selectWatermark">
+                                                <div>
+                                                    <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': filepath == $parent.selected_watermark(), 'fa-square-o': filepath != $parent.selected_watermark() } "></i>
+                                                    <span class="filename" data-bind="text: getFilename()" />
+                                                </div>
+                                                <div style="height:18px; text-overflow: ellipsis;" class="filepath" data-bind="text: filepath"></div>
+                                            </div>
+                                            <div class="span1">
+                                                <div class="text-right">
+                                                    <button type="button" class="close text-error" aria-label="Close" data-bind="click: $parent.deleteWatermark">
+                                                        <i class="fa fa-no-shadow fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div data-bind="visible: watermark_list().length == 0" class="text-error">
+                            You must upload at least one watermark in order to use this feature.
+                        </div>
+                        <div data-bind="visible: watermark_list().length > 0 && selected_watermark() == ''" class="text-error">
+                            You must select at least one watermark in order to use this feature.
+                        </div>
+                        <span class="help-inline">
+                            <span class="label label label-info">Info</span>&nbsp;Click a filename to select it.
                         </span>
                     </div>
                 </div>
-            </div>
+                <div class="control-group">
+                    <div class="controls">
+                            <div class="input-group" style="display:flex; align-items:center">
+                                <span class="btn fileinput-button">
+                                    <span>Upload new...</span>
+                                    <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
+                                </span>
+                                <span id="octolapse-upload-watermark-progress" class="progress-bar-container">
+                                    <span class="progress-bar" style="width: 0%;"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         </div>
         <div>
             <hr />
@@ -260,101 +283,131 @@
                     Add textual information based on an overlay template to your rendered timelapse
                 </p>
             </div>
-            <div class="control-group">
-                <label class="control-label">Text:</label>
-                <div class="controls">
-                    <textarea id="octolapse_overlay_text_template" class="input-block-level ignore_hidden_errors" name="overlay_text_template" data-bind="value: overlay_text_template" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-and-replacement-tokens" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="octolapse_overlay_text_template"></div>
-                    <p class="help-inline">
-                        Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
-                        <i>
-                            <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
-                                <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}
-                            </span>
-                        </i>
-                    </p>
-                </div>
-                <label class="control-label">Size:</label>
-                <div class="controls">
-                    <span class="input-append" style="display:inline-block">
-                        <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" />
-                        <span class="add-on">pt</span>
-                    </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-size" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_font_size"></div>
-                </div>
-                <label for="rendering_profile_overlay_text_valign" class="control-label">Vertical alignment:</label>
-                <div class="controls">
-                    <select id="rendering_profile_overlay_text_valign" name="overlay_text_valign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
-                                    optionsCaption: 'Select One...',
-                                    value: overlay_text_valign"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-vertical-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_valign"></div>
-                </div>
-                <label for="rendering_profile_overlay_text_halign" class="control-label">Horizontal alignment:</label>
-                <div class="controls">
-                    <select id="rendering_profile_overlay_text_halign" name="overlay_text_halign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
-                                    optionsCaption: 'Select One...',
-                                    value: overlay_text_halign"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-horizontal-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_halign"></div>
-                </div>
-                <label for="rendering_profile_overlay_text_alignment" class="control-label">Text Alignment:</label>
-                <div class="controls">
-                    <select id="rendering_profile_overlay_text_alignment" name="overlay_text_alignment" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
-                                    optionsCaption: 'Select One...',
-                                    value: overlay_text_alignment"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_alignment"></div>
-                </div>
-                <label class="control-label">Position offset:</label>
-                <div class="controls">
-                    <span class="input-append">
-                        <input type="number" class="input-small" data-bind="value: overlay_text_pos_x" required="true" />
-                        <span class="add-on">x</span>
-                    </span>
-                    <span class="input-append">
-                        <input type="number" class="input-small" data-bind="value: overlay_text_pos_y" required="true" />
-                        <span class="add-on">y</span>
-                    </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-position-offset" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="input-append" style="display:inline-block">
-                        <input type="hidden" id="rendering_profile_overlay_text_pos" name="octolapse_overlay_text_pos" data-bind="value: overlay_text_pos()"/>
-                    </div>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_pos"></div>
-
-                </div>
-                <label for="overlay_color" class="control-label">Color:</label>
-                <div class="controls">
-                    <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-color" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
-                </div>
-                <label class="control-label">Font: <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-font-selection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></label>
-                <div class="controls">
-                    <div class="scroll-table-container">
-                        <table class="table table-condensed table-hover file-selector-list">
-                            <tbody data-bind="foreach: font_list">
-                                <tr data-bind="click: $parent.selectOverlayFont, css: { selected: filepath == $parent.overlay_font_path() }">
-                                    <td>
-                                        <div>
-                                            <span class="filename" data-bind="text: getFilename()" />
-                                        </div>
-
-                                        <div class="filepath" data-bind="text: filepath"></div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-image-preview" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: overlay_preview_image_src, alt: overlay_preview_image_error}" />
-
-                <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
+            <div class="control-group" data-bind="visible: font_list().length == 0">
+                <p class="text-error">
+                    No fonts were detected on the current system.  If you are using Linux, you may not have font-config installed.
+                </p>
             </div>
+            <div class="control-group" data-bind="visible: font_list().length > 0">
+                <div class="control-group">
+                    <label class="control-label">Text:</label>
+                    <div class="controls">
+                        <textarea id="octolapse_overlay_text_template" class="input-xxl ignore_hidden_errors" name="overlay_text_template" data-bind="value: overlay_text_template" />
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-and-replacement-tokens" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="octolapse_overlay_text_template"></div>
+                        <p class="help-inline">
+                            Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
+                            <i>
+                                <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
+                                    <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}
+                                </span>
+                            </i>
+                        </p>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Size:</label>
+                    <div class="controls">
+                        <span class="input-append" style="display:inline-block">
+                            <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" />
+                            <span class="add-on">pt</span>
+                        </span>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-size" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_font_size"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="rendering_profile_overlay_text_valign" class="control-label">Vertical alignment:</label>
+                    <div class="controls">
+                        <select id="rendering_profile_overlay_text_valign" name="overlay_text_valign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
+                                        optionsCaption: 'Select One...',
+                                        value: overlay_text_valign"></select>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-vertical-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_valign"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="rendering_profile_overlay_text_halign" class="control-label">Horizontal alignment:</label>
+                    <div class="controls">
+                        <select id="rendering_profile_overlay_text_halign" name="overlay_text_halign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
+                                        optionsCaption: 'Select One...',
+                                        value: overlay_text_halign"></select>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-horizontal-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_halign"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="rendering_profile_overlay_text_alignment" class="control-label">Text Alignment:</label>
+                    <div class="controls">
+                        <select id="rendering_profile_overlay_text_alignment" name="overlay_text_alignment" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
+                                        optionsCaption: 'Select One...',
+                                        value: overlay_text_alignment"></select>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_alignment"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Position offset:</label>
+                    <div class="controls">
+                        <span class="input-append">
+                            <input type="number" class="input-small" data-bind="value: overlay_text_pos_x" required="true" />
+                            <span class="add-on">x</span>
+                        </span>
+                        <span class="input-append">
+                            <input type="number" class="input-small" data-bind="value: overlay_text_pos_y" required="true" />
+                            <span class="add-on">y</span>
+                        </span>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-position-offset" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="input-append" style="display:inline-block">
+                            <input type="hidden" id="rendering_profile_overlay_text_pos" name="octolapse_overlay_text_pos" data-bind="value: overlay_text_pos()"/>
+                        </div>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_pos"></div>
 
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="overlay_color" class="control-label">Color:</label>
+                    <div class="controls">
+                        <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-color" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font: <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-font-selection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></label>
+                    <div class="controls">
+                        <div class="scroll-table-container">
+                            <table class="table table-condensed table-hover file-selector-list">
+                                <tbody data-bind="foreach: font_list">
+                                    <tr data-bind="click: $parent.selectOverlayFont, css: { selected: filepath == $parent.overlay_font_path() }">
+                                        <td>
+                                            <div>
+                                                <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': filepath == $parent.overlay_font_path() , 'fa-square-o': filepath != $parent.overlay_font_path() } "></i>
+                                                <span class="filename" data-bind="text: getFilename()" />
+                                            </div>
+
+                                            <div class="filepath" data-bind="text: filepath"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row-fluid">
+                        <div class="span4"></div>
+                        <div class="span6">
+                            <p data-bind="visible: overlay_font_path() == ''" class="text-error">No font is selected.  You must select a font in order to use Overlays.</p>
+                        </div>
+                        <div class="span2">
+                            <div class="text-right">
+                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-image-preview" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: overlay_preview_image_src, alt: overlay_preview_image_error}" />
+                    <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
+                </div>
+            </div>
         </div>
         <hr />
         <div class="control-group">

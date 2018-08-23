@@ -150,6 +150,7 @@ $(function() {
             if (watermark_image === undefined) {
                 self.enable_watermark(false);
                 self.selected_watermark("");
+                return;
             }
             self.enable_watermark(true);
             self.selected_watermark(watermark_image.filepath);

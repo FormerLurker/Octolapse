@@ -33,6 +33,9 @@
 #octolapse_add_edit_profile_dialog .input-xxl{
     width: 430px;
 }
+#octolapse_add_edit_profile_dialog .control-group{
+    margin-bottom: 5px;
+}
 a.disabled {
     color: #ccc;
     cursor: default;
