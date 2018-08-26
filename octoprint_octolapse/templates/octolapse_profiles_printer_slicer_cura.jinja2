@@ -14,7 +14,7 @@
                     <label class="control-label" for="printer_profile_cura_retraction_distance">Retraction Distance</label>
                     <div class="controls">
                         <div class="input-append form-inline">
-                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.05" min="0.05" max="100.0"/>
+                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.05" min="0.05" max="100.0" required/>
                             <span class="add-on">mm</span>
                         </div>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -184,7 +184,7 @@
                     <div class="input-append form-inline">
                         <input id="slicer_cura_skirt_brim_speed" name="skirt_brim_speed" type="number"
                                class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.skirt_brim_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>

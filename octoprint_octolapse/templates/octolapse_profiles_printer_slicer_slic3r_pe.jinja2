@@ -204,24 +204,10 @@
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_gap_fill_speed"></div>
                 </div>
             </div>
-            <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_first_layer_speed">First Layer</label>
-                <div class="controls">
-                    <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
-                               max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
-                    </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#first-layer-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_first_layer_speed"></div>
-                </div>
-            </div>
+
             <div>
                 <h5>Speed for non-print moves</h5>
-                <p>Can be found in 'Print Settings->Speed->Speed for print moves</p>
+                <p>Can be found in 'Print Settings->Speed->Speed for non-print moves</p>
             </div>
             <div class="control-group">
                 <label class="control-label" for="slicer_slic3r_pe_movement_speed">Movement Speed</label>
@@ -236,6 +222,25 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#movement-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_movement_speed"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Modifiers</h5>
+                <p>Can be found in 'Print Settings->Speed->Modifiers</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_first_layer_speed">First Layer Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#first-layer-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_first_layer_speed"></div>
                 </div>
             </div>
             <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
