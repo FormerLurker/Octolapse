@@ -14,7 +14,7 @@
                 <label class="control-label" for="printer_profile_slic3r_retract_length">Length</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.05" min="0.05" max="100.0" required/>
+                        <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.05" min="0.05" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -25,7 +25,7 @@
                 <label class="control-label" for="printer_profile_slic3r_pe_z_hop">Lift Z</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.05" min=".00" max="100.0" required />
+                        <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.05" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -37,7 +37,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_retract_speed" name="retract_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.retract_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -52,7 +52,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_detract_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.detract_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.detract_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -71,7 +71,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_perimeter_speed" name="perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.perimeter_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.perimeter_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -86,7 +86,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_small_perimeter_speed" name="small_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -102,7 +102,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_external_perimeter_speed" name="external_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed" step="0.001"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed" step="0.001"
                                min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -118,7 +118,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.infill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.infill_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -133,7 +133,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_solid_infill_speed" name="solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -148,7 +148,7 @@
                 <div class="controls" for="slicer_slic3r_pe_top_solid_infill_speed">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_top_solid_infill_speed" name="top_solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -164,7 +164,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_support_speed" name="support_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.support_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.support_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -179,7 +179,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_bridge_speed" name="bridge_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.bridge_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.bridge_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -194,7 +194,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_gap_fill_speed" name="gap_fill_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.gap_fill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.gap_fill_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -209,7 +209,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -228,7 +228,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_movement_speed" name="movement_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.movement_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.movement_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>

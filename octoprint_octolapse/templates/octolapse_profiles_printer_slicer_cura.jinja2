@@ -14,7 +14,7 @@
                     <label class="control-label" for="printer_profile_cura_retraction_distance">Retraction Distance</label>
                     <div class="controls">
                         <div class="input-append form-inline">
-                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.05" min="0.05" max="100.0"/>
+                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.05" min="0.05" max="100.0"/>
                             <span class="add-on">mm</span>
                         </div>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -26,7 +26,7 @@
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="slicer_cura_retraction_retract_speed" name="retraction_retract_speed" type="number"
-                                   class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.retraction_retract_speed" step="0.001" min="0"
+                                   class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_retract_speed" step="0.001" min="0"
                                    max="9999999" required/>
                             <span class="add-on">mm</span>
                             <span class="add-on">sec</span>
@@ -41,7 +41,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_retraction_prime_speed" name="retraction_prime_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.retraction_prime_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_prime_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -59,7 +59,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_print_speed" name="print_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.print_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.print_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -74,7 +74,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.infill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.infill_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -89,7 +89,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_outer_wall_speed" name="outer_wall_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.outer_wall_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.outer_wall_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -104,7 +104,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_inner_wall_speed" name="inner_wall_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.inner_wall_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.inner_wall_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -119,7 +119,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_top_bottom_speed" name="top_bottom_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.top_bottom_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.top_bottom_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -135,7 +135,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_travel_speed" name="travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.travel_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.travel_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -150,7 +150,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_initial_layer_print_speed" name="initial_layer_print_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.initial_layer_print_speed" step="0.001"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.initial_layer_print_speed" step="0.001"
                                min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -166,7 +166,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_initial_layer_travel_speed" name="initial_layer_travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.initial_layer_travel_speed" step="0.001"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.initial_layer_travel_speed" step="0.001"
                                min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -183,7 +183,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_skirt_brim_speed" name="skirt_brim_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.skirt_brim_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.skirt_brim_speed" step="0.001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -198,7 +198,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_maximum_z_speed" name="maximum_z_speed" type="number"
-                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.maximum_z_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.maximum_z_speed" step="0.001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -215,7 +215,7 @@
                 <label class="control-label" for="printer_profile_cura_z_hop_height">Z-Hop Height</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_cura_z_hop_height" name="z_hop" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.cura_viewmodel.z_hop_height" step="0.05" min=".00" max="100.0" required />
+                        <input id="printer_profile_cura_z_hop_height" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.z_hop_height" step="0.05" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
