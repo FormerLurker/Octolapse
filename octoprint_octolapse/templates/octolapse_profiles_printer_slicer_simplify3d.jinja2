@@ -1,0 +1,245 @@
+<script type="text/html" id="printer-slicer-simplify-3d-template">
+    <div>
+        <div>
+            <h4>Slicer - Simplify 3d</h4>
+            <p>Match all of the speed settings in your current slicer profile with all of the settings below. In order to
+                use feature detection (used in the 'high quality' snapshot profiles), it is best if each speed is unique.
+                Make sure to use the correct units!</p>
+        </div>
+        <div>
+            <div>
+                <h5>Extruder - Ooze Control</h5>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_retraction_distance">Retraction Distance</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_retraction_distance" name="retraction_distance" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.retraction_distance" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_retraction_distance"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_retraction_vertical_lift">Retraction Vertical Lift</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_retraction_vertical_lift" name="retraction_vertical_lift" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.retraction_vertical_lift" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_retraction_vertical_lift"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_retraction_speed">Retraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_retraction_speed" name="retraction_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.retraction_retract_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">min</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_retraction_speed"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Layer</h5>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_first_layer_speed_multiplier">First Layer Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_first_layer_speed_multiplier" name="first_layer_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.first_layer_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_first_layer_speed_multiplier"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Additions</h5>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_above_raft_speed_multiplier">Above Raft Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_above_raft_speed_multiplier" name="above_raft_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.above_raft_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_above_raft_speed_multiplier"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_prime_pillar_speed_multiplier">Prime Pillar - Speed Multiplier</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_prime_pillar_speed_multiplier" name="prime_pillar_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.prime_pillar_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_prime_pillar_speed_multiplier"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_ooze_shield_speed_multiplier">Ooze Shield - Speed Multiplier</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_ooze_shield_speed_multiplier" name="ooze_shield_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.ooze_shield_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_ooze_shield_speed_multiplier"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Speeds</h5>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_default_printing_speed">Default Printing Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_default_printing_speed" name="default_printing_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.default_printing_speed" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">min</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#movement-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_default_printing_speed"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_outline_speed_multiplier">Outline Underspeed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_outline_speed_multiplier" name="outline_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.outline_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_outline_speed_multiplier"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_solid_infill_speed_multiplier">Solid Infill speed_multiplier</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_solid_infill_speed_multiplier" name="solid_infill_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.solid_infill_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_solid_infill_speed_multiplier"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_support_structure_speed_multiplier">Support Structure Underspeed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_support_structure_speed_multiplier" name="support_structure_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.support_structure_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_support_structure_speed_multiplier"></div>
+                </div>
+            </div>
+             <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_xy_axis_movement_speed">X/Y Axis Movement Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_xy_axis_movement_speed" name="xy_axis_movement_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.xy_axis_movement_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">min</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#z-movement-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_xy_axis_movement_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_z_axis_movement_speed">Z Axis Movement Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_z_axis_movement_speed" name="z_axis_movement_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.z_axis_movement_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">min</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#z-movement-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_z_axis_movement_speed"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Other - Bridging</h5>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_bridging_speed_multiplier">Bridging Speed Multiplier</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_bridging_speed_multiplier" name="bridging_speed_multiplier" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.simplify_3d_viewmodel.bridging_speed_multiplier" step="1" min="1"
+                               max="999"/>
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_bridging_speed_multiplier"></div>
+                </div>
+            </div>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
+                    quality settings within the snapshot profile:
+                </p>
+                <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                    <span data-bind="text: $data"></span><br/>
+                </div>
+            </div>
+            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not work when using 'Feature Detection' print quality settings
+                    within the snapshot profile: <span class="text-error" data-bind="text: getMissingSpeedsList"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+</script>

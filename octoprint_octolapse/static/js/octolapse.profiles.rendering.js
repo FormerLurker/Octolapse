@@ -285,7 +285,7 @@ $(function() {
             delete copy.overlay_preview_image;
             delete copy.overlay_preview_image_src;
             return copy;
-        }
+        };
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {

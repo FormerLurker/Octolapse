@@ -178,7 +178,61 @@ $(function () {
         new PNotify(options);
     };
 
+     // Create Helpers
+    Octolapse.convertAxisSpeedUnit = function (speed, newUnit, previousUnit, tolerance, tolerance_unit){
+        if (speed == null)
+            return null;
+        if(tolerance_unit != newUnit)
+        {
+            switch (newUnit){
+            case "mm-min":
+                tolerance = tolerance * 60.0;
+            case "mm-sec":
+                tolerance = tolerance / 60.0;
+            }
+        }
+        if(newUnit == previousUnit)
+            return Octolapse.roundToIncrement(speed, tolerance);
 
+        switch (newUnit){
+            case "mm-min":
+                return Octolapse.roundToIncrement(speed*60.0, tolerance);
+            case "mm-sec":
+                return Octolapse.roundToIncrement(speed/60.0, tolerance);
+        }
+        return null;
+    };
+
+
+    // rounding to an increment
+    Octolapse.roundToIncrement = function (num, increment) {
+        if (increment == 0)
+            return 0;
+        if (num == null)
+            return null;
+
+        // Enforce the minimum increment
+        if (increment < 0.001)
+            increment = 0.001;
+
+        if (num != parseFloat(num))
+            return num;
+
+        var div = Math.round(num / increment);
+        var value = increment * div
+
+        // Find the number of decimals in the increment
+        var numDecimals = 0;
+        if ((increment % 1) != 0)
+            numDecimals = increment.toString().split(".")[1].length;
+
+        if (numDecimals > 3)
+            numDecimals = 3;
+        // truncate value to numDecimals decimals
+        value = parseFloat(value.toFixed(numDecimals).toString())
+
+        return value;
+    }
 
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, key) {

@@ -19,6 +19,8 @@ def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, def
     settings_dict["snapshots"] = []
     for key, snapshot in new_settings.snapshots.items():
         settings_dict["snapshots"].append(snapshot.to_dict())
+        if snapshot.is_default:
+            settings_dict["current_snapshot_profile_guid"] = snapshot.guid
 
     # migrate the camera settings so that if there is no enabled column
     if (

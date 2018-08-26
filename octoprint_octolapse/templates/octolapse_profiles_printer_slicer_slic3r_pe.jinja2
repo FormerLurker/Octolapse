@@ -1,0 +1,258 @@
+<script type="text/html" id="printer-slic3r-pe-template">
+    <div>
+        <div>
+            <h4>Slicer - Slic3r Prusa Edition</h4>
+            <p>Copy all of the settings below from your slicer.</p>
+
+        </div>
+        <div>
+            <div>
+                <h5>Extruder Retraction Settings</h5>
+                <p>Can be found in 'Printer Settings->Extruder->Retraction' in Slic3r PE.</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_slic3r_retract_length">Length</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.05" min="0.05" max="100.0" required/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_slic3r_retract_length"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_slic3r_pe_z_hop">Lift Z</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.05" min=".00" max="100.0" required />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_slic3r_pe_z_hop"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_retract_speed">Retraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_retract_speed" name="retract_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.retract_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#retraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_retract_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_detract_speed">Detraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_detract_speed" name="detract_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.detract_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#detraction-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_detract_speed"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Speed for print moves</h5>
+                <p>Can be found in 'Print Settings->Speed->Speed for print moves</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_perimeter_speed">Perimeter Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_perimeter_speed" name="perimeter_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.perimeter_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#perimeter-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_small_perimeter_speed">Small Perimeters</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_small_perimeter_speed" name="small_perimeter_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#small-perimeter-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error"
+                         data-error-for="slicer_slic3r_pe_small_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_external_perimeter_speed">External Perimeters</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_external_perimeter_speed" name="external_perimeter_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed" step="0.001"
+                               min="0" max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#external-perimeter-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error"
+                         data-error-for="slicer_slic3r_pe_external_perimeter_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_infill_speed">Infill</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_infill_speed" name="infill_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.infill_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#infill-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_solid_infill_speed">Solid Infill</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_solid_infill_speed" name="solid_infill_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#solid-infill-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_solid_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Top Solid Infill</label>
+                <div class="controls" for="slicer_slic3r_pe_top_solid_infill_speed">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_top_solid_infill_speed" name="top_solid_infill_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#top-solid-infill-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error"
+                         data-error-for="slicer_slic3r_pe_top_solid_infill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_support_speed">Support</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_support_speed" name="support_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.support_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#support-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_support_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_bridge_speed">Bridge</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_bridge_speed" name="bridge_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.bridge_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#bridging-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_bridge_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_gap_fill_speed">Gaps</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_gap_fill_speed" name="gap_fill_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.gap_fill_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#gap-fill-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_gap_fill_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_first_layer_speed">First Layer</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#first-layer-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_first_layer_speed"></div>
+                </div>
+            </div>
+            <div>
+                <h5>Speed for non-print moves</h5>
+                <p>Can be found in 'Print Settings->Speed->Speed for print moves</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_movement_speed">Movement Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_movement_speed" name="movement_speed" type="number"
+                               class="input-small text-right ignore_hidden_error" data-bind="value: helpers.slic3r_pe_viewmodel.movement_speed" step="0.001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#movement-speed"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_movement_speed"></div>
+                </div>
+            </div>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <p>
+                    The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
+                    quality settings within the snapshot profile:
+                </p>
+                <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                    <span data-bind="text: $data"></span><br/>
+                </div>
+            </div>
+            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not work when using 'Feature Detection' print quality settings
+                    within the snapshot profile: <span class="text-error" data-bind="text: helpers.slic3r_pe_viewmodel.getMissingSpeedsList"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+</script>

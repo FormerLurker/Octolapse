@@ -183,6 +183,7 @@ $(function () {
             Octolapse.Printers.profiles([]);
             Octolapse.Printers.default_profile(settings.default_printer_profile);
             Octolapse.Printers.profileOptions = {
+                'slicer_type_options': settings.slicer_type_options,
                 'e_axis_default_mode_options': settings.e_axis_default_mode_options,
                 'g90_influences_extruder_options': settings.g90_influences_extruder_options,
                 'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,

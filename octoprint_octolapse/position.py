@@ -27,7 +27,7 @@ import math
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
-from octoprint_octolapse.settings import Printer, Snapshot
+from octoprint_octolapse.settings import Printer, Snapshot, SlicerPrintFeatures
 from octoprint_octolapse.extruder import Extruder
 
 
@@ -105,6 +105,7 @@ class Pos(object):
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
         self.Features = [] if pos is None else list(pos.Features)
+        self.HasOneFeatureEnabled = False if pos is None else pos.HasOneFeatureEnabled
 
         # default firmware retraction length and feedrate if default_firmware_retractions isenabled
         if pos is None and printer.default_firmware_retractions:
@@ -145,6 +146,7 @@ class Pos(object):
         self.HasPositionChanged = False
         self.HasStateChanged = False
         self.HasReceivedHomeCommand = False
+        self.HasOneFeatureEnabled = False
         self.Features = []
 
     def is_state_equal(self, pos, tolerance):
@@ -157,13 +159,15 @@ class Pos(object):
                 and self.IsExtruderRelative == pos.IsExtruderRelative
                 and utility.round_to(pos.Layer, tolerance) != utility.round_to(
                     self.Layer, tolerance)
-                and utility.round_to(pos.Height, tolerance) !=
-                    utility.round_to(self.Height, tolerance)
-                and utility.round_to(pos.LastExtrusionHeight, tolerance) !=
+                and utility.round_to(pos.Height, tolerance) != utility.round_to(self.Height, tolerance)
+                and (
+                    utility.round_to(pos.LastExtrusionHeight, tolerance) !=
                     utility.round_to(self.LastExtrusionHeight, tolerance)
+                )
                 and self.IsPrimed == pos.IsPrimed
                 and self.IsInPosition == pos.IsInPosition
-                and self.InPathPosition == Pos.InPathPosition
+                and self.InPathPosition == pos.InPathPosition
+                and self.HasOneFeatureEnabled == pos.HasOneFeatureEnabled
                 and self.HasPositionError == pos.HasPositionError
                 and self.PositionError == pos.PositionError
                 and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand
@@ -217,7 +221,7 @@ class Pos(object):
             "Height": self.Height,
             "LastExtrusionHeight": self.LastExtrusionHeight,
             "IsInPosition": self.IsInPosition,
-            "Features": self.Features,
+            "HasOneFeatureEnabled": self.HasOneFeatureEnabled,
             "InPathPosition": self.InPathPosition,
             "IsPrimed": self.IsPrimed,
             "HasPositionError": self.HasPositionError,
@@ -237,8 +241,7 @@ class Pos(object):
             "ZOffset": self.ZOffset,
             "E": self.E,
             "EOffset": self.EOffset,
-            "Features": self.Features
-
+            "Features": self.Features,
         }
 
     def to_dict(self):
@@ -392,6 +395,7 @@ class Position(object):
         self.Settings = octolapse_settings
         self.Printer = Printer(self.Settings.current_printer())
         self.Snapshot = Snapshot(self.Settings.current_snapshot())
+        self.SlicerFeatures = SlicerPrintFeatures(self.Printer, self.Snapshot)
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -405,9 +409,6 @@ class Position(object):
         self.Positions = deque(maxlen=5)
         self.SavedPosition = None
         self.HasRestrictedPosition = len(self.Snapshot.position_restrictions) > 0
-
-        self.reset()
-
         self.Extruder = Extruder(octolapse_settings)
         if self.Printer.g90_influences_extruder in ['true', 'false']:
             self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False
@@ -434,11 +435,6 @@ class Position(object):
             self.LocationDetectionCommands.append("G28")
         if "G29" not in self.LocationDetectionCommands:
             self.LocationDetectionCommands.append("G29")
-
-    def reset(self):
-        # todo: This reset function doesn't seem to reset everything.
-        self.Positions.clear()
-        self.SavedPosition = None
 
     def update_position(self,
                         x=None,
@@ -536,6 +532,12 @@ class Position(object):
         if pos is None:
             return None
         return pos.Features
+
+    def has_one_feature_enabled(self, index=0):
+        pos = self.get_position(index)
+        if pos is None:
+            return False
+        return pos.HasOneFeatureEnabled
 
     def has_position_changed(self, index=0):
         pos = self.get_position(index)
@@ -1175,7 +1177,8 @@ class Position(object):
 
         if pos.F is not None:
             # discover currently printing features
-            pos.Features = self.currently_printing_features(pos.F)
+            pos.Features = self.SlicerFeatures.get_printing_features_list(pos.F)
+            pos.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled(pos.F)
 
         # Have the XYZ positions or states changed?
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
@@ -1378,54 +1381,6 @@ class Position(object):
         current_position = self.Positions[index]
         return get_formatted_coordinates(current_position.X, current_position.Y,
                                          current_position.Z, current_position.E)
-
-    def currently_printing_features(self, speed):
-        features = []
-
-        # convert the speed to the current printer speed units
-        if self.Printer.axis_speed_display_units == "mm-sec":
-            speed = speed / 60.0
-
-        if utility.is_close(speed, self.Printer.detract_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Detract)
-        if utility.is_close(speed, self.Printer.retract_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Perimeters)
-        if utility.is_close(speed, self.Printer.movement_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Movement)
-        if utility.is_close(speed, self.Printer.z_hop_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.ZMovement)
-
-        if self.Printer.perimeter_speed and utility.is_close(speed, self.Printer.perimeter_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Perimeters)
-
-        if self.Printer.small_perimeter_speed and utility.is_close(speed, self.Printer.small_perimeter_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.SmallPerimeters)
-
-        if self.Printer.external_perimeter_speed and utility.is_close(speed, self.Printer.external_perimeter_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.ExternalPerimeters)
-
-        if self.Printer.infill_speed and utility.is_close(speed, self.Printer.infill_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Infill)
-
-        if self.Printer.solid_infill_speed and utility.is_close(speed, self.Printer.solid_infill_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.SolidInfill)
-
-        if self.Printer.top_solid_infill_speed and utility.is_close(speed, self.Printer.top_solid_infill_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.TopSolidInfill)
-
-        if self.Printer.support_speed and utility.is_close(speed, self.Printer.support_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Support)
-
-        if self.Printer.support_speed and utility.is_close(speed, self.Printer.bridge_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.Bridge)
-
-        if self.Printer.gap_fill_speed and utility.is_close(speed, self.Printer.gap_fill_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.GapFill)
-
-        if self.Printer.first_layer_speed and utility.is_close(speed, self.Printer.first_layer_speed, self.Printer.speed_tolerance):
-            features.append(Printer.PrintFeatureNames.FirstLayer)
-
-        return features
 
     def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 

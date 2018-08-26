@@ -1636,6 +1636,7 @@
     },
     {
       "trigger_on_retracting_start": "",
+      "is_default": true,
       "trigger_on_detract": true,
       "require_zhop": false,
       "description": "Triggers after each layer change.",

@@ -30,7 +30,9 @@ $(function() {
             max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
             min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
             max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
-            auto_position_detection_commands: { csvString: true }
+            auto_position_detection_commands: { csvString: true },
+            printer_profile_other_slicer_retract_length: {required: true},
+            printer_profile_slicer_other_z_hop: {required: true},
         },
         messages: {
             name: "Please enter a name for your profile",
@@ -50,23 +52,7 @@ $(function() {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
-        self.retract_length = ko.observable(values.retract_length);
-        self.retract_speed = ko.observable(values.retract_speed);
-        self.detract_speed = ko.observable(values.detract_speed);
-        self.movement_speed = ko.observable(values.movement_speed);
-        self.z_hop = ko.observable(values.z_hop);
-        self.z_hop_speed = ko.observable(values.z_hop_speed);
-        self.perimeter_speed = ko.observable(values.perimeter_speed);
-        self.small_perimeter_speed = ko.observable(values.small_perimeter_speed);
-        self.external_perimeter_speed = ko.observable(values.external_perimeter_speed);
-        self.infill_speed = ko.observable(values.infill_speed);
-        self.solid_infill_speed = ko.observable(values.solid_infill_speed);
-        self.top_solid_infill_speed = ko.observable(values.top_solid_infill_speed);
-        self.support_speed = ko.observable(values.support_speed);
-        self.bridge_speed = ko.observable(values.bridge_speed);
-        self.gap_fill_speed = ko.observable(values.gap_fill_speed);
-        self.first_layer_speed = ko.observable(values.first_layer_speed);
-        self.speed_tolerance = ko.observable(values.speed_tolerance);
+        self.slicer_type = ko.observable(values.slicer_type);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
         self.auto_detect_position = ko.observable(values.auto_detect_position);
@@ -91,72 +77,976 @@ $(function() {
         self.default_firmware_retractions = ko.observable(values.default_firmware_retractions);
         self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
         self.suppress_snapshot_command_always = ko.observable(values.suppress_snapshot_command_always);
-        // get the time component of the axis speed units (min/mm)
-        self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
-                if (self.axis_speed_display_units() === "mm-min")
-                    return 'min';
-                if (self.axis_speed_display_units() === "mm-sec")
-                    return 'sec';
-                return '?';
-            }, self);
+
+        self.create_helpers = function(values){
+            var self = this;
+            self.create_other_slicer_viewmodel = function(profile_observables){
+                var self = this;
+                self.speed_tolerance = ko.observable(profile_observables.speed_tolerance);
+                self.axis_speed_display_units = ko.observable(profile_observables.axis_speed_display_units);
+
+                self.retract_length = ko.observable(profile_observables.retract_length);
+                self.retract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.retract_speed, self.speed_tolerance()));
+                self.detract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.detract_speed, self.speed_tolerance()));
+                self.movement_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.movement_speed, self.speed_tolerance()));
+                self.print_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.print_speed, self.speed_tolerance()));
+                self.z_hop = ko.observable(profile_observables.z_hop);
+                self.z_hop_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.z_hop_speed, self.speed_tolerance()));
+                self.perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.perimeter_speed, self.speed_tolerance()));
+                self.small_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.small_perimeter_speed, self.speed_tolerance()));
+                self.external_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.external_perimeter_speed, self.speed_tolerance()));
+                self.infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.infill_speed, self.speed_tolerance()));
+                self.solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.solid_infill_speed, self.speed_tolerance()));
+                self.top_solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.top_solid_infill_speed, self.speed_tolerance()));
+                self.support_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.support_speed, self.speed_tolerance()));
+                self.bridge_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.bridge_speed, self.speed_tolerance()));
+                self.gap_fill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.gap_fill_speed, self.speed_tolerance()));
+                self.first_layer_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_speed, self.speed_tolerance()));
+                self.first_layer_travel_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_travel_speed, self.speed_tolerance()));
+                self.skirt_brim_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.skirt_brim_speed, self.speed_tolerance()));
+
+                self.above_raft_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.above_raft_speed, self.speed_tolerance()));
+                self.ooze_shield_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.ooze_shield_speed, self.speed_tolerance()));
+                self.prime_pillar_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.prime_pillar_speed, self.speed_tolerance()));
+
+                /*
+                    Create a getter for each profile variable (settings.py - printer class)
+                */
+                self.get_retract_length = function(){
+                   return self.retract_length();
+                };
+                self.get_retract_speed = function(){
+                   return self.retract_speed();
+                };
+                self.get_detract_speed = function(){
+                   return self.detract_speed();
+                };
+                self.get_movement_speed = function(){
+                   return self.movement_speed();
+                };
+                self.get_z_hop = function(){
+                   return self.z_hop();
+                };
+                self.get_z_hop_speed = function(){
+                   return self.z_hop_speed();
+                };
+                self.get_maximum_z_speed = function(){
+                    return null;
+                };
+                self.get_print_speed = function(){
+                    return self.print_speed();
+                };
+                self.get_perimeter_speed = function(){
+                   return self.perimeter_speed();
+                };
+                self.get_small_perimeter_speed = function(){
+                   return self.small_perimeter_speed();
+                };
+                self.get_external_perimeter_speed = function(){
+                   return self.external_perimeter_speed();
+                };
+                self.get_infill_speed = function(){
+                   return self.infill_speed();
+                };
+                self.get_solid_infill_speed = function(){
+                   return self.solid_infill_speed();
+                };
+                self.get_top_solid_infill_speed = function(){
+                   return self.top_solid_infill_speed();
+                };
+                self.get_support_speed = function(){
+                   return self.support_speed();
+                };
+                self.get_bridge_speed = function(){
+                   return self.bridge_speed();
+                };
+                self.get_gap_fill_speed = function(){
+                   return self.gap_fill_speed();
+                };
+                self.get_first_layer_speed = function(){
+                   return self.first_layer_speed();
+                };
+                self.get_first_layer_travel_speed = function(){
+                   return self.first_layer_travel_speed();
+                };
+                self.get_skirt_brim_speed = function(){
+                   return self.skirt_brim_speed();
+                };
+
+                self.get_above_raft_speed = function(){
+                   return self.above_raft_speed();
+                };
+                self.get_ooze_shield_speed = function(){
+                   return self.ooze_shield_speed();
+                };
+                self.get_prime_pillar_speed = function(){
+                   return self.prime_pillar_speed();
+                };
+
+                self.get_speed_tolerance = function(){
+                   return self.speed_tolerance();
+                };
+                self.get_axis_speed_display_units = function(){
+                   return self.axis_speed_display_units();
+                };
+                // get the time component of the axis speed units (min/mm)
+                self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
+                    if (self.axis_speed_display_units() === "mm-min")
+                        return 'min';
+                    if (self.axis_speed_display_units() === "mm-sec")
+                        return 'sec';
+                    return '?';
+                }, self);
+
+                // Get a list of speeds for use with feature detection
+                self.getSlicerSpeedList = function(){
+                    return [
+                        {speed: self.movement_speed(), type: "Movement"},
+                        {speed: self.retract_speed(), type: "Retraction"},
+                        {speed: self.detract_speed(), type: "Detraction"},
+                        {speed: self.print_speed(), type: "Print"},
+                        {speed: self.z_hop_speed(), type: "Z Movement"},
+                        {speed: self.perimeter_speed(), type: "Perimeter"},
+                        {speed: self.small_perimeter_speed(), type: "Small Perimeter"},
+                        {speed: self.external_perimeter_speed(), type: "External Perimeter"},
+                        {speed: self.infill_speed(), type: "Infill"},
+                        {speed: self.solid_infill_speed(), type: "Solid Infill"},
+                        {speed: self.top_solid_infill_speed(), type: "Top Solid Infill"},
+                        {speed: self.support_speed(), type: "Support"},
+                        {speed: self.bridge_speed(), type: "Bridge"},
+                        {speed: self.gap_fill_speed(), type: "Gap Fill"},
+                        {speed: self.first_layer_speed(), type: "First Layer"},
+                        {speed: self.above_raft_speed(), type: "Above Raft"},
+                        {speed: self.prime_pillar_speed(), type: "Prime Pillar"},
+                        {speed: self.ooze_shield_speed(), type: "Ooze Shield"}
+                    ];
+                };
+
+                self.axisSpeedDisplayUnitsChanged = function (obj, event) {
+
+                    if (Octolapse.Globals.is_admin()) {
+                        if (event.originalEvent) {
+                            // Get the current guid
+                            var newUnit = $("#octolapse_axis_speed_display_unit_options").val();
+                            var previousUnit = self.get_axis_speed_display_units();
+                            if(newUnit === previousUnit) {
+                                //console.log("Axis speed display units, no change detected!")
+                                return false;
+
+                            }
+                            //console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
+                            // in case we want to have more units in the future, check all cases
+                            // Convert all from mm-min to mm-sec
+                            self.speed_tolerance(Octolapse.convertAxisSpeedUnit(self.get_speed_tolerance(),newUnit,previousUnit, 0.001, previousUnit));
+                            self.retract_speed(Octolapse.convertAxisSpeedUnit(self.get_retract_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.detract_speed(Octolapse.convertAxisSpeedUnit(self.get_detract_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.movement_speed(Octolapse.convertAxisSpeedUnit(self.get_movement_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.z_hop_speed(Octolapse.convertAxisSpeedUnit(self.get_z_hop_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+
+                            // Optional values
+                            self.print_speed(Octolapse.convertAxisSpeedUnit(self.get_print_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.perimeter_speed(Octolapse.convertAxisSpeedUnit(self.get_perimeter_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.small_perimeter_speed(Octolapse.convertAxisSpeedUnit(self.get_small_perimeter_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.external_perimeter_speed(Octolapse.convertAxisSpeedUnit(self.get_external_perimeter_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.infill_speed(Octolapse.convertAxisSpeedUnit(self.get_infill_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.solid_infill_speed(Octolapse.convertAxisSpeedUnit(self.get_solid_infill_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.top_solid_infill_speed(Octolapse.convertAxisSpeedUnit(self.get_top_solid_infill_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.support_speed(Octolapse.convertAxisSpeedUnit(self.get_support_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.bridge_speed(Octolapse.convertAxisSpeedUnit(self.get_bridge_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+
+                            self.gap_fill_speed(Octolapse.convertAxisSpeedUnit(self.get_gap_fill_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.first_layer_speed(Octolapse.convertAxisSpeedUnit(self.get_first_layer_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.first_layer_travel_speed(Octolapse.convertAxisSpeedUnit(self.get_first_layer_travel_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.skirt_brim_speed(Octolapse.convertAxisSpeedUnit(self.get_skirt_brim_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+
+                            self.above_raft_speed(Octolapse.convertAxisSpeedUnit(self.get_above_raft_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.ooze_shield_speed(Octolapse.convertAxisSpeedUnit(self.get_ooze_shield_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            self.prime_pillar_speed(Octolapse.convertAxisSpeedUnit(self.get_prime_pillar_speed(),newUnit,previousUnit, self.get_speed_tolerance(), previousUnit));
+                            return true;
+                        }
+                    }
+                };
+
+                self.getMissingSpeedsList = ko.pureComputed(function () {
+                    // Add all speeds to an array
+                    return [
+                        {speed: self.get_movement_speed(), type: "Movement Speed"},
+                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
+                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
+                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
+                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
+                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
+                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
+                        {speed: self.get_infill_speed(), type: "Infill Speed"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
+                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
+                        {speed: self.get_support_speed(), type: "Support Speed"},
+                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
+                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
+                        {speed: self.get_skirt_brim_speed(), type: "Skirt/Brim Speed"},
+                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"},
+                        {speed: self.get_first_layer_travel_speed(), type: "First Layer Travel Speed"},
+                        {speed: self.get_above_raft_speed(), type: "Above Raft Speed"},
+                        {speed: self.get_ooze_shield_speed(), type: "Ooze Shield Speed"},
+                        {speed: self.get_prime_pillar_speed(), type: "Prime Pillar Speed"}
+                    ];
+                });
+
+            };
+            self.other_slicer_viewmodel = new self.create_other_slicer_viewmodel(values);
+
+            self.create_slic3r_pe_viewmodel = function(profile_observables){
+                var self = this;
+                self.get_axis_speed_display_units = function(){
+                   return "mm-sec"
+                };
+                self.get_speed_tolerance = function(){
+                   return 0.01;
+                };
+                // Initialize profile variables from observables
+                self.retract_length = ko.observable(profile_observables.retract_length);
+                self.z_hop = ko.observable(profile_observables.z_hop);
+
+                self.retract_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.retract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.detract_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.detract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.movement_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.perimeter_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.perimeter_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.small_perimeter_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.small_perimeter_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.external_perimeter_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.external_perimeter_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.infill_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.infill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.solid_infill_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.solid_infill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.top_solid_infill_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.top_solid_infill_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.support_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.support_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.bridge_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.bridge_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.gap_fill_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.gap_fill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.first_layer_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.first_layer_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+
+                /*
+                    Create a getter for each profile variable (settings.py - printer class)
+                */
+                self.get_retract_length = function(){
+                   return self.retract_length();
+                };
+                self.get_retract_speed = function(){
+                   return self.retract_speed();
+                };
+                self.get_detract_speed = function(){
+                   return self.detract_speed();
+                };
+                self.get_movement_speed = function(){
+                   return self.movement_speed();
+                };
+                self.get_z_hop = function(){
+                   return self.z_hop();
+                };
+                self.get_z_hop_speed = function(){
+                   return self.movement_speed();
+                };
+                self.get_maximum_z_speed = function(){
+                    return null;
+                };
+                self.get_print_speed = function(){
+                    return null;
+                };
+                self.get_perimeter_speed = function(){
+                   return self.perimeter_speed();
+                };
+                self.get_small_perimeter_speed = function(){
+                   return self.small_perimeter_speed();
+                };
+                self.get_external_perimeter_speed = function(){
+                   return self.external_perimeter_speed();
+                };
+                self.get_infill_speed = function(){
+                   return self.infill_speed();
+                };
+                self.get_solid_infill_speed = function(){
+                   return self.solid_infill_speed();
+                };
+                self.get_top_solid_infill_speed = function(){
+                   return self.top_solid_infill_speed();
+                };
+                self.get_support_speed = function(){
+                   return self.support_speed();
+                };
+                self.get_bridge_speed = function(){
+                   return self.bridge_speed();
+                };
+                self.get_gap_fill_speed = function(){
+                   return self.gap_fill_speed();
+                };
+                self.get_first_layer_speed = function(){
+                   return self.first_layer_speed();
+                };
+                self.get_first_layer_travel_speed = function(){
+                   return self.movement_speed();
+                };
+                self.get_skirt_brim_speed = function(){
+                   return self.first_layer_speed();
+                };
+
+                // Get a list of speeds for use with feature detection
+                self.getSlicerSpeedList = function(){
+                    return [
+                        {speed: self.movement_speed(), type: "Movement"},
+                        {speed: self.retract_speed(), type: "Retraction"},
+                        {speed: self.detract_speed(), type: "Detraction"},
+                        {speed: self.perimeter_speed(), type: "Perimeter"},
+                        {speed: self.small_perimeter_speed(), type: "Small Perimeter"},
+                        {speed: self.external_perimeter_speed(), type: "External Perimeter"},
+                        {speed: self.infill_speed(), type: "Infill"},
+                        {speed: self.solid_infill_speed(), type: "Solid Infill"},
+                        {speed: self.top_solid_infill_speed(), type: "Top Solid Infill"},
+                        {speed: self.support_speed(), type: "Support"},
+                        {speed: self.bridge_speed(), type: "Bridge"},
+                        {speed: self.gap_fill_speed(), type: "Gap Fill"},
+                        {speed: self.first_layer_speed(), type: "First Layer"}
+                    ];
+                };
+
+                self.getMissingSpeedsList = ko.pureComputed(function () {
+                    return speed_array = [
+                        {speed: self.get_movement_speed(), type: "Movement Speed"},
+                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
+                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
+                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
+                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
+                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
+                        {speed: self.get_infill_speed(), type: "Infill Speed"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
+                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
+                        {speed: self.get_support_speed(), type: "Support Speed"},
+                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
+                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
+                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
+                    ];
+               });
+            };
+            self.slic3r_pe_viewmodel = new self.create_slic3r_pe_viewmodel(values);
+
+            self.create_cura_viewmodel = function(profile_observables){
+                var self = this;
+                self.get_axis_speed_display_units = function(){
+                   return 'mm-sec';
+                };
+                self.get_speed_tolerance = function(){
+                   return 0.00005;
+                };
+                // Initialize profile variables from observables
+                self.retraction_distance = ko.observable(profile_observables.retract_length);
+                self.z_hop_height = ko.observable(profile_observables.z_hop);
+                self.retraction_retract_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.retract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.retraction_prime_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.detract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.travel_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.inner_wall_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.perimeter_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.outer_wall_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.external_perimeter_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.top_bottom_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.top_solid_infill_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.infill_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.infill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.print_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.print_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.initial_layer_print_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.first_layer_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.initial_layer_travel_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.first_layer_travel_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.skirt_brim_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.skirt_brim_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.maximum_z_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.maximum_z_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                /*
+                    Create a getter for each profile variable (settings.py - printer class)
+                */
+                self.get_retract_length = function(){
+                   return self.retraction_distance();
+                };
+                self.get_retract_speed = function(){
+                   return self.retraction_retract_speed();
+                };
+                self.get_detract_speed = function(){
+                   return self.retraction_prime_speed();
+                };
+                self.get_movement_speed = function(){
+                   return self.travel_speed();
+                };
+                self.get_z_hop = function(){
+                   return self.z_hop_height();
+                };
+                self.get_z_hop_speed = function(){
+                    if( ( self.maximum_z_speed() || 0) == 0)
+                        return self.travel_speed();
+
+                    return Math.min(self.maximum_z_speed(), self.travel_speed())
+                };
+                self.get_maximum_z_speed = function(){
+                    return self.maximum_z_speed();
+                };
+                self.get_print_speed = function(){
+                    return self.print_speed();
+                };
+                self.get_perimeter_speed = function(){
+                   return self.inner_wall_speed();
+                };
+                self.get_small_perimeter_speed = function(){
+                   return self.inner_wall_speed();
+                };
+                self.get_external_perimeter_speed = function(){
+                   return self.outer_wall_speed();
+                };
+                self.get_infill_speed = function(){
+                   return self.infill_speed();
+                };
+                self.get_solid_infill_speed = function(){
+                   return self.infill_speed();
+                };
+                self.get_top_solid_infill_speed = function(){
+                   return self.top_bottom_speed();
+                };
+                self.get_support_speed = function(){
+                   return self.print_speed();
+                };
+                self.get_bridge_speed = function(){
+                   return self.outer_wall_speed();
+                };
+                self.get_gap_fill_speed = function(){
+                   return self.print_speed();
+                };
+                self.get_print_speed = function(){
+                    return self.print_speed();
+                }
+                self.get_first_layer_speed = function(){
+                   return self.initial_layer_print_speed();
+                };
+                self.get_first_layer_travel_speed = function(){
+                   return self.initial_layer_travel_speed();
+                };
+                self.get_skirt_brim_speed = function(){
+                   return self.skirt_brim_speed();
+                };
+
+                // Get a list of speeds for use with feature detection
+                self.getSlicerSpeedList = function(){
+                    return [
+                        {speed: self.print_speed(), type: "Normal Print"},
+                        {speed: self.retraction_retract_speed(), type: "Retraction"},
+                        {speed: self.retraction_prime_speed(), type: "Prime"},
+                        {speed: self.infill_speed(), type: "Infill"},
+                        {speed: self.outer_wall_speed(), type: "Outer Wall"},
+                        {speed: self.inner_wall_speed(), type: "Inner Wall"},
+                        {speed: self.top_bottom_speed(), type: "Top/Bottom"},
+                        {speed: self.travel_speed(), type: "Travel"},
+                        {speed: self.initial_layer_print_speed(), type: "Initial Layer"},
+                        {speed: self.initial_layer_travel_speed(), type: "Initial Layer Travel"},
+                        {speed: self.skirt_brim_speed(), type: "Skirt/Brim"},
+                        {speed: self.get_z_hop_speed(), type: "Z Movement"},
+                    ];
+                };
+
+                self.getMissingSpeedsList = ko.pureComputed(function () {
+                    return speed_array = [
+                        {speed: self.get_movement_speed(), type: "Movement Speed"},
+                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
+                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
+                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
+                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
+                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
+                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
+                        {speed: self.get_infill_speed(), type: "Infill Speed"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
+                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
+                        {speed: self.get_support_speed(), type: "Support Speed"},
+                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
+                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
+                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
+                    ];
+
+                });
+            };
+            self.cura_viewmodel = new self.create_cura_viewmodel(values);
+
+            self.create_simplify_3d_viewmodel = function(profile_observables){
+                var self = this;
+                self.get_axis_speed_display_units = function(){
+                   return 'mm-min';
+                };
+                self.get_speed_tolerance = function(){
+                   return 0.05;
+                };
+                // Initialize profile variables from observables
+                self.retraction_distance = ko.observable(profile_observables.retract_length);
+                self.retraction_vertical_lift = ko.observable(profile_observables.z_hop);
+                self.retraction_retract_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.retract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+
+                self.first_layer_speed_multiplier = ko.observable(profile_observables.first_layer_speed_multiplier || 100.0);
+                self.above_raft_speed_multiplier = ko.observable(profile_observables.above_raft_speed_multiplier || 100.0);
+                self.prime_pillar_speed_multiplier = ko.observable(profile_observables.prime_pillar_speed_multiplier || 100.0);
+                self.ooze_shield_speed_multiplier = ko.observable(profile_observables.ooze_shield_speed_multiplier || 100.0);
+
+                self.default_printing_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.print_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.outline_speed_multiplier = ko.observable(profile_observables.outline_speed_multiplier || 100.0);
+                self.solid_infill_speed_multiplier = ko.observable(profile_observables.solid_infill_speed_multiplier || 100.0);
+                self.support_structure_speed_multiplier = ko.observable(profile_observables.support_structure_speed_multiplier || 100.0);
+                self.xy_axis_movement_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.z_axis_movement_speed = ko.observable(
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.z_hop,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.bridging_speed_multiplier = ko.observable(profile_observables.bridging_speed_multiplier || 100.0);
+
+                /*
+                    Create a getter for each profile variable (settings.py - printer class)
+                */
+                self.get_retract_length = function(){
+                   return self.retraction_distance();
+                };
+                self.get_retract_speed = function(){
+                   return self.retraction_retract_speed();
+                };
+                self.get_detract_speed = function(){
+                   return self.retraction_retract_speed();
+                };
+                self.get_movement_speed = function(){
+                   return self.xy_axis_movement_speed();
+                };
+                self.get_z_hop = function(){
+                   return self.retraction_vertical_lift();
+                };
+                self.get_z_hop_speed = function(){
+                    return self.z_axis_movement_speed();
+                };
+                self.get_print_speed = function(){
+                    return self.default_printing_speed();
+                };
+                self.get_perimeter_speed = function(){
+                    if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.outline_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_small_perimeter_speed = function(){
+                    if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.outline_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_external_perimeter_speed = function(){
+                    if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.outline_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_infill_speed = function(){
+                   return self.default_printing_speed();
+                };
+                self.get_solid_infill_speed = function(){
+                    if(self.default_printing_speed()==null || self.solid_infill_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.solid_infill_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_top_solid_infill_speed = function(){
+                   if(self.default_printing_speed()==null || self.solid_infill_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.solid_infill_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_support_speed = function(){
+                    if(self.default_printing_speed()==null || self.support_structure_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.support_structure_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_bridge_speed = function(){
+                    if(self.default_printing_speed()==null || self.bridging_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.bridging_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_gap_fill_speed = function(){
+                   return self.default_printing_speed();
+                };
+                self.get_print_speed = function(){
+                    return self.default_printing_speed();
+                }
+                self.get_first_layer_speed = function(){
+                    if(self.default_printing_speed()==null || self.first_layer_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.first_layer_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_first_layer_travel_speed = function(){
+                   return self.xy_axis_movement_speed();
+                };
+                self.get_skirt_brim_speed = function(){
+                   return self.default_printing_speed();
+                };
+                self.get_first_layer_speed_multiplier = function(){
+                   return self.first_layer_speed_multiplier();
+                };
+                self.get_above_raft_speed_multiplier = function(){
+                   return self.above_raft_speed_multiplier();
+                };
+                self.get_prime_pillar_speed_multiplier = function(){
+                   return self.prime_pillar_speed_multiplier();
+                };
+                self.get_ooze_shield_speed_multiplier = function(){
+                   return self.ooze_shield_speed_multiplier();
+                };
+                self.get_outline_speed_multiplier = function(){
+                   return self.outline_speed_multiplier();
+                };
+                self.get_solid_infill_speed_multiplier = function(){
+                   return self.solid_infill_speed_multiplier();
+                };
+                self.get_support_structure_speed_multiplier = function(){
+                   return self.support_structure_speed_multiplier();
+                };
+                self.get_bridging_speed_multiplier = function(){
+                   return self.bridging_speed_multiplier();
+                };
+
+                self.get_above_raft_speed = function(){
+                    if(self.default_printing_speed()==null || self.above_raft_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.above_raft_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_ooze_shield_speed = function(){
+                    if(self.default_printing_speed()==null || self.ooze_shield_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.ooze_shield_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+                self.get_prime_pillar_speed = function(){
+                    if(self.default_printing_speed()==null || self.prime_pillar_speed_multiplier() == null)
+                        return null;
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.prime_pillar_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                };
+
+                // Get a list of speeds for use with feature detection
+                self.getSlicerSpeedList = function(){
+                    return [
+                        {speed: self.get_retract_speed(), type: "Retraction"},
+                        {speed: self.get_first_layer_speed(), type: "First Layer"},
+                        {speed: self.get_above_raft_speed(), type: "Above Raft"},
+                        {speed: self.get_prime_pillar_speed(), type: "Prime Pillar"},
+                        {speed: self.get_ooze_shield_speed(), type: "Ooze Shield"},
+                        {speed: self.get_print_speed(), type: "Normal Print"},
+                        {speed: self.get_perimeter_speed(), type: "Outline Speed"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill"},
+                        {speed: self.get_support_speed(), type: "Supports"},
+                        {speed: self.get_movement_speed(), type: "X/Y Movement"},
+                        {speed: self.get_z_hop_speed(), type: "Z Movement"},
+                        {speed: self.get_bridge_speed(), type: "Bridging"},
+
+                    ];
+                };
+
+                self.getMissingSpeedsList = ko.pureComputed(function () {
+                    return speed_array = [
+                        {speed: self.get_movement_speed(), type: "Movement Speed"},
+                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
+                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
+                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
+                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
+                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
+                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
+                        {speed: self.get_infill_speed(), type: "Infill Speed"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
+                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
+                        {speed: self.get_support_speed(), type: "Support Speed"},
+                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
+                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
+                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
+                    ];
+                });
+            };
+            self.simplify_3d_viewmodel = new self.create_simplify_3d_viewmodel(values);
+        };
+        self.helpers = new self.create_helpers(values);
+        /*
+            Create a computed for each profile variable (settings.py - printer class)
+        */
+        self.retract_length = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_retract_length();
+        });
+        self.retract_speed = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_retract_speed();
+        });
+        self.detract_speed = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_detract_speed();
+        });
+        self.movement_speed = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_movement_speed();
+        });
+        self.z_hop = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_z_hop();
+        });
+        self.z_hop_speed = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_z_hop_speed();
+        });
+        self.maximum_z_speed = ko.pureComputed(function(){
+           var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_maximum_z_speed !== undefined)
+                return slicer.get_maximum_z_speed();
+            return null;
+        });
+        self.print_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_print_speed !== undefined)
+                return slicer.get_print_speed();
+            return null;
+        });
+        self.perimeter_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_perimeter_speed !== undefined)
+                return slicer.get_perimeter_speed();
+            return null;
+        });
+        self.small_perimeter_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_small_perimeter_speed !== undefined)
+                return slicer.get_small_perimeter_speed();
+            return null;
+        });
+        self.external_perimeter_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_external_perimeter_speed !== undefined)
+                return slicer.get_external_perimeter_speed();
+            return null;
+        });
+        self.infill_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_infill_speed !== undefined)
+                return slicer.get_infill_speed();
+            return null;
+        });
+        self.solid_infill_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_solid_infill_speed !== undefined)
+                return slicer.get_solid_infill_speed();
+            return null;
+        });
+        self.top_solid_infill_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_top_solid_infill_speed !== undefined)
+                return slicer.get_top_solid_infill_speed();
+            return null;
+        });
+        self.support_speed = ko.pureComputed(function(){
+           var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_support_speed !== undefined)
+                return slicer.get_support_speed();
+            return null;
+        });
+        self.bridge_speed = ko.pureComputed(function(){
+           var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_bridge_speed !== undefined)
+                return slicer.get_bridge_speed();
+            return null;
+        });
+        self.gap_fill_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_gap_fill_speed !== undefined)
+                return slicer.get_gap_fill_speed();
+            return null;
+        });
+        self.first_layer_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_first_layer_speed !== undefined)
+                return slicer.get_first_layer_speed();
+            return null;
+        });
+        self.first_layer_travel_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_first_layer_travel_speed !== undefined)
+                return slicer.get_first_layer_travel_speed();
+            return null;
+        });
+        self.skirt_brim_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_skirt_brim_speed !== undefined)
+                return slicer.get_skirt_brim_speed();
+            return null;
+        });
+        self.above_raft_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_above_raft_speed !== undefined)
+                return slicer.get_above_raft_speed();
+            return null;
+        });
+        self.ooze_shield_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_ooze_shield_speed !== undefined)
+                return slicer.get_ooze_shield_speed();
+            return null;
+        });
+        self.prime_pillar_speed = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_prime_pillar_speed !== undefined)
+                return slicer.get_prime_pillar_speed();
+            return null;
+        });
+
+        self.speed_tolerance = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_speed_tolerance();
+        });
+        self.axis_speed_display_units = ko.pureComputed(function(){
+           return self.getCurrentSlicerVariables(self.slicer_type()).get_axis_speed_display_units();
+        });
+        self.first_layer_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_first_layer_speed_multiplier !== undefined)
+                return slicer.get_first_layer_speed_multiplier();
+            return null;
+        });
+        self.above_raft_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_above_raft_speed_multiplier !== undefined)
+                return slicer.get_above_raft_speed_multiplier();
+            return null;
+        });
+        self.prime_pillar_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_prime_pillar_speed_multiplier !== undefined)
+                return slicer.get_prime_pillar_speed_multiplier();
+            return null;
+        });
+        self.ooze_shield_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_ooze_shield_speed_multiplier !== undefined)
+                return slicer.get_ooze_shield_speed_multiplier();
+            return null;
+        });
+        self.outline_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_outline_speed_multiplier !== undefined)
+                return slicer.get_outline_speed_multiplier();
+            return null;
+        });
+        self.solid_infill_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_solid_infill_speed_multiplier !== undefined)
+                return slicer.get_solid_infill_speed_multiplier();
+            return null;
+        });
+        self.support_structure_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_support_structure_speed_multiplier !== undefined)
+                return slicer.get_support_structure_speed_multiplier();
+            return null;
+        });
+        self.bridging_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_bridging_speed_multiplier !== undefined)
+                return slicer.get_bridging_speed_multiplier();
+            return null;
+        });
+
+        self.slicer_speed_list = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.getSlicerSpeedList !== undefined)
+                return slicer.getSlicerSpeedList();
+            return [];
+        });
 
         self.getNonUniqueSpeeds = ko.pureComputed(function () {
             // Add all speeds to an array
             var duplicate_map = {};
             var duplicates = {};
-            var speed_array = [
-                {speed: self.movement_speed(), type: "Movement Speed"},
-                {speed: self.retract_speed(), type: "Retraction Speed"},
-                {speed: self.detract_speed(), type: "Detraction Speed"},
-                {speed: self.z_hop_speed(), type: "Z Movement Speed"},
-                {speed: self.perimeter_speed(), type: "Perimeter Speed"},
-                {speed: self.small_perimeter_speed(), type: "Small Perimeter Speed"},
-                {speed: self.external_perimeter_speed(), type: "External Perimeter Speed"},
-                {speed: self.infill_speed(), type: "Infill Speed"},
-                {speed: self.solid_infill_speed(), type: "Solid Infill Speed"},
-                {speed: self.top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                {speed: self.support_speed(), type: "Support Speed"},
-                {speed: self.bridge_speed(), type: "Bridge Speed"},
-                {speed: self.gap_fill_speed(), type: "Gap Fill Speed"},
-                {speed: self.first_layer_speed(), type: "First Layer Speed"}
-            ];
+
+            var speed_array = self.slicer_speed_list();
 
             for (var index = 0, size = speed_array.length; index < size; index++) {
-                //console.log("Finding duplicates...");
                 var cur_speed = speed_array[index];
                 if(!cur_speed.speed)
                     continue;
-                if (duplicate_map[cur_speed.speed]) {
-                    // Add the duplicate we found
-                    duplicates[cur_speed.type] = cur_speed.speed;
-                    // Add the original item, since it is also a duplicate
-                    duplicates[duplicate_map[cur_speed.speed]] = duplicate_map[cur_speed.speed];
-                }
-                duplicate_map[cur_speed.speed] = cur_speed.type;
+                if(duplicate_map[cur_speed.speed])
+                    duplicate_map[cur_speed.speed].push(cur_speed.type);
+                else
+                    duplicate_map[cur_speed.speed] = [cur_speed.type];
             }
+            var output = []
+            for (var key in duplicate_map) {
+                var dup_item = duplicate_map[key];
+                var is_first = true;
+                var num_items = dup_item.length
+                if(num_items > 1) {
+                    var cur_output_string = key.toString() + " " + self.axis_speed_display_units() + ": ";
 
-            return Object.keys(duplicates);
+                    for (var index = 0; index < num_items; index ++) {
+                        if (!is_first)
+                            cur_output_string += ", ";
+                        cur_output_string += dup_item[index];
+                        is_first = false;
+                    }
+                    cur_output_string += "";
+                    output.push(cur_output_string);
+                }
+            }
+            return output;
         });
 
-        self.getMissingSpeeds = ko.pureComputed(function () {
-            // Add all speeds to an array
+        self.getMissingSpeedsList = ko.pureComputed(function () {
+                    // Add all speeds to an array
             var missingSpeeds = [];
-            var speed_array = [
-                {speed: self.movement_speed(), type: "Movement Speed"},
-                {speed: self.retract_speed(), type: "Retraction Speed"},
-                {speed: self.detract_speed(), type: "Detraction Speed"},
-                {speed: self.z_hop_speed(), type: "Z Movement Speed"},
-                {speed: self.perimeter_speed(), type: "Perimeter Speed"},
-                {speed: self.small_perimeter_speed(), type: "Small Perimeter Speed"},
-                {speed: self.external_perimeter_speed(), type: "External Perimeter Speed"},
-                {speed: self.infill_speed(), type: "Infill Speed"},
-                {speed: self.solid_infill_speed(), type: "Solid Infill Speed"},
-                {speed: self.top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                {speed: self.support_speed(), type: "Support Speed"},
-                {speed: self.bridge_speed(), type: "Bridge Speed"},
-                {speed: self.gap_fill_speed(), type: "Gap Fill Speed"},
-                {speed: self.first_layer_speed(), type: "First Layer Speed"}
-            ];
+
+            var speed_array = []
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.getSlicerSpeedList !== undefined)
+                speed_array = slicer.getMissingSpeedsList();
 
             for (var index = 0, size = speed_array.length; index < size; index++) {
                 var cur_speed = speed_array[index];
@@ -167,99 +1057,29 @@ $(function() {
             return missingSpeeds;
         });
 
-        self.axisSpeedDisplayUnitsChanged = function (obj, event) {
-
-            if (Octolapse.Globals.is_admin()) {
-                if (event.originalEvent) {
-                    // Get the current guid
-                    var newUnit = $("#octolapse_axis_speed_display_unit_options").val();
-                    var previousUnit = self.axis_speed_display_units();
-                    var precision = 3;
-                    var precision_multiplier = Math.pow(10, precision);
-                    if(newUnit === previousUnit) {
-                        //console.log("Axis speed display units, no change detected!")
-                        return false;
-
-                    }
-                    //console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
-                    // in case we want to have more units in the future, check all cases
-                    switch (previousUnit)
-                    {
-                        case "mm-min":
-                            if(newUnit === "mm-sec")
-                            {
-                                // Convert all from mm-min to mm-sec
-                                self.retract_speed(Math.round(self.retract_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                self.detract_speed(Math.round(self.detract_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                self.movement_speed(Math.round(self.movement_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                self.z_hop_speed(Math.round(self.z_hop_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                // Optional values
-                                if(self.perimeter_speed())
-                                    self.perimeter_speed(Math.round(self.perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.small_perimeter_speed())
-                                    self.small_perimeter_speed(Math.round(self.small_perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.external_perimeter_speed())
-                                    self.external_perimeter_speed(Math.round(self.external_perimeter_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.infill_speed())
-                                    self.infill_speed(Math.round(self.infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.solid_infill_speed())
-                                    self.solid_infill_speed(Math.round(self.solid_infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.top_solid_infill_speed())
-                                    self.top_solid_infill_speed(Math.round(self.top_solid_infill_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.support_speed())
-                                    self.support_speed(Math.round(self.support_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.bridge_speed())
-                                    self.bridge_speed(Math.round(self.bridge_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.gap_fill_speed())
-                                    self.gap_fill_speed(Math.round(self.gap_fill_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.first_layer_speed())
-                                    self.first_layer_speed(Math.round(self.first_layer_speed()/60.0 * precision_multiplier) /precision_multiplier);
-                                self.speed_tolerance(Math.round(self.speed_tolerance()/60.0 * precision_multiplier) /precision_multiplier);
-
-                            }
-                            else
-                                return false;
-                            break;
-                        case "mm-sec":
-                            if(newUnit === "mm-min")
-                            {
-                                self.retract_speed(Math.round(self.retract_speed()*60.0 * precision_multiplier) / precision_multiplier);
-                                self.detract_speed(Math.round(self.detract_speed()*60.0 * precision_multiplier) / precision_multiplier);
-                                self.movement_speed(Math.round(self.movement_speed()*60.0 * precision_multiplier) / precision_multiplier);
-                                self.z_hop_speed(Math.round(self.z_hop_speed()*60.0 * precision_multiplier) / precision_multiplier);
-                                // Optional values
-                                if(self.perimeter_speed())
-                                    self.perimeter_speed(Math.round(self.perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.small_perimeter_speed())
-                                    self.small_perimeter_speed(Math.round(self.small_perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.external_perimeter_speed())
-                                    self.external_perimeter_speed(Math.round(self.external_perimeter_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.infill_speed())
-                                    self.infill_speed(Math.round(self.infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.solid_infill_speed())
-                                    self.solid_infill_speed(Math.round(self.solid_infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.top_solid_infill_speed())
-                                    self.top_solid_infill_speed(Math.round(self.top_solid_infill_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.support_speed())
-                                    self.support_speed(Math.round(self.support_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.bridge_speed())
-                                    self.bridge_speed(Math.round(self.bridge_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.gap_fill_speed())
-                                    self.gap_fill_speed(Math.round(self.gap_fill_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                if(self.first_layer_speed())
-                                    self.first_layer_speed(Math.round(self.first_layer_speed()*60.0 * precision_multiplier) /precision_multiplier);
-                                self.speed_tolerance(Math.round(self.speed_tolerance()*60.0 * precision_multiplier) /precision_multiplier);
-
-                            }
-                            else
-                                return false;
-                            break;
-                        default:
-                            return false;
-                    }
-                    return true;
-                }
+        self.getCurrentSlicerVariables = function() {
+            switch(self.slicer_type())
+            {
+                case 'other':
+                    return self.helpers.other_slicer_viewmodel;
+                case 'slic3r-pe':
+                    return self.helpers.slic3r_pe_viewmodel;
+                case 'cura':
+                    return self.helpers.cura_viewmodel;
+                case 'simplify-3d':
+                    return self.helpers.simplify_3d_viewmodel;
             }
+        }
+
+        self.toJS = function()
+        {
+            console.log("converting printer profile to js.");
+            var copy = ko.toJS(self);
+            delete copy.helpers;
+            return copy;
         };
+
     };
+
+
 });

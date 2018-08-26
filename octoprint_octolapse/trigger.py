@@ -275,46 +275,6 @@ class Trigger(object):
             return None
         return state.IsFeature
 
-    def is_one_feature_allowed(self, features_array):
-        if not self.Snapshot.feature_restrictions_enabled:
-            return True
-        elif len(features_array) == 0:
-            return False
-
-        # todo:  make this more reasonable.
-        for feature_name in features_array:
-            if self.Snapshot.trigger_on_retract and feature_name == Printer.PrintFeatureNames.Retract:
-                return True
-            if self.Snapshot.trigger_on_detract and feature_name == Printer.PrintFeatureNames.Detract:
-                return True
-            if self.Snapshot.trigger_on_movement and feature_name == Printer.PrintFeatureNames.Movement:
-                return True
-            if self.Snapshot.trigger_on_z_movement and feature_name == Printer.PrintFeatureNames.ZMovement:
-                return True
-
-            if self.Snapshot.trigger_on_perimeters and feature_name == Printer.PrintFeatureNames.Perimeters:
-                return True
-            elif self.Snapshot.trigger_on_external_perimeters and feature_name == Printer.PrintFeatureNames.ExternalPerimeters:
-                return True
-            elif self.Snapshot.trigger_on_small_perimeters and feature_name == Printer.PrintFeatureNames.SmallPerimeters:
-                return True
-            elif self.Snapshot.trigger_on_infill and feature_name == Printer.PrintFeatureNames.Infill:
-                return True
-            elif self.Snapshot.trigger_on_solid_infill and feature_name == Printer.PrintFeatureNames.SolidInfill:
-                return True
-            elif self.Snapshot.trigger_on_top_solid_infill and feature_name == Printer.PrintFeatureNames.TopSolidInfill:
-                return True
-            elif self.Snapshot.trigger_on_supports and feature_name == Printer.PrintFeatureNames.Support:
-                return True
-            elif self.Snapshot.trigger_on_bridges and feature_name == Printer.PrintFeatureNames.Bridge:
-                return True
-            elif self.Snapshot.trigger_on_gap_fills and feature_name == Printer.PrintFeatureNames.GapFill:
-                return True
-            elif self.Snapshot.trigger_on_first_layer and feature_name == Printer.PrintFeatureNames.FirstLayer:
-                return True
-            else:
-                return False
-
     def is_waiting(self, index):
         state = self.get_state(index)
         if state is None:
@@ -427,7 +387,7 @@ class GcodeTrigger(Trigger):
                 # set is in position
                 state.IsInPosition = position.is_in_position(0)
                 state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = self.is_one_feature_allowed(position.features(0))
+                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
 
                 if self.SnapshotCommand == parsed_command.gcode:
                     state.IsWaiting = True
@@ -595,7 +555,7 @@ class LayerTrigger(Trigger):
                 # set is in position
                 state.IsInPosition = position.is_in_position(0)
                 state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = self.is_one_feature_allowed(position.features(0))
+                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
 
                 # calculate height increment changed
                 if (
@@ -847,7 +807,7 @@ class TimerTrigger(Trigger):
                 # set is in position
                 state.IsInPosition = position.is_in_position(0)
                 state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = self.is_one_feature_allowed(position.features(0))
+                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
                 # if the trigger start time is null, set it now.
                 if state.TriggerStartTime is None:
                     state.TriggerStartTime = current_time

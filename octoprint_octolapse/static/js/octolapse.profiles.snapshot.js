@@ -31,6 +31,9 @@ $(function () {
         self.description = ko.observable(values.description);
         self.enabled = ko.observable(values.enabled);
         self.trigger_type = ko.observable(values.trigger_type);
+
+
+
         /*
             Timer Trigger Settings
         */
@@ -82,6 +85,12 @@ $(function () {
         self.trigger_on_bridges = ko.observable(values.trigger_on_bridges);
         self.trigger_on_gap_fills = ko.observable(values.trigger_on_gap_fills);
         self.trigger_on_first_layer = ko.observable(values.trigger_on_first_layer);
+        self.trigger_on_first_layer_travel = ko.observable(values.trigger_on_first_layer_travel);
+        self.trigger_on_skirt_brim = ko.observable(values.trigger_on_skirt_brim);
+        self.trigger_on_normal_print_speed = ko.observable(values.trigger_on_normal_print_speed);
+        self.trigger_on_above_raft = ko.observable(values.trigger_on_above_raft);
+        self.trigger_on_ooze_shield = ko.observable(values.trigger_on_ooze_shield);
+        self.trigger_on_prime_pillar = ko.observable(values.trigger_on_prime_pillar);
 
         self.require_zhop = ko.observable(values.require_zhop);
         self.lift_before_move = ko.observable(values.lift_before_move);
@@ -102,6 +111,24 @@ $(function () {
         self.new_position_restriction_y2 = ko.observable(1);
         self.new_position_restriction_r = ko.observable(1);
         self.new_calculate_intersections = ko.observable(false);
+
+        self.feature_template_id = ko.pureComputed(function(){
+           var current_slicer_type = Octolapse.Printers.currentProfile().slicer_type();
+           switch(current_slicer_type)
+           {
+               case "other":
+                   return "snapshot-other-slicer-feature-template";
+               case "slic3r-pe":
+                   return "snapshot-sli3er-pe-feature-template";
+               case "cura":
+                   return "snapshot-cura-feature-template";
+               case "simplify-3d":
+                   return "snapshot-simplify-3d-feature-template";
+               default:
+                   return "snapshot-other-slicer-feature-template";
+           }
+        });
+
 
 
 

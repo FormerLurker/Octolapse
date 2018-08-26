@@ -1,0 +1,507 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2017  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="snapshot-other-slicer-feature-template">
+    <div>
+        <h5>Current Print Profile Slicer Type - Other</h5>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Movement (travel)</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at movement (travel) speed">
+                <input type="checkbox" data-bind="checked: trigger_on_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Z Movement (z-lift)</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at z-lift speed">
+                <input type="checkbox" data-bind="checked: trigger_on_z_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Retract</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at retraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_retract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Detract</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at detraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_detract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Normal Print Speed</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at normal print speed">
+                <input type="checkbox" data-bind="checked: trigger_on_normal_print_speed" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+                <input type="checkbox" data-bind="checked: trigger_on_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Small Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at small perimeter speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_small_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">External Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at external perimeter speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_external_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Solid Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Top Solid Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at top solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_top_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Supports</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing with support speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_supports" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Bridges</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at bridging speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_bridges" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Gap Fills</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while filling gaps.">
+                <input type="checkbox" data-bind="checked: trigger_on_gap_fills" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">First Layer</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer" /> Enabled
+            </label>
+            <span class="help-inline">Currently this option works by matching the first layer speed ONLY on the first layer.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">First Layer Travel</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while traveling on the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer_travel" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Above Raft</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting directly above the raft.">
+                <input type="checkbox" data-bind="checked: trigger_on_above_raft" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Ooze Shield</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting an ooze shield.">
+                <input type="checkbox" data-bind="checked: trigger_on_ooze_shield" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Prime Pillar</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting a prime pillar.">
+                <input type="checkbox" data-bind="checked: trigger_on_prime_pillar" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Trigger On Skirt/Brim</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing skirts/brims.">
+                <input type="checkbox" data-bind="checked: trigger_on_skirt_brim" /> Enabled
+            </label>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="snapshot-sli3er-pe-feature-template">
+    <div>
+        <h5>Current Print Profile Slicer Type - Slic3r PE</h5>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Movement (travel)</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at movement (travel) speed">
+                <input type="checkbox" data-bind="checked: trigger_on_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Retract</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at retraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_retract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Detract</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at detraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_detract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+                <input type="checkbox" data-bind="checked: trigger_on_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Small Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at small perimeter speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_small_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">External Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at external perimeter speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_external_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Solid Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Top Solid Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at top solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_top_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Supports</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing with support speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_supports" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Bridges</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at bridging speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_bridges" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Gap Fills</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while filling gaps.">
+                <input type="checkbox" data-bind="checked: trigger_on_gap_fills" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">First Layer</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer" /> Enabled
+            </label>
+            <span class="help-inline">Currently this option works by matching the first layer speed ONLY on the first layer.</span>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="snapshot-cura-feature-template">
+    <div>
+        <h5>Current Print Profile Slicer Type - Cura</h5>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Normal Print Speed</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at the default print speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_normal_print_speed" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Retract</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at retraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_retract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Prime</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at detraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_detract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Outer Wall</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at external perimeter speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_external_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Inner Wall</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+                <input type="checkbox" data-bind="checked: trigger_on_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Top/Bottom</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at top/bottom solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_top_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Travel</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at movement (travel) speed">
+                <input type="checkbox" data-bind="checked: trigger_on_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Initial Layer</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer" /> Enabled
+            </label>
+            <span class="help-inline">Currently this option works by matching the first layer speed ONLY on the first layer.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Initial Layer Travel</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while traveling on the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer_travel" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Skirt/Brim</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing skirts/brims.">
+                <input type="checkbox" data-bind="checked: trigger_on_skirt_brim" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Z Travel</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at z travel speed">
+                <input type="checkbox" data-bind="checked: trigger_on_z_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="snapshot-simplify-3d-feature-template">
+    <div>
+        <h5>Current Print Profile Slicer Type - Simplify 3D</h5>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Retraction</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at retraction speed">
+                <input type="checkbox" data-bind="checked: trigger_on_retract" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">First Layer</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to be taken while printing at the first layer speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_first_layer" /> Enabled
+            </label>
+            <span class="help-inline">Currently this option works by matching the first layer speed ONLY on the first layer.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Above Raft</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting directly above the raft.">
+                <input type="checkbox" data-bind="checked: trigger_on_above_raft" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Prime Pillar</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting a prime pillar.">
+                <input type="checkbox" data-bind="checked: trigger_on_prime_pillar" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Ooze Shield</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while priting an ooze shield.">
+                <input type="checkbox" data-bind="checked: trigger_on_ooze_shield" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Default Printing Speed</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at the default print speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_normal_print_speed" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Perimeters</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+                <input type="checkbox" data-bind="checked: trigger_on_perimeters" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Solid Infill</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at solid infill speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_solid_infill" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Supports</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing with support speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_supports" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Z/Y Movement</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at movement (travel) speed">
+                <input type="checkbox" data-bind="checked: trigger_on_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Z Movement</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at z-lift speed">
+                <input type="checkbox" data-bind="checked: trigger_on_z_movement" /> Enabled
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Bridging</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots to trigger while printing at bridging speed.">
+                <input type="checkbox" data-bind="checked: trigger_on_bridges" /> Enabled
+            </label>
+        </div>
+    </div>
+
+</script>
