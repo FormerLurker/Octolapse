@@ -202,10 +202,11 @@ $(function() {
                 self.getSlicerSpeedList = function(){
                     return [
                         {speed: self.movement_speed(), type: "Movement"},
+                        {speed: self.z_hop_speed(), type: "Z Movement"},
                         {speed: self.retract_speed(), type: "Retraction"},
                         {speed: self.detract_speed(), type: "Detraction"},
                         {speed: self.print_speed(), type: "Print"},
-                        {speed: self.z_hop_speed(), type: "Z Movement"},
+
                         {speed: self.perimeter_speed(), type: "Perimeter"},
                         {speed: self.small_perimeter_speed(), type: "Small Perimeter"},
                         {speed: self.external_perimeter_speed(), type: "External Perimeter"},
@@ -216,9 +217,12 @@ $(function() {
                         {speed: self.bridge_speed(), type: "Bridge"},
                         {speed: self.gap_fill_speed(), type: "Gap Fill"},
                         {speed: self.first_layer_speed(), type: "First Layer"},
+                        {speed: self.first_layer_travel_speed(), type: "First Layer Travel"},
                         {speed: self.above_raft_speed(), type: "Above Raft"},
+                        {speed: self.ooze_shield_speed(), type: "Ooze Shield"},
                         {speed: self.prime_pillar_speed(), type: "Prime Pillar"},
-                        {speed: self.ooze_shield_speed(), type: "Ooze Shield"}
+                        {speed: self.prime_pillar_speed(), type: "Skirt/Brim"}
+
                     ];
                 };
 
@@ -396,18 +400,18 @@ $(function() {
                 // Get a list of speeds for use with feature detection
                 self.getSlicerSpeedList = function(){
                     return [
-                        {speed: self.movement_speed(), type: "Movement"},
                         {speed: self.retract_speed(), type: "Retraction"},
                         {speed: self.detract_speed(), type: "Detraction"},
-                        {speed: self.perimeter_speed(), type: "Perimeter"},
-                        {speed: self.small_perimeter_speed(), type: "Small Perimeter"},
-                        {speed: self.external_perimeter_speed(), type: "External Perimeter"},
+                        {speed: self.perimeter_speed(), type: "Perimeters"},
+                        {speed: self.small_perimeter_speed(), type: "Small Perimeters"},
+                        {speed: self.external_perimeter_speed(), type: "External Perimeters"},
                         {speed: self.infill_speed(), type: "Infill"},
                         {speed: self.solid_infill_speed(), type: "Solid Infill"},
                         {speed: self.top_solid_infill_speed(), type: "Top Solid Infill"},
-                        {speed: self.support_speed(), type: "Support"},
-                        {speed: self.bridge_speed(), type: "Bridge"},
-                        {speed: self.gap_fill_speed(), type: "Gap Fill"},
+                        {speed: self.support_speed(), type: "Supports"},
+                        {speed: self.bridge_speed(), type: "Bridges"},
+                        {speed: self.gap_fill_speed(), type: "Gaps"},
+                        {speed: self.movement_speed(), type: "Movement"},
                         {speed: self.first_layer_speed(), type: "First Layer"}
                     ];
                 };
@@ -541,7 +545,7 @@ $(function() {
                 self.getSlicerSpeedList = function(){
                     return [
                         {speed: self.print_speed(), type: "Normal Print"},
-                        {speed: self.retraction_retract_speed(), type: "Retraction"},
+                        {speed: self.retraction_retract_speed(), type: "Retract"},
                         {speed: self.retraction_prime_speed(), type: "Prime"},
                         {speed: self.infill_speed(), type: "Infill"},
                         {speed: self.outer_wall_speed(), type: "Outer Wall"},
@@ -551,7 +555,7 @@ $(function() {
                         {speed: self.initial_layer_print_speed(), type: "Initial Layer"},
                         {speed: self.initial_layer_travel_speed(), type: "Initial Layer Travel"},
                         {speed: self.skirt_brim_speed(), type: "Skirt/Brim"},
-                        {speed: self.get_z_hop_speed(), type: "Z Movement"},
+                        {speed: self.get_z_hop_speed(), type: "Z Travel"},
                     ];
                 };
 
@@ -720,10 +724,10 @@ $(function() {
                         {speed: self.get_above_raft_speed(), type: "Above Raft"},
                         {speed: self.get_prime_pillar_speed(), type: "Prime Pillar"},
                         {speed: self.get_ooze_shield_speed(), type: "Ooze Shield"},
-                        {speed: self.get_print_speed(), type: "Normal Print"},
-                        {speed: self.get_perimeter_speed(), type: "Outline Speed"},
+                        {speed: self.get_print_speed(), type: "Default Printing"},
+                        {speed: self.get_perimeter_speed(), type: "Outlines"},
                         {speed: self.get_solid_infill_speed(), type: "Solid Infill"},
-                        {speed: self.get_support_speed(), type: "Supports"},
+                        {speed: self.get_support_speed(), type: "Support Structure"},
                         {speed: self.get_movement_speed(), type: "X/Y Movement"},
                         {speed: self.get_z_hop_speed(), type: "Z Movement"},
                         {speed: self.get_bridge_speed(), type: "Bridging"},
