@@ -266,32 +266,6 @@ $(function() {
                         }
                     }
                 };
-
-                self.getMissingSpeedsList = ko.pureComputed(function () {
-                    // Add all speeds to an array
-                    return [
-                        {speed: self.get_movement_speed(), type: "Movement Speed"},
-                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
-                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
-                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
-                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
-                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
-                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
-                        {speed: self.get_infill_speed(), type: "Infill Speed"},
-                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
-                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                        {speed: self.get_support_speed(), type: "Support Speed"},
-                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
-                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
-                        {speed: self.get_skirt_brim_speed(), type: "Skirt/Brim Speed"},
-                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"},
-                        {speed: self.get_first_layer_travel_speed(), type: "First Layer Travel Speed"},
-                        {speed: self.get_above_raft_speed(), type: "Above Raft Speed"},
-                        {speed: self.get_ooze_shield_speed(), type: "Ooze Shield Speed"},
-                        {speed: self.get_prime_pillar_speed(), type: "Prime Pillar Speed"}
-                    ];
-                });
-
             };
             self.other_slicer_viewmodel = new self.create_other_slicer_viewmodel(values);
 
@@ -437,24 +411,6 @@ $(function() {
                         {speed: self.first_layer_speed(), type: "First Layer"}
                     ];
                 };
-
-                self.getMissingSpeedsList = ko.pureComputed(function () {
-                    return speed_array = [
-                        {speed: self.get_movement_speed(), type: "Movement Speed"},
-                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
-                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
-                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
-                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
-                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
-                        {speed: self.get_infill_speed(), type: "Infill Speed"},
-                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
-                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                        {speed: self.get_support_speed(), type: "Support Speed"},
-                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
-                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
-                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
-                    ];
-               });
             };
             self.slic3r_pe_viewmodel = new self.create_slic3r_pe_viewmodel(values);
 
@@ -599,25 +555,6 @@ $(function() {
                     ];
                 };
 
-                self.getMissingSpeedsList = ko.pureComputed(function () {
-                    return speed_array = [
-                        {speed: self.get_movement_speed(), type: "Movement Speed"},
-                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
-                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
-                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
-                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
-                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
-                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
-                        {speed: self.get_infill_speed(), type: "Infill Speed"},
-                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
-                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                        {speed: self.get_support_speed(), type: "Support Speed"},
-                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
-                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
-                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
-                    ];
-
-                });
             };
             self.cura_viewmodel = new self.create_cura_viewmodel(values);
 
@@ -794,24 +731,6 @@ $(function() {
                     ];
                 };
 
-                self.getMissingSpeedsList = ko.pureComputed(function () {
-                    return speed_array = [
-                        {speed: self.get_movement_speed(), type: "Movement Speed"},
-                        {speed: self.get_retract_speed(), type: "Retraction Speed"},
-                        {speed: self.get_detract_speed(), type: "Detraction Speed"},
-                        {speed: self.get_z_hop_speed(), type: "Z Movement Speed"},
-                        {speed: self.get_perimeter_speed(), type: "Perimeter Speed"},
-                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeter Speed"},
-                        {speed: self.get_external_perimeter_speed(), type: "External Perimeter Speed"},
-                        {speed: self.get_infill_speed(), type: "Infill Speed"},
-                        {speed: self.get_solid_infill_speed(), type: "Solid Infill Speed"},
-                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill Speed"},
-                        {speed: self.get_support_speed(), type: "Support Speed"},
-                        {speed: self.get_bridge_speed(), type: "Bridge Speed"},
-                        {speed: self.get_gap_fill_speed(), type: "Gap Fill Speed"},
-                        {speed: self.get_first_layer_speed(), type: "First Layer Speed"}
-                    ];
-                });
             };
             self.simplify_3d_viewmodel = new self.create_simplify_3d_viewmodel(values);
         };
@@ -1043,11 +962,7 @@ $(function() {
                     // Add all speeds to an array
             var missingSpeeds = [];
 
-            var speed_array = []
-            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
-            if (slicer.getSlicerSpeedList !== undefined)
-                speed_array = slicer.getMissingSpeedsList();
-
+            var speed_array = self.slicer_speed_list();
             for (var index = 0, size = speed_array.length; index < size; index++) {
                 var cur_speed = speed_array[index];
                 if(!cur_speed.speed)

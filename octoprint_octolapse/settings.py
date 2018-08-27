@@ -46,66 +46,66 @@ class SlicerPrintFeatures(object):
         self.features = []
 
         if printer_profile.slicer_type == 'other':
-            self.features.append({'speed': printer_profile.movement_speed, 'name': "Movement", "enabled": snapshot_profile.trigger_on_movement })
-            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement","enabled": snapshot_profile.trigger_on_z_movement})
-            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.trigger_on_retract })
-            self.features.append({'speed': printer_profile.detract_speed, 'name': "Detraction", "enabled": snapshot_profile.trigger_on_detract })
-            self.features.append({'speed': printer_profile.detract_speed, 'name': "Print Speed", "enabled": snapshot_profile.trigger_on_normal_print_speed})
-            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Perimeter", "enabled": snapshot_profile.trigger_on_perimeters })
-            self.features.append({'speed': printer_profile.small_perimeter_speed, 'name': "Small Perimeter", "enabled": snapshot_profile.trigger_on_small_perimeters })
-            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "External Perimeter", "enabled": snapshot_profile.trigger_on_external_perimeters })
-            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.trigger_on_infill})
-            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.trigger_on_solid_infill })
-            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top Solid Infill", "enabled": snapshot_profile.trigger_on_top_solid_infill })
-            self.features.append({'speed': printer_profile.support_speed, 'name': "Support", "enabled": snapshot_profile.trigger_on_supports })
-            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridge", "enabled": snapshot_profile.trigger_on_bridges })
-            self.features.append({'speed': printer_profile.gap_fill_speed, 'name': "Gap Fill", "enabled": snapshot_profile.trigger_on_gap_fills})
-            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.trigger_on_first_layer })
-            self.features.append({'speed': printer_profile.above_raft_speed, 'name': "Above Raft", "enabled": snapshot_profile.trigger_on_above_raft })
-            self.features.append({'speed': printer_profile.ooze_shield_speed, 'name': "Ooze Shield", "enabled": snapshot_profile.trigger_on_ooze_shield})
-            self.features.append({'speed': printer_profile.prime_pillar_speed, 'name': "Prime Pillar", "enabled": snapshot_profile.trigger_on_prime_pillar })
-            self.features.append({'speed': printer_profile.skirt_brim_speed, 'name': "Skirt/Brim", "enabled": snapshot_profile.trigger_on_skirt_brim})
+            self.features.append({'speed': printer_profile.movement_speed, 'name': "Movement", "enabled": snapshot_profile.feature_trigger_on_movement})
+            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement","enabled": snapshot_profile.feature_trigger_on_z_movement})
+            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.feature_trigger_on_retract})
+            self.features.append({'speed': printer_profile.detract_speed, 'name': "Detraction", "enabled": snapshot_profile.feature_trigger_on_detract})
+            self.features.append({'speed': printer_profile.detract_speed, 'name': "Print Speed", "enabled": snapshot_profile.feature_trigger_on_normal_print_speed})
+            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Perimeter", "enabled": snapshot_profile.feature_trigger_on_perimeters})
+            self.features.append({'speed': printer_profile.small_perimeter_speed, 'name': "Small Perimeter", "enabled": snapshot_profile.feature_trigger_on_small_perimeters})
+            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "External Perimeter", "enabled": snapshot_profile.feature_trigger_on_external_perimeters})
+            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.feature_trigger_on_infill})
+            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.feature_trigger_on_solid_infill})
+            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top Solid Infill", "enabled": snapshot_profile.feature_trigger_on_top_solid_infill})
+            self.features.append({'speed': printer_profile.support_speed, 'name': "Support", "enabled": snapshot_profile.feature_trigger_on_supports})
+            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridge", "enabled": snapshot_profile.feature_trigger_on_bridges})
+            self.features.append({'speed': printer_profile.gap_fill_speed, 'name': "Gap Fill", "enabled": snapshot_profile.feature_trigger_on_gap_fills})
+            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.feature_trigger_on_first_layer})
+            self.features.append({'speed': printer_profile.above_raft_speed, 'name': "Above Raft", "enabled": snapshot_profile.feature_trigger_on_above_raft})
+            self.features.append({'speed': printer_profile.ooze_shield_speed, 'name': "Ooze Shield", "enabled": snapshot_profile.feature_trigger_on_ooze_shield})
+            self.features.append({'speed': printer_profile.prime_pillar_speed, 'name': "Prime Pillar", "enabled": snapshot_profile.feature_trigger_on_prime_pillar})
+            self.features.append({'speed': printer_profile.skirt_brim_speed, 'name': "Skirt/Brim", "enabled": snapshot_profile.feature_trigger_on_skirt_brim})
 
         elif printer_profile.slicer_type == 'slic3r-pe':
-            self.features.append({'speed': printer_profile.movement_speed, 'name': "Movement", "enabled": snapshot_profile.trigger_on_movement})
-            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.trigger_on_retract})
-            self.features.append({'speed': printer_profile.detract_speed, 'name': "Detraction", "enabled": snapshot_profile.trigger_on_detract})
-            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Perimeter", "enabled": snapshot_profile.trigger_on_perimeters})
-            self.features.append({'speed': printer_profile.small_perimeter_speed, 'name': "Small Perimeter", "enabled": snapshot_profile.trigger_on_small_perimeters})
-            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "External Perimeter", "enabled": snapshot_profile.trigger_on_external_perimeters})
-            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.trigger_on_infill})
-            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.trigger_on_solid_infill})
-            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top Solid Infill", "enabled": snapshot_profile.trigger_on_top_solid_infill})
-            self.features.append({'speed': printer_profile.support_speed, 'name': "Support", "enabled": snapshot_profile.trigger_on_supports})
-            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridge", "enabled": snapshot_profile.trigger_on_bridges})
-            self.features.append({'speed': printer_profile.gap_fill_speed, 'name': "Gap Fill", "enabled": snapshot_profile.trigger_on_gap_fills})
-            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.trigger_on_first_layer})
+            self.features.append({'speed': printer_profile.movement_speed, 'name': "Movement", "enabled": snapshot_profile.feature_trigger_on_movement})
+            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.feature_trigger_on_retract})
+            self.features.append({'speed': printer_profile.detract_speed, 'name': "Detraction", "enabled": snapshot_profile.feature_trigger_on_detract})
+            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Perimeter", "enabled": snapshot_profile.feature_trigger_on_perimeters})
+            self.features.append({'speed': printer_profile.small_perimeter_speed, 'name': "Small Perimeter", "enabled": snapshot_profile.feature_trigger_on_small_perimeters})
+            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "External Perimeter", "enabled": snapshot_profile.feature_trigger_on_external_perimeters})
+            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.feature_trigger_on_infill})
+            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.feature_trigger_on_solid_infill})
+            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top Solid Infill", "enabled": snapshot_profile.feature_trigger_on_top_solid_infill})
+            self.features.append({'speed': printer_profile.support_speed, 'name': "Support", "enabled": snapshot_profile.feature_trigger_on_supports})
+            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridge", "enabled": snapshot_profile.feature_trigger_on_bridges})
+            self.features.append({'speed': printer_profile.gap_fill_speed, 'name': "Gap Fill", "enabled": snapshot_profile.feature_trigger_on_gap_fills})
+            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.feature_trigger_on_first_layer})
         elif printer_profile.slicer_type == 'cura':
-            self.features.append({'speed': printer_profile.print_speed, 'name': "Normal Print", "enabled": snapshot_profile.trigger_on_normal_print_speed})
-            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.trigger_on_retract})
-            self.features.append({'speed': printer_profile.detract_speed, 'name': "Prime", "enabled": snapshot_profile.trigger_on_detract})
-            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.trigger_on_infill})
-            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "Outer Wall","enabled": snapshot_profile.trigger_on_external_perimeters})
-            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Inner Wall", "enabled": snapshot_profile.trigger_on_perimeters})
-            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top/Bottom", "enabled": snapshot_profile.trigger_on_top_solid_infill})
-            self.features.append({'speed': printer_profile.movement_speed, 'name': "Travel", "enabled": snapshot_profile.trigger_on_movement})
-            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "Initial Layer", "enabled": snapshot_profile.trigger_on_first_layer})
-            self.features.append({'speed': printer_profile.first_layer_travel_speed, 'name': "Initial Layer Travel", "enabled": snapshot_profile.trigger_on_first_layer_travel})
-            self.features.append({'speed': printer_profile.skirt_brim_speed, 'name': "Skirt/Brim", "enabled": snapshot_profile.trigger_on_skirt_brim})
-            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement", "enabled": snapshot_profile.trigger_on_z_movement})
+            self.features.append({'speed': printer_profile.print_speed, 'name': "Normal Print", "enabled": snapshot_profile.feature_trigger_on_normal_print_speed})
+            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.feature_trigger_on_retract})
+            self.features.append({'speed': printer_profile.detract_speed, 'name': "Prime", "enabled": snapshot_profile.feature_trigger_on_detract})
+            self.features.append({'speed': printer_profile.infill_speed, 'name': "Infill", "enabled": snapshot_profile.feature_trigger_on_infill})
+            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "Outer Wall","enabled": snapshot_profile.feature_trigger_on_external_perimeters})
+            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Inner Wall", "enabled": snapshot_profile.feature_trigger_on_perimeters})
+            self.features.append({'speed': printer_profile.top_solid_infill_speed, 'name': "Top/Bottom", "enabled": snapshot_profile.feature_trigger_on_top_solid_infill})
+            self.features.append({'speed': printer_profile.movement_speed, 'name': "Travel", "enabled": snapshot_profile.feature_trigger_on_movement})
+            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "Initial Layer", "enabled": snapshot_profile.feature_trigger_on_first_layer})
+            self.features.append({'speed': printer_profile.first_layer_travel_speed, 'name': "Initial Layer Travel", "enabled": snapshot_profile.feature_trigger_on_first_layer_travel})
+            self.features.append({'speed': printer_profile.skirt_brim_speed, 'name': "Skirt/Brim", "enabled": snapshot_profile.feature_trigger_on_skirt_brim})
+            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement", "enabled": snapshot_profile.feature_trigger_on_z_movement})
         elif printer_profile.slicer_type == 'simplify-3d':
-            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.trigger_on_retract})
-            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.trigger_on_first_layer})
-            self.features.append({'speed': printer_profile.above_raft_speed, 'name': "Above Raft", "enabled": snapshot_profile.trigger_on_above_raft})
-            self.features.append({'speed': printer_profile.prime_pillar_speed, 'name': "Prime Pillar", "enabled": snapshot_profile.trigger_on_prime_pillar})
-            self.features.append({'speed': printer_profile.ooze_shield_speed, 'name': "Ooze Shield", "enabled": snapshot_profile.trigger_on_ooze_shield})
-            self.features.append({'speed': printer_profile.print_speed, 'name': "Deafult Print", "enabled": snapshot_profile.trigger_on_normal_print_speed})
-            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Outline", "enabled": snapshot_profile.trigger_on_perimeters})
-            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.trigger_on_solid_infill})
-            self.features.append({'speed': printer_profile.support_speed, 'name': "Supports", "enabled": snapshot_profile.trigger_on_supports})
-            self.features.append({'speed': printer_profile.movement_speed, 'name': "X/Y Movement", "enabled": snapshot_profile.trigger_on_movement})
-            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement", "enabled": snapshot_profile.trigger_on_z_movement})
-            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridging", "enabled": snapshot_profile.trigger_on_bridges})
+            self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.feature_trigger_on_retract})
+            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.feature_trigger_on_first_layer})
+            self.features.append({'speed': printer_profile.above_raft_speed, 'name': "Above Raft", "enabled": snapshot_profile.feature_trigger_on_above_raft})
+            self.features.append({'speed': printer_profile.prime_pillar_speed, 'name': "Prime Pillar", "enabled": snapshot_profile.feature_trigger_on_prime_pillar})
+            self.features.append({'speed': printer_profile.ooze_shield_speed, 'name': "Ooze Shield", "enabled": snapshot_profile.feature_trigger_on_ooze_shield})
+            self.features.append({'speed': printer_profile.print_speed, 'name': "Deafult Print", "enabled": snapshot_profile.feature_trigger_on_normal_print_speed})
+            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Outline", "enabled": snapshot_profile.feature_trigger_on_perimeters})
+            self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.feature_trigger_on_solid_infill})
+            self.features.append({'speed': printer_profile.support_speed, 'name': "Supports", "enabled": snapshot_profile.feature_trigger_on_supports})
+            self.features.append({'speed': printer_profile.movement_speed, 'name': "X/Y Movement", "enabled": snapshot_profile.feature_trigger_on_movement})
+            self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement", "enabled": snapshot_profile.feature_trigger_on_z_movement})
+            self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridging", "enabled": snapshot_profile.feature_trigger_on_bridges})
 
     def is_one_feature_enabled(self, speed):
         if not self.feature_detection_enabled:
@@ -300,50 +300,50 @@ class Printer(object):
                 changes["movement_speed"], self.movement_speed)
 
         if "perimeter_speed" in changes.keys():
-            self.perimeter_speed = utility.get_float(
+            self.perimeter_speed = utility.get_nullable_float(
                 changes["perimeter_speed"], self.perimeter_speed)
         if "small_perimeter_speed" in changes.keys():
-            self.small_perimeter_speed = utility.get_float(
+            self.small_perimeter_speed = utility.get_nullable_float(
                 changes["small_perimeter_speed"], self.small_perimeter_speed)
         if "external_perimeter_speed" in changes.keys():
-            self.external_perimeter_speed = utility.get_float(
+            self.external_perimeter_speed = utility.get_nullable_float(
                 changes["external_perimeter_speed"], self.external_perimeter_speed)
         if "infill_speed" in changes.keys():
-            self.infill_speed = utility.get_float(
+            self.infill_speed = utility.get_nullable_float(
                 changes["infill_speed"], self.infill_speed)
         if "solid_infill_speed" in changes.keys():
-            self.solid_infill_speed = utility.get_float(
+            self.solid_infill_speed = utility.get_nullable_float(
                 changes["solid_infill_speed"], self.solid_infill_speed)
         if "top_solid_infill_speed" in changes.keys():
-            self.top_solid_infill_speed = utility.get_float(
+            self.top_solid_infill_speed = utility.get_nullable_float(
                 changes["top_solid_infill_speed"], self.top_solid_infill_speed)
         if "support_speed" in changes.keys():
-            self.support_speed = utility.get_float(
+            self.support_speed = utility.get_nullable_float(
                 changes["support_speed"], self.support_speed)
         if "bridge_speed" in changes.keys():
-            self.bridge_speed = utility.get_float(
+            self.bridge_speed = utility.get_nullable_float(
                 changes["bridge_speed"], self.bridge_speed)
         if "gap_fill_speed" in changes.keys():
-            self.gap_fill_speed = utility.get_float(
+            self.gap_fill_speed = utility.get_nullable_float(
                 changes["gap_fill_speed"], self.gap_fill_speed)
         if "first_layer_speed" in changes.keys():
-            self.first_layer_speed = utility.get_float(
+            self.first_layer_speed = utility.get_nullable_float(
                 changes["first_layer_speed"], self.first_layer_speed)
 
         if "first_layer_travel_speed" in changes.keys():
-            self.first_layer_travel_speed = utility.get_float(
+            self.first_layer_travel_speed = utility.get_nullable_float(
                 changes["first_layer_travel_speed"], self.first_layer_travel_speed)
         if "skirt_brim_speed" in changes.keys():
-            self.skirt_brim_speed = utility.get_float(
+            self.skirt_brim_speed = utility.get_nullable_float(
                 changes["skirt_brim_speed"], self.skirt_brim_speed)
         if "above_raft_speed" in changes.keys():
-            self.above_raft_speed = utility.get_float(
+            self.above_raft_speed = utility.get_nullable_float(
                 changes["above_raft_speed"], self.above_raft_speed)
         if "ooze_shield_speed" in changes.keys():
-            self.ooze_shield_speed = utility.get_float(
+            self.ooze_shield_speed = utility.get_nullable_float(
                 changes["ooze_shield_speed"], self.ooze_shield_speed)
         if "prime_pillar_speed" in changes.keys():
-            self.prime_pillar_speed = utility.get_float(
+            self.prime_pillar_speed = utility.get_nullable_float(
                 changes["prime_pillar_speed"], self.prime_pillar_speed)
         if "speed_tolerance" in changes.keys():
             self.speed_tolerance = utility.get_float(
@@ -841,26 +841,26 @@ class Snapshot(object):
         self.trigger_on_detracted = None
         # Feature Detection
         self.feature_restrictions_enabled = False
-        self.trigger_on_detract = True
-        self.trigger_on_retract = True
-        self.trigger_on_movement = True
-        self.trigger_on_z_movement = True
-        self.trigger_on_perimeters = True
-        self.trigger_on_small_perimeters = True
-        self.trigger_on_external_perimeters = True
-        self.trigger_on_infill = True
-        self.trigger_on_solid_infill = True
-        self.trigger_on_top_solid_infill = True
-        self.trigger_on_supports = True
-        self.trigger_on_bridges = True
-        self.trigger_on_gap_fills = True
-        self.trigger_on_first_layer = True
-        self.trigger_on_above_raft = True
-        self.trigger_on_ooze_shield = True
-        self.trigger_on_prime_pillar = True
-        self.trigger_on_normal_print_speed = True
-        self.trigger_on_skirt_brim = True
-        self.trigger_on_first_layer_travel = True
+        self.feature_trigger_on_detract = False
+        self.feature_trigger_on_retract = False
+        self.feature_trigger_on_movement = False
+        self.feature_trigger_on_z_movement = False
+        self.feature_trigger_on_perimeters = True
+        self.feature_trigger_on_small_perimeters = False
+        self.feature_trigger_on_external_perimeters = False
+        self.feature_trigger_on_infill = True
+        self.feature_trigger_on_solid_infill = True
+        self.feature_trigger_on_top_solid_infill = True
+        self.feature_trigger_on_supports = False
+        self.feature_trigger_on_bridges = False
+        self.feature_trigger_on_gap_fills = True
+        self.feature_trigger_on_first_layer = True
+        self.feature_trigger_on_above_raft = False
+        self.feature_trigger_on_ooze_shield = False
+        self.feature_trigger_on_prime_pillar = True
+        self.feature_trigger_on_normal_print_speed = False
+        self.feature_trigger_on_skirt_brim = False
+        self.feature_trigger_on_first_layer_travel = False
         # Lift and retract before move
         self.lift_before_move = True
         self.retract_before_move = True
@@ -900,26 +900,26 @@ class Snapshot(object):
                 self.position_restrictions = snapshot.position_restrictions
                 # feature detection
                 self.feature_restrictions_enabled = snapshot.feature_restrictions_enabled
-                self.trigger_on_detract = snapshot.trigger_on_detract
-                self.trigger_on_retract = snapshot.trigger_on_retract
-                self.trigger_on_movement = snapshot.trigger_on_movement
-                self.trigger_on_z_movement = snapshot.trigger_on_z_movement
-                self.trigger_on_perimeters = snapshot.trigger_on_perimeters
-                self.trigger_on_small_perimeters = snapshot.trigger_on_small_perimeters
-                self.trigger_on_external_perimeters = snapshot.trigger_on_external_perimeters
-                self.trigger_on_infill = snapshot.trigger_on_infill
-                self.trigger_on_solid_infill = snapshot.trigger_on_solid_infill
-                self.trigger_on_top_solid_infill = snapshot.trigger_on_top_solid_infill
-                self.trigger_on_supports = snapshot.trigger_on_supports
-                self.trigger_on_bridges = snapshot.trigger_on_bridges
-                self.trigger_on_gap_fills = snapshot.trigger_on_gap_fills
-                self.trigger_on_first_layer = snapshot.trigger_on_first_layer
-                self.trigger_on_above_raft = snapshot.trigger_on_above_raft
-                self.trigger_on_ooze_shield = snapshot.trigger_on_ooze_shield
-                self.trigger_on_prime_pillar = snapshot.trigger_on_prime_pillar
-                self.trigger_on_normal_print_speed = snapshot.trigger_on_normal_print_speed
-                self.trigger_on_skirt_brim = snapshot.trigger_on_skirt_brim
-                self.trigger_on_first_layer_travel = snapshot.trigger_on_first_layer_travel
+                self.feature_trigger_on_detract = snapshot.feature_trigger_on_detract
+                self.feature_trigger_on_retract = snapshot.feature_trigger_on_retract
+                self.feature_trigger_on_movement = snapshot.feature_trigger_on_movement
+                self.feature_trigger_on_z_movement = snapshot.feature_trigger_on_z_movement
+                self.feature_trigger_on_perimeters = snapshot.feature_trigger_on_perimeters
+                self.feature_trigger_on_small_perimeters = snapshot.feature_trigger_on_small_perimeters
+                self.feature_trigger_on_external_perimeters = snapshot.feature_trigger_on_external_perimeters
+                self.feature_trigger_on_infill = snapshot.feature_trigger_on_infill
+                self.feature_trigger_on_solid_infill = snapshot.feature_trigger_on_solid_infill
+                self.feature_trigger_on_top_solid_infill = snapshot.feature_trigger_on_top_solid_infill
+                self.feature_trigger_on_supports = snapshot.feature_trigger_on_supports
+                self.feature_trigger_on_bridges = snapshot.feature_trigger_on_bridges
+                self.feature_trigger_on_gap_fills = snapshot.feature_trigger_on_gap_fills
+                self.feature_trigger_on_first_layer = snapshot.feature_trigger_on_first_layer
+                self.feature_trigger_on_above_raft = snapshot.feature_trigger_on_above_raft
+                self.feature_trigger_on_ooze_shield = snapshot.feature_trigger_on_ooze_shield
+                self.feature_trigger_on_prime_pillar = snapshot.feature_trigger_on_prime_pillar
+                self.feature_trigger_on_normal_print_speed = snapshot.feature_trigger_on_normal_print_speed
+                self.feature_trigger_on_skirt_brim = snapshot.feature_trigger_on_skirt_brim
+                self.feature_trigger_on_first_layer_travel = snapshot.feature_trigger_on_first_layer_travel
                 # lift and retract before move
                 self.lift_before_move = snapshot.lift_before_move
                 self.retract_before_move = snapshot.retract_before_move
@@ -1006,69 +1006,69 @@ class Snapshot(object):
         if "feature_restrictions_enabled" in changes.keys():
             self.feature_restrictions_enabled = utility.get_bool(
                 changes["feature_restrictions_enabled"], self.feature_restrictions_enabled)
-        if "trigger_on_detract" in changes.keys():
-            self.trigger_on_detract = utility.get_bool(
-                changes["trigger_on_detract"], self.trigger_on_detract)
-        if "trigger_on_retract" in changes.keys():
-            self.trigger_on_retract = utility.get_bool(
-                changes["trigger_on_retract"], self.trigger_on_retract)
-        if "trigger_on_movement" in changes.keys():
-            self.trigger_on_movement = utility.get_bool(
-                changes["trigger_on_movement"], self.trigger_on_movement)
-        if "trigger_on_z_movement" in changes.keys():
-            self.trigger_on_z_movement = utility.get_bool(
-                changes["trigger_on_z_movement"], self.trigger_on_z_movement)
-        if "trigger_on_perimeters" in changes.keys():
-            self.trigger_on_perimeters = utility.get_bool(
-                changes["trigger_on_perimeters"], self.trigger_on_perimeters)
-        if "trigger_on_small_perimeters" in changes.keys():
-            self.trigger_on_small_perimeters = utility.get_bool(
-                changes["trigger_on_small_perimeters"], self.trigger_on_small_perimeters)
-        if "trigger_on_external_perimeters" in changes.keys():
-            self.trigger_on_external_perimeters = utility.get_bool(
-                changes["trigger_on_external_perimeters"], self.trigger_on_external_perimeters)
-        if "trigger_on_infill" in changes.keys():
-            self.trigger_on_infill = utility.get_bool(
-                changes["trigger_on_infill"], self.trigger_on_infill)
-        if "trigger_on_solid_infill" in changes.keys():
-            self.trigger_on_solid_infill = utility.get_bool(
-                changes["trigger_on_solid_infill"], self.trigger_on_solid_infill)
-        if "trigger_on_top_solid_infill" in changes.keys():
-            self.trigger_on_top_solid_infill = utility.get_bool(
-                changes["trigger_on_top_solid_infill"], self.trigger_on_top_solid_infill)
-        if "trigger_on_supports" in changes.keys():
-            self.trigger_on_supports = utility.get_bool(
-                changes["trigger_on_supports"], self.trigger_on_supports)
-        if "trigger_on_bridges" in changes.keys():
-            self.trigger_on_bridges = utility.get_bool(
-                changes["trigger_on_bridges"], self.trigger_on_bridges)
-        if "trigger_on_gap_fills" in changes.keys():
-            self.trigger_on_gap_fills = utility.get_bool(
-                changes["trigger_on_gap_fills"], self.trigger_on_gap_fills)
-        if "trigger_on_first_layer" in changes.keys():
-            self.trigger_on_first_layer = utility.get_bool(
-                changes["trigger_on_first_layer"], self.trigger_on_first_layer)
-        if "trigger_on_first_layer_travel" in changes.keys():
-            self.trigger_on_first_layer_travel = utility.get_bool(
-                changes["trigger_on_first_layer_travel"], self.trigger_on_first_layer_travel)
+        if "feature_trigger_on_detract" in changes.keys():
+            self.feature_trigger_on_detract = utility.get_bool(
+                changes["feature_trigger_on_detract"], self.feature_trigger_on_detract)
+        if "feature_trigger_on_retract" in changes.keys():
+            self.feature_trigger_on_retract = utility.get_bool(
+                changes["feature_trigger_on_retract"], self.feature_trigger_on_retract)
+        if "feature_trigger_on_movement" in changes.keys():
+            self.feature_trigger_on_movement = utility.get_bool(
+                changes["feature_trigger_on_movement"], self.feature_trigger_on_movement)
+        if "feature_trigger_on_z_movement" in changes.keys():
+            self.feature_trigger_on_z_movement = utility.get_bool(
+                changes["feature_trigger_on_z_movement"], self.feature_trigger_on_z_movement)
+        if "feature_trigger_on_perimeters" in changes.keys():
+            self.feature_trigger_on_perimeters = utility.get_bool(
+                changes["feature_trigger_on_perimeters"], self.feature_trigger_on_perimeters)
+        if "feature_trigger_on_small_perimeters" in changes.keys():
+            self.feature_trigger_on_small_perimeters = utility.get_bool(
+                changes["feature_trigger_on_small_perimeters"], self.feature_trigger_on_small_perimeters)
+        if "feature_trigger_on_external_perimeters" in changes.keys():
+            self.feature_trigger_on_external_perimeters = utility.get_bool(
+                changes["feature_trigger_on_external_perimeters"], self.feature_trigger_on_external_perimeters)
+        if "feature_trigger_on_infill" in changes.keys():
+            self.feature_trigger_on_infill = utility.get_bool(
+                changes["feature_trigger_on_infill"], self.feature_trigger_on_infill)
+        if "feature_trigger_on_solid_infill" in changes.keys():
+            self.feature_trigger_on_solid_infill = utility.get_bool(
+                changes["feature_trigger_on_solid_infill"], self.feature_trigger_on_solid_infill)
+        if "feature_trigger_on_top_solid_infill" in changes.keys():
+            self.feature_trigger_on_top_solid_infill = utility.get_bool(
+                changes["feature_trigger_on_top_solid_infill"], self.feature_trigger_on_top_solid_infill)
+        if "feature_trigger_on_supports" in changes.keys():
+            self.feature_trigger_on_supports = utility.get_bool(
+                changes["feature_trigger_on_supports"], self.feature_trigger_on_supports)
+        if "feature_trigger_on_bridges" in changes.keys():
+            self.feature_trigger_on_bridges = utility.get_bool(
+                changes["feature_trigger_on_bridges"], self.feature_trigger_on_bridges)
+        if "feature_trigger_on_gap_fills" in changes.keys():
+            self.feature_trigger_on_gap_fills = utility.get_bool(
+                changes["feature_trigger_on_gap_fills"], self.feature_trigger_on_gap_fills)
+        if "feature_trigger_on_first_layer" in changes.keys():
+            self.feature_trigger_on_first_layer = utility.get_bool(
+                changes["feature_trigger_on_first_layer"], self.feature_trigger_on_first_layer)
+        if "feature_trigger_on_first_layer_travel" in changes.keys():
+            self.feature_trigger_on_first_layer_travel = utility.get_bool(
+                changes["feature_trigger_on_first_layer_travel"], self.feature_trigger_on_first_layer_travel)
 
 
         if "trigger_on_above_raft" in changes.keys():
-            self.trigger_on_above_raft = utility.get_bool(
-                changes["trigger_on_above_raft"], self.trigger_on_above_raft)
+            self.feature_trigger_on_above_raft = utility.get_bool(
+                changes["trigger_on_above_raft"], self.feature_trigger_on_above_raft)
         if "trigger_on_ooze_shield" in changes.keys():
-            self.trigger_on_ooze_shield = utility.get_bool(
-                changes["trigger_on_ooze_shield"], self.trigger_on_ooze_shield)
+            self.feature_trigger_on_ooze_shield = utility.get_bool(
+                changes["trigger_on_ooze_shield"], self.feature_trigger_on_ooze_shield)
         if "trigger_on_prime_pillar" in changes.keys():
-            self.trigger_on_prime_pillar = utility.get_bool(
-                changes["trigger_on_prime_pillar"], self.trigger_on_prime_pillar)
+            self.feature_trigger_on_prime_pillar = utility.get_bool(
+                changes["trigger_on_prime_pillar"], self.feature_trigger_on_prime_pillar)
         if "trigger_on_normal_print_speed" in changes.keys():
-            self.trigger_on_normal_print_speed = utility.get_bool(
-                changes["trigger_on_normal_print_speed"], self.trigger_on_normal_print_speed)
+            self.feature_trigger_on_normal_print_speed = utility.get_bool(
+                changes["trigger_on_normal_print_speed"], self.feature_trigger_on_normal_print_speed)
 
         if "trigger_on_skirt_brim" in changes.keys():
-            self.trigger_on_skirt_brim = utility.get_bool(
-                changes["trigger_on_skirt_brim"], self.trigger_on_skirt_brim)
+            self.feature_trigger_on_skirt_brim = utility.get_bool(
+                changes["trigger_on_skirt_brim"], self.feature_trigger_on_skirt_brim)
         # Lift and retract before move
         if "lift_before_move" in changes.keys():
             self.lift_before_move = utility.get_bool(
@@ -1160,26 +1160,26 @@ class Snapshot(object):
                 self.position_restrictions),
             # Feature Detection
             'feature_restrictions_enabled': self.feature_restrictions_enabled,
-            'trigger_on_detract': self.trigger_on_detract,
-            'trigger_on_retract': self.trigger_on_retract,
-            'trigger_on_movement': self.trigger_on_movement,
-            'trigger_on_z_movement': self.trigger_on_z_movement,
-            'trigger_on_perimeters': self.trigger_on_perimeters,
-            'trigger_on_small_perimeters': self.trigger_on_small_perimeters,
-            'trigger_on_external_perimeters': self.trigger_on_external_perimeters,
-            'trigger_on_infill': self.trigger_on_infill,
-            'trigger_on_solid_infill': self.trigger_on_solid_infill,
-            'trigger_on_top_solid_infill': self.trigger_on_top_solid_infill,
-            'trigger_on_supports': self.trigger_on_supports,
-            'trigger_on_bridges': self.trigger_on_bridges,
-            'trigger_on_gap_fills': self.trigger_on_gap_fills,
-            'trigger_on_first_layer': self.trigger_on_first_layer,
-            'trigger_on_first_layer_travel': self.trigger_on_first_layer_travel,
-            'trigger_on_above_raft': self.trigger_on_above_raft,
-            'trigger_on_ooze_shield': self.trigger_on_ooze_shield,
-            'trigger_on_prime_pillar': self.trigger_on_prime_pillar,
-            'trigger_on_normal_print_speed': self.trigger_on_normal_print_speed,
-            'trigger_on_skirt_brim': self.trigger_on_skirt_brim,
+            'feature_trigger_on_detract': self.feature_trigger_on_detract,
+            'feature_trigger_on_retract': self.feature_trigger_on_retract,
+            'feature_trigger_on_movement': self.feature_trigger_on_movement,
+            'feature_trigger_on_z_movement': self.feature_trigger_on_z_movement,
+            'feature_trigger_on_perimeters': self.feature_trigger_on_perimeters,
+            'feature_trigger_on_small_perimeters': self.feature_trigger_on_small_perimeters,
+            'feature_trigger_on_external_perimeters': self.feature_trigger_on_external_perimeters,
+            'feature_trigger_on_infill': self.feature_trigger_on_infill,
+            'feature_trigger_on_solid_infill': self.feature_trigger_on_solid_infill,
+            'feature_trigger_on_top_solid_infill': self.feature_trigger_on_top_solid_infill,
+            'feature_trigger_on_supports': self.feature_trigger_on_supports,
+            'feature_trigger_on_bridges': self.feature_trigger_on_bridges,
+            'feature_trigger_on_gap_fills': self.feature_trigger_on_gap_fills,
+            'feature_trigger_on_first_layer': self.feature_trigger_on_first_layer,
+            'feature_trigger_on_first_layer_travel': self.feature_trigger_on_first_layer_travel,
+            'feature_trigger_on_above_raft': self.feature_trigger_on_above_raft,
+            'feature_trigger_on_ooze_shield': self.feature_trigger_on_ooze_shield,
+            'feature_trigger_on_prime_pillar': self.feature_trigger_on_prime_pillar,
+            'feature_trigger_on_normal_print_speed': self.feature_trigger_on_normal_print_speed,
+            'feature_trigger_on_skirt_brim': self.feature_trigger_on_skirt_brim,
             # Lift and Retract Before Move
             'lift_before_move': self.lift_before_move,
             'retract_before_move': self.retract_before_move,

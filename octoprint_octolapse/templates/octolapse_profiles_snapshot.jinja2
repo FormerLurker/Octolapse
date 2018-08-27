@@ -253,7 +253,6 @@
             <div>
                 <h5>Feature Detection</h5>
                 <p>Allow snapshots to be taken while printing certain types of features.  The detection is performed by matching the current gcode speeds with your printer profile settings.  They must match exactly in order to work!</p>
-                <p>If your printer profile uses the same speed for any of the following options, octolapse may take snapshots where you did not intend.  Make sure all print speeds are distinct, even if by only a small amount.</p>
                 <p>Important Note: If your slicer has any features that slow down a layer speed detection will not work properly on these layers (in Slic3r, check Filament Settings->Cooling->Cooling Thresholds)</p>
             </div>
             <div class="control-group">
@@ -266,8 +265,22 @@
                 </div>
             </div>
             <div data-bind="visible: feature_restrictions_enabled">
+                <div data-bind="visible: has_non_unique_feature_detection_fields" class="text-warning">
+                    <p>
+                        The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
+                        quality settings within the snapshot profile:
+                    </p>
+                    <div class="text-error" data-bind="foreach: non_unique_feature_detection_fields">
+                        <span data-bind="text: $data"></span><br/>
+                    </div>
+                </div>
+                <div data-bind="visible: has_missing_feature_detection_fields" class="text-warning">
+                    <p>
+                        The following speeds missing and will not work when using 'Feature Detection' print quality settings
+                        within the snapshot profile: <span class="text-error" data-bind="text: missing_feature_detection_fields"></span>
+                    </p>
+                </div>
                 <div data-bind="template: feature_template_id"></div>
-
             </div>
             <div>
                 <h5>LIft and Retract</h5>

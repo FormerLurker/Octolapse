@@ -70,27 +70,26 @@ $(function () {
 
         self.feature_restrictions_enabled  = ko.observable(values.feature_restrictions_enabled);
 
-        self.trigger_on_detract = ko.observable(values.trigger_on_detract);
-        self.trigger_on_retract = ko.observable(values.trigger_on_retract);
-        self.trigger_on_movement = ko.observable(values.trigger_on_movement);
-        self.trigger_on_z_movement = ko.observable(values.trigger_on_z_movement);
-
-        self.trigger_on_perimeters = ko.observable(values.trigger_on_perimeters);
-        self.trigger_on_small_perimeters = ko.observable(values.trigger_on_small_perimeters);
-        self.trigger_on_external_perimeters = ko.observable(values.trigger_on_external_perimeters);
-        self.trigger_on_infill = ko.observable(values.trigger_on_infill);
-        self.trigger_on_solid_infill = ko.observable(values.trigger_on_solid_infill);
-        self.trigger_on_top_solid_infill = ko.observable(values.trigger_on_top_solid_infill);
-        self.trigger_on_supports = ko.observable(values.trigger_on_supports);
-        self.trigger_on_bridges = ko.observable(values.trigger_on_bridges);
-        self.trigger_on_gap_fills = ko.observable(values.trigger_on_gap_fills);
-        self.trigger_on_first_layer = ko.observable(values.trigger_on_first_layer);
-        self.trigger_on_first_layer_travel = ko.observable(values.trigger_on_first_layer_travel);
-        self.trigger_on_skirt_brim = ko.observable(values.trigger_on_skirt_brim);
-        self.trigger_on_normal_print_speed = ko.observable(values.trigger_on_normal_print_speed);
-        self.trigger_on_above_raft = ko.observable(values.trigger_on_above_raft);
-        self.trigger_on_ooze_shield = ko.observable(values.trigger_on_ooze_shield);
-        self.trigger_on_prime_pillar = ko.observable(values.trigger_on_prime_pillar);
+        self.feature_trigger_on_detract = ko.observable(values.feature_trigger_on_detract);
+        self.feature_trigger_on_retract = ko.observable(values.feature_trigger_on_retract);
+        self.feature_trigger_on_movement = ko.observable(values.feature_trigger_on_movement);
+        self.feature_trigger_on_z_movement = ko.observable(values.feature_trigger_on_z_movement);
+        self.feature_trigger_on_perimeters = ko.observable(values.feature_trigger_on_perimeters);
+        self.feature_trigger_on_small_perimeters = ko.observable(values.feature_trigger_on_small_perimeters);
+        self.feature_trigger_on_external_perimeters = ko.observable(values.feature_trigger_on_external_perimeters);
+        self.feature_trigger_on_infill = ko.observable(values.feature_trigger_on_infill);
+        self.feature_trigger_on_solid_infill = ko.observable(values.feature_trigger_on_solid_infill);
+        self.feature_trigger_on_top_solid_infill = ko.observable(values.feature_trigger_on_top_solid_infill);
+        self.feature_trigger_on_supports = ko.observable(values.feature_trigger_on_supports);
+        self.feature_trigger_on_bridges = ko.observable(values.feature_trigger_on_bridges);
+        self.feature_trigger_on_gap_fills = ko.observable(values.feature_trigger_on_gap_fills);
+        self.feature_trigger_on_first_layer = ko.observable(values.feature_trigger_on_first_layer);
+        self.feature_trigger_on_first_layer_travel = ko.observable(values.feature_trigger_on_first_layer_travel);
+        self.feature_trigger_on_skirt_brim = ko.observable(values.feature_trigger_on_skirt_brim);
+        self.feature_trigger_on_normal_print_speed = ko.observable(values.feature_trigger_on_normal_print_speed);
+        self.feature_trigger_on_above_raft = ko.observable(values.feature_trigger_on_above_raft);
+        self.feature_trigger_on_ooze_shield = ko.observable(values.feature_trigger_on_ooze_shield);
+        self.feature_trigger_on_prime_pillar = ko.observable(values.feature_trigger_on_prime_pillar);
 
         self.require_zhop = ko.observable(values.require_zhop);
         self.lift_before_move = ko.observable(values.lift_before_move);
@@ -113,6 +112,9 @@ $(function () {
         self.new_calculate_intersections = ko.observable(false);
 
         self.feature_template_id = ko.pureComputed(function(){
+            var current_printer = Octolapse.Printers.currentProfile();
+            if(current_printer==null)
+                return 'snapshot-missing-printer-feature-template';
            var current_slicer_type = Octolapse.Printers.currentProfile().slicer_type();
            switch(current_slicer_type)
            {
@@ -128,11 +130,30 @@ $(function () {
                    return "snapshot-other-slicer-feature-template";
            }
         });
-
-
-
-
-
+        self.has_non_unique_feature_detection_fields = ko.pureComputed(function(){
+            var current_printer = Octolapse.Printers.currentProfile();
+            if(current_printer != null)
+                return current_printer.getNonUniqueSpeeds().length > 0;
+            return false;
+        });
+        self.non_unique_feature_detection_fields = ko.pureComputed(function(){
+            var current_printer = Octolapse.Printers.currentProfile();
+            if(current_printer != null)
+                return current_printer.getNonUniqueSpeeds();
+            return [];
+        });
+        self.has_missing_feature_detection_fields = ko.pureComputed(function(){
+            var current_printer = Octolapse.Printers.currentProfile();
+            if(current_printer != null)
+                return current_printer.getMissingSpeedsList().length > 0;
+            return false;
+        });
+        self.missing_feature_detection_fields = ko.pureComputed(function(){
+            var current_printer = Octolapse.Printers.currentProfile();
+            if(current_printer != null)
+                return current_printer.getMissingSpeedsList();
+            return [];
+        });
         self.addPositionRestriction = function () {
             //console.log("Adding " + type + " position restriction.");
             var restriction = ko.observable({
