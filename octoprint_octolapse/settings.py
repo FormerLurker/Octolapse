@@ -125,11 +125,11 @@ class SlicerPrintFeatures(object):
                                       "enabled": snapshot_profile.feature_trigger_on_normal_print_speed and snapshot_profile.feature_trigger_on_first_layer})
 
                 first_layer_outline_speed = None if printer_profile.external_perimeter_speed is None else printer_profile.external_perimeter_speed * printer_profile.first_layer_speed_multiplier / 100.0
-                self.features.append({'speed': first_layer_outline_speed, 'name': "First Layer Outlines",
+                self.features.append({'speed': first_layer_outline_speed, 'name': "First Layer Exterior Outlines",
                                       "enabled": snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer})
 
                 first_layer_inner_perimeter_speed = None if printer_profile.perimeter_speed is None else printer_profile.perimeter_speed * printer_profile.first_layer_speed_multiplier / 100.0
-                self.features.append({'speed': first_layer_inner_perimeter_speed, 'name': "First Layer Inner Perimeters",
+                self.features.append({'speed': first_layer_inner_perimeter_speed, 'name': "First Layer Interior Outlines",
                                       "enabled": snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer})
 
                 first_layer_solid_infill_speed = None if printer_profile.solid_infill_speed is None else printer_profile.solid_infill_speed * printer_profile.first_layer_speed_multiplier / 100.0
