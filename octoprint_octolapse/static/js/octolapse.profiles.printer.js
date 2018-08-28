@@ -568,7 +568,7 @@ $(function() {
                    return 'mm-min';
                 };
                 self.get_speed_tolerance = function(){
-                   return 0.05;
+                   return 0.5;
                 };
                 // Initialize profile variables from observables
                 self.retraction_distance = ko.observable(profile_observables.retract_length);
@@ -593,7 +593,7 @@ $(function() {
                         profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
                 self.z_axis_movement_speed = ko.observable(
                     Octolapse.convertAxisSpeedUnit(
-                        profile_observables.z_hop,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                        profile_observables.z_hop_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
                 self.bridging_speed_multiplier = ko.observable(profile_observables.bridging_speed_multiplier || 100.0);
 
                 /*
@@ -623,12 +623,14 @@ $(function() {
                 self.get_perimeter_speed = function(){
                     if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
                         return null;
-                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.outline_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                    var perimeter_speed_multiplier = 100.0 - ((100 - self.outline_speed_multiplier())/2.0)
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (perimeter_speed_multiplier / 100.0), self.get_speed_tolerance());
                 };
                 self.get_small_perimeter_speed = function(){
                     if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
                         return null;
-                    return Octolapse.roundToIncrement(self.default_printing_speed() * (self.outline_speed_multiplier() / 100.0), self.get_speed_tolerance());
+                    var perimeter_speed_multiplier = 100.0 - ((100 - self.outline_speed_multiplier())/2.0)
+                    return Octolapse.roundToIncrement(self.default_printing_speed() * (perimeter_speed_multiplier / 100.0), self.get_speed_tolerance());
                 };
                 self.get_external_perimeter_speed = function(){
                     if(self.default_printing_speed()==null || self.outline_speed_multiplier() == null)
@@ -725,7 +727,8 @@ $(function() {
                         {speed: self.get_prime_pillar_speed(), type: "Prime Pillar"},
                         {speed: self.get_ooze_shield_speed(), type: "Ooze Shield"},
                         {speed: self.get_print_speed(), type: "Default Printing"},
-                        {speed: self.get_perimeter_speed(), type: "Outlines"},
+                        {speed: self.get_external_perimeter_speed(), type: "Exterior Outlines"},
+                        {speed: self.get_perimeter_speed(), type: "Interior Outlines"},
                         {speed: self.get_solid_infill_speed(), type: "Solid Infill"},
                         {speed: self.get_support_speed(), type: "Support Structure"},
                         {speed: self.get_movement_speed(), type: "X/Y Movement"},

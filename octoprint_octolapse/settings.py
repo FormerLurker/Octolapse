@@ -95,17 +95,54 @@ class SlicerPrintFeatures(object):
             self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Travel", "enabled": snapshot_profile.feature_trigger_on_z_movement})
         elif printer_profile.slicer_type == 'simplify-3d':
             self.features.append({'speed': printer_profile.retract_speed, 'name': "Retraction", "enabled": snapshot_profile.feature_trigger_on_retract})
-            self.features.append({'speed': printer_profile.first_layer_speed, 'name': "First Layer", "enabled": snapshot_profile.feature_trigger_on_first_layer})
             self.features.append({'speed': printer_profile.above_raft_speed, 'name': "Above Raft", "enabled": snapshot_profile.feature_trigger_on_above_raft})
             self.features.append({'speed': printer_profile.prime_pillar_speed, 'name': "Prime Pillar", "enabled": snapshot_profile.feature_trigger_on_prime_pillar})
             self.features.append({'speed': printer_profile.ooze_shield_speed, 'name': "Ooze Shield", "enabled": snapshot_profile.feature_trigger_on_ooze_shield})
             self.features.append({'speed': printer_profile.print_speed, 'name': "Deafult Printing Speed", "enabled": snapshot_profile.feature_trigger_on_normal_print_speed})
-            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Outlines", "enabled": snapshot_profile.feature_trigger_on_perimeters})
+            self.features.append({'speed': printer_profile.external_perimeter_speed, 'name': "Exterior Outlines", "enabled": snapshot_profile.feature_trigger_on_external_perimeters})
+            self.features.append({'speed': printer_profile.perimeter_speed, 'name': "Interior Outlines", "enabled": snapshot_profile.feature_trigger_on_perimeters})
             self.features.append({'speed': printer_profile.solid_infill_speed, 'name': "Solid Infill", "enabled": snapshot_profile.feature_trigger_on_solid_infill})
             self.features.append({'speed': printer_profile.support_speed, 'name': "Supports", "enabled": snapshot_profile.feature_trigger_on_supports})
             self.features.append({'speed': printer_profile.movement_speed, 'name': "X/Y Movement", "enabled": snapshot_profile.feature_trigger_on_movement})
             self.features.append({'speed': printer_profile.z_hop_speed, 'name': "Z Movement", "enabled": snapshot_profile.feature_trigger_on_z_movement})
             self.features.append({'speed': printer_profile.bridge_speed, 'name': "Bridging", "enabled": snapshot_profile.feature_trigger_on_bridges})
+
+            # calculate the first prime speed
+            first_prime_speed = printer_profile.retract_speed * 0.3
+            self.features.append({'speed': first_prime_speed, 'name': "First Prime",
+                                  "enabled": snapshot_profile.feature_trigger_on_retract and snapshot_profile.feature_trigger_on_first_layer})
+            # Calculate first layer speeds for simplify
+            if printer_profile.first_layer_speed_multiplier is not None:
+                first_layer_prime_pillar_speed = None if printer_profile.prime_pillar_speed is None else printer_profile.prime_pillar_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_prime_pillar_speed, 'name': "First Layer Prime Pillar", "enabled": snapshot_profile.feature_trigger_on_prime_pillar and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_ooze_shield_speed = None if printer_profile.ooze_shield_speed is None else printer_profile.ooze_shield_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_ooze_shield_speed, 'name': "First Layer Ooze Shield",
+                                      "enabled": snapshot_profile.feature_trigger_on_ooze_shield and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_print_speed = None if printer_profile.print_speed is None else printer_profile.print_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_print_speed, 'name': "First Layer Printing Speed",
+                                      "enabled": snapshot_profile.feature_trigger_on_normal_print_speed and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_outline_speed = None if printer_profile.external_perimeter_speed is None else printer_profile.external_perimeter_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_outline_speed, 'name': "First Layer Outlines",
+                                      "enabled": snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_inner_perimeter_speed = None if printer_profile.perimeter_speed is None else printer_profile.perimeter_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_inner_perimeter_speed, 'name': "First Layer Inner Perimeters",
+                                      "enabled": snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_solid_infill_speed = None if printer_profile.solid_infill_speed is None else printer_profile.solid_infill_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_solid_infill_speed, 'name': "First Layer Solid Infill",
+                                      "enabled": snapshot_profile.feature_trigger_on_solid_infill and snapshot_profile.feature_trigger_on_first_layer})
+
+                first_layer_support_speed = None if printer_profile.support_speed is None else printer_profile.support_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_support_speed, 'name': "First Layer Supports",
+                                      "enabled": snapshot_profile.feature_trigger_on_supports and snapshot_profile.feature_trigger_on_first_layer})
+                # Is this necessary???
+                first_layer_bridge_speed = None if printer_profile.bridge_speed is None else printer_profile.bridge_speed * printer_profile.first_layer_speed_multiplier / 100.0
+                self.features.append({'speed': first_layer_bridge_speed, 'name': "First Layer Bridging",
+                                      "enabled": snapshot_profile.feature_trigger_on_bridges and snapshot_profile.feature_trigger_on_first_layer})
 
     def is_one_feature_enabled(self, speed):
         if not self.feature_detection_enabled:
@@ -134,8 +171,9 @@ class SlicerPrintFeatures(object):
         for feature in self.features:
             feature_speed = feature["speed"]
             if feature_speed is not None and utility.is_close(speed, feature_speed, self.speed_tolerance):
-                printing_features.append(feature["name"]);
-        return printing_features;
+                printing_features.append(feature["name"])
+
+        return printing_features
 
 
 class Printer(object):

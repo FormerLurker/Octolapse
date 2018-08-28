@@ -504,11 +504,20 @@
         </div>
     </div>
     <div class="control-group">
-        <label class="control-label">Outlines</label>
+        <label class="control-label">Exterior Outlines (perimeters)</label>
         <div class="controls">
-            <label class="checkbox" title="Allow snapshots while printing at perimeter speed">
+            <label class="checkbox" title="Allow snapshots while printing at exterior perimeter speed">
+                <input type="checkbox" data-bind="checked: feature_trigger_on_external_perimeters" /> Enabled
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection-for-Simplify-3D#exterior-outlines" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Interior Outlines (perimeters)</label>
+        <div class="controls">
+            <label class="checkbox" title="Allow snapshots while printing at interior perimeter speed">
                 <input type="checkbox" data-bind="checked: feature_trigger_on_perimeters" /> Enabled
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection-for-Simplify-3D#outlines" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection-for-Simplify-3D#interior-outlines" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
             </label>
         </div>
     </div>
