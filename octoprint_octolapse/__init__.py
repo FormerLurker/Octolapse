@@ -42,7 +42,7 @@ from octoprint.server.util.flask import restricted_access
 
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
-from octoprint_octolapse.snapshot import take_in_memory_snapshot
+import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
@@ -411,7 +411,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             if len(active_cameras) > 0:
                 try:
-                    camera_image = take_in_memory_snapshot(self.Settings, active_cameras[0])
+                    camera_image = snapshot.take_in_memory_snapshot(self.Settings, active_cameras[0])
                 except Exception as e:
                     self._logger.warning("Failed to take a snapshot. Falling back to solid color.")
                     self._logger.warning(e.message)
