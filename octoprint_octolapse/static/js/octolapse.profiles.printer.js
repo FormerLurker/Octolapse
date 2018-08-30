@@ -424,7 +424,7 @@ $(function() {
                    return 'mm-sec';
                 };
                 self.get_speed_tolerance = function(){
-                   return 0.00005;
+                   return 0.05;
                 };
                 // Initialize profile variables from observables
                 self.retraction_distance = ko.observable(profile_observables.retract_length);
