@@ -90,6 +90,7 @@ $(function () {
         self.feature_trigger_on_above_raft = ko.observable(values.feature_trigger_on_above_raft);
         self.feature_trigger_on_ooze_shield = ko.observable(values.feature_trigger_on_ooze_shield);
         self.feature_trigger_on_prime_pillar = ko.observable(values.feature_trigger_on_prime_pillar);
+        self.feature_trigger_on_wipe = ko.observable(values.feature_trigger_on_wipe);
 
         self.require_zhop = ko.observable(values.require_zhop);
         self.lift_before_move = ko.observable(values.lift_before_move);

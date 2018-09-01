@@ -175,7 +175,7 @@ form.octolapse_form .modal-body {
     display: none;
 }
 
-.octolapse_add_edit_dialog input[type=number] {
+.octolapse_add_edit_dialog input[type=number], .octolapse_add_edit_dialog input[type=text] {
     text-align: left;
 }
 

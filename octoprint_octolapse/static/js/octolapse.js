@@ -318,6 +318,49 @@ $(function () {
         function (value) {
             return /^-?\d+$/.test(value);
         }, 'Please enter an integer value.');
+
+    Octolapse.isPercent = function(value){
+        if (!value)
+            return false;
+        var value = value.trim();
+        if(value.length > 1 && value[value.length-1] == "%")
+            value = value.substr(0,value.length-2);
+        else
+            return false;
+
+        return Octolapse.isFloat(value)
+    };
+    Octolapse.isFloat = function(value){
+        if (!value)
+            return false;
+        return !isNaN(parseFloat(value))
+    };
+
+    Octolapse.parseFloat = function(value){
+        var ret = parseFloat(value);
+        if(!isNaN(ret))
+            return ret;
+        return null;
+    };
+
+    Octolapse.parsePercent = function(value){
+        var value = value.trim();
+        if(value.length > 1 && value[value.length-1] == "%")
+            value = value.substr(0,value.length-1);
+        else
+            return null;
+        return Octolapse.parseFloat(value)
+    }
+
+    $.validator.addMethod('floatOrPercent',
+        function (value) {
+            if (!value)
+                return false;
+            var value = value.trim();
+            if(value.length > 1 && value[value.length-1] == "%")
+                value = value.substr(0,value.length-2);
+            return !isNaN(parseFloat(value))
+        }, 'Please enter an integer value.');
     // Add a custom validator for positive
     $.validator.addMethod('integerPositive',
         function (value) {

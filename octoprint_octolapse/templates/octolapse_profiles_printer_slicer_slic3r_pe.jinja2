@@ -85,11 +85,9 @@
                 <label class="control-label" for="slicer_slic3r_pe_small_perimeter_speed">Small Perimeters</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_small_perimeter_speed" name="small_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed" step="0.001" min="0"
-                               max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
+                        <input id="slicer_slic3r_pe_small_perimeter_speed" name="slic3r_small_perimeter_speed_text" type="text" autocomplete="off"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed_text"/>
+                        <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#small-perimeters"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -101,11 +99,9 @@
                 <label class="control-label" for="slicer_slic3r_pe_external_perimeter_speed">External Perimeters</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_external_perimeter_speed" name="external_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed" step="0.001"
-                               min="0" max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
+                        <input id="slicer_slic3r_pe_external_perimeter_speed" name="external_perimeter_speed" type="text" autocomplete="off"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed_text"/>
+                        <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#external-perimeters"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -132,11 +128,9 @@
                 <label class="control-label" for="slicer_slic3r_pe_solid_infill_speed">Solid Infill</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_solid_infill_speed" name="solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed" step="0.001" min="0"
-                               max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
+                        <input id="slicer_slic3r_pe_solid_infill_speed" name="solid_infill_speed" type="text" autocomplete="off"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed_text" />
+                        <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#solid-infill"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -147,11 +141,8 @@
                 <label class="control-label">Top Solid Infill</label>
                 <div class="controls" for="slicer_slic3r_pe_top_solid_infill_speed">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_top_solid_infill_speed" name="top_solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed" step="0.001" min="0"
-                               max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
+                        <input id="slicer_slic3r_pe_top_solid_infill_speed" name="top_solid_infill_speed" type="text" autocomplete="off" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed_text"/>
+                        <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#top-solid-infill"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -232,11 +223,9 @@
                 <label class="control-label" for="slicer_slic3r_pe_first_layer_speed">First Layer Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed" step="0.001" min="0"
-                               max="9999999"/>
-                        <span class="add-on">mm</span>
-                        <span class="add-on">sec</span>
+                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="text" autocomplete="off"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed_text"/>
+                        <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#first-layer-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -255,7 +244,7 @@
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
                     The following speeds missing and will not work when using 'Feature Detection' print quality settings
-                    within the snapshot profile:<span data-bind="foreach: getMissingSpeedsList">
+                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>
                 </p>

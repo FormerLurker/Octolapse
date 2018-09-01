@@ -198,6 +198,9 @@ $(function() {
                     return '?';
                 }, self);
 
+                self.get_num_slow_layers = function(){
+                    return 1;
+                }
                 // Get a list of speeds for use with feature detection
                 self.getSlicerSpeedList = function(){
                     return [
@@ -299,27 +302,43 @@ $(function() {
                         profile_observables.perimeter_speed,
                         self.get_axis_speed_display_units(),
                         profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.small_perimeter_speed = ko.observable(
+
+                var small_perimeter_speed = profile_observables.small_perimeter_speed_text || (
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.small_perimeter_speed,
                         self.get_axis_speed_display_units(),
-                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.external_perimeter_speed = ko.observable(
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance())
+                );
+                self.small_perimeter_speed_text = ko.observable( (small_perimeter_speed || "").toString());
+
+                var external_perimeter_speed = profile_observables.external_perimeter_speed_text || (
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.external_perimeter_speed,
                         self.get_axis_speed_display_units(),
-                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance())
+                );
+                self.external_perimeter_speed_text = ko.observable( (external_perimeter_speed || "").toString());
+
                 self.infill_speed = ko.observable(
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.infill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.solid_infill_speed = ko.observable(
+
+                var solid_infill_speed = profile_observables.solid_infill_speed_text || (
                     Octolapse.convertAxisSpeedUnit(
-                        profile_observables.solid_infill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.top_solid_infill_speed = ko.observable(
+                        profile_observables.solid_infill_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance())
+                );
+                self.solid_infill_speed_text = ko.observable( (solid_infill_speed || "").toString());
+
+                var top_solid_infill_speed = profile_observables.top_solid_infill_speed_text || (
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.top_solid_infill_speed,
                         self.get_axis_speed_display_units(),
-                        profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance())
+                );
+                self.top_solid_infill_speed_text = ko.observable( (top_solid_infill_speed || "").toString());
+
                 self.support_speed = ko.observable(
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.support_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
@@ -329,10 +348,14 @@ $(function() {
                 self.gap_fill_speed = ko.observable(
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.gap_fill_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.first_layer_speed = ko.observable(
-                    Octolapse.convertAxisSpeedUnit(
-                        profile_observables.first_layer_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
 
+                var first_layer_speed = profile_observables.first_layer_speed_text || (
+                    Octolapse.convertAxisSpeedUnit(
+                        profile_observables.first_layer_speed,
+                        self.get_axis_speed_display_units(),
+                        profile_observables.axis_speed_display_units, self.get_speed_tolerance())
+                );
+                self.first_layer_speed_text = ko.observable( (first_layer_speed || "").toString());
                 /*
                     Create a getter for each profile variable (settings.py - printer class)
                 */
@@ -364,20 +387,90 @@ $(function() {
                    return self.perimeter_speed();
                 };
                 self.get_small_perimeter_speed = function(){
-                   return self.small_perimeter_speed();
+                   var value = self.small_perimeter_speed_text();
+                   if(Octolapse.isPercent(value))
+                   {
+                        var percent = Octolapse.parsePercent(value);
+                        if(percent != null && self.perimeter_speed() != null)
+                            return self.perimeter_speed() * percent / 100.0;
+                   }
+                   else
+                   {
+                        return Octolapse.parseFloat(value);
+                   }
+                   return null;
                 };
+                self.get_small_perimeter_speed_multiplier = function(){
+                    var value = self.small_perimeter_speed_text();
+                    if(!Octolapse.isPercent(value))
+                        return null;
+                    return Octolapse.parsePercent(value);
+                }
                 self.get_external_perimeter_speed = function(){
-                   return self.external_perimeter_speed();
+                   var value = self.external_perimeter_speed_text();
+                   if(Octolapse.isPercent(value))
+                   {
+                       var percent = Octolapse.parsePercent(value);
+                       if(percent != null && self.perimeter_speed() != null)
+                        return self.perimeter_speed() * percent / 100.0;
+                   }
+                   else
+                   {
+                      return Octolapse.parseFloat(value);
+                   }
+                   return null;
                 };
+                self.get_external_perimeter_speed_multiplier = function(){
+                    var value = self.external_perimeter_speed_text();
+                    if(!Octolapse.isPercent(value))
+                        return null;
+                    return Octolapse.parsePercent(value);
+                }
+
                 self.get_infill_speed = function(){
                    return self.infill_speed();
                 };
                 self.get_solid_infill_speed = function(){
-                   return self.solid_infill_speed();
+                   var value = self.solid_infill_speed_text();
+                   if(Octolapse.isPercent(value))
+                   {
+                        var percent = Octolapse.parsePercent(value);
+                        if(percent != null && self.infill_speed() != null)
+                            return self.infill_speed() * percent / 100.0;
+                   }
+                   else
+                   {
+                       return Octolapse.parseFloat(value);
+                   }
+                   return null;
                 };
+                self.get_solid_infill_speed_multiplier = function(){
+                    var value = self.solid_infill_speed_text();
+                    if(!Octolapse.isPercent(value))
+                        return null;
+                    return Octolapse.parsePercent(value);
+                }
                 self.get_top_solid_infill_speed = function(){
-                   return self.top_solid_infill_speed();
+                   var value = self.top_solid_infill_speed_text();
+                   if(Octolapse.isPercent(value))
+                   {
+                        var percent = Octolapse.parsePercent(value);
+                        if(percent != null && self.get_solid_infill_speed() != null)
+                            return self.get_solid_infill_speed() * percent / 100.0;
+                   }
+                   else
+                   {
+                       return Octolapse.parseFloat(value);
+                   }
+                   return null;
                 };
+                self.get_top_solid_infill_speed_multiplier = function(){
+                    var value = self.top_solid_infill_speed_text();
+                    if(!Octolapse.isPercent(value))
+                        return null;
+                    return Octolapse.parsePercent(value);
+                }
+
                 self.get_support_speed = function(){
                    return self.support_speed();
                 };
@@ -388,32 +481,75 @@ $(function() {
                    return self.gap_fill_speed();
                 };
                 self.get_first_layer_speed = function(){
-                   return self.first_layer_speed();
+                    var value = self.first_layer_speed_text();
+                    if(Octolapse.isPercent(value))
+                        return null;
+
+                    return Octolapse.parseFloat(value);
                 };
+                self.get_first_layer_speed_multiplier = function(){
+                    var value = self.first_layer_speed_text();
+                    if(!Octolapse.isPercent(value))
+                        return null;
+                    return Octolapse.parsePercent(value);
+                };
+
                 self.get_first_layer_travel_speed = function(){
                    return self.movement_speed();
                 };
-                self.get_skirt_brim_speed = function(){
-                   return self.first_layer_speed();
+
+                self.get_small_perimeter_speed_text = function(){
+                    return self.small_perimeter_speed_text();
+                };
+                self.get_external_perimeter_speed_text = function(){
+                    return self.external_perimeter_speed_text();
+                };
+                self.get_solid_infill_speed_text = function(){
+                    return self.solid_infill_speed_text();
+                };
+                self.get_top_solid_infill_speed_text = function(){
+                    return self.top_solid_infill_speed_text();
+                };
+                self.get_first_layer_speed_text = function(){
+                    return self.first_layer_speed_text();
                 };
 
+                self.get_num_slow_layers = function(){
+                    return 1;
+                }
                 // Get a list of speeds for use with feature detection
                 self.getSlicerSpeedList = function(){
-                    return [
-                        {speed: self.retract_speed(), type: "Retraction"},
-                        {speed: self.detract_speed(), type: "Detraction"},
-                        {speed: self.perimeter_speed(), type: "Perimeters"},
-                        {speed: self.small_perimeter_speed(), type: "Small Perimeters"},
-                        {speed: self.external_perimeter_speed(), type: "External Perimeters"},
-                        {speed: self.infill_speed(), type: "Infill"},
-                        {speed: self.solid_infill_speed(), type: "Solid Infill"},
-                        {speed: self.top_solid_infill_speed(), type: "Top Solid Infill"},
-                        {speed: self.support_speed(), type: "Supports"},
-                        {speed: self.bridge_speed(), type: "Bridges"},
-                        {speed: self.gap_fill_speed(), type: "Gaps"},
-                        {speed: self.movement_speed(), type: "Movement"},
-                        {speed: self.first_layer_speed(), type: "First Layer"}
+                    var speed_list = [
+                        {speed: Math.round(self.get_retract_speed()), type: "Retraction"},
+                        {speed: Math.round(self.get_detract_speed()), type: "Detraction"},
+                        {speed: self.get_perimeter_speed(), type: "Perimeters"},
+                        {speed: self.get_small_perimeter_speed(), type: "Small Perimeters"},
+                        {speed: self.get_external_perimeter_speed(), type: "External Perimeters"},
+                        {speed: self.get_infill_speed(), type: "Infill"},
+                        {speed: self.get_solid_infill_speed(), type: "Solid Infill"},
+                        {speed: self.get_top_solid_infill_speed(), type: "Top Solid Infill"},
+                        {speed: self.get_support_speed(), type: "Supports"},
+                        {speed: self.get_bridge_speed(), type: "Bridges"},
+                        {speed: self.get_gap_fill_speed(), type: "Gaps"},
+                        {speed: self.get_movement_speed(), type: "Movement"}
                     ];
+                    console.log("getting slic3r first layer speeds")
+                    if (self.get_first_layer_speed_multiplier() == null)
+                        speed_list.push({speed: self.get_first_layer_speed(), type: "First Layer"})
+                    else{
+                        Array.prototype.push.apply(speed_list,[
+                            {speed: self.get_perimeter_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Perimeters"},
+                            {speed: self.get_small_perimeter_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Small Perimeters"},
+                            {speed: self.get_external_perimeter_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer External Perimeters"},
+                            {speed: self.get_infill_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Infill"},
+                            {speed: self.get_solid_infill_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Solid Infill"},
+                            {speed: self.get_top_solid_infill_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Top Solid Infill"},
+                            {speed: self.get_support_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Supports"},
+                            {speed: self.get_gap_fill_speed()*self.get_first_layer_speed_multiplier()/100.0, type: "First Layer Gaps"}
+                        ]);
+                    }
+
+                    return speed_list;
                 };
             };
             self.slic3r_pe_viewmodel = new self.create_slic3r_pe_viewmodel(values);
@@ -471,6 +607,7 @@ $(function() {
                 self.maximum_z_speed = ko.observable(
                     Octolapse.convertAxisSpeedUnit(
                         profile_observables.maximum_z_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.num_slow_layers = ko.observable(profile_observables.num_slow_layers);
                 /*
                     Create a getter for each profile variable (settings.py - printer class)
                 */
@@ -540,7 +677,9 @@ $(function() {
                 self.get_skirt_brim_speed = function(){
                    return self.skirt_brim_speed();
                 };
-
+                self.get_num_slow_layers = function(){
+                    return self.num_slow_layers();
+                }
                 // Get a list of speeds for use with feature detection
                 self.getSlicerSpeedList = function(){
                     return [
@@ -718,6 +857,9 @@ $(function() {
                     return Octolapse.roundToIncrement(self.default_printing_speed() * (self.prime_pillar_speed_multiplier() / 100.0), self.get_speed_tolerance());
                 };
 
+                self.get_num_slow_layers = function(){
+                    return 1;
+                }
                 // Get a list of speeds for use with feature detection
                 self.getSlicerSpeedList = function(){
                     return [
@@ -921,6 +1063,55 @@ $(function() {
             return null;
         });
 
+        self.small_perimeter_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_small_perimeter_speed_multiplier !== undefined)
+                return slicer.get_small_perimeter_speed_multiplier();
+            return null;
+        });
+        self.external_perimeter_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_external_perimeter_speed_multiplier !== undefined)
+                return slicer.get_external_perimeter_speed_multiplier();
+            return null;
+        });
+        self.top_solid_infill_speed_multiplier = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_top_solid_infill_speed_multiplier !== undefined)
+                return slicer.get_top_solid_infill_speed_multiplier();
+            return null;
+        });
+        self.small_perimeter_speed_text = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_small_perimeter_speed_text !== undefined)
+                return slicer.get_small_perimeter_speed_text();
+            return null;
+        });
+        self.external_perimeter_speed_text = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_external_perimeter_speed_text !== undefined)
+                return slicer.get_external_perimeter_speed_text();
+            return null;
+        });
+        self.solid_infill_speed_text = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_solid_infill_speed_text !== undefined)
+                return slicer.get_solid_infill_speed_text();
+            return null;
+        });
+        self.top_solid_infill_speed_text = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_top_solid_infill_speed_text !== undefined)
+                return slicer.get_top_solid_infill_speed_text();
+            return null;
+        });
+        self.first_layer_speed_text = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_first_layer_speed_text !== undefined)
+                return slicer.get_first_layer_speed_text();
+            return null;
+        });
+
         self.slicer_speed_list = ko.pureComputed(function(){
             var slicer = self.getCurrentSlicerVariables(self.slicer_type());
             if (slicer.getSlicerSpeedList !== undefined)
@@ -928,10 +1119,15 @@ $(function() {
             return [];
         });
 
+        self.num_slow_layers = ko.pureComputed(function(){
+            var slicer = self.getCurrentSlicerVariables(self.slicer_type());
+            if (slicer.get_num_slow_layers !== undefined)
+                return slicer.get_num_slow_layers();
+            return null;
+        });
         self.getNonUniqueSpeeds = ko.pureComputed(function () {
             // Add all speeds to an array
             var duplicate_map = {};
-            var duplicates = {};
 
             var speed_array = self.slicer_speed_list();
 
@@ -995,7 +1191,6 @@ $(function() {
 
         self.toJS = function()
         {
-            console.log("converting printer profile to js.");
             var copy = ko.toJS(self);
             delete copy.helpers;
             return copy;

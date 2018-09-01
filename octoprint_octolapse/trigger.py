@@ -629,7 +629,7 @@ class LayerTrigger(Trigger):
                             state.IsWaitingOnFeature = True
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
-                                "GcodeTrigger - Waiting on Feature.")
+                                "LayerTrigger - Waiting on Feature.")
                         else:
                             if state.IsHeightChangeWait:
                                 self.Settings.current_debug_profile().log_triggering(
@@ -846,7 +846,7 @@ class TimerTrigger(Trigger):
                             state.IsWaitingOnFeature = True
                             # Make sure the previous X,Y is in position
                             self.Settings.current_debug_profile().log_trigger_wait_state(
-                                "GcodeTrigger - Waiting on Feature.")
+                                "TimerTrigger - Waiting on Feature.")
                         else:
                             # Is Triggering
                             self.TriggeredCount += 1

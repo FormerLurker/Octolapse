@@ -100,10 +100,10 @@ class SnapshotGcodeGenerator(object):
         if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
             self.AxisSpeedUnits = "mm-min"
 
-        self.RetractSpeed = self.convert_to_mm_min(self.Printer.retract_speed)
-        self.DetractSpeed = self.convert_to_mm_min(self.Printer.detract_speed)
-        self.TravelSpeed = self.convert_to_mm_min(self.Printer.movement_speed)
-        self.ZHopSpeed = self.convert_to_mm_min(self.Printer.z_hop_speed)
+        self.RetractSpeed = self.convert_to_mm_min(self.Printer.get_retract_speed_for_slicer_type())
+        self.DetractSpeed = self.convert_to_mm_min(self.Printer.get_detract_speed_for_slicer_type())
+        self.TravelSpeed = self.convert_to_mm_min(self.Printer.get_movement_speed_for_slicer_type())
+        self.ZHopSpeed = self.convert_to_mm_min(self.Printer.get_z_hop_speed_for_slicer_type())
 
     def convert_to_mm_min(self, axis_speed):
         if self.AxisSpeedUnits == "mm-sec":
@@ -616,7 +616,7 @@ class SnapshotGcodeGenerator(object):
             "" if y is None else " Y{0:.3f}".format(y),
             "" if z is None else " Z{0:.3f}".format(z),
             "" if e is None else " E{0:.5f}".format(e),
-            "" if f is None else " F{0}".format(f)
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
@@ -644,35 +644,35 @@ class SnapshotGcodeGenerator(object):
         return "G1 X{0:.3f} Y{1:.3f}{2}".format(
             x,
             y,
-            "" if f is None else " F{0}".format(int(f))
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
     def get_gcode_z_lift_relative(distance, f=None):
         return "G1 Z{0:.3f}{1}".format(
             distance,
-            "" if f is None else " F{0}".format(int(f))
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
     def get_gocde_z_lower_relative(distance, f=None):
         return "G1 Z{0:.3f}{1}".format(
             -1.0 * distance,
-            "" if f is None else " F{0}".format(int(f))
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
     def get_gcode_retract(distance, f=None):
         return "G1 E{0:.5f}{1}".format(
             -1 * distance,
-            "" if f is None else " F{0}".format(int(f))
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
     def get_gcode_detract(distance, f=None):
         return "G1 E{0:.5f}{1}".format(
             distance,
-            "" if f is None else " F{0}".format(int(f))
+            "" if f is None else " F{0:.3f}".format(f)
         )
 
     @staticmethod
@@ -689,4 +689,4 @@ class SnapshotGcodeGenerator(object):
 
     @staticmethod
     def get_gcode_feedrate(f):
-        return "G1 F{0}".format(int(f))
+        return "G1 F{0:.3f}".format(f)

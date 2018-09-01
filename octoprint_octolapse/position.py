@@ -1175,11 +1175,6 @@ class Position(object):
         # todo: should we use 0 as a tolerance here?
         self.Extruder.update(self.e_relative_pos(pos), update_state=pos.should_update_extruder_state(previous_pos, 0))
 
-        if pos.F is not None:
-            # discover currently printing features
-            pos.Features = self.SlicerFeatures.get_printing_features_list(pos.F)
-            pos.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled(pos.F)
-
         # Have the XYZ positions or states changed?
         pos.HasPositionChanged = not pos.is_position_equal(previous_pos, 0)
         pos.HasStateChanged = not pos.is_state_equal(previous_pos, self.PrinterTolerance)
@@ -1265,6 +1260,15 @@ class Position(object):
             if pos.IsZHop and self.Printer.z_hop > 0:
                 self.Settings.current_debug_profile().log_position_zhop(
                     "Position - Zhop:{0}".format(self.Printer.z_hop))
+
+        # Update Feature Detection
+        if pos.F is not None:
+            # update the features
+            self.SlicerFeatures.update(pos.F, pos.Layer)
+            # discover currently printing features
+            pos.Features = self.SlicerFeatures.get_printing_features_list()
+            # see if at least one feature is enabled, or if feature detection is disabled
+            pos.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled()
 
         self.Positions.appendleft(pos)
 
