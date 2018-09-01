@@ -208,6 +208,24 @@
                     <div class="error_label_container text-error" data-error-for="slicer_cura_maximum_z_speed"></div>
                 </div>
             </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_cura_num_slow_layers">Number of Slower Layers</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_cura_num_slow_layers" name="num_slow_layers" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.num_slow_layers" step="1" min="0"
+                               max="9999999"/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#number-of-slower-layers"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_num_slow_layers"></div>
+                </div>
+            </div>
+
+
+
             <div>
                 <h5>Travel</h5>
             </div>

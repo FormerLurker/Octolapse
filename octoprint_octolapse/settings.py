@@ -565,21 +565,21 @@ class SlicerPrintFeatures(object):
             PrintFeatureSetting(
                 calculate_speed_cura,
                 "Skirt/Brim",
-                "Slow Layer Skirt/Brim",
+                "Skirt/Brim",
                 printer_profile.skirt_brim_speed,
-                printer_profile.first_layer_speed,
+                printer_profile.skirt_brim_speed,
                 snapshot_profile.feature_trigger_on_skirt_brim,
-                snapshot_profile.feature_trigger_on_skirt_brim and snapshot_profile.feature_trigger_on_first_layer))
+                snapshot_profile.feature_trigger_on_skirt_brim))
 
         self.features.append(
             PrintFeatureSetting(
                 calculate_speed_cura,
                 "Z Travel",
-                "Slow Layer Z Travel",
+                "Z Travel",
                 printer_profile.get_z_hop_speed_for_slicer_type(),
-                printer_profile.first_layer_travel_speed,
+                printer_profile.get_z_hop_speed_for_slicer_type(),
                 snapshot_profile.feature_trigger_on_z_movement,
-                snapshot_profile.feature_trigger_on_z_movement and snapshot_profile.feature_trigger_on_first_layer_travel))
+                snapshot_profile.feature_trigger_on_z_movement))
 
     def create_simplify_3d_feature_list(self, printer_profile, snapshot_profile):
         self.features.append(
@@ -848,7 +848,7 @@ class Printer(object):
                 self.bridge_speed = printer.bridge_speed
                 self.gap_fill_speed = printer.gap_fill_speed
                 self.first_layer_speed = printer.first_layer_speed
-                self.first_layer_travel_speed = printer.first_layer_speed
+                self.first_layer_travel_speed = printer.first_layer_travel_speed
                 self.skirt_brim_speed = printer.skirt_brim_speed
                 self.above_raft_speed = printer.above_raft_speed
                 self.ooze_shield_speed = printer.ooze_shield_speed
