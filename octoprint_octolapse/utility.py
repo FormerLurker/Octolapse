@@ -109,6 +109,17 @@ def get_filename_from_full_path(path):
 def is_close(a, b, abs_tol=0.01000):
     return abs(a - b) <= abs_tol
 
+def is_not_close_and_greater_than(a, b, tol=0.01):
+    if is_close(a,b,abs_tol=tol):
+        return True
+    if a > b:
+        return True
+
+def is_close_or_greater_than(a, b, tol=0.01):
+    if is_close(a,b,abs_tol=tol):
+        return True
+    if a > b:
+        return True
 
 def round_to(n, precision):
     correction = 0.5 if n >= 0 else -0.5

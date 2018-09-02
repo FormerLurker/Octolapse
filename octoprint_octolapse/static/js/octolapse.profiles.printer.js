@@ -560,7 +560,7 @@ $(function() {
                    return 'mm-sec';
                 };
                 self.get_speed_tolerance = function(){
-                   return 0.05;
+                   return 0.001667;
                 };
                 // Initialize profile variables from observables
                 self.retraction_distance = ko.observable(profile_observables.retract_length);
@@ -707,33 +707,29 @@ $(function() {
                    return 'mm-min';
                 };
                 self.get_speed_tolerance = function(){
-                   return 0.5;
+                   return 1;
                 };
                 // Initialize profile variables from observables
-                self.retraction_distance = ko.observable(profile_observables.retract_length);
-                self.retraction_vertical_lift = ko.observable(profile_observables.z_hop);
-                self.retraction_retract_speed = ko.observable(
-                    Octolapse.convertAxisSpeedUnit(
-                        profile_observables.retract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
+                self.retraction_distance = ko.observable(Octolapse.roundToIncrement(profile_observables.retract_length,0.01));
+                self.retraction_vertical_lift = ko.observable(Octolapse.roundToIncrement(profile_observables.z_hop,0.01));
+                console.log("axis speed");
+                self.retraction_retract_speed = ko.observable(Octolapse.convertAxisSpeedUnit(
+                        profile_observables.retract_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, 0.1, 'mm-min'));
 
-                self.first_layer_speed_multiplier = ko.observable(profile_observables.first_layer_speed_multiplier || 100.0);
-                self.above_raft_speed_multiplier = ko.observable(profile_observables.above_raft_speed_multiplier || 100.0);
-                self.prime_pillar_speed_multiplier = ko.observable(profile_observables.prime_pillar_speed_multiplier || 100.0);
-                self.ooze_shield_speed_multiplier = ko.observable(profile_observables.ooze_shield_speed_multiplier || 100.0);
-
-                self.default_printing_speed = ko.observable(
-                    Octolapse.convertAxisSpeedUnit(
-                        profile_observables.print_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.outline_speed_multiplier = ko.observable(profile_observables.outline_speed_multiplier || 100.0);
-                self.solid_infill_speed_multiplier = ko.observable(profile_observables.solid_infill_speed_multiplier || 100.0);
-                self.support_structure_speed_multiplier = ko.observable(profile_observables.support_structure_speed_multiplier || 100.0);
-                self.xy_axis_movement_speed = ko.observable(
-                    Octolapse.convertAxisSpeedUnit(
-                        profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.z_axis_movement_speed = ko.observable(
-                    Octolapse.convertAxisSpeedUnit(
-                        profile_observables.z_hop_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, self.get_speed_tolerance()));
-                self.bridging_speed_multiplier = ko.observable(profile_observables.bridging_speed_multiplier || 100.0);
+                self.first_layer_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_speed_multiplier || 100.0,1));
+                self.above_raft_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.above_raft_speed_multiplier || 100.0,1));
+                self.prime_pillar_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.prime_pillar_speed_multiplier || 100.0,1));
+                self.ooze_shield_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.ooze_shield_speed_multiplier || 100.0,1));
+                self.default_printing_speed = ko.observable(Octolapse.convertAxisSpeedUnit(
+                        profile_observables.print_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, 0.1, 'mm-min'));
+                self.outline_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.outline_speed_multiplier || 100.0,1));
+                self.solid_infill_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.solid_infill_speed_multiplier || 100.0,1));
+                self.support_structure_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.support_structure_speed_multiplier || 100.0,1));
+                self.xy_axis_movement_speed = ko.observable(Octolapse.convertAxisSpeedUnit(
+                            profile_observables.movement_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, 0.1, 'mm-min'));
+                self.z_axis_movement_speed = ko.observable(Octolapse.convertAxisSpeedUnit(
+                        profile_observables.z_hop_speed,self.get_axis_speed_display_units(),profile_observables.axis_speed_display_units, 0.1, 'mm-min'));
+                self.bridging_speed_multiplier = ko.observable(Octolapse.roundToIncrement(profile_observables.bridging_speed_multiplier || 100.0,0.1));
 
                 /*
                     Create a getter for each profile variable (settings.py - printer class)

@@ -268,24 +268,31 @@ class Extruder(object):
 
             else:
                 state.DetractionLength = 0
-            # round our lengths to the nearest .05mm to avoid some floating point math errors
 
+            # round our lengths to the nearest .05mm to avoid some floating point math errors
             self._update_state(state, previous_state)
             # Add the current position, remove positions if we have more than 5 from the end
         self.add_state(state)
 
     def _update_state(self, state, state_previous):
 
-        state.IsExtrudingStart = True if state.ExtrusionLength > 0 and state_previous.ExtrusionLength == 0 else False
-        state.IsExtruding = True if state.ExtrusionLength > 0 else False
-        state.IsPrimed = True if state.ExtrusionLength == 0 and state.RetractionLength == 0 else False
-        state.IsRetractingStart = True if state_previous.RetractionLength == 0 and state.RetractionLength > 0 else False
-        state.IsRetracting = True if state.RetractionLength > state_previous.RetractionLength else False
-        state.IsPartiallyRetracted = True if (0 < state.RetractionLength < self.PrinterRetractionLength) else False
-        state.IsRetracted = True if state.RetractionLength >= self.PrinterRetractionLength else False
-        state.IsDetractingStart = True if state.DetractionLength > 0 and state_previous.DetractionLength == 0 else False
-        state.IsDetracting = True if state.DetractionLength > state_previous.DetractionLength else False
-        state.IsDetracted = True if state_previous.RetractionLength > 0 and state.RetractionLength == 0 else False
+        retraction_length = utility.round_to(state.RetractionLength, self.PrinterTolerance)
+        detraction_length = utility.round_to(state.DetractionLength, self.PrinterTolerance)
+        extrusion_length = utility.round_to(state.ExtrusionLength, self.PrinterTolerance)
+
+        previous_retraction_length = utility.round_to(state_previous.RetractionLength, self.PrinterTolerance)
+        previous_detraction_length = utility.round_to(state_previous.DetractionLength, self.PrinterTolerance)
+
+        state.IsExtrudingStart = True if extrusion_length > 0 and state_previous.ExtrusionLength == 0 else False
+        state.IsExtruding = True if extrusion_length > 0 else False
+        state.IsPrimed = True if extrusion_length == 0 and retraction_length == 0 else False
+        state.IsRetractingStart = True if previous_retraction_length == 0 and retraction_length > 0 else False
+        state.IsRetracting = True if retraction_length > previous_retraction_length else False
+        state.IsPartiallyRetracted = True if (0 < retraction_length < self.PrinterRetractionLength) else False
+        state.IsRetracted = True if retraction_length >= self.PrinterRetractionLength else False
+        state.IsDetractingStart = True if detraction_length > 0 and previous_detraction_length == 0 else False
+        state.IsDetracting = True if detraction_length > previous_detraction_length else False
+        state.IsDetracted = True if previous_retraction_length > 0 and retraction_length == 0 else False
 
         if not state.is_state_equal(state_previous):
             state.HasChanged = True
