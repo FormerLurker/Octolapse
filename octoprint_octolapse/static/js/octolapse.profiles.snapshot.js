@@ -29,7 +29,6 @@ $(function () {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
-        self.enabled = ko.observable(values.enabled);
         self.trigger_type = ko.observable(values.trigger_type);
 
 
@@ -46,6 +45,7 @@ $(function () {
         /*
         * Position Restrictions
         * */
+        self.position_restrictions_enabled = ko.observable(values.position_restrictions_enabled);
         self.position_restrictions = ko.observableArray([]);
         for (var index = 0; index < values.position_restrictions.length; index++) {
             self.position_restrictions.push(

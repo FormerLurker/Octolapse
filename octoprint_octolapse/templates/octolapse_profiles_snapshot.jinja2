@@ -42,15 +42,8 @@
                 <div class="error_label_container text-error" data-error-for="snapshot_profile_description"></div>
             </div>
         </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input id="snapshot_profile_enabled" name="trigger_enabled" type="checkbox" data-bind="checked: enabled" />Enabled
-                </label>
-            </div>
-        </div>
     </div>
-    <div data-bind="visible:(position_restrictions().length > 0)" class="text-warning">
+    <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
             <p>
                 <strong>
                     There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
@@ -115,22 +108,61 @@
     </div>
     <hr />
     <div>
-      <h4>Print Quality Settings</h4>
-        <p>Options to enhance your print quality with Octolapse.  Your printer profile MUST be properly configured for these features to work properly.</p>
+      <h4>Print Quality Settings<a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#print-quality-settings" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></h4>
+
+        <p>Here you can control when and how Octolapse triggers a snapshot based on the current state of your extruder.  You can force Octolapse to lift and retract while taking snapshots, or put limits on when snapshots can be taken based on what your extruder is doing.</p>
     </div>
     <div>
         <div>
             <div>
-                <h5>Extruder State Requirements</h5>
+                <h5>Print Quality - Extruder State <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></h5>
+                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
+
+            </div>
+            <div>
+                <h6>Lift and Retract</h6>
+                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Trigger on Z-Hop Only</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: require_zhop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#trigger-on-z-hop-only" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Retract Before Move</label>
+                <div class="controls">
+                    <label class="checkbox" title="If not retracted, retract before move">
+                        <input type="checkbox" data-bind="checked: retract_before_move" /> Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#retract-before-move" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                    <span class="help-inline">If enabled, Octolapse will retract up to the length specified in the active printer profile.</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Lift Before Move</label>
+                <div class="controls">
+                    <label class="checkbox" title="If not lifted, lift before move">
+                        <input type="checkbox" data-bind="checked: lift_before_move" /> Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#lift-before-move" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                    <span class="help-inline">If enabled, Octolapse will lift up to the length specified in the active printer profile.</span>
+                </div>
+            </div>
+            <div>
+                <h6>Extruder Trigger Requirements</h6>
                 <p>
-                    Set extruder requirements for taking a snapshot.
+                    Set extruder requirements for triggering a snapshot.
                 </p>
             </div>
             <div class="control-group">
                 <div class="controls">
                     <label class="checkbox">
                         <input id="snapshot_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#extruder-state-requirements" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#extruder-trigger-requirements" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
                 </div>
             </div>
@@ -251,7 +283,7 @@
     <div>
         <div>
             <div>
-                <h5>Feature Detection</h5>
+                <h5>Print Quality - Feature Detection</h5>
                 <p>Allow snapshots to be taken while printing certain types of features.  The detection is performed by matching the current gcode speeds with your printer profile settings.  They must match exactly in order to work!</p>
                 <p>Important Note: If your slicer has any features that slow down a layer speed detection will not work properly on these layers (in Slic3r, check Filament Settings->Cooling->Cooling Thresholds)</p>
             </div>
@@ -260,66 +292,49 @@
                 <div class="controls">
                     <label class="checkbox" title="Enable or disable feature detection and restriction">
                         <input type="checkbox" data-bind="checked: feature_restrictions_enabled" /> Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#feature-detection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
                 </div>
             </div>
-            <div data-bind="visible: feature_restrictions_enabled">
-                <div data-bind="visible: has_non_unique_feature_detection_fields" class="text-warning">
-                    <p>
-                        The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
-                        quality settings within the snapshot profile:
+
+
+            <div data-bind="visible: feature_restrictions_enabled()">
+                <div data-bind="has_non_unique_feature_detection_fields" class="text-warning">
+                    <p class="text-error">
+                        Non-Unique Speeds Detected:
+                        <small>
+                            <a href="#" class="muted"
+                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_profile_non_unique_speeds.hide' }">
+                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
+                            </a>
+                        </small>
                     </p>
-                    <div class="text-error" data-bind="foreach: non_unique_feature_detection_fields">
-                        <span data-bind="text: $data"></span><br/>
+                    <div id="snapshot_profile_non_unique_speeds" class="control-group hide">
+                        <p>
+                        The following speeds are non-unique and will be indistinguishable when using 'Feature Detection':
+                        </p>
+                        <div class="text-error" data-bind="foreach: non_unique_feature_detection_fields">
+                            <span data-bind="text: $data"></span><br/>
+                        </div>
                     </div>
                 </div>
-                <div data-bind="visible: has_missing_feature_detection_fields" class="text-warning">
+                <div data-bind="visible: feature_restrictions_enabled() && has_missing_feature_detection_fields()" class="text-warning" style="display: none;">
                     <p>
                         The following speeds missing and will not work when using 'Feature Detection' print quality settings
                         within the snapshot profile: <span class="text-error" data-bind="text: missing_feature_detection_fields"></span>
                     </p>
                 </div>
+
                 <div data-bind="template: feature_template_id"></div>
-            </div>
-            <div>
-                <h5>LIft and Retract</h5>
-                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
-            </div>
-            <div class="control-group">
-                <label class="control-label">Trigger on Z-Hop Only</label>
-                <div class="controls">
-                    <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: require_zhop" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#trigger-on-z-hop-only" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    </label>
                 </div>
             </div>
-            <div class="control-group">
-                <label class="control-label">Retract Before Move</label>
-                <div class="controls">
-                    <label class="checkbox" title="If not retracted, retract before move">
-                        <input type="checkbox" data-bind="checked: retract_before_move" /> Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#retract-before-move" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    </label>
-                    <span class="help-inline">If enabled, Octolapse will retract up to the length specified in the active printer profile.</span>
-                </div>
-            </div>
-            <div class="control-group">
-                <label class="control-label">Lift Before Move</label>
-                <div class="controls">
-                    <label class="checkbox" title="If not lifted, lift before move">
-                        <input type="checkbox" data-bind="checked: lift_before_move" /> Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#lift-before-move" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    </label>
-                    <span class="help-inline">If enabled, Octolapse will lift up to the length specified in the active printer profile.</span>
-                </div>
-            </div>
+
+
+
         </div>
     </div>
-    <hr/>
     <div>
-        <div data-bind="visible:(position_restrictions().length > 0)" class="text-warning">
+        <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
             <p>
                 <strong>
                     There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
@@ -327,19 +342,7 @@
                 </strong>
             </p>
         </div>
-
         <div>
-            <small>
-                <a href="#" class="muted"
-                   data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_trigger_advanced.hide' }">
-                    <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Advanced Snapshot Trigger Options') }}
-                </a>
-            </small>
-        </div>
-        <div id="snapshot_trigger_advanced" class="control-group hide">
-            <div>
-                <h4>Advanced Snapshot Settings</h4>
-            </div>
             <div>
                 <div>
                     <h5>Position Restrictions</h5>
@@ -347,10 +350,18 @@
                         Restrict snapshots so that they can only occur within the boundries, either rectangular or
                         circular, you set. You can add as many as you require.
                     </p>
-                    <p>
-                        <span class="label label-important">Warning</span>&nbsp;This is a Beta feature.
-                    </p>
                 </div>
+                <div class="control-group">
+                    <label class="control-label">Enable Position Restrictions</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Enable or disable position restrictions">
+                            <input type="checkbox" data-bind="checked: position_restrictions_enabled" /> Enabled
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#position-restrictions" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div data-bind="visible: position_restrictions_enabled">
                 <!-- Add new position restriction -->
                 <div class="control-group">
                     <label class="control-label">Position Restriction Type</label>
@@ -359,7 +370,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_type"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#position-restriction-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_type"></div>
                     </div>
                 </div>
@@ -370,7 +381,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_shape"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#position-restriction-shape" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-shape" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_shape"></div>
                     </div>
                 </div>
@@ -458,7 +469,7 @@
                             <input type="checkbox"
                                    data-bind="checked: new_calculate_intersections"
                                    title="Calculate intersections and trigger if an intersection is in position." />Calculate Intersections
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#calculate-intersections" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#calculate-intersections" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         </label>
                         <span class="help-inline">
                             When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.
@@ -538,8 +549,8 @@
                         </div>
                     </div>
                 </div>
-
             </div>
+            <hr/>
             <div>
                 <div><h5>Snaphot Image Removal</h5></div>
                 <div class="control-group">

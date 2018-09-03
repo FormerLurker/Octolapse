@@ -885,6 +885,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.Settings.current_debug_profile().log_print_state_change("Octolapse is disabled.")
             return
 
+        # see if the printer profile has been configured
+
+        if not self.Settings.current_printer().has_been_saved_by_user:
+            message = "Your Octolapse printer profile has not been configured.  Please copy your slicer settings into " \
+                      "your printer profile and try again. "
+            self.on_print_start_failed(message)
+            return
+
         # determine the file source
         printer_data = self._printer.get_current_data()
         current_job = printer_data.get("job", None)
@@ -1004,6 +1012,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     'error': "Octolapse requires Octoprint v1.3.9 rc3 or above, but version v{0} is installed."
                              "  Please update Octoprint to use Octolapse.".format(octoprint.server.DISPLAY_VERSION),
                     'warning': False}
+
+        # check the ffmpeg path
         try:
             ffmpeg_path = self._settings.global_get(["webcam", "ffmpeg"])
             if self.Settings.current_rendering().enabled and (ffmpeg_path == "" or ffmpeg_path is None):
@@ -1072,13 +1082,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         # make sure at least one trigger is enabled
         current_snapshot = self.Settings.current_snapshot()
-        if not (
-            current_snapshot.enabled
-        ):
-            return {
-                'success': False,
-                'error': "No triggers are enabled in the current snapshot profile.  Cannot start timelapse."
-            }
 
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)

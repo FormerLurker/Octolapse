@@ -54,6 +54,9 @@
                     <div data-bind="visible: !hasPrinterSelected()" class="text-error">
                         <p>No printer is selected.</p>
                     </div>
+                    <div data-bind="visible: !has_configured_printer_profile()" class="text-error">
+                        <p>The selected printer profile has not been configured. Please edit the profile and copy in your slicer settings.</p>
+                    </div>
                 </td>
                 <td>
                     <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null, click: openCurrentPrinterProfile">

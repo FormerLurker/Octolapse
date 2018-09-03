@@ -408,7 +408,9 @@ class Position(object):
         self.PrinterTolerance = self.Printer.printer_position_confirmation_tolerance
         self.Positions = deque(maxlen=5)
         self.SavedPosition = None
-        self.HasRestrictedPosition = len(self.Snapshot.position_restrictions) > 0
+        self.HasRestrictedPosition = (
+            len(self.Snapshot.position_restrictions) > 0 and self.Snapshot.position_restrictions_enabled
+        )
         self.Extruder = Extruder(octolapse_settings)
         if self.Printer.g90_influences_extruder in ['true', 'false']:
             self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False

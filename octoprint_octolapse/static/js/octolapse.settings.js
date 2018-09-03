@@ -73,6 +73,7 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Printers = new Octolapse.ProfilesViewModel(printerSettings);
+
             /*
                 Create our stabilizations view model
             */

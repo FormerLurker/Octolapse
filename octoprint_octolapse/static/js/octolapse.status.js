@@ -44,7 +44,7 @@ $(function () {
             self.current_debug_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
-                'printers': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'printers': ko.observableArray([{name: "Unknown", guid: "", has_been_saved_by_user: false}]),
                 'stabilizations': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'snapshots': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'renderings': ko.observableArray([{name: "Unknown", guid: ""}]),
@@ -135,10 +135,30 @@ $(function () {
                 return false;
 
             },this);
+
             self.hasPrinterSelected = ko.pureComputed(function(){
                 return ! (Octolapse.Status.current_printer_profile_guid() == null || Octolapse.Status.current_printer_profile_guid()=="");
             },this);
 
+            self.has_configured_printer_profile = ko.pureComputed(function(){
+                console.log("detecting configured printers.")
+                var current_printer = self.getCurrentProfileByGuid(self.profiles().printers());
+                if (current_printer != null)
+                    return current_printer.has_been_saved_by_user;
+                return true;
+            },this);
+
+            self.getCurrentProfileByGuid = function(profiles){
+                guid = Octolapse.Status.current_printer_profile_guid();
+                if (guid != null) {
+                    for (var i = 0; i < profiles.length; i++) {
+                        if (profiles[i].guid == guid) {
+                            return profiles[i]
+                        }
+                    }
+                }
+                return null;
+            }
             self.hasConfigIssues = ko.computed(function(){
                 var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected();
                 return hasConfigIssues;

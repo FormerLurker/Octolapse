@@ -57,6 +57,12 @@ $(function() {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
+        // Saved by user flag, sent from server
+        self.saved_by_user_flag = ko.observable(values.has_been_saved_by_user);
+        // has_been_saved_by_user profile setting, computed and always returns true
+        // This will switch has_been_saved_by_user from false to true
+        // after any user save
+        self.has_been_saved_by_user = ko.observable(true);
         self.slicer_type = ko.observable(values.slicer_type);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
@@ -87,32 +93,31 @@ $(function() {
             var self = this;
             self.create_other_slicer_viewmodel = function(profile_observables){
                 var self = this;
-                self.speed_tolerance = ko.observable(profile_observables.speed_tolerance);
+                self.speed_tolerance = ko.observable(profile_observables.speed_tolerance).extend({numeric:6});
                 self.axis_speed_display_units = ko.observable(profile_observables.axis_speed_display_units);
 
-                self.retract_length = ko.observable(profile_observables.retract_length);
-                self.retract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.retract_speed, self.speed_tolerance()));
-                self.detract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.detract_speed, self.speed_tolerance()));
-                self.movement_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.movement_speed, self.speed_tolerance()));
-                self.print_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.print_speed, self.speed_tolerance()));
-                self.z_hop = ko.observable(profile_observables.z_hop);
-                self.z_hop_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.z_hop_speed, self.speed_tolerance()));
-                self.perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.perimeter_speed, self.speed_tolerance()));
-                self.small_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.small_perimeter_speed, self.speed_tolerance()));
-                self.external_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.external_perimeter_speed, self.speed_tolerance()));
-                self.infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.infill_speed, self.speed_tolerance()));
-                self.solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.solid_infill_speed, self.speed_tolerance()));
-                self.top_solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.top_solid_infill_speed, self.speed_tolerance()));
-                self.support_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.support_speed, self.speed_tolerance()));
-                self.bridge_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.bridge_speed, self.speed_tolerance()));
-                self.gap_fill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.gap_fill_speed, self.speed_tolerance()));
-                self.first_layer_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_speed, self.speed_tolerance()));
-                self.first_layer_travel_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_travel_speed, self.speed_tolerance()));
-                self.skirt_brim_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.skirt_brim_speed, self.speed_tolerance()));
-
-                self.above_raft_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.above_raft_speed, self.speed_tolerance()));
-                self.ooze_shield_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.ooze_shield_speed, self.speed_tolerance()));
-                self.prime_pillar_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.prime_pillar_speed, self.speed_tolerance()));
+                self.retract_length = ko.observable(profile_observables.retract_length).extend({numeric:4});
+                self.z_hop = ko.observable(profile_observables.z_hop).extend({numeric:4});
+                self.movement_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.movement_speed, self.speed_tolerance())).extend({numeric:3});
+                self.retract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.retract_speed, self.speed_tolerance())).extend({numeric:3});
+                self.detract_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.detract_speed, self.speed_tolerance())).extend({numeric:3});
+                self.print_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.print_speed, self.speed_tolerance())).extend({numeric:3});
+                self.z_hop_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.z_hop_speed, self.speed_tolerance())).extend({numeric:3});
+                self.perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.perimeter_speed, self.speed_tolerance())).extend({numeric:3});
+                self.small_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.small_perimeter_speed, self.speed_tolerance())).extend({numeric:3});
+                self.external_perimeter_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.external_perimeter_speed, self.speed_tolerance())).extend({numeric:3});
+                self.infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.infill_speed, self.speed_tolerance())).extend({numeric:3});
+                self.solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.solid_infill_speed, self.speed_tolerance())).extend({numeric:3});
+                self.top_solid_infill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.top_solid_infill_speed, self.speed_tolerance())).extend({numeric:3});
+                self.support_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.support_speed, self.speed_tolerance())).extend({numeric:3});
+                self.bridge_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.bridge_speed, self.speed_tolerance())).extend({numeric:3});
+                self.gap_fill_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.gap_fill_speed, self.speed_tolerance())).extend({numeric:3});
+                self.first_layer_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_speed, self.speed_tolerance())).extend({numeric:3});
+                self.first_layer_travel_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.first_layer_travel_speed, self.speed_tolerance())).extend({numeric:3});
+                self.skirt_brim_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.skirt_brim_speed, self.speed_tolerance())).extend({numeric:3});
+                self.above_raft_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.above_raft_speed, self.speed_tolerance())).extend({numeric:3});
+                self.ooze_shield_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.ooze_shield_speed, self.speed_tolerance())).extend({numeric:3});
+                self.prime_pillar_speed = ko.observable(Octolapse.roundToIncrement(profile_observables.prime_pillar_speed, self.speed_tolerance())).extend({numeric:3});
 
                 /*
                     Create a getter for each profile variable (settings.py - printer class)
@@ -640,10 +645,11 @@ $(function() {
                    return self.z_hop_height();
                 };
                 self.get_z_hop_speed = function(){
-                    if( ( self.maximum_z_speed() || 0) == 0)
+                    var maximum_z_speed = self.maximum_z_speed()
+                    if((maximum_z_speed || 0) == 0 || maximum_z_speed > self.travel_speed())
                         return self.travel_speed();
 
-                    return Math.min(self.maximum_z_speed(), self.travel_speed())
+                    return maximum_z_speed;
                 };
                 self.get_maximum_z_speed = function(){
                     return self.maximum_z_speed();

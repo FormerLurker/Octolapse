@@ -49,6 +49,19 @@ $(function() {
             return false;
 
         }, Octolapse.Cameras);
+
+        // Add a helper function to show a flag if the current profile is not configured
+        self.currentProfileConfigured = ko.pureComputed(function () {
+            if(self.profileTypeName == 'Printer')
+            {
+                var current_printer = self.currentProfile();
+                if(current_printer!=null && !current_printer.saved_by_user_flag())
+                    return false;
+                return true;
+            }
+            return true;
+        });
+
         // Created a sorted observable
         self.profiles_sorted = ko.computed(function() { return Octolapse.nameSort(self.profiles) });
 

@@ -616,13 +616,14 @@ class SlicerPrintFeatures(object):
                 snapshot_profile.feature_trigger_on_top_solid_infill and snapshot_profile.feature_trigger_on_first_layer))
 
         travel_speed = printer_profile.get_speed_for_slicer_type(printer_profile.movement_speed)
+        slow_travel_speed = printer_profile.get_speed_for_slicer_type(printer_profile.first_layer_travel_speed)
         self.features.append(
             PrintFeatureSetting(
                 calculate_speed_cura,
                 "Travel",
                 "Slow Layer Travel",
                 travel_speed,
-                slow_layer_speed,
+                slow_travel_speed,
                 snapshot_profile.feature_trigger_on_movement,
                 snapshot_profile.feature_trigger_on_movement and snapshot_profile.feature_trigger_on_first_layer_travel))
 
@@ -655,7 +656,7 @@ class SlicerPrintFeatures(object):
             PrintFeatureSetting(
                 calculate_speed_simplify_3d,
                 "Retraction",
-                "First Layer Retraction",
+                "Retraction",
                 retract_speed,
                 retract_speed,
                 snapshot_profile.feature_trigger_on_retract,
@@ -835,6 +836,12 @@ class Printer(object):
         self.guid = guid if guid else str(uuid.uuid4())
         self.name = name
         self.description = ""
+        # flag that is false until the profile has been saved by the user at least once
+        # this is used to show a warning to the user if a new printer profile is used
+        # without being configured
+        self.has_been_saved_by_user = False
+
+        # Slicer Settings
         self.slicer_type = "other"
         self.retract_length = 2.0
         self.retract_speed = 6000
@@ -911,6 +918,7 @@ class Printer(object):
                 self.guid = printer.guid
                 self.name = printer.name
                 self.description = printer.description
+                self.has_been_saved_by_user = printer.has_been_saved_by_user
                 self.slicer_type = printer.slicer_type
                 self.retract_length = printer.retract_length
                 self.retract_speed = printer.retract_speed
@@ -992,6 +1000,9 @@ class Printer(object):
         if "description" in changes.keys():
             self.description = utility.get_string(
                 changes["description"], self.description)
+        if "has_been_saved_by_user" in changes.keys():
+            self.has_been_saved_by_user = utility.get_bool(
+                changes["has_been_saved_by_user"], self.has_been_saved_by_user)
         if "slicer_type" in changes.keys():
             self.slicer_type = utility.get_string(
                 changes["slicer_type"], self.slicer_type)
@@ -1207,6 +1218,7 @@ class Printer(object):
             'guid': self.guid,
             'name': self.name,
             'description': self.description,
+            'has_been_saved_by_user': self.has_been_saved_by_user,
             'slicer_type': self.slicer_type,
             'retract_length': self.retract_length,
             'retract_speed': self.retract_speed,
@@ -1670,7 +1682,6 @@ class Snapshot(object):
         self.is_default = False
         self.name = name
         self.description = ""
-        self.enabled = True
         self.trigger_type = self.LayerTriggerType
         # timer trigger settings
         self.timer_trigger_seconds = 30
@@ -1678,6 +1689,7 @@ class Snapshot(object):
         self.layer_trigger_height = 0.0
 
         # Position Restrictions
+        self.position_restrictions_enabled = False
         self.position_restrictions = []
 
         # Quality Settings
@@ -1731,13 +1743,11 @@ class Snapshot(object):
                 self.description = snapshot.description
                 self.guid = snapshot.guid
                 self.is_default = snapshot.is_default
-                self.enabled = snapshot.enabled
                 self.trigger_type = snapshot.trigger_type
                 # timer trigger members
                 self.timer_trigger_seconds = snapshot.timer_trigger_seconds
                 # layer trigger members
                 self.layer_trigger_height = snapshot.layer_trigger_height
-
                 # quality settings
                 self.require_zhop = snapshot.require_zhop
                 # extruder state
@@ -1754,6 +1764,7 @@ class Snapshot(object):
                 self.trigger_on_detracted = snapshot.trigger_on_detracted
                 # position restrictions
                 self.position_restrictions = snapshot.position_restrictions
+                self.position_restrictions_enabled = snapshot.position_restrictions_enabled
                 # feature detection
                 self.feature_restrictions_enabled = snapshot.feature_restrictions_enabled
                 self.feature_trigger_on_detract = snapshot.feature_trigger_on_detract
@@ -1801,10 +1812,6 @@ class Snapshot(object):
         if "description" in changes.keys():
             self.description = utility.get_string(
                 changes["description"], self.description)
-        # gcode trigger members
-        if "enabled" in changes.keys():
-            self.enabled = utility.get_bool(
-                changes["enabled"], self.enabled)
         if "trigger_type" in changes.keys():
             self.trigger_type = utility.get_string(
                 changes["trigger_type"], self.trigger_type)
@@ -1817,6 +1824,9 @@ class Snapshot(object):
             self.layer_trigger_height = utility.get_float(
                 changes["layer_trigger_height"], self.layer_trigger_height)
         # position restrictions
+        if "position_restrictions_enabled" in changes.keys():
+            self.position_restrictions_enabled = utility.get_bool(
+                changes["position_restrictions_enabled"], self.position_restrictions_enabled)
         if "position_restrictions" in changes.keys():
             self.position_restrictions = self.get_trigger_position_restrictions(
                 changes["position_restrictions"])
@@ -1908,8 +1918,6 @@ class Snapshot(object):
         if "feature_trigger_on_first_layer_travel" in changes.keys():
             self.feature_trigger_on_first_layer_travel = utility.get_bool(
                 changes["feature_trigger_on_first_layer_travel"], self.feature_trigger_on_first_layer_travel)
-
-
         if "feature_trigger_on_above_raft" in changes.keys():
             self.feature_trigger_on_above_raft = utility.get_bool(
                 changes["feature_trigger_on_above_raft"], self.feature_trigger_on_above_raft)
@@ -1992,7 +2000,6 @@ class Snapshot(object):
             'guid': self.guid,
             'name': self.name,
             'description': self.description,
-            'enabled': self.enabled,
             'trigger_type': self.trigger_type,
             # Gcode Trigger
             # None
@@ -2016,6 +2023,7 @@ class Snapshot(object):
             'trigger_on_detracting': get_vr(self.trigger_on_detracting),
             'trigger_on_detracted': get_vr(self.trigger_on_detracted),
             # Position Restrictions
+            'position_restrictions_enabled': self.position_restrictions_enabled,
             'position_restrictions': self.get_trigger_position_restrictions_value_string(
                 self.position_restrictions),
             # Feature Detection
@@ -3247,7 +3255,8 @@ class OctolapseSettings(object):
         for key, printer in self.printers.items():
             profiles_dict["printers"].append({
                 "name": printer.name,
-                "guid": printer.guid
+                "guid": printer.guid,
+                "has_been_saved_by_user": printer.has_been_saved_by_user
             })
 
         for key, stabilization in self.stabilizations.items():
