@@ -160,7 +160,7 @@ $(function () {
                 return null;
             }
             self.hasConfigIssues = ko.computed(function(){
-                var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected();
+                var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected() || !self.has_configured_printer_profile();
                 return hasConfigIssues;
             },this);
 
