@@ -132,10 +132,7 @@ $(function () {
            }
         });
         self.has_non_unique_feature_detection_fields = ko.pureComputed(function(){
-            var current_printer = Octolapse.Printers.currentProfile();
-            if(current_printer != null)
-                return current_printer.getNonUniqueSpeeds().length > 0;
-            return false;
+            return self.non_unique_feature_detection_fields().length > 0
         });
         self.non_unique_feature_detection_fields = ko.pureComputed(function(){
             var current_printer = Octolapse.Printers.currentProfile();
