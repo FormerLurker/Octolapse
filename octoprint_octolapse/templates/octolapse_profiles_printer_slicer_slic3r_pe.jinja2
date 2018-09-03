@@ -2,8 +2,35 @@
     <div>
         <div>
             <h4>Slicer - Slic3r Prusa Edition</h4>
-            <p>Copy all of the settings below from your slicer.</p>
+            <p>Copy all of the settings below from your slicer.  Please note that Retraction and detraction speeds are rounded to the nearest mm/sec, and all other speeds are rounded to the nearest 0.01 mm/min.</p>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <div>
+                    <p class="text-error">
+                        Some of your speed settings are non-unique:
+                        <small>
+                            <a href="#" class="muted"
+                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_slic3r_pe_non_unique_speeds.hide' }">
+                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
+                            </a>
+                        </small>
+                    </p>
 
+                </div>
+                <div id="show_slic3r_pe_non_unique_speeds" class="control-group hide">
+                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
+                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                        <span data-bind="text: $data"></span><br/>
+                    </div>
+                </div>
+            </div>
+            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
+                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
+                    </span>
+                </p>
+            </div>
         </div>
         <div>
             <div>
@@ -14,7 +41,7 @@
                 <label class="control-label" for="printer_profile_slic3r_retract_length">Length</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.05" min="0.05" max="100.0" required/>
+                        <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.000001" min="0.000001" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -25,7 +52,7 @@
                 <label class="control-label" for="printer_profile_slic3r_pe_z_hop">Lift Z</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.05" min=".00" max="100.0" required />
+                        <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.0001" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#lift-z" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -37,7 +64,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_retract_speed" name="retract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_speed" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -52,7 +79,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_detract_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.detract_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.detract_speed" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -71,7 +98,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_perimeter_speed" name="perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.perimeter_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.perimeter_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -85,7 +112,7 @@
                 <label class="control-label" for="slicer_slic3r_pe_small_perimeter_speed">Small Perimeters</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_small_perimeter_speed" name="slic3r_small_perimeter_speed_text" type="text" autocomplete="off"
+                        <input id="slicer_slic3r_pe_small_perimeter_speed" name="slicer_slic3r_pe_small_perimeter_speed" type="text" autocomplete="off"
                                class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.small_perimeter_speed_text"/>
                         <span class="add-on">mm/sec or %</span>
                     </div>
@@ -99,7 +126,7 @@
                 <label class="control-label" for="slicer_slic3r_pe_external_perimeter_speed">External Perimeters</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_external_perimeter_speed" name="external_perimeter_speed" type="text" autocomplete="off"
+                        <input id="slicer_slic3r_pe_external_perimeter_speed" name="slicer_slic3r_pe_external_perimeter_speed" type="text" autocomplete="off"
                                class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.external_perimeter_speed_text"/>
                         <span class="add-on">mm/sec or %</span>
                     </div>
@@ -113,8 +140,8 @@
                 <label class="control-label" for="slicer_slic3r_pe_infill_speed">Infill</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.infill_speed" step="0.001" min="0"
+                        <input id="slicer_slic3r_pe_infill_speed" name="slicer_slic3r_pe_infill_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.infill_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -128,7 +155,7 @@
                 <label class="control-label" for="slicer_slic3r_pe_solid_infill_speed">Solid Infill</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_solid_infill_speed" name="solid_infill_speed" type="text" autocomplete="off"
+                        <input id="slicer_slic3r_pe_solid_infill_speed" name="slicer_slic3r_pe_solid_infill_speed" type="text" autocomplete="off"
                                class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.solid_infill_speed_text" />
                         <span class="add-on">mm/sec or %</span>
                     </div>
@@ -141,7 +168,7 @@
                 <label class="control-label">Top Solid Infill</label>
                 <div class="controls" for="slicer_slic3r_pe_top_solid_infill_speed">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_top_solid_infill_speed" name="top_solid_infill_speed" type="text" autocomplete="off" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed_text"/>
+                        <input id="slicer_slic3r_pe_top_solid_infill_speed" name="slicer_slic3r_pe_top_solid_infill_speed" type="text" autocomplete="off" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.top_solid_infill_speed_text"/>
                         <span class="add-on">mm/sec or %</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#top-solid-infill"
@@ -155,7 +182,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_support_speed" name="support_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.support_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.support_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -170,7 +197,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_bridge_speed" name="bridge_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.bridge_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.bridge_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -185,7 +212,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_gap_fill_speed" name="gap_fill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.gap_fill_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.gap_fill_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -205,7 +232,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_movement_speed" name="movement_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.movement_speed" step="0.001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.movement_speed" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -223,7 +250,7 @@
                 <label class="control-label" for="slicer_slic3r_pe_first_layer_speed">First Layer Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_first_layer_speed" name="first_layer_speed" type="text" autocomplete="off"
+                        <input id="slicer_slic3r_pe_first_layer_speed" name="slicer_slic3r_pe_first_layer_speed" type="text" autocomplete="off"
                                class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.first_layer_speed_text"/>
                         <span class="add-on">mm/sec or %</span>
                     </div>
@@ -233,22 +260,32 @@
                 </div>
             </div>
             <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
-                <p>
-                    The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
-                    quality settings within the snapshot profile:
-                </p>
-                <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
-                    <span data-bind="text: $data"></span><br/>
+                <div>
+                    <p>
+                        Some of your speed settings are non-unique:
+                        <small>
+                            <a href="#" class="muted text-error"
+                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_slic3r_pe_non_unique_speeds.hide' }">
+                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
+                            </a>
+                        </small>
+                    </p>
+
+                </div>
+                <div id="show_slic3r_pe_non_unique_speeds" class="control-group hide">
+                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
+                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                        <span data-bind="text: $data"></span><br/>
+                    </div>
                 </div>
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not work when using 'Feature Detection' print quality settings
+                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
                     within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>
                 </p>
-
             </div>
         </div>
     </div>

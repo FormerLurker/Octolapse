@@ -211,10 +211,6 @@ $(function () {
         if (num == null)
             return null;
 
-        // Enforce the minimum increment
-        if (increment < 0.001)
-            increment = 0.001;
-
         if (num != parseFloat(num))
             return num;
 
@@ -226,8 +222,6 @@ $(function () {
         if ((increment % 1) != 0)
             numDecimals = increment.toString().split(".")[1].length;
 
-        if (numDecimals > 3)
-            numDecimals = 3;
         // truncate value to numDecimals decimals
         value = parseFloat(value.toFixed(numDecimals).toString())
 
@@ -352,15 +346,32 @@ $(function () {
         return Octolapse.parseFloat(value)
     }
 
-    $.validator.addMethod('floatOrPercent',
+    $.validator.addMethod('slic3rPEFloatOrPercent',
         function (value) {
             if (!value)
+                return true;
+            if(!Octolapse.isPercent(value) && !Octolapse.isFloat(value))
+            {
                 return false;
-            var value = value.trim();
-            if(value.length > 1 && value[value.length-1] == "%")
-                value = value.substr(0,value.length-2);
-            return !isNaN(parseFloat(value))
-        }, 'Please enter an integer value.');
+            }
+            return true;
+        }, 'Please enter a decimal or a percent.');
+
+    $.validator.addMethod('slic3rPEFloatOrPercentSteps',
+        function (value) {
+            if (!value)
+                return true;
+            if(Octolapse.isPercent(value))
+                value = Octolapse.parsePercent(value);
+            else if(Octolapse.isFloat(value))
+                value = Octolapse.parseFloat(value);
+            var rounded_value = Octolapse.roundToIncrement(value, 0.0001);
+            if (rounded_value == value)
+                return true;
+            return false
+
+        }, 'Please enter a multiple of 0.0001.');
+
     // Add a custom validator for positive
     $.validator.addMethod('integerPositive',
         function (value) {
@@ -464,10 +475,17 @@ $(function () {
     ko.extenders.numeric = function (target, precision) {
         var result = ko.dependentObservable({
             read: function () {
-                val = target();
+                var val = target();
+                val = Octolapse.parseFloat(val)
                 if (val == null)
-                    return Octolapse.NullNumericText;
-                return val.toFixed(precision);
+                    return val;
+                try{
+                    return val.toFixed(precision);
+                }
+                catch{
+                    console.log("Error converting toFixed");
+                }
+
             },
             write: target
         });

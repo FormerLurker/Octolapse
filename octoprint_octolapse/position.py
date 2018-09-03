@@ -122,7 +122,7 @@ class Pos(object):
 
         # default firmware retraction zlift if default_firmware_retractions_zhop is enabled
         if pos is None and printer.default_firmware_retractions_zhop:
-            self.FirmwareZLift = printer.z_hop
+            self.FirmwareZLift = printer.get_z_hop_for_slicer_type()
         else:
             self.FirmwareZLift = None if pos is None else pos.FirmwareZLift
 
@@ -415,8 +415,7 @@ class Position(object):
         else:
             self.G90InfluencesExtruder = g90_influences_extruder
 
-        if self.Printer.z_hop is None:
-            self.Printer.z_hop = 0
+        self.ZHop = 0 if self.Printer.get_z_hop_for_slicer_type() is None else self.Printer.get_z_hop_for_slicer_type()
 
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()
@@ -493,18 +492,18 @@ class Position(object):
             return None
 
         # get the lift amount, but don't restrict it so we can log properly
-        amount_to_lift = pos.distance_to_zlift(self.Printer.z_hop, False)
+        amount_to_lift = pos.distance_to_zlift(self.ZHop, False)
 
         if amount_to_lift < 0:
             # the current lift is negative
             self.Settings.current_debug_profile().log_warning("position.py - A 'distance_to_zlift' was requested, "
                                                               "but the current lift is already above the z_hop height.")
             return 0
-        elif amount_to_lift > self.Printer.z_hop:
+        elif amount_to_lift > self.ZHop:
             # For some reason we're lower than we expected
             self.Settings.current_debug_profile().log_warning("position.py - A 'distance_to_zlift' was requested, "
                                                               "but was found to be more than the z_hop height.")
-            return self.Printer.z_hop
+            return self.ZHop
         else:
             # we are in-between 0 and z_hop, calculate lift
             return amount_to_lift
@@ -1246,7 +1245,7 @@ class Position(object):
             if pos.LastExtrusionHeight is not None:
                 # calculate lift, taking into account floating point
                 # rounding
-                distance_to_lift = pos.distance_to_zlift(self.Printer.z_hop)
+                distance_to_lift = pos.distance_to_zlift(self.ZHop)
 
                 # todo:  replace rounding with a call to is close or greater than utility function
                 distance_to_lift = utility.round_to(distance_to_lift, self.PrinterTolerance)
@@ -1254,12 +1253,12 @@ class Position(object):
                     self.Extruder.is_extruding() or self.Extruder.is_extruding_start()
                 )
 
-                if is_lifted or self.Printer.z_hop == 0:
+                if is_lifted or self.ZHop == 0:
                     pos.IsZHop = True
 
-            if pos.IsZHop and self.Printer.z_hop > 0:
+            if pos.IsZHop and self.ZHop > 0:
                 self.Settings.current_debug_profile().log_position_zhop(
-                    "Position - Zhop:{0}".format(self.Printer.z_hop))
+                    "Position - Zhop:{0}".format(self.ZHop))
 
         # Update Feature Detection
         if pos.F is not None:

@@ -100,16 +100,10 @@ class SnapshotGcodeGenerator(object):
         if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
             self.AxisSpeedUnits = "mm-min"
 
-        self.RetractSpeed = self.convert_to_mm_min(self.Printer.get_retract_speed_for_slicer_type())
-        self.DetractSpeed = self.convert_to_mm_min(self.Printer.get_detract_speed_for_slicer_type())
-        self.TravelSpeed = self.convert_to_mm_min(self.Printer.get_movement_speed_for_slicer_type())
-        self.ZHopSpeed = self.convert_to_mm_min(self.Printer.get_z_hop_speed_for_slicer_type())
-
-    def convert_to_mm_min(self, axis_speed):
-        if self.AxisSpeedUnits == "mm-sec":
-            return axis_speed * 60.0
-        else:
-            return axis_speed
+        self.RetractSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.retract_speed, "retract_speed")
+        self.DetractSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.detract_speed, "detract_speed")
+        self.TravelSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.movement_speed, "movement_speed")
+        self.ZHopSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.z_hop_speed, "z_hop_speed")
 
     def reset(self):
         self.ReturnWhenComplete = True

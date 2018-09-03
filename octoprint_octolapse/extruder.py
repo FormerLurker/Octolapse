@@ -85,7 +85,7 @@ class Extruder(object):
 
     def __init__(self, octolapse_settings):
         self.Settings = octolapse_settings
-        self.PrinterRetractionLength = self.Settings.current_printer().retract_length
+        self.PrinterRetractionLength = self.Settings.current_printer().get_retract_length_for_slicer_type()
         self.PrinterTolerance = self.Settings.current_printer().printer_position_confirmation_tolerance
         self.StateHistory = deque(maxlen=5)
         self.reset()

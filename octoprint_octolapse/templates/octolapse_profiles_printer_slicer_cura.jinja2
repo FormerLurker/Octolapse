@@ -5,6 +5,34 @@
             <p>Match all of the speed settings in your current slicer profile with all of the settings below. In order to
                 use feature detection (used in the 'high quality' snapshot profiles), it is best if each speed is unique.
                 Make sure to use the correct units!</p>
+            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <div>
+                    <p class="text-error">
+                        Some of your speed settings are non-unique:
+                        <small>
+                            <a href="#" class="muted"
+                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_cura_pe_non_unique_speeds.hide' }">
+                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
+                            </a>
+                        </small>
+                    </p>
+
+                </div>
+                <div id="show_cura_pe_non_unique_speeds" class="control-group hide">
+                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
+                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                        <span data-bind="text: $data"></span><br/>
+                    </div>
+                </div>
+            </div>
+            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
+                <p>
+                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
+                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
+                    </span>
+                </p>
+            </div>
         </div>
         <div>
             <div>
@@ -240,19 +268,30 @@
                     <div class="error_label_container text-error" data-error-for="printer_profile_cura_z_hop_height"></div>
                 </div>
             </div>
-            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
-                <p>
-                    The following speeds are non-unique and will be indistinguishable when using 'Feature Detection' print
-                    quality settings within the snapshot profile:
-                </p>
-                <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
-                    <span data-bind="text: $data"></span><br/>
+           <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
+                <div>
+                    <p class="text-error">
+                        Some of your speed settings are non-unique:
+                        <small>
+                            <a href="#" class="muted"
+                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_cura_pe_non_unique_speeds.hide' }">
+                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
+                            </a>
+                        </small>
+                    </p>
+
+                </div>
+                <div id="show_cura_pe_non_unique_speeds" class="control-group hide">
+                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
+                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
+                        <span data-bind="text: $data"></span><br/>
+                    </div>
                 </div>
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not work when using 'Feature Detection' print quality settings
-                    within the snapshot profile:<span class="text-error"  data-bind="foreach: getMissingSpeedsList">
+                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>
                 </p>
