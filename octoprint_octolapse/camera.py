@@ -39,6 +39,8 @@ from octoprint_octolapse.settings import Camera
 def format_request_template(camera_address, template, value):
     return template.format(camera_address=camera_address, value=value)
 
+#def test_external_camera_snapshot_script(camera_profile):
+
 
 def test_web_camera(camera_profile, timeout_seconds=2):
     url = format_request_template(
@@ -419,22 +421,16 @@ class CameraSettingScriptThread(Thread):
                     script,
                     self.Camera.name
                 ]
-                (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, None
-                )
-            except OSError as e:
+                cmd = utility.POpenWithTimeout()
+                return_code = cmd.run(script_args, None)
+                console_output = cmd.stdout
+                error_message = cmd.stderr
+            except utility.POpenWithTimeout.ProcessError as e:
                 raise CameraError(
                     'camera_initialization_error',
                     "An OS Error error occurred while executing the custom camera initialization script",
                     cause=e
                 )
-            except CalledProcessError as e:
-
-                # If we can't create the thumbnail, just log
-                error_message = (
-                    "An unexpected exception occurred executing the camera initialization script."
-                )
-                raise CameraError('camera_initialization_error', error_message, cause=e)
 
             if error_message is not None:
                 if error_message.endswith("\r\n"):

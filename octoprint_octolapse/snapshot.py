@@ -419,23 +419,16 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         ]
 
         try:
-            (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                script_args, self.snapshot_job_info.TimeoutSeconds
-            )
-        except OSError as e:
+            cmd = utility.POpenWithTimeout()
+            return_code = cmd.run(script_args, self.snapshot_job_info.TimeoutSeconds)
+            console_output = cmd.stdout
+            error_message = cmd.stderr
+        except utility.POpenWithTimeout.ProcessError as e:
             raise SnapshotError(
                 '{0}_script_error'.format(self.script_type),
                 "An OS Error error occurred while executing the {0} script".format(self.script_type),
                 cause=e
             )
-        except CalledProcessError as e:
-
-            # If we can't create the thumbnail, just log
-            error_message = (
-                "Snapshot Script Error - An unexpected exception occurred executing the {0} script."
-                .format(self.script_type)
-            )
-            raise SnapshotError('{0}_script_error'.format(self.script_type), error_message, cause=e)
 
         if error_message and error_message.endswith("\r\n"):
             error_message = error_message[:-2]

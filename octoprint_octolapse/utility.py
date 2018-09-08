@@ -29,6 +29,8 @@ import subprocess
 import sys
 import time
 import traceback
+import threading
+import psutil
 from threading import Timer
 
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
@@ -498,11 +500,160 @@ def get_system_fonts():
         raise NotImplementedError('Unsupported operating system.')
 
 
+class POpenWithTimeout(object):
+    class ProcessError(Exception):
+        def __init__(self, error_type, message, cause=None):
+            super(POpenWithTimeout.ProcessError, self).__init__()
+            self.error_type = error_type
+            self.cause = cause if cause is not None else None
+            self.message = message
+
+        def __str__(self):
+            if self.cause is None:
+                return "{}: {}".format(self.error_type, self.message, str(self.cause))
+            if isinstance(self.cause, list):
+                if len(self.cause) > 1:
+                    error_string = "{}: {} - Inner Exceptions".format(self.error_type, self.message)
+                    error_count = 1
+                    for cause in self.cause:
+                        error_string += "\n    {}: {} Exception - {}".format(error_count, type(cause).__name__, str(cause))
+                        error_count += 1
+                    return error_string
+                elif len(self.cause) == 1:
+                    return "{}: {} - Inner Exception: {}".format(self.error_type, self.message, str(self.cause[0]))
+            return "{}: {} - Inner Exception: {}".format(self.error_type, self.message, str(self.cause))
+
+    lock = threading.Lock()
+
+    def __init__(self):
+        self.proc = None
+        self.stdout = ''
+        self.stderr = ''
+        self.completed = False
+        self.exception = None
+        self.subprocess_kill_exceptions = []
+        self.kill_exceptions = None
+
+    def kill(self):
+            if self.proc is None:
+                return
+            try:
+                process = psutil.Process(self.proc.pid)
+                for proc in process.children(recursive=True):
+                    try:
+                        proc.kill()
+                    except psutil.NoSuchProcess:
+                        # the process must have completed
+                        pass
+                    except (psutil.Error,psutil.AccessDenied, psutil.ZombieProcess) as e:
+                        self.kill_exceptions.append(e)
+                process.kill()
+            except psutil.NoSuchProcess:
+                # the process must have completed
+                pass
+            except (psutil.Error, psutil.AccessDenied, psutil.ZombieProcess) as e:
+                self.kill_exceptions = e
+
+    def get_exceptions(self):
+        if (
+            self.exception is None
+            and (self.subprocess_kill_exceptions is None or len(self.subprocess_kill_exceptions) == 0)
+            and self.kill_exceptions is None
+        ):
+            return None
+        causes = []
+        error_type = None
+        error_message = None
+        if self.exception is not None:
+            error_type = 'script-execution-error'
+            error_message = 'An error occurred curing the execution of a custom script.'
+            causes.append(self.exception)
+        if self.kill_exceptions is not None:
+            if error_type is None:
+                error_type = 'script-kill-error'
+                error_message = 'A custom script timed out, and an error occurred while terminating the process.'
+            causes.append(self.kill_exceptions)
+        if len(self.subprocess_kill_exceptions) > 0:
+            if error_type is None:
+                error_type = 'script-subprocess-kill-error'
+                error_message = 'A custom script timed out, and an error occurred while terminating one of its ' \
+                                'subprocesses.'
+            for cause in self.subprocess_kill_exceptions:
+                causes.append(cause)
+
+        return POpenWithTimeout.ProcessError(
+            error_type,
+            error_message,
+            cause=causes)
+
+    # run a command with the provided args, timeout in timeout_seconds
+    def run(self, args, timeout_seconds):
+
+        # Create, start and run the process and fill in stderr and stdout
+        def execute_process(args):
+            # get the lock so that we can start the process without encountering a timeout
+            self.lock.acquire()
+            try:
+                # don't start the process if we've already timed out
+                if not self.completed:
+                    self.proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                else:
+                    return
+            except (OSError, subprocess.CalledProcessError) as e:
+                self.exception = e
+                self.completed = True
+                (exc_stdout, exc_stderr) = self.proc.communicate()
+                self.stdout = exc_stdout
+                self.stderr = exc_stderr
+                return
+            finally:
+                self.lock.release()
+
+            (t_stdout, t_stderr) = self.proc.communicate()
+            self.lock.acquire()
+            try:
+                if not self.completed:
+                    self.stdout = t_stdout
+                    self.stderr = t_stderr
+                    self.completed = True
+            finally:
+                self.lock.release()
+
+        thread = threading.Thread(target=execute_process, args=[args])
+        # start the thread
+        thread.start()
+        # join the thread with a timeout
+        thread.join(timeout=timeout_seconds)
+        # check to see if the thread is alive
+        if thread.is_alive():
+            self.lock.acquire()
+            try:
+                if not self.completed:
+                    if self.proc is not None:
+                        self.kill()
+                        (p_stdout, p_stderr) = self.proc.communicate()
+                        self.stdout = p_stdout
+                        self.stderr = p_stderr + '- The snapshot script timed out in {0} seconds.'.format(timeout_seconds)
+                    self.completed = True
+            finally:
+                self.lock.release()
+
+        if self.proc is not None:
+            # raise any exceptions that were caught
+            exceptions = self.get_exceptions()
+            if exceptions is not None:
+                raise exceptions
+            return self.proc.returncode
+        else:
+            self.stderr = 'The process does not exist'
+            return -100
+
 def run_command_with_timeout(args, timeout_sec):
     """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
-
     Return subprocess exit code on natural completion of the subprocess.
     Raise an exception if timeout expires before subprocess completes."""
+
+
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if timeout_sec is not None:

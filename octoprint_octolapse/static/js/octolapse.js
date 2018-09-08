@@ -962,7 +962,7 @@ $(function () {
                         title: 'Octolapse - Before/After Render Script Error',
                         text: data.msg,
                         type: 'error',
-                        hide: true,
+                        hide: false,
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options, "before_after_render_script_error");

@@ -357,29 +357,23 @@ class TimelapseRenderJob(object):
                         script_args[4]
                     )
                 )
-
-                (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, None
-                )
-            except OSError as e:
+                cmd = utility.POpenWithTimeout()
+                return_code = cmd.run(script_args, None)
+                console_output = cmd.stdout
+                error_message = cmd.stderr
+            except utility.POpenWithTimeout.ProcessError as e:
                 raise RenderError(
                     'before_render_script_error',
-                    "An OS Error error occurred while executing the before-render script",
+                    "A script occurred while executing executing the before-render script",
                     cause=e
                 )
-            except CalledProcessError as e:
-
-                # If we can't create the thumbnail, just log
-                error_message = (
-                    "An unexpected exception occurred executing the before-render script."
-                )
-                raise RenderError('before_render_script_error', error_message, cause=e)
-
             if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
                 self._debug().log_error(
                     "Error output was returned from the before-rendering script: {0}".format(error_message))
+                self._debug().log_error(
+                    "The console ouput for the error:  \n    {0}".format(console_output))
             if not return_code == 0:
                 if error_message:
                     error_message = "The before-render script failed with the following error message: {0}" \
@@ -433,23 +427,16 @@ class TimelapseRenderJob(object):
                     )
                 )
 
-                (return_code, console_output, error_message) = utility.run_command_with_timeout(
-                    script_args, None
-                )
-            except OSError as e:
+                cmd = utility.POpenWithTimeout()
+                return_code = cmd.run(script_args, None)
+                console_output = cmd.stdout
+                error_message = cmd.stderr
+            except utility.POpenWithTimeout.ProcessError as e:
                 raise RenderError(
                     'after_render_script_error',
-                    "An OS Error error occurred while executing the after-render script",
+                    "A script occurred while executing executing the after-render script",
                     cause=e
                 )
-            except CalledProcessError as e:
-
-                # If we can't create the thumbnail, just log
-                error_message = (
-                    "An unexpected exception occurred executing the after-render script."
-                )
-                raise RenderError('after_render_script_error', error_message, cause=e)
-
             if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
