@@ -8,6 +8,8 @@ def migrate_settings(current_version, settings_dict, log_file_path, default_sett
     if LooseVersion(settings_dict["version"]) <= LooseVersion("0.3.3rc3.dev0"):
         return migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, default_settings_path)
 
+    return settings_dict
+
 
 def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, default_settings_path):
     # versions prior to or equal to 0.3.3rc3.dev0 need to have the snapshot profiles reset to the defaults

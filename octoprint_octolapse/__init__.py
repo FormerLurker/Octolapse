@@ -585,6 +585,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def load_settings(self, force_defaults=False):
         # if the settings file does not exist, create one from the default settings
         create_new_settings = False
+        settings_upgraded = False
         if not os.path.isfile(self.get_settings_file_path()) or force_defaults:
             # create new settings from default setting file
             with open(self.get_default_settings_path()) as defaultSettingsJson:
@@ -614,7 +615,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     data = settings_migration.migrate_settings(
                         self._plugin_version, data, self.get_log_file_path(), self.get_default_settings_path()
                     )
-                    create_new_settings = True
+                    # No file existed, so we must have created default settings.  Save them!
+                    settings_upgraded = True
                 if self.Settings is None:
                     #  create a new settings object
                     self.Settings = OctolapseSettings(self.get_log_file_path(), data, self._plugin_version)
@@ -629,7 +631,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.copy_octoprint_default_settings(
             apply_to_current_profile=create_new_settings)
 
-        if create_new_settings:
+        if create_new_settings or settings_upgraded:
             # No file existed, so we must have created default settings.  Save them!
             self.save_settings()
 
