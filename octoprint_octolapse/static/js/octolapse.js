@@ -890,7 +890,7 @@ $(function () {
                                 title: 'Octolapse - Camera Error',
                                 text: data.snapshot_error,
                                 type: 'error',
-                                hide: true,
+                                hide: false,
                                 addclass: "octolapse"
                             };
                             Octolapse.displayPopupForKey(options, "snapshot_error")
