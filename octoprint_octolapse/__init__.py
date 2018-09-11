@@ -59,7 +59,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.TemplatePlugin,
                       octoprint.plugin.StartupPlugin,
                       octoprint.plugin.EventHandlerPlugin,
-                      octoprint.plugin.BlueprintPlugin):
+                      octoprint.plugin.BlueprintPlugin,
+                      octoprint.plugin.RestartNeedingPlugin):
     TIMEOUT_DELAY = 1000
 
     def __init__(self):
@@ -1006,6 +1007,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.current_debug_profile().log_print_state_change(message)
         self.send_plugin_message("print-start-error", message)
+
     def start_timelapse(self):
 
         # check for version 1.3.7 min

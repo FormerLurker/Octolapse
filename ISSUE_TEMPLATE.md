@@ -185,4 +185,6 @@ Screenshot/Video Links: LINKs_GO_HERE
 
 
 ## Please consider becoming a patron
-If you like this project, [please support my work by becoming a patron,](https://www.patreon.com/bePatron?u=9588101) and consider adding a 'star' to the repository.  It takes a lot of time and effort to maintain the project and respond to issues.  The cost of test prints, software, cameras, printer parts, etc. can quickly add up, so every bit helps.  I'm currently saving for some additional test cameras in preparation for develiping multi-camera support.
+If you like this project, [please support my work by becoming a patron,](https://www.patreon.com/bePatron?u=9588101) and consider adding a 'star' to the repository.  It takes a lot of time and effort to maintain the project and respond to issues.  The cost of test prints, software, cameras, printer parts, etc. can quickly add up, so every bit helps.
+
+You can find various [videos and tutorials](https://www.youtube.com/channel/UCnnTLQetNw7FqfQOLJCMqoQ) by subscribing to my Youtube channel.  You can also [follow me on Twitter](https://twitter.com/FormerLurker1).
