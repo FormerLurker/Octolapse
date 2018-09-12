@@ -482,7 +482,7 @@ $(function () {
                 try{
                     return val.toFixed(precision);
                 }
-                catch{
+                catch (e){
                     console.log("Error converting toFixed");
                 }
 

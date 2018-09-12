@@ -73,7 +73,7 @@
                                  value: output_format"></select>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#output-file-format" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_output_format"></div>
-                    <span class="help-inline" data-bind="visible:output_format() != 'mp4'">
+                    <span class="help-inline" data-bind="visible: !can_synchronize_format()">
                         <span class="label label-important">Attention</span>&nbsp;Sync Output may not work correctly unless you have selected mp4.
                     </span>
                 </div>

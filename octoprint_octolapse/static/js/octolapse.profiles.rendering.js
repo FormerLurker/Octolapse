@@ -136,6 +136,10 @@ $(function() {
             return 'Image could not be retrieved from server. The error returned was: ' + self.overlay_preview_image_error() + '.';
         });
 
+        self.can_synchronize_format = ko.pureComputed(function() {
+           return ['mp4','h264'].indexOf(self.output_format()) > -1;
+        });
+
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
              $('#overlay_color').minicolors({format: 'rgb', opacity: true});
