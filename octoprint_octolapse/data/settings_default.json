@@ -893,7 +893,7 @@
       "ooze_shield_speed_multiplier": 100,
       "description": "This is a beta profile, use at your own risk.",
       "first_layer_speed_multiplier": 100,
-      "g90_influences_extruder": "use-octoprint-settings",
+      "g90_influences_extruder": "true",
       "solid_infill_speed_multiplier": 100,
       "origin_y": 0.0,
       "origin_x": 0.0,

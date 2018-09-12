@@ -1319,11 +1319,13 @@ class Printer(object):
 
     def get_speed_from_settings_other_slicer(self, speed, speed_name=None):
         if self.axis_speed_display_units == "mm-sec":
-            speed = speed * 60.0;
+            speed = speed * 60.0
         # Todo - Look at this, we need to round prob.
         return speed
 
     def get_speed_for_slicer_type(self, speed, speed_name=None):
+        if speed is None:
+            return None
         if self.slicer_type == 'slic3r-pe':
             return self.get_speed_from_settings_slic3r_pe(speed, speed_name)
         elif self.slicer_type == 'simplify-3d':
@@ -1342,7 +1344,7 @@ class Printer(object):
         elif self.slicer_type == 'cura':
             return self.speed_tolerance * 60.0
         elif self.slicer_type == 'other':
-            if self.axis_speed_display_units=='mm-sec':
+            if self.axis_speed_display_units == 'mm-sec':
                 return self.speed_tolerance * 60
             return self.speed_tolerance
         return self.speed_tolerance
