@@ -2139,7 +2139,7 @@
       "on_after_snapshot_script": ""
     }
   ],
-  "version": "0.3.4rc1.dev0",
+  "version": "0.3.4rc1.dev3",
   "show_real_snapshot_time": true,
   "position_restriction_types": [
     {
