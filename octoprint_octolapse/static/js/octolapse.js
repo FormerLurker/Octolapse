@@ -524,7 +524,7 @@ $(function () {
     };
 
     ko.extenders.axis_speed_unit = function (target, options) {
-        console.log("rounding to axis speed units");
+        //console.log("rounding to axis speed units");
         var result = ko.pureComputed({
             read: target,
             write: function (newValue) {
@@ -549,7 +549,7 @@ $(function () {
     };
 
     ko.extenders.round_to_increment = function (target, options) {
-        console.log("rounding to axis speed units");
+        //console.log("rounding to axis speed units");
         var round_to_increment = options.round_to_increment;
         var result = ko.pureComputed({
             read: target,

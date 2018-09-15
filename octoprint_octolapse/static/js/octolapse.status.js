@@ -141,7 +141,7 @@ $(function () {
             },this);
 
             self.has_configured_printer_profile = ko.pureComputed(function(){
-                console.log("detecting configured printers.")
+                //console.log("detecting configured printers.")
                 var current_printer = self.getCurrentProfileByGuid(self.profiles().printers());
                 if (current_printer != null)
                     return current_printer.has_been_saved_by_user;

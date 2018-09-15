@@ -164,7 +164,7 @@ Octolapse.create_other_slicer_viewmodel = function (profile_observables) {
                     return false;
 
                 }
-                console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
+                //console.log("Changing axis speed from " + previousUnit + " to " + newUnit)
                 // in case we want to have more units in the future, check all cases
                 // Convert all from mm-min to mm-sec
 
