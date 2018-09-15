@@ -1435,11 +1435,23 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # core UI here.
         return dict(
             js=[
-                "js/jquery.minicolors.min.js", "js/jquery.validate.min.js", "js/octolapse.js",
-                "js/octolapse.settings.js", "js/octolapse.settings.main.js", "js/octolapse.profiles.js",
-                "js/octolapse.profiles.printer.js", "js/octolapse.profiles.stabilization.js",
-                "js/octolapse.profiles.snapshot.js", "js/octolapse.profiles.rendering.js",
-                "js/octolapse.profiles.camera.js", "js/octolapse.profiles.debug.js", "js/octolapse.status.js"
+                "js/jquery.minicolors.min.js",
+                "js/jquery.validate.min.js",
+                "js/octolapse.js",
+                "js/octolapse.settings.js",
+                "js/octolapse.settings.main.js",
+                "js/octolapse.profiles.js",
+                "js/octolapse.profiles.printer.js",
+                "js/octolapse.profiles.printer.slicer.cura.js",
+                "js/octolapse.profiles.printer.slicer.other.js",
+                "js/octolapse.profiles.printer.slicer.simplify_3d.js",
+                "js/octolapse.profiles.printer.slicer.slic3r_pe.js",
+                "js/octolapse.profiles.stabilization.js",
+                "js/octolapse.profiles.snapshot.js",
+                "js/octolapse.profiles.rendering.js",
+                "js/octolapse.profiles.camera.js",
+                "js/octolapse.profiles.debug.js",
+                "js/octolapse.status.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"])

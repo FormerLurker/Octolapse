@@ -173,7 +173,11 @@ $(function() {
                 newProfile = new self.profileViewModelCreate(ko.toJS(self.default_profile())); // Create our profile viewmodel
             }
             else {
-                newProfile = new self.profileViewModelCreate(ko.toJS(self.getProfileByGuid(guid))); // Create our profile viewmodel
+                var current_profile = ko.toJS(self.getProfileByGuid(guid))
+                if(current_profile == null)
+                    return null;
+
+                newProfile = new self.profileViewModelCreate(ko.toJS(current_profile)); // Create our profile viewmodel
             }
             return newProfile;
         };
@@ -240,6 +244,9 @@ $(function() {
             }
             else {
                 var newProfile = self.getNewProfile(guid);
+                // If we don't find a profile, just return.  Something is messed up.
+                if (newProfile == null)
+                    return;
                 if (isCopy === true)
                 {
                     newProfile.guid("");

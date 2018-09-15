@@ -27,7 +27,7 @@
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
                     within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>
@@ -42,7 +42,7 @@
                 <label class="control-label" for="printer_profile_other_slicer_retract_length">*Retraction Length</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_length" step="0.0001" min="0.0001" max="100.0" required/>
+                        <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_length" step="0.0001" min="0.0000" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -82,8 +82,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_movement_speed" name="movement_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.movement_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.movement_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -97,8 +96,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_retract_speed" name="retract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -112,8 +110,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_detract_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.detract_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.detract_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -127,8 +124,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_print_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.print_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.print_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -142,8 +138,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_z_hop_speed" name="z_hop_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.z_hop_speed" step="0.001" min="0"
-                               max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.z_hop_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -157,8 +152,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_perimeter_speed" name="perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.perimeter_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -172,8 +166,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_small_perimeter_speed" name="small_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.small_perimeter_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.small_perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -188,8 +181,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_external_perimeter_speed" name="external_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.external_perimeter_speed" step="0.001"
-                               min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.external_perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -204,8 +196,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.infill_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -219,8 +210,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_solid_infill_speed" name="solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.solid_infill_speed" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.solid_infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -234,8 +224,7 @@
                 <div class="controls" for="slicer_other_top_solid_infill_speed">
                     <div class="input-append form-inline">
                         <input id="slicer_other_top_solid_infill_speed" name="top_solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.top_solid_infill_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.top_solid_infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -250,8 +239,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_support_speed" name="support_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.support_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.support_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -265,8 +253,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_bridge_speed" name="bridge_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.bridge_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.bridge_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -280,8 +267,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_gap_fill_speed" name="gap_fill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.gap_fill_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.gap_fill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -295,8 +281,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_first_layer_speed" name="first_layer_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -311,8 +296,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_first_layer_travel_speed" name="first_layer_travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_travel_speed" step="0.001"
-                               min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_travel_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -327,8 +311,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_skirt_brim_speed" name="skirt_brim_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.skirt_brim_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.skirt_brim_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -342,8 +325,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_above_raft_speed" name="above_raft_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.above_raft_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.above_raft_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -357,8 +339,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_ooze_shield_speed" name="ooze_shield_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.ooze_shield_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.ooze_shield_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -372,8 +353,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_prime_pillar_speed" name="prime_pillar_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.prime_pillar_speed" step="0.001" min="0"
-                               max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.prime_pillar_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                     </div>
@@ -392,8 +372,7 @@
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="slicer_other_speed_tolerance" name="speed_tolerance" type="number"
-                                   class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.speed_tolerance" step="0.000001" min="0"
-                                   max="9999999"/>
+                                   class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.speed_tolerance" min="0" max="9999999"/>
                             <span class="add-on">mm</span>
                             <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
                         </div>
@@ -425,7 +404,7 @@
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
                     within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>

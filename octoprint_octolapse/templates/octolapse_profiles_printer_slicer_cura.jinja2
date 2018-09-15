@@ -27,7 +27,7 @@
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
                     within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>
@@ -42,7 +42,7 @@
                     <label class="control-label" for="printer_profile_cura_retraction_distance">Retraction Distance</label>
                     <div class="controls">
                         <div class="input-append form-inline">
-                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.0001" min="0.0001" max="100.0" required/>
+                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.0001" min="0" max="100.0" required/>
                             <span class="add-on">mm</span>
                         </div>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#retraction-distance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -290,7 +290,7 @@
             </div>
             <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
                 <p>
-                    The following speeds missing and will not be matched properly when using 'Feature Detection' print quality settings
+                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
                     within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
                         <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
                     </span>

@@ -185,10 +185,10 @@ $(function () {
         if(tolerance_unit != newUnit)
         {
             switch (newUnit){
-            case "mm-min":
-                tolerance = tolerance * 60.0;
-            case "mm-sec":
-                tolerance = tolerance / 60.0;
+                case "mm-min":
+                    tolerance = tolerance * 60.0;
+                case "mm-sec":
+                    tolerance = tolerance / 60.0;
             }
         }
         if(newUnit == previousUnit)
@@ -314,6 +314,9 @@ $(function () {
         }, 'Please enter an integer value.');
 
     Octolapse.isPercent = function(value){
+
+        if(typeof value != 'string')
+            return false;
         if (!value)
             return false;
         var value = value.trim();
@@ -472,6 +475,105 @@ $(function () {
     });
     // Knockout numeric binding
     Octolapse.NullNumericText = "none";
+
+    Octolapse.round_axis_speed_unit = function (val, options) {
+        var round_to_increment_mm_min = options.round_to_increment_mm_min;
+        var round_to_increment_mm_sec = options.round_to_increment_mm_sec;
+        var current_units_observable = options.current_units_observable;
+        var round_to_percent = options.round_to_percent;
+        var return_text = options.return_text || false;
+
+        if (val == null)
+            return null;
+
+        // Check to see if it is a percent
+        var is_percent = Octolapse.isPercent(val)
+        if(is_percent)
+        {
+            if(round_to_percent)
+            {
+                val = Octolapse.parsePercent(val);
+            }
+            else
+                return null;
+        }
+        else
+            val = Octolapse.parseFloat(val)
+
+        if (val == null || isNaN(val))
+            return null;
+        try{
+            var round_to_increment = round_to_increment_mm_min;
+            if (is_percent) {
+                round_to_increment = round_to_percent
+            }
+            else if (current_units_observable() == 'mm-sec') {
+                round_to_increment = round_to_increment_mm_sec;
+            }
+            var rounded = Octolapse.roundToIncrement(val, round_to_increment);
+            if(is_percent && return_text)
+                return rounded.toString() + "%";
+            else if (return_text)
+                return rounded.toString();
+            return rounded;
+        }
+        catch (e){
+            console.log("Error rounding axis_speed_unit");
+        }
+
+    };
+
+    ko.extenders.axis_speed_unit = function (target, options) {
+        console.log("rounding to axis speed units");
+        var result = ko.pureComputed({
+            read: target,
+            write: function (newValue) {
+                var current = target();
+                var valueToWrite = Octolapse.round_axis_speed_unit(newValue, options);
+                //only write if it changed
+                if (valueToWrite !== current) {
+                    target(valueToWrite);
+                } else {
+                    //if the rounded value is the same, but a different value was written, force a notification for the current field
+                    if (newValue !== current) {
+                        target.notifySubscribers(valueToWrite);
+                    }
+                }
+
+            }
+        }).extend({ notify: 'always' });
+
+        result(target());
+
+        return result;
+    };
+
+    ko.extenders.round_to_increment = function (target, options) {
+        console.log("rounding to axis speed units");
+        var round_to_increment = options.round_to_increment;
+        var result = ko.pureComputed({
+            read: target,
+            write: function (newValue) {
+                var current = target();
+                var valueToWrite = Octolapse.roundToIncrement(newValue, round_to_increment);
+                //only write if it changed
+                if (valueToWrite !== current) {
+                    target(valueToWrite);
+                } else {
+                    //if the rounded value is the same, but a different value was written, force a notification for the current field
+                    if (newValue !== current) {
+                        target.notifySubscribers(valueToWrite);
+                    }
+                }
+
+            }
+        }).extend({ notify: 'always' });
+
+        result(target());
+
+        return result;
+    };
+
     ko.extenders.numeric = function (target, precision) {
         var result = ko.dependentObservable({
             read: function () {
