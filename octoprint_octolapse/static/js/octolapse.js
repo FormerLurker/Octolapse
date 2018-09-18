@@ -587,6 +587,9 @@ $(function () {
                 if (val == null)
                     return val;
                 try{
+                    // safari doesn't seem to like toFixed with a precision > 20
+                    if(precision > 20)
+                        precision = 20;
                     return val.toFixed(precision);
                 }
                 catch (e){
