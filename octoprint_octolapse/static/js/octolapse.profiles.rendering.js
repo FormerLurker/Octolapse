@@ -115,7 +115,7 @@ $(function() {
             },
             write: function (value) {
                 // Extract values.
-                var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1,).map(Number);
+                var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1).map(Number);
                 // Multiply alpha by 255 and round.
                 rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.
@@ -179,12 +179,14 @@ $(function() {
 
         // Load watermark list from server-side Octolapse directory.
         self.updateWatermarkList = function() {
+
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') +
                 'rendering/watermark')
                     .then(function(response) {
                         self.watermark_list.removeAll()
-                        for (let file of response['filepaths']) {
-                            self.watermark_list.push(new WatermarkImage(file));
+                        // The let format is not working in some versions of safari
+                        for (var index = 0; index < response['filepaths'].length;index++) {
+                            self.watermark_list.push(new WatermarkImage(response['filepaths'][index]));
                         }
                      }, function(response) {
                         self.watermark_list.removeAll()
@@ -218,7 +220,14 @@ $(function() {
                     $progressBar.animate({'width': '100%'}, {'queue':false});
                     self.updateWatermarkList().then(function() {
                         // Find the new watermark in the list and select it.
-                        var matchingWatermarks = self.watermark_list().filter(w=>w.getFilename() == data.files[0].name);
+                        var matchingWatermarks = [];
+                        // The lambda version was not working in safari
+                        for(var index=0;index<self.watermark_list();index++)
+                        {
+                            if(data.files[0] == self.watermark_list()[index].getFilename())
+                                matchingWatermarks.push(self.watermark_list()[index]);
+                        }
+                        //var matchingWatermarks = self.watermark_list().filter(w=>w.getFilename() == data.files[0].name);
                         if (matchingWatermarks.length == 0) {
                             //console.log("Error: No matching watermarks found!");
                             return
@@ -240,9 +249,10 @@ $(function() {
         self.updateFontList = function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/font')
                     .then(function(response) {
-                        self.font_list.removeAll()
-                        for (let f of response) {
-                            self.font_list.push(new Font(f));
+                        self.font_list.removeAll();
+                        // The let expression was not working in safari
+                        for (var index = 0; index< response.length; index++) {
+                            self.font_list.push(new Font(response[index]));
                         }
                      }, function(response) {
                         // Failed to load any fonts.

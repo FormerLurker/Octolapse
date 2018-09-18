@@ -222,6 +222,11 @@ $(function () {
         if ((increment % 1) != 0)
             numDecimals = increment.toString().split(".")[1].length;
 
+        // tofixed can only support 20 decimals, reduce if necessary
+        if(numDecimals > 20) {
+            //console.log("Too much precision for tofixed:" + numDecimals + " - Reducing to 20");
+            numDecimals = 20;
+        }
         // truncate value to numDecimals decimals
         value = parseFloat(value.toFixed(numDecimals).toString())
 
@@ -693,9 +698,12 @@ $(function () {
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
         };
+
+        self.startup_complete = false;
         self.onStartupComplete = function () {
             //console.log("Startup Complete")
             self.getInitialState();
+            self.startup_complete = true;
 
         };
         self.onDataUpdaterReconnect = function () {
@@ -705,9 +713,15 @@ $(function () {
         };
 
         self.getInitialState = function(){
+            //console.log("Getting initial state");
+            if(!self.startup_complete && self.is_admin()) {
+                //console.log("octolapse.js - Loading settings for current user after startup.");
+                Octolapse.Settings.loadSettings();
+            }
             self.loadState();
             // reset snapshot error state
             Octolapse.Status.snapshot_error(false);
+            //console.log("Finished loading initial state.");
 
         }
 
@@ -722,7 +736,7 @@ $(function () {
                 dataType: "json",
                 success: function (result) {
                     //console.log("The state has been loaded.  Waiting for message");
-
+                    self.initial_state_loaded = true;
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
 
@@ -732,12 +746,18 @@ $(function () {
                 }
             });
         };
+
+
         self.onUserLoggedIn = function (user) {
-            //console.log("octolapse.js - User Logged In.  User: " + user);
             self.is_admin(self.loginState.isAdmin());
-            if(self.is_admin())
+            if(self.is_admin() && self.startup_complete) {
+                //console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
                 Octolapse.Settings.loadSettings();
+            }
+            //else
+            //    console.log("octolapse.js - User Logged In before startup - waiting to load settings.  User: " + user.name);
         };
+
         self.onUserLoggedOut = function () {
             //console.log("octolapse.js - User Logged Out");
             self.is_admin(false);
@@ -790,6 +810,7 @@ $(function () {
 
             self.HasLoadedState = true;
         };
+
         self.update = function (settings) {
             // enabled
             if (ko.isObservable(settings.is_octolapse_enabled))

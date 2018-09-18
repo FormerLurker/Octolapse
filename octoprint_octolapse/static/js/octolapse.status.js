@@ -142,14 +142,13 @@ $(function () {
 
             self.has_configured_printer_profile = ko.pureComputed(function(){
                 //console.log("detecting configured printers.")
-                var current_printer = self.getCurrentProfileByGuid(self.profiles().printers());
+                var current_printer = self.getCurrentProfileByGuid(self.profiles().printers(),Octolapse.Status.current_printer_profile_guid());
                 if (current_printer != null)
                     return current_printer.has_been_saved_by_user;
                 return true;
             },this);
 
-            self.getCurrentProfileByGuid = function(profiles){
-                guid = Octolapse.Status.current_printer_profile_guid();
+            self.getCurrentProfileByGuid = function(profiles, guid){
                 if (guid != null) {
                     for (var i = 0; i < profiles.length; i++) {
                         if (profiles[i].guid == guid) {
@@ -585,7 +584,7 @@ $(function () {
                     if (event.originalEvent) {
                         // Get the current guid
                         var guid = $("#octolapse_tab_stabilization_profile").val();
-                        //console.log("Default stabilization is changing to " + guid);
+                        //console.log("Default stabilization is changing to " + guid + " from " + self.current_stabilization_profile_guid());
                         Octolapse.Stabilizations.setCurrentProfile(guid);
                         return true;
                     }
