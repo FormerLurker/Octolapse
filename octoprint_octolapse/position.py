@@ -436,6 +436,11 @@ class Position(object):
             self.LocationDetectionCommands.append("G28")
         if "G29" not in self.LocationDetectionCommands:
             self.LocationDetectionCommands.append("G29")
+        if "G161" not in self.LocationDetectionCommands:
+            self.LocationDetectionCommands.append("G161")
+        if "G162" not in self.LocationDetectionCommands:
+            self.LocationDetectionCommands.append("G162")
+
 
     def update_position(self,
                         x=None,
@@ -957,62 +962,8 @@ class Position(object):
                         "Received G21 - Already in millimeters."
                     )
             elif pos.parsed_command.cmd == "G28":
-                # Home
-                pos.HasReceivedHomeCommand = True
-                x = True if "X" in pos.parsed_command.parameters else None
-                y = True if "Y" in pos.parsed_command.parameters else None
-                z = True if "Z" in pos.parsed_command.parameters else None
-                # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
-                #w = parameters["W"] if "W" in parameters else None
-
-                x_homed = False
-                y_homed = False
-                z_homed = False
-                if x is not None:
-                    x_homed = True
-                if y is not None:
-                    y_homed = True
-                if z is not None:
-                    z_homed = True
-
-                # if there are no x,y or z parameters, we're homing all axes
-                if x is None and y is None and z is None:
-                    x_homed = True
-                    y_homed = True
-                    z_homed = True
-
-                home_strings = []
-                if x_homed:
-                    pos.XHomed = True
-                    pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
-                    if pos.X is None:
-                        home_strings.append("Homing X to Unknown Origin.")
-                    else:
-                        home_strings.append("Homing X to {0}.".format(
-                            get_formatted_coordinate(pos.X)))
-                if y_homed:
-                    pos.YHomed = True
-                    pos.Y = self.Origin[
-                        "Y"] if not self.Printer.auto_detect_position else None
-                    if pos.Y is None:
-                        home_strings.append("Homing Y to Unknown Origin.")
-                    else:
-                        home_strings.append("Homing Y to {0}.".format(
-                            get_formatted_coordinate(pos.Y)))
-                if z_homed:
-                    pos.ZHomed = True
-                    pos.Z = self.Origin[
-                        "Z"] if not self.Printer.auto_detect_position else None
-                    if pos.Z is None:
-                        home_strings.append("Homing Z to Unknown Origin.")
-                    else:
-                        home_strings.append("Homing Z to {0}.".format(
-                            get_formatted_coordinate(pos.Z)))
-
-                self.Settings.current_debug_profile().log_position_command_received(
-                    "Received G28 - ".format(" ".join(home_strings)))
-                pos.HasPositionError = False
-                pos.PositionError = None
+                # note, this command alters pos
+                self._g28_received(pos)
                 # we must do this in case we have more than one home command
                 previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
             elif pos.parsed_command.cmd == "G90":
@@ -1071,44 +1022,6 @@ class Position(object):
                         self.Settings.current_debug_profile().log_position_command_received(
                             "Received G91 - Already using relative extruder coordinates"
                         )
-            elif pos.parsed_command.cmd == "M83":
-                # Extruder - Set Relative
-                if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
-                    self.Settings.current_debug_profile().log_position_command_received(
-                        "Received M83 - Switching Extruder to Relative Coordinates"
-                    )
-                    pos.IsExtruderRelative = True
-            elif pos.parsed_command.cmd == "M82":
-                # Extruder - Set Absolute
-                if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
-                    self.Settings.current_debug_profile().log_position_command_received(
-                        "Received M82 - Switching Extruder to Absolute Coordinates"
-                    )
-                    pos.IsExtruderRelative = False
-            elif pos.parsed_command.cmd == "M207":
-                self.Settings.current_debug_profile().log_position_command_received(
-                    "Received M207 - setting firmware retraction values"
-                )
-                # Firmware Retraction Tracking
-                if "S" in pos.parsed_command.parameters:
-                    pos.FirmwareRetractionLength = pos.parsed_command.parameters["S"]
-                if "R" in pos.parsed_command.parameters:
-                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["R"]
-                if "F" in pos.parsed_command.parameters:
-                    pos.FirmwareRetractionFeedrate = pos.parsed_command.parameters["F"]
-                if "T" in pos.parsed_command.parameters:
-                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["T"]
-                if "Z" in pos.parsed_command.parameters:
-                    pos.FirmwareZLift = pos.parsed_command.parameters["Z"]
-            elif pos.parsed_command.cmd == "M208":
-                self.Settings.current_debug_profile().log_position_command_received(
-                    "Received M207 - setting firmware detraction values"
-                )
-                # Firmware Retraction Tracking
-                if "S" in pos.parsed_command.parameters:
-                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["S"]
-                if "F" in pos.parsed_command.parameters:
-                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["F"]
             elif pos.parsed_command.cmd == "G92":
                 # Set Position (offset)
 
@@ -1153,7 +1066,7 @@ class Position(object):
 
                 if z is not None:
                     if pos.Z is not None and pos.ZHomed:
-                            pos.ZOffset = pos.Z - utility.get_float(z, 0)
+                        pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     else:
                         pos.Z = utility.get_float(z, 0)
 
@@ -1170,6 +1083,54 @@ class Position(object):
                     "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                     "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
                         parsed_command.gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
+            elif pos.parsed_command.cmd == "G161":
+                # note, this command alters pos
+                self._g161_received(pos)
+                # we must do this in case we have more than one home command
+                previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
+            elif pos.parsed_command.cmd == "G162":
+                self._g162_received(pos)
+                # we must do this in case we have more than one home command
+                previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
+            elif pos.parsed_command.cmd == "M83":
+                # Extruder - Set Relative
+                if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
+                    self.Settings.current_debug_profile().log_position_command_received(
+                        "Received M83 - Switching Extruder to Relative Coordinates"
+                    )
+                    pos.IsExtruderRelative = True
+            elif pos.parsed_command.cmd == "M82":
+                # Extruder - Set Absolute
+                if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
+                    self.Settings.current_debug_profile().log_position_command_received(
+                        "Received M82 - Switching Extruder to Absolute Coordinates"
+                    )
+                    pos.IsExtruderRelative = False
+            elif pos.parsed_command.cmd == "M207":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware retraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in pos.parsed_command.parameters:
+                    pos.FirmwareRetractionLength = pos.parsed_command.parameters["S"]
+                if "R" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["R"]
+                if "F" in pos.parsed_command.parameters:
+                    pos.FirmwareRetractionFeedrate = pos.parsed_command.parameters["F"]
+                if "T" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["T"]
+                if "Z" in pos.parsed_command.parameters:
+                    pos.FirmwareZLift = pos.parsed_command.parameters["Z"]
+            elif pos.parsed_command.cmd == "M208":
+                self.Settings.current_debug_profile().log_position_command_received(
+                    "Received M207 - setting firmware detraction values"
+                )
+                # Firmware Retraction Tracking
+                if "S" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionAdditionalLength = pos.parsed_command.parameters["S"]
+                if "F" in pos.parsed_command.parameters:
+                    pos.FirmwareUnretractionFeedrate = pos.parsed_command.parameters["F"]
+
 
         ########################################
         # Update the extruder monitor.
@@ -1272,6 +1233,182 @@ class Position(object):
             pos.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled()
 
         self.Positions.appendleft(pos)
+
+    def _g28_received(self,pos):
+        # Home
+        pos.HasReceivedHomeCommand = True
+        x = True if "X" in pos.parsed_command.parameters else None
+        y = True if "Y" in pos.parsed_command.parameters else None
+        z = True if "Z" in pos.parsed_command.parameters else None
+        # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
+        # w = parameters["W"] if "W" in parameters else None
+
+        x_homed = False
+        y_homed = False
+        z_homed = False
+        if x is not None:
+            x_homed = True
+        if y is not None:
+            y_homed = True
+        if z is not None:
+            z_homed = True
+
+        # if there are no x,y or z parameters, we're homing all axes
+        if x is None and y is None and z is None:
+            x_homed = True
+            y_homed = True
+            z_homed = True
+
+        home_strings = []
+        if x_homed:
+            pos.XHomed = True
+            pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
+            if pos.X is None:
+                home_strings.append("Homing X to Unknown Origin.")
+            else:
+                home_strings.append("Homing X to {0}.".format(
+                    get_formatted_coordinate(pos.X)))
+        if y_homed:
+            pos.YHomed = True
+            pos.Y = self.Origin[
+                "Y"] if not self.Printer.auto_detect_position else None
+            if pos.Y is None:
+                home_strings.append("Homing Y to Unknown Origin.")
+            else:
+                home_strings.append("Homing Y to {0}.".format(
+                    get_formatted_coordinate(pos.Y)))
+        if z_homed:
+            pos.ZHomed = True
+            pos.Z = self.Origin[
+                "Z"] if not self.Printer.auto_detect_position else None
+            if pos.Z is None:
+                home_strings.append("Homing Z to Unknown Origin.")
+            else:
+                home_strings.append("Homing Z to {0}.".format(
+                    get_formatted_coordinate(pos.Z)))
+
+        self.Settings.current_debug_profile().log_position_command_received(
+            "Received G28 - ".format(" ".join(home_strings)))
+        pos.HasPositionError = False
+        pos.PositionError = None
+
+    def _g161_received(self, pos):
+        # Home
+        pos.HasReceivedHomeCommand = True
+        x = True if "X" in pos.parsed_command.parameters else None
+        y = True if "Y" in pos.parsed_command.parameters else None
+        z = True if "Z" in pos.parsed_command.parameters else None
+        f = True if "F" in pos.parsed_command.parameters else None
+        # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
+        # w = parameters["W"] if "W" in parameters else None
+
+        x_homed = False
+        y_homed = False
+        z_homed = False
+        if x is not None:
+            x_homed = True
+        if y is not None:
+            y_homed = True
+        if z is not None:
+            z_homed = True
+
+        if f is not None:
+            pos.F = f
+
+        # if there are no x,y or z parameters, we're homing all axes
+        if x is None and y is None and z is None:
+            x_homed = True
+            y_homed = True
+            z_homed = True
+
+        home_strings = []
+        if x_homed:
+            pos.XHomed = True
+            pos.X = self.Printer.min_x if not self.Printer.auto_detect_position else None
+            if pos.X is None:
+                home_strings.append("Homing X to Unknown Minimum.")
+            else:
+                home_strings.append("Homing X to {0}.".format(
+                    get_formatted_coordinate(pos.X)))
+        if y_homed:
+            pos.YHomed = True
+            pos.Y = self.Printer.min_y if not self.Printer.auto_detect_position else None
+            if pos.Y is None:
+                home_strings.append("Homing Y to Unknown Minimum.")
+            else:
+                home_strings.append("Homing Y to {0}.".format(
+                    get_formatted_coordinate(pos.Y)))
+        if z_homed:
+            pos.ZHomed = True
+            pos.Z = self.Printer.min_z if not self.Printer.auto_detect_position else None
+            if pos.Z is None:
+                home_strings.append("Homing Z to Unknown Minimum.")
+            else:
+                home_strings.append("Homing Z to {0}.".format(
+                    get_formatted_coordinate(pos.Z)))
+
+        self.Settings.current_debug_profile().log_position_command_received(
+            "Received G161 - ".format(" ".join(home_strings)))
+        pos.HasPositionError = False
+        pos.PositionError = None
+
+    def _g162_received(self, pos):
+        # Home
+        pos.HasReceivedHomeCommand = True
+        x = True if "X" in pos.parsed_command.parameters else None
+        y = True if "Y" in pos.parsed_command.parameters else None
+        z = True if "Z" in pos.parsed_command.parameters else None
+        f = True if "F" in pos.parsed_command.parameters else None
+
+        x_homed = False
+        y_homed = False
+        z_homed = False
+        if x is not None:
+            x_homed = True
+        if y is not None:
+            y_homed = True
+        if z is not None:
+            z_homed = True
+
+        if f is not None:
+            pos.F = f
+
+        # if there are no x,y or z parameters, we're homing all axes
+        if x is None and y is None and z is None:
+            x_homed = True
+            y_homed = True
+            z_homed = True
+
+        home_strings = []
+        if x_homed:
+            pos.XHomed = True
+            pos.X = self.Printer.max_x if not self.Printer.auto_detect_position else None
+            if pos.X is None:
+                home_strings.append("Homing X to Unknown Maximum.")
+            else:
+                home_strings.append("Homing X to {0}.".format(
+                    get_formatted_coordinate(pos.X)))
+        if y_homed:
+            pos.YHomed = True
+            pos.Y = self.Printer.max_y if not self.Printer.auto_detect_position else None
+            if pos.Y is None:
+                home_strings.append("Homing Y to Unknown Maximum.")
+            else:
+                home_strings.append("Homing Y to {0}.".format(
+                    get_formatted_coordinate(pos.Y)))
+        if z_homed:
+            pos.ZHomed = True
+            pos.Z = self.Printer.max_z if not self.Printer.auto_detect_position else None
+            if pos.Z is None:
+                home_strings.append("Homing Z to Unknown Maximum.")
+            else:
+                home_strings.append("Homing Z to {0}.".format(
+                    get_formatted_coordinate(pos.Z)))
+
+        self.Settings.current_debug_profile().log_position_command_received(
+            "Received G162 - ".format(" ".join(home_strings)))
+        pos.HasPositionError = False
+        pos.PositionError = None
 
     def has_homed_position(self, index=0):
         if len(self.Positions) <= index:

@@ -22,6 +22,7 @@
 ##################################################################################
 import operator
 from six import string_types
+import utility
 
 
 class CommandParameter(object):
@@ -380,6 +381,30 @@ class Commands(object):
         }
     )
 
+    G161 = Command(
+        "G161",
+        "Home axis to minimum",
+        "G161 - Home axis to minimum X={X}, Y={Y}, Z={Z}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
+            "F": CommandParameter("F", CommandParameter.parse_float, 4)
+        }
+    )
+
+    G162 = Command(
+        "G162",
+        "Home axis to maximum",
+        "G162 - Home axis to maximum X={X}, Y={Y}, Z={Z}, F={F}",
+        parameters={
+            "X": CommandParameter("X", CommandParameter.parse_float, 1),
+            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+            "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
+            "F": CommandParameter("F", CommandParameter.parse_float, 4)
+        }
+    )
+
     M190 = Command(
         "M190",
         "Set bed temperature and wait",
@@ -452,6 +477,8 @@ class Commands(object):
             G90.Command: G90,
             G91.Command: G91,
             G92.Command: G92,
+            G161.Command: G161,
+            G162.Command: G162,
             M82.Command: M82,
             M83.Command: M83,
             M104.Command: M104,
@@ -534,22 +561,22 @@ class Commands(object):
 
     @staticmethod
     def parse(gcode):
-
-        stripped_gcode = Commands.strip_comments(gcode)
-        if stripped_gcode is None:
-            return ParsedCommand(None, None, gcode)
+        original_gcode = gcode
+        gcode = Commands.strip_comments(gcode)
+        if gcode is None:
+            return ParsedCommand(None, None, original_gcode)
 
         # ignore blank lines
         if len(gcode) < 1:
-            return ParsedCommand(None, None, gcode)
+            return ParsedCommand(None, None, original_gcode)
 
         # ignore any lines that start with a %
         if gcode[0] == "%":
-            return ParsedCommand(None, None, gcode)
+            return ParsedCommand(None, None, original_gcode)
 
         # make sure our string is greater than 2 characters
         if len(gcode) < 2:
-            return ParsedCommand(None, None, gcode)
+            return ParsedCommand(None, None, original_gcode)
 
         # extract any line numbers
         if gcode[0] == "N":
@@ -571,12 +598,12 @@ class Commands(object):
         # Now we should be left with the command and any parameters
         # Make sure our command is a valid one
         if len(gcode) < 2:
-            return ParsedCommand(None, None, gcode)
+            return ParsedCommand(None, None, original_gcode)
 
         # get the command letter
         command_letter = gcode[0].upper()
         if command_letter not in Commands.GcodeWords:
-            return ParsedCommand(None, None, gcode)
+            return ParsedCommand(None, None, original_gcode)
 
         # search for decimals or periods to build the command address
         command_address = ""
@@ -589,24 +616,31 @@ class Commands(object):
                 command_address += c
             elif c == ".":
                 if not has_seen_period:
-                    # if the command add
-                    command_address = str(int(command_address))
+                    # add the current command address if it exists
+                    address_number = utility.get_int(command_address, -1)
+                    if address_number > -1:
+                        command_address = str(address_number)
+                    else:
+                        command_address = '?'
                     command_address += c
                     has_seen_period = True
                 else:
 
-                    return ParsedCommand(None, None, gcode, error="Cannot parse the gcode address, multiple periods "
+                    return ParsedCommand(None, None, original_gcode, error="Cannot parse the gcode address, multiple periods "
                                                                   "seen.")
             else:
                 break
         # If we've not seen any periods, strip any leading 0s from the gcode
         if not has_seen_period:
-            command_address = str(int(command_address))
-
+            address_number = utility.get_int(command_address, -1)
+            if address_number > -1:
+                command_address = str(address_number)
+            else:
+                command_address = '?'
         # make sure the command is in the dictionary
         command_to_search = command_letter + command_address
         if command_to_search not in Commands.CommandsDictionary.keys():
-            return ParsedCommand(command_to_search, None, gcode)
+            return ParsedCommand(command_to_search, None, original_gcode)
 
         cmd = Commands.CommandsDictionary[command_to_search]
 
@@ -620,8 +654,8 @@ class Commands(object):
             try:
                 parameters = cmd.parse_parameters(parameters)
             except ValueError as e:
-                ParsedCommand(command_to_search, None, gcode, error=str(e))
-        return ParsedCommand(command_to_search, parameters, gcode)
+                ParsedCommand(command_to_search, None, original_gcode, error=str(e))
+        return ParsedCommand(command_to_search, parameters, original_gcode)
 
     @staticmethod
     def to_string(parsed_command):

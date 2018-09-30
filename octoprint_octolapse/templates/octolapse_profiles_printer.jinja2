@@ -152,7 +152,7 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 </label>
                 <span class="help-inline">
-                    Setting this option to true causes Octolapse to pause the print after it receives a home command (G28) or a mesh bed leveling command (G29) in order to aquire a location.  It will resume the print when complete.
+                    Setting this option to true causes Octolapse request a position (M114) after receiving a home/mesh bed leveling command (G28, G29, G161, G162).
                 </span>
             </div>
         </div>
@@ -167,7 +167,7 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#additional-location-detection-commands" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
 
                     <div class="error_label_container text-error" data-error-for="printer_profile_auto_position_detection_commands"></div>
-                    <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28 or G29 in the list.</span>
+                    <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28, G29, G161 or G162 in the list.</span>
                 </div>
             </div>
         </div>

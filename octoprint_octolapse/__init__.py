@@ -1296,6 +1296,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             # only handle commands sent while printing
             if self.Timelapse is not None:
+                # needed to handle non utf-8 characters
+                cmd = cmd.encode('ascii', 'ignore')
                 return self.Timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             if self.Settings is not None:
@@ -1306,6 +1308,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_gcode_sending(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
             if self.Timelapse:
+                # needed to handle non utf-8 characters
+                cmd = cmd.encode('ascii', 'ignore')
                 # we always want to send this event, else we may get stuck waiting for a position request!
                 self.Timelapse.on_gcode_sending(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
@@ -1317,6 +1321,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
             if self.Timelapse is not None and self.Timelapse.is_timelapse_active():
+                # needed to handle non utf-8 characters
+                cmd = cmd.encode('ascii', 'ignore')
                 self.Timelapse.on_gcode_sent(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             if self.Settings is not None:
