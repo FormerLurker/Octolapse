@@ -1057,7 +1057,7 @@ class Position(object):
                         pos.XHomed = True
                 if y is not None:
                     if pos.Y is not None and pos.YHomed:
-                            pos.YOffset = pos.Y - utility.get_float(y, 0)
+                        pos.YOffset = pos.Y - utility.get_float(y, 0)
                     else:
                         pos.Y = utility.get_float(y, 0)
 
