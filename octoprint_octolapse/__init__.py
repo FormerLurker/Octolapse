@@ -210,10 +210,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
     def load_state_request(self):
+        # todo:  add a timer to wait for the settings to load!
         if self.Settings is None:
             raise Exception(
                 "Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please wait a few "
                 "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
+        #todo:  add a timer to wait for the timelapse to be initialized
         if self.Timelapse is None:
             raise Exception(
                 "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please wait a few "
@@ -584,7 +586,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return self._settings.get_plugin_logfile_path()
 
     def load_settings(self, force_defaults=False):
-        # if the settings file does not exist, create one from the default settings
         create_new_settings = False
         settings_upgraded = False
         if not os.path.isfile(self.get_settings_file_path()) or force_defaults:

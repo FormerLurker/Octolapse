@@ -1300,7 +1300,7 @@
       "guid": "39ab406e-4304-4a46-aa0e-0158d0dfa573",
       "priming_height": 0.75,
       "small_perimeter_speed_multiplier": null,
-      "has_been_saved_by_user": false, 
+      "has_been_saved_by_user": false,
       "origin_z": 0.0,
       "abort_out_of_bounds": true,
       "min_y": -74.0,
