@@ -237,22 +237,28 @@ class SnapshotGcodeGenerator(object):
 
         assert (isinstance(triggering_command_position, Pos))
 
-        x_return = position.x()
-        y_return = position.y()
-        z_return = position.z()
-        f_return = position.f()
+        current_position = position.get_position(0)
+        if current_position is None:
+            return None
+
+        assert (isinstance(current_position, Pos))
+        x_return = current_position.X
+        y_return = current_position.Y
+        z_return = current_position.Z
+        f_return = current_position.F
         # e_return = position.e()
 
-        is_relative = position.is_relative()
-        is_extruder_relative = position.is_extruder_relative()
-        is_metric = position.is_metric()
-        z_lift = position.distance_to_zlift()
+        is_relative = current_position.IsRelative
+        is_extruder_relative = current_position.IsExtruderRelative
+        is_metric = current_position.IsMetric
+
+        z_lift = current_position.distance_to_zlift(position.ZHop)
+
         if z_lift is None:
-            pos = position.get_position(0)
-            if pos is not None:
-                self.Settings.current_debug_profile().log_warning(
-                    "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(pos.Z, pos.LastExtrusionHeight)
-                )
+            self.Settings.current_debug_profile().log_warning(
+                "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(
+                    current_position.Z, current_position.LastExtrusionHeight))
+
         length_to_retract = position.Extruder.length_to_retract()
         final_command = parsed_command.gcode
 
