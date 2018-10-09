@@ -27,10 +27,9 @@ import time
 import uuid
 from Queue import Queue
 
-import octoprint.util.comm as OctoprintComm
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
-from octoprint_octolapse.gcode_parser import Commands, ParsedCommand
+from octoprint_octolapse.gcode_parser import Commands, ParsedCommand, Response
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs
 from octoprint_octolapse.settings import Printer, Snapshot, OctolapseSettings
@@ -180,7 +179,7 @@ class Timelapse(object):
         if self._position_request_sent:
             self._position_request_sent = False
             self.Settings.current_debug_profile().log_print_state_change(
-                "Octolapse has received an position request response.")
+                "Octolapse has received a position request response.")
             if self.State in [TimelapseState.AcquiringLocation, TimelapseState.TakingSnapshot, TimelapseState.WaitingToEndTimelapse, TimelapseState.WaitingToRender]:
                 # set flag to false so that it can be triggered again after the next M114 sent by Octolapse
                 self._position_payload = payload
@@ -891,32 +890,14 @@ class Timelapse(object):
         self.Settings.current_debug_profile().log_gcode_received(
             "Received from printer: line:{0}".format(line)
         )
-        #if self._position_request_sent:
-        #    payload = self.check_for_position_request(line)
-        #    if payload:
-        #        self.on_position_received(payload)
+        if self._position_request_sent:
+            payload = Response.check_for_position_request(line)
+            if payload:
+                self.on_position_received(payload)
 
         return line
 
-    #def check_for_position_request(self, line):
-    #    ##~~ position report processing
-    #    if 'X:' in line and 'Y:' in line and 'Z:' in line:
-    #        parsed = OctoprintComm.parse_position_line(line)
-    #        if parsed:
-    #            # we don't know T or F when printing from SD since
-    #            # there's no way to query it from the firmware and
-    #            # no way to track it ourselves when not streaming
-    #            # the file - this all sucks sooo much
-    #
-    #            x = parsed.get("x")
-    #            y = parsed.get("y")
-    #            z = parsed.get("z")
-    #            e = None
-    #            if "e" in parsed:
-    #                e = parsed.get("e")
-    #            return {'x': x, 'y': y, 'z': z, 'e': e, }
-    #
-    #    return False
+
 
     # internal functions
     ####################

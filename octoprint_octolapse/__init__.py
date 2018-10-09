@@ -846,8 +846,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.send_state_changed_message({"Status": self.get_status_dict()})
             if event == Events.CLIENT_OPENED:
                 self.send_state_changed_message({"Status": self.get_status_dict()})
-            if event == Events.POSITION_UPDATE:
-                self.Timelapse.on_position_received(payload)
+            #if event == Events.POSITION_UPDATE:
+            #    self.Timelapse.on_position_received(payload)
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
             elif event == Events.DISCONNECTED:

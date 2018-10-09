@@ -23,7 +23,7 @@
 import operator
 from six import string_types
 import utility
-
+import re
 
 class CommandParameter(object):
     def __init__(self, name, parse_function, order):
@@ -691,3 +691,69 @@ class Commands(object):
 
         return lines
 
+
+class Response(object):
+    # This code was copied from the OctoPrint comm.pi file in order to sidestep an issue
+    # where position responses with spaces after a colon (for example:  ok X:150.0 Y:150.0 Z:  0.7 E:  0.0)
+    # were not being detected as a position response, and failed to file a PositionReceived event
+    regex_float_pattern = "[-+]?[0-9]*\.?[0-9]+"
+    regex_e_positions = re.compile("E(?P<id>\d+):(?P<value>{float})".format(float=regex_float_pattern))
+    regex_position = re.compile(
+        "X:\s*(?P<x>{float})\s*Y:\s*(?P<y>{float})\s*Z:\s*(?P<z>{float})\s*((E:\s*(?P<e>{float}))|(?P<es>(E\d+:{float}\s*)+))"
+        .format(float=regex_float_pattern))
+
+    @staticmethod
+    def parse_position_line(line):
+        """
+        Parses the provided M114 response line and returns the parsed coordinates.
+
+        Args:
+            line (str): the line to parse
+
+        Returns:
+            dict or None: the parsed coordinates, or None if no coordinates could be parsed
+        """
+
+        match = Response.regex_position.search(line)
+        if match is not None:
+            result = dict(x=float(match.group("x")),
+                          y=float(match.group("y")),
+                          z=float(match.group("z")))
+            if match.group("e") is not None:
+                # report contains only one E
+                result["e"] = float(match.group("e"))
+
+            elif match.group("es") is not None:
+                # report contains individual entries for multiple extruders ("E0:... E1:... E2:...")
+                es = match.group("es")
+                for m in Response.regex_e_positions.finditer(es):
+                    result["e{}".format(m.group("id"))] = float(m.group("value"))
+
+            else:
+                # apparently no E at all, should never happen but let's still handle this
+                return None
+
+            return result
+
+        return None
+
+    @staticmethod
+    def check_for_position_request(line):
+        ##~~ position report processing
+        if 'X:' in line and 'Y:' in line and 'Z:' in line:
+            parsed = Response.parse_position_line(line)
+            if parsed:
+                # we don't know T or F when printing from SD since
+                # there's no way to query it from the firmware and
+                # no way to track it ourselves when not streaming
+                # the file - this all sucks sooo much
+
+                x = parsed.get("x")
+                y = parsed.get("y")
+                z = parsed.get("z")
+                e = None
+                if "e" in parsed:
+                    e = parsed.get("e")
+                return {'x': x, 'y': y, 'z': z, 'e': e, }
+
+        return False
