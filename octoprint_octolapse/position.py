@@ -1324,25 +1324,25 @@ class Position(object):
         home_strings = []
         if x_homed:
             pos.XHomed = True
-            pos.X = self.Printer.min_x if not self.Printer.auto_detect_position else None
+            pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
             if pos.X is None:
-                home_strings.append("Homing X to Unknown Minimum.")
+                home_strings.append("Homing X to Unknown Origin.")
             else:
                 home_strings.append("Homing X to {0}.".format(
                     get_formatted_coordinate(pos.X)))
         if y_homed:
             pos.YHomed = True
-            pos.Y = self.Printer.min_y if not self.Printer.auto_detect_position else None
+            pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
             if pos.Y is None:
-                home_strings.append("Homing Y to Unknown Minimum.")
+                home_strings.append("Homing Y to Unknown Origin.")
             else:
                 home_strings.append("Homing Y to {0}.".format(
                     get_formatted_coordinate(pos.Y)))
         if z_homed:
             pos.ZHomed = True
-            pos.Z = self.Printer.min_z if not self.Printer.auto_detect_position else None
+            pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
             if pos.Z is None:
-                home_strings.append("Homing Z to Unknown Minimum.")
+                home_strings.append("Homing Z to Unknown Origin.")
             else:
                 home_strings.append("Homing Z to {0}.".format(
                     get_formatted_coordinate(pos.Z)))
@@ -1382,25 +1382,25 @@ class Position(object):
         home_strings = []
         if x_homed:
             pos.XHomed = True
-            pos.X = self.Printer.max_x if not self.Printer.auto_detect_position else None
+            pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
             if pos.X is None:
-                home_strings.append("Homing X to Unknown Maximum.")
+                home_strings.append("Homing X to Unknown Origin.")
             else:
                 home_strings.append("Homing X to {0}.".format(
                     get_formatted_coordinate(pos.X)))
         if y_homed:
             pos.YHomed = True
-            pos.Y = self.Printer.max_y if not self.Printer.auto_detect_position else None
+            pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
             if pos.Y is None:
-                home_strings.append("Homing Y to Unknown Maximum.")
+                home_strings.append("Homing Y to Unknown Origin.")
             else:
                 home_strings.append("Homing Y to {0}.".format(
                     get_formatted_coordinate(pos.Y)))
         if z_homed:
             pos.ZHomed = True
-            pos.Z = self.Printer.max_z if not self.Printer.auto_detect_position else None
+            pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
             if pos.Z is None:
-                home_strings.append("Homing Z to Unknown Maximum.")
+                home_strings.append("Homing Z to Unknown Origin.")
             else:
                 home_strings.append("Homing Z to {0}.".format(
                     get_formatted_coordinate(pos.Z)))
