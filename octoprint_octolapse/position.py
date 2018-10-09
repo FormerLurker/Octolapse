@@ -1052,6 +1052,7 @@ class Position(object):
                         pos.XOffset = pos.X - utility.get_float(x, 0)
                     else:
                         pos.X = utility.get_float(x, 0)
+                        pos.XOffset = 0
 
                     if o:
                         pos.XHomed = True
@@ -1060,6 +1061,7 @@ class Position(object):
                         pos.YOffset = pos.Y - utility.get_float(y, 0)
                     else:
                         pos.Y = utility.get_float(y, 0)
+                        pos.YOffset = 0
 
                     if o:
                         pos.YHomed = True
@@ -1069,6 +1071,7 @@ class Position(object):
                         pos.ZOffset = pos.Z - utility.get_float(z, 0)
                     else:
                         pos.Z = utility.get_float(z, 0)
+                        pos.ZOffset = 0
 
                     if o:
                         pos.ZHomed = True
