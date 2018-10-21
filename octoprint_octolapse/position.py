@@ -388,6 +388,15 @@ class Pos(object):
 
         return amount_to_lift
 
+    def x_with_offset(self):
+        return utility.coordinate_to_offset_position(self.X, self.XOffset)
+
+    def y_with_offset(self):
+        return utility.coordinate_to_offset_position(self.Y, self.YOffset)
+
+    def z_with_offset(self):
+        return utility.coordinate_to_offset_position(self.Z, self.ZOffset)
+
 
 class Position(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile,
@@ -436,10 +445,11 @@ class Position(object):
             self.LocationDetectionCommands.append("G28")
         if "G29" not in self.LocationDetectionCommands:
             self.LocationDetectionCommands.append("G29")
-        if "G161" not in self.LocationDetectionCommands:
-            self.LocationDetectionCommands.append("G161")
-        if "G162" not in self.LocationDetectionCommands:
-            self.LocationDetectionCommands.append("G162")
+        # remove support for G161 and G162 until they are better understood
+        # if "G161" not in self.LocationDetectionCommands:
+        #     self.LocationDetectionCommands.append("G161")
+        # if "G162" not in self.LocationDetectionCommands:
+        #     self.LocationDetectionCommands.append("G162")
 
 
     def update_position(self,
@@ -1086,15 +1096,16 @@ class Position(object):
                     "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                     "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
                         parsed_command.gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
-            elif pos.parsed_command.cmd == "G161":
-                # note, this command alters pos
-                self._g161_received(pos)
-                # we must do this in case we have more than one home command
-                previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
-            elif pos.parsed_command.cmd == "G162":
-                self._g162_received(pos)
-                # we must do this in case we have more than one home command
-                previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
+            # Eventually the G161 and G162 codes will be supported, but not yet.
+            # elif pos.parsed_command.cmd == "G161":
+            #     # note, this command alters pos
+            #     self._g161_received(pos)
+            #     # we must do this in case we have more than one home command
+            #     previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
+            # elif pos.parsed_command.cmd == "G162":
+            #     self._g162_received(pos)
+            #     # we must do this in case we have more than one home command
+            #     previous_pos = Pos(self.Printer, self.OctoprintPrinterProfile, pos)
             elif pos.parsed_command.cmd == "M83":
                 # Extruder - Set Relative
                 if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
@@ -1295,123 +1306,126 @@ class Position(object):
         pos.HasPositionError = False
         pos.PositionError = None
 
-    def _g161_received(self, pos):
-        # Home
-        pos.HasReceivedHomeCommand = True
-        x = True if "X" in pos.parsed_command.parameters else None
-        y = True if "Y" in pos.parsed_command.parameters else None
-        z = True if "Z" in pos.parsed_command.parameters else None
-        f = True if "F" in pos.parsed_command.parameters else None
-        # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
-        # w = parameters["W"] if "W" in parameters else None
-
-        x_homed = False
-        y_homed = False
-        z_homed = False
-        if x is not None:
-            x_homed = True
-        if y is not None:
-            y_homed = True
-        if z is not None:
-            z_homed = True
-
-        if f is not None:
-            pos.F = f
-
-        # if there are no x,y or z parameters, we're homing all axes
-        if x is None and y is None and z is None:
-            x_homed = True
-            y_homed = True
-            z_homed = True
-
-        home_strings = []
-        if x_homed:
-            pos.XHomed = True
-            pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
-            if pos.X is None:
-                home_strings.append("Homing X to Unknown Origin.")
-            else:
-                home_strings.append("Homing X to {0}.".format(
-                    get_formatted_coordinate(pos.X)))
-        if y_homed:
-            pos.YHomed = True
-            pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
-            if pos.Y is None:
-                home_strings.append("Homing Y to Unknown Origin.")
-            else:
-                home_strings.append("Homing Y to {0}.".format(
-                    get_formatted_coordinate(pos.Y)))
-        if z_homed:
-            pos.ZHomed = True
-            pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
-            if pos.Z is None:
-                home_strings.append("Homing Z to Unknown Origin.")
-            else:
-                home_strings.append("Homing Z to {0}.".format(
-                    get_formatted_coordinate(pos.Z)))
-
-        self.Settings.current_debug_profile().log_position_command_received(
-            "Received G161 - ".format(" ".join(home_strings)))
-        pos.HasPositionError = False
-        pos.PositionError = None
-
-    def _g162_received(self, pos):
-        # Home
-        pos.HasReceivedHomeCommand = True
-        x = True if "X" in pos.parsed_command.parameters else None
-        y = True if "Y" in pos.parsed_command.parameters else None
-        z = True if "Z" in pos.parsed_command.parameters else None
-        f = True if "F" in pos.parsed_command.parameters else None
-
-        x_homed = False
-        y_homed = False
-        z_homed = False
-        if x is not None:
-            x_homed = True
-        if y is not None:
-            y_homed = True
-        if z is not None:
-            z_homed = True
-
-        if f is not None:
-            pos.F = f
-
-        # if there are no x,y or z parameters, we're homing all axes
-        if x is None and y is None and z is None:
-            x_homed = True
-            y_homed = True
-            z_homed = True
-
-        home_strings = []
-        if x_homed:
-            pos.XHomed = True
-            pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
-            if pos.X is None:
-                home_strings.append("Homing X to Unknown Origin.")
-            else:
-                home_strings.append("Homing X to {0}.".format(
-                    get_formatted_coordinate(pos.X)))
-        if y_homed:
-            pos.YHomed = True
-            pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
-            if pos.Y is None:
-                home_strings.append("Homing Y to Unknown Origin.")
-            else:
-                home_strings.append("Homing Y to {0}.".format(
-                    get_formatted_coordinate(pos.Y)))
-        if z_homed:
-            pos.ZHomed = True
-            pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
-            if pos.Z is None:
-                home_strings.append("Homing Z to Unknown Origin.")
-            else:
-                home_strings.append("Homing Z to {0}.".format(
-                    get_formatted_coordinate(pos.Z)))
-
-        self.Settings.current_debug_profile().log_position_command_received(
-            "Received G162 - ".format(" ".join(home_strings)))
-        pos.HasPositionError = False
-        pos.PositionError = None
+    # Eventually this code will support the G161 and G162 commands
+    # Hold this code for the future
+    # Not ready to be released as of now.
+    # def _g161_received(self, pos):
+    #     # Home
+    #     pos.HasReceivedHomeCommand = True
+    #     x = True if "X" in pos.parsed_command.parameters else None
+    #     y = True if "Y" in pos.parsed_command.parameters else None
+    #     z = True if "Z" in pos.parsed_command.parameters else None
+    #     f = True if "F" in pos.parsed_command.parameters else None
+    #     # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
+    #     # w = parameters["W"] if "W" in parameters else None
+    #
+    #     x_homed = False
+    #     y_homed = False
+    #     z_homed = False
+    #     if x is not None:
+    #         x_homed = True
+    #     if y is not None:
+    #         y_homed = True
+    #     if z is not None:
+    #         z_homed = True
+    #
+    #     if f is not None:
+    #         pos.F = f
+    #
+    #     # if there are no x,y or z parameters, we're homing all axes
+    #     if x is None and y is None and z is None:
+    #         x_homed = True
+    #         y_homed = True
+    #         z_homed = True
+    #
+    #     home_strings = []
+    #     if x_homed:
+    #         pos.XHomed = True
+    #         pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
+    #         if pos.X is None:
+    #             home_strings.append("Homing X to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing X to {0}.".format(
+    #                 get_formatted_coordinate(pos.X)))
+    #     if y_homed:
+    #         pos.YHomed = True
+    #         pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
+    #         if pos.Y is None:
+    #             home_strings.append("Homing Y to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing Y to {0}.".format(
+    #                 get_formatted_coordinate(pos.Y)))
+    #     if z_homed:
+    #         pos.ZHomed = True
+    #         pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
+    #         if pos.Z is None:
+    #             home_strings.append("Homing Z to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing Z to {0}.".format(
+    #                 get_formatted_coordinate(pos.Z)))
+    #
+    #     self.Settings.current_debug_profile().log_position_command_received(
+    #         "Received G161 - ".format(" ".join(home_strings)))
+    #     pos.HasPositionError = False
+    #     pos.PositionError = None
+    #
+    # def _g162_received(self, pos):
+    #     # Home
+    #     pos.HasReceivedHomeCommand = True
+    #     x = True if "X" in pos.parsed_command.parameters else None
+    #     y = True if "Y" in pos.parsed_command.parameters else None
+    #     z = True if "Z" in pos.parsed_command.parameters else None
+    #     f = True if "F" in pos.parsed_command.parameters else None
+    #
+    #     x_homed = False
+    #     y_homed = False
+    #     z_homed = False
+    #     if x is not None:
+    #         x_homed = True
+    #     if y is not None:
+    #         y_homed = True
+    #     if z is not None:
+    #         z_homed = True
+    #
+    #     if f is not None:
+    #         pos.F = f
+    #
+    #     # if there are no x,y or z parameters, we're homing all axes
+    #     if x is None and y is None and z is None:
+    #         x_homed = True
+    #         y_homed = True
+    #         z_homed = True
+    #
+    #     home_strings = []
+    #     if x_homed:
+    #         pos.XHomed = True
+    #         pos.X = self.Origin["X"] if not self.Printer.auto_detect_position else None
+    #         if pos.X is None:
+    #             home_strings.append("Homing X to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing X to {0}.".format(
+    #                 get_formatted_coordinate(pos.X)))
+    #     if y_homed:
+    #         pos.YHomed = True
+    #         pos.Y = self.Origin["Y"] if not self.Printer.auto_detect_position else None
+    #         if pos.Y is None:
+    #             home_strings.append("Homing Y to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing Y to {0}.".format(
+    #                 get_formatted_coordinate(pos.Y)))
+    #     if z_homed:
+    #         pos.ZHomed = True
+    #         pos.Z = self.Origin["Z"] if not self.Printer.auto_detect_position else None
+    #         if pos.Z is None:
+    #             home_strings.append("Homing Z to Unknown Origin.")
+    #         else:
+    #             home_strings.append("Homing Z to {0}.".format(
+    #                 get_formatted_coordinate(pos.Z)))
+    #
+    #     self.Settings.current_debug_profile().log_position_command_received(
+    #         "Received G162 - ".format(" ".join(home_strings)))
+    #     pos.HasPositionError = False
+    #     pos.PositionError = None
 
     def has_homed_position(self, index=0):
         if len(self.Positions) <= index:

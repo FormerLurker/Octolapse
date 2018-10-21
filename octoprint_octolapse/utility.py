@@ -256,6 +256,19 @@ def get_currently_printing_filename(octoprint_printer):
                     return get_filename_from_full_path(current_file_path)
     return ""
 
+# not sure if we need this
+# def offset_position_to_coordinate(offset_position, offset):
+#     if offset_position is None or offset is None:
+#         return None
+#     return offset_position + offset
+
+# This function is only used in test code for the time being.  Need to reexamine G92
+# to correct issues with the out of bounds detection.
+def coordinate_to_offset_position(coordinate, offset):
+    if coordinate is None or offset is None:
+        return None
+    return coordinate - offset
+
 
 def is_in_bounds(bounding_box, x=None, y=None, z=None):
     # Determines if the given X,Y,Z coordinate is within

@@ -380,30 +380,30 @@ class Commands(object):
             "H": CommandParameter("H", CommandParameter.parse_float, 2)
         }
     )
-
-    G161 = Command(
-        "G161",
-        "Home axis to minimum",
-        "G161 - Home axis to minimum X={X}, Y={Y}, Z={Z}, F={F}",
-        parameters={
-            "X": CommandParameter("X", CommandParameter.parse_float, 1),
-            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
-            "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
-            "F": CommandParameter("F", CommandParameter.parse_float, 4)
-        }
-    )
-
-    G162 = Command(
-        "G162",
-        "Home axis to maximum",
-        "G162 - Home axis to maximum X={X}, Y={Y}, Z={Z}, F={F}",
-        parameters={
-            "X": CommandParameter("X", CommandParameter.parse_float, 1),
-            "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
-            "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
-            "F": CommandParameter("F", CommandParameter.parse_float, 4)
-        }
-    )
+    # Removing support for G161/G162
+    # G161 = Command(
+    #     "G161",
+    #     "Home axis to minimum",
+    #     "G161 - Home axis to minimum X={X}, Y={Y}, Z={Z}, F={F}",
+    #     parameters={
+    #         "X": CommandParameter("X", CommandParameter.parse_float, 1),
+    #         "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+    #         "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
+    #         "F": CommandParameter("F", CommandParameter.parse_float, 4)
+    #     }
+    # )
+    #
+    # G162 = Command(
+    #     "G162",
+    #     "Home axis to maximum",
+    #     "G162 - Home axis to maximum X={X}, Y={Y}, Z={Z}, F={F}",
+    #     parameters={
+    #         "X": CommandParameter("X", CommandParameter.parse_float, 1),
+    #         "Y": CommandParameter("Y", CommandParameter.parse_float, 2),
+    #         "Z": CommandParameter("Z", CommandParameter.parse_float, 3),
+    #         "F": CommandParameter("F", CommandParameter.parse_float, 4)
+    #     }
+    # )
 
     M190 = Command(
         "M190",
@@ -477,8 +477,9 @@ class Commands(object):
             G90.Command: G90,
             G91.Command: G91,
             G92.Command: G92,
-            G161.Command: G161,
-            G162.Command: G162,
+            # Remove support for G161 G162 until they are better understood.
+            # G161.Command: G161,
+            # G162.Command: G162,
             M82.Command: M82,
             M83.Command: M83,
             M104.Command: M104,
