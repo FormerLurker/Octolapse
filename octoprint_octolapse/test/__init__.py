@@ -35,6 +35,7 @@ from octoprint_octolapse.test.test_trigger_gcode import TestGcodeTrigger
 from octoprint_octolapse.test.test_trigger_layer import TestLayerTrigger
 from octoprint_octolapse.test.test_trigger_timer import TestTimerTrigger
 from octoprint_octolapse.test.test_utility import TestUtility
+from octoprint_octolapse.test.printers.test_makerbot_replicator_2 import TestMakerbotReplicator2
 
 
 def test_all():
@@ -43,7 +44,7 @@ def test_all():
                     # TestGcodeParts,
                     TestPosition, TestSnapshotGcode,
                     TestGcodeTrigger, TestLayerTrigger, TestTimerTrigger, TestUtility, TestOctolapsePlugin,
-                    TestTrigger]
+                    TestTrigger, TestMakerbotReplicator2]
 
     loader = unittest.TestLoader()
 
