@@ -1009,7 +1009,7 @@ class Timelapse(object):
 
     def _is_snapshot_command(self, printer, command_string):
         # note that self.Printer.snapshot_command is stripped of comments.
-        return command_string == printer.snapshot_command
+        return command_string.lower() == printer.snapshot_command.lower()
 
     def _is_trigger_waiting(self):
         # make sure we're in a state that could want to check for triggers
