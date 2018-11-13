@@ -166,7 +166,7 @@ class CaptureSnapshot(object):
 
             results.append(result)
 
-        # start the pre-snapshot threads
+        # start the after-snapshot threads
         for t in after_snapshot_threads:
             t.start()
 

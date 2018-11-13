@@ -93,6 +93,10 @@ def preview_overlay(rendering_profile, image=None):
         # Create an image with background color inverse to the text color.
         image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in rendering_profile.overlay_text_color[0:3]))
 
+    if rendering_profile.overlay_font_path is None or len(rendering_profile.overlay_font_path.strip()) == 0:
+        # we don't have any overlay path, return
+        return None
+
     font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
 
     def draw_center(i, t, dx=0, dy=0):

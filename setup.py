@@ -9,7 +9,7 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "v0.3.4rc1"
+plugin_version = "v0.3.4"
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
@@ -26,6 +26,11 @@ plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil"]
+
+from sys import platform
+if platform == "linux" or platform == "linux2":
+    plugin_requires.append("enum34")
+    plugin_requires.append("fontconfig")
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point

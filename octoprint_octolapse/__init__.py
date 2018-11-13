@@ -432,6 +432,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # Render a preview image.
             preview_image = render.preview_overlay(rendering_profile, image=camera_image)
 
+            if preview_image is None:
+                return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
+
             # Use a buffer to base64 encode the image.
             img_io = BytesIO()
             preview_image.save(img_io, 'JPEG')

@@ -38,7 +38,7 @@
                 <p>Can be found in 'Printer Settings->Extruder->Retraction' in Slic3r PE.</p>
             </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_slic3r_retract_length">Length</label>
+                <label class="control-label" for="printer_profile_slic3r_retract_length">Length*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="printer_profile_slic3r_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.retract_length" step="0.000001" min="0" max="100.0" required/>
@@ -49,7 +49,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_slic3r_pe_z_hop">Lift Z</label>
+                <label class="control-label" for="printer_profile_slic3r_pe_z_hop">Lift Z*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="printer_profile_slic3r_pe_z_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.slic3r_pe_viewmodel.z_hop" step="0.0001" min=".00" max="100.0" required />
@@ -60,7 +60,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_retract_speed">Retraction Speed</label>
+                <label class="control-label" for="slicer_slic3r_pe_retract_speed">Retraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_retract_speed" name="retract_speed" type="number"
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_detract_speed">Detraction Speed</label>
+                <label class="control-label" for="slicer_slic3r_pe_detract_speed">Detraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_detract_speed" name="detract_speed" type="number"
@@ -87,6 +87,9 @@
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_detract_speed"></div>
                 </div>
+            </div>
+            <div class="text-right">
+                <p>* <i>Indicates required fields</i></p>
             </div>
             <div>
                 <h5>Speed for print moves</h5>
@@ -227,7 +230,7 @@
                 <p>Can be found in 'Print Settings->Speed->Speed for non-print moves</p>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_movement_speed">Travel Speed</label>
+                <label class="control-label" for="slicer_slic3r_pe_movement_speed">Travel Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_slic3r_pe_movement_speed" name="movement_speed" type="number"
@@ -240,6 +243,9 @@
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_movement_speed"></div>
                 </div>
+            </div>
+            <div class="text-right">
+                <p>* <i>Indicates required fields</i></p>
             </div>
             <div>
                 <h5>Modifiers</h5>

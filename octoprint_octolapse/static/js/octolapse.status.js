@@ -417,6 +417,8 @@ $(function () {
                         return "Octolapse is waiting for print to complete.";
                     if( self.is_rendering())
                         return "Octolapse is rendering a timelapse.";
+                    if( !self.is_octolapse_enabled())
+                        return "Octolapse is disabled.";
                     return 'Octolapse is enabled and idle.';
                 }
                 if(!Octolapse.Globals.enabled())

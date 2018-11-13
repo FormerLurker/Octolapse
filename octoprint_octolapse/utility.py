@@ -376,7 +376,7 @@ def get_intersections_circle(x1, y1, x2, y2, c_x, c_y, c_radius):
 
     # is closest within the circle?
     if closest_to_c_dist <= c_radius:
-        closest = [closest_x, closest_y];
+        closest = [closest_x, closest_y]
 
     # If the closest point is inside the circle (but not on)
     if closest_to_c_dist < c_radius:
@@ -441,6 +441,8 @@ def get_intersections_rectangle(x1, y1, x2, y2, rect_x1, rect_y1, rect_x2, rect_
         return False
 
     for edge in range(0, 4):
+        p=None
+        q=None
         if edge == 0:
             p = -dx
             q = -(left - x1)

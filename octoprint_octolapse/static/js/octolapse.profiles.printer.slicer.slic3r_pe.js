@@ -118,6 +118,9 @@ Octolapse.create_slic3r_pe_viewmodel = function (profile_observables) {
         return self.retract_speed();
     };
     self.get_detract_speed = function () {
+        if(self.detract_speed() === 0)
+            return self.retract_speed();
+
         return self.detract_speed();
     };
     self.get_movement_speed = function () {

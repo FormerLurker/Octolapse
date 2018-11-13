@@ -157,7 +157,7 @@
             <span class="help-inline">If an image takes longer than the allowed time (in milliseconds) to acquire, it will timeout and the print will continue.</span>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" data-bind="visible: camera_type() != 'printer-gcode'">
         <label class="control-label">Snapshot Transposition Options</label>
         <div class="controls">
             <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,

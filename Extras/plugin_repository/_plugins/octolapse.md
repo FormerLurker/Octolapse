@@ -58,7 +58,7 @@ Octolapse is still in Beta but has been confirmed to work on several printers:
 *  Irapid Black - Beta - User Submitted
 *  Monoprice Maker Select v2/Wanhao Duplicator i3 - Beta - User Submitted - Requires OctoPrint 1.3.7rc3 or above
 
-Please note that some settings may need to be adjusted depending on your slicer settings.
+Please note that some settings WILL need to be adjusted depending on your slicer settings.
 
 [View the Octolapse Wiki on Github.](https://github.com/FormerLurker/Octolapse/wiki)
 
