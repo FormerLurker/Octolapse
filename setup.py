@@ -27,10 +27,11 @@ plugin_license = "AGPLv3"
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil"]
 
-from sys import platform
-if platform == "linux" or platform == "linux2":
-    plugin_requires.append("enum34")
-    plugin_requires.append("fontconfig")
+# TODO:  Get fontconfig to work
+#from sys import platform
+#if platform == "linux" or platform == "linux2":
+#    plugin_requires.append("enum34")
+#    plugin_requires.append("fontconfig")
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point
