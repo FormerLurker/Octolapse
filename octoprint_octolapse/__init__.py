@@ -999,6 +999,22 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if result["warning"]:
             self.send_popup_message(result["warning"])
 
+        # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
+        # the extruder.
+        #if self.Settings.current_printer().xyz_axes_default_mode == 'force-absolute':
+        #    # send G90
+        #    self._printer.commands(['G90'], tags={"force_xyz_axis"})
+        #elif self.Settings.current_printer().xyz_axes_default_mode == 'force-relative':
+        #    # send G91
+        #    self._printer.commands(['G91'], tags={"force_xyz_axis"})
+        ## send G90/G91 if necessary
+        #if self.Settings.current_printer().e_axis_default_mode == 'force-absolute':
+        #    # send M82
+        #    self._printer.commands(['M82'], tags={"force_e_axis"})
+        #elif self.Settings.current_printer().e_axis_default_mode == 'force-relative':
+        #    # send M83
+        #    self._printer.commands(['M83'], tags={"force_e_axis"})
+        #
         self.Settings.current_debug_profile().log_print_state_change(
             "Print Started - Timelapse Started.")
 
@@ -1087,9 +1103,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return {'success': False, 'error': "No default printer profile was selected.  Cannot start timelapse.  "
                                                "Please select a printer profile in the octolapse settings pages and "
                                                "restart the print."}
-
-        # make sure at least one trigger is enabled
-        current_snapshot = self.Settings.current_snapshot()
 
         self.Timelapse.start_timelapse(
             self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)

@@ -1,11 +1,12 @@
 # Octolapse
-<div align="center">
+<p align="center">
     <img src="https://raw.githubusercontent.com/FormerLurker/Octolapse/master/Extras/Wiki/assets/img/tab_mini.png" alt="Octolapse Tab"/>
-    <div>
-        <i>Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.</i>
-    </div>
     <br/>
-</div>
+    <i>Create a stabilized timelapse of your 3D prints.  Highly customizable, loads of presets, lots of fun.</i>
+    <br/>
+</p>
+
+***Octolapse is provided without warranties of any kind.  By installing Octolapse you agree to accept all liability for any damage caused directly or indirectly by Octolapse.  Use caution and never leave your printer unattended.***
 
 Octolapse is designed to make stabilized timelapses of your prints with as little hassle as possible, and it's extremely configurable.  Now you can create a silky smooth timelapse without a custom camera mount, no GCode customizations required.
 
@@ -18,43 +19,18 @@ Octolapse moves the print bed and extruder into position before taking each snap
 # Recent Changes
 If you are upgrading from [v0.3.1](https://github.com/FormerLurker/Octolapse/releases/tag/v0.3.1), please read the [v0.3.4 release notes](https://github.com/FormerLurker/Octolapse/releases/tag/v0.3.4), a lot has changed.  If you've had trouble running Octolapse in the past, you just might want to try it again!
 
-# Known Printer Support
-
-Octolapse is still in Beta but has been confirmed to work on several printers:
-
-*  Genuine Prusa - Mk2, Mk2S, Mk2 w Multi Material, Mk3
-*  Anet A8 - Beta - User Submitted
-*  Anycube I3 Mega - Beta - User Submitted
-*  CR-10 - Beta - User Submitted
-*  Dagoma Neva - Beta - User Submitted
-*  Irapid Black - Beta - User Submitted
-*  Monoprice Maker Select v2/Wanhao Duplicator i3 - Beta - User Submitted - Requires OctoPrint 1.3.7rc3 or above
-
-Please note that some settings may need to be adjusted depending on your slicer settings.
-
-# Installation
-
-[Read the installation instructions.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
-
-After installation, [checkout the project's wiki pages](https://github.com/FormerLurker/Octolapse/wiki).  It never hurts to know more about what you're doing!
-
 # What Octolapse Does
 
-<div align="center">
+<p align="center">
     <a href="https://youtu.be/er0VCYen1MY" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/er0VCYen1MY/0.jpg" alt="A timelapse of a double spiral vase made with Octolapse"/>
     </a>
-    <div>
-        <a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-  <i>A timelapse of a double spiral vase made with Octolapse</i>
-</a>
-    </div>
     <br/>
-</div>
-
-**Octolapse is provided without warranties of any kind.  By installing Octolapse you agree to accept all liability for any damage caused directly or indirectly by Octolapse.**
-
-Use caution and never leave your printer unattended.
+    <a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+        <i>A timelapse of a double spiral vase made with Octolapse</i>
+    </a>
+    <br/>
+</p>
 
 ## Octolapse was designed with print quality in mind
 * **Continuous tracking** of the X,Y, and Z axes.  Octolapse knows where your extruder and bed will be at all times.
@@ -91,62 +67,83 @@ Use caution and never leave your printer unattended.
 * All settings include links to the **Octolapse Wiki**, so you can get to the documentation quickly if you have questions.
 * Octolapse now works with **Themeify**.
 
+# Installation
+
+[Read the installation instructions.](https://github.com/FormerLurker/Octolapse/wiki/Installation)
+
+After installation, [checkout the project's wiki pages](https://github.com/FormerLurker/Octolapse/wiki).  It never hurts to know more about what you're doing!
 
 # Usage
 [Learn how to start your first print here.](https://github.com/FormerLurker/Octolapse/wiki/Usage)  It's a good idea to read about the settings before using Octolapse.  I also recommend you [watch this brief tutorial](https://youtu.be/sDyg9lMqMG8), which explains how to configure your printer profile for use with the new **High Quality** snapshot profile.
 
+# Known Printer Support
+
+Octolapse is still in Beta but has been confirmed to work on several printers:
+
+*  Genuine Prusa - Mk2, Mk2S, Mk2 w Multi Material, Mk3
+*  Anet A8 - Beta - User Submitted
+*  Anycube I3 Mega - Beta - User Submitted
+*  CR-10 - Beta - User Submitted
+*  Dagoma Neva - Beta - User Submitted
+*  Irapid Black - Beta - User Submitted
+*  Monoprice Maker Select v2/Wanhao Duplicator i3 - Beta - User Submitted - Requires OctoPrint 1.3.7rc3 or above
+
+Please note that some settings may need to be adjusted depending on your slicer settings.
 
 ## More Octolapses
-<div align="center">
+<p align="center">
     <a href="https://youtu.be/uBeVbDJKHw0" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/uBeVbDJKHw0/0.jpg" alt="User Created Compilation"/>
     </a>
-    <div>
-        <a href="https://www.youtube.com/channel/UCXRcs5H7Om8YbaNbaM5iOdg" alt="Link to WildRose builds channel" target="_blank">
-            <i>A user generated compilation created by WildRose Builds</i>
-        </a>
-    </div>
     <br/>
-</div>
+    <a href="https://www.youtube.com/channel/UCXRcs5H7Om8YbaNbaM5iOdg" alt="Link to WildRose builds channel" target="_blank">
+        <i>A user generated compilation created by WildRose Builds.  Support this channel and please subscribe!</i>
+    </a>
+    <br/>
+</p>
 
-<div align="center">
+<p align="center">
     <a href="https://youtu.be/dYbWfBCLNbI" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/dYbWfBCLNbI/0.jpg" alt="The Milennium Falcon"/>
     </a>
-    <div>
-        <a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-            <i>The Milennium Falcon</i>
-        </a>
-    </div>
     <br/>
-</div>
+    <a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+        <i>The Milennium Falcon</i>
+    </a>
+    <br/>
+</p>
 
-<div align="center">
+<p align="center">
     <a href="https://youtu.be/4kEHbRrp2Jk" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/4kEHbRrp2Jk/0.jpg" alt="The Moon - Animated X Axis"/>
     </a>
-    <div>
-        <a href="https://www.thingiverse.com/thing:2531838" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-            <i>The Moon - Animated X Axis</i>
-        </a>
-    </div>
     <br/>
-</div>
+    <a href="https://www.thingiverse.com/thing:2531838" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+        <i>The Moon - Animated X Axis</i>
+    </a>
+    <br/>
+</p>
 
-<div align="center">
+<p align="center">
     <a href="https://youtu.be/Ra5Jjq-nJfA" title="Watch on youtube">
         <img src="https://img.youtube.com/vi/Ra5Jjq-nJfA/0.jpg" alt="The obligatory benchy"/>
     </a>
-    <div>
-        <a href="https://www.thingiverse.com/thing:763622" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
-            <i>The obligatory benchy</i>
-        </a>
-    </div>
     <br/>
-</div>
+    <a href="https://www.thingiverse.com/thing:763622" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
+        <i>The obligatory benchy</i>
+    </a>
+    <br/>
+</p>
 
 ## History of Octolapse
 I got the idea for Octolapse when I attempted to manually make a [stabilized timelapse](https://youtu.be/xZlP4vpAKNc) by hand editing my GCode files.  To accomplish this I used the excellent and simple [GCode System Commands](https://github.com/kantlivelong/OctoPrint-GCodesystemCommands) plugin.  The timelapse worked great, but it required a lot of effort which I didn't want to put in every time.  I received several requests for instructions on how to create a stabilized timelapse, so I decided to give plugin development a go.  I've never done one before (or programmed python or knockout or anything open source), but figured I could contribute something good to the community.  This is my "thank you" to all of the makers out there who have contributed your time and effort!
 
+## Report Problems
+If you think you have found a bug in Octolapse, please create an issue on the official github.com page [here](https://github.com/FormerLurker/Octolapse/issues/new).  In order to have your issue handled properly and quickly, please completely
 
-Copyright (C) 2017  Brad Hochgesang - FormerLurker@pm.me
+## License
+View the [Octolapse license](https://github.com/FormerLurker/Octolapse/blob/master/LICENSE).
+
+<hr/>
+
+_Copyright (C) 2017  Brad Hochgesang - FormerLurker@pm.me_
