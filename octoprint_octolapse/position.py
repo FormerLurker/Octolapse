@@ -756,8 +756,8 @@ class Position(object):
                 f = pos.parsed_command.parameters["F"] if "F" in pos.parsed_command.parameters else None
 
                 # If we're moving on the X/Y plane only, mark this position as travel only
-                pos.IsTravelOnly = e is None and (
-                    x is not None or y is not None or z is not None
+                pos.IsTravelOnly = e is None and z is None and (
+                    x is not None or y is not None
                 )
 
                 if x is not None or y is not None or z is not None or f is not None:

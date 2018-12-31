@@ -488,7 +488,7 @@ class SnapshotGcodeGenerator(object):
         # Start Return Gcode
         if self.ReturnWhenComplete:
             # Only return to the previous coordinates if we need to (which will be most cases,
-            # except when the triggering command is a travel only (moves both X and Y)
+            # except when the triggering command is a travel only (moves both X and Y, but not Z)
             # record our previous position for posterity
             new_snapshot_gcode.ReturnX = x_return
             new_snapshot_gcode.ReturnY = y_return
@@ -514,7 +514,9 @@ class SnapshotGcodeGenerator(object):
             )
             new_snapshot_gcode.append(
                 SnapshotGcode.RETURN_COMMANDS,
-                self.get_gcode_travel(triggering_command_position.X, triggering_command_position.Y)
+                self.get_gcode_travel(
+                    triggering_command_position.X, triggering_command_position.Y
+                )
             )
 
 

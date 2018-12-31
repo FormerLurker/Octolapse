@@ -25,7 +25,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil"]
+plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards"]
 
 # TODO:  Get fontconfig to work
 #from sys import platform

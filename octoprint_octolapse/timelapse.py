@@ -783,7 +783,7 @@ class Timelapse(object):
                 self.Settings.current_debug_profile().log_triggering("An in-path snapshot is triggering")
                 return first_trigger
 
-            first_trigger = self.Triggers.get_first_triggering(1, Triggers.TRIGGER_TYPE_DEFAULT)
+            first_trigger = self.Triggers.get_first_triggering(0, Triggers.TRIGGER_TYPE_DEFAULT)
             if first_trigger:  # We're triggering
                 self.Settings.current_debug_profile().log_triggering("A snapshot is triggering")
                 return first_trigger

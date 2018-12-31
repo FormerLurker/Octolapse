@@ -259,7 +259,7 @@ $(function () {
                 },
                 buttons: {
                     closer: false,
-                    sticker: false
+                    sticker: false,
                 },
                 history: {
                     history: false
