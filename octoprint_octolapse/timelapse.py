@@ -693,8 +693,22 @@ class Timelapse(object):
             return None,
 
         if parsed_command.cmd is not None:
+            # see if the current command is G92 with a dummy parameter (O)
+            # note that this must be done BEFORE stripping commands for test mode
+            if(
+                parsed_command.cmd == "G92"
+                and ("O" in parsed_command.parameters)
+            ):
+                parsed_command.parameters.pop("O")
+                if len(parsed_command.parameters) == 0:
+                    # suppress command, the g92 ONLY contained an O (fake home) parameter
+                    return None,
+                return Commands.to_string(parsed_command)
+
+            # look for test mode
             if self.IsTestMode and self.State >= TimelapseState.WaitingForTrigger:
                 return self.Commands.alter_for_test_mode(parsed_command)
+
 
         # Send the original unaltered command
         return None

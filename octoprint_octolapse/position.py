@@ -1041,7 +1041,12 @@ class Position(object):
                 e = pos.parsed_command.parameters["E"] if "E" in pos.parsed_command.parameters else None
                 o = True if "O" in pos.parsed_command.parameters else False
 
-                if x is None and y is None and z is None and e is None:
+                if o:
+                    pos.XHomed = True
+                    pos.YHomed = True
+                    pos.ZHomed = True
+
+                if not o and x is None and y is None and z is None and e is None:
                     if pos.X is not None:
                         pos.XOffset = pos.X
                     if pos.Y is not None:
@@ -1050,11 +1055,6 @@ class Position(object):
                         pos.ZOffset = pos.Z
                     if pos.E is not None:
                         pos.EOffset = pos.E
-
-                    if o:
-                        pos.XHomed = True
-                        pos.YHomed = True
-                        pos.ZHomed = True
 
                 # set the offsets if they are provided
                 if x is not None:
@@ -1183,7 +1183,14 @@ class Position(object):
                 pos.IsInPosition = True
 
             # calculate LastExtrusionHeight and Height
-            if self.Extruder.is_extruding():
+            # If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
+            # adjust the last extrusion height
+            if (
+                self.Extruder.is_extruding()
+                #or (
+                #    pos.LastExtrusionHeight is not None and self.Printer.retract_length > 0 and self.Extruder.is_primed()
+                #)
+            ):
                 pos.LastExtrusionHeight = pos.Z
 
                 if not pos.IsPrimed:
