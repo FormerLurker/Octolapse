@@ -35,12 +35,12 @@ from octoprint_octolapse.trigger import TimerTrigger
 class TestTimerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
-        self.Settings.current_printer().e_axis_default_mode = 'relative'
-        self.Settings.current_printer().xyz_axes_default_mode = 'absolute'
-        self.Settings.current_printer().auto_detect_position = False
-        self.Settings.current_printer().origin_x = 0
-        self.Settings.current_printer().origin_y = 0
-        self.Settings.current_printer().origin_z = 0
+        self.Settings.profiles.current_printer().e_axis_default_mode = 'relative'
+        self.Settings.profiles.current_printer().xyz_axes_default_mode = 'absolute'
+        self.Settings.profiles.current_printer().auto_detect_position = False
+        self.Settings.profiles.current_printer().origin_x = 0
+        self.Settings.profiles.current_printer().origin_y = 0
+        self.Settings.profiles.current_printer().origin_z = 0
         self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):
@@ -62,7 +62,7 @@ class TestTimerTrigger(unittest.TestCase):
     def test_TimerTrigger(self):
         """Test the timer trigger"""
         # use a short trigger time so that the test doesn't take too long
-        self.Settings.current_snapshot().timer_trigger_seconds = 2
+        self.Settings.profiles.current_snapshot().timer_trigger_seconds = 2
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = TimerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,
@@ -281,8 +281,8 @@ class TestTimerTrigger(unittest.TestCase):
 
     def test_TimerTrigger_LayerChange_ZHop(self):
         """Test the layer trigger for layer changes triggers"""
-        self.Settings.current_snapshot().timer_trigger_require_zhop = True
-        self.Settings.current_printer().z_hop = .5
+        self.Settings.profiles.current_snapshot().timer_trigger_require_zhop = True
+        self.Settings.profiles.current_printer().z_hop = .5
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = TimerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,

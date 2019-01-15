@@ -815,6 +815,7 @@ $(function () {
         };
 
         self.update = function (settings) {
+            //console.log("Updating Main Settings")
             // enabled
             if (ko.isObservable(settings.is_octolapse_enabled))
                 self.enabled(settings.is_octolapse_enabled());

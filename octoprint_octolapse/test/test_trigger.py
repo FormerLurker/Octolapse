@@ -38,7 +38,7 @@ class TestTrigger(unittest.TestCase):
     def test_IsInPosition_Rect_Forbidden(self):
         restrictions_dict = [
             {"Shape": "rect", "X": 10.0, "Y": 10.0, "X2": 20.0, "Y2": 20.0, "Type": "forbidden", "R": 1.0}]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         self.assertTrue(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertTrue(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))
         self.assertTrue(trigger.is_in_position(restrictions, 20.1, 20.1, self.PrinterTolerance))
@@ -52,7 +52,7 @@ class TestTrigger(unittest.TestCase):
     def test_IsInPosition_Rect_Required(self):
         restrictions_dict = [
             {"Shape": "rect", "X": 10.0, "Y": 10.0, "X2": 20.0, "Y2": 20.0, "Type": "required", "R": 1.0}]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         self.assertFalse(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertFalse(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))
         self.assertFalse(trigger.is_in_position(restrictions, 20.1, 20.1, self.PrinterTolerance))
@@ -69,7 +69,7 @@ class TestTrigger(unittest.TestCase):
             {"Shape": "rect", "X": 10.0, "Y": 10.0, "X2": 20.0, "Y2": 20.0, "Type": "required", "R": 1.0},
             {"Shape": "rect", "X": 15.0, "Y": 15.0, "X2": 25.0, "Y2": 25.0, "Type": "forbidden", "R": 1.0},
         ]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         # out of all areas, restricted and forbidden
         self.assertFalse(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertFalse(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))
@@ -95,7 +95,7 @@ class TestTrigger(unittest.TestCase):
 
     def test_IsInPosition_Circle_Forbidden(self):
         restrictions_dict = [{"Shape": "circle", "R": 1.0, "Y": 10.0, "X": 10.0, "Type": "forbidden", "X2": 0, "Y2": 0}]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         # tests outside forbidden area
         self.assertTrue(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertTrue(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))
@@ -113,7 +113,7 @@ class TestTrigger(unittest.TestCase):
     def test_IsInPosition_Circle_Required(self):
         restrictions_dict = [
             {"Shape": "circle", "R": 1.0, "Y": 10.0, "X": 10.0, "Type": "required", "X2": 20.0, "Y2": 20.0}]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         # tests outside area
         self.assertFalse(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertFalse(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))
@@ -135,7 +135,7 @@ class TestTrigger(unittest.TestCase):
             {"Shape": "circle", "R": 1.0, "Y": 10.0, "X": 10.0, "Type": "required", "X2": 20.0, "Y2": 20.0},
             {"Shape": "circle", "R": 1.0, "Y": 10.0, "X": 11.0, "Type": "forbidden", "X2": 25.0, "Y2": 25.0},
         ]
-        restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+        restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
         # out of all areas, restricted and forbidden
         self.assertFalse(trigger.is_in_position(restrictions, 0, 0, self.PrinterTolerance))
         self.assertFalse(trigger.is_in_position(restrictions, 100, 0, self.PrinterTolerance))

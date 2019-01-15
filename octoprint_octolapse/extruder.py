@@ -85,8 +85,8 @@ class Extruder(object):
 
     def __init__(self, octolapse_settings):
         self.Settings = octolapse_settings
-        self.PrinterRetractionLength = self.Settings.current_printer().get_retract_length_for_slicer_type()
-        self.PrinterTolerance = self.Settings.current_printer().printer_position_confirmation_tolerance
+        self.PrinterRetractionLength = self.Settings.profiles.current_printer().get_retract_length_for_slicer_type()
+        self.PrinterTolerance = self.Settings.profiles.current_printer().printer_position_confirmation_tolerance
         self.StateHistory = deque(maxlen=5)
         self.reset()
         self.add_state(ExtruderState())
@@ -189,7 +189,7 @@ class Extruder(object):
 
         # if we don't have any history, we want to retract
         if state is None:
-            self.Settings.current_debug_profile().log_error("extruder.py - A 'length_to_retract' was requested, "
+            self.Settings.Logger.log_error("extruder.py - A 'length_to_retract' was requested, "
                                                             "but the extruder haa no state history!")
             return self.PrinterRetractionLength
 
@@ -200,12 +200,12 @@ class Extruder(object):
 
         if retract_length < 0:
             # This means we are beyond fully retracted, return 0
-            self.Settings.current_debug_profile().log_warning("extruder.py - A 'length_to_retract' was requested, "
+            self.Settings.Logger.log_warning("extruder.py - A 'length_to_retract' was requested, "
                                                               "but the extruder is beyond the configured retraction "
                                                               "length.")
             retract_length = 0
         elif retract_length > self.PrinterRetractionLength:
-            self.Settings.current_debug_profile().log_error("extruder.py - A 'length_to_retract' was requested, "
+            self.Settings.Logger.log_error("extruder.py - A 'length_to_retract' was requested, "
                                                             "but was found to be greater than the retraction "
                                                             "length.")
             # for some reason we are over the retraction length.  Return 0
@@ -330,7 +330,7 @@ class Extruder(object):
                 state.IsDetracted
             )
 
-            self.Settings.current_debug_profile().log_extruder_change(message)
+            self.Settings.Logger.log_extruder_change(message)
 
     @staticmethod
     def _extruder_state_triggered(option, state):
@@ -437,7 +437,7 @@ class Extruder(object):
                 detracted_triggered,
                 ret_value
             )
-            self.Settings.current_debug_profile().log_extruder_triggered(message)
+            self.Settings.Logger.log_extruder_triggered(message)
 
         return ret_value
 

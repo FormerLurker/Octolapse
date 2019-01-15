@@ -75,9 +75,9 @@ class SnapshotGcodeGenerator(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile):
         self.Commands = Commands()
         self.Settings = octolapse_settings  # type: OctolapseSettings
-        self.StabilizationPaths = self.Settings.current_stabilization().get_stabilization_paths()
-        self.Snapshot = Snapshot(self.Settings.current_snapshot())
-        self.Printer = Printer(self.Settings.current_printer())
+        self.StabilizationPaths = self.Settings.profiles.current_stabilization().get_stabilization_paths()
+        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
+        self.Printer = self.Settings.profiles.current_printer().clone()
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprint_printer_profile)
@@ -134,7 +134,7 @@ class SnapshotGcodeGenerator(object):
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coordinates["X"])
             self.HasSnapshotPositionErrors = True
-            self.Settings.current_debug_profile().log_error(
+            self.Settings.Logger.log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
                 coordinates["X"] = None
@@ -148,7 +148,7 @@ class SnapshotGcodeGenerator(object):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coordinates["Y"])
             self.HasSnapshotPositionErrors = True
-            self.Settings.current_debug_profile().log_error(
+            self.Settings.Logger.log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
                 coordinates["Y"] = None
@@ -255,7 +255,7 @@ class SnapshotGcodeGenerator(object):
         z_lift = current_position.distance_to_zlift(position.ZHop)
 
         if z_lift is None:
-            self.Settings.current_debug_profile().log_warning(
+            self.Settings.Logger.log_warning(
                 "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(
                     current_position.Z, current_position.LastExtrusionHeight))
 
@@ -268,7 +268,7 @@ class SnapshotGcodeGenerator(object):
             message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(
                 x_return, y_return, z_return)
             self.SnapshotPositionErrors = message
-            self.Settings.current_debug_profile().log_error(
+            self.Settings.Logger.log_error(
                 "gcode.py - CreateSnapshotGcode - {0}".format(message))
             return None
 
@@ -287,7 +287,7 @@ class SnapshotGcodeGenerator(object):
 
         # check the units
         if is_metric is None or not is_metric:
-            self.Settings.current_debug_profile().log_error(
+            self.Settings.Logger.log_error(
                 "No unit of measurement has been set and the current"
                 " printer profile is set to require explicit G20/G21, or the unit of measurement is inches. "
             )
@@ -312,7 +312,7 @@ class SnapshotGcodeGenerator(object):
         # handle the trigger types
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
             if triggering_command_position.IsTravelOnly:
-                self.Settings.current_debug_profile().log_snapshot_gcode(
+                self.Settings.Logger.log_snapshot_gcode(
                     "The triggering command is travel only, skipping return command generation"
                 )
                 # No need to perform the return step!  We'll go right the the next travel location after
@@ -507,7 +507,7 @@ class SnapshotGcodeGenerator(object):
             new_snapshot_gcode.ReturnY = triggering_command_position.Y
             # see about Z, we may need to suppress our
             new_snapshot_gcode.ReturnZ = triggering_command_position.Z
-            self.Settings.current_debug_profile().log_snapshot_gcode(
+            self.Settings.Logger.log_snapshot_gcode(
                 "Skipping return position, traveling to the triggering command position: X={0}, y={0}".format(
                     triggering_command_position.X, triggering_command_position.Y
                 )
@@ -598,7 +598,7 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.END_GCODE,
             final_command)
 
-        self.Settings.current_debug_profile().log_snapshot_gcode(
+        self.Settings.Logger.log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
                 new_snapshot_gcode.snapshot_index(),
                 new_snapshot_gcode.end_index(),
@@ -606,7 +606,7 @@ class SnapshotGcodeGenerator(object):
             )
         )
         for gcode in new_snapshot_gcode.snapshot_gcode():
-            self.Settings.current_debug_profile().log_snapshot_gcode("    {0}".format(gcode))
+            self.Settings.Logger.log_snapshot_gcode("    {0}".format(gcode))
 
         return new_snapshot_gcode
 

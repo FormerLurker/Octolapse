@@ -43,7 +43,7 @@ class Triggers(object):
         try:
             return len(self._triggers)
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def reset(self):
         self.Snapshot = None
@@ -52,22 +52,22 @@ class Triggers(object):
     def create(self):
         try:
             self.reset()
-            self.Printer = self.Settings.current_printer()
-            self.Snapshot = self.Settings.current_snapshot()
+            self.Printer = self.Settings.profiles.current_printer().clone()
+            self.Snapshot = self.Settings.profiles.current_snapshot().clone()
             self.Name = self.Snapshot.name
             # create the triggers
             # If the gcode trigger is enabled, add it
-            if self.Snapshot.trigger_type == Snapshot.GcodeTriggerType:
+            if self.Snapshot.trigger_type == SnapshotProfile.GcodeTriggerType:
                 # Add the trigger to the list
                 self._triggers.append(GcodeTrigger(self.Settings))
             # If the layer trigger is enabled, add it
-            elif self.Snapshot.trigger_type == Snapshot.LayerTriggerType:
+            elif self.Snapshot.trigger_type == SnapshotProfile.LayerTriggerType:
                 self._triggers.append(LayerTrigger(self.Settings))
             # If the layer trigger is enabled, add it
-            elif self.Snapshot.trigger_type == Snapshot.TimerTriggerType:
+            elif self.Snapshot.trigger_type == SnapshotProfile.TimerTriggerType:
                 self._triggers.append(TimerTrigger(self.Settings))
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def resume(self):
         try:
@@ -75,7 +75,7 @@ class Triggers(object):
                 if type(trigger) == TimerTrigger:
                     trigger.resume()
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def pause(self):
         try:
@@ -83,7 +83,7 @@ class Triggers(object):
                 if type(trigger) == TimerTrigger:
                     trigger.pause()
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def update(self, position, parsed_command):
         """Update all triggers and return any that are triggering"""
@@ -100,11 +100,11 @@ class Triggers(object):
 
                 # Make sure there are no position errors (unknown position, out of bounds, etc)
                 if position.has_position_error(0):
-                    self.Settings.current_debug_profile().log_error(
+                    self.Settings.Logger.log_error(
                         "A trigger has a position error:{0}".format(position.position_error(0)))
                 # see if the current trigger is triggering, indicting that a snapshot should be taken
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
         return None
 
@@ -121,7 +121,7 @@ class Triggers(object):
                 ):
                     return currentTrigger
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
         return False
 
@@ -132,7 +132,7 @@ class Triggers(object):
                 if currentTrigger.is_waiting(0):
                     return currentTrigger
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def has_changed(self):
         try:
@@ -141,7 +141,7 @@ class Triggers(object):
                 if currentTrigger.has_changed(0):
                     return True
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
             return None
         return False
 
@@ -152,7 +152,7 @@ class Triggers(object):
             for currentTrigger in self._triggers:
                 state_list.append(currentTrigger.to_dict(0))
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
             return None
         return state_list
 
@@ -164,7 +164,7 @@ class Triggers(object):
                 if currentTrigger.has_changed(0):
                     change_list.append(currentTrigger.to_dict(0))
         except Exception, e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
             return None
         return change_list
 
@@ -226,8 +226,8 @@ class Trigger(object):
 
     def __init__(self, octolapse_settings, max_states=5):
         self.Settings = octolapse_settings
-        self.Printer = Printer(self.Settings.current_printer())
-        self.Snapshot = Snapshot(self.Settings.current_snapshot())
+        self.Printer = self.Settings.profiles.current_printer().clone()
+        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
 
         self.Type = 'Trigger'
         self._stateHistory = []
@@ -316,7 +316,7 @@ class GcodeTrigger(Trigger):
             self.SnapshotCommand = self.Printer.snapshot_command
 
         except ValueError as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
         self.Type = "gcode"
         self.RequireZHop = self.Snapshot.require_zhop
@@ -350,12 +350,12 @@ class GcodeTrigger(Trigger):
                 self.Snapshot.trigger_on_detracting,
                 self.Snapshot.trigger_on_detracted
             )
-            self.Settings.current_debug_profile().log_trigger_create(message)
+            self.Settings.Logger.log_trigger_create(message)
 
         # Logging
         message = "Creating Gcode Trigger - Gcode Command:{0}, RequireZHop:{1}"
         message = message.format(self.Printer.snapshot_command, self.Snapshot.require_zhop)
-        self.Settings.current_debug_profile().log_trigger_create(message)
+        self.Settings.Logger.log_trigger_create(message)
 
 
         # add an initial state
@@ -395,16 +395,16 @@ class GcodeTrigger(Trigger):
                     if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
                         if self.RequireZHop and not position.is_zhop(0):
                             state.IsWaitingOnZHop = True
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on ZHop.")
                         elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on Position.")
                         elif not state.IsFeatureAllowed:
                             state.IsWaitingOnFeature = True
                             # Make sure the previous X,Y is in position
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on Feature.")
                         else:
                             state.IsTriggered = True
@@ -420,11 +420,11 @@ class GcodeTrigger(Trigger):
                             state.IsWaitingOnZHop = False
                             state.IsWaitingOnExtruder = False
                             state.IsWaitingOnFeature = False
-                            self.Settings.current_debug_profile().log_triggering(
+                            self.Settings.Logger.log_triggering(
                                 "GcodeTrigger - Waiting for extruder to trigger.")
                     else:
                         state.IsWaitingOnExtruder = True
-                        self.Settings.current_debug_profile().log_trigger_wait_state(
+                        self.Settings.Logger.log_trigger_wait_state(
                             "GcodeTrigger - Waiting for extruder to trigger.")
 
             # calculate changes and set the current state
@@ -433,7 +433,7 @@ class GcodeTrigger(Trigger):
             # add the state to the history
             self.add_state(state)
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
 
 class LayerTriggerState(TriggerState):
@@ -512,7 +512,7 @@ class LayerTrigger(Trigger):
                 self.Snapshot.trigger_on_detracting,
                 self.Snapshot.trigger_on_detracted
             )
-            self.Settings.current_debug_profile().log_trigger_create(message)
+            self.Settings.Logger.log_trigger_create(message)
         # Configuration Variables
         self.RequireZHop = self.Snapshot.require_zhop
         self.HeightIncrement = self.Snapshot.layer_trigger_height
@@ -525,7 +525,7 @@ class LayerTrigger(Trigger):
             self.Snapshot.layer_trigger_height,
             self.Snapshot.require_zhop
         )
-        self.Settings.current_debug_profile().log_trigger_create(message)
+        self.Settings.Logger.log_trigger_create(message)
 
         self.add_state(LayerTriggerState())
 
@@ -575,7 +575,7 @@ class LayerTrigger(Trigger):
                             "Layer Trigger - Warning - The height increment was expected to increase, but it did not." 
                             " Height Increment:{0}, Current Increment:{1}, Calculated Inrement:{2}"
                         ).format(self.HeightIncrement, state.CurrentIncrement, new_increment)
-                        self.Settings.current_debug_profile().log_trigger_height_change(message)
+                        self.Settings.Logger.log_trigger_height_change(message)
                     else:
                         state.CurrentIncrement = new_increment
                         # if the current increment is below one here, set it to one.  This is not normal, but can happen
@@ -587,7 +587,7 @@ class LayerTrigger(Trigger):
                         message = (
                             "Layer Trigger - Height Increment:{0}, Current Increment:{1}, Height: {2}"
                         ).format(self.HeightIncrement, state.CurrentIncrement, position.height(0))
-                        self.Settings.current_debug_profile().log_trigger_height_change(message)
+                        self.Settings.Logger.log_trigger_height_change(message)
 
                 # see if we've encountered a layer or height change
                 if self.HeightIncrement is not None and self.HeightIncrement > 0:
@@ -611,31 +611,31 @@ class LayerTrigger(Trigger):
                     if not is_extruder_triggering:
                         state.IsWaitingOnExtruder = True
                         if state.IsHeightChangeWait:
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Height change triggering, waiting on extruder.")
                         elif state.IsLayerChangeWait:
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
                         if self.RequireZHop and not position.is_zhop(0):
                             state.IsWaitingOnZHop = True
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
                         elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Waiting on Position.")
                         elif not state.IsFeatureAllowed:
                             state.IsWaitingOnFeature = True
                             # Make sure the previous X,Y is in position
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Waiting on Feature.")
                         else:
                             if state.IsHeightChangeWait:
-                                self.Settings.current_debug_profile().log_triggering(
+                                self.Settings.Logger.log_triggering(
                                     "LayerTrigger - Height change triggering.")
                             elif state.IsLayerChangeWait:
-                                self.Settings.current_debug_profile().log_triggering(
+                                self.Settings.Logger.log_triggering(
                                     "LayerTrigger - Layer change triggering.")
 
                             self.TriggeredCount += 1
@@ -660,7 +660,7 @@ class LayerTrigger(Trigger):
             # add the state to the history
             self.add_state(state)
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
 
 class TimerTriggerState(TriggerState):
@@ -727,7 +727,7 @@ class TimerTrigger(Trigger):
                 self.Snapshot.trigger_on_detracting,
                 self.Snapshot.trigger_on_detracted
             )
-            self.Settings.current_debug_profile().log_trigger_create(message)
+            self.Settings.Logger.log_trigger_create(message)
 
         self.IntervalSeconds = self.Snapshot.timer_trigger_seconds
         self.RequireZHop = self.Snapshot.require_zhop
@@ -739,7 +739,7 @@ class TimerTrigger(Trigger):
             self.Snapshot.timer_trigger_seconds,
             self.Snapshot.require_zhop
         )
-        self.Settings.current_debug_profile().log_trigger_create(message)
+        self.Settings.Logger.log_trigger_create(message)
 
         # add initial state
         initial_state = TimerTriggerState()
@@ -752,7 +752,7 @@ class TimerTrigger(Trigger):
                 return
             state.PauseTime = time.time()
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def resume(self):
         try:
@@ -771,12 +771,12 @@ class TimerTrigger(Trigger):
                     state.PauseTime, current_time,
                     new_last_trigger_time
                 )
-                self.Settings.current_debug_profile().log_timer_trigger_unpaused(message)
+                self.Settings.Logger.log_timer_trigger_unpaused(message)
                 # Keep the proper interval if the print is paused
                 state.TriggerStartTime = new_last_trigger_time
                 state.PauseTime = None
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
 
     def update(self, position):
         try:
@@ -820,7 +820,7 @@ class TimerTrigger(Trigger):
                     int(current_time - state.TriggerStartTime),
                     int(self.IntervalSeconds - (current_time - state.TriggerStartTime))
                 )
-                self.Settings.current_debug_profile().log_trigger_time_remaining(message)
+                self.Settings.Logger.log_trigger_time_remaining(message)
 
                 # how many seconds to trigger
                 seconds_to_trigger = self.IntervalSeconds - \
@@ -834,18 +834,18 @@ class TimerTrigger(Trigger):
                     # see if the exturder is in the right position
                     if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
                         if self.RequireZHop and not position.is_zhop(0):
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True
                         elif not state.IsInPosition and not state.InPathPosition:
                             # Make sure the previous X,Y is in position
 
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on Position.")
                         elif not state.IsFeatureAllowed:
                             state.IsWaitingOnFeature = True
                             # Make sure the previous X,Y is in position
-                            self.Settings.current_debug_profile().log_trigger_wait_state(
+                            self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on Feature.")
                         else:
                             # Is Triggering
@@ -866,10 +866,10 @@ class TimerTrigger(Trigger):
                             state.IsWaitingOnExtruder = False
                             state.IsWaitingOnFeature = False
                             # Log trigger
-                            self.Settings.current_debug_profile().log_triggering('TimerTrigger - Triggering.')
+                            self.Settings.Logger.log_triggering('TimerTrigger - Triggering.')
 
                     else:
-                        self.Settings.current_debug_profile().log_trigger_wait_state(
+                        self.Settings.Logger.log_trigger_wait_state(
                             'TimerTrigger - Triggering, waiting for extruder')
                         state.IsWaitingOnExtruder = True
             # calculate changes and set the current state
@@ -877,4 +877,4 @@ class TimerTrigger(Trigger):
             # add the state to the history
             self.add_state(state)
         except Exception as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)

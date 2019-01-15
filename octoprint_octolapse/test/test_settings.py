@@ -23,7 +23,7 @@
 import unittest
 from tempfile import NamedTemporaryFile
 
-from octoprint_octolapse.settings import OctolapseSettings, Rendering, InvalidSettingsKeyException, InvalidSettingsValueException
+from octoprint_octolapse.settings import OctolapseSettings, RenderingProfile
 
 import json
 class TestSettings(unittest.TestCase):

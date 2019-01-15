@@ -34,7 +34,7 @@ import sys
 from requests.auth import HTTPBasicAuth
 from threading import Thread
 import octoprint_octolapse.camera as camera
-from octoprint_octolapse.settings import Camera
+from octoprint_octolapse.settings import CameraProfile
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from tempfile import mkdtemp
@@ -79,7 +79,7 @@ class CaptureSnapshot(object):
         self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
-            self.Cameras.append(Camera(current_camera))
+            self.Cameras.append(current_camera.clone())
 
         self.CameraInfos = {}
         for current_camera in self.Cameras:
@@ -185,7 +185,7 @@ class CaptureSnapshot(object):
     def clean_snapshots(self, snapshot_directory, job_directory):
 
         # get snapshot directory
-        self.Settings.current_debug_profile().log_snapshot_clean(
+        self.Settings.Logger.log_snapshot_clean(
             "Cleaning snapshots from: {0}".format(snapshot_directory))
 
         path = os.path.dirname(snapshot_directory + os.sep)
@@ -193,10 +193,10 @@ class CaptureSnapshot(object):
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
-                self.Settings.current_debug_profile().log_snapshot_clean("Snapshots cleaned.")
+                self.Settings.Logger.log_snapshot_clean("Snapshots cleaned.")
                 if not os.listdir(job_path):
                     shutil.rmtree(job_path)
-                    self.Settings.current_debug_profile().log_snapshot_clean("The job directory was empty, removing.")
+                    self.Settings.Logger.log_snapshot_clean("The job directory was empty, removing.")
             except Exception:
                 # Todo:  What exceptions do I catch here?
                 exception_type = sys.exc_info()[0]
@@ -206,9 +206,9 @@ class CaptureSnapshot(object):
                     "path at {0}.  It may already have been cleaned.  "
                     "Info:  ExceptionType:{1}, Exception Value:{2}"
                 ).format(path, exception_type, value)
-                self.Settings.current_debug_profile().log_snapshot_clean(message)
+                self.Settings.Logger.log_snapshot_clean(message)
         else:
-            self.Settings.current_debug_profile().log_snapshot_clean(
+            self.Settings.Logger.log_snapshot_clean(
                 "Snapshot - No need to clean snapshots: they have already been removed."
             )
 
@@ -217,14 +217,14 @@ class CaptureSnapshot(object):
         # get snapshot directory
         snapshot_directory = utility.get_snapshot_temp_directory(
             self.DataDirectory)
-        self.Settings.current_debug_profile().log_snapshot_clean(
+        self.Settings.Logger.log_snapshot_clean(
             "Cleaning snapshots from: {0}".format(snapshot_directory))
 
         path = os.path.dirname(snapshot_directory + os.sep)
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
-                self.Settings.current_debug_profile().log_snapshot_clean("Snapshots cleaned.")
+                self.Settings.Logger.log_snapshot_clean("Snapshots cleaned.")
             except:
                 # Todo:  What exceptions to catch here?
                 exception_type = sys.exc_info()[0]
@@ -234,9 +234,9 @@ class CaptureSnapshot(object):
                     "path at {0}.  It may already have been cleaned.  "
                     "Info:  ExceptionType:{1}, Exception Value:{2}"
                 ).format(path, exception_type, value)
-                self.Settings.current_debug_profile().log_snapshot_clean(message)
+                self.Settings.Logger.log_snapshot_clean(message)
         else:
-            self.Settings.current_debug_profile().log_snapshot_clean(
+            self.Settings.Logger.log_snapshot_clean(
                 "Snapshot - No need to clean snapshots: they have already been removed."
             )
 
@@ -339,7 +339,7 @@ class SnapshotThread(Thread):
         sleep_tries = 0
         delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
-        self.Settings.current_debug_profile().log_snapshot_download(
+        self.Settings.Logger.log_snapshot_download(
             "Snapshot Delay - Waiting {0} second(s) after executing the snapshot script."
             .format(self.snapshot_job_info.DelaySeconds)
         )
@@ -365,11 +365,11 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
     def run(self):
         try:
-            self.Settings.current_debug_profile().log_snapshot_download("Snapshot - running {0} script.".format(self.script_type))
+            self.Settings.Logger.log_snapshot_download("Snapshot - running {0} script.".format(self.script_type))
             # execute the script and send the parameters
             if self.script_type == 'snapshot':
                 if self.snapshot_job_info.DelaySeconds < 0.001:
-                    self.Settings.current_debug_profile().log_snapshot_download(
+                    self.Settings.Logger.log_snapshot_download(
                         "Snapshot Delay - No pre snapshot delay configured.")
                 else:
                     self.apply_camera_delay()
@@ -390,11 +390,11 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             self.snapshot_job_info.error = str(e)
 
         finally:
-            self.Settings.current_debug_profile().log_snapshot_download(
+            self.Settings.Logger.log_snapshot_download(
                 "The {0} script job completed, signaling task queue.".format(self.script_type))
 
     def execute_script(self):
-        self.Settings.current_debug_profile().log_snapshot_download(
+        self.Settings.Logger.log_snapshot_download(
             "Running the following {0} script command with a timeout of {1}: {2} {3} {4} {5} {6} {7} {8}"
             .format(
                 self.script_type,
@@ -444,7 +444,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                 )
             raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
         elif error_message:
-            self.Settings.current_debug_profile().log_error(
+            self.Settings.Logger.log_error(
                 "Error output was returned from the {0} script: {1}".format(self.script_type, error_message))
 
 
@@ -464,7 +464,7 @@ class WebcamSnapshotJob(SnapshotThread):
     def run(self):
         try:
             if self.snapshot_job_info.DelaySeconds < 0.001:
-                self.Settings.current_debug_profile().log_snapshot_download(
+                self.Settings.Logger.log_snapshot_download(
                     "Starting Snapshot Download Job Immediately.")
             else:
                 # Pre-Snapshot Delay
@@ -477,7 +477,7 @@ class WebcamSnapshotJob(SnapshotThread):
                         "Snapshot Download - Authenticating and "
                         "downloading from {0:s} to {1:s}."
                     ).format(self.Url, self.snapshot_job_info.directory)
-                    self.Settings.current_debug_profile().log_snapshot_download(message)
+                    self.Settings.Logger.log_snapshot_download(message)
                     r = requests.get(
                         self.Url,
                         auth=HTTPBasicAuth(self.Username, self.Password),
@@ -485,7 +485,7 @@ class WebcamSnapshotJob(SnapshotThread):
                         timeout=float(self.snapshot_job_info.TimeoutSeconds)
                     )
                 else:
-                    self.Settings.current_debug_profile().log_snapshot_download(
+                    self.Settings.Logger.log_snapshot_download(
                         "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, self.snapshot_job_info.directory))
                     r = requests.get(
                         self.Url, verify=not self.IgnoreSslError,
@@ -521,7 +521,7 @@ class WebcamSnapshotJob(SnapshotThread):
                     for chunk in r.iter_content(1024):
                         if chunk:
                             snapshot_file.write(chunk)
-                    self.Settings.current_debug_profile().log_snapshot_save(
+                    self.Settings.Logger.log_snapshot_save(
                         "Snapshot - Snapshot saved to disk at {0}".format(self.snapshot_job_info.full_path))
             except Exception as e:
                 raise SnapshotError(
@@ -535,10 +535,10 @@ class WebcamSnapshotJob(SnapshotThread):
             self.create_thumbnail()
             self.snapshot_job_info.success = True
         except SnapshotError as e:
-            self.Settings.current_debug_profile().log_exception(e)
+            self.Settings.Logger.log_exception(e)
             self.snapshot_job_info.error = str(e)
         finally:
-            self.Settings.current_debug_profile().log_snapshot_download(
+            self.Settings.Logger.log_snapshot_download(
                 "Snapshot Download Job completed, signaling task queue.")
 
 

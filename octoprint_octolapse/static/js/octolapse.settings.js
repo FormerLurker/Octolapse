@@ -182,84 +182,85 @@ $(function () {
 
             // Printers
             Octolapse.Printers.profiles([]);
-            Octolapse.Printers.default_profile(settings.default_printer_profile);
+            Octolapse.Printers.default_profile(settings.profiles.defaults.printer);
             Octolapse.Printers.profileOptions = {
-                'slicer_type_options': settings.slicer_type_options,
-                'e_axis_default_mode_options': settings.e_axis_default_mode_options,
-                'g90_influences_extruder_options': settings.g90_influences_extruder_options,
-                'xyz_axes_default_mode_options': settings.xyz_axes_default_mode_options,
-                'units_default_options': settings.units_default_options,
-                'axis_speed_display_unit_options': settings.axis_speed_display_unit_options
+                'slicer_type_options': settings.profiles.options.printer.slicer_type_options,
+                'e_axis_default_mode_options': settings.profiles.options.printer.e_axis_default_mode_options,
+                'g90_influences_extruder_options': settings.profiles.options.printer.g90_influences_extruder_options,
+                'xyz_axes_default_mode_options': settings.profiles.options.printer.xyz_axes_default_mode_options,
+                'units_default_options': settings.profiles.options.printer.units_default_options,
+                'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options
             };
-            Octolapse.Printers.current_profile_guid(settings.current_printer_profile_guid);
-            settings.printers.forEach(function (item, index) {
-                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(item));
+            Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
+            Object.keys(settings.profiles.printers).forEach(function(key) {
+                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(settings.profiles.printers[key]));
             });
 
             Octolapse.Stabilizations.profiles([]);
-            Octolapse.Stabilizations.default_profile(settings.default_stabilization_profile);
-            Octolapse.Stabilizations.profileOptions = {'stabilization_type_options': settings.stabilization_type_options}
-            Octolapse.Stabilizations.current_profile_guid(settings.current_stabilization_profile_guid);
-            settings.stabilizations.forEach(function (item, index) {
-                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(item));
+            Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
+            Octolapse.Stabilizations.profileOptions = {'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options}
+            Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
+            Object.keys(settings.profiles.stabilizations).forEach(function(key) {
+                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
             });
 
             // Snapshots
             Octolapse.Snapshots.profiles([]);
-            Octolapse.Snapshots.default_profile(settings.default_snapshot_profile);
+            Octolapse.Snapshots.default_profile(settings.profiles.defaults.snapshot);
             Octolapse.Snapshots.profileOptions ={
-                'trigger_types': settings.trigger_types,
-                'snapshot_extruder_trigger_options': settings.snapshot_extruder_trigger_options,
-                'position_restriction_shapes': settings.position_restriction_shapes,
-                'position_restriction_types': settings.position_restriction_types
+                'trigger_types': settings.profiles.options.snapshot.trigger_types,
+                'snapshot_extruder_trigger_options': settings.profiles.options.snapshot.snapshot_extruder_trigger_options,
+                'position_restriction_shapes': settings.profiles.options.snapshot.position_restriction_shapes,
+                'position_restriction_types': settings.profiles.options.snapshot.position_restriction_types
             }
-            Octolapse.Snapshots.current_profile_guid(settings.current_snapshot_profile_guid);
-            settings.snapshots.forEach(function (item, index) {
-                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(item));
+            Octolapse.Snapshots.current_profile_guid(settings.profiles.current_snapshot_profile_guid);
+            Object.keys(settings.profiles.snapshots).forEach(function(key) {
+                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(settings.profiles.snapshots[key]));
             });
 
             // Renderings
             Octolapse.Renderings.profiles([]);
-            Octolapse.Renderings.default_profile(settings.default_rendering_profile);
+            Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
             Octolapse.Renderings.profileOptions = {
-                'rendering_fps_calculation_options': settings.rendering_fps_calculation_options,
-                'rendering_output_format_options': settings.rendering_output_format_options,
-                'rendering_file_templates': settings.rendering_file_templates,
-                'overlay_text_templates': settings.overlay_text_templates,
-                'overlay_text_alignment_options': settings.overlay_text_alignment_options,
-                'overlay_text_valign_options': settings.overlay_text_valign_options,
-                'overlay_text_halign_options': settings.overlay_text_halign_options,
+                'rendering_fps_calculation_options': settings.profiles.options.rendering.rendering_fps_calculation_options,
+                'rendering_output_format_options': settings.profiles.options.rendering.rendering_output_format_options,
+                'rendering_file_templates': settings.profiles.options.rendering.rendering_file_templates,
+                'overlay_text_templates': settings.profiles.options.rendering.overlay_text_templates,
+                'overlay_text_alignment_options': settings.profiles.options.rendering.overlay_text_alignment_options,
+                'overlay_text_valign_options': settings.profiles.options.rendering.overlay_text_valign_options,
+                'overlay_text_halign_options': settings.profiles.options.rendering.overlay_text_halign_options,
             }
-            Octolapse.Renderings.current_profile_guid(settings.current_rendering_profile_guid);
-            settings.renderings.forEach(function (item, index) {
-                var o = new Octolapse.RenderingProfileViewModel(item);
-                Octolapse.Renderings.profiles.push(o);
+            Octolapse.Renderings.current_profile_guid(settings.profiles.current_rendering_profile_guid);
+            Object.keys(settings.profiles.renderings).forEach(function(key) {
+                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(settings.profiles.renderings[key]));
             });
 
             // Cameras
             Octolapse.Cameras.profiles([]);
-            Octolapse.Cameras.default_profile(settings.default_camera_profile);
+            Octolapse.Cameras.default_profile(settings.profiles.defaults.camera);
             Octolapse.Cameras.profileOptions = {
-                'camera_powerline_frequency_options': settings.camera_powerline_frequency_options,
-                'camera_exposure_type_options': settings.camera_exposure_type_options,
-                'camera_led_1_mode_options': settings.camera_led_1_mode_options,
-                'snapshot_transpose_options': settings.snapshot_transpose_options,
-                'camera_type_options': settings.camera_type_options
+                'camera_powerline_frequency_options': settings.profiles.options.camera.camera_powerline_frequency_options,
+                'camera_exposure_type_options': settings.profiles.options.camera.camera_exposure_type_options,
+                'camera_led_1_mode_options': settings.profiles.options.camera.camera_led_1_mode_options,
+                'snapshot_transpose_options': settings.profiles.options.camera.snapshot_transpose_options,
+                'camera_type_options': settings.profiles.options.camera.camera_type_options
 
             }
 
-            settings.cameras.forEach(function (item, index) {
-                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(item));
+            Object.keys(settings.profiles.cameras).forEach(function(key) {
+                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
             });
 
             // Debug
             Octolapse.DebugProfiles.profiles([]);
-            Octolapse.DebugProfiles.default_profile(settings.current_debug_profile_guid);
-            Octolapse.DebugProfiles.profileOptions = {'debug_profile_options': settings.debug_profile_options}
-            Octolapse.DebugProfiles.current_profile_guid(settings.current_debug_profile_guid);
-            settings.debug_profiles.forEach(function (item, index) {
-                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(item));
+            Octolapse.DebugProfiles.default_profile(settings.profiles.current_debug_profile_guid);
+            Octolapse.DebugProfiles.profileOptions = {'debug_profile_options': ""}
+            Octolapse.DebugProfiles.current_profile_guid(settings.profiles.current_debug_profile_guid);
+            //console.log("Creating Debug Profiles")
+            Object.keys(settings.profiles.debug).forEach(function(key) {
+                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(settings.profiles.debug[key]));
             });
+
 
         };
 
@@ -282,7 +283,7 @@ $(function () {
                         success: function (newSettings) {
 
                             self.updateSettings(newSettings);
-                            Octolapse.Globals.update(newSettings);
+                            Octolapse.Globals.update(newSettings.main_settings);
                             alert("The default settings have been restored.  It is recommended that you restart the OctoPrint server now.");
                         },
                         error: function (XMLHttpRequest, textStatus, errorThrown) {

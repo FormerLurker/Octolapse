@@ -33,12 +33,12 @@ from octoprint_octolapse.trigger import LayerTrigger
 class TestLayerTrigger(unittest.TestCase):
     def setUp(self):
         self.Settings = OctolapseSettings(NamedTemporaryFile().name)
-        self.Settings.current_printer().e_axis_default_mode = 'relative'
-        self.Settings.current_printer().xyz_axes_default_mode = 'absolute'
-        self.Settings.current_printer().auto_detect_position = False
-        self.Settings.current_printer().origin_x = 0
-        self.Settings.current_printer().origin_y = 0
-        self.Settings.current_printer().origin_z = 0
+        self.Settings.profiles.current_printer().e_axis_default_mode = 'relative'
+        self.Settings.profiles.current_printer().xyz_axes_default_mode = 'absolute'
+        self.Settings.profiles.current_printer().auto_detect_position = False
+        self.Settings.profiles.current_printer().origin_x = 0
+        self.Settings.profiles.current_printer().origin_y = 0
+        self.Settings.profiles.current_printer().origin_z = 0
         self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):
@@ -655,8 +655,8 @@ class TestLayerTrigger(unittest.TestCase):
 
     def test_LayerTrigger_LayerChange_ZHop(self):
         """Test the layer trigger for layer changes triggers"""
-        self.Settings.current_snapshot().layer_trigger_require_zhop = True
-        self.Settings.current_printer().z_hop = .5
+        self.Settings.profiles.current_snapshot().layer_trigger_require_zhop = True
+        self.Settings.profiles.current_printer().z_hop = .5
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,

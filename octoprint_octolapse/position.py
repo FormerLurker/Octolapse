@@ -27,7 +27,7 @@ import math
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
-from octoprint_octolapse.settings import Printer, Snapshot, SlicerPrintFeatures
+from octoprint_octolapse.settings import PrinterProfile, SnapshotProfile, SlicerPrintFeatures
 from octoprint_octolapse.extruder import Extruder
 
 
@@ -402,8 +402,8 @@ class Position(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile,
                  g90_influences_extruder):
         self.Settings = octolapse_settings
-        self.Printer = Printer(self.Settings.current_printer())
-        self.Snapshot = Snapshot(self.Settings.current_snapshot())
+        self.Printer = self.Settings.profiles.current_printer().clone()
+        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
         self.SlicerFeatures = SlicerPrintFeatures(self.Printer, self.Snapshot)
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
@@ -513,12 +513,12 @@ class Position(object):
 
         if amount_to_lift < 0:
             # the current lift is negative
-            self.Settings.current_debug_profile().log_warning("position.py - A 'distance_to_zlift' was requested, "
+            self.Settings.Logger.log_warning("position.py - A 'distance_to_zlift' was requested, "
                                                               "but the current lift is already above the z_hop height.")
             return 0
         elif amount_to_lift > self.ZHop:
             # For some reason we're lower than we expected
-            self.Settings.current_debug_profile().log_warning("position.py - A 'distance_to_zlift' was requested, "
+            self.Settings.Logger.log_warning("position.py - A 'distance_to_zlift' was requested, "
                                                               "but was found to be more than the z_hop height.")
             return self.ZHop
         else:
@@ -745,7 +745,7 @@ class Position(object):
             elif pos.parsed_command.cmd in ["G0", "G1"]:
                 # Movement
 
-                self.Settings.current_debug_profile().log_position_command_received(
+                self.Settings.Logger.log_position_command_received(
                     "Received {0}".format(pos.parsed_command.cmd)
                 )
 
@@ -767,7 +767,7 @@ class Position(object):
                             pos.PositionError = ""
                         pos.update_position(self.BoundingBox, x, y, z, e=None, f=f)
                     else:
-                        self.Settings.current_debug_profile().log_position_command_received(
+                        self.Settings.Logger.log_position_command_received(
                             "Position - Unable to update the X/Y/Z axis position, the axis mode ("
                             "relative/absolute) has not been explicitly set via G90/G91. "
                         )
@@ -791,7 +791,7 @@ class Position(object):
                             e=e,
                             f=None)
                     else:
-                        self.Settings.current_debug_profile().log_error(
+                        self.Settings.Logger.log_error(
                             "Position - Unable to update the extruder position, the extruder mode ("
                             "relative/absolute) has been selected (absolute/relative). "
                         )
@@ -808,17 +808,17 @@ class Position(object):
                         if pos.IsRelative else "Absolute", previous_pos.X,
                         previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
                         pos.Y, pos.Z, pos.E)
-                self.Settings.current_debug_profile().log_position_change(
+                self.Settings.Logger.log_position_change(
                     message)
             elif pos.parsed_command.cmd in ["G2", "G3"]:
                 # Movement Type
                 movement_type = ""
                 if pos.parsed_command.cmd == "G2":
                     movement_type = "clockwise"
-                    self.Settings.current_debug_profile().log_position_command_received("Received G2 - Clockwise Arc")
+                    self.Settings.Logger.log_position_command_received("Received G2 - Clockwise Arc")
                 else:
                     movement_type = "counter-clockwise"
-                    self.Settings.current_debug_profile().log_position_command_received("Received G3 - Counter-Clockwise Arc")
+                    self.Settings.Logger.log_position_command_received("Received G3 - Counter-Clockwise Arc")
 
                 x = pos.parsed_command.parameters["X"] if "X" in pos.parsed_command.parameters else None
                 y = pos.parsed_command.parameters["Y"] if "Y" in pos.parsed_command.parameters else None
@@ -833,25 +833,25 @@ class Position(object):
 
                 can_update_position = False
                 if r is not None and (i is not None or j is not None):
-                    self.Settings.current_debug_profile().log_error(
+                    self.Settings.Logger.log_error(
                         "Received {0} - but received R and either I or J, which is not allowed.".format(pos.parsed_command.cmd))
                 elif i is not None or j is not None:
                     # IJ Form
                     if x is not None and y is not None:
                         # not a circle, the position has changed
                         can_update_position = True
-                        self.Settings.current_debug_profile().log_info(
+                        self.Settings.Logger.log_info(
                             "Cannot yet calculate position restriction intersections when G2/G3.")
                 elif r is not None:
                     # R Form
                     if x is None and y is None:
-                        self.Settings.current_debug_profile().log_error(
+                        self.Settings.Logger.log_error(
                             "Received {0} - but received R without x or y, which is not allowed."
                             .format(pos.parsed_command.cmd)
                         )
                     else:
                         can_update_position = True
-                        self.Settings.current_debug_profile().log_info(
+                        self.Settings.Logger.log_info(
                             "Cannot yet calculate position restriction intersections when G2/G3.")
 
                 if can_update_position:
@@ -862,7 +862,7 @@ class Position(object):
                                 pos.PositionError = ""
                             pos.update_position(self.BoundingBox, x, y, z=None, e=None, f=f)
                         else:
-                            self.Settings.current_debug_profile().log_position_command_received(
+                            self.Settings.Logger.log_position_command_received(
                                 "Position - Unable to update the X/Y/Z axis position, the axis mode ("
                                 "relative/absolute) has not been explicitly set via G90/G91. "
                             )
@@ -885,7 +885,7 @@ class Position(object):
                                 e=e,
                                 f=None)
                         else:
-                            self.Settings.current_debug_profile().log_error(
+                            self.Settings.Logger.log_error(
                                 "Position - Unable to update the extruder position, the extruder mode ("
                                 "relative/absolute) has been selected (absolute/relative). "
                             )
@@ -902,11 +902,11 @@ class Position(object):
                             parsed_command.gcode, "Relative" if pos.IsRelative else "Absolute", movement_type, previous_pos.X,
                             previous_pos.Y, previous_pos.Z, previous_pos.E, pos.X,
                             pos.Y, pos.Z, pos.E)
-                    self.Settings.current_debug_profile().log_position_change(
+                    self.Settings.Logger.log_position_change(
                         message)
             elif pos.parsed_command.cmd == "G10":
                 if "P" not in pos.parsed_command.parameters:
-                    self.Settings.current_debug_profile().log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G10 - Received firmware retract."
                     )
 
@@ -921,7 +921,7 @@ class Position(object):
                     pos.IsExtruderRelative = previous_extruder_relative
             elif pos.parsed_command.cmd == "G11":
 
-                self.Settings.current_debug_profile().log_position_command_received(
+                self.Settings.Logger.log_position_command_received(
                     "Received G11 - Received firmware detract."
                 )
 
@@ -948,27 +948,23 @@ class Position(object):
             elif pos.parsed_command.cmd == "G20":
                 # change units to inches
                 if pos.IsMetric is None or pos.IsMetric:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G20 - Switching units to inches."
                     )
                     pos.IsMetric = False
                 else:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G20 - Already in inches."
                     )
             elif pos.parsed_command.cmd == "G21":
                 # change units to millimeters
                 if pos.IsMetric is None or not pos.IsMetric:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G21 - Switching units to millimeters."
                     )
                     pos.IsMetric = True
                 else:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G21 - Already in millimeters."
                     )
             elif pos.parsed_command.cmd == "G28":
@@ -979,14 +975,12 @@ class Position(object):
             elif pos.parsed_command.cmd == "G90":
                 # change x,y,z to absolute
                 if pos.IsRelative is None or pos.IsRelative:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G90 - Switching to absolute x,y,z coordinates."
                     )
                     pos.IsRelative = False
                 else:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G90 - Already using absolute x,y,z coordinates."
                     )
 
@@ -996,25 +990,22 @@ class Position(object):
                 # as well
                 if self.G90InfluencesExtruder:
                     if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
-                        self.Settings.current_debug_profile(
-                        ).log_position_command_received(
+                        self.Settings.Logger.log_position_command_received(
                             "Received G90 - Switching to absolute extruder coordinates"
                         )
                         pos.IsExtruderRelative = False
                     else:
-                        self.Settings.current_debug_profile(
-                        ).log_position_command_received(
+                        self.Settings.Logger.log_position_command_received(
                             "Received G90 - Already using absolute extruder coordinates"
                         )
             elif pos.parsed_command.cmd == "G91":
                 # change x,y,z to relative
                 if pos.IsRelative is None or not pos.IsRelative:
-                    self.Settings.current_debug_profile().log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G91 - Switching to relative x,y,z coordinates")
                     pos.IsRelative = True
                 else:
-                    self.Settings.current_debug_profile(
-                    ).log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received G91 - Already using relative x,y,z coordinates"
                     )
 
@@ -1024,12 +1015,12 @@ class Position(object):
                 # as well
                 if self.G90InfluencesExtruder:
                     if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
-                        self.Settings.current_debug_profile().log_position_command_received(
+                        self.Settings.Logger.log_position_command_received(
                             "Received G91 - Switching to relative extruder coordinates"
                         )
                         pos.IsExtruderRelative = True
                     else:
-                        self.Settings.current_debug_profile().log_position_command_received(
+                        self.Settings.Logger.log_position_command_received(
                             "Received G91 - Already using relative extruder coordinates"
                         )
             elif pos.parsed_command.cmd == "G92":
@@ -1092,7 +1083,7 @@ class Position(object):
                     else:
                         pos.E = utility.get_float(e, 0)
 
-                self.Settings.current_debug_profile().log_position_command_received(
+                self.Settings.Logger.log_position_command_received(
                     "Received G92 - Set Position.  Command:{0}, XOffset:{1}, " +
                     "YOffset:{2}, ZOffset:{3}, EOffset:{4}".format(
                         parsed_command.gcode, pos.XOffset, pos.YOffset, pos.ZOffset, pos.EOffset))
@@ -1109,19 +1100,19 @@ class Position(object):
             elif pos.parsed_command.cmd == "M83":
                 # Extruder - Set Relative
                 if pos.IsExtruderRelative is None or not pos.IsExtruderRelative:
-                    self.Settings.current_debug_profile().log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received M83 - Switching Extruder to Relative Coordinates"
                     )
                     pos.IsExtruderRelative = True
             elif pos.parsed_command.cmd == "M82":
                 # Extruder - Set Absolute
                 if pos.IsExtruderRelative is None or pos.IsExtruderRelative:
-                    self.Settings.current_debug_profile().log_position_command_received(
+                    self.Settings.Logger.log_position_command_received(
                         "Received M82 - Switching Extruder to Absolute Coordinates"
                     )
                     pos.IsExtruderRelative = False
             elif pos.parsed_command.cmd == "M207":
-                self.Settings.current_debug_profile().log_position_command_received(
+                self.Settings.Logger.log_position_command_received(
                     "Received M207 - setting firmware retraction values"
                 )
                 # Firmware Retraction Tracking
@@ -1136,7 +1127,7 @@ class Position(object):
                 if "Z" in pos.parsed_command.parameters:
                     pos.FirmwareZLift = pos.parsed_command.parameters["Z"]
             elif pos.parsed_command.cmd == "M208":
-                self.Settings.current_debug_profile().log_position_command_received(
+                self.Settings.Logger.log_position_command_received(
                     "Received M207 - setting firmware detraction values"
                 )
                 # Firmware Retraction Tracking
@@ -1208,8 +1199,7 @@ class Position(object):
                     if pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > previous_pos.Height:
                         pos.Height = utility.round_to(
                             pos.Z, self.PrinterTolerance)
-                        self.Settings.current_debug_profile(
-                        ).log_position_height_change(
+                        self.Settings.Logger.log_position_height_change(
                             "Position - Reached New Height:{0}.".format(
                                 pos.Height))
 
@@ -1219,8 +1209,7 @@ class Position(object):
                             or pos.Layer == 0):
                         pos.IsLayerChange = True
                         pos.Layer += 1
-                        self.Settings.current_debug_profile(
-                        ).log_position_layer_change(
+                        self.Settings.Logger.log_position_layer_change(
                             "Position - Layer:{0}.".format(pos.Layer))
                     else:
                         pos.IsLayerChange = False
@@ -1241,7 +1230,7 @@ class Position(object):
                     pos.IsZHop = True
 
             if pos.IsZHop and self.ZHop > 0:
-                self.Settings.current_debug_profile().log_position_zhop(
+                self.Settings.Logger.log_position_zhop(
                     "Position - Zhop:{0}".format(self.ZHop))
 
         # Update Feature Detection
@@ -1308,7 +1297,7 @@ class Position(object):
                 home_strings.append("Homing Z to {0}.".format(
                     get_formatted_coordinate(pos.Z)))
 
-        self.Settings.current_debug_profile().log_position_command_received(
+        self.Settings.Logger.log_position_command_received(
             "Received G28 - ".format(" ".join(home_strings)))
         pos.HasPositionError = False
         pos.PositionError = None
@@ -1371,7 +1360,7 @@ class Position(object):
     #             home_strings.append("Homing Z to {0}.".format(
     #                 get_formatted_coordinate(pos.Z)))
     #
-    #     self.Settings.current_debug_profile().log_position_command_received(
+    #     self.Settings.Logger.log_position_command_received(
     #         "Received G161 - ".format(" ".join(home_strings)))
     #     pos.HasPositionError = False
     #     pos.PositionError = None
@@ -1429,7 +1418,7 @@ class Position(object):
     #             home_strings.append("Homing Z to {0}.".format(
     #                 get_formatted_coordinate(pos.Z)))
     #
-    #     self.Settings.current_debug_profile().log_position_command_received(
+    #     self.Settings.Logger.log_position_command_received(
     #         "Received G162 - ".format(" ".join(home_strings)))
     #     pos.HasPositionError = False
     #     pos.PositionError = None

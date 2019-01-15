@@ -30,7 +30,7 @@ from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.trigger import Triggers
 from octoprint_octolapse.gcode_parser import ParsedCommand, Commands
-from octoprint_octolapse.settings import Printer
+from octoprint_octolapse.settings import PrinterProfile
 from octoprint_octolapse.test.testing_utilities import get_printer_profile
 
 
@@ -40,7 +40,7 @@ class TestSnapshotGcode(unittest.TestCase):
         self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
         printer = get_printer_profile()
         self.Settings.printers.update({printer["guid"]: Printer(printer=printer)})
-        self.Settings.current_printer_profile_guid = printer["guid"]
+        self.Settings.profiles.current_printer_profile_guid = printer["guid"]
         self.Extruder = Extruder(self.Settings)
         self.Position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         # set starting position
@@ -66,10 +66,10 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotPosition_Absolute(self):
         """Test getting absolute snapshot positions for x and y"""
         # adjust the settings for absolute position and create the snapshot gcode generator
-        self.Settings.current_stabilization().x_type = "fixed_coordinate"
-        self.Settings.current_stabilization().x_fixed_coordinate = 10
-        self.Settings.current_stabilization().y_type = "fixed_coordinate"
-        self.Settings.current_stabilization().y_fixed_coordinate = 20
+        self.Settings.profiles.current_stabilization().x_type = "fixed_coordinate"
+        self.Settings.profiles.current_stabilization().x_fixed_coordinate = 10
+        self.Settings.profiles.current_stabilization().y_type = "fixed_coordinate"
+        self.Settings.profiles.current_stabilization().y_fixed_coordinate = 20
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
 
@@ -86,16 +86,16 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotPosition_AbsolutePath(self):
         """Test getting absolute path snapshot positions for x and y"""
         # adjust the settings for absolute position and create the snapshot gcode generator
-        self.Settings.current_stabilization().x_type = "fixed_path"
-        self.Settings.current_stabilization().x_fixed_path = "0,1,2,3,4,5"
-        self.Settings.current_stabilization().y_type = "fixed_path"
-        self.Settings.current_stabilization().y_fixed_path = "5,4,3,2,1,0"
+        self.Settings.profiles.current_stabilization().x_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().x_fixed_path = "0,1,2,3,4,5"
+        self.Settings.profiles.current_stabilization().y_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().y_fixed_path = "5,4,3,2,1,0"
 
         # test with no loop
-        self.Settings.current_stabilization().x_fixed_path_loop = False
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = False
-        self.Settings.current_stabilization().y_fixed_path_loop = False
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = False
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -116,10 +116,10 @@ class TestSnapshotGcode(unittest.TestCase):
         self.assertTrue(coordinates["X"] == 5 and coordinates["Y"] == 0)
 
         # test with loop, no invert
-        self.Settings.current_stabilization().x_fixed_path_loop = True
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = False
-        self.Settings.current_stabilization().y_fixed_path_loop = True
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = True
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = True
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = False
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -140,10 +140,10 @@ class TestSnapshotGcode(unittest.TestCase):
         self.assertTrue(coordinates["X"] == 1 and coordinates["Y"] == 4)
 
         # test with loop and invert
-        self.Settings.current_stabilization().x_fixed_path_loop = True
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = True
-        self.Settings.current_stabilization().y_fixed_path_loop = True
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = True
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = True
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = True
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = True
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -174,10 +174,10 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotPosition_BedRelative(self):
         """Test getting bed relative snapshot positions for x and y"""
         # adjust the settings for absolute position and create the snapshot gcode generator
-        self.Settings.current_stabilization().x_type = "relative"
-        self.Settings.current_stabilization().x_relative = 0
-        self.Settings.current_stabilization().y_type = "relative"
-        self.Settings.current_stabilization().y_relative = 100
+        self.Settings.profiles.current_stabilization().x_type = "relative"
+        self.Settings.profiles.current_stabilization().x_relative = 0
+        self.Settings.profiles.current_stabilization().y_type = "relative"
+        self.Settings.profiles.current_stabilization().y_relative = 100
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
 
@@ -194,16 +194,16 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotPosition_BedRelativePath(self):
         """Test getting bed relative path snapshot positions for x and y"""
         # adjust the settings for absolute position and create the snapshot gcode generator
-        self.Settings.current_stabilization().x_type = "relative_path"
-        self.Settings.current_stabilization().x_relative_path = "0,25,50,75,100"
-        self.Settings.current_stabilization().y_type = "relative_path"
-        self.Settings.current_stabilization().y_relative_path = "100,75,50,25,0"
+        self.Settings.profiles.current_stabilization().x_type = "relative_path"
+        self.Settings.profiles.current_stabilization().x_relative_path = "0,25,50,75,100"
+        self.Settings.profiles.current_stabilization().y_type = "relative_path"
+        self.Settings.profiles.current_stabilization().y_relative_path = "100,75,50,25,0"
 
         # test with no loop
-        self.Settings.current_stabilization().x_relative_path_loop = False
-        self.Settings.current_stabilization().x_relative_path_invert_loop = False
-        self.Settings.current_stabilization().y_relative_path_loop = False
-        self.Settings.current_stabilization().y_relative_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().x_relative_path_loop = False
+        self.Settings.profiles.current_stabilization().x_relative_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_relative_path_loop = False
+        self.Settings.profiles.current_stabilization().y_relative_path_invert_loop = False
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -222,10 +222,10 @@ class TestSnapshotGcode(unittest.TestCase):
         self.assertTrue(coordinates["X"] == 250 and coordinates["Y"] == 0)
 
         # test with loop, no invert
-        self.Settings.current_stabilization().x_relative_path_loop = True
-        self.Settings.current_stabilization().x_relative_path_invert_loop = False
-        self.Settings.current_stabilization().y_relative_path_loop = True
-        self.Settings.current_stabilization().y_relative_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().x_relative_path_loop = True
+        self.Settings.profiles.current_stabilization().x_relative_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_relative_path_loop = True
+        self.Settings.profiles.current_stabilization().y_relative_path_invert_loop = False
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -244,10 +244,10 @@ class TestSnapshotGcode(unittest.TestCase):
         self.assertTrue(coordinates["X"] == 62.5 and coordinates["Y"] == 150)
 
         # test with loop and invert
-        self.Settings.current_stabilization().x_relative_path_loop = True
-        self.Settings.current_stabilization().x_relative_path_invert_loop = True
-        self.Settings.current_stabilization().y_relative_path_loop = True
-        self.Settings.current_stabilization().y_relative_path_invert_loop = True
+        self.Settings.profiles.current_stabilization().x_relative_path_loop = True
+        self.Settings.profiles.current_stabilization().x_relative_path_invert_loop = True
+        self.Settings.profiles.current_stabilization().y_relative_path_loop = True
+        self.Settings.profiles.current_stabilization().y_relative_path_invert_loop = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         coordinates = snapshot_gcode_generator.get_snapshot_position(0, 0)
@@ -269,10 +269,10 @@ class TestSnapshotGcode(unittest.TestCase):
         """Test snapshot gcode in absolute coordinate system with relative extruder and fixed coordinate
         stabilization """
         # adjust the settings for absolute position and create the snapshot gcode generator
-        self.Settings.current_stabilization().x_type = "fixed_coordinate"
-        self.Settings.current_stabilization().x_fixed_coordinate = 10
-        self.Settings.current_stabilization().y_type = "fixed_coordinate"
-        self.Settings.current_stabilization().y_fixed_coordinate = 20
+        self.Settings.profiles.current_stabilization().x_type = "fixed_coordinate"
+        self.Settings.profiles.current_stabilization().x_fixed_coordinate = 10
+        self.Settings.profiles.current_stabilization().y_type = "fixed_coordinate"
+        self.Settings.profiles.current_stabilization().y_fixed_coordinate = 20
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True
@@ -307,15 +307,15 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotGcode_RelativePath_RelativeCoordinates_ExtruderAbsolute_ZHop_Retraction(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
         # use relative coordinates for stabilizations
-        self.Settings.current_stabilization().x_type = "relative_path"
-        self.Settings.current_stabilization().x_relative_path = "50,100"  # 125,250
-        self.Settings.current_stabilization().x_relative_path_loop = False
-        self.Settings.current_stabilization().x_relative_path_invert_loop = False
-        self.Settings.current_stabilization().y_type = "relative_path"
-        self.Settings.current_stabilization().y_relative_path = "50,100"  # 100,200
-        self.Settings.current_stabilization().y_relative_path_loop = False
-        self.Settings.current_stabilization().y_relative_path_invert_loop = False
-        self.Settings.current_snapshot().retract_before_move = True
+        self.Settings.profiles.current_stabilization().x_type = "relative_path"
+        self.Settings.profiles.current_stabilization().x_relative_path = "50,100"  # 125,250
+        self.Settings.profiles.current_stabilization().x_relative_path_loop = False
+        self.Settings.profiles.current_stabilization().x_relative_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_type = "relative_path"
+        self.Settings.profiles.current_stabilization().y_relative_path = "50,100"  # 100,200
+        self.Settings.profiles.current_stabilization().y_relative_path_loop = False
+        self.Settings.profiles.current_stabilization().y_relative_path_invert_loop = False
+        self.Settings.profiles.current_snapshot().retract_before_move = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
 
@@ -355,15 +355,15 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotGcode_FixedPath_RelativeCoordinates_ExtruderAbsolute_ZHop_AlreadyRetracted(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
         # use relative coordinates for stabilizations
-        self.Settings.current_stabilization().x_type = "fixed_path"
-        self.Settings.current_stabilization().x_fixed_path = "50,100"  # 125,250
-        self.Settings.current_stabilization().x_fixed_path_loop = False
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = False
-        self.Settings.current_stabilization().y_type = "fixed_path"
-        self.Settings.current_stabilization().y_fixed_path = "50,100"  # 100,200
-        self.Settings.current_stabilization().y_fixed_path_loop = False
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = False
-        self.Settings.current_snapshot().retract_before_move = True
+        self.Settings.profiles.current_stabilization().x_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().x_fixed_path = "50,100"  # 125,250
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().y_fixed_path = "50,100"  # 100,200
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = False
+        self.Settings.profiles.current_snapshot().retract_before_move = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True
@@ -429,11 +429,11 @@ class TestSnapshotGcode(unittest.TestCase):
 
         # test with relative coordinates, absolute extruder coordinates, z hop impossible (current z height will not
         # allow this since it puts things outside of the bounds) use relative coordinates for stabilizations
-        self.Settings.current_stabilization().x_type = "relative"
-        self.Settings.current_stabilization().x_relative = 50  # 125
-        self.Settings.current_stabilization().y_type = "relative"
-        self.Settings.current_stabilization().y_relative = 100  # 200
-        self.Settings.current_snapshot().retract_before_move = False
+        self.Settings.profiles.current_stabilization().x_type = "relative"
+        self.Settings.profiles.current_stabilization().x_relative = 50  # 125
+        self.Settings.profiles.current_stabilization().y_type = "relative"
+        self.Settings.profiles.current_stabilization().y_relative = 100  # 200
+        self.Settings.profiles.current_snapshot().retract_before_move = False
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         # create
@@ -463,15 +463,15 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotGcode_SnapshotCommands(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
         # use relative coordinates for stabilizations
-        self.Settings.current_stabilization().x_type = "fixed_path"
-        self.Settings.current_stabilization().x_fixed_path = "50,100"  # 125,250
-        self.Settings.current_stabilization().x_fixed_path_loop = False
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = False
-        self.Settings.current_stabilization().y_type = "fixed_path"
-        self.Settings.current_stabilization().y_fixed_path = "50,100"  # 100,200
-        self.Settings.current_stabilization().y_fixed_path_loop = False
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = False
-        self.Settings.current_snapshot().retract_before_move = True
+        self.Settings.profiles.current_stabilization().x_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().x_fixed_path = "50,100"  # 125,250
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().y_fixed_path = "50,100"  # 100,200
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = False
+        self.Settings.profiles.current_snapshot().retract_before_move = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True
@@ -490,15 +490,15 @@ class TestSnapshotGcode(unittest.TestCase):
     def test_GetSnapshotGcode_ReturnCommands(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
         # use relative coordinates for stabilizations
-        self.Settings.current_stabilization().x_type = "fixed_path"
-        self.Settings.current_stabilization().x_fixed_path = "50,100"  # 125,250
-        self.Settings.current_stabilization().x_fixed_path_loop = False
-        self.Settings.current_stabilization().x_fixed_path_invert_loop = False
-        self.Settings.current_stabilization().y_type = "fixed_path"
-        self.Settings.current_stabilization().y_fixed_path = "50,100"  # 100,200
-        self.Settings.current_stabilization().y_fixed_path_loop = False
-        self.Settings.current_stabilization().y_fixed_path_invert_loop = False
-        self.Settings.current_snapshot().retract_before_move = True
+        self.Settings.profiles.current_stabilization().x_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().x_fixed_path = "50,100"  # 125,250
+        self.Settings.profiles.current_stabilization().x_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().x_fixed_path_invert_loop = False
+        self.Settings.profiles.current_stabilization().y_type = "fixed_path"
+        self.Settings.profiles.current_stabilization().y_fixed_path = "50,100"  # 100,200
+        self.Settings.profiles.current_stabilization().y_fixed_path_loop = False
+        self.Settings.profiles.current_stabilization().y_fixed_path_invert_loop = False
+        self.Settings.profiles.current_snapshot().retract_before_move = True
         snapshot_gcode_generator = SnapshotGcodeGenerator(
             self.Settings, self.create_octoprint_printer_profile())
         self.Extruder.is_retracted = lambda: True

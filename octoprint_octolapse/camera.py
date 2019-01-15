@@ -33,7 +33,7 @@ import requests
 # Todo:  Do we need to add this to setup.py?
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
-from octoprint_octolapse.settings import Camera
+from octoprint_octolapse.settings import CameraProfile
 
 
 def format_request_template(camera_address, template, value):
@@ -83,7 +83,7 @@ def test_web_camera(camera_profile, timeout_seconds=2):
 
 
 def test_web_camera_image_preferences(camera_profile, timeout_seconds=2):
-    assert (isinstance(camera_profile, Camera))
+    assert (isinstance(camera_profile, CameraProfile))
     # first see what kind of server we have
     url = format_request_template(
         camera_profile.address, camera_profile.snapshot_request_template, "")

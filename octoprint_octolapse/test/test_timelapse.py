@@ -81,7 +81,7 @@ class TestTimelapse(unittest.TestCase):
         self.OctoprintPrinterProfile = self.CreateOctoprintPrinterProfile()
         self.Settings = OctolapseSettings("c:\\temp\\octolapse\\data\\")
         # configure settings for tests
-        currentSnapshot = self.Settings.current_snapshot()
+        currentSnapshot = self.Settings.profiles.current_snapshot()
         currentSnapshot.gcode_trigger_enabled = True
         currentSnapshot.layer_trigger_enabled = False
         currentSnapshot.timer_trigger_enabled = False
@@ -201,9 +201,9 @@ class TestTimelapse(unittest.TestCase):
 
     def test_StartTimelapse(self):
         """Test timelapse startup routine."""
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         self.Timelapse_GcodeTrigger.start_timelapse(
             self.OctoprintTestPrinter, self.OctoprintPrinterProfile, self.FfMpegPath, False)
         # Test all settings
@@ -221,9 +221,9 @@ class TestTimelapse(unittest.TestCase):
     def test_PrintPaused(self):
         """Test the 'Print Paused' routine"""
         # verify initial state
-        self.Settings.current_snapshot().gcode_trigger_enabled = False
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = True
         self.assertTrue(self.Timelapse_TimerTrigger.State ==
                         TimelapseState.Idle)
         self.assertTrue(len(self.Timelapse_TimerTrigger.Triggers) == 0)
@@ -283,7 +283,7 @@ class TestTimelapse(unittest.TestCase):
         # set the snapshot command
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Timelapse_GcodeTrigger.Printer = self.Settings.current_printer()
+        self.Timelapse_GcodeTrigger.Printer = self.Settings.profiles.current_printer()
         self.Timelapse_GcodeTrigger.Printer.snapshot_command = snapshotCommand
         # test snapshot command
         self.assertTrue(
@@ -296,10 +296,10 @@ class TestTimelapse(unittest.TestCase):
         # set the snapshot command
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
-        self.Settings.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
         # verify the initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.IsTriggering(
             notSnapshotCommand) is None)
@@ -329,9 +329,9 @@ class TestTimelapse(unittest.TestCase):
             snapshotCommand) is None)
 
     def test_IsTriggering_TimerTrigger(self):
-        self.Settings.current_snapshot().gcode_trigger_enabled = False
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = True
         # verify the initial state
         self.assertTrue(self.Timelapse_TimerTrigger.IsTriggering("") is None)
 
@@ -364,10 +364,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_TimelapseNotActive(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
 
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
@@ -385,10 +385,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_TestSuppressSnapshotCommand(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -410,10 +410,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_TestSuppressNonSnapshotGcodeCommand(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -435,10 +435,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_M105Suppress(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -460,10 +460,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_SuppressNonSnapshotGcode(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -491,10 +491,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_SendAllSnapshotCommands(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -569,9 +569,9 @@ class TestTimelapse(unittest.TestCase):
 
     def test_GcodeQueuing_Triggering_SuppressedSavedCommand(self):
         suppressedSavedCommand = "  m105  "
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -601,9 +601,9 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeQueuing_Triggering_SnapshotCommand(self):
         snapshotCommand = "snap"
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -630,9 +630,9 @@ class TestTimelapse(unittest.TestCase):
 
     def test_GcodeQueuing_Triggering_NonSnapshotCommand(self):
         notSnapshotCommand = "NotTheSnapshotCommand"
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
         # verify initial state
         self.assertTrue(self.Timelapse_GcodeTrigger.State ==
                         TimelapseState.Idle)
@@ -663,10 +663,10 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeSent_IgnoredStates(self):
         """Tests WaitingForTrigger,	RequestingReturnPosition, SendingSnapshotGcode, TakingSnapshot, RequestingSnapshotPosition, SendingReturnGcode, all of which should be ignored except for a debug message."""
         snapshotCommand = "snap"
-        self.Settings.current_printer().snapshot_command = snapshotCommand
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
 
         # start the timelapse
         self.Timelapse_GcodeTrigger.start_timelapse(
@@ -719,9 +719,9 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeSent_SendingSnapshotGcode_NotInSnapshotGcode(self):
         """Test SendingSnapshotGcode, which watch for the move command and then switch to the state RequestingSnapshotPosition"""
         notInGcodeCommand = "	DEFINITELYnotInTheGcode "
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
 
         # start the timelapse
         self.Timelapse_GcodeTrigger.start_timelapse(
@@ -745,9 +745,9 @@ class TestTimelapse(unittest.TestCase):
     def test_GcodeSent_SendingSnapshotGcode_NotMoveCommand(self):
         """Test SendingSnapshotGcode, which watch for the move command and then switch to the state RequestingSnapshotPosition"""
 
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
 
         # start the timelapse
         self.Timelapse_GcodeTrigger.start_timelapse(
@@ -793,9 +793,9 @@ class TestTimelapse(unittest.TestCase):
 
     def test_GcodeSent_SendingSnapshotGcode_RequestingSnapshotPosition(self):
         """Test SendingSnapshotGcode, which watch for the move command and then switch to the state RequestingSnapshotPosition"""
-        self.Settings.current_snapshot().gcode_trigger_enabled = True
-        self.Settings.current_snapshot().layer_trigger_enabled = False
-        self.Settings.current_snapshot().timer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True
+        self.Settings.profiles.current_snapshot().layer_trigger_enabled = False
+        self.Settings.profiles.current_snapshot().timer_trigger_enabled = False
 
         # start the timelapse
         self.Timelapse_GcodeTrigger.start_timelapse(
@@ -979,7 +979,7 @@ class TestTimelapse(unittest.TestCase):
         self.Timelapse_GcodeTrigger.Position = Position(
             self.Settings, self.OctoprintPrinterProfile, False)
         self.Timelapse_GcodeTrigger.OctoprintPrinter = self.OctoprintTestPrinter
-        self.Timelapse_GcodeTrigger.Printer = self.Settings.current_printer()
+        self.Timelapse_GcodeTrigger.Printer = self.Settings.profiles.current_printer()
         # Test Pos 0,0,0 when at 0,0,0
         x = 0
         y = 0
@@ -1128,7 +1128,7 @@ class TestTimelapse(unittest.TestCase):
         # self.Timelapse_GcodeTrigger.OctoprintPrinter = self.OctoprintTestPrinter
         self.Timelapse_GcodeTrigger.SendDelayedSnapshotPositionRequest = ReturnNone
         self.Timelapse_GcodeTrigger.SendSnapshotReturnCommands = ReturnNone
-        self.Timelapse_GcodeTrigger.Snapshot = self.Settings.current_snapshot()
+        self.Timelapse_GcodeTrigger.Snapshot = self.Settings.profiles.current_snapshot()
         self.Timelapse_GcodeTrigger.Snapshot.position_request_retry_attemps = 3
         self.Timelapse_GcodeTrigger.Snapshot.position_request_retry_delay_ms = 0  # no delay
         self.Timelapse_GcodeTrigger.PositionRequestAttempts = 0

@@ -295,7 +295,7 @@ class TestTrigger(unittest.TestCase):
     #        }
     #    ]
     #
-    #    restrictions = self.Settings.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
+    #    restrictions = self.Settings.profiles.current_snapshot().get_trigger_position_restrictions(restrictions_dict)
 
 
 if __name__ == '__main__':

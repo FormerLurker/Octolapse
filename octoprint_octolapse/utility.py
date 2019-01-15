@@ -340,12 +340,12 @@ def get_bounding_box(octolapse_printer_profile, octoprint_printer_profile):
             max_z = volume["height"]
 
     return {
-        "min_x": min_x,
-        "max_x": max_x,
-        "min_y": min_y,
-        "max_y": max_y,
-        "min_z": min_z,
-        "max_z": max_z
+        "min_x": float(min_x),
+        "max_x": float(max_x),
+        "min_y": float(min_y),
+        "max_y": float(max_y),
+        "min_z": float(min_z),
+        "max_z": float(max_z)
     }
 
 

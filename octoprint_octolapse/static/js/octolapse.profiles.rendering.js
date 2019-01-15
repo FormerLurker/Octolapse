@@ -88,13 +88,24 @@ $(function() {
                 if (value === undefined) {
                     return;
                 }
-                xy = JSON.parse(value);
-                self.overlay_text_pos_x(xy[0]);
-                self.overlay_text_pos_y(xy[1]);
+                try {
+                    positions = JSON.parse(value)
+                    self.overlay_text_pos_x(positions[0]);
+                    self.overlay_text_pos_y(positions[1]);
+                }
+                catch(exc)
+                {
+                    self.overlay_text_pos_x(0);
+                    self.overlay_text_pos_y(0);
+                }
+
             },
         });
-        self.overlay_text_pos_x = values.overlay_text_pos_x === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_x);
-        self.overlay_text_pos_y = values.overlay_text_pos_y === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_y);
+        //self.overlay_text_pos_x = values.overlay_text_pos_x === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_x);
+        // = values.overlay_text_pos_y === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_y);
+
+        self.overlay_text_pos_x = ko.observable();
+        self.overlay_text_pos_y = ko.observable();
         self.overlay_text_pos(values.overlay_text_pos);
         self.overlay_text_alignment = ko.observable(values.overlay_text_alignment);
         self.overlay_text_valign = ko.observable(values.overlay_text_valign);
@@ -142,7 +153,7 @@ $(function() {
 
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function() {
-             $('#overlay_color').minicolors({format: 'rgb', opacity: true});
+             $('#rendering_profile_overlay_color').minicolors({format: 'rgb', opacity: true});
              self.updateWatermarkList();
              self.updateFontList();
              self.initWatermarkUploadButton();

@@ -38,7 +38,7 @@ import sarge
 from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.settings import Camera, Rendering
+from octoprint_octolapse.settings import CameraProfile, RenderingProfile
 from octoprint_octolapse.snapshot import SnapshotMetadata
 
 
@@ -166,13 +166,13 @@ class RenderJobInfo(object):
 
 class RenderingProcessor(object):
     def __init__(
-        self, rendering_task_queue, get_debug_profile, timelapse_job_info, rendering, cameras, data_directory, octoprint_timelapse_folder,
+        self, rendering_task_queue, logger, timelapse_job_info, rendering, cameras, data_directory, octoprint_timelapse_folder,
         ffmpeg_path, on_start, on_success, on_error, cleanup_on_success, cleanup_on_fail
     ):
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
         self.timelapse_job_info = utility.TimelapseJobInfo(job_info=timelapse_job_info)
-        self.rendering = Rendering(rendering)
+        self.rendering = rendering.clone()
         self.data_directory = data_directory
         self.octoprint_timelapse_folder = octoprint_timelapse_folder
         self.ffmpeg_path = ffmpeg_path
@@ -180,14 +180,14 @@ class RenderingProcessor(object):
         self.on_start = on_start
         self.on_success = on_success
         self.on_error = on_error
-        self.get_debug_profile = get_debug_profile
+        self.logger = logger
         self.cameras = []
         self.cleanup_on_success = cleanup_on_success
         self.cleanup_on_fail = cleanup_on_fail
         self.print_state = "unknown"
         self.time_added = 0
         for current_camera in cameras:
-            self.cameras.append(Camera(current_camera))
+            self.cameras.append(current_camera.clone())
 
     @property
     def enabled(self):
@@ -203,7 +203,7 @@ class RenderingProcessor(object):
         for job_info in job_infos:
             job = TimelapseRenderJob(
                 self.rendering,
-                self.get_debug_profile,
+                self.logger,
                 job_info,
                 self.octoprint_timelapse_folder,
                 self.ffmpeg_path,
@@ -222,7 +222,7 @@ class RenderingProcessor(object):
             if error is None:
                 self.on_success(payload)
             else:
-                self.get_debug_profile().log_render_fail(error)
+                self.logger.log_render_fail(error)
                 self.on_error(payload, error)
 
     def start_rendering(
@@ -265,7 +265,7 @@ class TimelapseRenderJob(object):
     def __init__(
         self,
         rendering,
-        debug,
+        logger,
         render_job_info,
         octoprint_timelapse_folder,
         ffmpeg_path,
@@ -276,7 +276,7 @@ class TimelapseRenderJob(object):
         cleanup_on_fail
     ):
         self._rendering = rendering
-        self._debug = debug
+        self._logger = logger
 
         self.render_job_info = render_job_info
 
@@ -352,7 +352,7 @@ class TimelapseRenderJob(object):
                     os.path.join(self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
                 ]
 
-                self._debug().log_render_start(
+                self._logger.log_render_start(
                     "Running the following before-render script command: {0} \"{1}\" \"{2}\" \"{3}\" \"{4}\"".format(
                         script_args[0],
                         script_args[1],
@@ -374,9 +374,9 @@ class TimelapseRenderJob(object):
             if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
-                self._debug().log_error(
+                self._logger.log_error(
                     "Error output was returned from the before-rendering script: {0}".format(error_message))
-                self._debug().log_error(
+                self._logger.log_error(
                     "The console ouput for the error:  \n    {0}".format(console_output))
             if not return_code == 0:
                 if error_message:
@@ -414,7 +414,7 @@ class TimelapseRenderJob(object):
 
                 ]
 
-                self._debug().log_render_start(
+                self._logger.log_render_start(
                     'Running the following after-render script command: {0} "{1}" "{2}" "{3}" "{4}" "{5}" "{6}" "{7}" '
                     '"{8}" "{9}" "{10}"'.format(
                         script_args[0],
@@ -444,7 +444,7 @@ class TimelapseRenderJob(object):
             if error_message:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
-                self._debug().log_error(
+                self._logger.log_error(
                     "Error output was returned from the after-rendering script: {0}".format(error_message))
             if not return_code == 0:
                 if error_message:
@@ -461,14 +461,14 @@ class TimelapseRenderJob(object):
 
     def _read_snapshot_metadata(self):
         metadata_path = os.path.join(self.render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
-        self._debug().log_render_start('Reading snapshot metadata from {}'.format(metadata_path))
+        self._logger.log_render_start('Reading snapshot metadata from {}'.format(metadata_path))
         try:
             with open(metadata_path, 'r') as metadata_file:
                 dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
                 self._snapshot_metadata = list(dictreader)
                 """Get the number of frames."""
                 self._imageCount = len(self._snapshot_metadata)
-                self._debug().log_render_start("Found {0} images with metadata.".format(self._imageCount))
+                self._logger.log_render_start("Found {0} images with metadata.".format(self._imageCount))
                 # add the snapshot count to the output tokens
                 self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
                 return
@@ -489,7 +489,7 @@ class TimelapseRenderJob(object):
             self._imageCount = 0
 
         self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
-        self._debug().log_render_start("Found {0} images via a manual search.".format(self._imageCount))
+        self._logger.log_render_start("Found {0} images via a manual search.".format(self._imageCount))
         return
         # we need to start with index 0, apparently.  Before I thought it was 1!
         image_index = 0
@@ -502,7 +502,7 @@ class TimelapseRenderJob(object):
             else:
                 break
         # since we're starting at 0 and incrementing after a file is found, the index here will be our count.
-        self._debug().log_render_start("Found {0} images via a manual search.".format(image_index))
+        self._logger.log_render_start("Found {0} images via a manual search.".format(image_index))
         self._imageCount = image_index
         # add the snapshot count to the output tokens
 
@@ -528,11 +528,11 @@ class TimelapseRenderJob(object):
                 self._rendering.max_fps,
                 self._rendering.min_fps
             )
-            self._debug().log_render_start(message)
+            self._logger.log_render_start(message)
         else:
             message = "FPS Calculation Type:{0}, Fps:{0}"
             message = message.format(self._rendering.fps_calculation_type, self._fps)
-            self._debug().log_render_start(message)
+            self._logger.log_render_start(message)
         # Add the FPS to the output tokens
         self.render_job_info.output_tokens["FPS"] = "{0}".format(int(math.ceil(self._fps)))
 
@@ -543,7 +543,7 @@ class TimelapseRenderJob(object):
         try:
             self._output_filename = self._rendering.output_template.format(**self.render_job_info.output_tokens)
         except ValueError as e:
-            self._debug().log_exception(e)
+            self._logger.log_exception(e)
             self._output_filename = "RenderingFilenameTemplateError"
         self._output_extension = self._get_extension_from_output_format(self._rendering.output_format)
 
@@ -615,7 +615,7 @@ class TimelapseRenderJob(object):
         r_error = None
         try:
 
-            self._debug().log_render_start("Starting render.")
+            self._logger.log_render_start("Starting render.")
 
             self._pre_render()
 
@@ -635,7 +635,7 @@ class TimelapseRenderJob(object):
                                                 "Please set the bitrate within the Octolapse rendering profile.")
 
             try:
-                self._debug().log_render_start(
+                self._logger.log_render_start(
                     "Creating the directory at {0}".format(self._output_directory))
                 if not os.path.exists(self._output_directory):
                     os.makedirs(self._output_directory)
@@ -672,7 +672,7 @@ class TimelapseRenderJob(object):
                 self._rendering_output_file_path,
                 watermark=watermark_path
             )
-            self._debug().log_render_start(
+            self._logger.log_render_start(
                 "Running ffmpeg with command string: {0}".format(command_str))
 
             with self.render_job_lock:
@@ -707,7 +707,7 @@ class TimelapseRenderJob(object):
                         "Synchronizing timelapse with the built in "
                         "timelapse plugin, copying {0} to {1}"
                     ).format(self._rendering_output_file_path, synchronization_path)
-                    self._debug().log_render_sync(message)
+                    self._logger.log_render_sync(message)
                     shutil.move(self._rendering_output_file_path, synchronization_path)
                     # we've renamed the output due to a sync, update the member
                 except Exception as e:
@@ -734,9 +734,9 @@ class TimelapseRenderJob(object):
         return self._create_callback_payload(self.render_job_info.job_id, message), r_error
 
     def _preprocess_images(self, preprocessed_directory):
-        self._debug().log_render_start("Starting preprocessing of images.")
+        self._logger.log_render_start("Starting preprocessing of images.")
         if self._snapshot_metadata is None:
-            self._debug().log_error("Snapshot metadata file missing; skipping preprocessing.")
+            self._logger.log_error("Snapshot metadata file missing; skipping preprocessing.")
             # Just copy images over.
             for i in range(self._imageCount):
                 file_path = os.path.join(
@@ -750,6 +750,7 @@ class TimelapseRenderJob(object):
 
         first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
         for i, data in enumerate(self._snapshot_metadata):
+            # TODO:  MAKE SURE THIS WORKS IF THERE ARE ANY ERRORS
             # Variables the user can use in overlay_text_template.format().
             format_vars = {}
 
@@ -799,7 +800,7 @@ class TimelapseRenderJob(object):
                     os.makedirs(output_dir)
                 shutil.move(file_path, output_path)
 
-        self._debug().log_render_start("Preprocessing success!")
+        self._logger.log_render_start("Preprocessing success!")
 
     @staticmethod
     def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location, overlay_text_alignment,
@@ -853,7 +854,7 @@ class TimelapseRenderJob(object):
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self, image_dir):
-        self._debug().log_render_start("Starting pre/post roll.")
+        self._logger.log_render_start("Starting pre/post roll.")
         # start with pre-roll, since it will require a bunch of renaming
         pre_roll_frames = int(self._rendering.pre_roll_seconds * self._fps)
         if pre_roll_frames > 0:
@@ -884,7 +885,7 @@ class TimelapseRenderJob(object):
                 image_number = image_index + self._imageCount + pre_roll_frames
                 new_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % image_number)
                 shutil.copy(last_image_path, new_image_path)
-        self._debug().log_render_start("Pre/post roll generated successfully.")
+        self._logger.log_render_start("Pre/post roll generated successfully.")
 
     @staticmethod
     def _get_extension_from_output_format(output_format):
