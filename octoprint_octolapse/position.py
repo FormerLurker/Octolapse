@@ -27,7 +27,7 @@ import math
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
-from octoprint_octolapse.settings import PrinterProfile, SnapshotProfile, SlicerPrintFeatures
+from octoprint_octolapse.settings import PrinterProfile, SnapshotProfile, SlicerPrintFeatures, OctolapseGcodeSettings
 from octoprint_octolapse.extruder import Extruder
 
 
@@ -403,8 +403,9 @@ class Position(object):
                  g90_influences_extruder):
         self.Settings = octolapse_settings
         self.Printer = self.Settings.profiles.current_printer().clone()
+
         self.Snapshot = self.Settings.profiles.current_snapshot().clone()
-        self.SlicerFeatures = SlicerPrintFeatures(self.Printer, self.Snapshot)
+        self.SlicerFeatures = SlicerPrintFeatures(self.Printer.get_current_slicer_settings(), self.Snapshot)
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -426,7 +427,10 @@ class Position(object):
         else:
             self.G90InfluencesExtruder = g90_influences_extruder
 
-        self.ZHop = 0 if self.Printer.get_z_hop_for_slicer_type() is None else self.Printer.get_z_hop_for_slicer_type()
+        self.octolapse_gcode_settings = self.Printer.get_current_octolapse_gcode_settings()
+        assert (isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
+
+        self.ZHop = 0 if self.octolapse_gcode_settings.z_lift_height is None else self.octolapse_gcode_settings.z_lift_height
 
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()

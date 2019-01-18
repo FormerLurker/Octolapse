@@ -100,10 +100,13 @@ class SnapshotGcodeGenerator(object):
         if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
             self.AxisSpeedUnits = "mm-min"
 
-        self.RetractSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.retract_speed, "retract_speed")
-        self.DetractSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.detract_speed, "detract_speed")
-        self.TravelSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.movement_speed, "movement_speed")
-        self.ZHopSpeed = self.Printer.get_speed_for_slicer_type(self.Printer.z_hop_speed, "z_hop_speed")
+        self.octolapse_gcode_settings = self.Printer.get_current_octolapse_gcode_settings()
+        assert(isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
+        self.z_lift_height = self.octolapse_gcode_settings.z_lift_height
+        self.RetractSpeed = self.octolapse_gcode_settings.retraction_speed
+        self.DetractSpeed = self.octolapse_gcode_settings.detraction_speed
+        self.TravelSpeed = self.octolapse_gcode_settings.x_y_travel_speed
+        self.ZHopSpeed = self.octolapse_gcode_settings.z_lift_speed
 
     def reset(self):
         self.ReturnWhenComplete = True
@@ -430,7 +433,7 @@ class SnapshotGcodeGenerator(object):
                 self.RetractedBySnapshotStartGcode = True
 
         # Can we hop or are we too close to the top?
-        can_zhop = self.ZLift is not None and self.Printer.z_hop > 0 and utility.is_in_bounds(
+        can_zhop = self.z_lift_height is not None and self.z_lift_height > 0 and utility.is_in_bounds(
             self.BoundingBox, z=z_return + self.ZLift)
         # if we can ZHop, do
         if can_zhop and self.ZLift > 0 and self.Snapshot.lift_before_move:

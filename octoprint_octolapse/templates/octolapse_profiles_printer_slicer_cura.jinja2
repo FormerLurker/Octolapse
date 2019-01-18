@@ -1,4 +1,4 @@
-<script type="text/html" id="printer-cura-template">
+<script type="text/html" id="printer-slicer-cura-template">
     <div>
         <div>
             <h4>Slicer - Cura</h4>
@@ -39,14 +39,14 @@
                 <h5>Material</h5>
             </div>
                 <div class="control-group">
-                    <label class="control-label" for="printer_profile_cura_retraction_distance">Retraction Distance</label>
+                    <label class="control-label" for="printer_profile_cura_retraction_amount">Retraction Distance</label>
                     <div class="controls">
                         <div class="input-append form-inline">
-                            <input id="printer_profile_cura_retraction_distance" name="retraction_distance" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_distance" step="0.0001" min="0" max="100.0" required/>
+                            <input id="printer_profile_cura_retraction_amount" name="retraction_amount" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_amount" step="0.0001" min="0" max="100.0" required/>
                             <span class="add-on">mm</span>
                         </div>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#retraction-distance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                        <div class="error_label_container text-error" data-error-for="printer_profile_cura_retraction_distance"></div>
+                        <div class="error_label_container text-error" data-error-for="printer_profile_cura_retraction_amount"></div>
                     </div>
                 </div>
                 <div class="control-group">
@@ -54,7 +54,7 @@
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="slicer_cura_retraction_retract_speed" name="retraction_retract_speed" type="number"
-                                   class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_retract_speed" step="0.0001" min="0"
+                                   class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_retract_speed" step="0.0001" min="0"
                                    max="9999999" required/>
                             <span class="add-on">mm</span>
                             <span class="add-on">sec</span>
@@ -69,7 +69,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_retraction_prime_speed" name="retraction_prime_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.retraction_prime_speed" step="0.0001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_prime_speed" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -83,71 +83,71 @@
                 <h5>Speed</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_print_speed">Print Speed</label>
+                <label class="control-label" for="slicer_cura_speed_print">Print Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_print_speed" name="print_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.print_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_print" name="speed_print" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_print" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#print-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_print_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_print"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_infill_speed">Infill Speed</label>
+                <label class="control-label" for="slicer_cura_speed_infill">Infill Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.infill_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_infill" name="speed_infill" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_infill" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#infill-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_infill_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_infill"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_outer_wall_speed">Outer Wall Speed</label>
+                <label class="control-label" for="slicer_cura_speed_wall_0">Outer Wall Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_outer_wall_speed" name="outer_wall_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.outer_wall_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_wall_0" name="speed_wall_0" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_wall_0" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#outer-wall-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_outer_wall_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_wall_0"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_inner_wall_speed">Inner Wall Speed</label>
+                <label class="control-label" for="slicer_cura_speed_wall_x">Inner Wall Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_inner_wall_speed" name="inner_wall_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.inner_wall_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_wall_x" name="speed_wall_x" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_wall_x" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#inner-wall-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_inner_wall_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_wall_x"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_top_bottom_speed">Top/Bottom Speed</label>
+                <label class="control-label" for="slicer_cura_speed_topbottom">Top/Bottom Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_top_bottom_speed" name="top_bottom_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.top_bottom_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_topbottom" name="speed_topbottom" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_topbottom" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -155,30 +155,30 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#topbottom-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error"
-                         data-error-for="slicer_cura_top_bottom_speed"></div>
+                         data-error-for="slicer_cura_speed_topbottom"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_travel_speed">Travel Speed</label>
+                <label class="control-label" for="slicer_cura_speed_travel">Travel Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_travel_speed" name="travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.travel_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_speed_travel" name="speed_travel" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_travel" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#travel-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_travel_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_travel"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_initial_layer_print_speed">Initial Layer Print Speed</label>
+                <label class="control-label" for="slicer_cura_speed_travel">Initial Layer Print Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_initial_layer_print_speed" name="initial_layer_print_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.initial_layer_print_speed" step="0.0001"
+                        <input id="slicer_cura_speed_travel" name="speed_travel" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_travel" step="0.0001"
                                min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -186,15 +186,15 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#initial-layer-print-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error"
-                         data-error-for="slicer_cura_initial_layer_print_speed"></div>
+                         data-error-for="slicer_cura_speed_travel"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_initial_layer_travel_speed">Initial Layer Travel Speed</label>
+                <label class="control-label" for="slicer_cura_speed_travel_layer_0">Initial Layer Travel Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_initial_layer_travel_speed" name="initial_layer_travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.initial_layer_travel_speed" step="0.0001"
+                        <input id="slicer_cura_speed_travel_layer_0" name="speed_travel_layer_0" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_travel_layer_0" step="0.0001"
                                min="0" max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -202,7 +202,7 @@
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#initial-layer-travel-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error"
-                         data-error-for="slicer_cura_initial_layer_travel_speed"></div>
+                         data-error-for="slicer_cura_speed_travel_layer_0"></div>
                 </div>
             </div>
 
@@ -211,7 +211,7 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_skirt_brim_speed" name="skirt_brim_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.skirt_brim_speed" step="0.0001" min="0"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.skirt_brim_speed" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
@@ -222,33 +222,33 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_maximum_z_speed">Maximum Z Speed</label>
+                <label class="control-label" for="slicer_cura_max_feedrate_z_override">Maximum Z Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_maximum_z_speed" name="maximum_z_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.maximum_z_speed" step="0.0001" min="0"
+                        <input id="slicer_cura_max_feedrate_z_override" name="max_feedrate_z_override" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.max_feedrate_z_override" step="0.0001" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#maximum-z-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_maximum_z_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_max_feedrate_z_override"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_num_slow_layers">Number of Slower Layers</label>
+                <label class="control-label" for="slicer_cura_speed_slowdown_layers">Number of Slower Layers</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_cura_num_slow_layers" name="num_slow_layers" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.num_slow_layers" step="1" min="0"
+                        <input id="slicer_cura_speed_slowdown_layers" name="num_slow_layers" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.speed_slowdown_layers" step="1" min="0"
                                max="9999999"/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#number-of-slower-layers"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_cura_num_slow_layers"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_cura_speed_slowdown_layers"></div>
                 </div>
             </div>
 
@@ -258,14 +258,14 @@
                 <h5>Travel</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_cura_z_hop_height">Z Hop Height</label>
+                <label class="control-label" for="printer_profile_cura_retraction_hop">Z Hop Height</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_cura_z_hop_height" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.cura_viewmodel.z_hop_height" step="0.0001" min=".00" max="100.0" required />
+                        <input id="printer_profile_cura_retraction_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_hop" step="0.0001" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#z-hop-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="printer_profile_cura_z_hop_height"></div>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_cura_retraction_hop"></div>
                 </div>
             </div>
            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">

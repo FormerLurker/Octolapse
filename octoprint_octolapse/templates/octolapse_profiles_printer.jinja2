@@ -45,7 +45,121 @@
         <p>You have not yet configured this printer profile.  Please select your slicer from the list below, and copy all of the settings from your slicer into this profile before using Octolapse.</p>
     </div>
     <hr />
+    <div>
+        <h3>Printer Movement Settings MAKE THIS BETTER</h3>
+        <p>These settings control movement speed, retraction and lift during snapshot actions.</p>
+        <div class="control-group">
+                <label class="control-label" for="printer_profile_gcode_configuration_type">Configuration Type</label>
+                <div class="controls">
+                    <select id="printer_profile_gcode_configuration_type" data-bind="options: Octolapse.Printers.profileOptions.gcode_configuration_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: gcode_configuration_type"></select>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_gcode_configuration_type"></div>
+                </div>
+        </div>
+        <div data-bind="visible: gcode_configuration_type() == 'automatic'">
 
+        </div>
+        <div data-bind="visible: gcode_configuration_type() == 'manual'">
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_retraction_length">Retraction Length</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_retraction_length" name="retraction_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.retraction_length" step="0.000001" min="0" max="100.0" required/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_retraction_length"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_retraction_speed">Retraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_retraction_speed" name="retraction_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.retraction_speed" min="0" max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_retraction_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_detraction_speed">Detraction Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_detraction_speed" name="detraction_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.detraction_speed" step="0.0001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_detraction_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_z_lift_height">Z-Lift Height</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_z_lift_height" name="z_lift_height" type="number"
+                               class="input-small text-right ignore_hidden_errors"
+                               data-bind="value: octolapse_gcode_settings.z_lift_height"
+                               step="0.0001" min=".00" max="100.0" required />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_z_lift_height"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_z_lift_speed">Z-Lift Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_z_lift_speed" name="z_lift_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.z_lift_speed" step="0.0001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_z_lift_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_x_y_travel_speed">X/Y Travel Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_x_y_travel_speed" name="x_y_travel_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.x_y_travel_speed" step="0.0001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_x_y_travel_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_first_layer_travel_speed">First Layer Travel Speed</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_first_layer_travel_speed" name="first_layer_travel_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: octolapse_gcode_settings.first_layer_travel_speed" step="0.0001" min="0"
+                               max="9999999" required/>
+                        <span class="add-on">mm</span>
+                        <span class="add-on">sec</span>
+                    </div>
+                    <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_first_layer_travel_speed"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div>
         <h3>Current Slicer Settings</h3>
         <p>These settings must be copied from your slicer and be kept up-to-date.  Some features of Octolapse will fail to work or will result in lower print quality if they do not match your slicer settings exactly.</p>
@@ -63,9 +177,10 @@
         </div>
         <!-- Other Slicer Type -->
         <div data-bind="visible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
-        <div data-bind="visible: slicer_type() == 'slic3r-pe', template:'printer-slic3r-pe-template'"></div>
-        <div data-bind="visible: slicer_type() == 'cura', template:'printer-cura-template'"></div>
+        <div data-bind="visible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
+        <div data-bind="visible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
         <div data-bind="visible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
+        <div data-bind="visible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
     </div>
     <div>
         <div>
@@ -376,5 +491,6 @@
 {% include "octolapse_profiles_printer_slicer_slic3r_pe.jinja2" %}
 {% include "octolapse_profiles_printer_slicer_cura.jinja2" %}
 {% include "octolapse_profiles_printer_slicer_simplify3d.jinja2" %}
+{% include "octolapse_profiles_printer_slicer_automatic.jinja2" %}
 
 

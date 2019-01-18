@@ -1,0 +1,23 @@
+<script type="text/html" id="printer-slicer-automatic-template">
+    <div>
+        <div>
+            <h4>Automatic Slicer Settings</h4>
+            <p>Octolapse will attempt to extract all of the necessary slicer settings directly from your gcode file.  Currently this works for the most recent versions of Simplify3d and Slic3r PE out of the box.  If you are using Cura, <a href="#" title="Enable Automatic Slicer Configuration for Cura">follow this guide</a> to enable automatic slicer settings detection.</p>
+            <div>
+                <h5>Automatic Slicer Settings Extraction Options</h5>
+            </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input id="printer_profile_automatic_slicer_continue_on_failure" name="continue_on_failure" type="checkbox" data-bind="checked: slicers.automatic.continue_on_failure" title="Continue printing even if Octolapse can't detect your slicer settings" />Start Printing After Failure
+                            <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                        </label>
+                        <span class="help-inline">
+                            If Octolapse can't determine your slicer settings from your gcode file, your print will not start.  Enabling this option will allow your print to continue, but Octolapse will not function.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>

@@ -119,11 +119,21 @@ class Timelapse(object):
 
         self._reset()
 
-    def start_timelapse(self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder):
+    def start_timelapse(self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path):
         # we must supply the settings first!  Else reset won't work properly.
         self._reset()
         # in case the settings have been destroyed and recreated
         self.Settings = settings
+        _copy_of_settings = settings.clone()
+        # ToDo:  all cloning should be removed after this point.  We already have a settings object copy.  Also, we no longer need the original settings since we can use the global OctolapseSettings.Logger now
+        self.Printer = _copy_of_settings.profiles.current_printer()
+        assert (isinstance(self.Printer, PrinterProfile))
+        if self.Printer.slicer_type == 'automatic':
+            # extract any slicer settings if possible.  This must be done before any calls to the printer profile
+            # info that includes slicer setting
+            if not self.Printer.get_gcode_settings_from_file(gcode_file_path):
+                raise Exception("Settings could not be extracted from your slicer.  Cannot start timelapse.")
+
         # time tracking - how much time did we add to the print?
         self.SecondsAddedByOctolapse = 0
         self.RequiresLocationDetectionAfterHome = False
@@ -132,17 +142,17 @@ class Timelapse(object):
         self.CurrentJobInfo = utility.TimelapseJobInfo(
             job_guid=uuid.uuid4(),
             print_start_time=time.time(),
-            print_file_name=utility.get_currently_printing_filename(self.OctoprintPrinter)
+            print_file_name=utility.get_filename_from_full_path(gcode_file_path)
         )
         # Note that the RenderingProcessor makes copies of all objects sent to it
-        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
+        self.Snapshot = _copy_of_settings.profiles.current_snapshot()
 
         self.RenderingProcessor = RenderingProcessor(
             self._rendering_task_queue,
-            self.Settings.Logger,
+            _copy_of_settings.Logger,
             self.CurrentJobInfo,
-            self.Settings.profiles.current_rendering(),
-            self.Settings.profiles.active_cameras(),
+            _copy_of_settings.profiles.current_rendering(),
+            _copy_of_settings.profiles.active_cameras(),
             self.DataFolder,
             self.DefaultTimelapseDirectory,
             self.FfMpegPath,
@@ -154,20 +164,20 @@ class Timelapse(object):
         )
 
         self.Gcode = SnapshotGcodeGenerator(
-            self.Settings, octoprint_printer_profile)
-        self.Printer = self.Settings.profiles.current_printer().clone()
+            _copy_of_settings, octoprint_printer_profile)
+
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, self.Settings.profiles.active_cameras(), self.CurrentJobInfo, self.send_gcode_for_camera
+            _copy_of_settings, self.DataFolder, _copy_of_settings.profiles.active_cameras(), self.CurrentJobInfo, self.send_gcode_for_camera
         )
         self.Position = Position(
-            self.Settings, octoprint_printer_profile, g90_influences_extruder)
+            _copy_of_settings, octoprint_printer_profile, g90_influences_extruder)
         self.State = TimelapseState.WaitingForTrigger
-        self.IsTestMode = self.Settings.profiles.current_debug_profile().is_test_mode
-        self.Triggers = Triggers(self.Settings)
+        self.IsTestMode = _copy_of_settings.profiles.current_debug_profile().is_test_mode
+        self.Triggers = Triggers(_copy_of_settings)
         self.Triggers.create()
 
         # take a snapshot of the current settings for use in the Octolapse Tab
-        self.CurrentProfiles = self.Settings.profiles.get_profiles_dict()
+        self.CurrentProfiles = _copy_of_settings.profiles.get_profiles_dict()
 
         # send an initial state message
         self._on_timelapse_start()

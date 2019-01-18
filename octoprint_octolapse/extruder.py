@@ -24,7 +24,7 @@
 from collections import deque
 
 import octoprint_octolapse.utility as utility
-
+from octoprint_octolapse.settings import PrinterProfile, OctolapseGcodeSettings
 
 class ExtruderState(object):
     def __init__(self, state=None):
@@ -85,7 +85,11 @@ class Extruder(object):
 
     def __init__(self, octolapse_settings):
         self.Settings = octolapse_settings
-        self.PrinterRetractionLength = self.Settings.profiles.current_printer().get_retract_length_for_slicer_type()
+
+        self.octolapse_gcode_settings = self.Settings.profiles.current_printer().get_current_octolapse_gcode_settings()
+        assert (isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
+
+        self.PrinterRetractionLength = self.octolapse_gcode_settings.retraction_length
         self.PrinterTolerance = self.Settings.profiles.current_printer().printer_position_confirmation_tolerance
         self.StateHistory = deque(maxlen=5)
         self.reset()

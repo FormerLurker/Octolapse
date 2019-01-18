@@ -31,6 +31,7 @@ import time
 import traceback
 import threading
 import psutil
+import octoprint.filemanager.storage
 from threading import Timer
 
 FLOAT_MATH_EQUALITY_RANGE = 0.000001
@@ -243,17 +244,26 @@ def seconds_to_hhmmss(seconds):
 #
 #     def __missing__(self, key):
 #         return '{' + key + '}'
+def get_currently_printing_file_path_on_disk(octoprint_printer, storage_interface):
+    path = get_currently_printing_file_path(octoprint_printer)
+    if path is not None:
+        return storage_interface.path_on_disk(path)
+    return None
 
-
-def get_currently_printing_filename(octoprint_printer):
+def get_currently_printing_file_path(octoprint_printer):
     if octoprint_printer is not None:
         current_job = octoprint_printer.get_current_job()
         if current_job is not None and "file" in current_job:
             current_job_file = current_job["file"]
             if "path" in current_job_file and "origin" in current_job_file:
-                current_file_path = current_job_file["path"]
-                if current_file_path is not None:
-                    return get_filename_from_full_path(current_file_path)
+                return current_job_file["path"]
+    return None
+
+
+def get_currently_printing_filename(octoprint_printer):
+    file_path = get_currently_printing_file_path(octoprint_printer)
+    if file_path is not None:
+        return get_filename_from_full_path(file_path)
     return ""
 
 # not sure if we need this

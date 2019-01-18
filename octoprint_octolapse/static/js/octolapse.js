@@ -319,23 +319,21 @@ $(function () {
         }, 'Please enter an integer value.');
 
     Octolapse.isPercent = function(value){
-
+        console.log("is percent - Octolapse")
         if(typeof value != 'string')
             return false;
         if (!value)
             return false;
         var value = value.trim();
-        if(value.length > 1 && value[value.length-1] == "%")
-            value = value.substr(0,value.length-2);
-        else
+        if(! (value.length > 1 && value[value.length-1] == "%"))
             return false;
-
+        value = value.substr(0,value.length-1);
         return Octolapse.isFloat(value)
     };
     Octolapse.isFloat = function(value){
         if (!value)
             return false;
-        return !isNaN(parseFloat(value))
+        return !isNaN(value) && !isNaN(parseFloat(value))
     };
 
     Octolapse.parseFloat = function(value){

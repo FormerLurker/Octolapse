@@ -39,6 +39,7 @@ import octoprint.server
 from octoprint.events import eventManager, Events
 from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
+import octoprint.filemanager
 
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
@@ -66,6 +67,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Settings = None  # type: OctolapseSettings
         self.Timelapse = None  # type: Timelapse
         self.IsRenderingSynchronized = False
+        self._storage_interface = None
 
     def get_sorting_key(self, sorting_context):
         return 1
@@ -239,7 +241,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # save the updated settings to a file.
             self.save_settings()
             self.send_settings_changed_message(client_id)
-            return json.dumps(updated_profile.to_dict()), 200, {'ContentType': 'application/json'}
+            return updated_profile.to_json(), 200, {'ContentType': 'application/json'}
         except Exception as e:
             self._logger.error("Error encountered in /addUpdateProfile.")
             self._logger.error(utility.exception_to_string(e))
@@ -298,8 +300,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         client_id = request_values["client_id"]
         try:
             self.load_settings(force_defaults=True)
-
-
             self.send_settings_changed_message(client_id)
 
             return self.Settings.to_json(), 200, {'ContentType': 'application/json'}
@@ -596,23 +596,35 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settings_upgraded = False
         if not os.path.isfile(self.get_settings_file_path()) or force_defaults:
             # create new settings from default setting file
-            with open(self.get_default_settings_path(), 'r') as defaultSettingsJson:
-                data = json.load(defaultSettingsJson)
-                # if a settings file does not exist, create one ??
-                new_settings = OctolapseSettings.create_from(
-                    self.get_log_file_path(),
-                    self._plugin_version,
-                    data,
-                    get_debug_function=self.get_default_settings_folder
-                )
-
-                if self.Settings is not None:
-                    self.Settings.update(new_settings.to_dict())
-                else:
-                    self.Settings = new_settings
+            new_settings = OctolapseSettings.load(
+                self.get_default_settings_path(),
+                self.get_log_file_path(),
+                self._plugin_version,
+                self.get_current_debug_profile_function
+            )
+            if self.Settings is not None:
+                self.Settings.update(new_settings.to_dict())
+            else:
+                self.Settings = new_settings
             self.Settings.Logger.log_settings_load(
                 "Creating new settings file from defaults.")
             create_new_settings = True
+
+            #with open(self.get_default_settings_path(), 'r') as defaultSettingsJson:
+            #    data = json.load(defaultSettingsJson)
+            #    # if a settings file does not exist, create one ??
+            #    new_settings = OctolapseSettings.create_from(
+            #        self.get_log_file_path(),
+            #        self._plugin_version,
+            #        data,
+            #        get_debug_function=self.get_current_debug_profile_function
+            #    )
+            #
+            #    if self.Settings is not None:
+            #        self.Settings.update(new_settings.to_dict())
+            #    else:
+            #        self.Settings = new_settings
+
         else:
             # Load settings from file
             if self.Settings is not None:
@@ -622,6 +634,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self._logger.info("Loading existing settings file from: {0}.".format(
                     self.get_settings_file_path())
                 )
+            # ToDo - Add settings migration calls to OcotlapseSettings.load
             with open(self.get_settings_file_path()) as settingsJson:
                 data = json.load(settingsJson)
                 # do the settings need to be migrated?
@@ -821,9 +834,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_after_startup(self):
         try:
             self.load_settings()
-            # create our initial timelapse object
+            # create a storage interface
+            self._storage_interface = self._file_manager._storage("local")
             # create our timelapse object
-
             self.create_timelapse_object()
             self.Settings.Logger.log_info("Octolapse - loaded and active.")
         except Exception as e:
@@ -1120,9 +1133,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return {'success': False, 'error': "No default printer profile was selected.  Cannot start timelapse.  "
                                                "Please select a printer profile in the octolapse settings pages and "
                                                "restart the print."}
-
+        gcode_file_path = utility.get_currently_printing_file_path_on_disk(
+            self._printer, self._storage_interface
+        )
         self.Timelapse.start_timelapse(
-            self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder)
+            self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path)
 
         if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
             return {'success': True,

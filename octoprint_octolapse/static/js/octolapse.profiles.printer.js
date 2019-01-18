@@ -50,6 +50,35 @@ $(function() {
             auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." }
         }
     };
+    Octolapse.OctolapseGcodeSettings = function(values)
+    {
+        var self = this;
+        self.retraction_length = ko.observable(values.retraction_length);
+        self.retraction_speed = ko.observable(values.retraction_speed);
+        self.detraction_speed = ko.observable(values.detraction_speed);
+        self.x_y_travel_speed = ko.observable(values.x_y_travel_speed);
+        self.first_layer_travel_speed = ko.observable(values.first_layer_travel_speed);
+        self.z_lift_height = ko.observable(values.z_lift_height);
+        self.z_lift_speed = ko.observable(values.z_lift_speed);
+    };
+
+    Octolapse.SlicerAutomatic = function(values)
+    {
+        self.continue_on_failure = ko.observable(values.continue_on_failure)
+    };
+
+    Octolapse.Slicers = function(values)
+    {
+        console.log("Creating Slicers");
+        var self = this;
+        self.automatic = new Octolapse.SlicerAutomatic(values.automatic);
+        self.cura = new Octolapse.CuraViewmodel(values.cura);
+        self.other = new Octolapse.OtherSlicerViewModel(values.other);
+        self.simplify_3d = new Octolapse.Simplify3dViewModel(values.simplify_3d);
+        self.slic3r_pe = new Octolapse.Slic3rPeViewModel(values.slic3r_pe);
+    };
+
+
 
     Octolapse.PrinterProfileViewModel = function (values) {
         var self = this;
@@ -59,6 +88,9 @@ $(function() {
         self.description = ko.observable(values.description);
         // Saved by user flag, sent from server
         self.saved_by_user_flag = ko.observable(values.has_been_saved_by_user);
+        self.gcode_configuration_type = ko.observable(values.gcode_configuration_type);
+        self.octolapse_gcode_settings = new Octolapse.OctolapseGcodeSettings(values.octolapse_gcode_settings);
+        self.slicers = new Octolapse.Slicers(values.slicers)
         // has_been_saved_by_user profile setting, computed and always returns true
         // This will switch has_been_saved_by_user from false to true
         // after any user save
@@ -89,17 +121,10 @@ $(function() {
         self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
         self.suppress_snapshot_command_always = ko.observable(values.suppress_snapshot_command_always);
 
-        self.create_helpers = function(values){
-            var self = this;
-            self.other_slicer_viewmodel = new Octolapse.create_other_slicer_viewmodel(values);
-            self.slic3r_pe_viewmodel = new Octolapse.create_slic3r_pe_viewmodel(values);
-            self.cura_viewmodel = new Octolapse.create_cura_viewmodel(values);
-            self.simplify_3d_viewmodel = new Octolapse.create_simplify_3d_viewmodel(values);
-        };
-        self.helpers = new self.create_helpers(values);
         /*
             Create a computed for each profile variable (settings.py - printer class)
         */
+        /*
         self.retract_length = ko.pureComputed(function(){
            return self.getCurrentSlicerVariables(self.slicer_type()).get_retract_length();
         });
@@ -334,7 +359,10 @@ $(function() {
                 return slicer.get_num_slow_layers();
             return null;
         });
+        */
         self.getNonUniqueSpeeds = ko.pureComputed(function () {
+            //TODO:  FIX THIS
+            return [];
             // Add all speeds to an array
             var duplicate_map = {};
 
@@ -372,6 +400,8 @@ $(function() {
             return output;
         });
         self.getMissingSpeedsList = ko.pureComputed(function () {
+            //TODO:  FIX THIS
+            return [];
                     // Add all speeds to an array
             var missingSpeeds = [];
 

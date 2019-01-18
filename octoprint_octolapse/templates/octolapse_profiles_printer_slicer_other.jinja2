@@ -42,7 +42,7 @@
                 <label class="control-label" for="printer_profile_other_slicer_retract_length">*Retraction Length</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_length" step="0.0001" min="0.0000" max="100.0" required/>
+                        <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.retract_length" step="0.0001" min="0.0000" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -53,7 +53,7 @@
                 <label class="control-label" for="printer_profile_slicer_other_z_hop">*Z-Hop Height</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="printer_profile_slicer_other_z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.z_hop" step="0.0001" min="0.0000" max="100.0" required />
+                        <input id="printer_profile_slicer_other_z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.z_hop" step="0.0001" min="0.0000" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#z-hop-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -69,8 +69,8 @@
                     <select id="octolapse_axis_speed_display_unit_options" data-bind="options: Octolapse.Printers.profileOptions.axis_speed_display_unit_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
-                                        event: {change: helpers.other_slicer_viewmodel.axisSpeedDisplayUnitsChanged},
-                                       value: helpers.other_slicer_viewmodel.axis_speed_display_units"></select>
+                                        event: {change: slicers.other.axisSpeedDisplayUnitsChanged},
+                                       value: slicers.other.axis_speed_display_units"></select>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#speed-display-units"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error"
@@ -78,17 +78,17 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_movement_speed">*Movement Speed</label>
+                <label class="control-label" for="slicer_other_travel_speed">*Movement Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_other_movement_speed" name="movement_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.movement_speed" min="0" max="9999999" required/>
+                        <input id="slicer_other_travel_speed" name="travel_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.travel_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#movement-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_other_movement_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_other_travel_speed"></div>
                 </div>
             </div>
             <div class="control-group">
@@ -96,9 +96,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_retract_speed" name="retract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.retract_speed" min="0" max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.retract_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#retraction-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -110,9 +110,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_detract_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.detract_speed" min="0" max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.detract_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#detraction-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -124,9 +124,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_print_speed" name="detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.print_speed" min="0" max="9999999" required/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.print_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#print-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -134,17 +134,17 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_z_hop_speed">Z Movement Speed</label>
+                <label class="control-label" for="slicer_other_z_travel_speed">Z Movement Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_other_z_hop_speed" name="z_hop_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.z_hop_speed" min="0" max="9999999" required/>
+                        <input id="slicer_other_z_travel_speed" name="z_travel_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.z_travel_speed" min="0" max="9999999" required/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#z-movement-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_other_z_hop_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_other_z_travel_speed"></div>
                 </div>
             </div>
             <div class="control-group">
@@ -152,9 +152,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_perimeter_speed" name="perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.perimeter_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#perimeter-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -166,9 +166,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_small_perimeter_speed" name="small_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.small_perimeter_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.small_perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#small-perimeter-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -181,9 +181,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_external_perimeter_speed" name="external_perimeter_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.external_perimeter_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.external_perimeter_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#external-perimeter-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -196,9 +196,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_infill_speed" name="infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.infill_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#infill-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -210,9 +210,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_solid_infill_speed" name="solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.solid_infill_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.solid_infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#solid-infill-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -224,9 +224,9 @@
                 <div class="controls" for="slicer_other_top_solid_infill_speed">
                     <div class="input-append form-inline">
                         <input id="slicer_other_top_solid_infill_speed" name="top_solid_infill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.top_solid_infill_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.top_solid_infill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#top-solid-infill-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -239,9 +239,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_support_speed" name="support_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.support_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.support_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#support-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -253,9 +253,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_bridge_speed" name="bridge_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.bridge_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.bridge_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#bridge-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -267,9 +267,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_gap_fill_speed" name="gap_fill_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.gap_fill_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.gap_fill_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#gap-fill-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -277,17 +277,17 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_first_layer_speed">First Layer</label>
+                <label class="control-label" for="slicer_other_first_layer_print_speed">First Layer</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_other_first_layer_speed" name="first_layer_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_speed" min="0" max="9999999"/>
+                        <input id="slicer_other_first_layer_print_speed" name="first_layer_print_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.first_layer_print_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#first-layer-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_other_first_layer_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_other_first_layer_print_speed"></div>
                 </div>
             </div>
 
@@ -296,9 +296,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_first_layer_travel_speed" name="first_layer_travel_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.first_layer_travel_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.first_layer_travel_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#first-layer-travel-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -311,9 +311,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_skirt_brim_speed" name="skirt_brim_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.skirt_brim_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.skirt_brim_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#skirtbrim-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -325,9 +325,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_above_raft_speed" name="above_raft_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.above_raft_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.above_raft_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#above-raft-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -339,9 +339,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_ooze_shield_speed" name="ooze_shield_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.ooze_shield_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.ooze_shield_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#ooze-shield-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -353,9 +353,9 @@
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_prime_pillar_speed" name="prime_pillar_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.prime_pillar_speed" min="0" max="9999999"/>
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.prime_pillar_speed" min="0" max="9999999"/>
                         <span class="add-on">mm</span>
-                        <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                        <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#prime-pillar-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
@@ -372,9 +372,9 @@
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="slicer_other_speed_tolerance" name="speed_tolerance" type="number"
-                                   class="input-small text-right ignore_hidden_errors" data-bind="value: helpers.other_slicer_viewmodel.speed_tolerance" min="0" max="9999999"/>
+                                   class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.speed_tolerance" min="0" max="9999999"/>
                             <span class="add-on">mm</span>
-                            <span class="add-on" data-bind="text: helpers.other_slicer_viewmodel.getAxisSpeedTimeUnit">?</span>
+                            <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                         </div>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#speed-tolerance"
                            title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
