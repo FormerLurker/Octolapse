@@ -89,16 +89,16 @@ class Settings(object):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, Settings):
                         class_item.update(value)
                     else:
-                        source.__dict__[key] = source._try_convert_value(class_item, value)
+                        source.__dict__[key] = source.try_convert_value(class_item, value, key)
         except Exception as e:
             raise e
 
-    @staticmethod
-    def _try_convert_value(destination, value):
+    @classmethod
+    def try_convert_value(cls, destination, value, key):
         if value is None:
             return None
         if isinstance(destination, float):
@@ -161,6 +161,7 @@ class ProfileSettings(Settings):
 class SlicerAutomatic(Settings):
     def __init__(self):
         self.continue_on_failure = False
+        self.disable_automatic_save = True
 
 
 class PrinterProfileSlicers(Settings):
@@ -179,9 +180,8 @@ class PrinterProfile(ProfileSettings):
         # this is used to show a warning to the user if a new printer profile is used
         # without being configured
         self.has_been_saved_by_user = False
-        self.gcode_configuration_type = "use-slicer-settings"
         self.slicer_type = "automatic"
-        self.octolapse_gcode_settings = OctolapseGcodeSettings()
+        self.gcode_generation_settings = OctolapseGcodeSettings()
         self.slicers = PrinterProfileSlicers()
         self.snapshot_command = "snap"
         self.suppress_snapshot_command_always = True
@@ -199,7 +199,8 @@ class PrinterProfile(ProfileSettings):
         self.min_z = 0.0
         self.max_z = 0.0
         self.auto_position_detection_commands = ""
-        self.priming_height = 0.75
+        self.priming_height = 0.75 # Extrusion must occur BELOW this level before layer tracking will begin
+        self.minimum_layer_height = 0.05  # Layer tracking won't start until extrusion at this height is reached.
         self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
         self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
@@ -254,27 +255,21 @@ class PrinterProfile(ProfileSettings):
         }
 
     def get_current_slicer_settings(self):
-        if self.slicer_type == 'slic3r-pe':
-            return self.slicers.slic3r_pe
-        elif self.slicer_type == 'simplify-3d':
-            return self.slicers.simplify_3d
-        elif self.slicer_type == 'cura':
-            return self.slicers.cura
-        elif self.slicer_type == 'other':
-            return self.slicers.other
-        return None
+        return self.get_slicer_settings_by_type(self.slicer_type)
 
-    def get_current_octolapse_gcode_settings(self):
-        if self.gcode_configuration_type=='use-slicer-settings':
-            if self.slicer_type == 'slic3r-pe':
-                return self.slicers.slic3r_pe.get_octolapse_gcode_settings()
-            elif self.slicer_type == 'simplify-3d':
-                return self.slicers.simplify_3d.get_octolapse_gcode_settings()
-            elif self.slicer_type == 'cura':
-                return self.slicers.cura.get_octolapse_gcode_settings()
-            elif self.slicer_type == 'other':
-                return self.slicers.other.get_octolapse_gcode_settings()
-        return self.octolapse_gcode_settings
+    def get_slicer_settings_by_type(self, slicer_type):
+        if slicer_type == 'slic3r-pe':
+            return self.slicers.slic3r_pe
+        elif slicer_type == 'simplify-3d':
+            return self.slicers.simplify_3d
+        elif slicer_type == 'cura':
+            return self.slicers.cura
+        elif slicer_type == 'other':
+            return self.slicers.other
+        return None  # we return None on automatic.  This profile needs to be accessed directly
+
+    def get_current_state_detection_settings(self):
+        return self.get_current_slicer_settings().get_gcode_generation_settings()
 
     def get_gcode_settings_from_file(self, gcode_file_path):
         simplify_preprocessor = gcode_preprocessing.Simplify3dSettingsProcessor(
@@ -1109,7 +1104,7 @@ class Profiles(Settings):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
                     if key == 'printers':
                         self.printers = {}
                         for profile_key, profile_value in value.items():
@@ -1141,7 +1136,7 @@ class Profiles(Settings):
                         # don't update any static settings, those come from the class itself!
                         continue
                     else:
-                        self.__dict__[key] = self._try_convert_value(class_item, value)
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
         except Exception as e:
             raise e
 
@@ -1216,9 +1211,9 @@ class SlicerSettings(Settings):
     def get_num_slow_layers(self):
         raise NotImplementedError("You must implement get_num_slow_layers")
 
-    def get_octolapse_gcode_settings(self):
+    def get_gcode_generation_settings(self):
         """Returns OctolapseSlicerSettings"""
-        raise NotImplementedError("You must implement get_octolapse_gcode_settings")
+        raise NotImplementedError("You must implement get_gcode_generation_settings")
 
     def get_print_features(self, print_feature_settings):
         """"Returns OctolapseSlicerSettings"""
@@ -1259,12 +1254,15 @@ class CuraSettings(SlicerSettings):
         self.axis_speed_display_settings = 'mm-sec'
 
     def get_num_slow_layers(self):
+        if self.speed_slowdown_layers is None or len(str(self.speed_slowdown_layers).strip()) == 0:
+            return None
+
         return int(self.speed_slowdown_layers)
 
     def get_speed_tolerance(self):
         return 0.1 / 60.0 / 2.0
 
-    def get_octolapse_gcode_settings(self):
+    def get_gcode_generation_settings(self):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_amount()
         settings.retraction_speed = self.get_retraction_retract_speed()
@@ -1276,9 +1274,13 @@ class CuraSettings(SlicerSettings):
         return settings
 
     def get_retraction_amount(self):
+        if self.retraction_amount is None or len(str(self.retraction_amount).strip()) == 0:
+            return None
         return float(self.retraction_amount)
 
     def get_retraction_hop(self):
+        if self.retraction_hop is None or len(str(self.retraction_hop).strip()) == 0:
+            return None
         return float(self.retraction_hop)
 
     def get_speed_print(self):
@@ -1342,7 +1344,8 @@ class CuraSettings(SlicerSettings):
                     snapshot_profile.feature_trigger_on_normal_print_speed
                     and snapshot_profile.feature_trigger_on_first_layer
                 ),
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1352,7 +1355,8 @@ class CuraSettings(SlicerSettings):
                 None,
                 snapshot_profile.feature_trigger_on_retract,
                 None,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                0
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1362,7 +1366,8 @@ class CuraSettings(SlicerSettings):
                 None,
                 snapshot_profile.feature_trigger_on_detract,
                 None,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                0
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1372,7 +1377,8 @@ class CuraSettings(SlicerSettings):
                 self.get_slow_layer_speed_infill(),
                 snapshot_profile.feature_trigger_on_infill,
                 snapshot_profile.feature_trigger_on_infill and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1382,7 +1388,8 @@ class CuraSettings(SlicerSettings):
                 self.get_slow_layer_speed_wall_0(),
                 snapshot_profile.feature_trigger_on_external_perimeters,
                 snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
            PrintFeatureSetting(
                 self.calculate_speed,
@@ -1392,7 +1399,8 @@ class CuraSettings(SlicerSettings):
                 self.get_slow_layer_speed_wall_x(),
                 snapshot_profile.feature_trigger_on_perimeters,
                 snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1402,7 +1410,8 @@ class CuraSettings(SlicerSettings):
                 self.get_slow_layer_speed_topbottom_speed(),
                 snapshot_profile.feature_trigger_on_top_solid_infill,
                 snapshot_profile.feature_trigger_on_top_solid_infill and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1412,7 +1421,8 @@ class CuraSettings(SlicerSettings):
                 self.get_slow_layer_speed_travel(),
                 snapshot_profile.feature_trigger_on_movement,
                 snapshot_profile.feature_trigger_on_movement and snapshot_profile.feature_trigger_on_first_layer_travel,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                self.get_num_slow_layers()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1422,7 +1432,8 @@ class CuraSettings(SlicerSettings):
                 None,
                 snapshot_profile.feature_trigger_on_skirt_brim,
                 None,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                0
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1432,12 +1443,13 @@ class CuraSettings(SlicerSettings):
                 None,
                 snapshot_profile.feature_trigger_on_z_movement,
                 None,
-                self.get_speed_tolerance()
+                self.get_speed_tolerance(),
+                0
             )
         ]
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
-        if speed is None:
+        if speed is None or len(str(speed).strip()) == 0:
             return None
 
         # Convert speed to mm/min
@@ -1483,7 +1495,7 @@ class Simplify3dSettings(SlicerSettings):
     def get_speed_tolerance(self):
         return 1
 
-    def get_octolapse_gcode_settings(self):
+    def get_gcode_generation_settings(self):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_distance()
@@ -1496,11 +1508,10 @@ class Simplify3dSettings(SlicerSettings):
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
-
-        if speed is None:
+        if speed is None or len(str(speed).strip()) == 0:
             return None
         speed = float(speed)
-        if multiplier is not None:
+        if multiplier is not None and not len(str(multiplier).strip()) == 0:
             if is_half_speed_multiplier:
                 speed = 100.0 - (100 - float(multiplier) / 2.0)
             else:
@@ -1805,19 +1816,19 @@ class Slic3rPeSettings(SlicerSettings):
         super(Slic3rPeSettings, self).__init__(SlicerSettings.SlicerTypeSlic3rPe, version)
         self.retract_length = None
         self.retract_lift = None
+        self.deretract_speed = None
         self.retract_speed = None
-        self.detract_speed = None
         self.perimeter_speed = None                 #check
-        self.small_perimeter_speed = None
-        self.external_perimeter_speed = None
+        self.small_perimeter_speed = ''
+        self.external_perimeter_speed = ''
         self.infill_speed = None
-        self.solid_infill_speed = None
-        self.top_solid_infill_speed = None
+        self.solid_infill_speed = ''
+        self.top_solid_infill_speed = ''
         self.support_material_speed = None
         self.bridge_speed = None
         self.gap_fill_speed = None
         self.travel_speed = None
-        self.first_layer_speed = None
+        self.first_layer_speed = ''
         self.axis_speed_display_units = 'mm-sec'
 
     def get_num_slow_layers(self):
@@ -1826,11 +1837,11 @@ class Slic3rPeSettings(SlicerSettings):
     def get_speed_tolerance(self):
         return 0.01 / 60.0 / 2.0
 
-    def get_octolapse_gcode_settings(self):
+    def get_gcode_generation_settings(self):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
         settings.retraction_speed = self.get_retract_speed()
-        settings.detraction_speed = self.get_detract_speed()
+        settings.detraction_speed = self.get_deretract_speed()
         settings.x_y_travel_speed = self.get_travel_speed()
         settings.first_layer_travel_speed = self.get_travel_speed()
         settings.z_lift_height = self.get_retract_lift()
@@ -1841,102 +1852,150 @@ class Slic3rPeSettings(SlicerSettings):
         return self.get_travel_speed()
 
     def get_retract_length(self):
+        if self.retract_length is None:
+            return None
+
         return utility.round_to(float(self.retract_length), 0.00001)
 
     def get_retract_lift(self):
+        if self.retract_lift is None:
+            return None
+
         return utility.round_to(float(self.retract_lift), 0.001)
 
     @staticmethod
     def parse_percent(parse_string):
-        if parse_string is None:
-            return None
-
-        percent_index = parse_string.strip().find('%')
-        if percent_index < 1:
-            return None
         try:
-            percent = float(str(parse_string).translate(None, '%')) / 100.0
-            return percent
-        except ValueError:
+            if parse_string is None:
+                return None
+            if isinstance(parse_string, (str,unicode)):
+                percent_index = str(parse_string).strip().find('%')
+                if percent_index < 1:
+                    return None
+                try:
+                    percent = float(str(parse_string).translate(None, '%')) / 100.0
+                    return percent
+                except ValueError:
+                    return None
             return None
-
-    def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
-        if speed is None:
-            return None
-        try:
-            if multiplier is not None and isinstance(multiplier, str):
-                multiplier = self.parse_percent(multiplier)
-            elif multiplier is None:
-                multiplier = 1.0
-
-            if not isinstance(speed, float):
-                speed = float(speed)
-
-            # For some reason retract and detract speeds are rounded to the nearest mm/sec
-            if speed_name is not None and speed_name in ["retract_speed", "detract_speed"]:
-                return utility.round_to(speed * 60 * multiplier, 1)
-            # round to .01
-            # Todo:  I had a note that says we should be rounding to 0.001!  Check this out
-            return utility.round_to(speed * 60.0 * multiplier, .01)
         except Exception as e:
             raise e
 
-    # in slic3r a speed can be both a percent or mm/sec in some cases
-    def _get_percent_or_mm_sec_speed(self, speed_or_percent, base_speed, speed_name=None):
-        if speed_or_percent is None:
+    def get_speed_from_setting(
+        self, speed_setting, is_first_layer=False, has_base_setting=False, base_setting=None, round_to=0.01
+    ):
+
+        first_layer_multiplier = 1.0
+        if is_first_layer:
+            first_layer_multiplier = self.parse_percent(self.first_layer_speed)
+            if first_layer_multiplier is None:
+                if self.first_layer_speed is None or len(str(self.first_layer_speed).strip()) == 0:
+                    return None
+                # If the first layer speed is not a percent, return it
+                return utility.round_to(float(self.first_layer_speed), round_to)
+
+        if speed_setting is None or len(str(speed_setting).strip()) == 0:
             return None
-        percent = Slic3rPeSettings.parse_percent(speed_or_percent)
-        if percent is not None:
-            if base_speed is None:
+
+        # see if the small perimeter speed is a percent
+        speed_setting_percent = self.parse_percent(speed_setting)
+        if speed_setting_percent is not None:
+            # the small perimeter speed is not a percent, scale it by the first layer percent
+            if has_base_setting and (base_setting is None or len(str(base_setting).strip()) == 0):
                 return None
-            return self.get_speed_mm_min(float(base_speed)*percent, speed_name)
-        return self.get_speed_mm_min(float(speed_or_percent), speed_name)
+            speed_setting = float(base_setting) * speed_setting_percent
+        else:
+            speed_setting = float(speed_setting)
 
-    def _get_first_layer_speed(self, speed):
-        if self.first_layer_speed is None or speed is None:
-            return None
-        percent = Slic3rPeSettings.parse_percent(self.first_layer_speed)
-
-        return self.get_speed_mm_min(speed, percent)
+        return utility.round_to(speed_setting * first_layer_multiplier * 60.0, round_to)
 
     def get_first_layer_perimeter_speed(self):
-        return self._get_first_layer_speed(self.perimeter_speed)
+        self.get_speed_from_setting(
+            self.perimeter_speed,
+            is_first_layer=True
+        )
 
     def get_small_perimeter_speed(self):
-        return self._get_percent_or_mm_sec_speed(self.small_perimeter_speed, self.perimeter_speed)
+        return self.get_speed_from_setting(
+            self.small_perimeter_speed,
+            base_setting=self.perimeter_speed,
+            has_base_setting=True
+        )
 
     def get_first_layer_small_perimeter_speed(self):
-        return self._get_first_layer_speed(self.get_small_perimeter_speed())
+        return self.get_speed_from_setting(
+            self.small_perimeter_speed,
+            base_setting=self.perimeter_speed,
+            has_base_setting=True,
+            is_first_layer=True
+        )
 
     def get_external_perimeter_speed(self):
-        return self._get_percent_or_mm_sec_speed(self.external_perimeter_speed, self.perimeter_speed)
+        return self.get_speed_from_setting(
+            self.small_perimeter_speed,
+            base_setting=self.perimeter_speed,
+            has_base_setting=True
+        )
 
     def get_first_layer_external_perimeter_speed(self):
-        return self._get_first_layer_speed(self.get_small_perimeter_speed())
+        return self.get_speed_from_setting(
+            self.external_perimeter_speed,
+            base_setting=self.perimeter_speed,
+            has_base_setting=True,
+            is_first_layer=True
+        )
 
     def get_first_layer_infill_speed(self):
-        return self._get_first_layer_speed(self.infill_speed)
+        return self.get_speed_from_setting(
+            self.infill_speed,
+            is_first_layer=True
+        )
 
     def get_solid_infill_speed(self):
-        return self._get_percent_or_mm_sec_speed(self.solid_infill_speed, self.infill_speed)
+        return self.get_speed_from_setting(
+            self.solid_infill_speed,
+            base_setting=self.infill_speed,
+            has_base_setting=True
+        )
 
     def get_first_layer_solid_infill_speed(self):
-        return self._get_first_layer_speed(self.get_solid_infill_speed())
+        return self.get_speed_from_setting(
+            self.solid_infill_speed,
+            base_setting=self.infill_speed,
+            has_base_setting=True,
+            is_first_layer=True
+        )
 
     def get_top_solid_infill_speed(self):
-        return self._get_percent_or_mm_sec_speed(self.top_solid_infill_speed, self.infill_speed)
+        return self.get_speed_from_setting(
+            self.top_solid_infill_speed,
+            base_setting=self.infill_speed,
+            has_base_setting=True
+        )
 
     def get_first_layer_top_solid_infill_speed(self):
-        return self._get_first_layer_speed(self.get_top_solid_infill_speed())
+        return self.get_speed_from_setting(
+            self.top_solid_infill_speed,
+            base_setting=self.infill_speed,
+            has_base_setting=True,
+            is_first_layer=True
+        )
 
     def get_first_layer_supports_speed(self):
-        return self._get_first_layer_speed(self.support_material_speed)
+        return self.get_speed_from_setting(
+            self.support_material_speed,
+            is_first_layer=True
+        )
 
     def get_first_layer_gaps_speed(self):
-        return self._get_first_layer_speed(self.gap_fill_speed)
-
+        return self.get_speed_from_setting(
+            self.gap_fill_speed,
+            is_first_layer=True
+        )
     def get_travel_speed(self):
-        return self.get_speed_mm_min(self.travel_speed)
+        return self.get_speed_from_setting(
+            self.travel_speed
+        )
 
     def get_wipe_speed(self):
         travel_speed = self.get_travel_speed()
@@ -1945,28 +2004,50 @@ class Slic3rPeSettings(SlicerSettings):
         return None
 
     def get_retract_speed(self):
-        return self.get_speed_mm_min(self.retract_speed, speed_name='retract_speed')
+        return self.get_speed_from_setting(
+            self.retract_speed,
+            round_to=1
+        )
 
-    def get_detract_speed(self):
-        detract_speed = self.get_speed_mm_min(self.detract_speed, speed_name='detract_speed')
-        if detract_speed is None or detract_speed == 0:
-            return self.get_retract_speed()
-        return detract_speed
+    def get_deretract_speed(self):
+        if self.deretract_speed is None or len(str(self.deretract_speed).strip()) == 0:
+            return None
+        deretract_speed = self.deretract_speed
+
+        if float(self.deretract_speed) == 0:
+            if self.retract_speed is None or len(str(self.retract_speed).strip()) == 0:
+                return None
+            deretract_speed = self.retract_speed
+
+        return self.get_speed_from_setting(
+            deretract_speed,
+            round_to=1
+        )
 
     def get_perimeter_speed(self):
-        return self.get_speed_mm_min(self.perimeter_speed)
+        return self.get_speed_from_setting(
+            self.perimeter_speed
+        )
 
     def get_infill_speed(self):
-        return self.get_speed_mm_min(self.infill_speed)
+        return self.get_speed_from_setting(
+            self.infill_speed
+        )
 
     def get_support_material_speed(self):
-        return self.get_speed_mm_min(self.support_material_speed)
+        return self.get_speed_from_setting(
+            self.support_material_speed
+        )
 
     def get_bridge_speed(self):
-        return self.get_speed_mm_min(self.bridge_speed)
+        return self.get_speed_from_setting(
+            self.bridge_speed
+        )
 
     def get_gap_fill_speed(self):
-        return self.get_speed_mm_min(self.gap_fill_speed)
+        return self.get_speed_from_setting(
+            self.gap_fill_speed
+        )
 
     def get_print_features(self, snapshot_profile):
         return [
@@ -1984,7 +2065,7 @@ class Slic3rPeSettings(SlicerSettings):
                 self.calculate_speed,
                 "Detraction",
                 None,
-                self.get_detract_speed(),
+                self.get_deretract_speed(),
                 None,
                 snapshot_profile.feature_trigger_on_detract,
                 None,
@@ -2109,8 +2190,58 @@ class Slic3rPeSettings(SlicerSettings):
         )
 
     def update_settings_from_gcode(self, settings_dict):
-        # for slic3r we can just call the regular update function!
-        self.update(settings_dict)
+        try:
+            for key, value in settings_dict.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
+                    if key in [
+                        'retract_before_wipe',
+                        'support_material_interface_speed',
+                        'support_material_xy_spacing',
+                        'fill_density',
+                        'infill_overlap',
+                        'top_solid_infill_speed',
+                        'first_layer_speed',
+                        'small_perimeter_speed',
+                        'solid_infill_speed',
+                        'external_perimeter_speed'
+                    ]:
+                        if 'percent' in value:
+                            self.__dict__[key] = str(value['percent']) + "%"
+                        elif 'mm' in value:
+                            self.__dict__[key] = value['mm']
+                    elif key == 'version':
+                        self.version = value["version"]
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+        except Exception as e:
+            raise e
+
+    @classmethod
+    def try_convert_value(cls, destination, value, key):
+        if value is None or (isinstance(value, (str,unicode)) and value == 'None'):
+            return None
+        # all of the following can be either strings or percent strings, we need to save them as strings
+        if(
+            key in [
+            'retract_before_wipe',
+            'support_material_interface_speed',
+            'support_material_xy_spacing',
+            'fill_density',
+            'infill_overlap',
+            'top_solid_infill_speed',
+            'first_layer_speed',
+            'small_perimeter_speed',
+            'solid_infill_speed',
+            'external_perimeter_speed'
+            ]
+        ):
+
+            return str(value)
+
+        return super(Slic3rPeSettings, cls).try_convert_value(destination, value, key)
 
 
 class OtherSlicerSettings(SlicerSettings):
@@ -2150,7 +2281,7 @@ class OtherSlicerSettings(SlicerSettings):
             return self.speed_tolerance * 60.0
         return self.speed_tolerance
 
-    def get_octolapse_gcode_settings(self):
+    def get_gcode_generation_settings(self):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
@@ -2435,7 +2566,10 @@ class SlicerPrintFeatures(Settings):
 
         self.num_slow_layers = slicer_settings.get_num_slow_layers()
         self.speed_tolerance = slicer_settings.get_speed_tolerance()
-        self.features = slicer_settings.get_print_features(snapshot_settings)
+        try:
+            self.features = slicer_settings.get_print_features(snapshot_settings)
+        except Exception as e:
+            raise e
         self.feature_detection_enabled = snapshot_settings.feature_restrictions_enabled
 
     @staticmethod
@@ -2486,6 +2620,92 @@ class SlicerPrintFeatures(Settings):
         if len(printing_features) == 0:
             printing_features = []
         return printing_features
+
+    def get_feature_dict(
+        self, speed_units, include_all_features=False, include_missing_speeds=True, include_nonunique_speeds=True
+    ):
+        all_speed_list = []
+        non_unique_speed_dict = {}
+        missing_speeds_list = []
+        divisor = 1.0
+        if speed_units == 'mm-sec':
+            divisor = 60.0
+        # create a list by name and a dict by speed
+        for feature in self.features:
+            assert (isinstance(feature, PrintFeatureSetting))
+            speed = None
+            under_speed = None
+            # calculate speed and underspeed
+            if feature.speed is not None:
+                speed = feature.speed / divisor
+            if feature.under_speed is not None:
+                under_speed = feature.under_speed / divisor
+
+            # add non_unique speeds
+            if include_nonunique_speeds:
+                if speed is not None:
+                    if speed in non_unique_speed_dict:
+                        non_unique_speed_dict[speed].append(feature.layer_name)
+                    else:
+                        non_unique_speed_dict[speed] = [feature.layer_name]
+                if under_speed is not None:
+                    if under_speed in non_unique_speed_dict:
+                        non_unique_speed_dict[under_speed].append(feature.slow_layer_name)
+                    else:
+                        non_unique_speed_dict[under_speed] = [feature.slow_layer_name]
+
+            # add features for speed and underspeed
+            if include_all_features:
+                if speed is not None:
+                    all_speed_list.append(
+                        {
+                            'name': feature.layer_name,
+                            'speed': speed,
+                            'is_underspeed': False,
+                            'description': ''
+                        }
+                    )
+                if under_speed is not None:
+                    all_speed_list.append(
+                        {
+                            'name': feature.slow_layer_name,
+                            'speed': under_speed,
+                            'is_underspeed': True,
+                            'description': ''
+                        }
+                    )
+
+            # add any missing features
+            if include_missing_speeds:
+                if speed is None and feature.layer_name is not None and len(feature.layer_name.strip()) > 0:
+                    missing_speeds_list.append(feature.layer_name)
+                if under_speed is None and feature.slow_layer_name is not None and len(feature.slow_layer_name.strip()) > 0:
+                    missing_speeds_list.append(feature.slow_layer_name)
+
+        if include_nonunique_speeds:
+            # erase any unique speeds from the non-unique speed list
+            keys_to_delete = [key for key in non_unique_speed_dict if len(non_unique_speed_dict[key]) == 1]
+            for key in keys_to_delete:
+                del non_unique_speed_dict[key]
+
+        if include_missing_speeds:
+            # remove any duplicates from missing speed list
+            seen = set()
+            seen_add = seen.add
+            missing_speeds_list_unique = [x for x in missing_speeds_list if not (x in seen or seen_add(x))]
+            non_unique_speed_list = []
+
+        # convert the non_unique speed dict into an array of dicts so that it is easily iterable in javascript
+        for key, val in non_unique_speed_dict.items():
+            key_string = str.format("{key}{speed_units}", key=key, speed_units=speed_units)
+            non_unique_speed_list.append({"speed": key_string, "feature_names": val})
+
+
+        return {
+            'non-unique-speeds': non_unique_speed_list,
+            'all-features': all_speed_list,
+            'missing-speeds': missing_speeds_list_unique
+        }
 
 
 class PrintFeatureSetting(Settings):

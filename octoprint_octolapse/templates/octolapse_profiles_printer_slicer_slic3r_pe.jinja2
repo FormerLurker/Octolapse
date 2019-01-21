@@ -3,34 +3,6 @@
         <div>
             <h4>Slicer - Slic3r Prusa Edition</h4>
             <p>Copy all of the settings below from your slicer.  Please note that Retraction and detraction speeds are rounded to the nearest mm/sec, and all other speeds are rounded to the nearest 0.01 mm/min.</p>
-            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
-                <div>
-                    <p class="text-error">
-                        Some of your speed settings are non-unique:
-                        <small>
-                            <a href="#" class="muted"
-                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_slic3r_pe_non_unique_speeds.hide' }">
-                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
-                            </a>
-                        </small>
-                    </p>
-
-                </div>
-                <div id="show_slic3r_pe_non_unique_speeds" class="control-group hide">
-                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
-                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
-                        <span data-bind="text: $data"></span><br/>
-                    </div>
-                </div>
-            </div>
-            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
-                <p>
-                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
-                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
-                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
-                    </span>
-                </p>
-            </div>
         </div>
         <div>
             <div>
@@ -74,18 +46,18 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_detract_speed">Detraction Speed*</label>
+                <label class="control-label" for="slicer_slic3r_pe_deretract_speed">Detraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
-                        <input id="slicer_slic3r_pe_detract_speed" name="slicer_slic3r_pe_detract_speed" type="number"
-                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.detract_speed" step="0.0001" min="0"
+                        <input id="slicer_slic3r_pe_deretract_speed" name="slicer_slic3r_pe_deretract_speed" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.deretract_speed" step="0.0001" min="0"
                                max="9999999" required/>
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#detraction-speed"
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_detract_speed"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_deretract_speed"></div>
                 </div>
             </div>
             <div class="text-right">
@@ -263,34 +235,6 @@
                        title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_first_layer_speed"></div>
                 </div>
-            </div>
-            <div data-bind="visible: getNonUniqueSpeeds().length > 0" class="text-warning">
-                <div>
-                    <p>
-                        Some of your speed settings are non-unique:
-                        <small>
-                            <a href="#" class="muted text-error"
-                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#show_slic3r_pe_non_unique_speeds.hide' }">
-                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
-                            </a>
-                        </small>
-                    </p>
-
-                </div>
-                <div id="show_slic3r_pe_non_unique_speeds" class="control-group hide">
-                    <p>If you wish to use the 'Feature Detection' within the snapshot profiles, adjust your speeds both within Slic3r PE and Octolapse until they are unique.  Otherwise Octolapse will not be able to properly distinguish all features.</p>
-                    <div class="text-error" data-bind="foreach: getNonUniqueSpeeds">
-                        <span data-bind="text: $data"></span><br/>
-                    </div>
-                </div>
-            </div>
-            <div data-bind="visible: getMissingSpeedsList().length > 0" class="text-warning">
-                <p>
-                    The following speeds are missing and will not be matched properly when using 'Feature Detection' print quality settings
-                    within the snapshot profile:<span class="text-error" data-bind="foreach: getMissingSpeedsList">
-                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko --><span data-bind="text: $data" />
-                    </span>
-                </p>
             </div>
         </div>
     </div>

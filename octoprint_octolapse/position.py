@@ -101,6 +101,7 @@ class Pos(object):
         self.Layer = 0 if pos is None else pos.Layer
         self.Height = 0 if pos is None else pos.Height
         self.IsPrimed = False if pos is None else pos.IsPrimed
+        self.MinimumLayerHeightReached = False if pos is None else pos.MinimumLayerHeightReached
         self.IsInPosition = False if pos is None else pos.IsInPosition
         self.InPathPosition = False if pos is None else pos.InPathPosition
         self.IsTravelOnly = False if pos is None else pos.IsTravelOnly
@@ -165,6 +166,7 @@ class Pos(object):
                     utility.round_to(self.LastExtrusionHeight, tolerance)
                 )
                 and self.IsPrimed == pos.IsPrimed
+                and self.MinimumLayerHeightReached == pos.MinimumLayerHeightReached
                 and self.IsInPosition == pos.IsInPosition
                 and self.InPathPosition == pos.InPathPosition
                 and self.HasOneFeatureEnabled == pos.HasOneFeatureEnabled
@@ -224,6 +226,7 @@ class Pos(object):
             "HasOneFeatureEnabled": self.HasOneFeatureEnabled,
             "InPathPosition": self.InPathPosition,
             "IsPrimed": self.IsPrimed,
+            "MinimumLayerHeightReached": self.MinimumLayerHeightReached,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
             "HasReceivedHomeCommand": self.HasReceivedHomeCommand,
@@ -269,6 +272,7 @@ class Pos(object):
             "Features": self.Features,
             "InPathPosition": self.InPathPosition,
             "IsPrimed": self.IsPrimed,
+            "MinimumLayerHeightReached": self.MinimumLayerHeightReached,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
             "HasPositionChanged": self.HasPositionChanged,
@@ -402,9 +406,9 @@ class Position(object):
     def __init__(self, octolapse_settings, octoprint_printer_profile,
                  g90_influences_extruder):
         self.Settings = octolapse_settings
-        self.Printer = self.Settings.profiles.current_printer().clone()
+        self.Printer = self.Settings.profiles.current_printer()
 
-        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
+        self.Snapshot = self.Settings.profiles.current_snapshot()
         self.SlicerFeatures = SlicerPrintFeatures(self.Printer.get_current_slicer_settings(), self.Snapshot)
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
@@ -427,10 +431,10 @@ class Position(object):
         else:
             self.G90InfluencesExtruder = g90_influences_extruder
 
-        self.octolapse_gcode_settings = self.Printer.get_current_octolapse_gcode_settings()
-        assert (isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
+        self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
+        assert (isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
 
-        self.ZHop = 0 if self.octolapse_gcode_settings.z_lift_height is None else self.octolapse_gcode_settings.z_lift_height
+        self.ZHop = 0 if self.gcode_generation_settings.z_lift_height is None else self.gcode_generation_settings.z_lift_height
 
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()
@@ -454,7 +458,6 @@ class Position(object):
         #     self.LocationDetectionCommands.append("G161")
         # if "G162" not in self.LocationDetectionCommands:
         #     self.LocationDetectionCommands.append("G162")
-
 
     def update_position(self,
                         x=None,
@@ -1198,6 +1201,18 @@ class Position(object):
                         # if we have no priming height set, just set IsPrimed = true.
                         pos.IsPrimed = True
 
+                if not pos.MinimumLayerHeightReached:
+                    # see if we've extruded at the minimum layer height.
+
+                    if self.Printer.minimum_layer_height > 0:
+                        # if a priming height is configured, see if we've extruded below the  height
+                        if pos.LastExtrusionHeight >= self.Printer.minimum_layer_height:
+                            pos.MinimumLayerHeightReached = True
+                    else:
+                        # if we have no priming height set, just set IsPrimed = true.
+                        pos.MinimumLayerHeightReached = True
+
+
                 # make sure we are primed before calculating height/layers
                 if pos.IsPrimed:
                     if pos.Height is None or utility.round_to(pos.Z, self.PrinterTolerance) > previous_pos.Height:
@@ -1208,9 +1223,13 @@ class Position(object):
                                 pos.Height))
 
                     # calculate layer change
-                    if (utility.round_to(
+                    if (pos.MinimumLayerHeightReached
+                        and (
+                            utility.round_to(
                             self.z_delta(pos), self.PrinterTolerance) > 0
-                            or pos.Layer == 0):
+                            or pos.Layer == 0
+                        )
+                    ):
                         pos.IsLayerChange = True
                         pos.Layer += 1
                         self.Settings.Logger.log_position_layer_change(

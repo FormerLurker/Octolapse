@@ -24,4 +24,23 @@ Octolapse.CuraViewmodel = function (values) {
     self.round_to_increment_mm_sec = 0.0001;
     self.round_to_increment_length = 0.0001;
     self.round_to_increment_num_layers = 1;
+
+    self.get_all_speed_settings = function()
+    {
+        return [
+            self.retraction_retract_speed,
+            self.retraction_prime_speed,
+            self.speed_print,
+            self.speed_infill,
+            self.speed_wall_0,
+            self.speed_wall_x,
+            self.speed_topbottom,
+            self.speed_travel,
+            self.speed_print_layer_0,
+            self.speed_travel_layer_0,
+            self.skirt_brim_speed,
+            self.max_feedrate_z_override,
+            self.speed_slowdown_layers,
+        ]
+    }
 };

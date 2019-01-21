@@ -86,10 +86,10 @@ class Extruder(object):
     def __init__(self, octolapse_settings):
         self.Settings = octolapse_settings
 
-        self.octolapse_gcode_settings = self.Settings.profiles.current_printer().get_current_octolapse_gcode_settings()
-        assert (isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
+        self.gcode_generation_settings = self.Settings.profiles.current_printer().get_current_state_detection_settings()
+        assert (isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
 
-        self.PrinterRetractionLength = self.octolapse_gcode_settings.retraction_length
+        self.PrinterRetractionLength = self.gcode_generation_settings.retraction_length
         self.PrinterTolerance = self.Settings.profiles.current_printer().printer_position_confirmation_tolerance
         self.StateHistory = deque(maxlen=5)
         self.reset()

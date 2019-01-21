@@ -79,7 +79,7 @@ class CaptureSnapshot(object):
         self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
-            self.Cameras.append(current_camera.clone())
+            self.Cameras.append(current_camera)
 
         self.CameraInfos = {}
         for current_camera in self.Cameras:

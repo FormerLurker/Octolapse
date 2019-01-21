@@ -27,6 +27,35 @@ Octolapse.OtherSlicerViewModel = function (values) {
     self.speed_tolerance = ko.observable(values.speed_tolerance);
     self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
 
+    self.get_all_speed_settings = function()
+    {
+        return [
+            self.travel_speed,
+            self.first_layer_travel_speed,
+            self.retract_speed,
+            self.detract_speed,
+            self.print_speed,
+            self.first_layer_print_speed,
+            self.z_travel_speed,
+            self.perimeter_speed,
+            self.small_perimeter_speed,
+            self.external_perimeter_speed,
+            self.infill_speed,
+            self.solid_infill_speed,
+            self.top_solid_infill_speed,
+            self.support_speed,
+            self.bridge_speed,
+            self.gap_fill_speed,
+            self.skirt_brim_speed,
+            self.above_raft_speed,
+            self.ooze_shield_speed,
+            self.prime_pillar_speed,
+            self.num_slow_layers,
+            self.speed_tolerance,
+            self.axis_speed_display_units
+        ]
+    };
+
     // Declare constants
     self.round_to_increment_mm_min = 0.001;
     self.round_to_increment_mm_sec = 0.000001;
@@ -39,6 +68,7 @@ Octolapse.OtherSlicerViewModel = function (values) {
             return 'sec';
         return '?';
     }, self);
+
 
 
     self.axisSpeedDisplayUnitsChanged = function (obj, event) {

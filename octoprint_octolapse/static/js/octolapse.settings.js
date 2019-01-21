@@ -579,8 +579,6 @@ $(function () {
             dialog.$addEditDialog.modal();
         };
 
-
-
     };
     // Bind the settings view model to the plugin settings element
     OCTOPRINT_VIEWMODELS.push([

@@ -48,7 +48,8 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, CameraProfile, \
-    RenderingProfile, SnapshotProfile, DebugProfile
+    RenderingProfile, SnapshotProfile, DebugProfile, SlicerPrintFeatures, \
+    SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, Slic3rPeSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 import octoprint_octolapse.settings_migration as settings_migration
 import octoprint_octolapse.log as log
@@ -227,6 +228,37 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
         self.send_state_loaded_message()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/getPrintFeatures", methods=["POST"])
+    def get_print_features(self):
+        request_values = flask.request.get_json()
+        client_slicer_settings = request_values["slicer_settings"]
+        client_slicer_type = request_values["slicer_type"]
+
+        slicer_settings = None
+        speed_units = 'mm-min'
+        if client_slicer_type == 'cura':
+            slicer_settings = CuraSettings.create_from(client_slicer_settings)
+            speed_units = 'mm-sec'
+        elif client_slicer_type == 'other':
+            slicer_settings = OtherSlicerSettings.create_from(client_slicer_settings)
+            speed_units = slicer_settings.axis_speed_display_units
+        elif client_slicer_type == 'simplify-3d':
+            slicer_settings = Simplify3dSettings.create_from(client_slicer_settings)
+        elif client_slicer_type == 'slic3r-pe':
+            slicer_settings = Slic3rPeSettings.create_from(client_slicer_settings)
+
+        # extract the slicer settings
+        data = SlicerPrintFeatures(slicer_settings, self.Settings.profiles.current_snapshot()).get_feature_dict(
+            speed_units
+        )
+
+        if self.Settings is None:
+            raise Exception(
+                "Unable to load print features from Octolapse.Settings, it hasn't been initialized yet.  Please wait a few "
+                "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
+
+        return json.dumps(data), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
     @restricted_access
@@ -914,6 +946,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.Timelapse.on_print_paused()
 
     def on_print_start(self, tags):
+
         self.Settings.Logger.log_print_state_change(
             "Print start detected, attempting to start timelapse."
         )
@@ -1021,13 +1054,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.on_print_start_failed(message)
             return
 
-        result = self.start_timelapse()
-        if not result["success"]:
-            self.on_print_start_failed(result["error"])
-            return
+        try:
+            result = self.start_timelapse()
+            if not result["success"]:
+                self.on_print_start_failed(result["error"])
+                return
 
-        if result["warning"]:
-            self.send_popup_message(result["warning"])
+            if result["warning"]:
+                self.send_popup_message(result["warning"])
+        except Exception as e:
+            self.Settings.Logger.log_exception(e)
+            self.send_popup_message("An unexpected error occurred while starting the Octolapse!  Please check plugin_octolapse.log for details")
 
         # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
         # the extruder.
@@ -1136,15 +1173,57 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         gcode_file_path = utility.get_currently_printing_file_path_on_disk(
             self._printer, self._storage_interface
         )
+        # Create a copy of the settings to send to the Timelapse object.
+        # We make this copy here so that editing settings vis the GUI won't affect the
+        # current timelapse.
+        settings_clone = self.Settings.clone()
+        current_printer_clone = settings_clone.profiles.current_printer()
+        has_automatic_settings_issue = False
+        if current_printer_clone.slicer_type == 'automatic':
+            # extract any slicer settings if possible.  This must be done before any calls to the printer profile
+            # info that includes slicer setting
+            if current_printer_clone.get_gcode_settings_from_file(gcode_file_path):
+                settings_saved = False
+                if not current_printer_clone.slicers.automatic.disable_automatic_save:
+                    # get the extracted slicer settings
+                    extracted_slicer_settings = current_printer_clone.get_current_slicer_settings()
+                    # Apply the extracted settings to to the live settings
+                    self.Settings.profiles.current_printer().get_slicer_settings_by_type(
+                        current_printer_clone.slicer_type
+                    ).update(extracted_slicer_settings.to_dict())
+                    # save the live settings
+                    self.save_settings()
+                    settings_saved = True
+
+                self.send_slicer_settings_detected_message(settings_saved)
+            else:
+                if not current_printer_clone.slicers.automatic.continue_on_failure:
+                    return {
+                        'success': False,
+                        'error': "Settings could not be extracted from your slicer.  "
+                        "Cannot start timelapse."
+                    }
+                else:
+                    has_automatic_settings_issue = True
+
         self.Timelapse.start_timelapse(
-            self.Settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path)
+            settings_clone, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path)
 
+        warning = ''
         if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
-            return {'success': True,
-                    'warning': "This plugin has not yet been tested on printers with origins that are not in the lower "
-                               "left.  Use at your own risk."}
+            warning = "This plugin has not yet been tested on printers with origins that are not in the lower " \
+                       "left.  Use at your own risk."
 
-        return {'success': True, 'warning': False}
+        if has_automatic_settings_issue:
+            if len(warning) > 0:
+                warning = warning + "  "
+            warning = warning + "Automatic settings extraction failed.  Continue on failure is enabled so your print" \
+                                " will continue, but the timelapse has been aborted."
+
+        if len(warning) == 0:
+            warning = False
+
+        return {'success': True, 'warning': warning}
 
     def send_popup_message(self, msg):
         self.send_plugin_message("popup", msg)
@@ -1165,6 +1244,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "client_id": client_id,
             "Status": self.get_status_dict(),
             "MainSettings": self.Settings.main_settings.to_dict()
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_slicer_settings_detected_message(self, settings_saved):
+        status = None
+        data = {
+            "type": "slicer_settings_detected",
+            "saved": settings_saved
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 

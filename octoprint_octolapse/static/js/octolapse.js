@@ -654,7 +654,6 @@ $(function () {
         return newValue;
     };
 
-
     Octolapse.NullTimeText = "none";
     ko.extenders.time = function (target, options) {
         var result = ko.dependentObservable({
@@ -890,6 +889,7 @@ $(function () {
                 case "settings-changed":
                     {
                         // Was this from us?
+                        self.updateState(data);
                         if (self.client_id !== data.client_id && self.is_admin())
                         {
                             Octolapse.showConfirmDialog(
@@ -900,9 +900,27 @@ $(function () {
                                     Octolapse.Settings.loadSettings();
                                 });
                         }
-                        self.updateState(data);
+
                     }
                     break;
+                case "slicer_settings_detected":
+                    console.log("slicer_settings_detected")
+                    if(data.saved) {
+                        if (self.is_admin())
+                            Octolapse.Settings.loadSettings();
+
+                        var options = {
+                            title: 'Octolapse Settings Updated',
+                            text: "Slicer settings settings were extracted from the gcode file and have been saved to your default printer.",
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
                 case "state-loaded":
                     {
                         //console.log('octolapse.js - state-loaded');

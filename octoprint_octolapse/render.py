@@ -172,7 +172,7 @@ class RenderingProcessor(object):
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
         self.timelapse_job_info = utility.TimelapseJobInfo(job_info=timelapse_job_info)
-        self.rendering = rendering.clone()
+        self.rendering = rendering
         self.data_directory = data_directory
         self.octoprint_timelapse_folder = octoprint_timelapse_folder
         self.ffmpeg_path = ffmpeg_path
@@ -187,7 +187,7 @@ class RenderingProcessor(object):
         self.print_state = "unknown"
         self.time_added = 0
         for current_camera in cameras:
-            self.cameras.append(current_camera.clone())
+            self.cameras.append(current_camera)
 
     @property
     def enabled(self):

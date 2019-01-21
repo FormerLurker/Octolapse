@@ -52,8 +52,8 @@ class Triggers(object):
     def create(self):
         try:
             self.reset()
-            self.Printer = self.Settings.profiles.current_printer().clone()
-            self.Snapshot = self.Settings.profiles.current_snapshot().clone()
+            self.Printer = self.Settings.profiles.current_printer()
+            self.Snapshot = self.Settings.profiles.current_snapshot()
             self.Name = self.Snapshot.name
             # create the triggers
             # If the gcode trigger is enabled, add it
@@ -226,8 +226,8 @@ class Trigger(object):
 
     def __init__(self, octolapse_settings, max_states=5):
         self.Settings = octolapse_settings
-        self.Printer = self.Settings.profiles.current_printer().clone()
-        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
+        self.Printer = self.Settings.profiles.current_printer()
+        self.Snapshot = self.Settings.profiles.current_snapshot()
 
         self.Type = 'Trigger'
         self._stateHistory = []

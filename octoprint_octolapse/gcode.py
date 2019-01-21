@@ -76,8 +76,8 @@ class SnapshotGcodeGenerator(object):
         self.Commands = Commands()
         self.Settings = octolapse_settings  # type: OctolapseSettings
         self.StabilizationPaths = self.Settings.profiles.current_stabilization().get_stabilization_paths()
-        self.Snapshot = self.Settings.profiles.current_snapshot().clone()
-        self.Printer = self.Settings.profiles.current_printer().clone()
+        self.Snapshot = self.Settings.profiles.current_snapshot()
+        self.Printer = self.Settings.profiles.current_printer()
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprint_printer_profile)
@@ -100,13 +100,13 @@ class SnapshotGcodeGenerator(object):
         if self.AxisSpeedUnits not in ["mm-min", "mm-sec"]:
             self.AxisSpeedUnits = "mm-min"
 
-        self.octolapse_gcode_settings = self.Printer.get_current_octolapse_gcode_settings()
-        assert(isinstance(self.octolapse_gcode_settings, OctolapseGcodeSettings))
-        self.z_lift_height = self.octolapse_gcode_settings.z_lift_height
-        self.RetractSpeed = self.octolapse_gcode_settings.retraction_speed
-        self.DetractSpeed = self.octolapse_gcode_settings.detraction_speed
-        self.TravelSpeed = self.octolapse_gcode_settings.x_y_travel_speed
-        self.ZHopSpeed = self.octolapse_gcode_settings.z_lift_speed
+        self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
+        assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
+        self.z_lift_height = self.gcode_generation_settings.z_lift_height
+        self.RetractSpeed = self.gcode_generation_settings.retraction_speed
+        self.DetractSpeed = self.gcode_generation_settings.detraction_speed
+        self.TravelSpeed = self.gcode_generation_settings.x_y_travel_speed
+        self.ZHopSpeed = self.gcode_generation_settings.z_lift_speed
 
     def reset(self):
         self.ReturnWhenComplete = True
@@ -259,8 +259,13 @@ class SnapshotGcodeGenerator(object):
 
         if z_lift is None:
             self.Settings.Logger.log_warning(
-                "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}".format(
-                    current_position.Z, current_position.LastExtrusionHeight))
+                "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}, settings to {2} if enabled".format(
+                    current_position.Z,
+                    current_position.LastExtrusionHeight,
+                    self.gcode_generation_settings.z_lift_height
+                )
+            )
+            z_lift = self.gcode_generation_settings.z_lift_height
 
         length_to_retract = position.Extruder.length_to_retract()
         final_command = parsed_command.gcode
@@ -435,6 +440,7 @@ class SnapshotGcodeGenerator(object):
         # Can we hop or are we too close to the top?
         can_zhop = self.z_lift_height is not None and self.z_lift_height > 0 and utility.is_in_bounds(
             self.BoundingBox, z=z_return + self.ZLift)
+
         # if we can ZHop, do
         if can_zhop and self.ZLift > 0 and self.Snapshot.lift_before_move:
             if not self.IsRelativeCurrent:  # must be in relative mode
