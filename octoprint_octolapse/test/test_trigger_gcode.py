@@ -116,9 +116,9 @@ class TestGcodeTrigger(unittest.TestCase):
         self.Settings.profiles.current_snapshot().gcode_trigger_on_retracting = None
         self.Settings.profiles.current_snapshot().gcode_trigger_on_partially_retracted = None
         self.Settings.profiles.current_snapshot().gcode_trigger_on_retracted = None
-        self.Settings.profiles.current_snapshot().gcode_trigger_on_detracting_start = None
-        self.Settings.profiles.current_snapshot().gcode_trigger_on_detracting = None
-        self.Settings.profiles.current_snapshot().gcode_trigger_on_detracted = None
+        self.Settings.profiles.current_snapshot().gcode_trigger_on_deretracting_start = None
+        self.Settings.profiles.current_snapshot().gcode_trigger_on_deretracting = None
+        self.Settings.profiles.current_snapshot().gcode_trigger_on_deretracted = None
         trigger = GcodeTrigger(self.Settings)
 
         # send a command that is the snapshot command using the defaults

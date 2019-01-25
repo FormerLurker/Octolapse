@@ -245,36 +245,36 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">Start Detracting</label>
+                    <label class="control-label">Start Deretracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_detracting_start" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="snapshot_profile_trigger_on_deretracting_start" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
-                               value: trigger_on_detracting_start"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_detracting_start"></div>
+                               value: trigger_on_deretracting_start"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting_start"></div>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">Detracting</label>
+                    <label class="control-label">Deretracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_detracting" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="snapshot_profile_trigger_on_deretracting" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
-                               value: trigger_on_detracting"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_detracting"></div>
+                               value: trigger_on_deretracting"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting"></div>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">On Detracted</label>
+                    <label class="control-label">On Deretracted</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_detracted" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="snapshot_profile_trigger_on_deretracted" data-bind="options: Octolapse.Snapshots.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
-                               value: trigger_on_detracted"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_detracted"></div>
+                               value: trigger_on_deretracted"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracted"></div>
                     </div>
                 </div>
             </div>
@@ -299,32 +299,7 @@
 
 
             <div data-bind="visible: feature_restrictions_enabled()">
-                <div data-bind="visible: has_non_unique_feature_detection_fields" class="text-warning">
-                    <p class="text-error">
-                        Non-Unique Speeds Detected:
-                        <small>
-                            <a href="#" class="muted"
-                               data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#snapshot_profile_non_unique_speeds.hide' }">
-                                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Show Non-Unique Speed Errors') }}
-                            </a>
-                        </small>
-                    </p>
-                    <div id="snapshot_profile_non_unique_speeds" class="control-group hide">
-                        <p>
-                        The following speeds are non-unique and will be indistinguishable when using 'Feature Detection':
-                        </p>
-                        <div class="text-error" data-bind="foreach: non_unique_feature_detection_fields">
-                            <span data-bind="text: $data"></span><br/>
-                        </div>
-                    </div>
-                </div>
-                <div data-bind="visible: feature_restrictions_enabled() && has_missing_feature_detection_fields()" class="text-warning" style="display: none;">
-                    <p>
-                        The following speeds are missing and will not work when using 'Feature Detection' print quality settings
-                        within the snapshot profile: <span class="text-error" data-bind="text: missing_feature_detection_fields"></span>
-                    </p>
-                </div>
-
+                <div data-bind="template:'printer-feature-template'"></div>
                 <div data-bind="template: feature_template_id"></div>
                 </div>
             </div>

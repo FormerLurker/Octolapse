@@ -175,7 +175,7 @@ class TestLayerTrigger(unittest.TestCase):
                       False, "FullyRetracted, Zhop"))
         gcode.append(('G1 Z0.200 F7200.000', False, "FullyRetracted"))
         gcode.append(('G1 E4.00000 F3000.00000', False,
-                      "DetractingStart, Detracted"))
+                      "DeretractingStart, Deretracted"))
         gcode.append(('M204 S1000', False, "Primed"))
         gcode.append(('G1 F1800', False, "Primed"))
         # start extruding
@@ -206,7 +206,7 @@ class TestLayerTrigger(unittest.TestCase):
         gcode.append(('G1 Z0.200 F7200.000', False, "FullyRetracted"))
         # Zhop complete
         gcode.append(('G1 E4.00000 F3000.00000', False,
-                      "DetractingStart, Detracted"))
+                      "DeretractingStart, Deretracted"))
         # Retraction Complete
         gcode.append(('G1 F1800', False, "Primed"))  # primed
         gcode.append(('G1 X129.413 Y100.587 E0.27673',
@@ -227,9 +227,9 @@ class TestLayerTrigger(unittest.TestCase):
                       False, "FullyRetracted, Zhop"))
         # end zhop
         gcode.append(('G1 Z0.400 F7200.000', False, "FullyRetracted"))
-        # detract
-        gcode.append(('G1 E4.00000 F3000.00000', False, "DetractingStart"))
-        gcode.append(('G1 F3000', False, "Detracted, Primed"))
+        # deretract
+        gcode.append(('G1 E4.00000 F3000.00000', False, "DeretractingStart"))
+        gcode.append(('G1 F3000', False, "Deretracted, Primed"))
         # start etruding
         gcode.append(('G1 X133.128 Y110.149 E0.33418',
                       False, "ExtrudingStart"))
@@ -473,7 +473,7 @@ class TestLayerTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
 
-        # try out on detracting
+        # try out on deretracting
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
         position.update("g0 x0 y0 z.5 e1")
@@ -587,10 +587,10 @@ class TestLayerTrigger(unittest.TestCase):
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         state.IsPrimed = False
-        # try out on detracting Start
+        # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
-        state.IsDetractingStart = True
+        state.IsDeretractingStart = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -599,10 +599,10 @@ class TestLayerTrigger(unittest.TestCase):
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
         state.IsPrimed = False
-        # try out on detracting Start
+        # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
-        state.IsDetracting = True
+        state.IsDeretracting = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -613,7 +613,7 @@ class TestLayerTrigger(unittest.TestCase):
         state.IsPrimed = False
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
-        state.IsDetracted = True
+        state.IsDeretracted = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

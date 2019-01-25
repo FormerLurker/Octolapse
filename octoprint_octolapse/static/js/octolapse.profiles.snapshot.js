@@ -30,9 +30,6 @@ $(function () {
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
         self.trigger_type = ko.observable(values.trigger_type);
-
-
-
         /*
             Timer Trigger Settings
         */
@@ -64,13 +61,13 @@ $(function () {
         self.trigger_on_retracting = ko.observable(values.trigger_on_retracting);
         self.trigger_on_partially_retracted = ko.observable(values.trigger_on_partially_retracted);
         self.trigger_on_retracted = ko.observable(values.trigger_on_retracted);
-        self.trigger_on_detracting_start = ko.observable(values.trigger_on_detracting_start);
-        self.trigger_on_detracting = ko.observable(values.trigger_on_detracting);
-        self.trigger_on_detracted = ko.observable(values.trigger_on_detracted);
+        self.trigger_on_deretracting_start = ko.observable(values.trigger_on_deretracting_start);
+        self.trigger_on_deretracting = ko.observable(values.trigger_on_deretracting);
+        self.trigger_on_deretracted = ko.observable(values.trigger_on_deretracted);
 
         self.feature_restrictions_enabled  = ko.observable(values.feature_restrictions_enabled);
 
-        self.feature_trigger_on_detract = ko.observable(values.feature_trigger_on_detract);
+        self.feature_trigger_on_deretract = ko.observable(values.feature_trigger_on_deretract);
         self.feature_trigger_on_retract = ko.observable(values.feature_trigger_on_retract);
         self.feature_trigger_on_movement = ko.observable(values.feature_trigger_on_movement);
         self.feature_trigger_on_z_movement = ko.observable(values.feature_trigger_on_z_movement);
@@ -127,31 +124,71 @@ $(function () {
                    return "snapshot-cura-feature-template";
                case "simplify-3d":
                    return "snapshot-simplify-3d-feature-template";
+               case "automatic":
+                   return "snapshot-automatic-slicer-feature-template";
                default:
                    return "snapshot-other-slicer-feature-template";
            }
         });
-        self.has_non_unique_feature_detection_fields = ko.pureComputed(function(){
-            return self.non_unique_feature_detection_fields().length > 0
-        });
-        self.non_unique_feature_detection_fields = ko.pureComputed(function(){
+        self.nonUniqueSpeedList = ko.observable([]);
+        self.missingSpeedsList = ko.observable([]);
+
+        self.getPrinterFeatures = function () {
+            //console.log("getting feature list");
             var current_printer = Octolapse.Printers.currentProfile();
-            if(current_printer != null)
-                return current_printer.getNonUniqueSpeeds();
-            return [];
-        });
-        self.has_missing_feature_detection_fields = ko.pureComputed(function(){
-            var current_printer = Octolapse.Printers.currentProfile();
-            if(current_printer != null)
-                return current_printer.getMissingSpeedsList().length > 0;
-            return false;
-        });
-        self.missing_feature_detection_fields = ko.pureComputed(function(){
-            var current_printer = Octolapse.Printers.currentProfile();
-            if(current_printer != null)
-                return current_printer.getMissingSpeedsList();
-            return [];
-        });
+            if(current_printer == null) {
+                self.nonUniqueSpeedList([]);
+                self.missingSpeedsList([]);
+                return;
+            }
+
+            var data = null;
+            switch(current_printer.slicer_type())
+            {
+                case 'cura':
+                    data = ko.toJS(current_printer.slicers.cura);
+                    break;
+                case 'other':
+                    data = ko.toJS(current_printer.slicers.other);
+                    break;
+                case 'simplify-3d':
+                    data = ko.toJS(current_printer.slicers.simplify_3d);
+                    break;
+                case 'slic3r-pe':
+                    data = ko.toJS(current_printer.slicers.slic3r_pe);
+                    break;
+            }
+            if (data != null)
+            {
+                $.ajax({
+                    url: "./plugin/octolapse/getPrintFeatures",
+                    type: "POST",
+                    tryCount: 0,
+                    retryLimit: 3,
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                            'slicer_settings': data,
+                            'slicer_type': current_printer.slicer_type()
+                        }
+                    ),
+                    dataType: "json",
+                    success: function (result) {
+                        //console.log("print features received");
+                        //console.log(result);
+                        self.nonUniqueSpeedList(result['non-unique-speeds']);
+                        self.missingSpeedsList(result['missing-speeds']);
+                        self.printFeaturesList(result['all-features']);
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Octolapse could load the currently printing features.  Please wait a few minutes and try again.");
+                        return false;
+                    }
+                });
+            }
+        };
+        // Trigger a change of the slicer print feature error messages
+       self.getPrinterFeatures();
+
         self.addPositionRestriction = function () {
             //console.log("Adding " + type + " position restriction.");
             var restriction = ko.observable({

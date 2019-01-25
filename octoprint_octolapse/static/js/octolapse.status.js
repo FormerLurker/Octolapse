@@ -905,7 +905,7 @@ $(function () {
             self.ExtrusionLengthTotal = ko.observable(0).extend({numeric: 2});
             self.ExtrusionLength = ko.observable(0).extend({numeric: 2});
             self.RetractionLength = ko.observable(0).extend({numeric: 2});
-            self.DetractionLength = ko.observable(0).extend({numeric: 2});
+            self.DeretractionLength = ko.observable(0).extend({numeric: 2});
             self.IsExtrudingStart = ko.observable(false);
             self.IsExtruding = ko.observable(false);
             self.IsPrimed = ko.observable(false);
@@ -913,16 +913,16 @@ $(function () {
             self.IsRetracting = ko.observable(false);
             self.IsRetracted = ko.observable(false);
             self.IsPartiallyRetracted = ko.observable(false);
-            self.IsDetractingStart = ko.observable(false);
-            self.IsDetracting = ko.observable(false);
-            self.IsDetracted = ko.observable(false);
+            self.IsDeretractingStart = ko.observable(false);
+            self.IsDeretracting = ko.observable(false);
+            self.IsDeretracted = ko.observable(false);
             self.HasChanged = ko.observable(false);
 
             self.update = function (state) {
                 this.ExtrusionLengthTotal(state.ExtrusionLengthTotal);
                 this.ExtrusionLength(state.ExtrusionLength);
                 this.RetractionLength(state.RetractionLength);
-                this.DetractionLength(state.DetractionLength);
+                this.DeretractionLength(state.DeretractionLength);
                 this.IsExtrudingStart(state.IsExtrudingStart);
                 this.IsExtruding(state.IsExtruding);
                 this.IsPrimed(state.IsPrimed);
@@ -930,9 +930,9 @@ $(function () {
                 this.IsRetracting(state.IsRetracting);
                 this.IsRetracted(state.IsRetracted);
                 this.IsPartiallyRetracted(state.IsPartiallyRetracted);
-                this.IsDetractingStart(state.IsDetractingStart);
-                this.IsDetracting(state.IsDetracting);
-                this.IsDetracted(state.IsDetracted);
+                this.IsDeretractingStart(state.IsDeretractingStart);
+                this.IsDeretracting(state.IsDeretracting);
+                this.IsDeretracted(state.IsDeretracted);
                 this.HasChanged(state.HasChanged);
             };
 
@@ -966,28 +966,28 @@ $(function () {
                 }
                 return "None";
             }, self);
-            self.getDetractionIconClass = ko.pureComputed(function () {
+            self.getDeretractionIconClass = ko.pureComputed(function () {
 
-                if (self.IsRetracting() && self.IsDetracting())
+                if (self.IsRetracting() && self.IsDeretracting())
                     return "fa-exclamation-circle";
-                if (self.IsDetracting() && self.IsDetractingStart)
+                if (self.IsDeretracting() && self.IsDeretractingStart)
                     return "fa-level-down";
-                if (self.IsDetracting())
+                if (self.IsDeretracting())
                     return "fa-long-arrow-down";
                 return "fa-times-circle";
             }, self);
-            self.getDetractionStateText = ko.pureComputed(function () {
+            self.getDeretractionStateText = ko.pureComputed(function () {
 
                 var text = "";
-                if (self.IsRetracting() && self.IsDetracting())
+                if (self.IsRetracting() && self.IsDeretracting())
                     text = "Error";
-                else if (self.IsDetracted()) {
-                    text = "Detracted: " + self.DetractionLength() + "mm";
+                else if (self.IsDeretracted()) {
+                    text = "Deretracted: " + self.DeretractionLength() + "mm";
                 }
-                else if (self.IsDetracting()) {
-                    if (self.IsDetractingStart())
+                else if (self.IsDeretracting()) {
+                    if (self.IsDeretractingStart())
                         text += "Start: ";
-                    text += self.DetractionLength() + "mm";
+                    text += self.DeretractionLength() + "mm";
                 }
                 else
                     text = "None";

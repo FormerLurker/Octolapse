@@ -2065,7 +2065,7 @@ class Slic3rPeSettings(SlicerSettings):
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
-                "Detraction",
+                "Deretraction",
                 None,
                 self.get_deretract_speed(),
                 None,
@@ -2414,7 +2414,7 @@ class OtherSlicerSettings(SlicerSettings):
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
-                "Detraction",
+                "Deretraction",
                 None,
                 self.get_deretract_speed(),
                 None,

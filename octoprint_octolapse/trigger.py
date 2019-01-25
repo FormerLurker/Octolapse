@@ -337,7 +337,7 @@ class GcodeTrigger(Trigger):
             message = (
                 "Extruder Triggers - OnExtrudingStart:{0}, OnExtruding:{1}, OnPrimed:{2}, "
                 "OnRetractingStart:{3} OnRetracting:{4}, OnPartiallyRetracted:{5}, OnRetracted:{6}, "
-                "ONDetractingStart:{7}, OnDetracting:{8}, OnDetracted:{9}"
+                "ONDeretractingStart:{7}, OnDeretracting:{8}, OnDeretracted:{9}"
             ).format(
                 self.Snapshot.trigger_on_extruding_start,
                 self.Snapshot.trigger_on_extruding,
@@ -498,8 +498,8 @@ class LayerTrigger(Trigger):
                 "Extruder Triggers - OnExtrudingStart:{0}, "
                 "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
                 "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
-                "OnRetracted:{6}, ONDetractingStart:{7}, "
-                "OnDetracting:{8}, OnDetracted:{9}"
+                "OnRetracted:{6}, ONDeretractingStart:{7}, "
+                "OnDeretracting:{8}, OnDeretracted:{9}"
             ).format(
                 self.Snapshot.trigger_on_extruding_start,
                 self.Snapshot.trigger_on_extruding,
@@ -713,8 +713,8 @@ class TimerTrigger(Trigger):
                 "Extruder Triggers - OnExtrudingStart:{0}, "
                 "OnExtruding:{1}, OnPrimed:{2}, OnRetractingStart:{3} "
                 "OnRetracting:{4}, OnPartiallyRetracted:{5}, "
-                "OnRetracted:{6}, ONDetractingStart:{7}, "
-                "OnDetracting:{8}, OnDetracted:{9}"
+                "OnRetracted:{6}, ONDeretractingStart:{7}, "
+                "OnDeretracting:{8}, OnDeretracted:{9}"
             ).format(
                 self.Snapshot.trigger_on_extruding_start,
                 self.Snapshot.trigger_on_extruding,

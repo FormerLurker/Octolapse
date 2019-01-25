@@ -6,7 +6,7 @@ Octolapse.OtherSlicerViewModel = function (values) {
     self.travel_speed = ko.observable(values.travel_speed);
     self.first_layer_travel_speed = ko.observable(values.first_layer_travel_speed);
     self.retract_speed = ko.observable(values.retract_speed);
-    self.detract_speed = ko.observable(values.detract_speed);
+    self.deretract_speed = ko.observable(values.deretract_speed);
     self.print_speed = ko.observable(values.print_speed);
     self.first_layer_print_speed = ko.observable(values.first_layer_print_speed);
     self.z_travel_speed = ko.observable(values.z_travel_speed);
@@ -33,7 +33,7 @@ Octolapse.OtherSlicerViewModel = function (values) {
             self.travel_speed,
             self.first_layer_travel_speed,
             self.retract_speed,
-            self.detract_speed,
+            self.deretract_speed,
             self.print_speed,
             self.first_layer_print_speed,
             self.z_travel_speed,
@@ -92,7 +92,7 @@ Octolapse.OtherSlicerViewModel = function (values) {
                 self.speed_tolerance(Octolapse.convertAxisSpeedUnit(self.speed_tolerance(), newUnit, previousUnit, axis_speed_round_to_increment, axis_speed_round_to_unit));
 
                 self.retract_speed(Octolapse.convertAxisSpeedUnit(self.retract_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
-                self.detract_speed(Octolapse.convertAxisSpeedUnit(self.detract_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
+                self.deretract_speed(Octolapse.convertAxisSpeedUnit(self.deretract_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
                 self.travel_speed(Octolapse.convertAxisSpeedUnit(self.travel_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
                 self.z_travel_speed(Octolapse.convertAxisSpeedUnit(self.z_travel_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
 

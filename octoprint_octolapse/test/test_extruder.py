@@ -77,7 +77,7 @@ class TestExtruder(unittest.TestCase):
         self.assertEquals(state.ExtrusionLength, 0.0)
         self.assertEquals(state.ExtrusionLengthTotal, 0.0)
         self.assertEquals(state.RetractionLength, 0.0)
-        self.assertEquals(state.DetractionLength, 0.0)
+        self.assertEquals(state.DeretractionLength, 0.0)
         self.assertFalse(state.IsExtrudingStart)
         self.assertFalse(state.IsExtruding)
         self.assertFalse(state.IsPrimed)
@@ -85,9 +85,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(state.IsRetracting)
         self.assertFalse(state.IsPartiallyRetracted)
         self.assertFalse(state.IsRetracted)
-        self.assertFalse(state.IsDetractingStart)
-        self.assertFalse(state.IsDetracting)
-        self.assertFalse(state.IsDetracted)
+        self.assertFalse(state.IsDeretractingStart)
+        self.assertFalse(state.IsDeretracting)
+        self.assertFalse(state.IsDeretracted)
         self.assertFalse(state.HasChanged)
 
     def test_ExtruderStateCopy(self):
@@ -99,7 +99,7 @@ class TestExtruder(unittest.TestCase):
         state.ExtrusionLength = 100
         state.ExtrusionLengthTotal = 200
         state.RetractionLength = 300
-        state.DetractionLength = 400
+        state.DeretractionLength = 400
         state.IsExtrudingStart = True
         state.IsExtruding = True
         state.IsPrimed = True
@@ -107,9 +107,9 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracting = True
         state.IsPartiallyRetracted = True
         state.IsRetracted = True
-        state.IsDetractingStart = True
-        state.IsDetracting = True
-        state.IsDetracted = True
+        state.IsDeretractingStart = True
+        state.IsDeretracting = True
+        state.IsDeretracted = True
         state.HasChanged = True
 
         # copy to a new state
@@ -119,7 +119,7 @@ class TestExtruder(unittest.TestCase):
         self.assertEquals(new_state.ExtrusionLength, 100)
         self.assertEquals(new_state.ExtrusionLengthTotal, 200)
         self.assertEquals(new_state.RetractionLength, 300)
-        self.assertEquals(new_state.DetractionLength, 400)
+        self.assertEquals(new_state.DeretractionLength, 400)
         self.assertTrue(new_state.IsExtrudingStart)
         self.assertTrue(new_state.IsExtruding)
         self.assertTrue(new_state.IsPrimed)
@@ -127,9 +127,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(new_state.IsRetracting)
         self.assertTrue(new_state.IsPartiallyRetracted)
         self.assertTrue(new_state.IsRetracted)
-        self.assertTrue(new_state.IsDetractingStart)
-        self.assertTrue(new_state.IsDetracting)
-        self.assertTrue(new_state.IsDetracted)
+        self.assertTrue(new_state.IsDeretractingStart)
+        self.assertTrue(new_state.IsDeretracting)
+        self.assertTrue(new_state.IsDeretracted)
         self.assertTrue(new_state.HasChanged)
 
     def test_HasChanged(self):
@@ -186,9 +186,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStates_FromExtruding(self):
         # 1, 0 - From extruding to primed
@@ -202,9 +202,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
         # 1, 1 - keep extruding
         self.Extruder.reset()
         self.Extruder.update(1)
@@ -216,9 +216,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
         # 1, -1 - from extruding to partially retracted
         self.Extruder.reset()
         self.Extruder.update(1)
@@ -230,9 +230,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 1, -4 - from extruding to fully retracted
         self.Extruder.reset()
@@ -245,9 +245,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 1, -5 - from extruding to beyond fully retracted
         self.Extruder.reset()
@@ -260,9 +260,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStates_FromPrimed(self):
         # 0, 0 - remain primed
@@ -276,9 +276,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 0, 1 - from primed to extruding
         self.Extruder.reset()
@@ -291,9 +291,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 0, -1 - from primed to partially retracted
         self.Extruder.reset()
@@ -306,9 +306,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 0, -4 - from primed to fully retracted
         self.Extruder.reset()
@@ -321,9 +321,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # 0, -5 - from primed to beyond fully retracted
         self.Extruder.reset()
@@ -336,9 +336,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStates_FromPartiallyRetracted(self):
         # -2,3 - from partially retracted to extruding
@@ -352,10 +352,10 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
-        # -2,2 - detract
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
+        # -2,2 - deretract
         self.Extruder.reset()
         self.Extruder.update(-2)
         self.Extruder.update(2)
@@ -366,10 +366,10 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
-        # -2,1 - detract from partially retracted to partially retracted
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
+        # -2,1 - deretract from partially retracted to partially retracted
         self.Extruder.reset()
         self.Extruder.update(-2)
         self.Extruder.update(1)
@@ -380,9 +380,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -2, 0 - remain partially retracted
         self.Extruder.reset()
@@ -395,9 +395,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -2,-1 - retract from partially retracted to partially retracted
         self.Extruder.reset()
@@ -410,9 +410,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -2,-2 - from partially retracted to fully retracted
         self.Extruder.reset()
@@ -425,9 +425,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -2,-3 - from partially retracted to beyond partially retracted
         self.Extruder.reset()
@@ -440,9 +440,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStates_FromFullyRetracted(self):
         # -4,5 - Fully Retracted To Extruding
@@ -456,11 +456,11 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
 
-        # -4,4 - Fully Retracted to Primed/Detracted
+        # -4,4 - Fully Retracted to Primed/Deretracted
         self.Extruder.reset()
         self.Extruder.update(-4)
         self.Extruder.update(4)
@@ -471,9 +471,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
 
         # -4,1 - Fully Retracted to Partially Retracted
         self.Extruder.reset()
@@ -486,9 +486,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -4,0 - Remain Fully Retracted
         self.Extruder.reset()
@@ -501,9 +501,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -4,-1 - Fully Retracted, Continue Retracting
         self.Extruder.reset()
@@ -516,9 +516,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStates_FromBeyondFullyRetracted(self):
         # -5,6 - Beyond fully retracted to extruding
@@ -532,11 +532,11 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
 
-        # -5,5 - Beyond fully retracted to primed/detracted
+        # -5,5 - Beyond fully retracted to primed/deretracted
         self.Extruder.reset()
         self.Extruder.update(-5)
         self.Extruder.update(5)
@@ -547,9 +547,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertTrue(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertTrue(self.Extruder.is_deretracted())
 
         # -5,4 - Beyond fully retracted to partially retracted
         self.Extruder.reset()
@@ -562,9 +562,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertTrue(self.Extruder.is_partially_retracted())
         self.assertFalse(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -5,1 - Beyond fully retracted to fully retracted
         self.Extruder.reset()
@@ -577,9 +577,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertTrue(self.Extruder.is_detracting_start())
-        self.assertTrue(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertTrue(self.Extruder.is_deretracting_start())
+        self.assertTrue(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -5,0 - Remain beyond fully retracted
         self.Extruder.reset()
@@ -592,9 +592,9 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
         # -5, -1 - Beyond fully retracted, continuing to retract
         self.Extruder.reset()
@@ -607,9 +607,9 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(self.Extruder.is_retracting())
         self.assertFalse(self.Extruder.is_partially_retracted())
         self.assertTrue(self.Extruder.is_retracted())
-        self.assertFalse(self.Extruder.is_detracting_start())
-        self.assertFalse(self.Extruder.is_detracting())
-        self.assertFalse(self.Extruder.is_detracted())
+        self.assertFalse(self.Extruder.is_deretracting_start())
+        self.assertFalse(self.Extruder.is_deretracting())
+        self.assertFalse(self.Extruder.is_deretracted())
 
     def test_ExtruderStateTriggered(self):
         self.assertTrue(self.Extruder._extruder_state_triggered(None, False) is None)
@@ -782,70 +782,70 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDetractingStart(self):
-        # test OnDetractingStart
+    def test_extruderTriggers_OnDeretractingStart(self):
+        # test OnDeretractingStart
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, True, None, None)
         # test True with true filter
-        state.IsDetractingStart = True
+        state.IsDeretractingStart = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
         self.assertTrue(self.Extruder.is_triggered(triggers))
         # test False with True filter
-        state.IsDetractingStart = False
+        state.IsDeretractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDetractingStart - False Filter
+        # test OnDeretractingStart - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, False, None, None)
         # test True with False filter
-        state.IsDetractingStart = True
+        state.IsDeretractingStart = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test False with False filter
-        state.IsDetractingStart = False
+        state.IsDeretractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDetracting(self):
-        # test OnDetracting
+    def test_extruderTriggers_OnDeretracting(self):
+        # test OnDeretracting
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, True, None)
         # test True with true filter
-        state.IsDetracting = True
+        state.IsDeretracting = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
         self.assertTrue(self.Extruder.is_triggered(triggers))
         # test False with True filter
-        state.IsDetracting = False
+        state.IsDeretracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDetracting - False Filter
+        # test OnDeretracting - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, False, None)
         # test True with False filter
-        state.IsDetracting = True
+        state.IsDeretracting = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test False with False filter
-        state.IsDetracting = False
+        state.IsDeretracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDetracted(self):
-        # test OnDetracted
+    def test_extruderTriggers_OnDeretracted(self):
+        # test OnDeretracted
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, True)
         # test True with true filter
-        state.IsDetracted = True
+        state.IsDeretracted = True
         state.IsPrimed = False  # turn this off so we don't have to account for this default state
         self.assertTrue(self.Extruder.is_triggered(triggers))
         # test False with True filter
-        state.IsDetracted = False
+        state.IsDeretracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDetracted - False Filter
+        # test OnDeretracted - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, False)
         # test True with False filter
-        state.IsDetracted = True
+        state.IsDeretracted = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # test False with False filter
-        state.IsDetracted = False
+        state.IsDeretracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
     def test_extruderTriggers_Mixed(self):
@@ -862,9 +862,9 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracting = True
         state.IsPartiallyRetracted = False
         state.IsRetracted = True
-        state.IsDetractingStart = True
-        state.IsDetracting = False
-        state.IsDetracted = True
+        state.IsDeretractingStart = True
+        state.IsDeretracting = False
+        state.IsDeretracted = True
         self.assertTrue(not self.Extruder.is_triggered(triggers))
         # True - is extruding
         state.IsExtrudingStart = False
@@ -874,9 +874,9 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracting = False
         state.IsPartiallyRetracted = False
         state.IsRetracted = True
-        state.IsDetractingStart = False
-        state.IsDetracting = False
-        state.IsDetracted = True
+        state.IsDeretractingStart = False
+        state.IsDeretracting = False
+        state.IsDeretracted = True
         self.assertTrue(self.Extruder.is_triggered(triggers))
 
         # Test all false states and all Nones
@@ -887,9 +887,9 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracting = True
         state.IsPartiallyRetracted = True
         state.IsRetracted = True
-        state.IsDetractingStart = True
-        state.IsDetracting = True
-        state.IsDetracted = True
+        state.IsDeretractingStart = True
+        state.IsDeretracting = True
+        state.IsDeretracted = True
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, None)
         self.assertTrue(self.Extruder.is_triggered(triggers))
         triggers = ExtruderTriggers(False, True, True, True, True, True, True, True, True, True)

@@ -440,8 +440,8 @@ class Commands(object):
 
     M208 = Command(
         "M208",
-        "Set detract length"
-        "M208 - Set detract length",
+        "Set deretract length"
+        "M208 - Set deretract length",
         parameters={
             "S": CommandParameter("S", CommandParameter.parse_float, 1),
             "F": CommandParameter("F", CommandParameter.parse_float, 2),

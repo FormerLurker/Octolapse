@@ -359,20 +359,20 @@
         </div>
 
         <div class="control-group">
-            <label class="control-label" for="default_firmware_retractions">Use Retraction/Detraction settings for Firmware Retract/Detract</label>
+            <label class="control-label" for="default_firmware_retractions">Use Retraction/Deretraction settings for Firmware Retract/Deretract</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Detraction settings for Firmware Retract/Detract" />Enabled
+                    <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-retractionderetraction-settings-for-firmware-retractderetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 </label>
                 <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/deretraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="default_firmware_retractions_zhop">Use Z-Hop (Z-Lift) settings for Firmware Retract/Detract</label>
+            <label class="control-label" for="default_firmware_retractions_zhop">Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Detraction settings for Firmware Retract/Detract" />Enabled
+                    <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-z-hop-z-lift-settings-for-firmware-retractderetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 </label>
                 <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/deretraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
@@ -391,6 +391,6 @@
 {% include "octolapse_profiles_printer_slicer_cura.jinja2" %}
 {% include "octolapse_profiles_printer_slicer_simplify3d.jinja2" %}
 {% include "octolapse_profiles_printer_slicer_automatic.jinja2" %}
-{% include "octolapse_profiles_printer_features.jinja2" %}
+
 
 

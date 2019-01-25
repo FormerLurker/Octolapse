@@ -32,7 +32,7 @@ class ExtruderState(object):
         self.ExtrusionLength = 0.0 if state is None else state.ExtrusionLength
         self.ExtrusionLengthTotal = 0.0 if state is None else state.ExtrusionLengthTotal
         self.RetractionLength = 0.0 if state is None else state.RetractionLength
-        self.DetractionLength = 0.0 if state is None else state.DetractionLength
+        self.DeretractionLength = 0.0 if state is None else state.DeretractionLength
         self.IsExtrudingStart = False if state is None else state.IsExtrudingStart
         self.IsExtruding = False if state is None else state.IsExtruding
         self.IsPrimed = False if state is None else state.IsPrimed
@@ -40,9 +40,9 @@ class ExtruderState(object):
         self.IsRetracting = False if state is None else state.IsRetracting
         self.IsRetracted = False if state is None else state.IsRetracted
         self.IsPartiallyRetracted = False if state is None else state.IsPartiallyRetracted
-        self.IsDetractingStart = False if state is None else state.IsDetractingStart
-        self.IsDetracting = False if state is None else state.IsDetracting
-        self.IsDetracted = False if state is None else state.IsDetracted
+        self.IsDeretractingStart = False if state is None else state.IsDeretractingStart
+        self.IsDeretracting = False if state is None else state.IsDeretracting
+        self.IsDeretracted = False if state is None else state.IsDeretracted
         self.HasChanged = False if state is None else state.HasChanged
 
     def is_state_equal(self, extruder):
@@ -53,9 +53,9 @@ class ExtruderState(object):
                 or self.IsRetracting != extruder.IsRetracting
                 or self.IsRetracted != extruder.IsRetracted
                 or self.IsPartiallyRetracted != extruder.IsPartiallyRetracted
-                or self.IsDetractingStart != extruder.IsDetractingStart
-                or self.IsDetracting != extruder.IsDetracting
-                or self.IsDetracted != extruder.IsDetracted):
+                or self.IsDeretractingStart != extruder.IsDeretractingStart
+                or self.IsDeretracting != extruder.IsDeretracting
+                or self.IsDeretracted != extruder.IsDeretracted):
             return False
         return True
 
@@ -65,7 +65,7 @@ class ExtruderState(object):
             "ExtrusionLength": self.ExtrusionLength,
             "ExtrusionLengthTotal": self.ExtrusionLengthTotal,
             "RetractionLength": self.RetractionLength,
-            "DetractionLength": self.DetractionLength,
+            "DeretractionLength": self.DeretractionLength,
             "IsExtrudingStart": self.IsExtrudingStart,
             "IsExtruding": self.IsExtruding,
             "IsPrimed": self.IsPrimed,
@@ -73,9 +73,9 @@ class ExtruderState(object):
             "IsRetracting": self.IsRetracting,
             "IsRetracted": self.IsRetracted,
             "IsPartiallyRetracted": self.IsPartiallyRetracted,
-            "IsDetractingStart": self.IsDetractingStart,
-            "IsDetracting": self.IsDetracting,
-            "IsDetracted": self.IsDetracted,
+            "IsDeretractingStart": self.IsDeretractingStart,
+            "IsDeretracting": self.IsDeretracting,
+            "IsDeretracted": self.IsDeretracted,
             "HasChanged": self.HasChanged
         }
 
@@ -164,22 +164,22 @@ class Extruder(object):
             return state.IsRetracted
         return False
 
-    def is_detracting_start(self, index=0):
+    def is_deretracting_start(self, index=0):
         state = self.get_state(index)
         if state is not None:
-            return state.IsDetractingStart
+            return state.IsDeretractingStart
         return False
 
-    def is_detracting(self, index=0):
+    def is_deretracting(self, index=0):
         state = self.get_state(index)
         if state is not None:
-            return state.IsDetracting
+            return state.IsDeretracting
         return False
 
-    def is_detracted(self, index=0):
+    def is_deretracted(self, index=0):
         state = self.get_state(index)
         if state is not None:
-            return state.IsDetracted
+            return state.IsDeretracted
         return False
 
     def extrusion_length_total(self, index=0):
@@ -262,16 +262,16 @@ class Extruder(object):
             # Update extrusion length
             state.ExtrusionLengthTotal += state.ExtrusionLength
 
-            # calculate detraction length
+            # calculate deretraction length
             if previous_state.RetractionLength > state.RetractionLength:
 
-                state.DetractionLength = previous_state.RetractionLength - state.RetractionLength
+                state.DeretractionLength = previous_state.RetractionLength - state.RetractionLength
 
-                # do not round the detraction length
-                # state.DetractionLength = utility.round_to(state.DetractionLength,self.PrinterTolerance)
+                # do not round the deretraction length
+                # state.DeretractionLength = utility.round_to(state.DeretractionLength,self.PrinterTolerance)
 
             else:
-                state.DetractionLength = 0
+                state.DeretractionLength = 0
 
             # round our lengths to the nearest .05mm to avoid some floating point math errors
             self._update_state(state, previous_state)
@@ -281,11 +281,11 @@ class Extruder(object):
     def _update_state(self, state, state_previous):
 
         retraction_length = utility.round_to(state.RetractionLength, self.PrinterTolerance)
-        detraction_length = utility.round_to(state.DetractionLength, self.PrinterTolerance)
+        deretraction_length = utility.round_to(state.DeretractionLength, self.PrinterTolerance)
         extrusion_length = utility.round_to(state.ExtrusionLength, self.PrinterTolerance)
 
         previous_retraction_length = utility.round_to(state_previous.RetractionLength, self.PrinterTolerance)
-        previous_detraction_length = utility.round_to(state_previous.DetractionLength, self.PrinterTolerance)
+        previous_deretraction_length = utility.round_to(state_previous.DeretractionLength, self.PrinterTolerance)
 
         state.IsExtrudingStart = True if extrusion_length > 0 and state_previous.ExtrusionLength == 0 else False
         state.IsExtruding = True if extrusion_length > 0 else False
@@ -294,9 +294,9 @@ class Extruder(object):
         state.IsRetracting = True if retraction_length > previous_retraction_length else False
         state.IsPartiallyRetracted = True if (0 < retraction_length < self.PrinterRetractionLength) else False
         state.IsRetracted = True if retraction_length >= self.PrinterRetractionLength else False
-        state.IsDetractingStart = True if detraction_length > 0 and previous_detraction_length == 0 else False
-        state.IsDetracting = True if detraction_length > previous_detraction_length else False
-        state.IsDetracted = True if previous_retraction_length > 0 and retraction_length == 0 else False
+        state.IsDeretractingStart = True if deretraction_length > 0 and previous_deretraction_length == 0 else False
+        state.IsDeretracting = True if deretraction_length > previous_deretraction_length else False
+        state.IsDeretracted = True if previous_retraction_length > 0 and retraction_length == 0 else False
 
         if not state.is_state_equal(state_previous):
             state.HasChanged = True
@@ -307,8 +307,8 @@ class Extruder(object):
                 "Extruder Changed: E:{0}, Retraction:{1} IsExtruding:{2}-{3}, "
                 "IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, IsRetractingStart:{8}-{9}, "
                 "IsRetracting:{10}-{11}, IsPartiallyRetracted:{12}-{13}, "
-                "IsRetracted:{14}-{15}, IsDetractingStart:{16}-{17}, "
-                "IsDetracting:{18}-{19}, IsDetracted:{20}-{21}"
+                "IsRetracted:{14}-{15}, IsDeretractingStart:{16}-{17}, "
+                "IsDeretracting:{18}-{19}, IsDeretracted:{20}-{21}"
             ).format(
                 state.E,
                 state.RetractionLength,
@@ -326,12 +326,12 @@ class Extruder(object):
                 state.IsPartiallyRetracted,
                 state_previous.IsRetracted,
                 state.IsRetracted,
-                state_previous.IsDetractingStart,
-                state.IsDetractingStart,
-                state_previous.IsDetracting,
-                state.IsDetracting,
-                state_previous.IsDetracted,
-                state.IsDetracted
+                state_previous.IsDeretractingStart,
+                state.IsDeretractingStart,
+                state_previous.IsDeretracting,
+                state.IsDeretracting,
+                state_previous.IsDeretracted,
+                state.IsDeretracted
             )
 
             self.Settings.Logger.log_extruder_change(message)
@@ -379,14 +379,14 @@ class Extruder(object):
         retracted_triggered = self._extruder_state_triggered(
             options.OnRetracted, state.IsRetracted
         )
-        detracting_start_triggered = self._extruder_state_triggered(
-            options.OnDetractingStart, state.IsDetractingStart
+        deretracting_start_triggered = self._extruder_state_triggered(
+            options.OnDeretractingStart, state.IsDeretractingStart
         )
-        detracting_triggered = self._extruder_state_triggered(
-            options.OnDetracting, state.IsDetracting
+        deretracting_triggered = self._extruder_state_triggered(
+            options.OnDeretracting, state.IsDeretracting
         )
-        detracted_triggered = self._extruder_state_triggered(
-            options.OnDetracted, state.IsDetracted
+        deretracted_triggered = self._extruder_state_triggered(
+            options.OnDeretracted, state.IsDeretracted
         )
 
         ret_value = False
@@ -398,9 +398,9 @@ class Extruder(object):
             or (retracting_triggered is not None and not retracting_triggered)
             or (partially_retracted_triggered is not None and not partially_retracted_triggered)
             or (retracted_triggered is not None and not retracted_triggered)
-            or (detracting_start_triggered is not None and not detracting_start_triggered)
-            or (detracting_triggered is not None and not detracting_triggered)
-            or (detracted_triggered is not None and not detracted_triggered))
+            or (deretracting_start_triggered is not None and not deretracting_start_triggered)
+            or (deretracting_triggered is not None and not deretracting_triggered)
+            or (deretracted_triggered is not None and not deretracted_triggered))
 
         if (not is_triggering_prevented
             and
@@ -412,9 +412,9 @@ class Extruder(object):
                 or (retracting_triggered is not None and retracting_triggered)
                 or (partially_retracted_triggered is not None and partially_retracted_triggered)
                 or (retracted_triggered is not None and retracted_triggered)
-                or (detracting_start_triggered is not None and detracting_start_triggered)
-                or (detracting_triggered is not None and detracting_triggered)
-                or (detracted_triggered is not None and detracted_triggered)
+                or (deretracting_start_triggered is not None and deretracting_start_triggered)
+                or (deretracting_triggered is not None and deretracting_triggered)
+                or (deretracted_triggered is not None and deretracted_triggered)
                 or (options.are_all_triggers_ignored()))):
             ret_value = True
 
@@ -423,7 +423,7 @@ class Extruder(object):
                 "Triggered E:{0}, Retraction:{1} IsExtruding:{2}-{3}, "
                 "IsExtrudingStart:{4}-{5}, IsPrimed:{6}-{7}, "
                 "IsRetracting:{8}-{9}, IsRetracted:{10}-{11}, "
-                "IsDetracting:{12}-{13}, IsTriggered:{14}"
+                "IsDeretracting:{12}-{13}, IsTriggered:{14}"
             ).format(
                 state.E,
                 state.RetractionLength,
@@ -437,8 +437,8 @@ class Extruder(object):
                 retracting_triggered,
                 state.IsRetracted,
                 retracted_triggered,
-                state.IsDetracting,
-                detracted_triggered,
+                state.IsDeretracting,
+                deretracted_triggered,
                 ret_value
             )
             self.Settings.Logger.log_extruder_triggered(message)
@@ -450,7 +450,7 @@ class ExtruderTriggers(object):
     def __init__(
             self, on_extruding_start, on_extruding, on_primed,
             on_retracting_start, on_retracting, on_partially_retracted,
-            on_retracted, on_detracting_start, on_detracting, on_detracted):
+            on_retracted, on_deretracting_start, on_deretracting, on_deretracted):
         # To trigger on an extruder state, set to True.
         # To prevent triggering on an extruder state, set to False.
         # To ignore the extruder state, set to None
@@ -461,9 +461,9 @@ class ExtruderTriggers(object):
         self.OnRetracting = on_retracting
         self.OnPartiallyRetracted = on_partially_retracted
         self.OnRetracted = on_retracted
-        self.OnDetractingStart = on_detracting_start
-        self.OnDetracting = on_detracting
-        self.OnDetracted = on_detracted
+        self.OnDeretractingStart = on_deretracting_start
+        self.OnDeretracting = on_deretracting
+        self.OnDeretracted = on_deretracted
 
     def are_all_triggers_ignored(self):
         if (self.OnExtrudingStart is None
@@ -473,8 +473,8 @@ class ExtruderTriggers(object):
                 and self.OnRetracting is None
                 and self.OnPartiallyRetracted is None
                 and self.OnRetracted is None
-                and self.OnDetractingStart is None
-                and self.OnDetracting is None
-                and self.OnDetracted is None):
+                and self.OnDeretractingStart is None
+                and self.OnDeretracting is None
+                and self.OnDeretracted is None):
             return True
         return False

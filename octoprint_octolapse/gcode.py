@@ -104,7 +104,7 @@ class SnapshotGcodeGenerator(object):
         assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
         self.z_lift_height = self.gcode_generation_settings.z_lift_height
         self.RetractSpeed = self.gcode_generation_settings.retraction_speed
-        self.DetractSpeed = self.gcode_generation_settings.deretraction_speed
+        self.DeretractSpeed = self.gcode_generation_settings.deretraction_speed
         self.TravelSpeed = self.gcode_generation_settings.x_y_travel_speed
         self.ZHopSpeed = self.gcode_generation_settings.z_lift_speed
 
@@ -560,8 +560,8 @@ class SnapshotGcodeGenerator(object):
                 )
                 self.IsExtruderRelativeCurrent = True
 
-            if self.DetractSpeed != self.FCurrent:
-                new_f = self.DetractSpeed
+            if self.DeretractSpeed != self.FCurrent:
+                new_f = self.DeretractSpeed
                 self.FCurrent = new_f
             else:
                 new_f = None

@@ -215,10 +215,10 @@ class TestTimerTrigger(unittest.TestCase):
         # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        # try out on detracting Start
+        # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
-        state.IsDetractingStart = True
+        state.IsDeretractingStart = True
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -227,10 +227,10 @@ class TestTimerTrigger(unittest.TestCase):
         # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        # try out on detracting Start
+        # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
-        state.IsDetracting = True
+        state.IsDeretracting = True
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -239,10 +239,10 @@ class TestTimerTrigger(unittest.TestCase):
         # Reset the extruder
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        # try out on detracting Start
+        # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
-        state.IsDetracted = True
+        state.IsDeretracted = True
         trigger.get_state(0).TriggerStartTime = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))

@@ -113,7 +113,7 @@ class Pos(object):
             self.FirmwareRetractionLength = printer.retract_length
             self.FirmwareUnretractionAdditionalLength = None  # todo:  add this setting
             self.FirmwareRetractionFeedrate = printer.retract_speed
-            self.FirmwareUnretractionFeedrate = printer.detract_speed
+            self.FirmwareUnretractionFeedrate = printer.deretract_speed
 
         else:
             self.FirmwareRetractionLength = None if pos is None else pos.FirmwareRetractionLength
@@ -929,7 +929,7 @@ class Position(object):
             elif pos.parsed_command.cmd == "G11":
 
                 self.Settings.Logger.log_position_command_received(
-                    "Received G11 - Received firmware detract."
+                    "Received G11 - Received firmware deretract."
                 )
 
                 lift_distance = 0 if pos.FirmwareZLift is None else -1.0*pos.FirmwareZLift
@@ -1135,7 +1135,7 @@ class Position(object):
                     pos.FirmwareZLift = pos.parsed_command.parameters["Z"]
             elif pos.parsed_command.cmd == "M208":
                 self.Settings.Logger.log_position_command_received(
-                    "Received M207 - setting firmware detraction values"
+                    "Received M207 - setting firmware deretraction values"
                 )
                 # Firmware Retraction Tracking
                 if "S" in pos.parsed_command.parameters:

@@ -23,7 +23,7 @@ def get_printer_profile():
           "snapshot_command": "snap",
           "override_octoprint_print_volume": False,
           "z_hop": 0.5,
-          "detract_speed": 3000.0,
+          "deretract_speed": 3000.0,
           "default_firmware_retractions": True,
           "printer_position_confirmation_tolerance": 0.001,
           "units_default": "millimeters",
