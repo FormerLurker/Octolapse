@@ -330,9 +330,9 @@ class GcodeTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             message = (
                 "Extruder Triggers - OnExtrudingStart:{0}, OnExtruding:{1}, OnPrimed:{2}, "
@@ -346,9 +346,9 @@ class GcodeTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             self.Settings.Logger.log_trigger_create(message)
 
@@ -490,9 +490,9 @@ class LayerTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             message = (
                 "Extruder Triggers - OnExtrudingStart:{0}, "
@@ -508,9 +508,9 @@ class LayerTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             self.Settings.Logger.log_trigger_create(message)
         # Configuration Variables
@@ -705,9 +705,9 @@ class TimerTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             message = (
                 "Extruder Triggers - OnExtrudingStart:{0}, "
@@ -723,9 +723,9 @@ class TimerTrigger(Trigger):
                 self.Snapshot.trigger_on_retracting,
                 self.Snapshot.trigger_on_partially_retracted,
                 self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_detracting_start,
-                self.Snapshot.trigger_on_detracting,
-                self.Snapshot.trigger_on_detracted
+                self.Snapshot.trigger_on_deretracting_start,
+                self.Snapshot.trigger_on_deretracting,
+                self.Snapshot.trigger_on_deretracted
             )
             self.Settings.Logger.log_trigger_create(message)
 

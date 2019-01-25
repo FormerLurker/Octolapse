@@ -89,8 +89,10 @@ class Settings(object):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
-                    if isinstance(class_item, Settings):
+                if not (isinstance(class_item, (str, unicode)) and class_item == '{octolapse_no_property_found}'):
+                    if isinstance(class_item, log.Logger):
+                        continue
+                    elif isinstance(class_item, Settings):
                         class_item.update(value)
                     else:
                         source.__dict__[key] = source.try_convert_value(class_item, value, key)
@@ -161,7 +163,7 @@ class ProfileSettings(Settings):
 class SlicerAutomatic(Settings):
     def __init__(self):
         self.continue_on_failure = False
-        self.disable_automatic_save = True
+        self.disable_automatic_save = False
 
 
 class PrinterProfileSlicers(Settings):
@@ -284,7 +286,7 @@ class PrinterProfile(ProfileSettings):
         file_processor = gcode_preprocessing.GcodeFileProcessor(
             [simplify_preprocessor, slic3r_preprocessor, cura_preprocessor], 1, None
         )
-        results = file_processor.process_file(gcode_file_path)
+        results = file_processor.process_file(gcode_file_path, filter_tags=['octolapse_setting'])
 
         # determine which results have the most settings
         current_max_slicer_type = None
@@ -523,13 +525,13 @@ class SnapshotProfile(ProfileSettings):
         self.trigger_on_retracting = None
         self.trigger_on_partially_retracted = None
         self.trigger_on_retracted = None
-        self.trigger_on_detracting_start = None
-        self.trigger_on_detracting = None
-        self.trigger_on_detracted = None
+        self.trigger_on_deretracting_start = None
+        self.trigger_on_deretracting = None
+        self.trigger_on_deretracted = None
         self.feature_trigger_on_wipe = None
         # Feature Detection
         self.feature_restrictions_enabled = False
-        self.feature_trigger_on_detract = False
+        self.feature_trigger_on_deretract = False
         self.feature_trigger_on_retract = False
         self.feature_trigger_on_movement = False
         self.feature_trigger_on_z_movement = False
@@ -1177,7 +1179,7 @@ class OctolapseGcodeSettings(Settings):
     def __init__(self):
         self.retraction_length = 2.0
         self.retraction_speed = 6000
-        self.detraction_speed = 3000
+        self.deretraction_speed = 3000
         self.x_y_travel_speed = 6000
         self.first_layer_travel_speed = 6000
         self.z_lift_height = .5
@@ -1266,7 +1268,7 @@ class CuraSettings(SlicerSettings):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_amount()
         settings.retraction_speed = self.get_retraction_retract_speed()
-        settings.detraction_speed = self.get_retraction_prime_speed()
+        settings.deretraction_speed = self.get_retraction_prime_speed()
         settings.x_y_travel_speed = self.get_speed_travel()
         settings.first_layer_travel_speed = self.get_slow_layer_speed_travel()
         settings.z_lift_height = self.get_retraction_hop()
@@ -1364,7 +1366,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_retraction_prime_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_detract,
+                snapshot_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance(),
                 0
@@ -1500,7 +1502,7 @@ class Simplify3dSettings(SlicerSettings):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_distance()
         settings.retraction_speed = self.get_retract_speed()
-        settings.detraction_speed = self.get_detract_speed()
+        settings.deretraction_speed = self.get_deretract_speed()
         settings.x_y_travel_speed = self.get_x_y_axis_movement_speed()
         settings.first_layer_travel_speed = self.get_x_y_axis_movement_speed()
         settings.z_lift_height = self.get_retraction_vertical_lift()
@@ -1534,7 +1536,7 @@ class Simplify3dSettings(SlicerSettings):
     def get_retract_speed(self):
         return self.get_speed_mm_min(self.retraction_speed)
 
-    def get_detract_speed(self):
+    def get_deretract_speed(self):
         return self.get_retract_speed()
 
     def get_above_raft_speed(self):
@@ -1737,7 +1739,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_first_prime_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_detract and snapshot_profile.feature_trigger_on_first_layer,
+                snapshot_profile.feature_trigger_on_deretract and snapshot_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
            )
         ]
@@ -1841,7 +1843,7 @@ class Slic3rPeSettings(SlicerSettings):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
         settings.retraction_speed = self.get_retract_speed()
-        settings.detraction_speed = self.get_deretract_speed()
+        settings.deretraction_speed = self.get_deretract_speed()
         settings.x_y_travel_speed = self.get_travel_speed()
         settings.first_layer_travel_speed = self.get_travel_speed()
         settings.z_lift_height = self.get_retract_lift()
@@ -2067,7 +2069,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_deretract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_detract,
+                snapshot_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2252,7 +2254,7 @@ class OtherSlicerSettings(SlicerSettings):
         self.travel_speed = None
         self.first_layer_travel_speed = None
         self.retract_speed = None
-        self.detract_speed = None
+        self.deretract_speed = None
         self.print_speed = None
         self.first_layer_print_speed = None
         self.z_travel_speed = None
@@ -2286,7 +2288,7 @@ class OtherSlicerSettings(SlicerSettings):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
         settings.retraction_speed = self.get_retract_speed()
-        settings.detraction_speed = self.get_detract_speed()
+        settings.deretraction_speed = self.get_deretract_speed()
         settings.x_y_travel_speed = self.get_travel_speed()
         settings.first_layer_travel_speed = self.get_first_layer_travel_speed()
         settings.z_lift_height = self.get_z_hop()
@@ -2326,8 +2328,8 @@ class OtherSlicerSettings(SlicerSettings):
     def get_retract_speed(self):
         return self.get_speed_mm_min(self.retract_speed)
 
-    def get_detract_speed(self):
-        return self.get_speed_mm_min(self.detract_speed)
+    def get_deretract_speed(self):
+        return self.get_speed_mm_min(self.deretract_speed)
 
     def get_perimeter_speed(self):
         return self.get_speed_mm_min(self.perimeter_speed)
@@ -2414,9 +2416,9 @@ class OtherSlicerSettings(SlicerSettings):
                 self.calculate_speed,
                 "Detraction",
                 None,
-                self.get_detract_speed(),
+                self.get_deretract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_detract,
+                snapshot_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance()
             ),

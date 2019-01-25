@@ -59,7 +59,7 @@ $(function() {
         var self = this;
         self.retraction_length = ko.observable(values.retraction_length);
         self.retraction_speed = ko.observable(values.retraction_speed);
-        self.detraction_speed = ko.observable(values.detraction_speed);
+        self.deretraction_speed = ko.observable(values.deretraction_speed);
         self.x_y_travel_speed = ko.observable(values.x_y_travel_speed);
         self.first_layer_travel_speed = ko.observable(values.first_layer_travel_speed);
         self.z_lift_height = ko.observable(values.z_lift_height);
@@ -75,7 +75,7 @@ $(function() {
 
     Octolapse.Slicers = function(values)
     {
-        console.log("Creating Slicers");
+        //console.log("Creating Slicers");
         var self = this;
         self.automatic = new Octolapse.AutomaticSlicerViewModel(values.automatic);
         self.cura = new Octolapse.CuraViewmodel(values.cura);
@@ -130,7 +130,7 @@ $(function() {
         self.printFeaturesList = ko.observable([]);
 
         self.getPrinterFeatures = function () {
-            console.log("getting feature list");
+            //console.log("getting feature list");
 
             var data = null;
             switch(self.slicer_type())
@@ -163,8 +163,8 @@ $(function() {
                     ),
                     dataType: "json",
                     success: function (result) {
-                        console.log("print features received");
-                        console.log(result);
+                        //console.log("print features received");
+                        //console.log(result);
                         self.nonUniqueSpeedList(result['non-unique-speeds']);
                         self.missingSpeedsList(result['missing-speeds']);
                         self.printFeaturesList(result['all-features']);
@@ -179,7 +179,7 @@ $(function() {
 
         self.subscribeToFeatureChanges = function(observables)
         {
-            console.log("subscribing slicer settings to getPrinterFeatures");
+            //console.log("subscribing slicer settings to getPrinterFeatures");
             for (var i = 0; i < observables.length; i++) {
 
                 observables[i].subscribe(self.getPrinterFeatures);

@@ -307,12 +307,8 @@ $(function () {
                         var previousImageDelayClass = "effect-delay-" + previousImageIndex;
                         //console.log("Updating classes for the previous image delay " + previousImageDelayClass+ ".");
                         $element.addClass(previousImageDelayClass);
-
-
                     }
-
                 }
-
 
                 // create the newest image
                 var $newSnapshot = $(document.createElement('img'));

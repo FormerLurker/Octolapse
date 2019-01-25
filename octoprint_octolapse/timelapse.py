@@ -42,7 +42,7 @@ class Timelapse(object):
     def __init__(
             self, settings, octoprint_printer, data_folder, timelapse_folder,
             on_print_started=None, on_print_start_failed=None,
-            on_snapshot_start=None, on_snapshot_end=None,
+            on_snapshot_start=None, on_snapshot_end=None, on_new_thumbnail_available=None,
             on_render_start=None, on_render_success=None, on_render_error=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
             on_state_changed=None, on_timelapse_start=None, on_timelapse_end=None,
@@ -59,6 +59,7 @@ class Timelapse(object):
         self.OnRenderErrorCallback = on_render_error
         self.OnSnapshotStartCallback = on_snapshot_start
         self.OnSnapshotCompleteCallback = on_snapshot_end
+        self.OnNewThumbnailsAvailableCallback = on_new_thumbnail_available
         self.TimelapseStoppingCallback = on_timelapse_stopping
         self.TimelapseStoppedCallback = on_timelapse_stopped
         self.OnStateChangedCallback = on_state_changed
@@ -161,7 +162,12 @@ class Timelapse(object):
             self.Settings, octoprint_printer_profile)
 
         self.CaptureSnapshot = CaptureSnapshot(
-            self.Settings, self.DataFolder, self.Settings.profiles.active_cameras(), self.CurrentJobInfo, self.send_gcode_for_camera
+            self.Settings,
+            self.DataFolder,
+            self.Settings.profiles.active_cameras(),
+            self.CurrentJobInfo,
+            self.send_gcode_for_camera,
+            self.OnNewThumbnailsAvailableCallback
         )
         self.Position = Position(
             self.Settings, octoprint_printer_profile, g90_influences_extruder)
@@ -205,6 +211,7 @@ class Timelapse(object):
         self.get_position_async(
             start_gcode=gcode_array, timeout=timeout
         )
+
     # requests a position from the printer (m400-m114), and can send optional gcode before the position request.
     # this ensures any gcode sent in the start_gcode parameter will be executed before the function returns.
     def get_position_async(self, start_gcode=None, timeout=None):
@@ -915,11 +922,8 @@ class Timelapse(object):
 
         return line
 
-
-
     # internal functions
     ####################
-
     def _send_state_changed_message(self):
         """Notifies any callbacks about any changes contained in the dictionaries.
         If you send a dict here the client will get a message, so check the

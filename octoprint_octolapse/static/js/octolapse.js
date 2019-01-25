@@ -319,7 +319,7 @@ $(function () {
         }, 'Please enter an integer value.');
 
     Octolapse.isPercent = function(value){
-        console.log("is percent - Octolapse")
+        //console.log("is percent - Octolapse")
         if(typeof value != 'string')
             return false;
         if (!value)
@@ -755,7 +755,7 @@ $(function () {
                 Octolapse.Settings.loadSettings();
             }
             //else
-            //    console.log("octolapse.js - User Logged In before startup - waiting to load settings.  User: " + user.name);
+                //console.log("octolapse.js - User Logged In before startup - waiting to load settings.  User: " + user.name);
         };
 
         self.onUserLoggedOut = function () {
@@ -885,6 +885,8 @@ $(function () {
             if (plugin !== "octolapse") {
                 return;
             }
+            //console.log("Message received.  Data:");
+            //console.log(data);
             switch (data.type) {
                 case "settings-changed":
                     {
@@ -904,7 +906,7 @@ $(function () {
                     }
                     break;
                 case "slicer_settings_detected":
-                    console.log("slicer_settings_detected")
+                    //console.log("slicer_settings_detected")
                     if(data.saved) {
                         if (self.is_admin())
                             Octolapse.Settings.loadSettings();
@@ -1049,16 +1051,18 @@ $(function () {
                             };
                             Octolapse.displayPopupForKey(options, "stabilization_error")
                         }
-
+                    }
+                    break;
+                case "new-thumbnail-available":
+                    if (data.guid == $("#octolapse_current_snapshot_camera").val()) {
+                        //console.log("New thumbnails available");
                         if (!Octolapse.HasTakenFirstSnapshot) {
                             Octolapse.HasTakenFirstSnapshot = true;
-                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
+                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container', true);
                             Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container', true);
                             Octolapse.Status.updateLatestSnapshotThumbnail(true);
                             Octolapse.Status.updateLatestSnapshotImage();
-                        }
-                        else
-                        {
+                        } else {
                             Octolapse.Status.updateLatestSnapshotThumbnail();
                             Octolapse.Status.updateLatestSnapshotImage();
                         }

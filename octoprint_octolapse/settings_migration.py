@@ -74,12 +74,26 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
 
     # add all profiles
     for printer in settings_dict['printers']:
+        printer["deretract_speed"] = printer["detract_speed"]
+        del printer["detract_speed"]
         profiles['printers'][printer['guid']] = printer
 
     for stabilization in settings_dict['stabilizations']:
         profiles['stabilizations'][stabilization['guid']] = stabilization
 
     for snapshot in settings_dict['snapshots']:
+        snapshot["trigger_on_deretracting"] = snapshot["trigger_on_detracting"]
+        del printer["trigger_on_detracting"]
+
+        snapshot["trigger_on_deretracting_start"] = snapshot["trigger_on_detracting_start"]
+        del printer["trigger_on_detracting_start"]
+
+        snapshot["feature_trigger_on_deretract"] = snapshot["feature_trigger_on_detract"]
+        del printer["feature_trigger_on_detract"]
+
+        snapshot["trigger_on_deretracted"] = snapshot["trigger_on_detracted"]
+        del printer["trigger_on_detracted"]
+
         profiles['snapshots'][snapshot['guid']] = snapshot
 
     for rendering in settings_dict['renderings']:

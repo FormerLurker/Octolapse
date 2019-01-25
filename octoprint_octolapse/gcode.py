@@ -104,7 +104,7 @@ class SnapshotGcodeGenerator(object):
         assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
         self.z_lift_height = self.gcode_generation_settings.z_lift_height
         self.RetractSpeed = self.gcode_generation_settings.retraction_speed
-        self.DetractSpeed = self.gcode_generation_settings.detraction_speed
+        self.DetractSpeed = self.gcode_generation_settings.deretraction_speed
         self.TravelSpeed = self.gcode_generation_settings.x_y_travel_speed
         self.ZHopSpeed = self.gcode_generation_settings.z_lift_speed
 
@@ -551,7 +551,7 @@ class SnapshotGcodeGenerator(object):
                 self.get_gocde_z_lower_relative(self.ZLift, new_f)
             )
 
-        # detract
+        # deretract
         if self.RetractedBySnapshotStartGcode:
             if not self.IsExtruderRelativeCurrent:
                 new_snapshot_gcode.append(
@@ -569,7 +569,7 @@ class SnapshotGcodeGenerator(object):
             if self.RetractedLength > 0:
                 new_snapshot_gcode.append(
                     SnapshotGcode.END_GCODE,
-                    self.get_gcode_detract(self.RetractedLength, new_f)
+                    self.get_gcode_deretract(self.RetractedLength, new_f)
                 )
 
         # reset the coordinate systems for the extruder and axis
@@ -680,7 +680,7 @@ class SnapshotGcodeGenerator(object):
         )
 
     @staticmethod
-    def get_gcode_detract(distance, f=None):
+    def get_gcode_deretract(distance, f=None):
         return "G1 E{0:.5f}{1}".format(
             distance,
             "" if f is None else " F{0:.3f}".format(f)

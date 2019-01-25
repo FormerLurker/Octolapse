@@ -34,7 +34,7 @@ import sys
 from requests.auth import HTTPBasicAuth
 from threading import Thread
 import octoprint_octolapse.camera as camera
-from octoprint_octolapse.settings import CameraProfile
+from octoprint_octolapse.settings import CameraProfile, OctolapseSettings
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from tempfile import mkdtemp
@@ -75,7 +75,8 @@ def take_in_memory_snapshot(settings, current_camera):
 
 class CaptureSnapshot(object):
 
-    def __init__(self, settings, data_directory, cameras, timelapse_job_info, send_gcode_array_callback=None):
+    def __init__(self, settings, data_directory, cameras, timelapse_job_info, send_gcode_array_callback
+                 , on_new_thumbnail_available_callback):
         self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
@@ -91,6 +92,7 @@ class CaptureSnapshot(object):
         self.SnapshotsTotal = 0
         self.ErrorsTotal = 0
         self.SendGcodeArrayCallback = send_gcode_array_callback
+        self.OnNewThumbnailAvailableCallback = on_new_thumbnail_available_callback
 
     def take_snapshots(self):
         before_snapshot_threads = []
@@ -114,9 +116,22 @@ class CaptureSnapshot(object):
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
             )
             if current_camera.camera_type == "external-script":
-                snapshot_threads.append(ExternalScriptSnapshotJob(snapshot_job_info, self.Settings, 'snapshot'))
+                snapshot_threads.append(
+                    ExternalScriptSnapshotJob(
+                        snapshot_job_info,
+                        self.Settings,
+                        'snapshot',
+                        on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
+                    )
+                )
             elif current_camera.camera_type == "webcam":
-                snapshot_threads.append(WebcamSnapshotJob(snapshot_job_info, self.Settings))
+                snapshot_threads.append(
+                    WebcamSnapshotJob(
+                        snapshot_job_info,
+                        self.Settings,
+                        on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
+                    )
+                )
 
             after_snapshot_job_info = SnapshotJobInfo(
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
@@ -141,7 +156,7 @@ class CaptureSnapshot(object):
                 self.ErrorsTotal += 1
             results.append(result)
 
-        # start the snapshot threads
+        # start the snapshot threads, then wait for all threads to signal before continuing
         for t in snapshot_threads:
             t.start()
 
@@ -241,15 +256,25 @@ class CaptureSnapshot(object):
             )
 
 
-class SnapshotThread(Thread):
-    def __init__(self, snapshot_job_info, settings):
-        super(SnapshotThread, self).__init__()
+class ImagePostProcessingThread(Thread):
+    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None):
+        super(ImagePostProcessingThread, self).__init__()
         self.snapshot_job_info = snapshot_job_info
-        self.Settings = settings
+        self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
 
-    def join(self, timeout=None):
-        super(SnapshotThread, self).join(timeout=timeout)
-        return self.snapshot_job_info
+    def run(self):
+        try:
+            OctolapseSettings.Logger.log_snapshot_download("Post-processing snapshot")
+            # Post Processing and Meta Data Creation
+            self.write_metadata()
+            self.transpose_image()
+            self.create_thumbnail()
+            if self.on_new_thumbnail_available_callback is not None:
+                self.on_new_thumbnail_available_callback(self.snapshot_job_info.camera.guid)
+        except SnapshotError as e:
+            OctolapseSettings.Logger.log_exception(e)
+        finally:
+            OctolapseSettings.Logger.log_snapshot_download("Post-processing completed")
 
     def write_metadata(self):
         try:
@@ -317,10 +342,20 @@ class SnapshotThread(Thread):
             img = Image.open(latest_snapshot_path)
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))
-            img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-            img.save(utility.get_latest_snapshot_thumbnail_download_path(
-                self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid), "JPEG"
+            img.thumbnail([basewidth, hsize], Image.ANTIALIAS)
+            img.save(
+                utility.get_latest_snapshot_thumbnail_download_path(
+                    self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
+                ),
+                "JPEG"
             )
+
+
+
+            #img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+            #img.save(utility.get_latest_snapshot_thumbnail_download_path(
+            #    self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid), "JPEG"
+            #)
         except Exception as e:
             # If we can't create the thumbnail, just log
             raise SnapshotError(
@@ -329,6 +364,18 @@ class SnapshotThread(Thread):
                 "Check the log file (plugin_octolapse.log) for details.",
                 cause=e
             )
+
+
+class SnapshotThread(Thread):
+    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None):
+        super(SnapshotThread, self).__init__()
+        self.snapshot_job_info = snapshot_job_info
+        self.Settings = settings
+        self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
+
+    def join(self, timeout=None):
+        super(SnapshotThread, self).join(timeout=timeout)
+        return self.snapshot_job_info
 
     def apply_camera_delay(self):
         # Some users had issues just using sleep.In one examined instance the time.sleep
@@ -349,10 +396,21 @@ class SnapshotThread(Thread):
             sleep(delay_seconds)  # sleep the calculated amount
             delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
+    def post_process(self):
+        # make sure the snapshot exists before attempting post-processing
+        # since it's possible the image isn't on the pi.
+        # for example it could be on a DSLR's SD memory
+        if os.path.isfile(self.snapshot_job_info.full_path):
+            ImagePostProcessingThread(self.snapshot_job_info, self.on_new_thumbnail_available_callback).start()
+
 
 class ExternalScriptSnapshotJob(SnapshotThread):
-    def __init__(self, snapshot_job_info, settings, script_type):
-        super(ExternalScriptSnapshotJob, self).__init__(snapshot_job_info, settings)
+    def __init__(self, snapshot_job_info, settings, script_type, on_new_thumbnail_available_callback=None):
+        super(ExternalScriptSnapshotJob, self).__init__(
+            snapshot_job_info,
+            settings,
+            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
+        )
         assert (isinstance(snapshot_job_info, SnapshotJobInfo))
         if script_type == 'before-snapshot':
             self.ScriptPath = snapshot_job_info.camera.on_before_snapshot_script
@@ -378,11 +436,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
             if self.script_type == 'snapshot':
                 # Make sure the expected snapshot exists before we start working with the snapshot file.
-                if os.path.isfile(self.snapshot_job_info.full_path):
-                    # Post Processing and Meta Data Creation
-                    self.write_metadata()
-                    self.transpose_image()
-                    self.create_thumbnail()
+                self.post_process()
 
             self.snapshot_job_info.success = True
 
@@ -450,8 +504,12 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
 class WebcamSnapshotJob(SnapshotThread):
 
-    def __init__(self, snapshot_job_info, settings):
-        super(WebcamSnapshotJob, self).__init__(snapshot_job_info, settings)
+    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None):
+        super(WebcamSnapshotJob, self).__init__(
+            snapshot_job_info,
+            settings,
+            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
+        )
         self.Address = self.snapshot_job_info.camera.address
         self.Username = self.snapshot_job_info.camera.username
         self.Password = self.snapshot_job_info.camera.password
@@ -529,10 +587,8 @@ class WebcamSnapshotJob(SnapshotThread):
                     "An unexpected exception occurred.",
                     cause=e
                 )
-            # Post Processing and Meta Data Creation
-            self.write_metadata()
-            self.transpose_image()
-            self.create_thumbnail()
+            # start post processing
+            self.post_process()
             self.snapshot_job_info.success = True
         except SnapshotError as e:
             self.Settings.Logger.log_exception(e)
