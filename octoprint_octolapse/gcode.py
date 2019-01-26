@@ -29,6 +29,7 @@ from octoprint_octolapse.trigger import Triggers
 
 class SnapshotGcode(object):
     CommandsDictionary = Commands()
+    INITIALIZATION_GCODE = 'initialization-gcode'
     START_GCODE = 'start-gcode'
     SNAPSHOT_COMMANDS = 'snapshot-commands'
     RETURN_COMMANDS = 'return-commands'
@@ -36,6 +37,7 @@ class SnapshotGcode(object):
 
     def __init__(self):
 
+        self.InitializationGcode = []  # commands executed here are not involved in timing calculations
         self.StartGcode = []
         self.SnapshotCommands = []
         self.ReturnCommands = []
@@ -49,10 +51,12 @@ class SnapshotGcode(object):
         self.SnapshotIndex = -1
 
     def snapshot_gcode(self):
-        return self.StartGcode + self.SnapshotCommands + self.ReturnCommands + self.EndGcode
+        return self.InitializationGcode + self.StartGcode + self.SnapshotCommands + self.ReturnCommands + self.EndGcode
 
     def append(self, command_type, command):
-        if command_type == self.START_GCODE:
+        if command_type == self.INITIALIZATION_GCODE:
+            self.InitializationGcode.append(command)
+        elif command_type == self.START_GCODE:
             self.StartGcode.append(command)
         elif command_type == self.SNAPSHOT_COMMANDS:
             self.SnapshotCommands.append(command)
@@ -62,10 +66,10 @@ class SnapshotGcode(object):
             self.EndGcode.append(command)
 
     def end_index(self):
-        return len(self.StartGcode) + len(self.SnapshotCommands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
+        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.SnapshotCommands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
 
     def snapshot_index(self):
-        return len(self.StartGcode) + len(self.SnapshotCommands) - 1
+        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.SnapshotCommands) - 1
 
 
 class SnapshotGcodeGenerator(object):
@@ -393,7 +397,7 @@ class SnapshotGcodeGenerator(object):
                 gcode2 = self.get_g_command(parsed_command.cmd, _x2, _y2, _z, _e2, _f)
 
                 # append both commands
-                new_snapshot_gcode.append(SnapshotGcode.START_GCODE, gcode1)
+                new_snapshot_gcode.append(SnapshotGcode.INITIALIZATION_GCODE, gcode1)
 
                 final_command = gcode2
                 # set the return x and return y to the intersection point

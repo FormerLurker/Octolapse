@@ -323,6 +323,12 @@ class Timelapse(object):
 
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
+            # If we have any initialization gcodes, send them before waiting for moves to finish (in case we are tracking itme)
+            if len(snapshot_gcode.InitializationGcode) > 0:
+                self.Settings.Logger.log_snapshot_gcode(
+                    "Sending initialization gcode.")
+                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode)
+
             if show_real_snapshot_time:
                 # wait for commands to finish before recording start time - this will give us a very accurate
                 # snapshot time, but requires an m400 + m114
