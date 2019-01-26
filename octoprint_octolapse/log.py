@@ -69,7 +69,6 @@ class Logger(object):
     def _is_enabled(self):
         if self.get_debug_function is None:
             return True
-        
         return self.get_debug_function()().enabled
     
     def _log_to_console(self):
@@ -103,133 +102,133 @@ class Logger(object):
         self.log_console('error', message)
 
     def log_position_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().position_change:
+        if self._has_debug_profile() and self.get_debug_function()().position_change:
             self.log_info(message)
 
     def log_position_command_received(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().position_command_received:
+        if self._has_debug_profile() and self.get_debug_function()().position_command_received:
             self.log_info(message)
 
     def log_extruder_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().extruder_change:
+        if self._has_debug_profile() and self.get_debug_function()().extruder_change:
             self.log_info(message)
 
     def log_extruder_triggered(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().extruder_triggered:
+        if self._has_debug_profile() and self.get_debug_function()().extruder_triggered:
             self.log_info(message)
 
     def log_trigger_create(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_create:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_create:
             self.log_info(message)
 
     def log_trigger_wait_state(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_wait_state:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_wait_state:
             self.log_info(message)
 
     def log_triggering(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_triggering:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_triggering:
             self.log_info(message)
 
     def log_triggering_state(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_triggering_state:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_triggering_state:
             self.log_info(message)
 
     def log_trigger_height_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_height_change:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_height_change:
             self.log_info(message)
 
     def log_position_layer_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().position_change:
+        if self._has_debug_profile() and self.get_debug_function()().position_change:
             self.log_info(message)
 
     def log_position_height_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().position_change:
+        if self._has_debug_profile() and self.get_debug_function()().position_change:
             self.log_info(message)
 
     def log_position_zhop(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_zhop:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_zhop:
             self.log_info(message)
 
     def log_timer_trigger_unpaused(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_time_unpaused:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_time_unpaused:
             self.log_info(message)
 
     def log_trigger_time_remaining(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().trigger_time_remaining:
+        if self._has_debug_profile() and self.get_debug_function()().trigger_time_remaining:
             self.log_info(message)
 
     def log_snapshot_gcode(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_gcode:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_gcode:
             self.log_info(message)
 
     def log_snapshot_gcode_end_command(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_gcode_endcommand:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_gcode_endcommand:
             self.log_info(message)
 
     def log_snapshot_position(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_position:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_position:
             self.log_info(message)
 
     def log_snapshot_return_position(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_position_return:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_position_return:
             self.log_info(message)
 
     def log_snapshot_resume_position(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_position_resume_print:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_position_resume_print:
             self.log_info(message)
 
     def log_snapshot_save(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_save:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_save:
             self.log_info(message)
 
     def log_snapshot_download(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_download:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_download:
             self.log_info(message)
 
     def log_render_start(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().render_start:
+        if self._has_debug_profile() and self.get_debug_function()().render_start:
             self.log_info(message)
 
     def log_render_complete(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().render_complete:
+        if self._has_debug_profile() and self.get_debug_function()().render_complete:
             self.log_info(message)
 
     def log_render_fail(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().render_fail:
+        if self._has_debug_profile() and self.get_debug_function()().render_fail:
             self.log_info(message)
 
     def log_render_sync(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().render_sync:
+        if self._has_debug_profile() and self.get_debug_function()().render_sync:
             self.log_info(message)
 
     def log_snapshot_clean(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().snapshot_clean:
+        if self._has_debug_profile() and self.get_debug_function()().snapshot_clean:
             self.log_info(message)
 
     def log_settings_save(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().settings_save:
+        if self._has_debug_profile() and self.get_debug_function()().settings_save:
             self.log_info(message)
 
     def log_settings_load(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().settings_load:
+        if self._has_debug_profile() and self.get_debug_function()().settings_load:
             self.log_info(message)
 
     def log_print_state_change(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().print_state_changed:
+        if self._has_debug_profile() and self.get_debug_function()().print_state_changed:
             self.log_info(message)
 
     def log_camera_settings_apply(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().camera_settings_apply:
+        if self._has_debug_profile() and self.get_debug_function()().camera_settings_apply:
             self.log_info(message)
 
     def log_gcode_sent(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().gcode_sent_all:
+        if self._has_debug_profile() and self.get_debug_function()().gcode_sent_all:
             self.log_info(message)
 
     def log_gcode_queuing(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().gcode_queuing_all:
+        if self._has_debug_profile() and self.get_debug_function()().gcode_queuing_all:
             self.log_info(message)
 
     def log_gcode_received(self, message):
-        if self._has_debug_profile() or self.get_debug_function()().gcode_received_all:
+        if self._has_debug_profile() and self.get_debug_function()().gcode_received_all:
             self.log_info(message)

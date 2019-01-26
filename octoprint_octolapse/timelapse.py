@@ -323,7 +323,6 @@ class Timelapse(object):
 
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
-
             if show_real_snapshot_time:
                 # wait for commands to finish before recording start time - this will give us a very accurate
                 # snapshot time, but requires an m400 + m114
@@ -342,6 +341,7 @@ class Timelapse(object):
             # Combine the start gcode with the snapshot commands
             gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.SnapshotCommands
 
+            snapshot_position = None
             # If we have any Start/Snapshot commands to send, do it!
             if len(gcodes_to_send) > 0:
                 self.Settings.Logger.log_snapshot_gcode(
@@ -371,19 +371,17 @@ class Timelapse(object):
             if not show_real_snapshot_time:
                 # return the printhead to the start position
                 gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
-                if len (gcode_to_send) > 0:
+                if len(gcode_to_send) > 0:
                     if self.State == TimelapseState.TakingSnapshot:
                         self.Settings.Logger.log_snapshot_gcode(
                             "Sending snapshot return and end gcode.")
                         self.send_snapshot_gcode_array(gcode_to_send)
             else:
-
                 if len(snapshot_gcode.ReturnCommands) > 0:
                     self.Settings.Logger.log_snapshot_gcode("Sending return gcode.")
                     return_position = self.get_position_async(
                         start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
                     )
-
                     timelapse_snapshot_payload["return_position"] = return_position
                     if return_position is None:
                         self.Settings.Logger.log_error(
@@ -395,16 +393,15 @@ class Timelapse(object):
                 # calculate the total snapshot time
                 snapshot_end_time = time.time()
                 snapshot_time = snapshot_end_time - snapshot_start_time
-                self.Settings.Logger.log_snapshot_gcode("Stabilization and snapshot process compleated in {0} seconds".format(snapshot_time))
+                self.Settings.Logger.log_snapshot_gcode("Stabilization and snapshot process complected in {0} seconds".format(snapshot_time))
                 self.SecondsAddedByOctolapse += snapshot_time
                 timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
                 timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
 
                 if len(snapshot_gcode.EndGcode) > 0:
                     if self.State == TimelapseState.TakingSnapshot:
-                        if self.State == TimelapseState.TakingSnapshot:
-                            self.Settings.Logger.log_snapshot_gcode("Sending end gcode.")
-                            self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
+                        self.Settings.Logger.log_snapshot_gcode("Sending end gcode.")
+                        self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
 
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = not has_error
@@ -868,7 +865,7 @@ class Timelapse(object):
     def acquire_snapshot(self, parsed_command, trigger):
         try:
             self.Settings.Logger.log_snapshot_download(
-                "About to take a snapshot.  Triggering Command: {0}".format(parsed_command.cmd))
+                "About to take a snapshot.  Triggering Command: {0}".format(parsed_command.gcode))
             if self.OnSnapshotStartCallback is not None:
                 snapshot_callback_thread = threading.Thread(target=self.OnSnapshotStartCallback)
                 snapshot_callback_thread.daemon = True

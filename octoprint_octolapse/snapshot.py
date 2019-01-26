@@ -44,6 +44,7 @@ from uuid import uuid4
 from time import time
 from PIL import Image
 
+
 class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
     METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken']

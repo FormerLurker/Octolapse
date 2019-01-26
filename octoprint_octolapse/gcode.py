@@ -246,7 +246,9 @@ class SnapshotGcodeGenerator(object):
 
         assert (isinstance(current_position, Pos))
         x_return = current_position.X
+        x_current = x_return
         y_return = current_position.Y
+        y_current = y_return
         z_return = current_position.Z
         f_return = current_position.F
         # e_return = position.e()
@@ -309,7 +311,6 @@ class SnapshotGcodeGenerator(object):
 
         # Flag to indicate that we should make sure the final feedrate = self.FOriginal
         # by default we want to change the feedrate if FCurrent != FOriginal
-        reset_feedrate_before_end_gcode = True
         if trigger is None:
             triggered_type = Triggers.TRIGGER_TYPE_DEFAULT
         else:
@@ -386,6 +387,8 @@ class SnapshotGcodeGenerator(object):
                     _f = float(_f)
 
                 gcode1 = self.get_g_command(parsed_command.cmd, _x1, _y1, _z, _e1, _f)
+                x_current = _x1
+                y_current = _y1
                 # create the second command
                 gcode2 = self.get_g_command(parsed_command.cmd, _x2, _y2, _z, _e2, _f)
 
@@ -471,27 +474,33 @@ class SnapshotGcodeGenerator(object):
         if new_snapshot_gcode.X is None or new_snapshot_gcode.Y is None:
             # either x or y is out of bounds.
             return None
+        # make sure we aren't in the proper position already!
+        if (
+            new_snapshot_gcode.X != x_current or
+            new_snapshot_gcode.Y != y_current
+        ):
+            # Move back to the snapshot position - make sure we're in absolute mode for this
+            if self.IsRelativeCurrent:  # must be in absolute mode
+                new_snapshot_gcode.append(
+                    SnapshotGcode.SNAPSHOT_COMMANDS,
+                    self.get_gcode_axes_absolute()
+                )
+                self.IsRelativeCurrent = False
 
-        # Move back to the snapshot position - make sure we're in absolute mode for this
-        if self.IsRelativeCurrent:  # must be in absolute mode
+            # detect speed change
+            if self.FCurrent != self.TravelSpeed:
+                new_f = self.TravelSpeed
+                self.FCurrent = new_f
+            else:
+                new_f = None
+
+            # Move to Snapshot Position
             new_snapshot_gcode.append(
                 SnapshotGcode.SNAPSHOT_COMMANDS,
-                self.get_gcode_axes_absolute()
+                self.get_gcode_travel(new_snapshot_gcode.X, new_snapshot_gcode.Y, new_f)
             )
-            self.IsRelativeCurrent = False
-
-        # detect speed change
-        if self.FCurrent != self.TravelSpeed:
-            new_f = self.TravelSpeed
-            self.FCurrent = new_f
-        else:
-            new_f = None
-
-        # Move to Snapshot Position
-        new_snapshot_gcode.append(
-            SnapshotGcode.SNAPSHOT_COMMANDS,
-            self.get_gcode_travel(new_snapshot_gcode.X, new_snapshot_gcode.Y, new_f)
-        )
+            x_current = new_snapshot_gcode.X
+            y_current = new_snapshot_gcode.Y
         # End Snapshot Gcode
 
         # Start Return Gcode
@@ -502,14 +511,31 @@ class SnapshotGcodeGenerator(object):
             new_snapshot_gcode.ReturnX = x_return
             new_snapshot_gcode.ReturnY = y_return
             new_snapshot_gcode.ReturnZ = z_return
+            if(
+                x_return is not None and y_return is not None
+                and (x_return != x_current or y_return != y_current)
+            ):
+                # Move back to previous position - make sure we're in absolute mode for this
+                if self.IsRelativeCurrent:  # must be in absolute mode
+                    new_snapshot_gcode.append(
+                        SnapshotGcode.RETURN_COMMANDS,
+                        self.get_gcode_axes_absolute()
+                    )
+                    self.IsRelativeCurrent = False
 
-            # Move back to previous position - make sure we're in absolute mode for this (hint: we already are right now)
-            # also, our current speed will be correct, no need to append F
-            if x_return is not None and y_return is not None:
+                # detect speed change
+                if self.FCurrent != self.TravelSpeed:
+                    new_f = self.TravelSpeed
+                    self.FCurrent = new_f
+                else:
+                    new_f = None
+
                 new_snapshot_gcode.append(
                     SnapshotGcode.RETURN_COMMANDS,
-                    self.get_gcode_travel(x_return, y_return)
+                    self.get_gcode_travel(x_return, y_return, new_f)
                 )
+                x_current = x_return
+                y_current = y_return
         else:
             # record the final position
             new_snapshot_gcode.ReturnX = triggering_command_position.X
@@ -517,19 +543,43 @@ class SnapshotGcodeGenerator(object):
             # see about Z, we may need to suppress our
             new_snapshot_gcode.ReturnZ = triggering_command_position.Z
             self.Settings.Logger.log_snapshot_gcode(
-                "Skipping return position, traveling to the triggering command position: X={0}, y={0}".format(
+                "Skipping return position, traveling to the triggering command position: X={0}, y={1}".format(
                     triggering_command_position.X, triggering_command_position.Y
                 )
             )
-            new_snapshot_gcode.append(
-                SnapshotGcode.RETURN_COMMANDS,
-                self.get_gcode_travel(
-                    triggering_command_position.X, triggering_command_position.Y
+            if (
+                triggering_command_position.X is not None and triggering_command_position.Y is not None
+                and
+                (
+                    triggering_command_position.X != x_current
+                    or triggering_command_position.Y != y_current
                 )
-            )
+            ):
+                # Move back to previous position - make sure we're in absolute mode for this
+                if self.IsRelativeCurrent:  # must be in absolute mode
+                    new_snapshot_gcode.append(
+                        SnapshotGcode.END_GCODE,
+                        self.get_gcode_axes_absolute()
+                    )
+                    self.IsRelativeCurrent = False
+
+                # detect speed change
+                if self.FCurrent != self.TravelSpeed:
+                    new_f = self.TravelSpeed
+                    self.FCurrent = new_f
+                else:
+                    new_f = None
+
+                new_snapshot_gcode.append(
+                    SnapshotGcode.END_GCODE,
+                    self.get_gcode_travel(
+                        triggering_command_position.X, triggering_command_position.Y, new_f
+                    )
+                )
+                x_current = triggering_command_position.X
+                y_current = triggering_command_position.Y
 
 
-            # Return to the previous feedrate if it's changed
 
         # If we zhopped in the beginning, lower z
         if self.ZhopBySnapshotStartGcode:
@@ -596,16 +646,28 @@ class SnapshotGcodeGenerator(object):
                     SnapshotGcode.END_GCODE,
                     self.get_gcode_extruder_absolute())
 
-        # Make sure we return to the original feedrate
-        if reset_feedrate_before_end_gcode and self.FOriginal is not None and self.FOriginal != self.FCurrent:
-            # we can't count on the end gcode to set f, set it here
+        if self.ReturnWhenComplete:
+            # Make sure we return to the original feedrate
+            if self.FOriginal is not None and self.FOriginal != self.FCurrent:
+                # we can't count on the end gcode to set f, set it here
+                new_snapshot_gcode.append(
+                    SnapshotGcode.END_GCODE,
+                    self.get_gcode_feedrate(self.FOriginal))
+        else:
+            # Make sure we return to the feedrate of the triggering command
+            # this is because we already sent an appropriate travel, and the speeds may have been reset by
+            # retract/zhop
+            if "F" in parsed_command.parameters and parsed_command.parameters["F"] != self.FCurrent:
+                # we can't count on the end gcode to set f, set it here
+                new_snapshot_gcode.append(
+                    SnapshotGcode.END_GCODE,
+                    self.get_gcode_feedrate(parsed_command.parameters["F"]))
+
+        # don't append any travel only moves, we will have done this already
+        if self.ReturnWhenComplete:
             new_snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
-                self.get_gcode_feedrate(self.FOriginal))
-
-        new_snapshot_gcode.append(
-            SnapshotGcode.END_GCODE,
-            final_command)
+                final_command)
 
         self.Settings.Logger.log_snapshot_gcode(
             "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
