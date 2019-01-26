@@ -2,7 +2,11 @@ from distutils.version import LooseVersion
 import json
 import sys
 import os
-from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, SnapshotProfile, RenderingProfile, CameraProfile, DebugProfile
+from octoprint_octolapse.settings import \
+    OctolapseSettings, PrinterProfile, StabilizationProfile, SnapshotProfile,\
+    RenderingProfile, CameraProfile, DebugProfile, Slic3rPeSettings, Simplify3dSettings, CuraSettings, OtherSlicerSettings
+
+
 
 
 def migrate_settings(current_version, settings_dict, log_file_path, default_settings_directory):
@@ -74,8 +78,104 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
 
     # add all profiles
     for printer in settings_dict['printers']:
-        printer["deretract_speed"] = printer["detract_speed"]
-        del printer["detract_speed"]
+        speed_units = printer['axis_speed_display_units']
+
+        printer['slicers'] = {}
+
+        slicer_type = printer["slicer_type"]
+        # Migrate all slicer settings based on the current slicer type
+        if slicer_type == "cura":
+            # cura settings
+            speed_multiplier = 1 if speed_units == "mm-sec" else 1.0 / 60.0
+            cura = CuraSettings()
+            cura.retraction_amount = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
+            cura.retraction_retract_speed = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
+            cura.retraction_prime_speed = None if "detract_speed" not in printer or printer["detract_speed"] is None else float(printer["detract_speed"]) * speed_multiplier
+            cura.speed_print = None if "print_speed" not in printer or printer["print_speed"] is None else float(printer["print_speed"]) * speed_multiplier
+            cura.speed_infill = None if "infill_speed" not in printer or printer["infill_speed"] is None else float(printer["infill_speed"]) * speed_multiplier
+            cura.speed_wall_0 = None if "external_perimeter_speed" not in printer or printer["external_perimeter_speed"] is None else float(printer["external_perimeter_speed"]) * speed_multiplier
+            cura.speed_wall_x = None if "perimeter_speed" not in printer or printer["perimeter_speed"] is None else float(printer["perimeter_speed"]) * speed_multiplier
+            cura.speed_topbottom = None if "top_solid_infill_speed" not in printer or printer["top_solid_infill_speed"] is None else float(printer["top_solid_infill_speed"]) * speed_multiplier
+            cura.speed_travel = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
+            cura.speed_print_layer_0 = None if "first_layer_speed" not in printer or printer["first_layer_speed"] is None else float(printer["first_layer_speed"]) * speed_multiplier
+            cura.speed_travel_layer_0 = None if "first_layer_travel_speed" not in printer or printer["first_layer_travel_speed"] is None else float(printer["first_layer_travel_speed"]) * speed_multiplier
+            cura.skirt_brim_speed = None if "skirt_brim_speed" not in printer or printer["skirt_brim_speed"] is None else float(printer["skirt_brim_speed"]) * speed_multiplier
+            cura.max_feedrate_z_override = None if "maximum_z_speed" not in printer or printer["maximum_z_speed"] is None else float(printer["maximum_z_speed"]) * speed_multiplier
+            cura.speed_slowdown_layers = None if "num_slow_layers" not in printer or printer["num_slow_layers"] is None else int(printer["num_slow_layers"])
+            cura.retraction_hop = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
+            printer['slicers']['cura'] = cura
+        elif slicer_type == "other":
+            ## other slicer settings
+            speed_multiplier = 1 if speed_units == "mm-min" else 60.0
+            other = OtherSlicerSettings()
+            other.retract_length = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
+            other.z_hop = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
+            other.travel_speed = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
+            other.first_layer_travel_speed = None if "first_layer_travel_speed" not in printer or printer["first_layer_travel_speed"] is None else float(printer["first_layer_travel_speed"]) * speed_multiplier
+            other.retract_speed = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
+            other.deretract_speed = None if "detract_speed" not in printer or printer["detract_speed"] is None else float(printer["detract_speed"]) * speed_multiplier
+            other.print_speed = None if "print_speed" not in printer or printer["print_speed"] is None else float(printer["print_speed"]) * speed_multiplier
+            other.first_layer_print_speed = None if "first_layer_speed" not in printer or printer["first_layer_speed"] is None else float(printer["first_layer_speed"]) * speed_multiplier
+            other.z_travel_speed = None if "z_hop_speed" not in printer or printer["z_hop_speed"] is None else float(printer["z_hop_speed"]) * speed_multiplier
+            other.perimeter_speed = None if "perimeter_speed" not in printer or printer["perimeter_speed"] is None else float(printer["perimeter_speed"]) * speed_multiplier
+            other.small_perimeter_speed = None if "small_perimeter_speed" not in printer or printer["small_perimeter_speed"] is None else float(printer["small_perimeter_speed"]) * speed_multiplier
+            other.external_perimeter_speed = None if "external_perimeter_speed" not in printer or printer["external_perimeter_speed"] is None else float(printer["external_perimeter_speed"]) * speed_multiplier
+            other.infill_speed = None if "infill_speed" not in printer or printer["infill_speed"] is None else float(printer["infill_speed"]) * speed_multiplier
+            other.solid_infill_speed = None if "solid_infill_speed" not in printer or printer["solid_infill_speed"] is None else float(printer["solid_infill_speed"]) * speed_multiplier
+            other.top_solid_infill_speed = None if "top_solid_infill_speed" not in printer or printer["top_solid_infill_speed"] is None else float(printer["top_solid_infill_speed"]) * speed_multiplier
+            other.support_speed = None if "support_speed" not in printer or printer["support_speed"] is None else float(printer["support_speed"]) * speed_multiplier
+            other.bridge_speed = None if "bridge_speed" not in printer or printer["bridge_speed"] is None else float(printer["bridge_speed"]) * speed_multiplier
+            other.gap_fill_speed = None if "gap_fill_speed" not in printer or printer["gap_fill_speed"] is None else float(printer["gap_fill_speed"]) * speed_multiplier
+            other.skirt_brim_speed = None if "skirt_brim_speed" not in printer or printer["skirt_brim_speed"] is None else float(printer["skirt_brim_speed"]) * speed_multiplier
+            other.above_raft_speed = None if "above_raft_speed" not in printer or printer["above_raft_speed"] is None else float(printer["above_raft_speed"]) * speed_multiplier
+            other.ooze_shield_speed = None if "ooze_shield_speed" not in printer or printer["ooze_shield_speed"] is None else float(printer["ooze_shield_speed"]) * speed_multiplier
+            other.prime_pillar_speed = None if "prime_pillar_speed" not in printer or printer["prime_pillar_speed"] is None else float(printer["prime_pillar_speed"]) * speed_multiplier
+            other.num_slow_layers = None if "num_slow_layers" not in printer or printer["num_slow_layers"] is None else int(printer["num_slow_layers"])
+            other.speed_tolerance = 1*speed_multiplier  if "speed_tolerance" not in printer or printer["speed_tolerance"] is None else float(printer["speed_tolerance"]) * speed_multiplier
+            other.axis_speed_display_units = speed_units
+            printer['slicers']['other'] = other
+        elif slicer_type == "simplify-3d":
+            ## Simplify 3d settings
+            simlify3d = Simplify3dSettings()
+            speed_multiplier = 1 if speed_units == "mm-min" else 60.0
+            simlify3d.retraction_distance = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
+            simlify3d.retraction_vertical_lift = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
+            simlify3d.retraction_speed = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
+            simlify3d.first_layer_speed_multiplier = None if "first_layer_speed_multiplier" not in printer or printer["first_layer_speed_multiplier"] is None else float(printer["first_layer_speed_multiplier"])
+            simlify3d.above_raft_speed_multiplier = None if "above_raft_speed_multiplier" not in printer or printer["above_raft_speed_multiplier"] is None else float(printer["above_raft_speed_multiplier"])
+            simlify3d.prime_pillar_speed_multiplier = None if "prime_pillar_speed_multiplier" not in printer or printer["prime_pillar_speed_multiplier"] is None else float(printer["prime_pillar_speed_multiplier"])
+            simlify3d.ooze_shield_speed_multiplier = None if "ooze_shield_speed_multiplier" not in printer or printer["ooze_shield_speed_multiplier"] is None else float(printer["ooze_shield_speed_multiplier"])
+            simlify3d.default_printing_speed = None if "print_speed" not in printer or printer["print_speed"] is None else float(printer["print_speed"]) * speed_multiplier
+            simlify3d.outline_speed_multiplier = None if "outline_speed_multiplier" not in printer or printer["outline_speed_multiplier"] is None else float(printer["outline_speed_multiplier"])
+            simlify3d.solid_infill_speed_multiplier = None if "solid_infill_speed_multiplier" not in printer or printer["solid_infill_speed_multiplier"] is None else float(printer["solid_infill_speed_multiplier"])
+            simlify3d.support_structure_speed_multiplier = None if "support_structure_speed_multiplier" not in printer or printer["support_structure_speed_multiplier"] is None else float(printer["support_structure_speed_multiplier"])
+            simlify3d.x_y_axis_movement_speed = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
+            simlify3d.z_axis_movement_speed = None if "z_hop_speed" not in printer or printer["z_hop_speed"] is None else float(printer["z_hop_speed"]) * speed_multiplier
+            simlify3d.bridging_speed_multiplier = None if "bridging_speed_multiplier" not in printer or printer["bridging_speed_multiplier"] is None else float(printer["bridging_speed_multiplier"])
+            simlify3d.axis_speed_display_settings = 'mm-min'
+            printer['slicers']['simplify_3d'] = simlify3d
+        elif slicer_type == "slic3r-pe":
+            # slicer PE settings
+            slic3rpe = Slic3rPeSettings()
+            speed_multiplier = 1 if speed_units == "mm-sec" else 1.0 / 60.0
+            slic3rpe.retract_length = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
+            slic3rpe.retract_lift = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
+            slic3rpe.deretract_speed = None if "detract_speed" not in printer or printer["detract_speed"] is None else float(printer["detract_speed"]) * speed_multiplier
+            slic3rpe.retract_speed = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
+            slic3rpe.perimeter_speed = None if "perimeter_speed" not in printer or printer["perimeter_speed"] is None else float(printer["perimeter_speed"]) * speed_multiplier
+            slic3rpe.small_perimeter_speed = '' if "small_perimeter_speed_text" not in printer or printer["small_perimeter_speed_text"] is None else str(printer["small_perimeter_speed_text"])
+            slic3rpe.external_perimeter_speed = '' if "external_perimeter_speed_text" not in printer or printer["external_perimeter_speed_text"] is None else str(printer["external_perimeter_speed_text"])
+            slic3rpe.infill_speed = None if "infill_speed" not in printer or printer["infill_speed"] is None else float(printer["infill_speed"]) * speed_multiplier
+            slic3rpe.solid_infill_speed = '' if "solid_infill_speed_text" not in printer or printer["solid_infill_speed_text"] is None else str(printer["solid_infill_speed_text"])
+            slic3rpe.top_solid_infill_speed = '' if "top_solid_infill_speed_text" not in printer or printer["top_solid_infill_speed_text"] is None else str(printer["top_solid_infill_speed_text"])
+            slic3rpe.support_material_speed = None if "support_speed" not in printer or printer["support_speed"] is None else float(printer["support_speed"]) * speed_multiplier
+            slic3rpe.bridge_speed = None if "bridge_speed" not in printer or printer["bridge_speed"] is None else float(printer["bridge_speed"]) * speed_multiplier
+            slic3rpe.gap_fill_speed = None if "gap_fill_speed" not in printer or printer["gap_fill_speed"] is None else float(printer["gap_fill_speed"]) * speed_multiplier
+            slic3rpe.travel_speed = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
+            slic3rpe.first_layer_speed = '' if "first_layer_speed_text" not in printer or printer["first_layer_speed_text"] is None else str(printer["first_layer_speed_text"])
+            slic3rpe.axis_speed_display_units = 'mm-sec'
+            printer['slicers']['slic3r_pe'] = slic3rpe
+
         profiles['printers'][printer['guid']] = printer
 
     for stabilization in settings_dict['stabilizations']:

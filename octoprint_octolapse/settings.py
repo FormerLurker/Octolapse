@@ -1828,7 +1828,7 @@ class Slic3rPeSettings(SlicerSettings):
         self.retract_lift = None
         self.deretract_speed = None
         self.retract_speed = None
-        self.perimeter_speed = None                 #check
+        self.perimeter_speed = None
         self.small_perimeter_speed = ''
         self.external_perimeter_speed = ''
         self.infill_speed = None

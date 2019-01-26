@@ -177,7 +177,6 @@ $(function () {
                         //console.log(result);
                         self.nonUniqueSpeedList(result['non-unique-speeds']);
                         self.missingSpeedsList(result['missing-speeds']);
-                        self.printFeaturesList(result['all-features']);
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         alert("Octolapse could load the currently printing features.  Please wait a few minutes and try again.");
