@@ -1920,7 +1920,7 @@ class Slic3rPeSettings(SlicerSettings):
         return utility.round_to(speed_setting * first_layer_multiplier * 60.0, round_to)
 
     def get_first_layer_perimeter_speed(self):
-        self.get_speed_from_setting(
+        return self.get_speed_from_setting(
             self.perimeter_speed,
             is_first_layer=True
         )
@@ -2002,6 +2002,7 @@ class Slic3rPeSettings(SlicerSettings):
             self.gap_fill_speed,
             is_first_layer=True
         )
+
     def get_travel_speed(self):
         return self.get_speed_from_setting(
             self.travel_speed

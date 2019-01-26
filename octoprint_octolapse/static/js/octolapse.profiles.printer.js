@@ -170,7 +170,6 @@ $(function() {
                         self.printFeaturesList(result['all-features']);
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Octolapse could load the currently printing features.  Please wait a few minutes and try again.");
                         return false;
                     }
                 });
