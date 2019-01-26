@@ -624,6 +624,14 @@ class SnapshotProfile(ProfileSettings):
             restrictions.append(restriction.to_dict())
         return restrictions
 
+    @classmethod
+    def try_convert_value(cls, destination, value, key):
+        if key == 'position_restrictions':
+            if value is not None:
+                return SnapshotProfile.get_trigger_position_restrictions(value)
+
+        return super(SnapshotProfile, cls).try_convert_value(destination, value, key)
+
 
 class RenderingProfile(ProfileSettings):
     def __init__(self, name="New Rendering Profile"):

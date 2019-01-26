@@ -512,7 +512,7 @@ class TimelapseRenderJob(object):
         if self._rendering.fps_calculation_type == 'duration':
 
             self._fps = utility.round_to(
-                float(self._imageCount) / float(self._rendering.run_length_seconds), 1)
+                float(self._imageCount) / float(self._rendering.run_length_seconds), 0.001)
             if self._fps > self._rendering.max_fps:
                 self._fps = self._rendering.max_fps
             elif self._fps < self._rendering.min_fps:
@@ -928,7 +928,7 @@ class TimelapseRenderJob(object):
         command = [self._ffmpeg, '-framerate', str(self._fps), '-loglevel', 'error', '-i',
                    '"{}"'.format(input_file_format)]
         command.extend(
-            ['-threads', str(self._threads), '-r', "25", '-y', '-b', str(self._rendering.bitrate), '-vcodec', v_codec])
+            ['-threads', str(self._threads), '-r', str(self._fps), '-y', '-b', str(self._rendering.bitrate), '-vcodec', v_codec])
 
         filter_string = self._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
