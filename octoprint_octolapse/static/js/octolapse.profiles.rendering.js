@@ -152,7 +152,7 @@ $(function() {
         });
 
         // This function is called when the Edit Profile dialog shows.
-        self.onShow = function() {
+        self.onShow = function(parent) {
              $('#rendering_profile_overlay_color').minicolors({format: 'rgb', opacity: true});
              self.updateWatermarkList();
              self.updateFontList();

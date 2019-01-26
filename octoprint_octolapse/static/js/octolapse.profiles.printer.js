@@ -129,9 +129,20 @@ $(function() {
         self.missingSpeedsList = ko.observable([]);
         self.printFeaturesList = ko.observable([]);
 
+        self.dialog = null;
+        self.isValid = function(){
+            if (self.dialog != null)
+                return self.dialog.IsValid();
+            return false;
+        }
+        self.onShow = function(parent) {
+            // Get a reference to the parent dialog.
+            self.dialog = parent;
+        };
         self.getPrinterFeatures = function () {
             //console.log("getting feature list");
-
+            if (!self.isValid())
+                return;
             var data = null;
             switch(self.slicer_type())
             {

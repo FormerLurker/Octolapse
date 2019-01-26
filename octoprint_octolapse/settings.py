@@ -1308,26 +1308,26 @@ class CuraSettings(SlicerSettings):
     def get_speed_infill(self):
         return self.get_speed_mm_min(self.speed_infill)
 
-    def get_slow_layer_speed_infill(self):
-        return self.get_slow_layer_speed_print()
+   #def get_slow_layer_speed_infill(self):
+   #    return self.get_slow_layer_speed_print()
 
     def get_speed_wall_0(self):
         return self.get_speed_mm_min(self.speed_wall_0)
 
-    def get_slow_layer_speed_wall_0(self):
-        return self.get_slow_layer_speed_print()
+    #def get_slow_layer_speed_wall_0(self):
+    #    return self.get_slow_layer_speed_print()
 
     def get_speed_wall_x(self):
         return self.get_speed_mm_min(self.speed_wall_x)
 
-    def get_slow_layer_speed_wall_x(self):
-        return self.get_slow_layer_speed_print()
+    #def get_slow_layer_speed_wall_x(self):
+    #    return self.get_slow_layer_speed_print()
 
     def get_speed_topbottom(self):
         return self.get_speed_mm_min(self.speed_topbottom)
 
-    def get_slow_layer_speed_topbottom_speed(self):
-        return self.get_slow_layer_speed_print()
+    #def get_slow_layer_speed_topbottom_speed(self):
+    #    return self.get_slow_layer_speed_print()
 
     def get_speed_travel(self):
         return self.get_speed_mm_min(self.speed_travel)
@@ -1346,13 +1346,12 @@ class CuraSettings(SlicerSettings):
             PrintFeatureSetting(
                 self.calculate_speed,
                 "Print Speed",
-                "Slow Layer Print Speed",
+                "Initial Layer(s)",
                 self.get_speed_print(),
                 self.get_slow_layer_speed_print(),
                 snapshot_profile.feature_trigger_on_normal_print_speed,
                 (
-                    snapshot_profile.feature_trigger_on_normal_print_speed
-                    and snapshot_profile.feature_trigger_on_first_layer
+                    snapshot_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance(),
                 self.get_num_slow_layers()
@@ -1382,46 +1381,42 @@ class CuraSettings(SlicerSettings):
             PrintFeatureSetting(
                 self.calculate_speed,
                 "Infill",
-                "Slow Layer Infill",
+                "",
                 self.get_speed_infill(),
-                self.get_slow_layer_speed_infill(),
+                None,
                 snapshot_profile.feature_trigger_on_infill,
-                snapshot_profile.feature_trigger_on_infill and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance(),
-                self.get_num_slow_layers()
+                None,
+                self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
                 "Outer Wall",
-                "Slow Layer Outer Wall",
+                None,
                 self.get_speed_wall_0(),
-                self.get_slow_layer_speed_wall_0(),
+                None,
                 snapshot_profile.feature_trigger_on_external_perimeters,
-                snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance(),
-                self.get_num_slow_layers()
+                None,
+                self.get_speed_tolerance()
             ),
            PrintFeatureSetting(
                 self.calculate_speed,
                 "Inner Wall",
-                "Slow Layer Inner Wall",
+                None,
                 self.get_speed_wall_x(),
-                self.get_slow_layer_speed_wall_x(),
+                None,
                 snapshot_profile.feature_trigger_on_perimeters,
-                snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance(),
-                self.get_num_slow_layers()
+                None,
+                self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
                 "Top/Bottom",
-                "Slow Layer Top/Bottom",
+                None,
                 self.get_speed_topbottom(),
-                self.get_slow_layer_speed_topbottom_speed(),
+                None,
                 snapshot_profile.feature_trigger_on_top_solid_infill,
-                snapshot_profile.feature_trigger_on_top_solid_infill and snapshot_profile.feature_trigger_on_first_layer,
-                self.get_speed_tolerance(),
-                self.get_num_slow_layers()
+                None,
+                self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
                 self.calculate_speed,
@@ -1430,7 +1425,7 @@ class CuraSettings(SlicerSettings):
                 self.get_speed_travel(),
                 self.get_slow_layer_speed_travel(),
                 snapshot_profile.feature_trigger_on_movement,
-                snapshot_profile.feature_trigger_on_movement and snapshot_profile.feature_trigger_on_first_layer_travel,
+                snapshot_profile.feature_trigger_on_first_layer_travel,
                 self.get_speed_tolerance(),
                 self.get_num_slow_layers()
             ),
@@ -1526,7 +1521,7 @@ class Simplify3dSettings(SlicerSettings):
                 speed = 100.0 - (100 - float(multiplier) / 2.0)
             else:
                 speed = speed * float(multiplier) / 100.0
-        speed -= 0.1
+
         return utility.round_to(speed, 0.1)
 
     @staticmethod
@@ -1616,7 +1611,7 @@ class Simplify3dSettings(SlicerSettings):
         return self.get_speed_mm_min(self.default_printing_speed, multiplier=self.bridging_speed_multiplier)
 
     def get_first_prime_speed(self):
-        self.get_speed_mm_min(self.get_retract_speed(), multiplier=30)
+        return self.get_speed_mm_min(self.get_retract_speed(), multiplier=30)
 
     def get_print_features(self, snapshot_profile):
         return [
@@ -2314,6 +2309,9 @@ class OtherSlicerSettings(SlicerSettings):
         return self.get_travel_speed()
 
     def get_speed_mm_min(self, speed, setting_name=None):
+        if speed is None:
+            return None
+        speed = float(speed)
         if self.axis_speed_display_units == "mm-sec":
             speed = speed * 60.0
         # Todo - Look at this, we need to round prob.

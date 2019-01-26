@@ -513,12 +513,18 @@ $(function () {
                 // Initialize the profile.
                 var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
                 if (typeof onShow == 'function') {
-                    onShow();
+                    onShow(dialog);
                 }
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
                 dialog.validator = dialog.$addEditForm.validate(rules);
+                dialog.IsValid = function()
+                {
+                    if (dialog.validator != null)
+                        return dialog.validator.numberOfInvalids() == 0;
+                    return true;
+                }
                 dialog.validator.form()
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
