@@ -82,6 +82,43 @@ class CommandParameter(object):
 
         return value, parameter_string
 
+    @staticmethod
+    def parse_int(parameter_string):
+        assert (isinstance(parameter_string, string_types))
+        parameter_string = parameter_string.lstrip()
+        index = 0
+        int_string = ""
+        for index in range(0, len(parameter_string)):
+            _c = parameter_string[index]
+            if _c.isspace():
+                continue
+            elif "0" <= _c <= "9":
+                int_string += _c
+            else:
+                break
+        if len(parameter_string) > index:
+            parameter_string = parameter_string[index:]
+        else:
+            parameter_string = ""
+
+        value = None
+        if len(int_string) > 0:
+            value = int(int_string)
+
+        return value, parameter_string
+
+    @staticmethod
+    def parse_tool(parameter_string):
+        assert (isinstance(parameter_string, string_types))
+        parameter_string = parameter_string.strip().upper()
+
+        if parameter_string[0] in ['?','X','C']:
+            return parameter_string[0], parameter_string
+
+        return CommandParameter.parse_int(parameter_string)
+
+
+
 
 class ParsedCommand(object):
     def __init__(self, cmd, parameters, gcode, error=None):
@@ -461,6 +498,14 @@ class Commands(object):
         "M240 - trigger camera",
         parameters={}
     )
+    T = Command(
+        "T",
+        "PrusaMMU - Change Tool",
+        "PrusaMMU - Change Tool",
+        parameters={
+            "T": CommandParameter("T", CommandParameter.parse_tool, 1),
+        },
+    )
 
     CommandsDictionary = {
             G0.Command: G0,
@@ -495,10 +540,11 @@ class Commands(object):
             M207.Command: M207,
             M208.Command: M208,
             M240.Command: M240,
-            M400.Command: M400
+            M400.Command: M400,
+            T.Command: T
         }
 
-    GcodeWords = {"G", "M"}
+    GcodeWords = {"G", "M", "T"}
     SuppressedSavedCommands = [M105.Command, M400.Command]
     SuppressedSnapshotGcodeCommands = [M105.Command]
     CommandsRequireMetric = [G0.Command, G1.Command, G2.Command, G3.Command, G28.Command, G92.Command]
@@ -507,7 +553,7 @@ class Commands(object):
         G10.Command, G11.Command,
         M104.Command, M140.Command, M141.Command,
         M109.Command, M190.Command, M191.Command,
-        M116.Command, M106.Command
+        M116.Command, M106.Command, T.Command
     ]
 
     @staticmethod
@@ -639,7 +685,11 @@ class Commands(object):
             else:
                 command_address = '?'
         # make sure the command is in the dictionary
-        command_to_search = command_letter + command_address
+        if command_letter != "T":
+            command_to_search = command_letter + command_address
+        else:
+            command_to_search = command_letter
+
         if command_to_search not in Commands.CommandsDictionary.keys():
             return ParsedCommand(command_to_search, None, original_gcode)
 
@@ -653,7 +703,10 @@ class Commands(object):
 
         if not cmd.TextOnlyParameter:
             try:
-                parameters = cmd.parse_parameters(parameters)
+                if command_letter == "T":
+                    parameters = cmd.parse_parameters("T"+parameters)
+                else:
+                    parameters = cmd.parse_parameters(parameters)
             except ValueError as e:
                 ParsedCommand(command_to_search, None, original_gcode, error=str(e))
         return ParsedCommand(command_to_search, parameters, original_gcode)
