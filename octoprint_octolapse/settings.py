@@ -229,8 +229,8 @@ class PrinterProfile(ProfileSettings):
                 dict(value='require-explicit', name='Require Explicit M82/M83'),
                 dict(value='relative', name='Default To Relative'),
                 dict(value='absolute', name='Default To Absolute'),
-                # dict(value='force-absolute', name='Force Absolute (send M82 at print start)'),
-                # dict(value='force-relative', name='Force Relative (send M83 at print start)')
+                dict(value='force-absolute', name='Force Absolute (send M82 at print start)'),
+                dict(value='force-relative', name='Force Relative (send M83 at print start)')
             ],
             'axis_speed_display_unit_options': [
                 dict(value='mm-min', name='Millimeters per Minute (mm/min)'),
@@ -246,8 +246,8 @@ class PrinterProfile(ProfileSettings):
                 dict(value='require-explicit', name='Require Explicit G90/G91'),
                 dict(value='relative', name='Default To Relative'),
                 dict(value='absolute', name='Default To Absolute'),
-                # dict(value='force-absolute', name='Force Absolute (send G90 at print start)'),
-                # dict(value='force-relative', name='Force Relative (send G91 at print start)')
+                dict(value='force-absolute', name='Force Absolute (send G90 at print start)'),
+                dict(value='force-relative', name='Force Relative (send G91 at print start)')
             ],
             'units_default_options': [
                 dict(value='require-explicit', name='Require Explicit G21'),

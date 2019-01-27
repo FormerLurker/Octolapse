@@ -1069,20 +1069,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
         # the extruder.
-        #if self.Settings.profiles.current_printer().xyz_axes_default_mode == 'force-absolute':
-        #    # send G90
-        #    self._printer.commands(['G90'], tags={"force_xyz_axis"})
-        #elif self.Settings.profiles.current_printer().xyz_axes_default_mode == 'force-relative':
-        #    # send G91
-        #    self._printer.commands(['G91'], tags={"force_xyz_axis"})
-        ## send G90/G91 if necessary
-        #if self.Settings.profiles.current_printer().e_axis_default_mode == 'force-absolute':
-        #    # send M82
-        #    self._printer.commands(['M82'], tags={"force_e_axis"})
-        #elif self.Settings.profiles.current_printer().e_axis_default_mode == 'force-relative':
-        #    # send M83
-        #    self._printer.commands(['M83'], tags={"force_e_axis"})
-        #
+        if self.Settings.profiles.current_printer().xyz_axes_default_mode == 'force-absolute':
+            # send G90
+            self._printer.commands(['G90'], tags={"force_xyz_axis"})
+        elif self.Settings.profiles.current_printer().xyz_axes_default_mode == 'force-relative':
+            # send G91
+            self._printer.commands(['G91'], tags={"force_xyz_axis"})
+        # send G90/G91 if necessary
+        if self.Settings.profiles.current_printer().e_axis_default_mode == 'force-absolute':
+            # send M82
+            self._printer.commands(['M82'], tags={"force_e_axis"})
+        elif self.Settings.profiles.current_printer().e_axis_default_mode == 'force-relative':
+            # send M83
+            self._printer.commands(['M83'], tags={"force_e_axis"})
+
         self.Settings.Logger.log_print_state_change(
             "Print Started - Timelapse Started.")
 
