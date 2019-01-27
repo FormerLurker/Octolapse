@@ -302,11 +302,30 @@ class PrinterProfile(ProfileSettings):
                 current_max_slicer_type = key
 
         if current_max_slicer_type is not None:
+            new_settings = settings[current_max_slicer_type]
             self.slicer_type = current_max_slicer_type
-            self.get_current_slicer_settings().update_settings_from_gcode(settings[current_max_slicer_type])
-            return True
+            new_slicer_settings = None
+            if self.slicer_type == 'slic3r-pe':
+                new_slicer_settings = Slic3rPeSettings()
+            elif self.slicer_type == 'simplify-3d':
+                new_slicer_settings = Simplify3dSettings()
+            elif self.slicer_type == 'cura':
+                new_slicer_settings = CuraSettings()
+            else:
+                raise Exception("An invalid slicer type has been detected while extracting settings from gcode.")
 
-        return False
+            new_slicer_settings.update_settings_from_gcode(new_settings)
+            # check to make sure all of the required settings are there
+            missing_settings = new_slicer_settings.get_missing_gcode_generation_settings()
+            if len(missing_settings) > 0:
+                return False, 'required-settings-missing', missing_settings
+            # copy the settings into the current profile
+            current_slicer_settings = self.get_current_slicer_settings()
+            current_slicer_settings.update(new_slicer_settings)
+
+            return True, None, []
+
+        return False, "no-settings-detected", ["No settings were detected in the gcode file."]
 
 
 class StabilizationPath(Settings):
@@ -1185,24 +1204,13 @@ class OctolapseSettings(Settings):
 
 class OctolapseGcodeSettings(Settings):
     def __init__(self):
-        self.retraction_length = 2.0
-        self.retraction_speed = 6000
-        self.deretraction_speed = 3000
-        self.x_y_travel_speed = 6000
-        self.first_layer_travel_speed = 6000
-        self.z_lift_height = .5
-        self.z_lift_speed = 6000
-
-    def get_slicer_settings(self):
-        if self.slicer_type in self.slicer_settings:
-            return self.slicer_settings[self.slicer_type]
-        return None
-
-    def get_print_features(self, print_feature_settings):
-        slicer_settings = self.get_slicer_settings()
-        if slicer_settings is not None:
-            return slicer_settings.get_print_features(print_feature_settings)
-        return None
+        self.retraction_length = None
+        self.retraction_speed = None
+        self.deretraction_speed = None
+        self.x_y_travel_speed = None
+        self.first_layer_travel_speed = None
+        self.z_lift_height = None
+        self.z_lift_speed = None
 
 
 class SlicerSettings(Settings):
@@ -1224,6 +1232,25 @@ class SlicerSettings(Settings):
     def get_gcode_generation_settings(self):
         """Returns OctolapseSlicerSettings"""
         raise NotImplementedError("You must implement get_gcode_generation_settings")
+
+    def get_missing_gcode_generation_settings(self):
+        settings = self.get_gcode_generation_settings()
+        assert(isinstance(settings, OctolapseGcodeSettings))
+        issue_list = []
+        if settings.retraction_length is None:
+            issue_list.append("Retraction Length")
+        if settings.retraction_speed is None:
+            issue_list.append("Retraction Speed")
+        if settings.deretraction_speed is None:
+            issue_list.append("Deretraction Speed")
+        if settings.x_y_travel_speed is None:
+            issue_list.append("X/Y Travel Speed")
+        if settings.z_lift_height is None:
+            issue_list.append("Z Lift Height")
+        if settings.z_lift_speed is None:
+            issue_list.append("Z Travel Speed")
+
+        return issue_list
 
     def get_print_features(self, print_feature_settings):
         """"Returns OctolapseSlicerSettings"""

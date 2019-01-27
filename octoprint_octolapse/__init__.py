@@ -1180,10 +1180,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settings_clone = self.Settings.clone()
         current_printer_clone = settings_clone.profiles.current_printer()
         has_automatic_settings_issue = False
+        automatic_settings_error = None
+
         if current_printer_clone.slicer_type == 'automatic':
             # extract any slicer settings if possible.  This must be done before any calls to the printer profile
             # info that includes slicer setting
-            if current_printer_clone.get_gcode_settings_from_file(gcode_file_path):
+            success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
+            if success:
                 settings_saved = False
                 if not current_printer_clone.slicers.automatic.disable_automatic_save:
                     # get the extracted slicer settings
@@ -1199,13 +1202,40 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.send_slicer_settings_detected_message(settings_saved)
             else:
                 if not current_printer_clone.slicers.automatic.continue_on_failure:
-                    return {
-                        'success': False,
-                        'error': "Settings could not be extracted from your slicer.  "
-                        "Cannot start timelapse."
-                    }
+                    # If you are using Cura, see this link:  TODO:  ADD LINK TO CURA FEATURE TEMPLATE AND INSTRUCTIONS
+                    if error_type == "no-settings-detected":
+                        return {
+                            'success': False,
+                            'error': "No settings could be extracted from the gcode file.  Please check the gcode file for issues.",
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'error': "Some required settings are missing: " + ",".join(error_list),
+                        }
                 else:
                     has_automatic_settings_issue = True
+                    if error_type == "no-settings-detected":
+                        automatic_settings_error = "Automatic settings extraction failed - No settings found in gcode"\
+                                                   " file - Continue on failure is enabled so your print will"\
+                                                   " continue, but the timelapse has been aborted."
+                    else:
+                        automatic_settings_error = "Automatic settings extraction failed - Required settings could not"\
+                                                   " be found : " + ",".join(error_list) + "Continue on failure is" \
+                                                   " enabled so your print will continue, but the timelapse has been" \
+                                                   " aborted."
+        else:
+            # see if the current printer profile is missing any required settings
+            # it is important to check here in case automatic slicer settings extraction
+            # isn't used.
+            slicer_settings = settings_clone.profiles.current_printer().get_current_slicer_settings()
+            missing_settings = slicer_settings.get_missing_gcode_generation_settings()
+            if len(missing_settings) > 0:
+                return {
+                    'success': False,
+                    'error': "Unable to start the print.  Some required slicer settings are missing or corrupt: " +
+                             ",".join(missing_settings)
+                }
 
         self.Timelapse.start_timelapse(
             settings_clone, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path)
@@ -1218,8 +1248,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if has_automatic_settings_issue:
             if len(warning) > 0:
                 warning = warning + "  "
-            warning = warning + "Automatic settings extraction failed.  Continue on failure is enabled so your print" \
-                                " will continue, but the timelapse has been aborted."
+            warning = warning + automatic_settings_error
 
         if len(warning) == 0:
             warning = False

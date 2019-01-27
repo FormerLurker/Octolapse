@@ -129,20 +129,9 @@ $(function() {
         self.missingSpeedsList = ko.observable([]);
         self.printFeaturesList = ko.observable([]);
 
-        self.dialog = null;
-        self.isValid = function(){
-            if (self.dialog != null)
-                return self.dialog.IsValid();
-            return false;
-        }
-        self.onShow = function(parent) {
-            // Get a reference to the parent dialog.
-            self.dialog = parent;
-        };
         self.getPrinterFeatures = function () {
-            //console.log("getting feature list");
-            if (!self.isValid())
-                return;
+            console.log("getting feature list");
+
             var data = null;
             switch(self.slicer_type())
             {
@@ -174,7 +163,7 @@ $(function() {
                     ),
                     dataType: "json",
                     success: function (result) {
-                        //console.log("print features received");
+                        console.log("print features received");
                         //console.log(result);
                         self.nonUniqueSpeedList(result['non-unique-speeds']);
                         self.missingSpeedsList(result['missing-speeds']);
