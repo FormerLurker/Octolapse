@@ -35,7 +35,7 @@ from octoprint_octolapse.render import RenderError, RenderingProcessor, Renderin
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
 from octoprint_octolapse.trigger import Triggers
-import fast_gcode_parser
+import fastgcodeparser
 
 
 class Timelapse(object):
@@ -605,7 +605,7 @@ class Timelapse(object):
                     cmd_type, gcode, command_string, tags
                 )
             )
-            fast_cmd = fast_gcode_parser.ParseGcode(command_string)
+            fast_cmd = fastgcodeparser.ParseGcode(command_string)
 
             if fast_cmd:
                 parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)

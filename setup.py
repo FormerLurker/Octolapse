@@ -63,7 +63,7 @@ if sys.platform == 'win32':
 ## Build our c++ parser extension
 plugin_ext_sources = ['octoprint_octolapse/data/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/data/lib/c/GcodeParser.cpp']
 cpp_gcode_parser = Extension(
-    'fast_gcode_parser',
+    'fastgcodeparser',
     sources=plugin_ext_sources,
     language="c++",
     extra_compile_args=compiler_args

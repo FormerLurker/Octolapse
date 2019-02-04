@@ -25,7 +25,7 @@ from octoprint_octolapse.gcode_parser import ParsedCommand
 from octoprint_octolapse.position import Pos, Position
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
-import fast_gcode_parser
+import fastgcodeparser
 
 class SnapshotGcode(object):
     INITIALIZATION_GCODE = 'initialization-gcode'
@@ -679,7 +679,7 @@ class SnapshotGcodeGenerator(object):
         self.y_return = intersection[1]  # will be in absolute coordinates
 
         # recalculate z_lift and retract distance since we have moved a bit
-        fast_cmd = fast_gcode_parser.ParseGcode(gcode1)
+        fast_cmd = fastgcodeparser.ParseGcode(gcode1)
         command_1 = ParsedCommand(fast_cmd[0], fast_cmd[1], gcode1)
 
         position.update(command_1)

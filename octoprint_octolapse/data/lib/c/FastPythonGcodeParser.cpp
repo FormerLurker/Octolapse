@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
 	Py_SetProgramName(argv[0]);
 	Py_Initialize();
-	initfast_gcode_parser();
+	initfastgcodeparser();
 	return 0;
 }
 
@@ -16,7 +16,7 @@ static PyMethodDef CppGcodeParserMethods[] = {
 	{ NULL, NULL, 0, NULL }
 };
 
-void initfast_gcode_parser(void)
+void initfastgcodeparser(void)
 {
 	PyObject *m;
 
@@ -29,8 +29,8 @@ void initfast_gcode_parser(void)
 	    parsable_commands.insert(parsable_command_names[a]);
 	}
 
-	m = Py_InitModule("fast_gcode_parser", CppGcodeParserMethods);
-	moduleError = PyErr_NewException("fast_gcode_parser.error", NULL, NULL);
+	m = Py_InitModule("fastgcodeparser", CppGcodeParserMethods);
+	moduleError = PyErr_NewException("fastgcodeparser.error", NULL, NULL);
 	Py_INCREF(moduleError);
 	PyModule_AddObject(m, "error", moduleError);
 
