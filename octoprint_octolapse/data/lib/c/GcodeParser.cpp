@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <set>
 #include <stdio.h>
-
+#include <cstring>
 bool isGcodeWord(char c)
 {
 	for (int index = 0; index < sizeof(&GCODE_WORDS); ++index)
