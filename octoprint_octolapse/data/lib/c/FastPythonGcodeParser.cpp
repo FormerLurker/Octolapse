@@ -37,7 +37,7 @@ void initfastgcodeparser(void)
 
 }
 
-extern "C" PyObject* ParseGcode(PyObject* self, PyObject *args)
+static PyObject* ParseGcode(PyObject* self, PyObject *args)
 {
     char * gcodeParam;
 	if (!PyArg_ParseTuple(args, "s", &gcodeParam))
