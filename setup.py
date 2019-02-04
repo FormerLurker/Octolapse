@@ -42,7 +42,7 @@ plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
 # MANIFEST.in to match to ensure that python setup.py sdist produces a source distribution that contains all your
 # files. This is sadly due to how python's setup.py works, see also http://stackoverflow.com/a/14159430/2028598
-plugin_additional_data = ['data/*.json', 'data/images/*.png', 'data/images/*.jpeg','lib/c/*.cpp','lib/c/*.h']
+plugin_additional_data = ['data/*.json', 'data/images/*.png', 'data/images/*.jpeg','data/lib/c/*.cpp','data/lib/c/*.h']
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
 plugin_additional_packages = []
 
