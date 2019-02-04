@@ -491,7 +491,7 @@ class TestLayerTrigger(unittest.TestCase):
         trigger.HeightIncrement = 0  # Trigger on every layer change
 
         # get the current extruder state
-        state = position.Extruder.get_state(0)
+        state = position.Extruder.current_state
         # Try on extruding start right after home, should fail since we haven't extruded yet
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
@@ -630,8 +630,8 @@ class TestLayerTrigger(unittest.TestCase):
         position.update("G28")
 
         # add the current state
-        pos = position.get_position(0)
-        state = position.Extruder.get_state(0)
+        pos = position.current_pos
+        state = position.Extruder.current_state
         state.IsPrimed = False
         # Use on extruding start for this test.
         trigger.ExtruderTriggers = ExtruderTriggers(

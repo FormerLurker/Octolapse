@@ -1,6 +1,6 @@
 # coding=utf-8
 from distutils.core import Extension
-
+import sys
 ########################################################################################################################
 # The plugin's identifier, has to be unique
 plugin_identifier = "octolapse"
@@ -56,14 +56,17 @@ plugin_ignored_packages = []
 #
 # Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-
+compiler_args = ['-O3']
+if sys.platform == 'win32':
+    compiler_args = ['/EHsc','-O3']
+    
 ## Build our c++ parser extension
 plugin_ext_sources = ['octoprint_octolapse/data/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/data/lib/c/GcodeParser.cpp']
 cpp_gcode_parser = Extension(
     'fast_gcode_parser',
     sources=plugin_ext_sources,
     language="c++",
-    extra_compile_args=['/EHsc','-O3']
+    extra_compile_args=compiler_args
 )
 additional_setup_parameters = {"ext_modules": [cpp_gcode_parser]}
 
