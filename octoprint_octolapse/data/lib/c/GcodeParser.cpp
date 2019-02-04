@@ -15,12 +15,12 @@ bool isGcodeWord(char c)
 	return false;
 }
 
-const char* stripGcode(const char* gcode)
+std::string stripGcode(std::string gcode)
 {
     std::string output;
 	const int BUFFER_SIZE = 64;
 	output.reserve(BUFFER_SIZE);
-	int gcodeLength = std::strlen(gcode);
+	int gcodeLength = gcode.size();
 	for (int index = 0; index < gcodeLength; ++index)
 	{
 		char currentChar = gcode[index];
@@ -38,10 +38,10 @@ const char* stripGcode(const char* gcode)
 		}
 
 	}
-	return output.c_str();
+	return output;
 }
 
-const char * stripNewLines(std::string gcode)
+std::string stripNewLines(std::string gcode)
 {
     int index = gcode.length();
     for ( ; index >-1 ; index--)
@@ -51,22 +51,22 @@ const char * stripNewLines(std::string gcode)
     }
     if(index > -1)
     {
-        return gcode.substr(0, index+1).c_str();
+        return gcode.substr(0, index+1);
     }
     else
     {
-        return gcode.c_str();
+        return gcode;
     }
 
 }
 
 
-int getFloatEndindex(const char* gcode, int startIndex)
+int getFloatEndindex(std::string gcode, int startIndex)
 {
 	bool hasSeenPeriod = false;
 	bool hasSeenPlusOrMinus = false;
 	char curLetter;
-	unsigned int stringLength = (unsigned)strlen(gcode);
+	unsigned int stringLength = gcode.size();
 	for (; startIndex < stringLength; ++startIndex)
 	{
         curLetter = gcode[startIndex];

@@ -48,12 +48,12 @@ extern "C"  PyObject* ParseGcode(PyObject* self, PyObject *args)
 		return NULL;
 	}
 
-    const char* strippedCommand = stripGcode(gcodeParam);
-    if (strlen(strippedCommand) == 0 || !isGcodeWord(strippedCommand[0]))
+    std::string strippedCommand = stripGcode(gcodeParam);
+    if (strippedCommand.size() == 0 || !isGcodeWord(strippedCommand[0]))
     {
 		return Py_BuildValue("O", Py_False);
     }
-    std::string commandName;
+    std::string commandName = "";
     commandName.append(strippedCommand,0,1);
     PyObject * pyCommandName;
     PyObject * pyParametersDict;
@@ -81,7 +81,7 @@ extern "C"  PyObject* ParseGcode(PyObject* self, PyObject *args)
         Py_DECREF(falseValue);
         hasParameters=true;
     }
-	else if ( strlen(strippedCommand) > endAddressIndex)
+	else if ( strippedCommand.size() > endAddressIndex)
 	{
 	    if (text_only_functions.find(commandName) != text_only_functions.end())
 	    {
@@ -158,18 +158,19 @@ static PyObject* getTextOnlyParameter(std::string commandName, std::string gcode
 
 
 }
-static PyObject* getParameters(const char * commandString, int startIndex)
+static PyObject* getParameters(std::string commandString, int startIndex)
 {
     PyObject *parameterDict = PyDict_New();
 	getParameters(commandString, startIndex, parameterDict);
 	return parameterDict;
 }
 
-static void getParameters(const char* commandString, int startIndex, PyObject * parameterDict)
+static void getParameters(std::string commandString, int startIndex, PyObject * parameterDict)
 {
-    unsigned int stringLength = strlen(commandString);
-    std::string parameterName(commandString + startIndex, commandString+startIndex+1);
-	if (startIndex < stringLength)
+
+    std::string parameterName = "";
+    parameterName.append(commandString, startIndex, 1);
+	if (startIndex < commandString.size())
 	{
 		int endParameterIndex = 2;
 
@@ -187,7 +188,8 @@ static void getParameters(const char* commandString, int startIndex, PyObject * 
 		}
 		else
 		{
-		    std::string value(commandString + startIndex+1, commandString + endParameterIndex);
+		    std::string value="";
+		    value.append(commandString, startIndex+1, endParameterIndex - startIndex-1);
 
 			char ** pend = NULL;
 			if(!isTCommand)
@@ -209,7 +211,6 @@ static void getParameters(const char* commandString, int startIndex, PyObject * 
             {
                 char * value_cstr = new char[value.size()+1];
                 strcpy(value_cstr, value.c_str());
-
                 val = PyInt_FromString(value_cstr,pend,0);
                 if(val == NULL)
                 {
@@ -230,7 +231,7 @@ static void getParameters(const char* commandString, int startIndex, PyObject * 
             if(val != NULL)
                 Py_DECREF(val);
 		}
-		if (endParameterIndex < stringLength)
+		if (endParameterIndex < commandString.size())
 		{
 		    getParameters(commandString, endParameterIndex, parameterDict);
         }
