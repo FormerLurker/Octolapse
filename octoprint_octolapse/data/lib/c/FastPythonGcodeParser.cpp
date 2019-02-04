@@ -3,7 +3,7 @@
 #include "GcodeParser.h"
 #include <stdlib.h>
 
-/*
+
 int main(int argc, char *argv[])
 {
 	Py_SetProgramName(argv[0]);
@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 	initfastgcodeparser();
 	return 0;
 }
-*/
+
 static PyMethodDef CppGcodeParserMethods[] = {
 	{ "ParseGcode",  (PyCFunction)ParseGcode,  METH_VARARGS  ,"Parses Gcode." },
 	{ NULL, NULL, 0, NULL }
