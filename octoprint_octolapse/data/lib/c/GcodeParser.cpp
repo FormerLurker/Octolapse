@@ -1,5 +1,9 @@
 #include "GcodeParser.h"
-
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <set>
+#include <stdio.h>
 
 bool isGcodeWord(char c)
 {
@@ -11,16 +15,6 @@ bool isGcodeWord(char c)
 	return false;
 }
 
-void freeParsedCommands(std::vector<ParsedCommand*> commands)
-{
-
-	for (int index = 0; index < commands.size(); index++)
-	{
-		commands[index]->parameters.clear();
-		delete commands[index];
-	}
-	commands.clear();
-}
 const char* stripGcode(const char* gcode)
 {
     std::string output;

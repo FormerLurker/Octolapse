@@ -3,11 +3,6 @@
 
 #include "Python.h"
 #include <string>
-#include <cstring>
-#include <iostream>
-#include <algorithm>
-#include <cstdlib>
-#include "GcodeParser.h"
 #include <set>
 
 PyObject* moduleError;
