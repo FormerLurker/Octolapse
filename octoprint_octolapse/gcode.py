@@ -388,7 +388,7 @@ class SnapshotGcodeGenerator(object):
 
     def delift_z(self):
         if self.zhopped_by_start_gcode:
-            self.set_e_to_relative(SnapshotGcode.START_GCODE)
+            self.set_xyz_to_relative(SnapshotGcode.END_GCODE)
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
                 self.get_gocde_z_lower_relative(

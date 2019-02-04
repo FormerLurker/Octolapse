@@ -608,10 +608,10 @@ class Timelapse(object):
             fast_cmd = fastgcodeparser.ParseGcode(command_string)
 
             if fast_cmd:
-                self.Settings.Logger.log_error("Gcode Parsed.  Cmd:" + fast_cmd[0] + " command_string:" + command_string)
+                #self.Settings.Logger.log_error("Gcode Parsed.  Cmd:" + fast_cmd[0] + " command_string:" + command_string)
                 parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
             else:
-                self.Settings.Logger.log_error("Could not parse gcode!  " + command_string)
+                #self.Settings.Logger.log_error("Could not parse gcode!  " + command_string)
                 parsed_command = ParsedCommand(None, None, command_string)
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener

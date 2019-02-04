@@ -74,6 +74,7 @@ int getFloatEndindex(std::string gcode, int startIndex)
 			continue;
         else if (curLetter == '+' || curLetter == '-')
         {
+
             if (!hasSeenPlusOrMinus)
             {
                 hasSeenPlusOrMinus = true;
