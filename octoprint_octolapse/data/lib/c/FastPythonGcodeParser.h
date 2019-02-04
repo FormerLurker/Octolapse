@@ -1,6 +1,5 @@
 #ifndef FastPythonGcodeParser_H
 #define FastPythonGcodeParser_H
-
 #include "Python.h"
 #include <string>
 #include <set>
