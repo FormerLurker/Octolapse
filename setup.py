@@ -59,7 +59,7 @@ plugin_ignored_packages = []
 compiler_args = ['-O3']
 if sys.platform == 'win32':
     compiler_args = ['/EHsc','-O3']
-    
+
 ## Build our c++ parser extension
 plugin_ext_sources = ['octoprint_octolapse/data/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/data/lib/c/GcodeParser.cpp']
 cpp_gcode_parser = Extension(
