@@ -998,8 +998,10 @@ $(function () {
                     break;
                 case "timelapse-complete":
                     {
-                        //console.log('octolapse.js - timelapse-complete');
+                        console.log('octolapse.js - timelapse-complete');
+                        Octolapse.Status.snapshot_error(false);
                         self.updateState(data)
+
                     }
                     break;
                 case "camera-settings-error":
@@ -1026,31 +1028,37 @@ $(function () {
                         //console.log(data);
                         self.updateState(data);
 
-                        Octolapse.Status.snapshot_error(data.error || data.snapshot_error);
-                        if(!data.snapshot_success)
+                        var hasError =!(data.success && data.snapshot_success);
+                        Octolapse.Status.snapshot_error(hasError);
+                        if(hasError)
                         {
                             // If only the camera image acquisition failed, use the camera error message
-                            Octolapse.Status.snapshot_error(true);
-                            var options = {
-                                title: 'Octolapse - Camera Error',
-                                text: data.snapshot_error,
-                                type: 'error',
-                                hide: false,
-                                addclass: "octolapse"
-                            };
-                            Octolapse.displayPopupForKey(options, "snapshot_error")
+                            if (!data.success)
+                            {
+                                var options = {
+                                    title: "Stabilization Error",
+                                    text: data.error,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse"
+                                };
+                                Octolapse.displayPopupForKey(options, "stabilization_error")
+                            }
+                            if (!data.snapshot_success)
+                            {
+                                var options = {
+                                    title: "Camera Error",
+                                    text: data.snapshot_error,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse"
+                                };
+                                Octolapse.displayPopupForKey(options, "camera_error")
+                            }
+
+
                         }
-                        else if(!data.success)
-                        {
-                            var options = {
-                                title: 'Octolapse - Stabilization Error',
-                                text: data.error,
-                                type: 'error',
-                                hide: false,
-                                addclass: "octolapse"
-                            };
-                            Octolapse.displayPopupForKey(options, "stabilization_error")
-                        }
+
                     }
                     break;
                 case "new-thumbnail-available":

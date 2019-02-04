@@ -21,14 +21,13 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-from octoprint_octolapse.gcode_parser import Commands
-from octoprint_octolapse.position import Pos
+from octoprint_octolapse.gcode_parser import ParsedCommand
+from octoprint_octolapse.position import Pos, Position
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
-
+import fast_gcode_parser
 
 class SnapshotGcode(object):
-    CommandsDictionary = Commands()
     INITIALIZATION_GCODE = 'initialization-gcode'
     START_GCODE = 'start-gcode'
     SNAPSHOT_COMMANDS = 'snapshot-commands'
@@ -77,7 +76,6 @@ class SnapshotGcodeGenerator(object):
     CurrentYPathIndex = 0
 
     def __init__(self, octolapse_settings, octoprint_printer_profile):
-        self.Commands = Commands()
         self.Settings = octolapse_settings  # type: OctolapseSettings
         self.StabilizationPaths = self.Settings.profiles.current_stabilization().get_stabilization_paths()
         self.Snapshot = self.Settings.profiles.current_snapshot()
@@ -135,23 +133,23 @@ class SnapshotGcodeGenerator(object):
         # Capture and undo the last position update, we're not going to be using it!
         self.triggering_command_position, self.triggering_extruder_position = position.undo_update()
         assert (isinstance(self.triggering_command_position, Pos))
-        current_position = position.get_position(0)
-        if current_position is None:
+        assert (isinstance(position, Position))
+
+        if len(position.Positions)<1:
             return None
-        assert (isinstance(current_position, Pos))
 
         # does G90/G91 influence the extruder
         self.g90_influences_extruder = position.G90InfluencesExtruder
         # get the command we will be probably sending at the end of the process
         self.final_command = parsed_command.gcode
         # record the return position, which is the current position
-        self.x_return = current_position.X
-        self.y_return = current_position.Y
-        self.z_return = current_position.Z
-        self.f_return = current_position.F
-        self.is_relative_return = current_position.IsRelative
-        self.is_extruder_relative_return = current_position.IsExtruderRelative
-        self.is_metric_return = current_position.IsMetric
+        self.x_return = position.current_pos.X
+        self.y_return = position.current_pos.Y
+        self.z_return = position.current_pos.Z
+        self.f_return = position.current_pos.F
+        self.is_relative_return = position.current_pos.IsRelative
+        self.is_extruder_relative_return = position.current_pos.IsExtruderRelative
+        self.is_metric_return = position.current_pos.IsMetric
 
         # keep track of the current position while creating gcode below.
         # these values will be updated and used to make sure we don't
@@ -163,7 +161,8 @@ class SnapshotGcodeGenerator(object):
         self.is_relative_current = self.is_relative_return
         self.is_extruder_relative_current = self.is_extruder_relative_return
         self.retracted_length_current = 0
-        self.distance_to_lift = current_position.distance_to_zlift(position.ZHop)
+        self.distance_to_lift = position.distance_to_zlift()
+        self.length_to_retract = position.Extruder.length_to_retract()
 
         # State flags for triggering various functionality
         self.return_when_complete = True  # we only return if the final command is not travel only in XY plane
@@ -171,7 +170,7 @@ class SnapshotGcodeGenerator(object):
         self.zhopped_by_start_gcode = False
 
         # misc variables used for logging info
-        self.last_extrusion_height = current_position.LastExtrusionHeight
+        self.last_extrusion_height = position.current_pos.LastExtrusionHeight
 
         # create our gcode object
         self.snapshot_gcode = SnapshotGcode()
@@ -208,7 +207,7 @@ class SnapshotGcodeGenerator(object):
         coordinates = dict(X=self.get_snapshot_coordinate(x_path),
                            Y=self.get_snapshot_coordinate(y_path))
 
-        if not utility.is_in_bounds(self.BoundingBox, x=coordinates["X"]):
+        if not utility.is_in_bounds(self.BoundingBox, coordinates["X"], None, None):
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coordinates["X"])
@@ -223,7 +222,7 @@ class SnapshotGcodeGenerator(object):
                 message += "  Using nearest in-bound position ({0}).".format(
                     coordinates["X"])
             self.SnapshotPositionErrors += message
-        if not utility.is_in_bounds(self.BoundingBox, y=coordinates["Y"]):
+        if not utility.is_in_bounds(self.BoundingBox, None, coordinates["Y"], None):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coordinates["Y"])
             self.HasSnapshotPositionErrors = True
@@ -307,22 +306,6 @@ class SnapshotGcodeGenerator(object):
     def get_relative_coordinate(percent, min_value, max_value):
         return ((float(max_value) - float(min_value)) * (percent / 100.0)) + float(min_value)
 
-    def set_distance_to_zlift(self):
-        # Get the z-lift distance, and make sure it isn't None, which indicates an error
-        if self.distance_to_lift is None:
-            self.Settings.Logger.log_warning(
-                "gcode.py - ZLift is none: Z:{0}, LastExtrusionHeight:{1}, settings to {2} if enabled".format(
-                    self.z_return,
-                    self.last_extrusion_height,
-                    self.gcode_generation_settings.z_lift_height
-                )
-            )
-            self.distance_to_lift = self.gcode_generation_settings.z_lift_height
-
-    def set_distance_to_retract(self, position):
-        # get the length to retract
-        self.length_to_retract = position.Extruder.length_to_retract()
-
     def set_e_to_relative(self, gcode_type):
         if not self.is_extruder_relative_current:
             self.snapshot_gcode.append(
@@ -361,45 +344,32 @@ class SnapshotGcodeGenerator(object):
         return feedrate
 
     def retract(self):
-        if (
-            self.Snapshot.retract_before_move and
-            self.length_to_retract > 0
-        ):
+        if self.Snapshot.retract_before_move and self.length_to_retract > 0:
             self.set_e_to_relative(SnapshotGcode.START_GCODE)
-            if self.length_to_retract > 0:
-                self.snapshot_gcode.append(
-                    SnapshotGcode.START_GCODE,
-                    self.get_gcode_retract(
-                        self.length_to_retract,
-                        self.get_altered_feedrate(
-                            self.gcode_generation_settings.retraction_speed
-                        )
-                    )
+            self.snapshot_gcode.append(
+                SnapshotGcode.START_GCODE,
+                self.get_gcode_retract(
+                    self.length_to_retract,
+                    self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
                 )
-                self.retracted_length_current = self.length_to_retract
-                self.retracted_by_start_gcode = True
+            )
+            self.retracted_by_start_gcode = True
 
     def deretract(self):
+
         if self.retracted_by_start_gcode:
             self.set_e_to_relative(SnapshotGcode.END_GCODE)
-            if self.retracted_length_current > 0:
-                self.snapshot_gcode.append(
-                    SnapshotGcode.END_GCODE,
-                    self.get_gcode_deretract(
-                        self.retracted_length_current,
-                        self.get_altered_feedrate(
-                            self.gcode_generation_settings.deretraction_speed
-                        )
-                    )
+            self.snapshot_gcode.append(
+                SnapshotGcode.END_GCODE,
+                self.get_gcode_deretract(
+                    self.length_to_retract,
+                    self.get_altered_feedrate(self.gcode_generation_settings.deretraction_speed)
                 )
+            )
 
     def can_zhop(self):
         return (
-            self.gcode_generation_settings.z_lift_height is not None
-            and self.gcode_generation_settings.z_lift_height > 0
-            and utility.is_in_bounds(
-                self.BoundingBox, z=self.z_return + self.distance_to_lift
-            )
+            utility.is_in_bounds(self.BoundingBox, None, None, self.z_return + self.distance_to_lift)
         )
 
     def lift_z(self):
@@ -418,29 +388,16 @@ class SnapshotGcodeGenerator(object):
 
     def delift_z(self):
         if self.zhopped_by_start_gcode:
-            if not self.is_relative_current:
-                self.snapshot_gcode.append(
-                    SnapshotGcode.END_GCODE,
-                    self.get_gcode_axes_relative()
-                )
-                self.is_relative_current = True
-
-            if self.gcode_generation_settings.z_lift_speed != self.f_current:
-                new_f = self.gcode_generation_settings.z_lift_speed
-                self.f_current = new_f
-            else:
-                new_f = None
-
+            self.set_e_to_relative(SnapshotGcode.START_GCODE)
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
-                self.get_gocde_z_lower_relative(self.distance_to_lift, new_f)
+                self.get_gocde_z_lower_relative(
+                    self.distance_to_lift,
+                    self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+                )
             )
 
     def go_to_snapshot_position(self):
-        # get the X and Y coordinates of the snapshot
-        snapshot_position = self.get_snapshot_position(self.x_return, self.y_return)
-        self.snapshot_gcode.X = snapshot_position["X"]
-        self.snapshot_gcode.Y = snapshot_position["Y"]
 
         if self.snapshot_gcode.X is None or self.snapshot_gcode.Y is None:
             # either x or y is out of bounds.
@@ -489,22 +446,18 @@ class SnapshotGcodeGenerator(object):
                     self.get_gcode_extruder_absolute())
 
     def return_to_original_feedrate(self, parsed_command):
-        if self.return_when_complete:
-            # Make sure we return to the original feedrate
-            if self.f_return is not None and self.f_return != self.f_current:
-                # we can't count on the end gcode to set f, set it here
-                self.snapshot_gcode.append(
-                    SnapshotGcode.END_GCODE,
-                    self.get_gcode_feedrate(self.f_return))
-        else:
-            # Make sure we return to the feedrate of the triggering command
-            # this is because we already sent an appropriate travel, and the speeds may have been reset by
-            # retract/zhop
-            if "F" in parsed_command.parameters and parsed_command.parameters["F"] != self.f_current:
-                # we can't count on the end gcode to set f, set it here
-                self.snapshot_gcode.append(
-                    SnapshotGcode.END_GCODE,
-                    self.get_gcode_feedrate(parsed_command.parameters["F"]))
+        # Make sure we return to the original feedrate
+        if (
+            not self.return_when_complete
+            or (
+                "F" not in parsed_command.parameters and (self.f_return is not None and self.f_return != self.f_current)
+            )
+        ):
+            # we can't count on the end gcode to set f, set it here
+            self.snapshot_gcode.append(
+                SnapshotGcode.END_GCODE,
+                self.get_gcode_feedrate(self.f_return))
+
 
     def return_to_original_position(self):
         if self.return_when_complete:
@@ -573,11 +526,6 @@ class SnapshotGcodeGenerator(object):
         if not self.initialize(position, trigger, parsed_command):
             return None
 
-        # set the z lift distance variables
-        self.set_distance_to_zlift()
-        # set the retraction distance variables
-        self.set_distance_to_retract(position)
-
         # create the start and end gcode, which would include any split gcode (position restriction intersection)
         # or any saved command that needs to be appended
 
@@ -609,28 +557,35 @@ class SnapshotGcodeGenerator(object):
         else:
             return None
 
-        # retract if necessary
-        self.retract()
 
-        # lift if necessary
-        self.lift_z()
+        # get the X and Y coordinates of the snapshot
+        snapshot_position = self.get_snapshot_position(self.x_return, self.y_return)
+        self.snapshot_gcode.X = snapshot_position["X"]
+        self.snapshot_gcode.Y = snapshot_position["Y"]
 
-        # Create code to move from the current extruder position to the snapshot position
-        self.go_to_snapshot_position()
+        if not self.HasSnapshotPositionErrors:
+            # retract if necessary
+            self.retract()
 
-        # Create Return Gcode
-        self.return_to_original_position()
+            # lift if necessary
+            self.lift_z()
 
-        # If we zhopped in the beginning, lower z
-        self.delift_z()
+            # Create code to move from the current extruder position to the snapshot position
+            self.go_to_snapshot_position()
 
-        # deretract if necessary
-        self.deretract()
+            # Create Return Gcode
+            self.return_to_original_position()
 
-        # reset the coordinate systems for the extruder and axis
-        self.return_to_original_coordinate_systems()
+            # If we zhopped in the beginning, lower z
+            self.delift_z()
 
-        self.return_to_original_feedrate(parsed_command)
+            # deretract if necessary
+            self.deretract()
+
+            # reset the coordinate systems for the extruder and axis
+            self.return_to_original_coordinate_systems()
+
+            self.return_to_original_feedrate(parsed_command)
 
         # If we are returning, add the final command to the end gcode
         if self.return_when_complete:
@@ -724,14 +679,16 @@ class SnapshotGcodeGenerator(object):
         self.y_return = intersection[1]  # will be in absolute coordinates
 
         # recalculate z_lift and retract distance since we have moved a bit
-        command_1 = Commands.parse(gcode1)
+        fast_cmd = fast_gcode_parser.ParseGcode(gcode1)
+        command_1 = ParsedCommand(fast_cmd[0], fast_cmd[1], gcode1)
+
         position.update(command_1)
         # set self.z_return to the new z position
         # must be absolute
         self.z_return = position.z()
         self.distance_to_lift = position.distance_to_zlift()
+        self.length_to_retract = position.Extruder.length_to_retract()
 
-        self.set_distance_to_retract(position)
 
         # undo the update since the position has not changed, only the zlift value and potentially the
         # retraction length

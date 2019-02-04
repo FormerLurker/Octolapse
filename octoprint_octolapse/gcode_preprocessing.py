@@ -183,8 +183,7 @@ class GcodeProcessor(object):
         self.file_process_type = 'full'
         self.file_process_category = 'none'
 
-    @staticmethod
-    def get_regex_definitions():
+    def get_regex_definitions(self):
         raise NotImplementedError('You must override get_regexes')
 
     def process_line(self, line, line_number, process_type):
@@ -196,6 +195,14 @@ class GcodeProcessor(object):
     def can_process(self):
         raise NotImplementedError('You must override can_process')
 
+    def on_before_start(self):
+        raise NotImplementedError('You must override on_before_start')
+
+    def on_apply_filter(self, filter_tags=None):
+        raise NotImplementedError('You must override on_apply_filter')
+
+    def is_complete(self):
+        raise NotImplementedError('You must override is_complete')
 
     @staticmethod
     def get_comment(self, line):
@@ -309,6 +316,7 @@ class GcodeSettingsProcessor(GcodeProcessor):
 
     def get_results(self):
         return self.results
+
 
 #############################################
 # Standard parsing functions
@@ -1675,3 +1683,103 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             filament_used = matches.group("flavor")
             self.results["layer_height"] = float(filament_used)
             self.active_settings_dictionary.pop('height')
+
+
+class GcodeFileLineProcessor(GcodeProcessor):
+
+    Position = None
+
+    def __init__(
+        self,
+        name,
+        matching_function,
+        max_forward_lines_to_process=None,
+        include_gcode=True,
+        include_comments=True
+    ):
+        super(GcodeFileLineProcessor, self).__init__(name, 'gcode_file_line_processor')
+        # other slicer specific vars
+        self.file_process_type = 'forward'
+        self.file_process_category = 'gcode-file-line'
+        self.max_forward_lines_to_process = max_forward_lines_to_process
+        self.forward_lines_processed = 0
+        self.results = {}
+        self.include_comments = include_comments
+        self.include_gcode = include_gcode
+        self.matching_function = matching_function
+        if not self.include_comments and not self.include_gcode:
+            raise ValueError("Both include_gcode and include_comments are false.  One or both must be true.")
+
+        # get the regex last
+        self.regex_definitions = self.get_regex_definitions()
+
+    def reset(self):
+        self.forward_lines_processed = 0
+        self.results = {}
+
+    def get_regex_definitions(self):
+        regexes = []
+        if self.include_gcode and self.include_comments:
+            regexes.append(
+                RegexDefinition("entire_line", "^(?P<gcode>[^;]*)[;]?(?P<comment>.*$)", self.matching_function)
+            )
+        elif self.include_gcode:
+            regexes.append(
+                RegexDefinition("gcode_only", "(?P<gcode>[^;]*)", self.matching_function)
+            )
+        elif self.include_comments:
+            regexes.append(
+                RegexDefinition("comment_only", "(?<=;)(?P<comment>.*$)", self.matching_function)
+            )
+        return regexes
+
+    def on_before_start(self):
+        # reset everything
+        self.reset()
+
+    def on_apply_filter(self, filter_tags=None):
+        pass
+
+    def can_process(self):
+        return True
+
+    def is_complete(self, process_type):
+        if (
+            (
+                process_type == "forward"
+                and self.max_forward_lines_to_process is not None
+                and self.forward_lines_processed >= self.max_forward_lines_to_process
+            )
+            or len(self.regex_definitions) == 0
+        ):
+            return True
+        return False
+
+    def process_line(self, line, line_number, process_type):
+        line = line.replace('\r', '').replace('\n', '')
+        if process_type == "forward":
+            self.forward_lines_processed += 1
+
+        for regex_definition in self.regex_definitions:
+            if regex_definition.match_once and regex_definition.has_matched:
+                continue
+            match = re.search(regex_definition.regex, line)
+            if not match:
+                continue
+            regex_definition.has_matched = True
+            self.process_match(match, line, regex_definition)
+            break
+
+    def process_match(self, matches, line_text, regex):
+        # see if we have a matched key
+        if regex.match_function is not None:
+            regex.match_function(matches)
+        else:
+            self.default_matching_function(matches)
+
+    def default_matching_function(self, matches):
+        raise NotImplementedError("You must implement the default_matching_function")
+
+    def get_results(self):
+        return self.results
+

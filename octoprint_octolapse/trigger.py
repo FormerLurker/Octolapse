@@ -22,7 +22,6 @@
 ##################################################################################
 
 import time
-from octoprint_octolapse.gcode_parser import *
 from octoprint_octolapse.extruder import ExtruderTriggers
 from octoprint_octolapse.settings import *
 
@@ -377,7 +376,7 @@ class GcodeTrigger(Trigger):
             state.reset_state()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.has_homed_position(0):
+            if not position.current_pos.HasHomedPosition:
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
@@ -385,15 +384,15 @@ class GcodeTrigger(Trigger):
                 # check to see if we are in the proper position to take a snapshot
 
                 # set is in position
-                state.IsInPosition = position.is_in_position(0)
-                state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
+                state.IsInPosition = position.current_pos.IsInPosition
+                state.InPathPosition = position.current_pos.InPathPosition
+                state.IsFeatureAllowed = position.current_pos.HasOneFeatureEnabled
 
-                if self.SnapshotCommand == parsed_command.gcode:
+                if self.SnapshotCommand.lower() == parsed_command.gcode.lower():
                     state.IsWaiting = True
                 if state.IsWaiting:
-                    if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
-                        if self.RequireZHop and not position.is_zhop(0):
+                    if position.Extruder.is_triggered(self.ExtruderTriggers):
+                        if self.RequireZHop and not position.current_pos.IsZhop:
                             state.IsWaitingOnZHop = True
                             self.Settings.Logger.log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on ZHop.")
@@ -546,7 +545,7 @@ class LayerTrigger(Trigger):
             state.reset_state()
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.has_homed_position(0):
+            if not position.current_pos.HasHomedPosition:
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
@@ -561,9 +560,9 @@ class LayerTrigger(Trigger):
                 if (
                     self.HeightIncrement is not None
                     and self.HeightIncrement > 0
-                    and position.is_layer_change(0)
+                    and position.current_pos.IsLayerChange
                     and (
-                        state.CurrentIncrement * self.HeightIncrement < position.height(0) or
+                        state.CurrentIncrement * self.HeightIncrement < position.current_pos.Height or
                         state.CurrentIncrement == 0
                     )
                 ):
@@ -596,18 +595,16 @@ class LayerTrigger(Trigger):
                         state.IsWaiting = True
 
                 else:
-                    if position.is_layer_change(0):
-                        state.Layer = position.layer(0)
+                    if position.current_pos.IsLayerChange:
+                        state.Layer = position.current_pos.Layer
                         state.IsLayerChangeWait = True
                         state.IsLayerChange = True
                         state.IsWaiting = True
 
-                # see if the extruder is triggering
-                is_extruder_triggering = position.Extruder.is_triggered(
-                    self.ExtruderTriggers, index=0)
-
                 if state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting:
                     state.IsWaiting = True
+                    # see if the extruder is triggering
+                    is_extruder_triggering = position.Extruder.is_triggered(self.ExtruderTriggers)
                     if not is_extruder_triggering:
                         state.IsWaitingOnExtruder = True
                         if state.IsHeightChangeWait:
@@ -795,7 +792,7 @@ class TimerTrigger(Trigger):
 
             # Don't update the trigger if we don't have a homed axis
             # Make sure to use the previous value so the homing operation can complete
-            if not position.has_homed_position(0):
+            if not position.current_pos.HasHomedPosition:
                 state.IsTriggered = False
                 state.IsHomed = False
             else:
@@ -832,7 +829,7 @@ class TimerTrigger(Trigger):
                     state.IsWaiting = True
 
                     # see if the exturder is in the right position
-                    if position.Extruder.is_triggered(self.ExtruderTriggers, index=0):
+                    if position.Extruder.is_triggered(self.ExtruderTriggers):
                         if self.RequireZHop and not position.is_zhop(0):
                             self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")

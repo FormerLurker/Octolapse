@@ -24,7 +24,7 @@ import operator
 from six import string_types
 import utility
 import re
-
+import string
 class CommandParameter(object):
     def __init__(self, name, parse_function, order):
         self.Name = name
@@ -118,15 +118,14 @@ class CommandParameter(object):
         return CommandParameter.parse_int(parameter_string)
 
 
-
-
 class ParsedCommand(object):
-    def __init__(self, cmd, parameters, gcode, error=None):
-        self.cmd = cmd
-        self.parameters = parameters
-        self.gcode = gcode
-        self.error = error
+    # define slots for faster creation
+    __slots__ = ['cmd', 'parameters', 'gcode']
 
+    def __init__(self, cmd, parameters, gcode):
+        self.cmd = cmd
+        self.parameters = {} if parameters is None else parameters
+        self.gcode = gcode
 
 class Command(object):
 
@@ -149,7 +148,6 @@ class Command(object):
             elif _c in self.Parameters:
                 parameter = _c
                 parameter_cmd = self.Parameters[parameter].ParseFunction
-
                 break
 
         if parameter is not None and len(parameters_string) > 0:
@@ -162,6 +160,25 @@ class Command(object):
                     raise ValueError("Either a parameter value was repeated or an unexpected character was found, "
                                      "cannot parse gcode.")
                 parameters.update(additional_parameters)
+
+        return parameters
+
+    def parse_parameters_fast(self, parameters_string, start_index, parameters=None):
+
+        string_length = len(parameters_string)
+        if parameters is None:
+            parameters = {}
+
+        if start_index < string_length and parameters_string[start_index] in self.Parameters:
+            if start_index <= string_length > 0:
+                end_index = Commands.get_float_end_index(parameters_string, start_index+1)
+                if end_index is None:
+                    end_index = start_index
+                    parameters[parameters_string[start_index]] = None
+                else:
+                    parameters[parameters_string[start_index]] = float(parameters_string[start_index+1:end_index+1])
+                if end_index+1 < string_length:
+                    self.parse_parameters_fast(parameters_string, end_index+1, parameters)
 
         return parameters
 
@@ -250,7 +267,7 @@ class Commands(object):
 
     G11 = Command(
         "G11",
-        "Retract"
+        "Unretract"
         "G11 - Unretract",
         parameters={
             "S": CommandParameter("S", CommandParameter.parse_float, 1)
@@ -343,7 +360,8 @@ class Commands(object):
         "Set extruder temperature",
         "M104 - Set extruder temperature: S={S}",
         parameters={
-            "S": CommandParameter("S", CommandParameter.parse_float, 1)
+            "S": CommandParameter("S", CommandParameter.parse_float, 1),
+            "T": CommandParameter("S", CommandParameter.parse_float, 1)
         }
     )
 
@@ -557,59 +575,113 @@ class Commands(object):
     ]
 
     @staticmethod
-    def strip_comments(gcode):
-        # strip off any trailing comments
+    def format_for_fast_parsing(gcode):
         ix = gcode.find(";")
-        if ix > -1:
-            if ix <= len(gcode) - 1:
-                gcode = gcode[0:ix]
-            else:
-                return None
+        if len(gcode) - 1 >= ix > -1:
+            gcode = gcode[0:ix]
+        return gcode.translate(None, string.whitespace).upper()
 
-        # remove any comments from ('s
-        start_comment_index = None
-        end_comment_index = None
-
-        index = 0
-        while index < len(gcode):
-            if end_comment_index is not None:
-                # we have a comment to remove.
-                if start_comment_index == 0:
-                    if len(gcode) == end_comment_index + 1:
-                        gcode = ""
-                        index = 0
-                    else:
-                        gcode = gcode[end_comment_index + 1:]
-                        index = 0
-
-                elif end_comment_index + 1 == len(gcode):
-                    gcode = gcode[0:start_comment_index]
-                    index = start_comment_index + 1
+    @staticmethod
+    def strip_comments(gcode, remove_parentheticals=True):
+        # strip off any trailing comments
+        if ";" in gcode:
+            ix = gcode.find(";")
+            if ix > -1:
+                if ix <= len(gcode) - 1:
+                    gcode = gcode[0:ix]
                 else:
-                    gcode = gcode[0:start_comment_index] + gcode[end_comment_index + 1:]
-                    index = start_comment_index
+                    return None
 
-                start_comment_index = None
-                end_comment_index = None
+        if remove_parentheticals and '(' in gcode:
+            # remove any comments from ('s
+            start_comment_index = None
+            end_comment_index = None
+            index = 0
+            while index < len(gcode):
+                if end_comment_index is not None:
+                    # we have a comment to remove.
+                    if start_comment_index == 0:
+                        if len(gcode) == end_comment_index + 1:
+                            gcode = ""
+                            index = 0
+                        else:
+                            gcode = gcode[end_comment_index + 1:]
+                            index = 0
 
-            for index in range(index, len(gcode)):
-                c = gcode[index]
-                if start_comment_index is None and c == "(":
-                    start_comment_index = index
-                elif start_comment_index is not None and c == ")":
-                    end_comment_index = index
+                    elif end_comment_index + 1 == len(gcode):
+                        gcode = gcode[0:start_comment_index]
+                        index = start_comment_index + 1
+                    else:
+                        gcode = gcode[0:start_comment_index] + gcode[end_comment_index + 1:]
+                        index = start_comment_index
+
+                    start_comment_index = None
+                    end_comment_index = None
+
+                for index in range(index, len(gcode)):
+                    c = gcode[index]
+                    if start_comment_index is None and c == "(":
+                        start_comment_index = index
+                    elif start_comment_index is not None and c == ")":
+                        end_comment_index = index
+                        break
+
+                if start_comment_index is None or end_comment_index is None:
                     break
-
-            if start_comment_index is None or end_comment_index is None:
-                break
 
         # strip whitespace
         return gcode.strip()
 
     @staticmethod
-    def parse(gcode):
+    def get_float_end_index(value, start_index):
+        index = -1
+        has_seen_period = False
+        for index in range(start_index, len(value)):
+            if "0" <= value[index] <= "9":
+                continue
+            elif value[index] == ".":
+                if not has_seen_period:
+                    has_seen_period = True
+                    continue
+                else:
+                    index -= 1
+                    break
+            else:
+                index -= 1
+                break
+        if index >= start_index:
+            return index
+        return None
+
+    @staticmethod
+    def fast_parse(original_gcode):
+        gcode = Commands.format_for_fast_parsing(original_gcode)
+        if gcode is None or len(gcode) < 1 or gcode[0] == '%':
+            return None
+
+        # Now we should be left with the command and any parameters
+        # Make sure our command is a valid one
+        if len(gcode) < 2 or gcode[0] not in Commands.GcodeWords:
+            return None
+
+        command_address_end_index = Commands.get_float_end_index(gcode, 1)
+
+        if command_address_end_index is None:
+            command_address_end_index = 0
+
+        command_to_search = gcode[0:command_address_end_index+1]
+        if command_to_search not in Commands.CommandsDictionary:
+            return None
+
+        cmd = Commands.CommandsDictionary[command_to_search]
+        parameters = cmd.parse_parameters_fast(gcode, command_address_end_index + 1)
+        # get the parameter string
+        return ParsedCommand(command_to_search, parameters, original_gcode)
+
+    @staticmethod
+    def parse(gcode, remove_parentheticals=True):
         original_gcode = gcode
-        gcode = Commands.strip_comments(gcode)
+        gcode = Commands.strip_comments(gcode, remove_parentheticals=remove_parentheticals)
         if gcode is None:
             return ParsedCommand(None, None, original_gcode)
 

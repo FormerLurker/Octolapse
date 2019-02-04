@@ -858,7 +858,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_timelapse_stopped=self.on_timelapse_stopped,
             on_timelapse_end=self.on_timelapse_end,
             on_state_changed=self.on_timelapse_state_changed,
-            on_timelapse_start=self.on_timelapse_start,
             on_snapshot_position_error=self.on_snapshot_position_error,
             on_position_error=self.on_position_error,
             on_plugin_message_sent=self.on_plugin_message_sent
@@ -1060,12 +1059,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if not result["success"]:
                 self.on_print_start_failed(result["error"])
                 return
-
             if result["warning"]:
                 self.send_popup_message(result["warning"])
         except Exception as e:
             self.Settings.Logger.log_exception(e)
             self.send_popup_message("An unexpected error occurred while starting the Octolapse!  Please check plugin_octolapse.log for details")
+            return
 
         # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
         # the extruder.
@@ -1085,6 +1084,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self.Settings.Logger.log_print_state_change(
             "Print Started - Timelapse Started.")
+
+        self.on_timelapse_start()
 
     def on_print_start_failed(self, error):
         if self.Settings.main_settings.cancel_print_on_startup_error:
@@ -1319,7 +1320,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, dict(
             type="render-complete", msg="Octolapse has completed a rendering."))
 
-    def on_timelapse_start(self, *args, **kwargs):
+    def on_timelapse_start(self):
         state_data = self.Timelapse.to_state_dict()
         data = {
             "type": "timelapse-start", "msg": "Octolapse has started a timelapse.", "Status": self.get_status_dict(),
@@ -1329,7 +1330,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_timelapse_end(self, *args, **kwargs):
-        self.send_state_changed_message({"Status": self.get_status_dict()})
+        state_data = self.Timelapse.to_state_dict()
+        data = {
+            "type": "timelapse-complete", "msg": "Octolapse has completed a timelapse.",
+            "Status": self.get_status_dict(),
+            "MainSettings": self.Settings.main_settings.to_dict()
+        }
+        data.update(state_data)
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
 
     def on_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()
@@ -1388,16 +1397,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_snapshot_end(self, *args, **kwargs):
         payload = args[0]
-
         status_dict = self.get_status_dict()
         success = payload["success"]
         error = payload["error"]
-        snapshot_payload = payload["snapshot_payload"]
-        snapshot_success = False
-        snapshot_error = "No information available."
-        if snapshot_payload:
-            snapshot_success = snapshot_payload["success"]
-            snapshot_error = snapshot_payload["error"]
+        snapshot_success = True
+        snapshot_error = ""
+        if "snapshot_payload" in payload:
+            snapshot_payload = payload["snapshot_payload"]
+            if snapshot_payload is not None:
+                snapshot_success = snapshot_payload["success"]
+                snapshot_error = snapshot_payload["error"]
 
         data = {
             "type": "snapshot-complete", "msg": "Octolapse has completed the current snapshot.", "Status": status_dict,

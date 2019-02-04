@@ -1,4 +1,5 @@
 # coding=utf-8
+from distutils.core import Extension
 
 ########################################################################################################################
 # The plugin's identifier, has to be unique
@@ -9,7 +10,7 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "v0.3.5rc1.dev0"
+plugin_version = "0.3.5rc1.dev0"
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
@@ -41,7 +42,7 @@ plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
 # MANIFEST.in to match to ensure that python setup.py sdist produces a source distribution that contains all your
 # files. This is sadly due to how python's setup.py works, see also http://stackoverflow.com/a/14159430/2028598
-plugin_additional_data = ['data/*.json', 'data/images/*.png', 'data/images/*.jpeg']
+plugin_additional_data = ['data/*.json', 'data/images/*.png', 'data/images/*.jpeg','lib/c/*.cpp']
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
 plugin_additional_packages = []
 
@@ -55,7 +56,16 @@ plugin_ignored_packages = []
 #
 # Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {}
+
+## Build our c++ parser extension
+plugin_ext_sources = ['octoprint_octolapse/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/lib/c/GcodeParser.cpp']
+cpp_gcode_parser = Extension(
+    'fast_gcode_parser',
+    sources=plugin_ext_sources,
+    language="c++",
+    extra_compile_args=['/EHsc','-O3']
+)
+additional_setup_parameters = {"ext_modules": [cpp_gcode_parser]}
 
 ########################################################################################################################
 
@@ -83,7 +93,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     requires=plugin_requires,
     additional_packages=plugin_additional_packages,
     ignored_packages=plugin_ignored_packages,
-    additional_data=plugin_additional_data
+    additional_data=plugin_additional_data,
 
 )
 

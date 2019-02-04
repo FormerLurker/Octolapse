@@ -32,9 +32,10 @@ from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.gcode_parser import Commands, ParsedCommand, Response
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs
-from octoprint_octolapse.settings import PrinterProfile, SnapshotProfile, OctolapseSettings
+from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
 from octoprint_octolapse.trigger import Triggers
+import fast_gcode_parser
 
 
 class Timelapse(object):
@@ -45,7 +46,7 @@ class Timelapse(object):
             on_snapshot_start=None, on_snapshot_end=None, on_new_thumbnail_available=None,
             on_render_start=None, on_render_success=None, on_render_error=None,
             on_timelapse_stopping=None, on_timelapse_stopped=None,
-            on_state_changed=None, on_timelapse_start=None, on_timelapse_end=None,
+            on_state_changed=None, on_timelapse_end=None,
             on_snapshot_position_error=None, on_position_error=None, on_plugin_message_sent=None):
         # config variables - These don't change even after a reset
         self.DataFolder = data_folder
@@ -63,7 +64,6 @@ class Timelapse(object):
         self.TimelapseStoppingCallback = on_timelapse_stopping
         self.TimelapseStoppedCallback = on_timelapse_stopped
         self.OnStateChangedCallback = on_state_changed
-        self.OnTimelapseStartCallback = on_timelapse_start
         self.OnTimelapseEndCallback = on_timelapse_end
         self.OnSnapshotPositionErrorCallback = on_snapshot_position_error
         self.OnPositionErrorCallback = on_position_error
@@ -178,10 +178,6 @@ class Timelapse(object):
 
         # take a snapshot of the current settings for use in the Octolapse Tab
         self.CurrentProfiles = self.Settings.profiles.get_profiles_dict()
-
-        # send an initial state message
-        self._on_timelapse_start()
-
 
     def on_position_received(self, payload):
         # added new position request sent flag so that we can prevent position requests NOT from Octolapse from
@@ -315,6 +311,10 @@ class Timelapse(object):
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
+
+            if self.Gcode.HasSnapshotPositionErrors:
+                timelapse_snapshot_payload["error"] = self.Gcode.SnapshotPositionErrors
+
             if snapshot_gcode is None:
                 self.Settings.Logger.log_warning(
                     "No snapshot gcode was generated."
@@ -410,14 +410,13 @@ class Timelapse(object):
                         self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
 
             # we've completed the procedure, set success
-            timelapse_snapshot_payload["success"] = not has_error
+            timelapse_snapshot_payload["success"] = not has_error and not self.Gcode.HasSnapshotPositionErrors
 
         except Exception as e:
             self.Settings.Logger.log_exception(e)
             timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \
                                                   "snapshot procedure. "
-        if has_error:
-            return None
+
         return timelapse_snapshot_payload
 
     # public functions
@@ -606,30 +605,12 @@ class Timelapse(object):
                     cmd_type, gcode, command_string, tags
                 )
             )
+            fast_cmd = fast_gcode_parser.ParseGcode(command_string)
 
-            parsed_command = Commands.parse(command_string)
-            if parsed_command.error is not None:
-                self.Settings.Logger.log_warning(
-                    "An error occurred while parsing the command string.  Details: {0}".format(parsed_command.error)
-                )
-
-                if self.IsTestMode:
-                    # if this is test mode, we need to stop the print
-                    self.OctoprintPrinter.cancel_print()
-                    # end snapshots and send a message
-                    message = "There was an error parsing your gcode.  Cancelling Print.  Error Details: {0}".format(
-                        parsed_command.error
-                    )
-                    self.stop_snapshots(message, True)
-                    # suppress the command
-                    return None,
-                message = "There was an error parsing your gcode.  Stopping Timelapse.  Error Details: {0}".format(
-                    parsed_command.error
-                )
-                self.stop_snapshots(message, True)
-
-                return None
-
+            if fast_cmd:
+                parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
+            else:
+                parsed_command = ParsedCommand(None, None, command_string)
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
 
@@ -703,7 +684,7 @@ class Timelapse(object):
         self._send_state_changed_message()
 
         # do any post processing for test mode
-        if suppress_command:
+        if suppress_command or is_snapshot_gcode_command:
             return None,
 
         if parsed_command.cmd is not None:
@@ -842,8 +823,7 @@ class Timelapse(object):
                     y=current_position["y"],
                     z=current_position["z"],
                     e=current_position["e"],
-                    force=True,
-                    calculate_changes=True)
+                    force=True)
 
             # adjust the triggering command
             gcode = parsed_command.gcode
@@ -896,13 +876,15 @@ class Timelapse(object):
 
             self.Triggers.resume()
 
-            self.OctoprintPrinter.set_job_on_hold(False)
-
             # notify that we're finished, but only if we haven't just stopped the timelapse.
             if self._most_recent_snapshot_payload is not None:
                 self.Settings.Logger.log_info("Sending on_snapshot_complete payload.")
                 # send a copy of the dict in case it gets changed by threads.
-                self._on_trigger_snapshot_complete(self._most_recent_snapshot_payload.copy())
+                new_payload = self._most_recent_snapshot_payload.copy()
+                self._on_trigger_snapshot_complete(new_payload)
+                self._most_recent_snapshot_payload = None
+
+            self.OctoprintPrinter.set_job_on_hold(False)
 
     def on_gcode_sending(self, cmd, cmd_type, gcode, tags):
 
@@ -1088,12 +1070,13 @@ class Timelapse(object):
                 "total_snapshot_time": snapshot_payload["total_snapshot_time"],
                 "current_snapshot_time": snapshot_payload["total_snapshot_time"]
             }
-            if self.OnSnapshotCompleteCallback is not None:
-                snapshot_complete_callback_thread = threading.Thread(
-                    target=self.OnSnapshotCompleteCallback, args=[payload]
-                )
-                snapshot_complete_callback_thread.daemon = True
-                snapshot_complete_callback_thread.start()
+
+            snapshot_complete_callback_thread = threading.Thread(
+                target=self.OnSnapshotCompleteCallback, args=[payload]
+            )
+            snapshot_complete_callback_thread.daemon = True
+            snapshot_complete_callback_thread.start()
+
 
     def _render_timelapse(self, print_end_state):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
@@ -1160,11 +1143,6 @@ class Timelapse(object):
             )
             render_error_complete_callback_thread.daemon = True
             render_error_complete_callback_thread.start()
-
-    def _on_timelapse_start(self):
-        if self.OnTimelapseStartCallback is None:
-            return
-        self.OnTimelapseStartCallback()
 
     def _reset(self):
         self.State = TimelapseState.Idle

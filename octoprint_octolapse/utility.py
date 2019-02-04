@@ -31,10 +31,11 @@ import time
 import traceback
 import threading
 import psutil
+import decimal
 import octoprint.filemanager.storage
 from threading import Timer
 
-FLOAT_MATH_EQUALITY_RANGE = 0.000001
+FLOAT_MATH_EQUALITY_RANGE = 0.00000001
 
 
 def get_float(value, default):
@@ -109,13 +110,29 @@ def get_filename_from_full_path(path):
     return os.path.splitext(file_name)[0]
 
 
+def greater_than_or_close(a, b, abs_tol):
+    return a - b > abs_tol
+
+def less_than_or_close(a, b, abs_tol):
+    return a - b < abs_tol
+
+def is_approximately_zero(a):
+    return abs(a) <= FLOAT_MATH_EQUALITY_RANGE
+
 def is_close(a, b, abs_tol=0.01000):
     return abs(a - b) <= abs_tol
 
 
 def round_to(n, precision):
-    correction = 0.5 if n >= 0 else -0.5
-    return int(n / precision + correction) * precision
+    return int(n / precision + (0.5 if n >= 0 else -0.5)) * precision
+
+
+def round_to_value(value, rounding_increment):
+    return round(value / rounding_increment) * rounding_increment
+
+
+def round_up(value):
+    return -(-value // 1.0)
 
 
 def get_temp_snapshot_driectory_template():
@@ -279,28 +296,17 @@ def coordinate_to_offset_position(coordinate, offset):
         return None
     return coordinate - offset
 
-
-def is_in_bounds(bounding_box, x=None, y=None, z=None):
+def is_in_bounds(bounding_box, x, y, z):
     # Determines if the given X,Y,Z coordinate is within
     # the bounding box of the printer, as determined by
     # the octoprint configuration
     # if no coordinates are give, return false
     if x is None and y is None and z is None:
         return False
-
-    min_x = bounding_box['min_x']
-    max_x = bounding_box['max_x']
-    min_y = bounding_box['min_y']
-    max_y = bounding_box['max_y']
-    min_z = bounding_box['min_z']
-    max_z = bounding_box['max_z']
-
-    x_in_bounds = x is None or min_x <= x <= max_x
-    y_in_bounds = y is None or min_y <= y <= max_y
-    z_in_bounds = z is None or min_z <= z <= max_z
-
+    x_in_bounds = x is None or bounding_box['min_x'] <= x <= bounding_box['max_x']
+    y_in_bounds = y is None or bounding_box['min_y'] <= y <= bounding_box['max_y']
+    z_in_bounds = z is None or bounding_box['min_z'] <= z <= bounding_box['max_z']
     return x_in_bounds and y_in_bounds and z_in_bounds
-
 
 def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
     min_x = bounding_box['min_x']
