@@ -17,7 +17,8 @@ static PyMethodDef CppGcodeParserMethods[] = {
 	{ NULL, NULL, 0, NULL }
 };
 
-void  initfastgcodeparser(void)
+extern "C" void  initfastgcodeparser(void)
+
 {
 	PyObject *m;
 
