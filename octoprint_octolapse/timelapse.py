@@ -605,7 +605,7 @@ class Timelapse(object):
                     cmd_type, gcode, command_string, tags
                 )
             )
-            fast_cmd = fastgcodeparser.ParseGcode(command_string)
+            fast_cmd = fastgcodeparser.ParseGcode(command_string.encode("utf8"))
 
             if fast_cmd:
                 self.Settings.Logger.log_error("Gcode Parsed.  Cmd:" + fast_cmd[0] + " command_string:" + command_string)
