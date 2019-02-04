@@ -58,7 +58,7 @@ plugin_ignored_packages = []
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
 ## Build our c++ parser extension
-plugin_ext_sources = ['octoprint_octolapse/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/lib/c/GcodeParser.cpp']
+plugin_ext_sources = ['octoprint_octolapse/data/lib/c/FastPythonGcodeParser.cpp','octoprint_octolapse/data/lib/c/GcodeParser.cpp']
 cpp_gcode_parser = Extension(
     'fast_gcode_parser',
     sources=plugin_ext_sources,
