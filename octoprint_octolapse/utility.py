@@ -35,7 +35,7 @@ import decimal
 import octoprint.filemanager.storage
 from threading import Timer
 
-FLOAT_MATH_EQUALITY_RANGE = 0.00000001
+FLOAT_MATH_EQUALITY_RANGE = 0.0000001
 
 def get_float(value, default):
     if value is None:
@@ -123,14 +123,20 @@ def is_close(a, b, abs_tol=0.01000):
 
 
 def round_to_float_equality_range(n):
-    return round(n / 0.00000001) * 0.00000001
+    return (n * 10000000 + 0.00000005)//1 / 10000000.0
+    #return round(n / 0.0000001) * 0.0000001
+    #answer = math.floor(n*10000000)/10000000 if n > 0 else math.ceil(n*10000000)/10000000
+    return round(n,8)
+
+    #return answer
+    # slow - return round(n,6)
 
 
 def round_to(n, precision):
     return int(n / precision + (0.5 if n >= 0 else -0.5)) * precision
 
 
-def round_to_value(value, rounding_increment=0.00000001):
+def round_to_value(value, rounding_increment=0.0000001):
     return round(value / rounding_increment) * rounding_increment
 
 

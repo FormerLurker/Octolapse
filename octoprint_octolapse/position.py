@@ -120,33 +120,30 @@ class Pos(object):
             self.IsDeretractingStart = copy_from_pos.IsDeretractingStart
             self.IsDeretracting = copy_from_pos.IsDeretracting
             self.IsDeretracted = copy_from_pos.IsDeretracted
+            self.IsInPosition = copy_from_pos.IsInPosition
+            self.HasOneFeatureEnabled = copy_from_pos.HasOneFeatureEnabled
+            self.InPathPosition = copy_from_pos.InPathPosition
+            self.IsZHop = copy_from_pos.IsZHop
+            self.Features = copy_from_pos.Features
             #######
             if reset_state:
                 # Resets state changes
                 self.IsLayerChange = False
                 self.IsHeightChange = False
                 self.IsTravelOnly = False
-                self.IsZHop = False
                 self.HasPositionChanged = False
                 self.HasStateChanged = False
                 self.HasReceivedHomeCommand = False
-                self.HasOneFeatureEnabled = False
-                self.IsInPosition = False
-                self.InPathPosition = False
                 self.Features = []
             else:
                 # Copy or default states
                 self.IsLayerChange = copy_from_pos.IsLayerChange
                 self.IsHeightChange = copy_from_pos.IsHeightChange
                 self.IsTravelOnly = copy_from_pos.IsTravelOnly
-                self.IsZHop = copy_from_pos.IsZHop
                 self.HasPositionChanged = copy_from_pos.HasPositionChanged
                 self.HasStateChanged = copy_from_pos.HasStateChanged
                 self.HasReceivedHomeCommand = copy_from_pos.HasReceivedHomeCommand
-                self.HasOneFeatureEnabled = copy_from_pos.HasOneFeatureEnabled
-                self.IsInPosition = copy_from_pos.IsInPosition
-                self.InPathPosition = copy_from_pos.InPathPosition
-                self.Features = copy_from_pos.Features
+
         else:
             self.parsed_command = None
             self.F = None
@@ -1025,11 +1022,10 @@ class Position(object):
                 # Calculate ZHop based on last extrusion height
                 #current.IsZHop = current.is_zhop(self.ZHop)
 
-            if not current.IsExtruding:
-                current.IsZHop = (
-                    False if current.Z is None or current.LastExtrusionHeight is None
-                    else current.Z - current.LastExtrusionHeight - self.ZHop <= 0
-                )
+            current.IsZHop = (
+                False if current.IsExtruding or current.Z is None or current.LastExtrusionHeight is None
+                else current.Z - current.LastExtrusionHeight >= self.ZHop
+            )
             # Update Feature Detection
             if self.feature_restrictions_enabled:
                 if current.F is not None or current.HasPositionChanged:
