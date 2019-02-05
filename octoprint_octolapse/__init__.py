@@ -354,7 +354,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def test_camera_settings_apply(self):
         request_values = flask.request.get_json()
         profile = request_values["profile"]
-        camera_profile = CameraProfile.from_json(profile)
+        camera_profile = CameraProfile.create_from(profile)
         try:
             camera.test_web_camera_image_preferences(camera_profile)
             return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
@@ -368,7 +368,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         request_values = flask.request.get_json()
         profile = request_values["profile"]
         settings_type = request_values["settings_type"]
-        camera_profile = CameraProfile.from_json(profile)
+        camera_profile = CameraProfile.create_from(profile)
         success, errors = self.apply_camera_settings(camera_profile=camera_profile, force=True, settings_type=settings_type)
         if not success:
             self.send_plugin_message('camera-settings-error', errors)
