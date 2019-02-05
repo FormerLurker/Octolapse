@@ -112,7 +112,6 @@ class SnapshotGcodeGenerator(object):
         self.final_command = None
         # will hold the position and extruder state of the command that triggered the snapshot
         self.triggering_command_position = None
-        self.triggering_extruder_position = None  # This isn't used at the moment, but it may become useful
         #Snapshot Gcode Variable
         self.snapshot_gcode = None
         # state flags
@@ -131,7 +130,7 @@ class SnapshotGcodeGenerator(object):
         # get the triggering command and extruder position by
         # undo the most recent position update since we haven't yet executed the most recent gcode command
         # Capture and undo the last position update, we're not going to be using it!
-        self.triggering_command_position, self.triggering_extruder_position = position.undo_update()
+        self.triggering_command_position = position.undo_update()
         assert (isinstance(self.triggering_command_position, Pos))
         assert (isinstance(position, Position))
 
@@ -162,7 +161,7 @@ class SnapshotGcodeGenerator(object):
         self.is_extruder_relative_current = self.is_extruder_relative_return
         self.retracted_length_current = 0
         self.distance_to_lift = position.distance_to_zlift()
-        self.length_to_retract = position.Extruder.length_to_retract()
+        self.length_to_retract = position.length_to_retract()
 
         # State flags for triggering various functionality
         self.return_when_complete = True  # we only return if the final command is not travel only in XY plane
@@ -687,7 +686,7 @@ class SnapshotGcodeGenerator(object):
         # must be absolute
         self.z_return = position.z()
         self.distance_to_lift = position.distance_to_zlift()
-        self.length_to_retract = position.Extruder.length_to_retract()
+        self.length_to_retract = position.length_to_retract()
 
 
         # undo the update since the position has not changed, only the zlift value and potentially the

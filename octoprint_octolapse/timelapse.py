@@ -434,7 +434,7 @@ class Timelapse(object):
                 if self.Position is not None:
                     position_dict = self.Position.to_position_dict()
                     position_state_dict = self.Position.to_state_dict()
-                    extruder_dict = self.Position.Extruder.to_dict()
+                    extruder_dict = self.Position.current_pos.to_extruder_state_dict()
                 if self.Triggers is not None:
                     trigger_state = {
                         "Name": self.Triggers.Name,
@@ -821,10 +821,11 @@ class Timelapse(object):
             else:
                 # update position
                 self.Position.update_position(
-                    x=current_position["x"],
-                    y=current_position["y"],
-                    z=current_position["z"],
-                    e=current_position["e"],
+                    current_position["x"],
+                    current_position["y"],
+                    current_position["z"],
+                    current_position["e"],
+                    None,
                     force=True)
 
             # adjust the triggering command
@@ -954,7 +955,7 @@ class Timelapse(object):
                         if update_position_state:
                             position_state_change_dict = self.Position.to_state_dict()
                         if self.Settings.main_settings.show_extruder_state_changes:
-                            extruder_change_dict = self.Position.Extruder.to_dict()
+                            extruder_change_dict = self.Position.current_pos.to_extruder_state_dict()
 
                         # if there are any state changes, send them
                         if (

@@ -1160,6 +1160,7 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
         return {
             # Octolapse Settings
             'max_feedrate_z_override': SettingsDefinition('max_feedrate_z_override', CuraParsingFunctions.parse_float,['octolapse_setting']),
+            'retraction_amount': SettingsDefinition('retraction_amount', CuraParsingFunctions.parse_float, ['octolapse_setting']),
             'retraction_hop': SettingsDefinition('retraction_hop', CuraParsingFunctions.parse_int,['octolapse_setting']),
             'retraction_hop_enabled': SettingsDefinition('retraction_hop_enabled', CuraParsingFunctions.parse_bool,['octolapse_setting']),
             'retraction_prime_speed': SettingsDefinition('retraction_prime_speed', CuraParsingFunctions.parse_int,['octolapse_setting']),
@@ -1470,7 +1471,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'relative_extrusion': SettingsDefinition('relative_extrusion', CuraParsingFunctions.parse_bool, ['misc']),
             'remove_empty_first_layers': SettingsDefinition('remove_empty_first_layers', CuraParsingFunctions.parse_bool, ['misc']),
             'retract_at_layer_change': SettingsDefinition('retract_at_layer_change', CuraParsingFunctions.parse_bool, ['misc']),
-            'retraction_amount': SettingsDefinition('retraction_amount', CuraParsingFunctions.parse_float, ['misc']),
             'retraction_combing': SettingsDefinition('retraction_combing', CuraParsingFunctions.strip_string, ['misc']),
             'retraction_combing_max_distance': SettingsDefinition('retraction_combing_max_distance', CuraParsingFunctions.parse_int, ['misc']),
             'retraction_count_max': SettingsDefinition('retraction_count_max', CuraParsingFunctions.parse_int, ['misc']),

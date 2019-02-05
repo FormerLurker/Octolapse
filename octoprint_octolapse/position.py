@@ -61,46 +61,141 @@ class Pos(object):
     # Add slots for faster copy and init
     __slots__ = ["parsed_command", "F", "X", "XOffset", "XHomed", "Y", "YOffset", "YHomed", "Z", "ZOffset", "ZHomed",
                  "E", "EOffset", "IsRelative", "IsExtruderRelative", "IsMetric", "LastExtrusionHeight", "Layer",
-                 "Height", "IsPrimed", "MinimumLayerHeightReached", "IsInPosition", "InPathPosition", "IsTravelOnly",
+                 "Height", "IsPrinterPrimed", "MinimumLayerHeightReached", "IsInPosition", "InPathPosition",
+                 "IsTravelOnly",
                  "Features", "HasOneFeatureEnabled", "FirmwareRetractionLength", "FirmwareUnretractionAdditionalLength",
                  "FirmwareRetractionFeedrate", "FirmwareUnretractionFeedrate", "FirmwareZLift", "HasHomedPosition",
-                 "IsLayerChange","IsHeightChange", "IsZHop", "HasPositionChanged", "HasStateChanged",
-                 "HasReceivedHomeCommand", "HasPositionError", "PositionError"]
+                 "IsLayerChange", "IsHeightChange", "IsZHop", "HasPositionChanged", "HasStateChanged",
+                 "HasReceivedHomeCommand", "HasPositionError", "PositionError", 'ERelative', 'ExtrusionLength',
+                 'ExtrusionLengthTotal', 'RetractionLength', 'DeretractionLength', 'IsExtrudingStart', 'IsExtruding',
+                 'IsPrimed', 'IsRetractingStart', 'IsRetracting', 'IsRetracted', 'IsPartiallyRetracted',
+                 'IsDeretractingStart', 'IsDeretracting', 'IsDeretracted'
+                 ]
 
-    def __init__(self,copy_from_pos=None, reset_state=False):
-        self.parsed_command = None if copy_from_pos is None else copy_from_pos.parsed_command
-        self.F = None if copy_from_pos is None else copy_from_pos.F
-        self.X = None if copy_from_pos is None else copy_from_pos.X
-        self.XOffset = 0 if copy_from_pos is None else copy_from_pos.XOffset
-        self.XHomed = False if copy_from_pos is None else copy_from_pos.XHomed
-        self.Y = None if copy_from_pos is None else copy_from_pos.Y
-        self.YOffset = 0 if copy_from_pos is None else copy_from_pos.YOffset
-        self.YHomed = False if copy_from_pos is None else copy_from_pos.YHomed
-        self.Z = None if copy_from_pos is None else copy_from_pos.Z
-        self.ZOffset = 0 if copy_from_pos is None else copy_from_pos.ZOffset
-        self.ZHomed = False if copy_from_pos is None else copy_from_pos.ZHomed
-        self.E = 0 if copy_from_pos is None else copy_from_pos.E
-        self.EOffset = 0 if copy_from_pos is None else copy_from_pos.EOffset
-        self.IsRelative = False if copy_from_pos is None else copy_from_pos.IsRelative
-        self.IsExtruderRelative = False if copy_from_pos is None else copy_from_pos.IsExtruderRelative
-        self.IsMetric = True if copy_from_pos is None else copy_from_pos.IsMetric
-        self.LastExtrusionHeight = None if copy_from_pos is None else copy_from_pos.LastExtrusionHeight
-        self.Layer = 0 if copy_from_pos is None else copy_from_pos.Layer
-        self.Height = 0 if copy_from_pos is None else copy_from_pos.Height
-        self.IsPrimed = False if copy_from_pos is None else copy_from_pos.IsPrimed
-        self.MinimumLayerHeightReached = False if copy_from_pos is None else copy_from_pos.MinimumLayerHeightReached
-        self.IsInPosition = False if copy_from_pos is None else copy_from_pos.IsInPosition
-        self.InPathPosition = False if copy_from_pos is None else copy_from_pos.InPathPosition
-        self.FirmwareRetractionLength = None if copy_from_pos is None else copy_from_pos.FirmwareRetractionLength
-        self.FirmwareUnretractionAdditionalLength = None if copy_from_pos is None else copy_from_pos.FirmwareUnretractionAdditionalLength
-        self.FirmwareRetractionFeedrate = None if copy_from_pos is None else copy_from_pos.FirmwareRetractionFeedrate
-        self.FirmwareUnretractionFeedrate = None if copy_from_pos is None else copy_from_pos.FirmwareUnretractionFeedrate
-        self.FirmwareZLift = None if copy_from_pos is None else copy_from_pos.FirmwareZLift
-        self.HasPositionError = False if copy_from_pos is None else copy_from_pos.HasPositionError
-        self.PositionError = None if copy_from_pos is None else copy_from_pos.PositionError
-        self.HasHomedPosition = False if copy_from_pos is None else copy_from_pos.HasHomedPosition
+    def __init__(self, copy_from_pos=None, reset_state=False):
 
-        if reset_state:
+        if copy_from_pos is not None:
+            self.parsed_command = copy_from_pos.parsed_command
+            self.F = copy_from_pos.F
+            self.X = copy_from_pos.X
+            self.XOffset = copy_from_pos.XOffset
+            self.XHomed = copy_from_pos.XHomed
+            self.Y = copy_from_pos.Y
+            self.YOffset = copy_from_pos.YOffset
+            self.YHomed = copy_from_pos.YHomed
+            self.Z = copy_from_pos.Z
+            self.ZOffset = copy_from_pos.ZOffset
+            self.ZHomed = copy_from_pos.ZHomed
+            self.E = copy_from_pos.E
+            self.EOffset = copy_from_pos.EOffset
+            self.IsRelative = copy_from_pos.IsRelative
+            self.IsExtruderRelative = copy_from_pos.IsExtruderRelative
+            self.IsMetric = copy_from_pos.IsMetric
+            self.LastExtrusionHeight = copy_from_pos.LastExtrusionHeight
+            self.Layer = copy_from_pos.Layer
+            self.Height = copy_from_pos.Height
+            self.IsPrinterPrimed = copy_from_pos.IsPrinterPrimed
+            self.MinimumLayerHeightReached = copy_from_pos.MinimumLayerHeightReached
+            self.FirmwareRetractionLength = copy_from_pos.FirmwareRetractionLength
+            self.FirmwareUnretractionAdditionalLength = copy_from_pos.FirmwareUnretractionAdditionalLength
+            self.FirmwareRetractionFeedrate = copy_from_pos.FirmwareRetractionFeedrate
+            self.FirmwareUnretractionFeedrate = copy_from_pos.FirmwareUnretractionFeedrate
+            self.FirmwareZLift = copy_from_pos.FirmwareZLift
+            self.HasPositionError = copy_from_pos.HasPositionError
+            self.PositionError = copy_from_pos.PositionError
+            self.HasHomedPosition = copy_from_pos.HasHomedPosition
+
+            ####### Extruder Tracking
+            self.ERelative = copy_from_pos.E
+            self.ExtrusionLength = copy_from_pos.ExtrusionLength
+            self.ExtrusionLengthTotal = copy_from_pos.ExtrusionLengthTotal
+            self.RetractionLength = copy_from_pos.RetractionLength
+            self.DeretractionLength = copy_from_pos.DeretractionLength
+            self.IsExtrudingStart = copy_from_pos.IsExtrudingStart
+            self.IsExtruding = copy_from_pos.IsExtruding
+            self.IsPrimed = copy_from_pos.IsPrimed
+            self.IsRetractingStart = copy_from_pos.IsRetractingStart
+            self.IsRetracting = copy_from_pos.IsRetracting
+            self.IsRetracted = copy_from_pos.IsRetracted
+            self.IsPartiallyRetracted = copy_from_pos.IsPartiallyRetracted
+            self.IsDeretractingStart = copy_from_pos.IsDeretractingStart
+            self.IsDeretracting = copy_from_pos.IsDeretracting
+            self.IsDeretracted = copy_from_pos.IsDeretracted
+            #######
+            if reset_state:
+                # Resets state changes
+                self.IsLayerChange = False
+                self.IsHeightChange = False
+                self.IsTravelOnly = False
+                self.IsZHop = False
+                self.HasPositionChanged = False
+                self.HasStateChanged = False
+                self.HasReceivedHomeCommand = False
+                self.HasOneFeatureEnabled = False
+                self.IsInPosition = False
+                self.InPathPosition = False
+                self.Features = []
+            else:
+                # Copy or default states
+                self.IsLayerChange = copy_from_pos.IsLayerChange
+                self.IsHeightChange = copy_from_pos.IsHeightChange
+                self.IsTravelOnly = copy_from_pos.IsTravelOnly
+                self.IsZHop = copy_from_pos.IsZHop
+                self.HasPositionChanged = copy_from_pos.HasPositionChanged
+                self.HasStateChanged = copy_from_pos.HasStateChanged
+                self.HasReceivedHomeCommand = copy_from_pos.HasReceivedHomeCommand
+                self.HasOneFeatureEnabled = copy_from_pos.HasOneFeatureEnabled
+                self.IsInPosition = copy_from_pos.IsInPosition
+                self.InPathPosition = copy_from_pos.InPathPosition
+                self.Features = copy_from_pos.Features
+        else:
+            self.parsed_command = None
+            self.F = None
+            self.X = None
+            self.XOffset = 0
+            self.XHomed = False
+            self.Y = None
+            self.YOffset = 0
+            self.YHomed = False
+            self.Z = None
+            self.ZOffset = 0
+            self.ZHomed = False
+            self.E = 0
+            self.EOffset = 0
+            self.IsRelative = False
+            self.IsExtruderRelative = False
+            self.IsMetric = True
+            self.LastExtrusionHeight = None
+            self.Layer = 0
+            self.Height = 0
+            self.IsPrinterPrimed = False
+            self.MinimumLayerHeightReached = False
+            self.FirmwareRetractionLength = None
+            self.FirmwareUnretractionAdditionalLength = None
+            self.FirmwareRetractionFeedrate = None
+            self.FirmwareUnretractionFeedrate = None
+            self.FirmwareZLift = None
+            self.HasPositionError = False
+            self.PositionError = None
+            self.HasHomedPosition = False
+
+            ####### Extruder Tracking
+            self.ERelative = 0
+            self.ExtrusionLength = 0.0
+            self.ExtrusionLengthTotal = 0.0
+            self.RetractionLength = 0.0
+            self.DeretractionLength = 0.0
+            self.IsExtrudingStart = False
+            self.IsExtruding = False
+            self.IsPrimed = False
+            self.IsRetractingStart = False
+            self.IsRetracting = False
+            self.IsRetracted = False
+            self.IsPartiallyRetracted = False
+            self.IsDeretractingStart = False
+            self.IsDeretracting = False
+            self.IsDeretracted = False
+
             # Resets state changes
             self.IsLayerChange = False
             self.IsHeightChange = False
@@ -110,113 +205,69 @@ class Pos(object):
             self.HasStateChanged = False
             self.HasReceivedHomeCommand = False
             self.HasOneFeatureEnabled = False
+            self.IsInPosition = False
+            self.InPathPosition = False
             self.Features = []
-        else:
-            # Copy or default states
-            self.IsLayerChange = False if copy_from_pos is None else copy_from_pos.IsLayerChange
-            self.IsHeightChange = False if copy_from_pos is None else copy_from_pos.IsHeightChange
-            self.IsTravelOnly = False if copy_from_pos is None else copy_from_pos.IsTravelOnly
-            self.IsZHop = False if copy_from_pos is None else copy_from_pos.IsZHop
-            self.HasPositionChanged = False if copy_from_pos is None else copy_from_pos.HasPositionChanged
-            self.HasStateChanged = False if copy_from_pos is None else copy_from_pos.HasStateChanged
-            self.HasReceivedHomeCommand = False if copy_from_pos is None else copy_from_pos.HasReceivedHomeCommand
-            self.HasOneFeatureEnabled = False if copy_from_pos is None else copy_from_pos.HasOneFeatureEnabled
-            self.Features = [] if copy_from_pos is None else copy_from_pos.Features
-
-    @staticmethod
-    def copy_to(source, target):
-        target.parsed_command = source.parsed_command
-        target.F = source.F
-        target.X = source.X
-        target.XOffset = source.XOffset
-        target.XHomed = source.XHomed
-        target.Y = source.Y
-        target.YOffset = source.YOffset
-        target.YHomed = source.YHomed
-        target.Z = source.Z
-        target.ZOffset = source.ZOffset
-        target.ZHomed = source.ZHomed
-        target.E = source.E
-        target.EOffset = source.EOffset
-        target.IsRelative = source.IsRelative
-        target.IsExtruderRelative = source.IsExtruderRelative
-        target.IsMetric = source.IsMetric
-        target.LastExtrusionHeight = source.LastExtrusionHeight
-        target.Layer = source.Layer
-        target.Height = source.Height
-        target.IsPrimed = source.IsPrimed
-        target.MinimumLayerHeightReached = source.MinimumLayerHeightReached
-        target.IsInPosition = source.IsInPosition
-        target.InPathPosition = source.InPathPosition
-        target.IsTravelOnly = source.IsTravelOnly
-        target.Features = source.Features
-        target.HasOneFeatureEnabled = source.HasOneFeatureEnabled
-        target.FirmwareRetractionLength = source.FirmwareRetractionLength
-        target.FirmwareUnretractionAdditionalLength = source.FirmwareUnretractionAdditionalLength
-        target.FirmwareRetractionFeedrate = source.FirmwareRetractionFeedrate
-        target.FirmwareUnretractionFeedrate = source.FirmwareUnretractionFeedrate
-        target.FirmwareZLift = source.FirmwareZLift
-        target.HasHomedPosition = source.HasHomedPosition
-        target.IsLayerChange = source.IsLayerChange
-        target.IsHeightChange = source.IsHeightChange
-        target.IsZHop = source.IsZHop
-        target.HasPositionChanged = source.HasPositionChanged
-        target.HasStateChanged = source.HasStateChanged
-        target.HasReceivedHomeCommand = source.HasReceivedHomeCommand
-        target.HasPositionError = source.HasPositionError
-        target.PositionError = source.PositionError
-        return target
 
     @classmethod
-    def create_initial(cls,printer, octoprint_printer_profile):
-        initialPos = Pos()
+    def create_initial(cls, printer, octoprint_printer_profile):
+        initial_pos = Pos()
         if printer.e_axis_default_mode in ['absolute', 'relative']:
-            initialPos.IsExtruderRelative = True if printer.e_axis_default_mode == 'relative' else False
+            initial_pos.IsExtruderRelative = True if printer.e_axis_default_mode == 'relative' else False
         else:
-            initialPos.IsExtruderRelative = None
+            initial_pos.IsExtruderRelative = None
         if printer.xyz_axes_default_mode in ['absolute', 'relative']:
-            initialPos.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
+            initial_pos.IsRelative = True if printer.xyz_axes_default_mode == 'relative' else False
         else:
-            initialPos.IsRelative = None
+            initial_pos.IsRelative = None
         if printer.units_default in ['inches', 'millimeters']:
-            initialPos.IsMetric = True if printer.units_default == 'millimeters' else False
+            initial_pos.IsMetric = True if printer.units_default == 'millimeters' else False
         else:
-            initialPos.IsMetric = None
+            initial_pos.IsMetric = None
 
         # default firmware retraction length and feedrate if default_firmware_retractions isenabled
         if printer.default_firmware_retractions:
-            initialPos.FirmwareRetractionLength = printer.retract_length
-            initialPos.FirmwareUnretractionAdditionalLength = None  # todo:  add this setting
-            initialPos.FirmwareRetractionFeedrate = printer.retract_speed
-            initialPos.FirmwareUnretractionFeedrate = printer.deretract_speed
+            initial_pos.FirmwareRetractionLength = printer.retract_length
+            initial_pos.FirmwareUnretractionAdditionalLength = None  # todo:  add this setting
+            initial_pos.FirmwareRetractionFeedrate = printer.retract_speed
+            initial_pos.FirmwareUnretractionFeedrate = printer.deretract_speed
         if printer.default_firmware_retractions_zhop:
-            initialPos.FirmwareZLift = printer.get_z_hop_for_slicer_type()
+            initial_pos.FirmwareZLift = printer.get_z_hop_for_slicer_type()
 
-        return initialPos
+        return initial_pos
 
     def is_state_equal(self, pos):
         if (self.XHomed == pos.XHomed and self.YHomed == pos.YHomed
-                and self.ZHomed == pos.ZHomed
-                and self.IsLayerChange == pos.IsLayerChange
-                and self.IsHeightChange == pos.IsHeightChange
-                and self.IsZHop == pos.IsZHop
-                and self.IsRelative == pos.IsRelative
-                and self.IsExtruderRelative == pos.IsExtruderRelative
-                and pos.Layer == self.Layer
-                and pos.Height == self.Height
-                and (
-                    (pos.LastExtrusionHeight is None and self.LastExtrusionHeight is None) or
-                    pos.LastExtrusionHeight == self.LastExtrusionHeight
-                )
-                and self.IsPrimed == pos.IsPrimed
-                and self.MinimumLayerHeightReached == pos.MinimumLayerHeightReached
-                and self.IsInPosition == pos.IsInPosition
-                and self.InPathPosition == pos.InPathPosition
-                and self.HasOneFeatureEnabled == pos.HasOneFeatureEnabled
-                and self.HasPositionError == pos.HasPositionError
-                and self.PositionError == pos.PositionError
-                and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand
-                and self.IsTravelOnly == pos.IsTravelOnly):
+            and self.ZHomed == pos.ZHomed
+            and self.IsLayerChange == pos.IsLayerChange
+            and self.IsHeightChange == pos.IsHeightChange
+            and self.IsZHop == pos.IsZHop
+            and self.IsRelative == pos.IsRelative
+            and self.IsExtruderRelative == pos.IsExtruderRelative
+            and self.Layer == pos.Layer
+            and self.Height == pos.Height
+            and self.LastExtrusionHeight == pos.LastExtrusionHeight
+            and self.IsPrinterPrimed == pos.IsPrinterPrimed
+            and self.MinimumLayerHeightReached == pos.MinimumLayerHeightReached
+            and self.IsInPosition == pos.IsInPosition
+            and self.InPathPosition == pos.InPathPosition
+            and self.HasOneFeatureEnabled == pos.HasOneFeatureEnabled
+            and self.HasPositionError == pos.HasPositionError
+            and self.PositionError == pos.PositionError
+            and self.HasReceivedHomeCommand == pos.HasReceivedHomeCommand
+            and self.IsTravelOnly == pos.IsTravelOnly
+            and self.IsExtrudingStart == pos.IsExtrudingStart
+            and self.IsExtruding == pos.IsExtruding
+            and self.IsPrimed == pos.IsPrimed
+            and self.IsRetractingStart == pos.IsRetractingStart
+            and self.IsRetracting == pos.IsRetracting
+            and self.IsRetracted == pos.IsRetracted
+            and self.IsPartiallyRetracted == pos.IsPartiallyRetracted
+            and self.IsDeretractingStart == pos.IsDeretractingStart
+            and self.IsDeretracting == pos.IsDeretracting
+            and self.IsDeretracted == pos.IsDeretracted
+
+        ):
             return True
 
         return False
@@ -228,6 +279,26 @@ class Pos(object):
             pos.Y == self.Y and
             pos.Z == self.Z
         )
+
+    def to_extruder_state_dict(self):
+        return {
+            "E": self.ERelative,
+            "ExtrusionLength": self.ExtrusionLength,
+            "ExtrusionLengthTotal": self.ExtrusionLengthTotal,
+            "RetractionLength": self.RetractionLength,
+            "DeretractionLength": self.DeretractionLength,
+            "IsExtrudingStart": self.IsExtrudingStart,
+            "IsExtruding": self.IsExtruding,
+            "IsPrimed": self.IsPrimed,
+            "IsRetractingStart": self.IsRetractingStart,
+            "IsRetracting": self.IsRetracting,
+            "IsRetracted": self.IsRetracted,
+            "IsPartiallyRetracted": self.IsPartiallyRetracted,
+            "IsDeretractingStart": self.IsDeretractingStart,
+            "IsDeretracting": self.IsDeretracting,
+            "IsDeretracted": self.IsDeretracted,
+            "HasChanged": self.HasStateChanged
+        }
 
     def to_state_dict(self):
         return {
@@ -247,7 +318,7 @@ class Pos(object):
             "IsInPosition": self.IsInPosition,
             "HasOneFeatureEnabled": self.HasOneFeatureEnabled,
             "InPathPosition": self.InPathPosition,
-            "IsPrimed": self.IsPrimed,
+            "IsPrinterPrimed": self.IsPrinterPrimed,
             "MinimumLayerHeightReached": self.MinimumLayerHeightReached,
             "HasPositionError": self.HasPositionError,
             "PositionError": self.PositionError,
@@ -309,86 +380,70 @@ class Pos(object):
 
     def update_position(
         self,
-        x=None,
-        y=None,
-        z=None,
-        e=None,
-        f=None,
+        x,
+        y,
+        z,
+        e,
+        f,
         force=False,
-        tolerance=utility.FLOAT_MATH_EQUALITY_RANGE
+        is_g1=False
     ):
-
+        if is_g1:
+            self.IsTravelOnly = e is None and z is None and (
+                x is not None or y is not None
+            )
         if f is not None:
-            self.F = float(f)
+            self.F = f
+
         if force:
             # Force the coordinates in as long as they are provided.
             #
             if x is not None:
-                self.X = utility.round_to_value(float(x) + self.XOffset, tolerance)
+                self.X = utility.round_to_float_equality_range(x + self.XOffset)
             if y is not None:
-                self.Y = utility.round_to_value(float(y) + self.YOffset, tolerance)
+                self.Y = utility.round_to_float_equality_range(y + self.YOffset)
             if z is not None:
-                self.Z = utility.round_to_value(float(z) + self.ZOffset, tolerance)
+                self.Z = utility.round_to_float_equality_range(z + self.ZOffset)
             if e is not None:
-                self.E = utility.round_to_value(float(e) + self.EOffset, tolerance)
+                self.E = utility.round_to_float_equality_range(e + self.EOffset)
+            return
+
+        if self.IsRelative:
+            if x is not None:
+                self.X = None if self.X is None else utility.round_to_float_equality_range(x + self.X)
+            if y is not None:
+                self.Y = None if self.Y is None else utility.round_to_float_equality_range(y + self.Y)
+            if z is not None:
+                self.Z = None if self.Z is None else utility.round_to_float_equality_range(z + self.Z)
         else:
-            # Update the previous positions if values were supplied
-            if x is not None and self.XHomed:
-                if self.IsRelative:
-                    if self.X is not None:
-                        self.X = utility.round_to_value(float(x) + self.X, tolerance)
-                else:
-                    self.X = utility.round_to_value(float(x) + self.XOffset, tolerance)
+            if x is not None:
+                self.X = utility.round_to_float_equality_range(x + self.XOffset)
+            if y is not None:
+                self.Y = utility.round_to_float_equality_range(y + self.YOffset)
+            if z is not None:
+                self.Z = utility.round_to_float_equality_range(z + self.ZOffset)
 
-            if y is not None and self.YHomed:
-                if self.IsRelative:
-                    if self.Y is not None:
-                        self.Y = utility.round_to_value(float(y) + self.Y, tolerance)
-                else:
-                    self.Y = utility.round_to_value(float(y) + self.YOffset, tolerance)
+        if e is not None:
+            if self.IsExtruderRelative:
+                self.E = None if self.E is None else utility.round_to_float_equality_range(e + self.E)
+            else:
+                self.E = utility.round_to_float_equality_range(e + self.EOffset)
 
-            if z is not None and self.ZHomed:
-                if self.IsRelative:
-                    if self.Z is not None:
-                        self.Z = utility.round_to_value(float(z)+self.Z, tolerance)
-                else:
-                    self.Z = utility.round_to_value(float(z) + self.ZOffset, tolerance)
-
-            if e is not None:
-                if self.IsExtruderRelative:
-                    if self.E is not None:
-                        self.E = utility.round_to_value(float(e) + self.E, tolerance)
-                else:
-                    self.E = utility.round_to_value(float(e) + self.EOffset, tolerance)
-
-            #if (not utility.is_in_bounds(
-            #        bounding_box, self.X, self.XOffset, self.Y , self.YOffset, self.Z, self.ZOffset)):
-            #    self.HasPositionError = True
-            #    self.PositionError = "Position - Coordinates {0} are out of the printer area!  " \
-            #                         "Cannot resume position tracking until the axis is homed, "  \
-            #                         "or until absolute coordinates are received.".format(
-            #                            get_formatted_coordinates(self.X, self.Y, self.Z, self.E))
-            #else:
-            #    self.HasPositionError = False
-            #    self.PositionError = None
+    def is_zhop(self, z_hop):
+        return (
+            False if self.Z is None or self.LastExtrusionHeight is None
+            else self.Z - self.LastExtrusionHeight - z_hop <= 0
+        )
 
     def distance_to_zlift(self, z_hop, restrict_lift_height=True):
-        if self.Z is None or self.LastExtrusionHeight is None:
-            return None
-
-        current_lift = self.Z - self.LastExtrusionHeight
-        amount_to_lift = z_hop - current_lift
-
+        amount_to_lift = None if self.Z is None or self.LastExtrusionHeight is None else self.Z - self.LastExtrusionHeight - z_hop
         if restrict_lift_height:
             if amount_to_lift < utility.FLOAT_MATH_EQUALITY_RANGE:
                 return 0
             elif amount_to_lift > z_hop:
                 return z_hop
-            else:
-                # we are in-between 0 and z_hop, calculate lift
-                return amount_to_lift
 
-        return amount_to_lift
+        return utility.round_to(amount_to_lift, utility.FLOAT_MATH_EQUALITY_RANGE)
 
     def x_with_offset(self):
         return utility.coordinate_to_offset_position(self.X, self.XOffset)
@@ -408,6 +463,7 @@ class Position(object):
 
         self.Snapshot = self.Settings.profiles.current_snapshot()
         self.SlicerFeatures = SlicerPrintFeatures(self.Printer.get_current_slicer_settings(), self.Snapshot)
+        self.feature_restrictions_enabled = self.Snapshot.feature_restrictions_enabled
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -417,13 +473,14 @@ class Position(object):
 
         self.BoundingBox = utility.get_bounding_box(self.Printer,
                                                     octoprint_printer_profile)
+        self.gcode_generation_settings = self.Settings.profiles.current_printer().get_current_state_detection_settings()
+        self.retraction_length = self.gcode_generation_settings.retraction_length
         self.PrinterTolerance = utility.FLOAT_MATH_EQUALITY_RANGE
         self.Positions = deque(maxlen=5)
         self.SavedPosition = None
         self.HasRestrictedPosition = (
             len(self.Snapshot.position_restrictions) > 0 and self.Snapshot.position_restrictions_enabled
         )
-        self.Extruder = Extruder(octolapse_settings)
         if self.Printer.g90_influences_extruder in ['true', 'false']:
             self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False
         else:
@@ -433,7 +490,8 @@ class Position(object):
         assert (isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
 
         self.ZHop = 0 if self.gcode_generation_settings.z_lift_height is None else self.gcode_generation_settings.z_lift_height
-
+        self.priming_height = self.Printer.priming_height
+        self.minimum_layer_height = self.Printer.minimum_layer_height
         self.LocationDetectionCommands = []
         self.create_location_detection_commands()
 
@@ -444,7 +502,8 @@ class Position(object):
         self.Positions.append(self.current_pos)
 
         self.gcode_functions = self.get_gcode_functions()
-        self.extruder_update_commands = {'G0', 'G1', 'G3', 'G4' ,'G10' ,'G11' ,'G28' ,'G80' ,'M109' ,'M116' ,'M190', 'M191'}
+        self.extruder_update_commands = {'G0', 'G1', 'G3', 'G4', 'G10', 'G11', 'G28', 'G80', 'M109', 'M116', 'M190',
+                                         'M191'}
 
     def create_location_detection_commands(self):
 
@@ -466,21 +525,14 @@ class Position(object):
         # if "G162" not in self.LocationDetectionCommands:
         #     self.LocationDetectionCommands.append("G162")
 
-    def update_position(self,
-                        x=None,
-                        y=None,
-                        z=None,
-                        e=None,
-                        f=None,
-                        force=False):
-        num_positions = len(self.Positions)
-        if num_positions == 0:
-            return
+    def update_position(self, x, y, z, e, f, force=False):
         self.current_pos.update_position(x, y, z, e, f, force)
 
     def to_position_dict(self):
         if len(self.Positions) > 0:
-            return self.current_pos.to_dict()
+            ret_dict = self.current_pos.to_dict()
+            ret_dict["Features"] = self.SlicerFeatures.get_printing_features_list(self.current_pos.F,self.current_pos.Layer)
+            return ret_dict
         return None
 
     def to_state_dict(self):
@@ -495,29 +547,108 @@ class Position(object):
         else:
             return self.current_pos.Height - self.previous_pos.Height
 
-    def distance_to_zlift(self, index=0):
-        pos = self.get_position(index)
-        assert(isinstance(pos, Pos))
-
-        if pos is None:
-            return None
-
+    def distance_to_zlift(self):
         # get the lift amount, but don't restrict it so we can log properly
-        amount_to_lift = pos.distance_to_zlift(self.ZHop, False)
+        return self.current_pos.distance_to_zlift(self.ZHop, True)
 
-        if amount_to_lift < 0:
-            # the current lift is negative
-            self.Settings.Logger.log_warning("position.py - A 'distance_to_zlift' was requested, "
-                                                              "but the current lift is already above the z_hop height.")
-            return 0
-        elif amount_to_lift > self.ZHop:
-            # For some reason we're lower than we expected
-            self.Settings.Logger.log_warning("position.py - A 'distance_to_zlift' was requested, "
-                                                              "but was found to be more than the z_hop height.")
-            return self.ZHop
-        else:
-            # we are in-between 0 and z_hop, calculate lift
-            return amount_to_lift
+    def length_to_retract(self):
+        # if we don't have any history, we want to retract
+        retract_length = utility.round_to_float_equality_range(
+            self.retraction_length - self.current_pos.RetractionLength
+        )
+
+        # Don't round the retraction length
+        # retractLength = utility.round_to(retract_length, self.PrinterTolerance)
+
+        if retract_length < 0:
+            # This means we are beyond fully retracted, return 0
+            self.Settings.Logger.log_warning("extruder.py - A 'length_to_retract' was requested, "
+                                             "but the extruder is beyond the configured retraction "
+                                             "length.")
+            retract_length = 0
+        elif retract_length > self.retraction_length:
+            self.Settings.Logger.log_error("extruder.py - A 'length_to_retract' was requested, "
+                                           "but was found to be greater than the retraction "
+                                           "length.")
+            # for some reason we are over the retraction length.  Return 0
+            retract_length = self.retraction_length
+
+        if abs(retract_length) < utility.FLOAT_MATH_EQUALITY_RANGE:
+            return 0.0
+        # return the calculated retraction length
+        return retract_length
+
+    def is_extruder_triggered(self, options):
+        # if there are no extruder trigger options, return true.
+        if options is None:
+            return True
+
+
+        # Matches the supplied extruder trigger options to the current
+        # extruder state.  Returns true if triggering, false if not.
+
+        extruding_start_triggered = self._extruder_state_triggered(
+            options.OnExtrudingStart, self.current_state.IsExtrudingStart
+        )
+        extruding_triggered = self._extruder_state_triggered(
+            options.OnExtruding, self.current_state.IsExtruding
+        )
+        primed_triggered = self._extruder_state_triggered(
+            options.OnPrimed, self.current_state.IsPrimed
+        )
+        retracting_start_triggered = self._extruder_state_triggered(
+            options.OnRetractingStart, self.current_state.IsRetractingStart
+        )
+        retracting_triggered = self._extruder_state_triggered(
+            options.OnRetracting, self.current_state.IsRetracting
+        )
+        partially_retracted_triggered = self._extruder_state_triggered(
+            options.OnPartiallyRetracted, self.current_state.IsPartiallyRetracted
+        )
+        retracted_triggered = self._extruder_state_triggered(
+            options.OnRetracted, self.current_state.IsRetracted
+        )
+        deretracting_start_triggered = self._extruder_state_triggered(
+            options.OnDeretractingStart, self.current_state.IsDeretractingStart
+        )
+        deretracting_triggered = self._extruder_state_triggered(
+            options.OnDeretracting, self.current_state.IsDeretracting
+        )
+        deretracted_triggered = self._extruder_state_triggered(
+            options.OnDeretracted, self.current_state.IsDeretracted
+        )
+
+        ret_value = False
+        is_triggering_prevented = (
+            (extruding_start_triggered is not None and not extruding_start_triggered)
+            or (extruding_triggered is not None and not extruding_triggered)
+            or (primed_triggered is not None and not primed_triggered)
+            or (retracting_start_triggered is not None and not retracting_start_triggered)
+            or (retracting_triggered is not None and not retracting_triggered)
+            or (partially_retracted_triggered is not None and not partially_retracted_triggered)
+            or (retracted_triggered is not None and not retracted_triggered)
+            or (deretracting_start_triggered is not None and not deretracting_start_triggered)
+            or (deretracting_triggered is not None and not deretracting_triggered)
+            or (deretracted_triggered is not None and not deretracted_triggered))
+
+        if (not is_triggering_prevented
+            and
+            (
+                (extruding_start_triggered is not None and extruding_start_triggered)
+                or (extruding_triggered is not None and extruding_triggered)
+                or (primed_triggered is not None and primed_triggered)
+                or (retracting_start_triggered is not None and retracting_start_triggered)
+                or (retracting_triggered is not None and retracting_triggered)
+                or (partially_retracted_triggered is not None and partially_retracted_triggered)
+                or (retracted_triggered is not None and retracted_triggered)
+                or (deretracting_start_triggered is not None and deretracting_start_triggered)
+                or (deretracting_triggered is not None and deretracting_triggered)
+                or (deretracted_triggered is not None and deretracted_triggered)
+                or (options.are_all_triggers_ignored()))):
+            ret_value = True
+
+        return ret_value
+
 
     def has_state_changed(self, index=0):
         pos = self.get_position(index)
@@ -681,7 +812,7 @@ class Position(object):
 
     def command_requires_location_detection(self, cmd):
         if self.Printer.auto_detect_position:
-           if cmd in self.LocationDetectionCommands:
+            if cmd in self.LocationDetectionCommands:
                 return True
         return False
 
@@ -700,11 +831,9 @@ class Position(object):
         if len(self.Positions) < 2:
             raise Exception("Cannot undo updates when there is less than one position in the position queue.")
         previous_position = self.Positions.popleft()
-        previous_extruder = self.Extruder.undo_update()
         self.current_pos = self.Positions[0]
         self.previous_pos = self.Positions[1]
-        return previous_position, previous_extruder
-
+        return previous_position
 
     def get_position(self, index=0):
         if len(self.Positions) > index:
@@ -715,8 +844,8 @@ class Position(object):
         return {
             "G0": self.process_g0_g1,
             "G1": self.process_g0_g1,
-            "G2": self.process_g2_g3,
-            "G3": self.process_g2_g3,
+            "G2": self.process_g2,
+            "G3": self.process_g3,
             "G10": self.process_g10,
             "G11": self.process_g11,
             "G20": self.process_g20,
@@ -733,227 +862,219 @@ class Position(object):
 
     def update(self, parsed_command):
 
-        num_positions = len(self.Positions)
-
-        # swap positions
-        Pos.copy_to(self.current_pos, self.previous_pos)
-        # create copy of the current pos for the previous pos
+        # Move the current position to the previous and
+        self.previous_pos = self.current_pos
         self.current_pos = Pos(self.previous_pos, reset_state=True)
+
+        previous = self.previous_pos
+        current = self.current_pos
+
         # set the pos gcode cmd
-        self.current_pos.parsed_command = parsed_command
+        current.parsed_command = parsed_command
 
         # apply the cmd to the position tracker
-        cmd = self.current_pos.parsed_command.cmd
-        if cmd is not None and self.current_pos.parsed_command.cmd in self.gcode_functions:
-            if self.current_pos.parsed_command.cmd in Commands.CommandsRequireMetric and not self.current_pos.IsMetric:
-                self.current_pos.HasPositionError = True
-                self.current_pos.PositionError = "Units are not metric.  Unable to continue print."
-            else:
-                # call the gcode function
-                self.gcode_functions[cmd]()
+        # cmd = current.parsed_command.cmd
+        cmd = parsed_command.cmd
 
-        ########################################
-        # Update the extruder monitor.
-        # todo: should we use 0 as a tolerance here?
-        should_update_extruder = False
+        # This is a secial case for optimization reasons.
+        # These two are by far the most used commands, so
+        # call them directly and avoid the hash lookup and extra function call
+        has_processed_command = False
+        if cmd == "G1" or cmd == "G0":
+            has_processed_command = True
+            self.current_pos.update_position(
+                parsed_command.parameters["X"] if "X" in parsed_command.parameters else None,
+                parsed_command.parameters["Y"] if "T" in parsed_command.parameters else None,
+                parsed_command.parameters["Z"] if "Z" in parsed_command.parameters else None,
+                parsed_command.parameters["E"] if "E" in parsed_command.parameters else None,
+                parsed_command.parameters["F"] if "F" in parsed_command.parameters else None,
+                is_g1=True
+            )
+        elif parsed_command.cmd in self.gcode_functions:
+            self.gcode_functions[parsed_command.cmd]()
+            has_processed_command = True
+            # Have the XYZ positions changed after processing a command?
 
-        e_relative = self.e_relative_pos()
-        if e_relative != 0 or parsed_command.cmd in self.extruder_update_commands:
-            should_update_extruder = True
+        if has_processed_command:
+            current.HasPositionChanged = (
+                current.X != previous.X or current.Y != previous.Y or current.E != previous.E
+                or current.Z != previous.Z
+            )
 
-        self.Extruder.update(e_relative, update_state=should_update_extruder)
-
-        # Have the XYZ positions or states changed?
-        self.current_pos.HasPositionChanged = not self.current_pos.is_position_equal(self.previous_pos)
-        self.current_pos.HasStateChanged = not self.current_pos.is_state_equal(self.previous_pos)
-
-        if not self.current_pos.HasHomedPosition:
-            self.current_pos.HasHomedPosition = (
-                self.current_pos.XHomed and self.current_pos.YHomed and self.current_pos.ZHomed and
-                self.current_pos.IsMetric and
-                self.current_pos.X is not None and
-                self.current_pos.Y is not None and
-                self.current_pos.Z is not None and
-                self.current_pos.IsRelative is not None and
-                self.current_pos.IsExtruderRelative is not None
-             )
-
-        if (
-            self.current_pos.HasHomedPosition and
-            self.previous_pos.HasHomedPosition and
-            (self.Extruder.current_state.HasChanged or self.current_pos.HasPositionChanged)
-        ):
-            # If we have a homed for the current and previous position, and either the exturder or position has changed
-
-            if self.HasRestrictedPosition:
-                # If we're using restricted positions, calculate intersections and determine if we are in position
-                can_calculate_intersections = self.current_pos.parsed_command.cmd in ["G0", "G1"]
-                _is_in_position, _intersections = self.calculate_path_intersections(
-                    self.Snapshot.position_restrictions,
-                    self.current_pos.X,
-                    self.current_pos.Y,
-                    self.previous_pos.X,
-                    self.previous_pos.Y,
-                    can_calculate_intersections
+            # see if our position is homed
+            if not current.HasHomedPosition:
+                current.HasHomedPosition = (
+                    current.XHomed and current.YHomed and current.ZHomed and
+                    current.IsMetric and
+                    current.X is not None and
+                    current.Y is not None and
+                    current.Z is not None and
+                    current.IsRelative is not None and
+                    current.IsExtruderRelative is not None
                 )
-                if _is_in_position:
-                    self.current_pos.IsInPosition = _is_in_position
 
-                else:
-                    self.current_pos.IsInPosition = False
-                    self.current_pos.InPathPosition = _intersections
+        # update the extruder state.  Note that e_relative must be rounded and non-null
+
+        ### Update Extruder States
+        # this value should already be rounded
+        current.ERelative = utility.round_to_float_equality_range(current.E - previous.E)
+        if current.ERelative != 0:
+            # Update RetractionLength and ExtrusionLength
+            current.RetractionLength = utility.round_to_float_equality_range(current.RetractionLength - current.ERelative)
+            if current.RetractionLength <= 0:
+                # we can use the negative retraction length to calculate our extrusion length!
+                current.ExtrusionLength = abs(current.RetractionLength)
+                # set the retraction length to 0 since we are extruding
+                current.RetractionLength = 0
             else:
-                self.current_pos.IsInPosition = True
+                current.ExtrusionLength = 0
+                # Update extrusion length
+                current.ExtrusionLengthTotal = utility.round_to_float_equality_range(
+                    current.ExtrusionLengthTotal + current.ExtrusionLength
+                )
+            # calculate deretraction length
+            if previous.RetractionLength > current.RetractionLength:
+                current.DeretractionLength = utility.round_to_float_equality_range(
+                    previous.RetractionLength - current.RetractionLength,
+                )
+            else:
+                current.DeretractionLength = 0
 
+        if current.ERelative != 0 or current.HasPositionChanged:
+            # rounding should all be done by now
+            current.IsExtrudingStart = True if current.ExtrusionLength > 0 and not previous.IsExtruding else False
+            current.IsExtruding = True if current.ExtrusionLength > 0 else False
+            current.IsPrimed = True if current.ExtrusionLength == 0 and current.RetractionLength else False
+            current.IsRetractingStart = True if not previous.IsRetracting and current.RetractionLength > 0 else False
+            current.IsRetracting = True if current.RetractionLength > previous.RetractionLength else False
+            current.IsPartiallyRetracted = True if (
+                0 < current.RetractionLength < self.retraction_length) else False
+            current.IsRetracted = True if current.RetractionLength >= self.retraction_length else False
+            current.IsDeretractingStart = True if current.DeretractionLength > 0 and not previous.IsDeretracting else False
+            current.IsDeretracting = True if current.DeretractionLength > previous.DeretractionLength else False
+            current.IsDeretracted = True if previous.IsRetracted and current.RetractionLength == 0 else False
+            # has this changed
+
+        # determine state changes
+        # state changes can happen with every gcode command, even if it's not parsed.  Update
+        #current.HasStateChanged = not current.is_state_equal(previous)
+
+        #if current.HasStateChanged or current.HasPositionChanged:
+        if (
+            current.HasPositionChanged
+        ):
             # calculate LastExtrusionHeight and Height
             # If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
             # adjust the last extrusion height
-            if (
-                self.Extruder.current_state.IsExtruding
-
-            ):
-                self.current_pos.LastExtrusionHeight = self.current_pos.Z
-
-                if not self.current_pos.IsPrimed:
+            if current.Z is not None and current.IsExtruding and current.Z != current.LastExtrusionHeight:
+                current.LastExtrusionHeight = current.Z
+                # Is Primed
+                if not current.IsPrinterPrimed:
                     # We haven't primed yet, check to see if we have priming height restrictions
                     if self.Printer.priming_height > 0:
                         # if a priming height is configured, see if we've extruded below the  height
-                        if self.current_pos.LastExtrusionHeight < self.Printer.priming_height:
-                            self.current_pos.IsPrimed = True
+                        if current.LastExtrusionHeight < self.priming_height:
+                            current.IsPrinterPrimed = True
                     else:
-                        # if we have no priming height set, just set IsPrimed = true.
-                        self.current_pos.IsPrimed = True
-
-                if not self.current_pos.MinimumLayerHeightReached:
+                        # if we have no priming height set, just set IsPrinterPrimed = true.
+                        current.IsPrinterPrimed = True
+                # Has Reached Minimum Layer Height
+                if not current.MinimumLayerHeightReached:
                     # see if we've extruded at the minimum layer height.
-
-                    if self.Printer.minimum_layer_height > 0:
+                    if self.minimum_layer_height > 0:
                         # if a priming height is configured, see if we've extruded below the  height
-                        if self.current_pos.LastExtrusionHeight >= self.Printer.minimum_layer_height:
-                            self.current_pos.MinimumLayerHeightReached = True
+                        if current.LastExtrusionHeight >= self.minimum_layer_height:
+                            current.MinimumLayerHeightReached = True
                     else:
-                        # if we have no priming height set, just set IsPrimed = true.
-                        self.current_pos.MinimumLayerHeightReached = True
+                        # if we have no priming height set, just set IsPrinterPrimed = true.
+                        current.MinimumLayerHeightReached = True
+                #Is Printer Primed
+                if current.IsPrinterPrimed:
+                    if current.LastExtrusionHeight > previous.Height:
+                        current.Height = current.Z
 
+                        # calculate layer change
+                        if current.MinimumLayerHeightReached and (
+                            utility.round_to_float_equality_range(current.Height - previous.Height) > 0
+                            or current.Layer == 0
+                        ):
+                            current.IsLayerChange = True
+                            current.Layer += 1
 
-                # make sure we are primed before calculating height/layers
-                if self.current_pos.IsPrimed:
-                    if self.current_pos.Height is None or self.current_pos.Z > self.previous_pos.Height:
-                        self.current_pos.Height = self.current_pos.Z
-                    # calculate layer change
-                    if (
-                        self.current_pos.MinimumLayerHeightReached
-                        and (
-                            self.current_pos.Height - self.previous_pos.Height > 0
-                            or self.current_pos.Layer == 0
-                        )
-                    ):
-                        # Todo:  Is this the layer change?  Looks to me like the extrusion length is 0!
-                        self.current_pos.IsLayerChange = True
-                        self.current_pos.Layer += 1
+            if self.HasRestrictedPosition:
+                # If we have a homed for the current and previous position, and either the exturder or position has changed
+                if current.X is not None and current.Y is not None and previous.X is not None and previous.Y is not None:
+                    # If we're using restricted positions, calculate intersections and determine if we are in position
+                    can_calculate_intersections = current.parsed_command.cmd in ["G0", "G1"]
+                    _is_in_position, _intersections = self.calculate_path_intersections(
+                        self.Snapshot.position_restrictions,
+                        current.X,
+                        current.Y,
+                        previous.X,
+                        previous.Y,
+                        can_calculate_intersections
+                    )
+                    if _is_in_position:
+                        current.IsInPosition = _is_in_position
+
                     else:
-                        self.current_pos.IsLayerChange = False
+                        current.InPathPosition = _intersections
+            else:
+                current.IsInPosition = True
+                # Calculate ZHop based on last extrusion height
+                #current.IsZHop = current.is_zhop(self.ZHop)
 
-            # Calculate ZHop based on last extrusion height
-            if self.current_pos.LastExtrusionHeight is not None:
-                # calculate lift, taking into account floating point
-                # rounding
-                distance_to_lift = self.current_pos.distance_to_zlift(self.ZHop)
-
-                # todo:  replace rounding with a call to is close or greater than utility function
-                is_lifted = distance_to_lift <= 0.0 and not (
-                    self.Extruder.current_state.IsExtruding
-                    or self.Extruder.current_state.IsExtrudingStart
-                    or self.Extruder.current_state.IsPrimed
+            if not current.IsExtruding:
+                current.IsZHop = (
+                    False if current.Z is None or current.LastExtrusionHeight is None
+                    else current.Z - current.LastExtrusionHeight - self.ZHop <= 0
                 )
-                if is_lifted or self.ZHop == 0:
-                    self.current_pos.IsZHop = True
-
-        # Update Feature Detection
-        if self.current_pos.F is not None:
-            # see if at least one feature is enabled, or if feature detection is disabled
-            self.current_pos.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled(self.current_pos.F, self.current_pos.Layer)
-
-        self.Positions.appendleft(self.current_pos)
+            # Update Feature Detection
+            if self.feature_restrictions_enabled:
+                if current.F is not None or current.HasPositionChanged:
+                    # see if at least one feature is enabled, or if feature detection is disabled
+                    current.HasOneFeatureEnabled = self.SlicerFeatures.is_one_feature_enabled(current.F, current.Layer)
+            else:
+                current.HasOneFeatureEnabled = True
+        self.Positions.appendleft(current)
 
     def process_g0_g1(self):
-        # Movement
-
-        x = self.current_pos.parsed_command.parameters[
-            "X"] if "X" in self.current_pos.parsed_command.parameters else None
-        y = self.current_pos.parsed_command.parameters[
-            "Y"] if "Y" in self.current_pos.parsed_command.parameters else None
-        z = self.current_pos.parsed_command.parameters[
-            "Z"] if "Z" in self.current_pos.parsed_command.parameters else None
-        e = self.current_pos.parsed_command.parameters[
-            "E"] if "E" in self.current_pos.parsed_command.parameters else None
-        f = self.current_pos.parsed_command.parameters[
-            "F"] if "F" in self.current_pos.parsed_command.parameters else None
 
         # If we're moving on the X/Y plane only, mark this position as travel only
-        self.current_pos.IsTravelOnly = e is None and z is None and (
-            x is not None or y is not None
+        parameters = self.current_pos.parsed_command.parameters
+        self.current_pos.update_position(
+            parameters["X"] if "X" in parameters else None,
+            parameters["Y"] if "T" in parameters else None,
+            parameters["Z"] if "Z" in parameters else None,
+            parameters["E"] if "E" in parameters else None,
+            parameters["F"] if "F" in parameters else None,
+            is_g1=True
         )
 
-        if x is not None or y is not None or z is not None or f is not None:
-            if self.current_pos.IsRelative is not None:
-                if self.current_pos.HasPositionError and not self.current_pos.IsRelative:
-                    self.current_pos.HasPositionError = False
-                    self.current_pos.PositionError = ""
-                self.current_pos.update_position(x, y, z, e=None, f=f)
-            else:
-                self.Settings.Logger.log_position_command_received(
-                    "Position - Unable to update the X/Y/Z axis position, the axis mode ("
-                    "relative/absolute) has not been explicitly set via G90/G91. "
-                )
-                self.current_pos.HasPositionError = True
-                self.current_pos.PositionError = "XYZ movement was detected, but the axis mode has not been set.  Please add" \
-                                                 " a G90 or G91 to the top of your start gcode.  " \
-                                                 "<a href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting" \
-                                                 "#for-xyz-choose-one-of-the-following-options\" target=\"_blank\">See this " \
-                                                 "guide for details:  </a>"
+    def process_g2(self):
+        self.process_g2_g3("G2")
 
-        if e is not None:
-            if self.current_pos.IsExtruderRelative is not None:
-                if self.current_pos.HasPositionError and not self.current_pos.IsExtruderRelative:
-                    self.current_pos.HasPositionError = False
-                    self.current_pos.PositionError = ""
-                self.current_pos.update_position(
-                    x=None,
-                    y=None,
-                    z=None,
-                    e=e,
-                    f=None)
-            else:
-                self.Settings.Logger.log_error(
-                    "Position - Unable to update the extruder position, the extruder mode ("
-                    "relative/absolute) has been selected (absolute/relative). "
-                )
+    def process_g3(self, parameters):
+        self.process_g2_g3("G3")
 
-    def process_g2_g3(self):
+    def process_g2_g3(self, cmd):
+        parameters = self.current_pos.parsed_command.parameters
         # Movement Type
         movement_type = ""
-        if self.current_pos.parsed_command.cmd == "G2":
+        if cmd == "G2":
             movement_type = "clockwise"
             self.Settings.Logger.log_position_command_received("Received G2 - Clockwise Arc")
         else:
             movement_type = "counter-clockwise"
             self.Settings.Logger.log_position_command_received("Received G3 - Counter-Clockwise Arc")
 
-        x = self.current_pos.parsed_command.parameters[
-            "X"] if "X" in self.current_pos.parsed_command.parameters else None
-        y = self.current_pos.parsed_command.parameters[
-            "Y"] if "Y" in self.current_pos.parsed_command.parameters else None
-        i = self.current_pos.parsed_command.parameters[
-            "I"] if "I" in self.current_pos.parsed_command.parameters else None
-        j = self.current_pos.parsed_command.parameters[
-            "J"] if "J" in self.current_pos.parsed_command.parameters else None
-        r = self.current_pos.parsed_command.parameters[
-            "R"] if "R" in self.current_pos.parsed_command.parameters else None
-        e = self.current_pos.parsed_command.parameters[
-            "E"] if "E" in self.current_pos.parsed_command.parameters else None
-        f = self.current_pos.parsed_command.parameters[
-            "F"] if "F" in self.current_pos.parsed_command.parameters else None
+        x = parameters["X"] if "X" in parameters else None
+        y = parameters["Y"] if "Y" in parameters else None
+        i = parameters["I"] if "I" in parameters else None
+        j = parameters["J"] if "J" in parameters else None
+        r = parameters["R"] if "R" in parameters else None
+        e = parameters["E"] if "E" in parameters else None
+        f = parameters["F"] if "F" in parameters else None
 
         # If we're moving on the X/Y plane only, mark this position as travel only
         self.current_pos.IsTravelOnly = e is None
@@ -961,8 +1082,7 @@ class Position(object):
         can_update_position = False
         if r is not None and (i is not None or j is not None):
             self.Settings.Logger.log_error(
-                "Received {0} - but received R and either I or J, which is not allowed.".format(
-                    self.current_pos.parsed_command.cmd))
+                "Received {0} - but received R and either I or J, which is not allowed.".format(cmd))
         elif i is not None or j is not None:
             # IJ Form
             if x is not None and y is not None:
@@ -974,8 +1094,7 @@ class Position(object):
             # R Form
             if x is None and y is None:
                 self.Settings.Logger.log_error(
-                    "Received {0} - but received R without x or y, which is not allowed."
-                        .format(self.current_pos.parsed_command.cmd)
+                    "Received {0} - but received R without x or y, which is not allowed.".format(cmd)
                 )
             else:
                 can_update_position = True
@@ -983,51 +1102,20 @@ class Position(object):
                     "Cannot yet calculate position restriction intersections when G2/G3.")
 
         if can_update_position:
-            if x is not None and y is not None:
-                if self.current_pos.IsRelative is not None:
-                    if self.current_pos.HasPositionError and not self.current_pos.IsRelative:
-                        self.current_pos.HasPositionError = False
-                        self.current_pos.PositionError = ""
-                    self.current_pos.update_position(self.BoundingBox, x, y, z=None, e=None, f=f)
-                else:
-                    self.Settings.Logger.log_position_command_received(
-                        "Position - Unable to update the X/Y/Z axis position, the axis mode ("
-                        "relative/absolute) has not been explicitly set via G90/G91. "
-                    )
-                    self.current_pos.HasPositionError = True
-                    self.current_pos.PositionError = "XYZ movement was detected, but the axis mode has not been set.  Please add" \
-                                                     " a G90 or G91 to the top of your start gcode.  " \
-                                                     "<a href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting" \
-                                                     "#for-xyz-choose-one-of-the-following-options\" target=\"_blank\">See this " \
-                                                     "guide for details:  </a>"
-            if e is not None:
-                if self.current_pos.IsExtruderRelative is not None:
-                    if self.current_pos.HasPositionError and not self.current_pos.IsExtruderRelative:
-                        self.current_pos.HasPositionError = False
-                        self.current_pos.PositionError = ""
-                    self.current_pos.update_position(
-                        self.BoundingBox,
-                        x=None,
-                        y=None,
-                        z=None,
-                        e=e,
-                        f=None)
-                else:
-                    self.Settings.Logger.log_error(
-                        "Position - Unable to update the extruder position, the extruder mode ("
-                        "relative/absolute) has been selected (absolute/relative). "
-                    )
+            self.current_pos.update_position(x, y, None, e, f)
 
             message = "Position Change - {0} - {1} {2} Arc From(X:{3},Y:{4},Z:{5},E:{6}) - To(X:{7},Y:{8}," \
                       "Z:{9},E:{10})"
             if self.previous_pos is None:
                 message = message.format(
-                    self.current_pos.parsed_command.gcode, "Relative" if self.current_pos.IsRelative else "Absolute", movement_type
+                    self.current_pos.parsed_command.gcode, "Relative" if self.current_pos.IsRelative else "Absolute",
+                    movement_type
                     , "None", "None",
                     "None", "None", self.current_pos.X, self.current_pos.Y, self.current_pos.Z, self.current_pos.E)
             else:
                 message = message.format(
-                    self.current_pos.parsed_command.gcode, "Relative" if self.current_pos.IsRelative else "Absolute", movement_type,
+                    self.current_pos.parsed_command.gcode, "Relative" if self.current_pos.IsRelative else "Absolute",
+                    movement_type,
                     self.previous_pos.X,
                     self.previous_pos.Y, self.previous_pos.Z, self.previous_pos.E, self.current_pos.X,
                     self.current_pos.Y, self.current_pos.Z, self.current_pos.E)
@@ -1035,15 +1123,16 @@ class Position(object):
                 message)
 
     def process_g10(self):
-        if "P" not in self.current_pos.parsed_command.parameters:
+        parameters = self.current_pos.parsed_command.parameters
+        if "P" not in parameters:
             e = 0 if self.current_pos.FirmwareRetractionLength is None else -1.0 * self.current_pos.FirmwareRetractionLength
             previous_extruder_relative = self.current_pos.IsExtruderRelative
             previous_relative = self.current_pos.IsRelative
 
             self.current_pos.IsRelative = True
             self.current_pos.IsExtruderRelative = True
-            self.current_pos.update_position(self.BoundingBox, x=None, y=None, z=self.current_pos.FirmwareZLift, e=e,
-                                             f=self.current_pos.FirmwareRetractionFeedrate)
+            self.current_pos.update_position(None, None, self.current_pos.FirmwareZLift, e,
+                                             self.current_pos.FirmwareRetractionFeedrate)
             self.current_pos.IsRelative = previous_relative
             self.current_pos.IsExtruderRelative = previous_extruder_relative
 
@@ -1064,8 +1153,7 @@ class Position(object):
 
         self.current_pos.IsRelative = True
         self.current_pos.IsExtruderRelative = True
-        self.current_pos.update_position(self.BoundingBox, x=None, y=None, z=lift_distance,
-                                         e=e, f=f)
+        self.current_pos.update_position({None, None, None, lift_distance, e, f})
         self.current_pos.IsRelative = previous_relative
         self.current_pos.IsExtruderRelative = previous_extruder_relative
 
@@ -1080,11 +1168,12 @@ class Position(object):
             self.current_pos.IsMetric = True
 
     def process_g28(self):
+        parameters = self.current_pos.parsed_command.parameters
         # Home
         self.current_pos.HasReceivedHomeCommand = True
-        x = True if "X" in self.current_pos.parsed_command.parameters else None
-        y = True if "Y" in self.current_pos.parsed_command.parameters else None
-        z = True if "Z" in self.current_pos.parsed_command.parameters else None
+        x = True if "X" in parameters else None
+        y = True if "Y" in parameters else None
+        z = True if "Z" in parameters else None
         # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
         # w = parameters["W"] if "W" in parameters else None
 
@@ -1146,13 +1235,13 @@ class Position(object):
             if self.current_pos.IsExtruderRelative is None or not self.current_pos.IsExtruderRelative:
                 self.current_pos.IsExtruderRelative = True
 
-    def process_g92(self):# Set Position (offset)
-
-        x = self.current_pos.parsed_command.parameters["X"] if "X" in self.current_pos.parsed_command.parameters else None
-        y = self.current_pos.parsed_command.parameters["Y"] if "Y" in self.current_pos.parsed_command.parameters else None
-        z = self.current_pos.parsed_command.parameters["Z"] if "Z" in self.current_pos.parsed_command.parameters else None
-        e = self.current_pos.parsed_command.parameters["E"] if "E" in self.current_pos.parsed_command.parameters else None
-        o = True if "O" in self.current_pos.parsed_command.parameters else False
+    def process_g92(self):  # Set Position (offset)
+        parameters = self.current_pos.parsed_command.parameters
+        x = parameters["X"] if "X" in parameters else None
+        y = parameters["Y"] if "Y" in parameters else None
+        z = parameters["Z"] if "Z" in parameters else None
+        e = parameters["E"] if "E" in parameters else None
+        o = True if "O" in parameters else False
 
         if o:
             self.current_pos.XHomed = True
@@ -1216,24 +1305,26 @@ class Position(object):
             self.current_pos.IsExtruderRelative = True
 
     def process_m207(self):
+        parameters = self.current_pos.parsed_command.parameters
         # Firmware Retraction Tracking
-        if "S" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareRetractionLength = self.current_pos.parsed_command.parameters["S"]
-        if "R" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareUnretractionAdditionalLength = self.current_pos.parsed_command.parameters["R"]
-        if "F" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareRetractionFeedrate = self.current_pos.parsed_command.parameters["F"]
-        if "T" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareUnretractionFeedrate = self.current_pos.parsed_command.parameters["T"]
-        if "Z" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareZLift = self.current_pos.parsed_command.parameters["Z"]
+        if "S" in parameters:
+            self.current_pos.FirmwareRetractionLength = parameters["S"]
+        if "R" in parameters:
+            self.current_pos.FirmwareUnretractionAdditionalLength = parameters["R"]
+        if "F" in parameters:
+            self.current_pos.FirmwareRetractionFeedrate = parameters["F"]
+        if "T" in parameters:
+            self.current_pos.FirmwareUnretractionFeedrate = parameters["T"]
+        if "Z" in parameters:
+            self.current_pos.FirmwareZLift = parameters["Z"]
 
     def process_m208(self):
+        parameters = self.current_pos.parsed_command.parameters
         # Firmware Retraction Tracking
-        if "S" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareUnretractionAdditionalLength = self.current_pos.parsed_command.parameters["S"]
-        if "F" in self.current_pos.parsed_command.parameters:
-            self.current_pos.FirmwareUnretractionFeedrate = self.current_pos.parsed_command.parameters["F"]
+        if "S" in parameters:
+            self.current_pos.FirmwareUnretractionAdditionalLength = parameters["S"]
+        if "F" in parameters:
+            self.current_pos.FirmwareUnretractionFeedrate = parameters["F"]
 
     # Eventually this code will support the G161 and G162 commands
     # Hold this code for the future
@@ -1368,7 +1459,7 @@ class Position(object):
             if len(self.Positions) <= index:
                 return None
             pos = self.Positions[index]
-            return x - pos.X+ pos.XOffset
+            return x - pos.X + pos.XOffset
 
         else:
             if len(self.Positions) <= index + 1:
@@ -1416,10 +1507,10 @@ class Position(object):
             return e - pos.E + pos.EOffset
 
         else:
-            if len(self.Positions) <= index+1:
+            if len(self.Positions) <= index + 1:
                 return None
             pos = self.Positions[index]
-            previous_pos = self.Positions[index+1]
+            previous_pos = self.Positions[index + 1]
             return pos.E - previous_pos.E
 
     def e_relative_pos(self):
@@ -1436,9 +1527,9 @@ class Position(object):
                 z = z + pos.ZOffset
 
         if ((pos.X is None or utility.is_close(pos.X, x, abs_tol=tolerance))
-                and (pos.Y is None or utility.is_close(pos.Y, y, abs_tol=tolerance))
-                and (z is None or pos.Z is None
-                     or utility.is_close(pos.Z, z, abs_tol=tolerance))):
+            and (pos.Y is None or utility.is_close(pos.Y, y, abs_tol=tolerance))
+            and (z is None or pos.Z is None
+                 or utility.is_close(pos.Z, z, abs_tol=tolerance))):
             return True
         return False
 
@@ -1553,3 +1644,132 @@ class Position(object):
         # if we're here then we only have forbidden restrictions, but the point
         # was not within the restricted area(s)
         return True
+
+    @staticmethod
+    def _extruder_state_triggered(option, state):
+        if option is None:
+            return None
+        if option and state:
+            return True
+        if not option and state:
+            return False
+        return None
+
+    def is_extruder_triggered(self, options):
+        # if there are no extruder trigger options, return true.
+        if options is None:
+            return True
+
+        # Matches the supplied extruder trigger options to the current
+        # extruder state.  Returns true if triggering, false if not.
+
+        extruding_start_triggered = self._extruder_state_triggered(
+            options.OnExtrudingStart, self.current_pos.IsExtrudingStart
+        )
+        extruding_triggered = self._extruder_state_triggered(
+            options.OnExtruding, self.current_pos.IsExtruding
+        )
+        primed_triggered = self._extruder_state_triggered(
+            options.OnPrimed, self.current_pos.IsPrimed
+        )
+        retracting_start_triggered = self._extruder_state_triggered(
+            options.OnRetractingStart, self.current_pos.IsRetractingStart
+        )
+        retracting_triggered = self._extruder_state_triggered(
+            options.OnRetracting, self.current_pos.IsRetracting
+        )
+        partially_retracted_triggered = self._extruder_state_triggered(
+            options.OnPartiallyRetracted, self.current_pos.IsPartiallyRetracted
+        )
+        retracted_triggered = self._extruder_state_triggered(
+            options.OnRetracted, self.current_pos.IsRetracted
+        )
+        deretracting_start_triggered = self._extruder_state_triggered(
+            options.OnDeretractingStart, self.current_pos.IsDeretractingStart
+        )
+        deretracting_triggered = self._extruder_state_triggered(
+            options.OnDeretracting, self.current_pos.IsDeretracting
+        )
+        deretracted_triggered = self._extruder_state_triggered(
+            options.OnDeretracted, self.current_pos.IsDeretracted
+        )
+
+        ret_value = False
+        is_triggering_prevented = (
+            (extruding_start_triggered is not None and not extruding_start_triggered)
+            or (extruding_triggered is not None and not extruding_triggered)
+            or (primed_triggered is not None and not primed_triggered)
+            or (retracting_start_triggered is not None and not retracting_start_triggered)
+            or (retracting_triggered is not None and not retracting_triggered)
+            or (partially_retracted_triggered is not None and not partially_retracted_triggered)
+            or (retracted_triggered is not None and not retracted_triggered)
+            or (deretracting_start_triggered is not None and not deretracting_start_triggered)
+            or (deretracting_triggered is not None and not deretracting_triggered)
+            or (deretracted_triggered is not None and not deretracted_triggered))
+
+        if (not is_triggering_prevented
+            and
+            (
+                (extruding_start_triggered is not None and extruding_start_triggered)
+                or (extruding_triggered is not None and extruding_triggered)
+                or (primed_triggered is not None and primed_triggered)
+                or (retracting_start_triggered is not None and retracting_start_triggered)
+                or (retracting_triggered is not None and retracting_triggered)
+                or (partially_retracted_triggered is not None and partially_retracted_triggered)
+                or (retracted_triggered is not None and retracted_triggered)
+                or (deretracting_start_triggered is not None and deretracting_start_triggered)
+                or (deretracting_triggered is not None and deretracting_triggered)
+                or (deretracted_triggered is not None and deretracted_triggered)
+                or (options.are_all_triggers_ignored()))):
+            ret_value = True
+
+        return ret_value
+
+
+class ExtruderTriggers(object):
+    __slots__ = [
+        'OnExtrudingStart',
+        'OnExtruding',
+        'OnPrimed',
+        'OnRetractingStart',
+        'OnRetracting',
+        'OnPartiallyRetracted',
+        'OnRetracted',
+        'OnDeretractingStart',
+        'OnDeretracting',
+        'OnDeretracted'
+    ]
+
+    def __init__(
+        self, on_extruding_start, on_extruding, on_primed,
+        on_retracting_start, on_retracting, on_partially_retracted,
+        on_retracted, on_deretracting_start, on_deretracting, on_deretracted):
+        # To trigger on an extruder state, set to True.
+        # To prevent triggering on an extruder state, set to False.
+        # To ignore the extruder state, set to None
+        self.OnExtrudingStart = on_extruding_start
+        self.OnExtruding = on_extruding
+        self.OnPrimed = on_primed
+        self.OnRetractingStart = on_retracting_start
+        self.OnRetracting = on_retracting
+        self.OnPartiallyRetracted = on_partially_retracted
+        self.OnRetracted = on_retracted
+        self.OnDeretractingStart = on_deretracting_start
+        self.OnDeretracting = on_deretracting
+        self.OnDeretracted = on_deretracted
+
+    def are_all_triggers_ignored(self):
+        if (
+            self.OnExtrudingStart is None
+            and self.OnExtruding is None
+            and self.OnPrimed is None
+            and self.OnRetractingStart is None
+            and self.OnRetracting is None
+            and self.OnPartiallyRetracted is None
+            and self.OnRetracted is None
+            and self.OnDeretractingStart is None
+            and self.OnDeretracting is None
+            and self.OnDeretracted is None
+        ):
+            return True
+        return False

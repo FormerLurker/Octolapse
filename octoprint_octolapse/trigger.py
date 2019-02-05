@@ -22,7 +22,7 @@
 ##################################################################################
 
 import time
-from octoprint_octolapse.extruder import ExtruderTriggers
+from octoprint_octolapse.position import ExtruderTriggers
 from octoprint_octolapse.settings import *
 
 
@@ -604,7 +604,7 @@ class LayerTrigger(Trigger):
                 if state.IsHeightChangeWait or state.IsLayerChangeWait or state.IsWaiting:
                     state.IsWaiting = True
                     # see if the extruder is triggering
-                    is_extruder_triggering = position.Extruder.is_triggered(self.ExtruderTriggers)
+                    is_extruder_triggering = position.is_extruder_triggered(self.ExtruderTriggers)
                     if not is_extruder_triggering:
                         state.IsWaitingOnExtruder = True
                         if state.IsHeightChangeWait:
@@ -829,7 +829,7 @@ class TimerTrigger(Trigger):
                     state.IsWaiting = True
 
                     # see if the exturder is in the right position
-                    if position.Extruder.is_triggered(self.ExtruderTriggers):
+                    if position.is_extruder_triggered(self.ExtruderTriggers):
                         if self.RequireZHop and not position.is_zhop(0):
                             self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")

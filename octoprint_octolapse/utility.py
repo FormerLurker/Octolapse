@@ -37,7 +37,6 @@ from threading import Timer
 
 FLOAT_MATH_EQUALITY_RANGE = 0.00000001
 
-
 def get_float(value, default):
     if value is None:
         return default
@@ -123,11 +122,15 @@ def is_close(a, b, abs_tol=0.01000):
     return abs(a - b) <= abs_tol
 
 
+def round_to_float_equality_range(n):
+    return round(n / 0.00000001) * 0.00000001
+
+
 def round_to(n, precision):
     return int(n / precision + (0.5 if n >= 0 else -0.5)) * precision
 
 
-def round_to_value(value, rounding_increment):
+def round_to_value(value, rounding_increment=0.00000001):
     return round(value / rounding_increment) * rounding_increment
 
 

@@ -2595,7 +2595,8 @@ class SlicerPrintFeatures(Settings):
     def __init__(self, slicer_settings, snapshot_settings):
         assert (isinstance(slicer_settings, SlicerSettings))
         assert (isinstance(snapshot_settings, SnapshotProfile))
-
+        self.previous_speed = 0
+        self.previous_is_one_enabled = False
         self.num_slow_layers = slicer_settings.get_num_slow_layers()
         self.speed_tolerance = slicer_settings.get_speed_tolerance()
         try:
@@ -2657,7 +2658,7 @@ class SlicerPrintFeatures(Settings):
             else:
                 calculated_speed = feature.under_speed
         else:
-            layer_name = feature.layer_naem
+            layer_name = feature.layer_name
             calculated_speed = feature.speed
 
         if calculated_speed is not None and utility.is_close(current_speed, calculated_speed, feature.tolerance):
@@ -2669,18 +2670,26 @@ class SlicerPrintFeatures(Settings):
         if not self.feature_detection_enabled:
             return True
 
+        if self.previous_speed == speed:
+            return self.previous_is_one_enabled
+
+        self.previous_speed = speed
+
+        is_one_enabled = False
         for feature in self.features:
             assert (isinstance(feature, PrintFeatureSetting))
             if feature.is_enabled_function(feature, speed, layer_num):
-                return True
-        return False
+                is_one_enabled = True
+                break
+        self.previous_is_one_enabled = is_one_enabled
+        return is_one_enabled
 
     def get_printing_features_list(self, current_speed, layer_number):
         printing_features = []
         if self.feature_detection_enabled:
             for feature in self.features:
                 assert (isinstance(feature, PrintFeatureSetting))
-                val = feature.id_detected_function(feature, current_speed, layer_number)
+                val = feature.is_detected_function(feature, current_speed, layer_number)
                 if val:
                     printing_features.append(val[1])
         return printing_features

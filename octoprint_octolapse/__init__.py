@@ -454,7 +454,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             # Extract the profile from the request.
             try:
-                rendering_profile = RenderingProfile().from_json(flask.request.form)
+                rendering_profile = RenderingProfile().create_from(flask.request.form)
             except Exception as e:
                 self._logger.error('Preview overlay request did not provide valid Rendering profile.')
                 self._logger.error(str(e))

@@ -21,15 +21,17 @@ extern "C" void  initfastgcodeparser(void)
 
 {
 	PyObject *m;
+    text_only_functions.clear();
+    for( unsigned int a = 0; a < sizeof(text_only_function_names)/sizeof(text_only_function_names[0]); a = a + 1 )
+    {
+        text_only_functions.insert(text_only_function_names[a]);
+    }
+    text_only_functions.clear();
 
-	for( unsigned int a = 0; a < sizeof(text_only_function_names)/sizeof(text_only_function_names[0]); a = a + 1 )
-	{
-	    text_only_functions.insert(text_only_function_names[a]);
-	}
-	for( unsigned int a = 0; a < sizeof(parsable_command_names)/sizeof(parsable_command_names[0]); a = a + 1 )
-	{
-	    parsable_commands.insert(parsable_command_names[a]);
-	}
+    for( unsigned int a = 0; a < sizeof(parsable_command_names)/sizeof(parsable_command_names[0]); a = a + 1 )
+    {
+        parsable_commands.insert(parsable_command_names[a]);
+    }
 
 	m = Py_InitModule("fastgcodeparser", CppGcodeParserMethods);
 	moduleError = PyErr_NewException("fastgcodeparser.error", NULL, NULL);

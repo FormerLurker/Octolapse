@@ -29,6 +29,7 @@ import shutil
 import sys
 import threading
 import time
+import json
 from csv import DictReader
 # sarge was added to the additional requirements for the plugin
 from datetime import datetime, timedelta
@@ -105,8 +106,13 @@ def preview_overlay(rendering_profile, image=None):
         d = ImageDraw.Draw(text_image)
         iw, ih = i.size
         tw, th = d.textsize(t, font=font)
+
+        if isinstance(rendering_profile.overlay_text_color, basestring):
+            overlay_text_color = json.loads(rendering_profile.overlay_text_color)
+        else:
+            overlay_text_color = rendering_profile.overlay_text_color
         d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
-               fill=tuple(rendering_profile.overlay_text_color), font=font)
+               fill=tuple(overlay_text_color), font=font)
         return Image.alpha_composite(i.convert('RGBA'), text_image).convert('RGB')
 
     image = draw_center(image, "Preview", dy=-20)
@@ -823,6 +829,8 @@ class TimelapseRenderJob(object):
         d = ImageDraw.Draw(text_image)
 
         # Process the text position to improve the alignment.
+        if isinstance(overlay_location, basestring):
+            overlay_location = json.loads(overlay_location)
         x, y = tuple(overlay_location)
         # valign.
         if overlay_text_valign == 'top':
@@ -850,6 +858,8 @@ class TimelapseRenderJob(object):
                               "An invalid overlay text halign ({}) was specified.".format(overlay_text_halign))
 
         # Draw overlay text.
+        if isinstance(text_color, basestring):
+            text_color = json.loads(text_color)
         d.multiline_text(xy=(x, y), text=text, fill=tuple(text_color), font=font, align=overlay_text_alignment)
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
