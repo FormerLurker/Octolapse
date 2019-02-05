@@ -482,16 +482,16 @@ class LayerTrigger(Trigger):
         self.Type = "layer"
         if self.Snapshot.extruder_state_requirements_enabled:
             self.ExtruderTriggers = ExtruderTriggers(
-                self.Snapshot.trigger_on_extruding_start,
-                self.Snapshot.trigger_on_extruding,
-                self.Snapshot.trigger_on_primed,
-                self.Snapshot.trigger_on_retracting_start,
-                self.Snapshot.trigger_on_retracting,
-                self.Snapshot.trigger_on_partially_retracted,
-                self.Snapshot.trigger_on_retracted,
-                self.Snapshot.trigger_on_deretracting_start,
-                self.Snapshot.trigger_on_deretracting,
-                self.Snapshot.trigger_on_deretracted
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_extruding_start),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_extruding),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_primed),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_retracting_start),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_retracting),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_partially_retracted),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_retracted),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_deretracting_start),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_deretracting),
+                SnapshotProfile.get_extruder_trigger_value(self.Snapshot.trigger_on_deretracted)
             )
             message = (
                 "Extruder Triggers - OnExtrudingStart:{0}, "

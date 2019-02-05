@@ -612,13 +612,14 @@ class SnapshotProfile(ProfileSettings):
         elif not value:
             return self.ExtruderTriggerForbiddenValue
 
-    def get_extruder_trigger_value(self, value):
+    @staticmethod
+    def get_extruder_trigger_value(value):
         if isinstance(value, basestring):
-            if value is None:
+            if value is None or len(value) == 0:
                 return None
-            elif value.lower() == self.ExtruderTriggerRequiredValue:
+            elif value.lower() == SnapshotProfile.ExtruderTriggerRequiredValue:
                 return True
-            elif value.lower() == self.ExtruderTriggerForbiddenValue:
+            elif value.lower() == SnapshotProfile.ExtruderTriggerForbiddenValue:
                 return False
             else:
                 return None

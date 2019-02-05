@@ -28,7 +28,6 @@ import math
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.settings import PrinterProfile, SnapshotProfile, SlicerPrintFeatures, OctolapseGcodeSettings
-from octoprint_octolapse.extruder import Extruder
 import copy
 
 
@@ -884,7 +883,7 @@ class Position(object):
             has_processed_command = True
             self.current_pos.update_position(
                 parsed_command.parameters["X"] if "X" in parsed_command.parameters else None,
-                parsed_command.parameters["Y"] if "T" in parsed_command.parameters else None,
+                parsed_command.parameters["Y"] if "Y" in parsed_command.parameters else None,
                 parsed_command.parameters["Z"] if "Z" in parsed_command.parameters else None,
                 parsed_command.parameters["E"] if "E" in parsed_command.parameters else None,
                 parsed_command.parameters["F"] if "F" in parsed_command.parameters else None,
@@ -944,7 +943,7 @@ class Position(object):
             # rounding should all be done by now
             current.IsExtrudingStart = True if current.ExtrusionLength > 0 and not previous.IsExtruding else False
             current.IsExtruding = True if current.ExtrusionLength > 0 else False
-            current.IsPrimed = True if current.ExtrusionLength == 0 and current.RetractionLength else False
+            current.IsPrimed = True if current.ExtrusionLength == 0 and current.RetractionLength == 0 else False
             current.IsRetractingStart = True if not previous.IsRetracting and current.RetractionLength > 0 else False
             current.IsRetracting = True if current.RetractionLength > previous.RetractionLength else False
             current.IsPartiallyRetracted = True if (
@@ -966,31 +965,32 @@ class Position(object):
             # calculate LastExtrusionHeight and Height
             # If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
             # adjust the last extrusion height
-            if current.Z is not None and current.IsExtruding and current.Z != current.LastExtrusionHeight:
-                current.LastExtrusionHeight = current.Z
-                # Is Primed
-                if not current.IsPrinterPrimed:
-                    # We haven't primed yet, check to see if we have priming height restrictions
-                    if self.Printer.priming_height > 0:
-                        # if a priming height is configured, see if we've extruded below the  height
-                        if current.LastExtrusionHeight < self.priming_height:
+            if current.Z is not None and current.Z != current.LastExtrusionHeight:
+                if current.IsExtruding:
+                    current.LastExtrusionHeight = current.Z
+                    # Is Primed
+                    if not current.IsPrinterPrimed:
+                        # We haven't primed yet, check to see if we have priming height restrictions
+                        if self.Printer.priming_height > 0:
+                            # if a priming height is configured, see if we've extruded below the  height
+                            if current.LastExtrusionHeight < self.priming_height:
+                                current.IsPrinterPrimed = True
+                        else:
+                            # if we have no priming height set, just set IsPrinterPrimed = true.
                             current.IsPrinterPrimed = True
-                    else:
-                        # if we have no priming height set, just set IsPrinterPrimed = true.
-                        current.IsPrinterPrimed = True
-                # Has Reached Minimum Layer Height
-                if not current.MinimumLayerHeightReached:
-                    # see if we've extruded at the minimum layer height.
-                    if self.minimum_layer_height > 0:
-                        # if a priming height is configured, see if we've extruded below the  height
-                        if current.LastExtrusionHeight >= self.minimum_layer_height:
+                    # Has Reached Minimum Layer Height
+                    if not current.MinimumLayerHeightReached:
+                        if self.minimum_layer_height > 0:
+                            # if a priming height is configured, see if we've extruded below the  height
+                            if current.LastExtrusionHeight >= self.minimum_layer_height:
+                                current.MinimumLayerHeightReached = True
+                        else:
+                            # if we have no priming height set, just set IsPrinterPrimed = true.
                             current.MinimumLayerHeightReached = True
-                    else:
-                        # if we have no priming height set, just set IsPrinterPrimed = true.
-                        current.MinimumLayerHeightReached = True
-                #Is Printer Primed
-                if current.IsPrinterPrimed:
-                    if current.LastExtrusionHeight > previous.Height:
+
+                #Calculate Layer Change
+                if ((current.IsPrimed and current.Layer > 0) or current.IsExtruding) and current.IsPrinterPrimed:
+                    if current.Z > previous.Height:
                         current.Height = current.Z
 
                         # calculate layer change
@@ -1001,6 +1001,7 @@ class Position(object):
                             current.IsLayerChange = True
                             current.Layer += 1
 
+            # Calcluate position restructions
             if self.HasRestrictedPosition:
                 # If we have a homed for the current and previous position, and either the exturder or position has changed
                 if current.X is not None and current.Y is not None and previous.X is not None and previous.Y is not None:
