@@ -75,6 +75,8 @@ class Timelapse(object):
         self.StateChangeMessageThread = None
         self.LastPositionErrorMessageTime = None
         self.PositionErrorMessageThread = None
+        self.has_position_errors_to_report = False
+        self.position_errors_to_report = None
         # Settings that may be different after StartTimelapse is called
 
         self.OctoprintPrinterProfile = None
@@ -88,6 +90,7 @@ class Timelapse(object):
         self.Position = None
         self.State = TimelapseState.Idle
         self.IsTestMode = False
+        self.snapshot_command = None
         # State Tracking that should only be reset when starting a timelapse
         self.HasBeenStopped = False
         self.TimelapseStopRequested = False
@@ -127,6 +130,8 @@ class Timelapse(object):
         self.Settings = settings
         # ToDo:  all cloning should be removed after this point.  We already have a settings object copy.  Also, we no longer need the original settings since we can use the global OctolapseSettings.Logger now
         self.Printer = self.Settings.profiles.current_printer()
+        self.snapshot_command = self.Printer.snapshot_command
+
         assert (isinstance(self.Printer, PrinterProfile))
 
         # time tracking - how much time did we add to the print?
@@ -578,7 +583,7 @@ class Timelapse(object):
         self.detect_timelapse_start(command_string, tags)
 
         if not self.is_timelapse_active():
-            if self._is_snapshot_command(self.Settings.profiles.current_printer(), command_string):
+            if utility.is_snapshot_command(command_string, self.snapshot_command):
                 if self.Settings.profiles.current_printer().suppress_snapshot_command_always:
                     self.Settings.Logger.log_info(
                         "Snapshot command {0} detected while octolapse was disabled.  Suppressing.".format(command_string)
@@ -597,8 +602,9 @@ class Timelapse(object):
         # update the position tracker so that we know where all of the axis are.
         # We will need this later when generating snapshot gcode so that we can return to the previous
         # position
-        is_snapshot_gcode_command = self._is_snapshot_command(self.Printer, command_string)
-
+        is_snapshot_gcode_command = utility.is_snapshot_command(command_string, self.snapshot_command)
+        if is_snapshot_gcode_command:
+            print("Snapshot Gcode Detected!")
         try:
             self.Settings.Logger.log_gcode_queuing(
                 "Queuing Command: Command Type:{0}, gcode:{1}, cmd: {2}, tags: {3}".format(
@@ -616,16 +622,14 @@ class Timelapse(object):
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
 
-            if parsed_command.cmd is not None and not is_snapshot_gcode_command:
-                # create our state change dictionaries
-                self.Position.update(parsed_command)
+            self.Position.update(parsed_command)
 
             # if this code is snapshot gcode, simply return it to the printer.
             if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
                 if not self.check_for_non_metric_errors():
 
                     if (self.State == TimelapseState.WaitingForTrigger
-                            and (self.Position.requires_location_detection(1)) and self.OctoprintPrinter.is_printing()):
+                            and (self.Position.command_requires_location_detection(parsed_command.cmd) and self.OctoprintPrinter.is_printing())):
                         # there is no longer a need to detect Octoprint start/end script, so
                         # we can put the job on hold without fear!
                         self.State = TimelapseState.AcquiringLocation
@@ -635,12 +639,12 @@ class Timelapse(object):
                             thread.daemon = True
                             thread.start()
                             return None,
-                    elif self.Position.has_position_error(0) and self.State != TimelapseState.AcquiringLocation:
+                    elif self.Position.current_pos.HasPositionError and self.State != TimelapseState.AcquiringLocation:
                         # There are position errors, report them!
                         self._on_position_error()
                     elif (self.State == TimelapseState.WaitingForTrigger
                           and self.OctoprintPrinter.is_printing()
-                          and not self.Position.has_position_error(0)):
+                          and not self.Position.current_pos.HasPositionError):
                         # update the triggers with the current position
                         self.Triggers.update(self.Position, parsed_command)
 
@@ -757,16 +761,16 @@ class Timelapse(object):
 
     def check_for_non_metric_errors(self):
         # make sure we're not using inches
-        is_metric = self.Position.is_metric()
+        is_metric = self.Position.current_pos.IsMetric
         has_error = False
         error_message = ""
-        if is_metric is None and self.Position.has_position_error():
+        if is_metric is None and self.Position.current_pos.HasPositionError:
             has_error = True
             error_message = "The printer profile requires an explicit G21 command before any position " \
                             "altering/setting commands, including any home commands.  Stopping timelapse, " \
                             "but continuing the print. "
 
-        elif not is_metric and self.Position.has_position_error():
+        elif not is_metric and self.Position.current_pos.HasPositionError:
             has_error = True
             if self.Printer.units_default == "inches":
                 error_message = "The printer profile uses 'inches' as the default unit of measurement.  In order to" \
@@ -917,19 +921,20 @@ class Timelapse(object):
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
 
-        delay_seconds = 0
-        # if another thread is trying to send the message, stop it
-        if self.StateChangeMessageThread is not None and self.StateChangeMessageThread.isAlive():
-            self.StateChangeMessageThread.cancel()
-
         if self.LastStateChangeMessageTime is not None:
             # do not send more than 1 per second
+
             time_since_last_update = time.time() - self.LastStateChangeMessageTime
             if time_since_last_update < 1:
-                delay_seconds = 1-time_since_last_update
-                if delay_seconds < 0:
-                    delay_seconds = 0
+                if self.Position.current_pos.HasPositionError:
+                    self.has_position_errors_to_report = True
+                    self.position_errors_to_report = self.Position.current_pos.HasPositionError
+                return
 
+        # if another thread is trying to send the message, stop it
+        if self.StateChangeMessageThread is not None and self.StateChangeMessageThread.isAlive():
+            # don't send any messages if another thread is alive.
+            return
         try:
             # Notify any callbacks
             if self.OnStateChangedCallback is not None:
@@ -985,22 +990,15 @@ class Timelapse(object):
                             self.OnStateChangedCallback(change_dict)
                             self.LastStateChangeMessageTime = time.time()
 
-                    current_position_errors = self.Position.has_position_state_errors(0)
-                    previous_position_errors = self.Position.has_position_state_errors(1)
-                    position_state_error_update = (
-                        current_position_errors
-                        or (current_position_errors != previous_position_errors)
-                    )
-
-                    if position_state_error_update:
-                        delay_seconds = 0
+                    position_errors = False
+                    if self.has_position_errors_to_report:
+                        position_errors = self.position_errors_to_report
+                    elif self.Position.current_pos.HasPositionError:
+                        position_errors = self.Position.current_pos.PositionError
 
                     # Send a delayed message
-                    self.StateChangeMessageThread = threading.Timer(
-                        delay_seconds,
-                        send_change_message,
-                        [position_state_error_update]
-
+                    self.StateChangeMessageThread = snapshot_complete_callback_thread = threading.Thread(
+                        target=send_change_message, args=[position_errors]
                     )
                     self.StateChangeMessageThread.daemon = True
                     self.StateChangeMessageThread.start()
@@ -1016,10 +1014,6 @@ class Timelapse(object):
         warning_thread = threading.Thread(target=self._send_plugin_message, args=[message_type, message])
         warning_thread.daemon = True
         warning_thread.start()
-
-    def _is_snapshot_command(self, printer, command_string):
-        # note that self.Printer.snapshot_command is stripped of comments.
-        return command_string.lower() == printer.snapshot_command.lower()
 
     def _is_trigger_waiting(self):
         # make sure we're in a state that could want to check for triggers
@@ -1046,7 +1040,7 @@ class Timelapse(object):
                 if delay_seconds < 0:
                     delay_seconds = 0
 
-        message = self.Position.position_error(0)
+        message = self.Position.current_pos.PositionError
         self.Settings.Logger.log_error(message)
 
         def _send_position_error(position_error_message):

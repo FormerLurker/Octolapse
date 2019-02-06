@@ -374,16 +374,7 @@ class Pos(object):
     def has_homed_axes(self):
         return self.XHomed and self.YHomed and self.ZHomed
 
-    def update_position(
-        self,
-        x,
-        y,
-        z,
-        e,
-        f,
-        force=False,
-        is_g1=False
-    ):
+    def update_position(self, x, y, z, e, f, force=False, is_g1=False):
         if is_g1:
             self.IsTravelOnly = e is None and z is None and (
                 x is not None or y is not None
@@ -425,12 +416,6 @@ class Pos(object):
             else:
                 self.E = utility.round_to_float_equality_range(e + self.EOffset)
 
-    def is_zhop(self, z_hop):
-        return (
-            False if self.Z is None or self.LastExtrusionHeight is None
-            else self.Z - self.LastExtrusionHeight - z_hop <= 0
-        )
-
     def distance_to_zlift(self, z_hop, restrict_lift_height=True):
         amount_to_lift = None if self.Z is None or self.LastExtrusionHeight is None else self.Z - self.LastExtrusionHeight - z_hop
         if restrict_lift_height:
@@ -440,15 +425,6 @@ class Pos(object):
                 return z_hop
 
         return utility.round_to(amount_to_lift, utility.FLOAT_MATH_EQUALITY_RANGE)
-
-    def x_with_offset(self):
-        return utility.coordinate_to_offset_position(self.X, self.XOffset)
-
-    def y_with_offset(self):
-        return utility.coordinate_to_offset_position(self.Y, self.YOffset)
-
-    def z_with_offset(self):
-        return utility.coordinate_to_offset_position(self.Z, self.ZOffset)
 
 
 class Position(object):
@@ -525,23 +501,12 @@ class Position(object):
         self.current_pos.update_position(x, y, z, e, f, force)
 
     def to_position_dict(self):
-        if len(self.Positions) > 0:
-            ret_dict = self.current_pos.to_dict()
-            ret_dict["Features"] = self.SlicerFeatures.get_printing_features_list(self.current_pos.F,self.current_pos.Layer)
-            return ret_dict
-        return None
+        ret_dict = self.current_pos.to_dict()
+        ret_dict["Features"] = self.SlicerFeatures.get_printing_features_list(self.current_pos.F,self.current_pos.Layer)
+        return ret_dict
 
     def to_state_dict(self):
-        if len(self.Positions) > 0:
-            return self.current_pos.to_state_dict()
-        return None
-
-    def z_delta(self, pos=None, index=None):
-        if index is not None and pos is not None and index < len(self.Positions):
-            self.previous_pos = self.get_position(index)
-            return pos.Height - self.previous_pos.Height
-        else:
-            return self.current_pos.Height - self.previous_pos.Height
+        return self.current_pos.to_state_dict()
 
     def distance_to_zlift(self):
         # get the lift amount, but don't restrict it so we can log properly
@@ -574,15 +539,33 @@ class Position(object):
         # return the calculated retraction length
         return retract_length
 
+    # TODO: do we need this?
+    def x_relative_to_current(self, x):
+        if x:
+            return x - self.current_pos.X + self.current_pos.XOffset
+        else:
+            return self.current_pos.X - self.previous_pos.X
+
+    # TODO: do we need this?
+    def y_relative_to_current(self, y):
+        if y:
+            return y - self.current_pos.Y + self.current_pos.YOffset
+        else:
+            return self.current_pos.Y - self.previous_pos.Y
+
+    # TODO: do we need this?
+    def e_relative_to_current(self, e):
+        if e:
+            return e - self.current_pos.E + self.current_pos.EOffset
+        else:
+            return self.current_pos.E - self.previous_pos.E
+
     def is_extruder_triggered(self, options):
         # if there are no extruder trigger options, return true.
         if options is None:
             return True
-
-
         # Matches the supplied extruder trigger options to the current
         # extruder state.  Returns true if triggering, false if not.
-
         extruding_start_triggered = self._extruder_state_triggered(
             options.OnExtrudingStart, self.current_state.IsExtrudingStart
         )
@@ -645,180 +628,10 @@ class Position(object):
 
         return ret_value
 
-
-    def has_state_changed(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.HasStateChanged
-
-    def is_in_position(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsInPosition
-
-    def in_path_position(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.InPathPosition
-
-    def features(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.Features
-
-    def has_one_feature_enabled(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return False
-        return pos.HasOneFeatureEnabled
-
-    def has_position_changed(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.HasPositionChanged
-
-    def has_position_error(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.HasPositionError
-
-    def has_position_state_errors(self, index=0):
-        if (not self.has_homed_axes(index)
-            or self.is_relative(index) is None
-            or self.is_extruder_relative(index) is None
-            or not self.is_metric(index)
-            or self.has_position_error(index)
-        ):
-            return True
-        return False
-
-    def position_error(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.PositionError
-
-    def x(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.X
-
-    def x_offset(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.XOffset
-
-    def y(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.Y
-
-    def y_offset(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.YOffset
-
-    def z(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.Z
-
-    def z_offset(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.ZOffset
-
-    def e(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.E
-
-    def e_offset(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.EOffset
-
-    def f(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.F
-
-    def is_zhop(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsZHop
-
-    def is_layer_change(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsLayerChange
-
-    def layer(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.Layer
-
-    def height(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.Height
-
-    def is_relative(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsRelative
-
-    def is_extruder_relative(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsExtruderRelative
-
-    def is_metric(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return None
-        return pos.IsMetric
-
-    def has_received_home_command(self, index=0):
-        pos = self.get_position(index)
-        if pos is None:
-            return False
-        return pos.HasReceivedHomeCommand and self.has_homed_axes(index)
-
     def command_requires_location_detection(self, cmd):
         if self.Printer.auto_detect_position:
             if cmd in self.LocationDetectionCommands:
                 return True
-        return False
-
-    def requires_location_detection(self, index=0):
-        pos = self.get_position(index)
-        if pos is None or pos.parsed_command is None:
-            return False
-
-        if self.command_requires_location_detection(pos.parsed_command.cmd):
-            return True
         return False
 
     def undo_update(self):
@@ -830,11 +643,6 @@ class Position(object):
         self.current_pos = self.Positions[0]
         self.previous_pos = self.Positions[1]
         return previous_position
-
-    def get_position(self, index=0):
-        if len(self.Positions) > index:
-            return self.Positions[index]
-        return None
 
     def get_gcode_functions(self):
         return {
@@ -872,7 +680,7 @@ class Position(object):
         # cmd = current.parsed_command.cmd
         cmd = parsed_command.cmd
 
-        # This is a secial case for optimization reasons.
+        # This is a special case for optimization reasons.
         # These two are by far the most used commands, so
         # call them directly and avoid the hash lookup and extra function call
         has_processed_command = False
@@ -1019,8 +827,6 @@ class Position(object):
                         current.InPathPosition = _intersections
             else:
                 current.IsInPosition = True
-                # Calculate ZHop based on last extrusion height
-                #current.IsZHop = current.is_zhop(self.ZHop)
 
             current.IsZHop = (
                 False if current.IsExtruding or current.Z is None or current.LastExtrusionHeight is None
@@ -1035,8 +841,8 @@ class Position(object):
                 current.HasOneFeatureEnabled = True
         self.Positions.appendleft(current)
 
+    #Todo:  Remove this, we use a different function
     def process_g0_g1(self):
-
         # If we're moving on the X/Y plane only, mark this position as travel only
         parameters = self.current_pos.parsed_command.parameters
         self.current_pos.update_position(
@@ -1443,113 +1249,6 @@ class Position(object):
     #         "Received G162 - ".format(" ".join(home_strings)))
     #     pos.HasPositionError = False
     #     pos.PositionError = None
-
-    def has_homed_axes(self, index=0):
-        if len(self.Positions) <= index:
-            return None
-        pos = self.Positions[index]
-        return pos.has_homed_axes()
-
-    def x_relative(self, index=0, x=None):
-
-        if x:
-            if len(self.Positions) <= index:
-                return None
-            pos = self.Positions[index]
-            return x - pos.X + pos.XOffset
-
-        else:
-            if len(self.Positions) <= index + 1:
-                return None
-            pos = self.Positions[index]
-            previous_pos = self.Positions[index + 1]
-            return pos.X - previous_pos.X
-
-    def y_relative(self, index=0, y=None):
-
-        if y:
-            if len(self.Positions) <= index:
-                return None
-            pos = self.Positions[index]
-            return y - pos.Y + pos.YOffset
-
-        else:
-            if len(self.Positions) <= index + 1:
-                return None
-            pos = self.Positions[index]
-            previous_pos = self.Positions[index + 1]
-            return pos.Y - previous_pos.Y
-
-    def z_relative(self, index=0, z=None):
-
-        if z:
-            if len(self.Positions) <= index:
-                return None
-            pos = self.Positions[index]
-            return z - pos.Z + pos.ZOffset
-
-        else:
-            if len(self.Positions) <= index + 1:
-                return None
-            pos = self.Positions[index]
-            previous_pos = self.Positions[index + 1]
-            return pos.Z - previous_pos.Z
-
-    def e_relative(self, index=0, e=None):
-
-        if e:
-            if len(self.Positions) <= index:
-                return None
-            pos = self.Positions[index]
-            return e - pos.E + pos.EOffset
-
-        else:
-            if len(self.Positions) <= index + 1:
-                return None
-            pos = self.Positions[index]
-            previous_pos = self.Positions[index + 1]
-            return pos.E - previous_pos.E
-
-    def e_relative_pos(self):
-        if len(self.Positions) < 2:
-            return None
-        return self.current_pos.E - self.previous_pos.E
-
-    @staticmethod
-    def is_at_position(x, y, z, pos, tolerance, apply_offsets):
-        if apply_offsets:
-            x = x + pos.XOffset
-            y = y + pos.YOffset
-            if z is not None:
-                z = z + pos.ZOffset
-
-        if ((pos.X is None or utility.is_close(pos.X, x, abs_tol=tolerance))
-            and (pos.Y is None or utility.is_close(pos.Y, y, abs_tol=tolerance))
-            and (z is None or pos.Z is None
-                 or utility.is_close(pos.Z, z, abs_tol=tolerance))):
-            return True
-        return False
-
-    def is_at_previous_position(self, x, y, z=None):
-        if len(self.Positions) < 2:
-            return False
-        return self.is_at_position(
-            x, y, z, self.Positions[1],
-            self.Printer.printer_position_confirmation_tolerance, True)
-
-    def is_at_current_position(self, x, y, z=None):
-        if len(self.Positions) < 1:
-            return False
-        return self.is_at_position(
-            x, y, z, self.Positions[0],
-            self.Printer.printer_position_confirmation_tolerance, True)
-
-    def get_position_string(self, index=0):
-        if len(self.Positions) < 1:
-            return get_formatted_coordinates(None, None, None, None)
-        current_position = self.Positions[index]
-        return get_formatted_coordinates(current_position.X, current_position.Y,
-                                         current_position.Z, current_position.E)
 
     def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 

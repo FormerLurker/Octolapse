@@ -335,6 +335,11 @@ def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
 
     return {'X': c_x, 'Y': c_y, 'Z': c_z}
 
+def is_snapshot_command(command_string, snapshot_command):
+    # note that self.Printer.snapshot_command is stripped of comments.
+    if snapshot_command is not None and len(snapshot_command)>0:
+        return command_string.lower() == snapshot_command.lower()
+    return False
 
 def get_bounding_box(octolapse_printer_profile, octoprint_printer_profile):
     # get octolapse min and max

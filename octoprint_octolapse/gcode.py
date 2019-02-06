@@ -80,6 +80,7 @@ class SnapshotGcodeGenerator(object):
         self.StabilizationPaths = self.Settings.profiles.current_stabilization().get_stabilization_paths()
         self.Snapshot = self.Settings.profiles.current_snapshot()
         self.Printer = self.Settings.profiles.current_printer()
+        self.snapshot_command = self.Printer.snapshot_command
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprint_printer_profile)
@@ -140,7 +141,10 @@ class SnapshotGcodeGenerator(object):
         # does G90/G91 influence the extruder
         self.g90_influences_extruder = position.G90InfluencesExtruder
         # get the command we will be probably sending at the end of the process
-        self.final_command = parsed_command.gcode
+        if not utility.is_snapshot_command(parsed_command.gcode, self.snapshot_command):
+            self.final_command = parsed_command.gcode
+        else:
+            self.final_command = None
         # record the return position, which is the current position
         self.x_return = position.current_pos.X
         self.y_return = position.current_pos.Y
@@ -518,6 +522,13 @@ class SnapshotGcodeGenerator(object):
                 self.x_current = self.triggering_command_position.X
                 self.y_current = self.triggering_command_position.Y
 
+    def send_final_command(self):
+        # If we are returning, add the final command to the end gcode
+        if self.return_when_complete and self.final_command is not None:
+            self.snapshot_gcode.append(
+                SnapshotGcode.END_GCODE,
+                self.final_command)
+
     def create_snapshot_gcode(
         self, position, trigger, parsed_command
     ):
@@ -586,11 +597,8 @@ class SnapshotGcodeGenerator(object):
 
             self.return_to_original_feedrate(parsed_command)
 
-        # If we are returning, add the final command to the end gcode
-        if self.return_when_complete:
-            self.snapshot_gcode.append(
-                SnapshotGcode.END_GCODE,
-                self.final_command)
+        # send the final command if necessray
+        self.send_final_command()
 
         # print out log messages
         self.Settings.Logger.log_snapshot_gcode(
@@ -637,7 +645,7 @@ class SnapshotGcodeGenerator(object):
         if _e:
             _e = float(_e)
             if not self.is_extruder_relative_current:
-                _extrusion_amount = position.e_relative(e=_e)
+                _extrusion_amount = position.e_relative_current(_e)
                 # set e1 absolute
                 _e1 = _e - _extrusion_amount * path_ratio_2
                 _e2 = _e
@@ -648,9 +656,9 @@ class SnapshotGcodeGenerator(object):
         # Convert X1 and y1 to relative
         if self.is_relative_current:
             if _x1:
-                _x1 = position.x_relative(_x1)
+                _x1 = position.x_relative_to_current(_x1)
             if _y1:
-                _y1 = position.y_relative(_y1)
+                _y1 = position.y_relative_to_current(_y1)
 
         if _x2:
             _x2 = float(_x2)

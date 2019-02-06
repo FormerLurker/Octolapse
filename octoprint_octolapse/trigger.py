@@ -98,9 +98,9 @@ class Triggers(object):
                     currentTrigger.update(position)
 
                 # Make sure there are no position errors (unknown position, out of bounds, etc)
-                if position.has_position_error(0):
+                if position.current_pos.HasPositionError:
                     self.Settings.Logger.log_error(
-                        "A trigger has a position error:{0}".format(position.position_error(0)))
+                        "A trigger has a position error:{0}".format(position.current_pos.PositionError))
                 # see if the current trigger is triggering, indicting that a snapshot should be taken
         except Exception, e:
             self.Settings.Logger.log_exception(e)
@@ -391,7 +391,7 @@ class GcodeTrigger(Trigger):
                 if self.SnapshotCommand.lower() == parsed_command.gcode.lower():
                     state.IsWaiting = True
                 if state.IsWaiting:
-                    if position.Extruder.is_triggered(self.ExtruderTriggers):
+                    if position.is_extruder_triggered(self.ExtruderTriggers):
                         if self.RequireZHop and not position.current_pos.IsZhop:
                             state.IsWaitingOnZHop = True
                             self.Settings.Logger.log_trigger_wait_state(
@@ -552,9 +552,9 @@ class LayerTrigger(Trigger):
                 state.IsHomed = True
 
                 # set is in position
-                state.IsInPosition = position.is_in_position(0)
-                state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
+                state.IsInPosition = position.current_pos.IsInPosition
+                state.InPathPosition = position.current_pos.InPathPosition
+                state.IsFeatureAllowed = position.current_pos.HasOneFeatureEnabled
 
                 # calculate height increment changed
                 if (
@@ -567,7 +567,7 @@ class LayerTrigger(Trigger):
                     )
                 ):
 
-                    new_increment = int(math.ceil(position.height(0)/self.HeightIncrement))
+                    new_increment = int(math.ceil(position.current_pos.Height/self.HeightIncrement))
 
                     if new_increment <= state.CurrentIncrement:
                         message = (
@@ -585,7 +585,7 @@ class LayerTrigger(Trigger):
                         state.IsHeightChange = True
                         message = (
                             "Layer Trigger - Height Increment:{0}, Current Increment:{1}, Height: {2}"
-                        ).format(self.HeightIncrement, state.CurrentIncrement, position.height(0))
+                        ).format(self.HeightIncrement, state.CurrentIncrement, position.current_pos.Height)
                         self.Settings.Logger.log_trigger_height_change(message)
 
                 # see if we've encountered a layer or height change
@@ -614,7 +614,7 @@ class LayerTrigger(Trigger):
                             self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if self.RequireZHop and not position.is_zhop(0):
+                        if self.RequireZHop and not position.current_pos.IsZhop:
                             state.IsWaitingOnZHop = True
                             self.Settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
@@ -802,9 +802,10 @@ class TimerTrigger(Trigger):
                 current_time = time.time()
 
                 # set is in position
-                state.IsInPosition = position.is_in_position(0)
-                state.InPathPosition = position.in_path_position(0)
-                state.IsFeatureAllowed = position.has_one_feature_enabled(0)
+                state.IsInPosition = position.current_pos.IsInPosition
+                state.InPathPosition = position.current_pos.InPathPosition
+                state.IsFeatureAllowed = position.current_pos.HasOneFeatureEnabled
+
                 # if the trigger start time is null, set it now.
                 if state.TriggerStartTime is None:
                     state.TriggerStartTime = current_time
@@ -830,7 +831,7 @@ class TimerTrigger(Trigger):
 
                     # see if the exturder is in the right position
                     if position.is_extruder_triggered(self.ExtruderTriggers):
-                        if self.RequireZHop and not position.is_zhop(0):
+                        if self.RequireZHop and not position.current_pos.IsZhop:
                             self.Settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")
                             state.IsWaitingOnZHop = True

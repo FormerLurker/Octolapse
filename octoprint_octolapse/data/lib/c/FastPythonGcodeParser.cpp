@@ -1,14 +1,14 @@
 #include "Python.h"
 #include "FastPythonGcodeParser.h"
 #include "GcodeParser.h"
-#include <stdlib.h>
+#include <iostream>
 
 
 int main(int argc, char *argv[])
 {
 	Py_SetProgramName(argv[0]);
 	Py_Initialize();
-	initfastgcodeparser();
+	//initfastgcodeparser();
 	return 0;
 }
 
@@ -18,8 +18,8 @@ static PyMethodDef CppGcodeParserMethods[] = {
 };
 
 extern "C" void  initfastgcodeparser(void)
-
 {
+    std::cout << "Initializing Octolapse Fast Gcode Parser V1.0.\r\n";
 	PyObject *m;
     text_only_functions.clear();
     for( unsigned int a = 0; a < sizeof(text_only_function_names)/sizeof(text_only_function_names[0]); a = a + 1 )
@@ -37,8 +37,6 @@ extern "C" void  initfastgcodeparser(void)
 	moduleError = PyErr_NewException("fastgcodeparser.error", NULL, NULL);
 	Py_INCREF(moduleError);
 	PyModule_AddObject(m, "error", moduleError);
-
-
 }
 
 extern "C"  PyObject* ParseGcode(PyObject* self, PyObject *args)
