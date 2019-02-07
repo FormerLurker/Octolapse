@@ -471,18 +471,21 @@ class Timelapse(object):
 
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
+            gcodes_sent_without_waiting = False
             # If we have any initialization gcodes, send them before waiting for moves to finish (in case we are tracking itme)
             if len(snapshot_gcode.InitializationGcode) > 0:
+                gcodes_sent_without_waiting = True
                 self.Settings.Logger.log_snapshot_gcode(
                     "Sending initialization gcode.")
                 self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode)
 
-            if show_real_snapshot_time:
+            if show_real_snapshot_time and gcodes_sent_without_waiting:
                 # wait for commands to finish before recording start time - this will give us a very accurate
                 # snapshot time, but requires an m400 + m114
                 self.Settings.Logger.log_snapshot_gcode(
                     "Waiting for commands to finish to calculate snapshot time accurately.")
                 start_position = self.get_position_async()
+                gcodes_sent_without_waiting = False
                 snapshot_start_time = time.time()
                 if start_position is None:
                     has_error = True
@@ -503,6 +506,7 @@ class Timelapse(object):
                         snapshot_position = self.get_position_async(
                             start_gcode=gcodes_to_send
                         )
+                        gcodes_sent_without_waiting = False
                         if snapshot_position is None:
                             has_error = True
                             self.Settings.Logger.log_error(
@@ -513,6 +517,9 @@ class Timelapse(object):
                                 return None
                     # TODO:  ALLOW MULTIPLE PAYLOADS
                     timelapse_snapshot_payload["snapshot_position"] = snapshot_position
+                    # wait if we need to.
+                    if gcodes_sent_without_waiting:
+                        snapshot_position = self.get_position_async()
                     # take a snapshot
                     snapshot_payload = self._take_snapshots()
                     # TODO:  ALLOW MULTIPLE PAYLOADS
