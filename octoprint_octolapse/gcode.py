@@ -110,7 +110,7 @@ class SnapshotGcodeGenerator(object):
         self.distance_to_lift = None
         self.length_to_retract = None
         # stored gcode
-        self.final_command = None
+        self.parsed_gcode = None
         # will hold the position and extruder state of the command that triggered the snapshot
         self.triggering_command_position = None
         #Snapshot Gcode Variable
@@ -142,9 +142,9 @@ class SnapshotGcodeGenerator(object):
         self.g90_influences_extruder = position.G90InfluencesExtruder
         # get the command we will be probably sending at the end of the process
         if not utility.is_snapshot_command(parsed_command.gcode, self.snapshot_command):
-            self.final_command = parsed_command.gcode
+            self.parsed_gcode = parsed_command.gcode
         else:
-            self.final_command = None
+            self.parsed_gcode = None
         # record the return position, which is the current position
         self.x_return = position.current_pos.X
         self.y_return = position.current_pos.Y
@@ -189,7 +189,7 @@ class SnapshotGcodeGenerator(object):
 
         # does G90/G91 influence the extruder
         self.g90_influences_extruder = g90_influences_extruder
-        self.final_command = parsed_command.gcode
+        self.parsed_gcode = parsed_command.gcode
 
         # record the return position, which is the current position
         self.x_return = snapshot_plan.x
@@ -591,12 +591,12 @@ class SnapshotGcodeGenerator(object):
                 self.x_current = self.triggering_command_position.X
                 self.y_current = self.triggering_command_position.Y
 
-    def send_final_command(self):
+    def send_parsed_command(self, gcode_type=SnapshotGcode.END_GCODE):
         # If we are returning, add the final command to the end gcode
-        if self.return_when_complete and self.final_command is not None:
+        if self.parsed_gcode is not None:
             self.snapshot_gcode.append(
-                SnapshotGcode.END_GCODE,
-                self.final_command)
+                gcode_type,
+                self.parsed_gcode)
 
     def create_snapshot_gcode(
         self, position, trigger, parsed_command
@@ -667,7 +667,8 @@ class SnapshotGcodeGenerator(object):
             self.return_to_original_feedrate(parsed_command)
 
         # send the final command if necessray
-        self.send_final_command()
+        if self.return_when_complete:
+            self.send_parsed_command(SnapshotGcode.END_GCODE)
 
         # print out log messages
         self.Settings.Logger.log_snapshot_gcode(
@@ -748,7 +749,7 @@ class SnapshotGcodeGenerator(object):
         # append both commands
         self.snapshot_gcode.append(SnapshotGcode.INITIALIZATION_GCODE, gcode1)
 
-        self.final_command = gcode2
+        self.parsed_gcode = gcode2
         # set the return x and return y to the intersection point
         # must be in absolute coordinates
         self.x_return = intersection[0]  # will be in absolute coordinates
@@ -778,6 +779,8 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.Y = snapshot_plan.y
 
         if not self.HasSnapshotPositionErrors:
+            if snapshot_plan.send_parsed_command == "first":
+                self.send_parsed_command(SnapshotGcode.INITIALIZATION_GCODE)
             # retract if necessary
             self.retract()
 
@@ -810,7 +813,8 @@ class SnapshotGcodeGenerator(object):
             # end processing without errors
 
         # send the final command if necessary.  Note that we always try to send the final command, even on error.
-        self.send_final_command()
+        if snapshot_plan.send_parsed_command == "last":
+            self.send_parsed_command(SnapshotGcode.END_GCODE)
 
         # print out log messages
         self.Settings.Logger.log_snapshot_gcode(

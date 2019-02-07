@@ -162,7 +162,8 @@ class SnapshotPlanStep(object):
 
 
 class SnapshotPlan(object):
-    def __init__(self, initial_position, file_line_number, z_lift_height, retraction_length, parsed_command):
+    def __init__(self, initial_position, file_line_number, z_lift_height, retraction_length, parsed_command,
+                 send_parsed_command='first'):
         self.file_line_number = file_line_number
         self.x = initial_position.X
         self.y = initial_position.Y
@@ -175,6 +176,7 @@ class SnapshotPlan(object):
         self.is_metric = initial_position.IsMetric
         self.steps = []
         self.parsed_command = parsed_command
+        self.send_parsed_command = send_parsed_command
 
     def add_step(self, step):
         assert (isinstance(step, SnapshotPlanStep))
@@ -238,7 +240,8 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
                 self.current_line,
                 self.z_lift_height,
                 self.retraction_distance,
-                position.current_pos.parsed_command
+                position.current_pos.parsed_command,
+                send_parsed_command='first'
 
             )
             plan.add_step(SnapshotPlanStep(SNAPSHOT_ACTION))
