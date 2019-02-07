@@ -17,6 +17,11 @@ Octolapse.Slic3rPeViewModel = function (values) {
     self.gap_fill_speed = ko.observable(values.gap_fill_speed);
     self.travel_speed = ko.observable(values.travel_speed);
     self.first_layer_speed = ko.observable(values.first_layer_speed);
+    self.retract_before_travel = ko.pureComputed(function () {
+        if (self.retract_length() != null && self.retract_length() > 0)
+            return true;
+        return false;
+    }, self);
 
     self.get_all_speed_settings = function()
     {

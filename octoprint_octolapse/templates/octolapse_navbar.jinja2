@@ -26,5 +26,5 @@
     <span class="fa-lg" style="display:none;" data-bind="visible: Octolapse.Status.is_timelapse_active() || Octolapse.Globals.show_navbar_when_not_printing(), attr: { title: Octolapse.Status.is_taking_snapshot() ? 'Taking a snapshot' : Octolapse.Status.is_rendering() ? 'Rendering' : 'Waiting to take snapshot'}">
       OCT<span data-bind="visible: ! Octolapse.Status.is_timelapse_active()">O</span><i class="fa fa-inverse" data-bind="css:{'icon-camera': (Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_rendering()), 'icon-film': Octolapse.Status.is_rendering(), 'fa-inverse' : (!Octolapse.Status.is_taking_snapshot() && !Octolapse.Status.is_rendering()) }"></i>LAPSE
     </span>
-  </a>
+</a>
 

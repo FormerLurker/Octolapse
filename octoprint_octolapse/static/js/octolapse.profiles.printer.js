@@ -30,6 +30,12 @@ $(function() {
             max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
             min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
             max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
+            snapshot_min_x: { lessThanOrEqual: "#octolapse_printer_snapshot_max_x" },
+            snapshot_max_x: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_x"},
+            snapshot_min_y: { lessThanOrEqual: "#octolapse_printer_snapshot_max_y" },
+            snapshot_max_y: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_y" },
+            snapshot_min_z: { lessThanOrEqual: "#octolapse_printer_snapshot_max_z" },
+            snapshot_max_z: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_z" },
             minimum_layer_height: { lessThanOrEqual: "#printer_profile_priming_height" },
             priming_height: { greaterThanOrEqual: "#printer_profile_minimum_layer_height" },
             auto_position_detection_commands: { csvString: true },
@@ -49,6 +55,12 @@ $(function() {
             max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Y - Width Min'' field." },
             min_z : { lessThanOrEqual: "Must be less than or equal to the 'Z - Width Max' field." },
             max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." },
+            snapshot_min_x : { lessThanOrEqual: "Must be less than or equal to the ''Snapshot Max X'' field." },
+            snapshot_max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min X'' field." },
+            snapshot_min_y : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Y' field." },
+            snapshot_max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Y'' field." },
+            snapshot_min_z : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Z' field." },
+            snapshot_max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Z'' field." },
             minimum_layer_height: { lessThanOrEqual: "Must be less than or equal to the ''Priming Height'' field." },
             priming_height: { greaterThanOrEqual: "Must be greater than or equal to the ''Minimum Layer Height'' field." },
             auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." }
@@ -115,6 +127,13 @@ $(function() {
         self.max_y = ko.observable(values.max_y);
         self.min_z = ko.observable(values.min_z);
         self.max_z = ko.observable(values.max_z);
+        self.restrict_snapshot_area = ko.observable(values.restrict_snapshot_area);
+        self.snapshot_min_x = ko.observable(values.snapshot_min_x);
+        self.snapshot_max_x = ko.observable(values.snapshot_max_x);
+        self.snapshot_min_y = ko.observable(values.snapshot_min_y);
+        self.snapshot_max_y = ko.observable(values.snapshot_max_y);
+        self.snapshot_min_z = ko.observable(values.snapshot_min_z);
+        self.snapshot_max_z = ko.observable(values.snapshot_max_z);
         self.priming_height = ko.observable(values.priming_height);
         self.minimum_layer_height = ko.observable(values.minimum_layer_height);
         self.e_axis_default_mode = ko.observable(values.e_axis_default_mode);
@@ -130,7 +149,7 @@ $(function() {
         self.printFeaturesList = ko.observable([]);
 
         self.getPrinterFeatures = function () {
-            console.log("getting feature list");
+            //console.log("getting feature list");
 
             var data = null;
             switch(self.slicer_type())
@@ -163,7 +182,7 @@ $(function() {
                     ),
                     dataType: "json",
                     success: function (result) {
-                        console.log("print features received");
+                        //console.log("print features received");
                         //console.log(result);
                         self.nonUniqueSpeedList(result['non-unique-speeds']);
                         self.missingSpeedsList(result['missing-speeds']);

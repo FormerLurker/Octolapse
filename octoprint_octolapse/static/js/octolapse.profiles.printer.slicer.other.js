@@ -27,6 +27,17 @@ Octolapse.OtherSlicerViewModel = function (values) {
     self.speed_tolerance = ko.observable(values.speed_tolerance);
     self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
 
+    self.retract_before_move = ko.pureComputed(function () {
+        if (self.retract_length() != null && self.retract_length() > 0)
+            return true;
+        return false;
+    }, self);
+    self.lift_when_retracted = ko.pureComputed(function () {
+        if (self.retract_before_move() && self.z_hop() != null && self.z_hop() > 0)
+            return true;
+        return false;
+    }, self);
+
     self.get_all_speed_settings = function()
     {
         return [

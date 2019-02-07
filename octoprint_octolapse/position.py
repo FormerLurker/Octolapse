@@ -423,19 +423,40 @@ class Pos(object):
                 return 0
             elif amount_to_lift > z_hop:
                 return z_hop
-
         return utility.round_to(amount_to_lift, utility.FLOAT_MATH_EQUALITY_RANGE)
+
+    def length_to_retract(self, amount_to_retract):
+        # if we don't have any history, we want to retract
+        retract_length = utility.round_to_float_equality_range(
+            utility.round_to_float_equality_range(amount_to_retract - self.RetractionLength)
+        )
+        # Don't round the retraction length
+        # retractLength = utility.round_to(retract_length, self.PrinterTolerance)
+        if retract_length < 0:
+            # This means we are beyond fully retracted, return 0
+            #self.logger.log_warning("extruder.py - A 'length_to_retract' was requested, "
+            #                                 "but the extruder is beyond the configured retraction "
+            #                                 "length.")
+            retract_length = 0
+        elif retract_length > amount_to_retract:
+            #self.logger.log_error("extruder.py - A 'length_to_retract' was requested, "
+            #                               "but was found to be greater than the retraction "
+            #                               "length.")
+            # for some reason we are over the retraction length.  Return 0
+            retract_length = amount_to_retract
+        # return the calculated retraction length
+        return retract_length
 
 
 class Position(object):
-    def __init__(self, octolapse_settings, octoprint_printer_profile,
+    def __init__(self, logger, printer_profile, snapshot_profile, octoprint_printer_profile,
                  g90_influences_extruder):
-        self.Settings = octolapse_settings
-        self.Printer = self.Settings.profiles.current_printer()
+        self.logger = logger
+        self.Printer = printer_profile
 
-        self.Snapshot = self.Settings.profiles.current_snapshot()
-        self.SlicerFeatures = SlicerPrintFeatures(self.Printer.get_current_slicer_settings(), self.Snapshot)
-        self.feature_restrictions_enabled = self.Snapshot.feature_restrictions_enabled
+        self.Snapshot = snapshot_profile
+        self.SlicerFeatures = None if snapshot_profile is None else SlicerPrintFeatures(self.Printer.get_current_slicer_settings(), snapshot_profile)
+        self.feature_restrictions_enabled = False if snapshot_profile is None else snapshot_profile.feature_restrictions_enabled
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.Origin = {
             "X": self.Printer.origin_x,
@@ -445,13 +466,13 @@ class Position(object):
 
         self.BoundingBox = utility.get_bounding_box(self.Printer,
                                                     octoprint_printer_profile)
-        self.gcode_generation_settings = self.Settings.profiles.current_printer().get_current_state_detection_settings()
+        self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
         self.retraction_length = self.gcode_generation_settings.retraction_length
         self.PrinterTolerance = utility.FLOAT_MATH_EQUALITY_RANGE
         self.Positions = deque(maxlen=5)
         self.SavedPosition = None
-        self.HasRestrictedPosition = (
-            len(self.Snapshot.position_restrictions) > 0 and self.Snapshot.position_restrictions_enabled
+        self.HasRestrictedPosition = False if snapshot_profile is None else (
+            len(snapshot_profile.position_restrictions) > 0 and snapshot_profile.position_restrictions_enabled
         )
         if self.Printer.g90_influences_extruder in ['true', 'false']:
             self.G90InfluencesExtruder = True if self.Printer.g90_influences_extruder == 'true' else False
@@ -513,31 +534,7 @@ class Position(object):
         return self.current_pos.distance_to_zlift(self.ZHop, True)
 
     def length_to_retract(self):
-        # if we don't have any history, we want to retract
-        retract_length = utility.round_to_float_equality_range(
-            self.retraction_length - self.current_pos.RetractionLength
-        )
-
-        # Don't round the retraction length
-        # retractLength = utility.round_to(retract_length, self.PrinterTolerance)
-
-        if retract_length < 0:
-            # This means we are beyond fully retracted, return 0
-            self.Settings.Logger.log_warning("extruder.py - A 'length_to_retract' was requested, "
-                                             "but the extruder is beyond the configured retraction "
-                                             "length.")
-            retract_length = 0
-        elif retract_length > self.retraction_length:
-            self.Settings.Logger.log_error("extruder.py - A 'length_to_retract' was requested, "
-                                           "but was found to be greater than the retraction "
-                                           "length.")
-            # for some reason we are over the retraction length.  Return 0
-            retract_length = self.retraction_length
-
-        if abs(retract_length) < utility.FLOAT_MATH_EQUALITY_RANGE:
-            return 0.0
-        # return the calculated retraction length
-        return retract_length
+        return self.current_pos.length_to_retract(self.retraction_length)
 
     # TODO: do we need this?
     def x_relative_to_current(self, x):
@@ -866,10 +863,10 @@ class Position(object):
         movement_type = ""
         if cmd == "G2":
             movement_type = "clockwise"
-            self.Settings.Logger.log_position_command_received("Received G2 - Clockwise Arc")
+            self.logger.log_position_command_received("Received G2 - Clockwise Arc")
         else:
             movement_type = "counter-clockwise"
-            self.Settings.Logger.log_position_command_received("Received G3 - Counter-Clockwise Arc")
+            self.logger.log_position_command_received("Received G3 - Counter-Clockwise Arc")
 
         x = parameters["X"] if "X" in parameters else None
         y = parameters["Y"] if "Y" in parameters else None
@@ -884,24 +881,24 @@ class Position(object):
 
         can_update_position = False
         if r is not None and (i is not None or j is not None):
-            self.Settings.Logger.log_error(
+            self.logger.log_error(
                 "Received {0} - but received R and either I or J, which is not allowed.".format(cmd))
         elif i is not None or j is not None:
             # IJ Form
             if x is not None and y is not None:
                 # not a circle, the position has changed
                 can_update_position = True
-                self.Settings.Logger.log_info(
+                self.logger.log_info(
                     "Cannot yet calculate position restriction intersections when G2/G3.")
         elif r is not None:
             # R Form
             if x is None and y is None:
-                self.Settings.Logger.log_error(
+                self.logger.log_error(
                     "Received {0} - but received R without x or y, which is not allowed.".format(cmd)
                 )
             else:
                 can_update_position = True
-                self.Settings.Logger.log_info(
+                self.logger.log_info(
                     "Cannot yet calculate position restriction intersections when G2/G3.")
 
         if can_update_position:
@@ -922,7 +919,7 @@ class Position(object):
                     self.previous_pos.X,
                     self.previous_pos.Y, self.previous_pos.Z, self.previous_pos.E, self.current_pos.X,
                     self.current_pos.Y, self.current_pos.Z, self.current_pos.E)
-            self.Settings.Logger.log_position_change(
+            self.logger.log_position_change(
                 message)
 
     def process_g10(self):
@@ -1187,7 +1184,7 @@ class Position(object):
     #             home_strings.append("Homing Z to {0}.".format(
     #                 get_formatted_coordinate(pos.Z)))
     #
-    #     self.Settings.Logger.log_position_command_received(
+    #     self.logger.log_position_command_received(
     #         "Received G161 - ".format(" ".join(home_strings)))
     #     pos.HasPositionError = False
     #     pos.PositionError = None
@@ -1245,7 +1242,7 @@ class Position(object):
     #             home_strings.append("Homing Z to {0}.".format(
     #                 get_formatted_coordinate(pos.Z)))
     #
-    #     self.Settings.Logger.log_position_command_received(
+    #     self.logger.log_position_command_received(
     #         "Received G162 - ".format(" ".join(home_strings)))
     #     pos.HasPositionError = False
     #     pos.PositionError = None

@@ -1168,6 +1168,8 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'retraction_speed': SettingsDefinition('retraction_speed', CuraParsingFunctions.parse_int,['octolapse_setting']),
             'skirt_brim_speed': SettingsDefinition('skirt_brim_speed', CuraParsingFunctions.parse_float,['octolapse_setting']),
             'speed_infill': SettingsDefinition('speed_infill', CuraParsingFunctions.parse_int, ['octolapse_setting']),
+            # Note that the below speed doesn't represent the initial layer or travel speed.  See speed_print_layer_0
+            # however, a test will need to be performed.
             'speed_layer_0': SettingsDefinition('speed_layer_0', CuraParsingFunctions.parse_float,['octolapse_setting']),
             'speed_print': SettingsDefinition('speed_print', CuraParsingFunctions.parse_int, ['octolapse_setting']),
             'speed_slowdown_layers': SettingsDefinition('speed_slowdown_layers', CuraParsingFunctions.parse_int,['octolapse_setting']),
@@ -1177,7 +1179,10 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'speed_wall': SettingsDefinition('speed_wall', CuraParsingFunctions.parse_float, ['octolapse_setting']),
             'speed_wall_0': SettingsDefinition('speed_wall_0', CuraParsingFunctions.parse_float, ['octolapse_setting']),
             'speed_wall_x': SettingsDefinition('speed_wall_x', CuraParsingFunctions.parse_float, ['octolapse_setting']),
+            'retraction_enable': SettingsDefinition('retraction_enable', CuraParsingFunctions.parse_bool, ['octolapse_setting']),
             'version': SettingsDefinition('version', CuraParsingFunctions.strip_string, ['octolapse_setting']),
+            'speed_print_layer_0': SettingsDefinition('speed_print_layer_0', CuraParsingFunctions.parse_float,
+                                                      ['octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
             'flavor': SettingsDefinition('flavor', CuraParsingFunctions.strip_string, ['misc']),
             'layer_height': SettingsDefinition('layer_height', CuraParsingFunctions.parse_float, ['misc']),
@@ -1474,7 +1479,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'retraction_combing': SettingsDefinition('retraction_combing', CuraParsingFunctions.strip_string, ['misc']),
             'retraction_combing_max_distance': SettingsDefinition('retraction_combing_max_distance', CuraParsingFunctions.parse_int, ['misc']),
             'retraction_count_max': SettingsDefinition('retraction_count_max', CuraParsingFunctions.parse_int, ['misc']),
-            'retraction_enable': SettingsDefinition('retraction_enable', CuraParsingFunctions.parse_bool, ['misc']),
             'retraction_extra_prime_amount': SettingsDefinition('retraction_extra_prime_amount', CuraParsingFunctions.parse_int, ['misc']),
             'retraction_extrusion_window': SettingsDefinition('retraction_extrusion_window', CuraParsingFunctions.parse_float, ['misc']),
             'retraction_hop_after_extruder_switch': SettingsDefinition('retraction_hop_after_extruder_switch', CuraParsingFunctions.parse_bool, ['misc']),
@@ -1508,7 +1512,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'speed_equalize_flow_max': SettingsDefinition('speed_equalize_flow_max', CuraParsingFunctions.parse_int, ['misc']),
             'speed_ironing': SettingsDefinition('speed_ironing', CuraParsingFunctions.parse_float, ['misc']),
             'speed_prime_tower': SettingsDefinition('speed_prime_tower', CuraParsingFunctions.parse_int, ['misc']),
-            'speed_print_layer_0': SettingsDefinition('speed_print_layer_0', CuraParsingFunctions.parse_float, ['misc']),
             'speed_roofing': SettingsDefinition('speed_roofing', CuraParsingFunctions.parse_float, ['misc']),
             'speed_support': SettingsDefinition('speed_support', CuraParsingFunctions.parse_int, ['misc']),
             'speed_support_bottom': SettingsDefinition('speed_support_bottom', CuraParsingFunctions.parse_float, ['misc']),

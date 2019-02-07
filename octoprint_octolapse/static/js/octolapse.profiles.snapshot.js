@@ -90,8 +90,6 @@ $(function () {
         self.feature_trigger_on_wipe = ko.observable(values.feature_trigger_on_wipe);
 
         self.require_zhop = ko.observable(values.require_zhop);
-        self.lift_before_move = ko.observable(values.lift_before_move);
-        self.retract_before_move = ko.observable(values.retract_before_move);
         /*
         * Snapshot Cleanup Settings
         */

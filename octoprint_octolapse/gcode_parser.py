@@ -814,7 +814,6 @@ class Commands(object):
         lines = []
         for line in gcode_string.splitlines():
             lines.append(Commands.strip_comments(line))
-
         return lines
 
 

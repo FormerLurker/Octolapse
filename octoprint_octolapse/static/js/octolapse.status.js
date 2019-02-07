@@ -99,6 +99,7 @@ $(function () {
             };
 
             self.SETTINGS_VISIBLE_KEY = "settings_visible";
+
             self.onBeforeBinding = function () {
                 var settingsVisible = Octolapse.getLocalStorage(self.SETTINGS_VISIBLE_KEY);
                 //console.log("Local Storage for " + self.SETTINGS_VISIBLE_KEY + ": " + settingsVisible);
@@ -148,6 +149,13 @@ $(function () {
                 return true;
             },this);
 
+            self.stabilization_requires_snapshot_profile = ko.pureComputed(function(){
+                var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
+                if (current_stabilization  != null)
+                    return current_stabilization.requires_snapshot_profile;
+                return true;
+            }, this);
+
             self.getCurrentProfileByGuid = function(profiles, guid){
                 if (guid != null) {
                     for (var i = 0; i < profiles.length; i++) {
@@ -158,11 +166,11 @@ $(function () {
                 }
                 return null;
             }
+
             self.hasConfigIssues = ko.computed(function(){
                 var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected() || !self.has_configured_printer_profile();
                 return hasConfigIssues;
             },this);
-
 
             self.onTabChange = function (current, previous) {
                 if (current != null && current === "#tab_plugin_octolapse") {
@@ -1487,7 +1495,6 @@ $(function () {
             }, self);
         };
 
-// Bind the settings view model to the plugin settings element
         OCTOPRINT_VIEWMODELS.push([
             Octolapse.StatusViewModel
             , []

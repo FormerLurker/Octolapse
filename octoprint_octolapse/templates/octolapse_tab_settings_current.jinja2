@@ -43,7 +43,7 @@
                     <select id="octolapse_tab_printer_profile"
                             class="input-block-level"
                             data-bind="
-                               enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
+                               enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
                                options: Octolapse.Status.printers_sorted,
                                optionsText: 'name',
                                optionsValue: 'guid',
@@ -59,7 +59,7 @@
                     </div>
                 </td>
                 <td>
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null, click: openCurrentPrinterProfile">
+                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>
@@ -70,7 +70,7 @@
                     <select id="octolapse_tab_stabilization_profile"
                             class="input-block-level"
                             data-bind="
-                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
+                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
                                 options: Octolapse.Status.stabilizations_sorted,
                                 optionsText: 'name',
                                 optionsValue: 'guid',
@@ -79,18 +79,18 @@
 
                 </td>
                 <td>
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null, click: openCurrentStabilizationProfile">
+                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>
             </tr>
-            <tr>
+            <tr data-bind="visible: Octolapse.Status.stabilization_requires_snapshot_profile()">
                 <td>Snapshot</td>
                 <td>
                     <select id="octolapse_tab_snapshot_profile"
                             class="input-block-level"
                             data-bind="
-                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
+                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
                                 options: Octolapse.Status.snapshots_sorted,
                                 optionsText: 'name',
                                 optionsValue: 'guid',
@@ -98,7 +98,7 @@
                                 value: Octolapse.Status.current_snapshot_profile_guid"></select>
                 </td>
                 <td>
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_snapshot_profile_guid() != null, click: openCurrentSnapshotProfile">
+                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_snapshot_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentSnapshotProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>
@@ -109,7 +109,7 @@
                     <select id="octolapse_tab_rendering_profile"
                             class="input-block-level"
                             data-bind="
-                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(),
+                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
                                 options: Octolapse.Status.renderings_sorted,
                                 optionsText: 'name',
                                 optionsValue: 'guid',
@@ -117,7 +117,7 @@
                                 value: Octolapse.Status.current_rendering_profile_guid"></select>
                 </td>
                 <td class="text-right">
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null, click: openCurrentRenderingProfile">
+                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>
@@ -136,7 +136,7 @@
                     <select id="octolapse_tab_debug_profile"
                             class="input-block-level"
                             data-bind="
-                                enable: Octolapse.Globals.is_admin(),
+                                enable: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(),
                                 options: Octolapse.Status.debug_sorted,
                                 optionsText: 'name',
                                 optionsValue: 'guid',
@@ -144,7 +144,7 @@
                                 value: Octolapse.Status.current_debug_profile_guid"></select>
                 </td>
                 <td>
-                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null, click: openCurrentDebugProfile">
+                    <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile">
                         <i class="fa fa-gear fa-2x"></i>
                     </a>
                 </td>

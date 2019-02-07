@@ -39,6 +39,7 @@ $(function () {
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
 
+        Octolapse.Settings.is_loaded = ko.observable(false);
         self.loginState = parameters[1];
 
 
@@ -199,7 +200,15 @@ $(function () {
 
             Octolapse.Stabilizations.profiles([]);
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
-            Octolapse.Stabilizations.profileOptions = {'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options}
+            Octolapse.Stabilizations.profileOptions = {
+                'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
+                'pre_calculated_stabilization_type_options': settings.profiles.options.stabilization.pre_calculated_stabilization_type_options,
+                'lock_to_corner_type_options': settings.profiles.options.stabilization.lock_to_corner_type_options,
+                'lock_to_corner_favor_axis_options': settings.profiles.options.stabilization.lock_to_corner_favor_axis_options,
+                'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
+                'lock_to_print_type_options': settings.profiles.options.stabilization.lock_to_print_type_options,
+                'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options
+            }
             Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
             Object.keys(settings.profiles.stabilizations).forEach(function(key) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
@@ -229,7 +238,7 @@ $(function () {
                 'overlay_text_templates': settings.profiles.options.rendering.overlay_text_templates,
                 'overlay_text_alignment_options': settings.profiles.options.rendering.overlay_text_alignment_options,
                 'overlay_text_valign_options': settings.profiles.options.rendering.overlay_text_valign_options,
-                'overlay_text_halign_options': settings.profiles.options.rendering.overlay_text_halign_options,
+                'overlay_text_halign_options': settings.profiles.options.rendering.overlay_text_halign_options
             }
             Octolapse.Renderings.current_profile_guid(settings.profiles.current_rendering_profile_guid);
             Object.keys(settings.profiles.renderings).forEach(function(key) {
@@ -262,9 +271,24 @@ $(function () {
                 Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(settings.profiles.debug[key]));
             });
 
+            Octolapse.Settings.is_loaded(true);
 
         };
 
+        self.getProfileByGuid = function(profiles, guid) {
+            var index = Octolapse.arrayFirstIndexOf(profiles(),
+                function(item) {
+                    var itemGuid = item.guid();
+                    var matchFound = itemGuid === guid;
+                    if (matchFound)
+                        return matchFound
+                }
+            );
+            if (index < 0) {
+                return null;
+            }
+            return profiles()[index];
+        };
         /*
             reload the default settings
         */
@@ -317,6 +341,7 @@ $(function () {
         };
 
         self.clearSettings = function (){
+            Octolapse.Settings.is_loaded(false);
              // Printers
             Octolapse.Printers.profiles([]);
             Octolapse.Printers.default_profile(null);

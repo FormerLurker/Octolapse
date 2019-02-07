@@ -12,11 +12,17 @@ from octoprint_octolapse.settings import \
 def migrate_settings(current_version, settings_dict, log_file_path, default_settings_directory):
 
     if LooseVersion(settings_dict["version"]) <= LooseVersion("0.3.3rc3.dev0"):
-        return migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, os.path.join(default_settings_directory,'settings_default_0_3_4.json'))
+        settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, os.path.join(default_settings_directory,'settings_default_0_3_4.json'))
     elif LooseVersion(settings_dict["version"]) <= LooseVersion("0.3.5rc1.dev0"):
-        return migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path,  os.path.join(default_settings_directory + 'settings_default.json'))
+        settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path,  os.path.join(default_settings_directory + 'settings_default.json'))
+
     return settings_dict
 
+
+def migrate_post_0_3_5(current_version, settings_dict, log_file_path, default_settings_path):
+    # This  is a reminder that the 'version' setting moved to Settings.main_settings.version
+    # so you don't forget :)
+    raise NotImplementedError("You haven't created this migration yet.")
 
 def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, log_file_path, default_settings_path):
     # versions prior to or equal to 0.3.3rc3.dev0 need to have the snapshot profiles reset to the defaults

@@ -26,7 +26,7 @@ from octoprint_octolapse.position import Pos, Position
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 import fastgcodeparser
-
+import octoprint_octolapse.stabilization_preprocessing as Preprocessing
 class SnapshotGcode(object):
     INITIALIZATION_GCODE = 'initialization-gcode'
     START_GCODE = 'start-gcode'
@@ -123,7 +123,7 @@ class SnapshotGcodeGenerator(object):
         # misc variables used for logging info
         self.last_extrusion_height = None
 
-    def initialize(self, position, trigger, parsed_command):
+    def initialize_for_real_time_processing(self, position, trigger, parsed_command):
         # reset any errors
         self.HasSnapshotPositionErrors = False
         self.SnapshotPositionErrors = ""
@@ -135,7 +135,7 @@ class SnapshotGcodeGenerator(object):
         assert (isinstance(self.triggering_command_position, Pos))
         assert (isinstance(position, Position))
 
-        if len(position.Positions)<1:
+        if len(position.Positions) < 1:
             return None
 
         # does G90/G91 influence the extruder
@@ -172,8 +172,51 @@ class SnapshotGcodeGenerator(object):
         self.retracted_by_start_gcode = False
         self.zhopped_by_start_gcode = False
 
-        # misc variables used for logging info
-        self.last_extrusion_height = position.current_pos.LastExtrusionHeight
+        # create our gcode object
+        self.snapshot_gcode = SnapshotGcode()
+
+        return not self.has_initialization_errors()
+
+    def initialize_for_snapshot_plan_processing(self, snapshot_plan, parsed_command, g90_influences_extruder):
+        assert(isinstance(snapshot_plan, Preprocessing.SnapshotPlan))
+        # reset any errors
+        self.HasSnapshotPositionErrors = False
+        self.SnapshotPositionErrors = ""
+
+        # get the triggering command and extruder position by
+        # undo the most recent position update since we haven't yet executed the most recent gcode command
+        # Capture and undo the last position update, we're not going to be using it!
+
+        # does G90/G91 influence the extruder
+        self.g90_influences_extruder = g90_influences_extruder
+        self.final_command = parsed_command.gcode
+
+        # record the return position, which is the current position
+        self.x_return = snapshot_plan.x
+        self.y_return = snapshot_plan.y
+        self.z_return = snapshot_plan.z
+        self.f_return = snapshot_plan.speed
+        self.is_relative_return = snapshot_plan.is_xyz_relative
+        self.is_extruder_relative_return = snapshot_plan.is_e_relative
+        self.is_metric_return = snapshot_plan.is_metric
+
+        # keep track of the current position while creating gcode below.
+        # these values will be updated and used to make sure we don't
+        # issue gcodes that don't move the axis, which would slow down
+        # the snapshot
+        self.x_current = self.x_return
+        self.y_current = self.y_return
+        self.f_current = self.f_return
+        self.is_relative_current = self.is_relative_return
+        self.is_extruder_relative_current = self.is_extruder_relative_return
+        self.retracted_length_current = 0
+        self.distance_to_lift = snapshot_plan.lift_amount
+        self.length_to_retract = snapshot_plan.retract_amount
+
+        # State flags for triggering various functionality
+        self.return_when_complete = True  # we only return if the final command is not travel only in XY plane
+        self.retracted_by_start_gcode = False
+        self.zhopped_by_start_gcode = False
 
         # create our gcode object
         self.snapshot_gcode = SnapshotGcode()
@@ -347,7 +390,7 @@ class SnapshotGcodeGenerator(object):
         return feedrate
 
     def retract(self):
-        if self.Snapshot.retract_before_move and self.length_to_retract > 0:
+        if self.gcode_generation_settings.retract_before_move and self.length_to_retract > 0:
             self.set_e_to_relative(SnapshotGcode.START_GCODE)
             self.snapshot_gcode.append(
                 SnapshotGcode.START_GCODE,
@@ -370,6 +413,28 @@ class SnapshotGcodeGenerator(object):
                 )
             )
 
+    def add_snapshot_action(self):
+        # Move to Snapshot Position
+        self.snapshot_gcode.append(
+            SnapshotGcode.SNAPSHOT_COMMANDS,
+            self.Printer.snapshot_command
+        )
+
+    def add_travel_action(self, step):
+        assert(isinstance(step, Preprocessing.SnapshotPlanStep))
+        # Move to Snapshot Position
+        self.set_xyz_to_absolute(SnapshotGcode.SNAPSHOT_COMMANDS)
+        self.snapshot_gcode.append(
+            SnapshotGcode.SNAPSHOT_COMMANDS,
+            self.get_gcode_travel(
+                step.x,
+                step.y,
+                self.get_altered_feedrate(step.f)
+            )
+        )
+        self.x_current = step.x
+        self.y_current = step.y
+
     def can_zhop(self):
         return (
             utility.is_in_bounds(self.BoundingBox, None, None, self.z_return + self.distance_to_lift)
@@ -377,7 +442,12 @@ class SnapshotGcodeGenerator(object):
 
     def lift_z(self):
         # if we can ZHop, do
-        if self.can_zhop() and self.distance_to_lift > 0 and self.Snapshot.lift_before_move:
+        if (
+            self.can_zhop() and
+            self.distance_to_lift > 0 and
+            self.gcode_generation_settings.retract_before_move and
+            self.gcode_generation_settings.lift_when_retracted
+        ):
             self.set_xyz_to_relative(SnapshotGcode.START_GCODE)
             # append to snapshot gcode
             self.snapshot_gcode.append(
@@ -461,7 +531,6 @@ class SnapshotGcodeGenerator(object):
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_feedrate(self.f_return))
 
-
     def return_to_original_position(self):
         if self.return_when_complete:
             # Only return to the previous coordinates if we need to (which will be most cases,
@@ -533,7 +602,7 @@ class SnapshotGcodeGenerator(object):
         self, position, trigger, parsed_command
     ):
         # initialize returns true on success.  If false, we can't continue
-        if not self.initialize(position, trigger, parsed_command):
+        if not self.initialize_for_real_time_processing(position, trigger, parsed_command):
             return None
 
         # create the start and end gcode, which would include any split gcode (position restriction intersection)
@@ -700,6 +769,61 @@ class SnapshotGcodeGenerator(object):
         # undo the update since the position has not changed, only the zlift value and potentially the
         # retraction length
         position.undo_update()
+
+    def create_gcode_for_snapshot_plan(self, snapshot_plan, parsed_command, g90_influences_extruder):
+        if not self.initialize_for_snapshot_plan_processing(snapshot_plan, parsed_command, g90_influences_extruder):
+            return None
+
+        self.snapshot_gcode.X = snapshot_plan.x
+        self.snapshot_gcode.Y = snapshot_plan.y
+
+        if not self.HasSnapshotPositionErrors:
+            # retract if necessary
+            self.retract()
+
+            # lift if necessary
+            self.lift_z()
+
+            has_taken_snapshot = False
+            assert(isinstance(snapshot_plan, Preprocessing.SnapshotPlan))
+            for step in snapshot_plan.steps:
+                assert(isinstance(step, Preprocessing.SnapshotPlanStep))
+                if step.action == Preprocessing.TRAVEL_ACTION:
+                    self.add_travel_action(step)
+                if step.action == Preprocessing.SNAPSHOT_ACTION:
+                    # todo: support multiple snapshots maybe? however, not today.
+                    self.add_snapshot_action()
+
+            # Create Return Gcode
+            self.return_to_original_position()
+
+            # If we zhopped in the beginning, lower z
+            self.delift_z()
+
+            # deretract if necessary
+            self.deretract()
+
+            # reset the coordinate systems for the extruder and axis
+            self.return_to_original_coordinate_systems()
+
+            self.return_to_original_feedrate(parsed_command)
+            # end processing without errors
+
+        # send the final command if necessary.  Note that we always try to send the final command, even on error.
+        self.send_final_command()
+
+        # print out log messages
+        self.Settings.Logger.log_snapshot_gcode(
+            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
+                self.snapshot_gcode.snapshot_index(),
+                self.snapshot_gcode.end_index(),
+                parsed_command.gcode
+            )
+        )
+        for gcode in self.snapshot_gcode.snapshot_gcode():
+            self.Settings.Logger.log_snapshot_gcode("    {0}".format(gcode))
+
+        return self.snapshot_gcode
 
     @staticmethod
     def get_g_command(cmd, x, y, z, e, f):

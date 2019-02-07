@@ -16,6 +16,7 @@ Octolapse.Simplify3dViewModel = function (values) {
     self.x_y_axis_movement_speed = ko.observable(values.x_y_axis_movement_speed);
     self.z_axis_movement_speed = ko.observable(values.z_axis_movement_speed);
     self.bridging_speed_multiplier = ko.observable(values.bridging_speed_multiplier);
+    self.extruder_use_retract = ko.observable(values.extruder_use_retract);
 
     self.get_all_speed_settings = function()
     {

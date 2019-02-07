@@ -12,6 +12,15 @@
                 <h5>Material</h5>
             </div>
                 <div class="control-group">
+                    <label class="control-label" for="printer_profile_cura_retraction_enable">Retraction Enabled</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input id="printer_profile_cura_retraction_enable" name="retraction_enable" type="checkbox" data-bind="checked: slicers.cura.retraction_enable" title="Enable retraction" />Enabled
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
                     <label class="control-label" for="printer_profile_cura_retraction_amount">Retraction Distance</label>
                     <div class="controls">
                         <div class="input-append form-inline">
@@ -225,11 +234,18 @@
                 </div>
             </div>
 
-
-
             <div>
                 <h5>Travel</h5>
             </div>
+            <div class="control-group">
+                    <label class="control-label" for="printer_profile_cura_retraction_hop_enabled">Z Hop When Retracted</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input id="printer_profile_cura_retraction_hop_enabled" name="retraction_hop_enabled" type="checkbox" data-bind="checked: slicers.cura.retraction_hop_enabled" title="Enable retraction" />Enabled
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        </label>
+                    </div>
+                </div>
             <div class="control-group">
                 <label class="control-label" for="printer_profile_cura_retraction_hop">Z Hop Height</label>
                 <div class="controls">

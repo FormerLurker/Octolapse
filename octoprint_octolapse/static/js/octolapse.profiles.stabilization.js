@@ -24,10 +24,19 @@
 $(function() {
     Octolapse.StabilizationProfileViewModel = function (values) {
         var self = this;
-        self.profileTypeName = ko.observable("Stabilization")
+        self.profileTypeName = ko.observable("Stabilization");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
+        self.stabilization_type = ko.observable(values.stabilization_type);
+        self.pre_calculated_stabilization_type = ko.observable(values.pre_calculated_stabilization_type)
+        // Pre-calculated stabilization options
+        self.lock_to_corner_type = ko.observable(values.lock_to_corner_type);
+        self.lock_to_corner_favor_axis = ko.observable(values.lock_to_corner_favor_axis);
+        self.lock_to_corner_disable_z_lift = ko.observable(values.lock_to_corner_disable_z_lift);
+        self.lock_to_corner_disable_retract = ko.observable(values.lock_to_corner_disable_retract);
+
+        //  Real-time stabilization options
         self.x_type = ko.observable(values.x_type);
         self.x_fixed_coordinate = ko.observable(values.x_fixed_coordinate);
         self.x_fixed_path = ko.observable(values.x_fixed_path);
@@ -53,6 +62,10 @@ $(function() {
     Octolapse.StabilizationProfileValidationRules = {
         rules: {
             name: "required"
+            ,stabilization_type: "required"
+            ,pre_calculated_stabilization_type: "required"
+            ,lock_to_corner_type: "required"
+            ,lock_to_corner_favor_axis: "required"
             ,x_type: "required"
             ,x_fixed_coordinate: { number: true, required: true }
             , x_fixed_path: { required: true, csvFloat: true}

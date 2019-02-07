@@ -203,6 +203,13 @@ class PrinterProfile(ProfileSettings):
         self.max_y = 0.0
         self.min_z = 0.0
         self.max_z = 0.0
+        self.restrict_snapshot_area = False
+        self.snapshot_min_x = 0.0
+        self.snapshot_max_x = 0.0
+        self.snapshot_min_y = 0.0
+        self.snapshot_max_y = 0.0
+        self.snapshot_min_z = 0.0
+        self.snapshot_max_z = 0.0
         self.auto_position_detection_commands = ""
         self.priming_height = 0.75 # Extrusion must occur BELOW this level before layer tracking will begin
         self.minimum_layer_height = 0.05  # Layer tracking won't start until extrusion at this height is reached.
@@ -346,8 +353,21 @@ class StabilizationPath(Settings):
 
 
 class StabilizationProfile(ProfileSettings):
+    STABILIZATION_TYPE_PRE_CALCULATED = "pre-calculate"
+    STABILIZATION_TYPE_REAL_TIME = "real-time"
+    LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner"
+
     def __init__(self, name="New Stabilization Profile"):
         super(StabilizationProfile, self).__init__(name)
+        self.stabilization_type = StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
+        self.pre_calculated_stabilization_type = StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
+        # Pre-Calculated stabilization options
+        self.lock_to_corner_type = 'back-left'
+        self.lock_to_corner_favor_axis = 'x'
+        self.lock_to_corner_disable_z_lift = True
+        self.lock_to_corner_disable_retract = True
+        self.lock_to_corner_height_increment = 0
+        # Real Time stabilization options
         self.x_type = "relative"
         self.x_fixed_coordinate = 0.0
         self.x_fixed_path = "0"
@@ -369,16 +389,52 @@ class StabilizationProfile(ProfileSettings):
         self.y_relative_path_loop = True
         self.y_relative_path_invert_loop = True
 
+    def requires_snapshot_profile(self):
+        if(
+            self.stabilization_type == "pre-calculate" and
+            self.pre_calculated_stabilization_type in ['lock-to-print-corner']
+        ):
+            return False
+        return True
     @staticmethod
     def get_options():
         return {
             'stabilization_type_options': [
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED, name='Pre-Calculated'),
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time')
+            ],
+            'pre_calculated_stabilization_type_options': [
+                dict(value='lock-to-print-corner', name='Lock To Print - Corner'),
+                dict(value='lock-to-print-nearest-point', name='Lock To Print - Nearest Point'),
+            ],
+            'lock_to_corner_type_options': [
+                dict(value='front-right', name='Front Right'),
+                dict(value='front-left', name='Front Left'),
+                dict(value='back-right', name='Back Right'),
+                dict(value='back-left', name='Back Left'),
+            ],
+            'lock_to_corner_favor_axis_options': [
+                dict(value='x', name='Favor X'),
+                dict(value='y', name='Favor Y')
+            ],
+            'real_time_xy_stabilization_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
                 dict(value='fixed_path', name='List of Fixed Coordinates'),
                 dict(value='relative', name='Relative Coordinate (0-100)'),
-                dict(value='relative_path', name='List of Relative Coordinates')
+                dict(value='relative_path', name='List of Relative Coordinates'),
+                dict(value='lock_to_print_min_max', name='Locked to Corner of Print')
             ],
+            'lock_to_print_type_options': [
+                dict(value='front_left', name='Front Left'),
+                dict(value='front_right', name='Front Right'),
+                dict(value='back_left', name='Back Left'),
+                dict(value='back_right', name='Back Right'),
+            ],
+            'favor_axis_options': [
+                dict(value='x', name='Favor X Axis'),
+                dict(value='y', name='Favor Y Axis')
+            ]
         }
 
     def get_stabilization_paths(self):
@@ -574,8 +630,8 @@ class SnapshotProfile(ProfileSettings):
         self.feature_trigger_on_skirt_brim = False
         self.feature_trigger_on_first_layer_travel = False
         # Lift and retract before move
-        self.lift_before_move = True
-        self.retract_before_move = True
+        #self.lift_before_move = True
+        #self.retract_before_move = True
 
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
@@ -903,6 +959,7 @@ class MainSettings(Settings):
         self.show_real_snapshot_time = False
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform,
+        self.version = plugin_version
 
 
 class ProfileOptions(StaticSettings):
@@ -977,7 +1034,8 @@ class Profiles(Settings):
         for key, stabilization in self.stabilizations.items():
             profiles_dict["stabilizations"].append({
                 "name": stabilization.name,
-                "guid": stabilization.guid
+                "guid": stabilization.guid,
+                "requires_snapshot_profile": stabilization.requires_snapshot_profile()
             })
 
         for key, snapshot in self.snapshots.items():
@@ -1162,7 +1220,6 @@ class Profiles(Settings):
                         self.debug = {}
                         for profile_key, profile_value in value.items():
                             self.debug[profile_key] = DebugProfile.create_from(profile_value)
-
                     elif isinstance(class_item, Settings):
                         class_item.update(value)
                     elif isinstance(class_item, StaticSettings):
@@ -1180,7 +1237,6 @@ class OctolapseSettings(Settings):
     Logger = None
 
     def __init__(self, logging_path, plugin_version="unknown", get_debug_function=None):
-        self.version = plugin_version
         self.main_settings = MainSettings(plugin_version)
         self.profiles = Profiles()
         if get_debug_function is not None and OctolapseSettings.Logger is None:
@@ -1196,7 +1252,7 @@ class OctolapseSettings(Settings):
 
     @classmethod
     def create_from(cls, logging_path, plugin_version, iterable=(), get_debug_function=None, **kwargs):
-        new_object = cls(logging_path, plugin_version,get_debug_function=get_debug_function)
+        new_object = cls(logging_path, plugin_version, get_debug_function=get_debug_function)
         new_object.update(iterable, **kwargs)
         return new_object
 
@@ -1208,11 +1264,13 @@ class OctolapseSettings(Settings):
 
 class OctolapseGcodeSettings(Settings):
     def __init__(self):
+        self.retract_before_move = None
         self.retraction_length = None
         self.retraction_speed = None
         self.deretraction_speed = None
         self.x_y_travel_speed = None
         self.first_layer_travel_speed = None
+        self.lift_when_retracted = None
         self.z_lift_height = None
         self.z_lift_speed = None
 
@@ -1253,7 +1311,10 @@ class SlicerSettings(Settings):
             issue_list.append("Z Lift Height")
         if settings.z_lift_speed is None:
             issue_list.append("Z Travel Speed")
-
+        if settings.retract_before_move is None:
+            issue_list.append("Retract Before Move")
+        if settings.lift_when_retracted is None:
+            issue_list.append("Lift When Retracted")
         return issue_list
 
     def get_print_features(self, print_feature_settings):
@@ -1280,6 +1341,8 @@ class CuraSettings(SlicerSettings):
         self.retraction_amount = None
         self.retraction_retract_speed = None
         self.retraction_prime_speed = None
+        self.retraction_hop_enabled = None  # new setting
+        self.retraction_enable = None  # new setting
         self.speed_print = None
         self.speed_infill = None
         self.speed_wall_0 = None
@@ -1312,6 +1375,15 @@ class CuraSettings(SlicerSettings):
         settings.first_layer_travel_speed = self.get_slow_layer_speed_travel()
         settings.z_lift_height = self.get_retraction_hop()
         settings.z_lift_speed = self.get_speed_travel_z()
+        settings.retract_before_move = (
+            self.retraction_enable and settings.retraction_length is not None and settings.retraction_length > 0
+        )
+        settings.lift_when_retracted = (
+            settings.retract_before_move and
+            self.retraction_hop_enabled and
+            settings.retraction_length is not None
+            and settings.retraction_length > 0
+        )
         return settings
 
     def get_retraction_amount(self):
@@ -1522,6 +1594,8 @@ class Simplify3dSettings(SlicerSettings):
         self.x_y_axis_movement_speed = None
         self.z_axis_movement_speed = None
         self.bridging_speed_multiplier = None
+        self.extruder_use_retract = None
+
         # simplify has a fixed speed tolerance
         self.axis_speed_display_settings = 'mm-min'
 
@@ -1541,6 +1615,13 @@ class Simplify3dSettings(SlicerSettings):
         settings.first_layer_travel_speed = self.get_x_y_axis_movement_speed()
         settings.z_lift_height = self.get_retraction_vertical_lift()
         settings.z_lift_speed = self.get_z_axis_movement_speed()
+        settings.retract_before_move = (
+            self.extruder_use_retract and settings.retraction_length is not None and settings.retraction_length > 0
+        )
+        settings.lift_when_retracted = (
+            settings.retract_before_move and settings.z_lift_height is not None and settings.z_lift_height > 0
+        )
+
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
@@ -1830,6 +1911,9 @@ class Simplify3dSettings(SlicerSettings):
         def _bridging_speed_multiplier():
             return _get_speed_multiplier(settings_dict["bridging_speed_multiplier"])
 
+        def _extruder_use_retract():
+            return settings_dict["extruder_use_retract"][_primary_extruder()]
+
         # for simplify we need to manually update the settings :(
         self.retraction_distance = _retraction_distance()
         self.retraction_vertical_lift = _retraction_vertical_lift()
@@ -1845,10 +1929,13 @@ class Simplify3dSettings(SlicerSettings):
         self.x_y_axis_movement_speed = _x_y_axis_movement_speed()
         self.z_axis_movement_speed = _z_axis_movement_speed()
         self.bridging_speed_multiplier = _bridging_speed_multiplier()
+        self.extruder_use_retract = _extruder_use_retract()
+
 
 class Slic3rPeSettings(SlicerSettings):
     def __init__(self, version="unknown"):
         super(Slic3rPeSettings, self).__init__(SlicerSettings.SlicerTypeSlic3rPe, version)
+        self.retract_before_travel = None
         self.retract_length = None
         self.retract_lift = None
         self.deretract_speed = None
@@ -1881,7 +1968,31 @@ class Slic3rPeSettings(SlicerSettings):
         settings.first_layer_travel_speed = self.get_travel_speed()
         settings.z_lift_height = self.get_retract_lift()
         settings.z_lift_speed = self.get_z_travel_speed()
+        # calculate retract before travel and lift when retracted
+        settings.retract_before_move = self.get_retract_before_travel()
+        settings.lift_when_retracted = self.get_lift_when_retracted()
         return settings
+
+    def get_retract_before_travel(self):
+        retract_length = self.get_retract_speed()
+        if (
+            self.retract_before_travel is not None and
+            float(self.retract_before_travel)>0 and
+            retract_length is not None and
+            retract_length > 0
+        ):
+            return True
+        return False
+
+    def get_lift_when_retracted(self):
+        retract_lift = self.get_retract_lift()
+        if (
+            self.get_retract_before_travel()
+            and retract_lift is not None
+            and retract_lift > 0
+        ):
+            return True
+        return False
 
     def get_z_travel_speed(self):
         return self.get_travel_speed()
@@ -2268,7 +2379,6 @@ class Slic3rPeSettings(SlicerSettings):
             'external_perimeter_speed'
             ]
         ):
-
             return str(value)
 
         return super(Slic3rPeSettings, cls).try_convert_value(destination, value, key)
@@ -2300,8 +2410,11 @@ class OtherSlicerSettings(SlicerSettings):
         self.ooze_shield_speed = None
         self.prime_pillar_speed = None
         self.num_slow_layers = None
+        self.lift_when_retracted = None
+        self.retract_before_move = None
         self.speed_tolerance = 1
         self.axis_speed_display_units = 'mm-min'
+
 
     def get_num_slow_layers(self):
         return self.num_slow_layers
@@ -2321,6 +2434,8 @@ class OtherSlicerSettings(SlicerSettings):
         settings.first_layer_travel_speed = self.get_first_layer_travel_speed()
         settings.z_lift_height = self.get_z_hop()
         settings.z_lift_speed = self.get_z_hop_speed()
+        settings.lift_when_retracted = self.lift_when_retracted
+        settings.retract_before_move = self.retract_before_move
         return settings
 
     def get_retract_length(self):

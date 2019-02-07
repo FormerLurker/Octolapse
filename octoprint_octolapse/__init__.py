@@ -41,6 +41,7 @@ from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
 import octoprint.filemanager
 
+import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
@@ -346,7 +347,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @restricted_access
     @admin_permission.require(403)
     def load_settings_request(self):
-        return self.Settings.to_json(), 200, {'ContentType': 'application/json'}
+        settings = self.Settings.to_json(), 200, {'ContentType': 'application/json'}
+        return settings
 
     @octoprint.plugin.BlueprintPlugin.route("/testCameraSettingsApply", methods=["POST"])
     @restricted_access
@@ -1098,7 +1100,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.send_plugin_message("print-start-error", message)
 
     def start_timelapse(self):
-
+        snapshot_plan = None
         # check for version 1.3.7 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
             return {'success': False,
@@ -1238,8 +1240,17 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                              ",".join(missing_settings)
                 }
 
+        current_stabilization_clone = settings_clone.profiles.current_stabilization()
+
+        if current_stabilization_clone.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED:
+            # pre-process the stabilization
+            preprocess_results = self.pre_process_stabilization(
+                current_stabilization_clone, current_printer_clone, octoprint_printer_profile, gcode_file_path)
+            snapshot_plans = preprocess_results["snapshot_plans"]
+
         self.Timelapse.start_timelapse(
-            settings_clone, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path)
+            settings_clone, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path,
+            snapshot_plans=snapshot_plans)
 
         warning = ''
         if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
@@ -1255,6 +1266,64 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             warning = False
 
         return {'success': True, 'warning': warning}
+
+    def pre_process_stabilization(self, stabilization, printer, octoprint_printer_profile, gcode_file_path):
+        snapshot_plan = None
+        preprocessor = None
+
+
+        if (
+            stabilization.pre_calculated_stabilization_type ==
+            StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
+        ):
+            bounding_box = None
+            if printer.restrict_snapshot_area:
+                bounding_box = (
+                    printer.snapshot_min_x,
+                    printer.snapshot_max_x,
+                    printer.snapshot_min_y,
+                    printer.snapshot_max_y,
+                    printer.snapshot_min_z,
+                    printer.snapshot_max_z
+                )
+
+            snapshot_gcode_settings = printer.gcode_generation_settings
+            retraction_length = (
+                0 if not snapshot_gcode_settings.retract_before_move else snapshot_gcode_settings.retraction_length
+            )
+            z_lift_height = (
+                0 if not snapshot_gcode_settings.lift_when_retracted else snapshot_gcode_settings.z_lift_height
+            )
+
+            preprocessor = octoprint_octolapse.stabilization_preprocessing.NearestToPrintPreprocessor(
+                self.Settings.Logger,
+                printer,
+                None,
+                octoprint_printer_profile,
+                False,
+                retraction_distance=0 if stabilization.lock_to_corner_disable_retract else retraction_length,
+                z_lift_height=0 if stabilization.lock_to_corner_disable_z_lift else z_lift_height,
+                nearest_to=stabilization.lock_to_corner_type,
+                favor_axis=stabilization.lock_to_corner_favor_axis,
+                height_increment=stabilization.lock_to_corner_height_increment,
+                bounding_box=bounding_box,
+                update_progress_callback=self.send_pre_processing_message
+            )
+
+        if preprocessor is not None:
+            self.send_pre_processing_message(0)
+            snapshot_plan = preprocessor.process_file(gcode_file_path)
+
+        return snapshot_plan
+
+    def send_pre_processing_message(self, percent_finished, time_elapsed=0, lines_processed=0):
+        data = {
+            "type": "gcode-pre-processing-update",
+            "percent_finished": percent_finished,
+            "time_elapsed": time_elapsed,
+            "lines_processed": lines_processed
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_popup_message(self, msg):
         self.send_plugin_message("popup", msg)
@@ -1338,7 +1407,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
-
 
     def on_position_error(self, message):
         state_data = self.Timelapse.to_state_dict()

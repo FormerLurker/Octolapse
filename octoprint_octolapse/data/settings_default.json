@@ -394,7 +394,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -443,7 +442,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -492,7 +490,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -541,7 +538,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -590,7 +586,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "",
         "feature_trigger_on_ooze_shield": false,
@@ -639,7 +634,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -688,7 +682,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": "trigger_on",
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": "forbidden",
         "feature_trigger_on_ooze_shield": false,
@@ -1218,7 +1211,6 @@
         "is_default": false,
         "feature_trigger_on_gap_fills": true,
         "trigger_on_extruding_start": null,
-        "lift_before_move": true,
         "feature_trigger_on_external_perimeters": false,
         "trigger_on_partially_retracted": null,
         "feature_trigger_on_ooze_shield": false,
@@ -2892,7 +2884,7 @@
         ]
       },
       "stabilization": {
-        "stabilization_type_options": [
+        "real_time_xy_stabilization_type_options": [
           {
             "name": "Disabled",
             "value": "disabled"

@@ -888,10 +888,33 @@ $(function () {
             //console.log("Message received.  Data:");
             //console.log(data);
             switch (data.type) {
+                case "gcode-pre-processing-update":
+                    //console.log("Octolapse received pre-processing update processing message.");
+                    // TODO: CHANGE THIS TO A PROGRESS INDICATOR
+                    var percent_finished = data.percent_finished;
+                    var time_elapsed = data.time_elapsed;
+                    var lines_processed = data.lines_processed;
+
+                    msg = percent_finished.toFixed(2).toString() + "% completed";
+
+                    var options = {
+                        title: 'Pre-Processing Gcode',
+                        text: msg,
+                        type: 'notice',
+                        hide: true,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options,"gcode-pre-processing-update");
+
+                    break;
                 case "settings-changed":
                     {
                         // Was this from us?
-                        self.updateState(data);
+                        if (Octolapse.Settings.is_loaded())
+                            self.updateState(data);
                         if (self.client_id !== data.client_id && self.is_admin())
                         {
                             Octolapse.showConfirmDialog(
@@ -902,7 +925,6 @@ $(function () {
                                     Octolapse.Settings.loadSettings();
                                 });
                         }
-
                     }
                     break;
                 case "slicer_settings_detected":
@@ -998,7 +1020,7 @@ $(function () {
                     break;
                 case "timelapse-complete":
                     {
-                        console.log('octolapse.js - timelapse-complete');
+                        //console.log('octolapse.js - timelapse-complete');
                         Octolapse.Status.snapshot_error(false);
                         self.updateState(data)
 
