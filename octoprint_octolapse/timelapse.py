@@ -35,7 +35,6 @@ from octoprint_octolapse.render import RenderError, RenderingProcessor, Renderin
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
 from octoprint_octolapse.trigger import Triggers
-from typing import List
 import octoprint_octolapse.stabilization_preprocessing as Preprocessing
 import fastgcodeparser
 
