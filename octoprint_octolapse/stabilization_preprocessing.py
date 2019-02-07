@@ -225,7 +225,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
         self.current_layer = 0
         self.current_height = 0
         self.saved_position = None
-
+        self.saved_position_line = 0
     def position_received(self, position):
         current_pos = position.current_pos
         if (
@@ -234,13 +234,13 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
         ):
             # On layer change create a plan
             # TODO:  get rid of newlines and whitespace in the fast gcode parser
-            position.current_pos.parsed_command.gcode = position.current_pos.parsed_command.gcode.strip()
+            self.saved_position.parsed_command.gcode = self.saved_position.parsed_command.gcode.strip()
             plan = SnapshotPlan(
                 self.saved_position,
-                self.current_line,
+                self.saved_position_line,
                 self.z_lift_height,
                 self.retraction_distance,
-                position.current_pos.parsed_command,
+                self.saved_position.parsed_command,
                 send_parsed_command='first'
 
             )
@@ -251,6 +251,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
             self.current_layer = self.saved_position.Layer
             # set the state for the next layer
             self.saved_position = None
+            self.saved_position_line = None
         if (
             current_pos.Layer > 0 and
             current_pos.X is not None and
@@ -276,6 +277,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
         ):
             if self.is_closer(current_pos):
                 self.saved_position = current_pos
+                self.saved_position_line = self.current_line
 
     def is_closer(self, position):
         # check our bounding box
