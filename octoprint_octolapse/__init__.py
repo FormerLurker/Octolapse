@@ -1242,6 +1242,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         current_stabilization_clone = settings_clone.profiles.current_stabilization()
 
+        snapshot_plans = None
         if current_stabilization_clone.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED:
             # pre-process the stabilization
             preprocess_results = self.pre_process_stabilization(
@@ -1270,8 +1271,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def pre_process_stabilization(self, stabilization, printer, octoprint_printer_profile, gcode_file_path):
         snapshot_plan = None
         preprocessor = None
-
-
         if (
             stabilization.pre_calculated_stabilization_type ==
             StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION

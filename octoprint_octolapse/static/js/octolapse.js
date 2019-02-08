@@ -766,22 +766,31 @@ $(function () {
 
         self.updateState = function (state) {
             //console.log(state);
-            if (state.Position != null) {
-                //console.log('octolapse.js - state-changed - Position');
-                Octolapse.Status.updatePosition(state.Position);
-            }
-            if (state.PositionState != null) {
-                //console.log('octolapse.js - state-changed - Position State');
-                Octolapse.Status.updatePositionState(state.PositionState);
-            }
-            if (state.Extruder != null) {
-                //console.log('octolapse.js - state-changed - Extruder State');
-                Octolapse.Status.updateExtruderState(state.Extruder);
-            }
-            if (state.TriggerState != null) {
-                //console.log('octolapse.js - state-changed - Trigger State');
-                Octolapse.Status.updateTriggerStates(state.TriggerState);
+            if (state.StabilizationType != null)
+                Octolapse.Status.updateStabilizationType(state.StabilizationType)
 
+            if (state.StabilizationType == "real-time") {
+                if (state.Position != null) {
+                    //console.log('octolapse.js - state-changed - Position');
+                    Octolapse.Status.updatePosition(state.Position);
+                }
+                if (state.PositionState != null) {
+                    //console.log('octolapse.js - state-changed - Position State');
+                    Octolapse.Status.updatePositionState(state.PositionState);
+                }
+                if (state.Extruder != null) {
+                    //console.log('octolapse.js - state-changed - Extruder State');
+                    Octolapse.Status.updateExtruderState(state.Extruder);
+                }
+                if (state.TriggerState != null) {
+                    //console.log('octolapse.js - state-changed - Trigger State');
+                    Octolapse.Status.updateTriggerStates(state.TriggerState);
+                }
+            }
+            else if (state.StabilizationType == "pre-calculated")
+            {
+                if(state.PreCalculatedStabilizationState)
+                    Octolapse.Status.updatePreCalculatedStabilization(state.PreCalculatedStabilizationState)
             }
             if (state.MainSettings != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');

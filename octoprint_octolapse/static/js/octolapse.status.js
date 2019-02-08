@@ -53,6 +53,7 @@ $(function () {
             });
 
             self.current_camera_guid = ko.observable()
+
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -436,6 +437,7 @@ $(function () {
                 return "Octolapse is waiting to take snapshot.";
 
             }, self);
+
             self.getTimelapseStateText =  ko.pureComputed(function () {
                 //console.log("GettingTimelapseStateText")
                 if(!self.is_timelapse_active())
@@ -466,6 +468,17 @@ $(function () {
                     return 'Octolapse';
                 return 'Octolapse - Disabled';
             }, self);
+
+            sefl.updatePreCalculatedStabilization(state)
+            {
+                console.log("updatePreCalculatedStabilization NOT IMPLEMENTED!")
+                //TODO:  FILL THIS IN
+            }
+            self.updateStabilizationType(type)
+            {
+                console.log("updateStabilizationType")
+                //TODO:  FILL THIS IN
+            }
 
             self.updatePositionState = function (state) {
                 // State variables

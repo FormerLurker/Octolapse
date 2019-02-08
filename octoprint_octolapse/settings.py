@@ -332,6 +332,7 @@ class PrinterProfile(ProfileSettings):
             # copy the settings into the current profile
             current_slicer_settings = self.get_current_slicer_settings()
             current_slicer_settings.update(new_slicer_settings)
+            self.gcode_generation_settings.update(current_slicer_settings.get_gcode_generation_settings())
 
             return True, None, []
 
@@ -1114,6 +1115,7 @@ class Profiles(Settings):
 
         if profile_type == "Printer":
             new_profile = PrinterProfile.create_from(profile)
+            new_profile.gcode_generation_settings = new_profile.get_current_slicer_settings().get_gcode_generation_settings()
             self.printers[guid] = new_profile
             if len(self.printers) == 1:
                 self.current_printer_profile_guid = new_profile.guid
@@ -1974,7 +1976,7 @@ class Slic3rPeSettings(SlicerSettings):
         return settings
 
     def get_retract_before_travel(self):
-        retract_length = self.get_retract_speed()
+        retract_length = self.get_retract_length()
         if (
             self.retract_before_travel is not None and
             float(self.retract_before_travel)>0 and

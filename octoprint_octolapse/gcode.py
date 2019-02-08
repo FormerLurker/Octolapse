@@ -518,12 +518,13 @@ class SnapshotGcodeGenerator(object):
                     SnapshotGcode.END_GCODE,
                     self.get_gcode_extruder_absolute())
 
-    def return_to_original_feedrate(self, parsed_command):
+    def return_to_original_feedrate(self, parsed_command=None):
         # Make sure we return to the original feedrate
         if (
             not self.return_when_complete
             or (
-                "F" not in parsed_command.parameters and (self.f_return is not None and self.f_return != self.f_current)
+                (parsed_command is None or "F" not in parsed_command.parameters) and
+                (self.f_return is not None and self.f_return != self.f_current)
             )
         ):
             # we can't count on the end gcode to set f, set it here
@@ -809,7 +810,10 @@ class SnapshotGcodeGenerator(object):
             # reset the coordinate systems for the extruder and axis
             self.return_to_original_coordinate_systems()
 
-            self.return_to_original_feedrate(parsed_command)
+            final_command = None
+            if snapshot_plan.send_parsed_command == "last":
+                final_command = parsed_command
+            self.return_to_original_feedrate(final_command)
             # end processing without errors
 
         # send the final command if necessary.  Note that we always try to send the final command, even on error.

@@ -110,21 +110,15 @@
     <div>
       <h4>Print Quality Settings<a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#print-quality-settings" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></h4>
 
-        <p>Here you can control when and how Octolapse triggers a snapshot based on the current state of your extruder.  You can force Octolapse to lift and retract while taking snapshots, or put limits on when snapshots can be taken based on what your extruder is doing.</p>
+        <p>Here you can place restrictions on when Octolapse can trigger a snapshot.</p>
     </div>
     <div>
         <div>
             <div>
-                <h5>Print Quality - Extruder State <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></h5>
-                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
-
-            </div>
-            <div>
-                <h6>Lift and Retract</h6>
-                <p>Your slicer settings for z-lift and retraction length must match your gcode file exactly for these options to work.</p>
+                <h6>Trigger on Z-Hop Only</h6>
+                <p>Only allow snapshots when your printer is lifted.</p>
             </div>
             <div class="control-group">
-                <label class="control-label">Trigger on Z-Hop Only</label>
                 <div class="controls">
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: require_zhop" />Enabled

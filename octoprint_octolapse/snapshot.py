@@ -32,7 +32,7 @@ from PIL import ImageFile
 import sys
 # PIL is in fact in setup.py.
 from requests.auth import HTTPBasicAuth
-from threading import Thread
+from threading import Thread, Timer
 import octoprint_octolapse.camera as camera
 from octoprint_octolapse.settings import CameraProfile, OctolapseSettings
 import octoprint_octolapse.utility as utility
@@ -257,14 +257,16 @@ class CaptureSnapshot(object):
             )
 
 
-class ImagePostProcessingThread(Thread):
-    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None):
-        super(ImagePostProcessingThread, self).__init__()
+class ImagePostProcessing(object):
+    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None, request=None):
         self.snapshot_job_info = snapshot_job_info
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
+        self.request = request
 
-    def run(self):
+    def process(self):
         try:
+            if self.request is not None:
+                self.save_image_from_request(self.request)
             OctolapseSettings.Logger.log_snapshot_download("Post-processing snapshot")
             # Post Processing and Meta Data Creation
             self.write_metadata()
@@ -276,6 +278,39 @@ class ImagePostProcessingThread(Thread):
             OctolapseSettings.Logger.log_exception(e)
         finally:
             OctolapseSettings.Logger.log_snapshot_download("Post-processing completed")
+
+    def save_image_from_request(self, r):
+        if r.status_code == requests.codes.ok:
+            try:
+                # make the directory
+                if not os.path.exists(self.snapshot_job_info.directory):
+                    os.makedirs(self.snapshot_job_info.directory)
+                # try to download the file.
+            except Exception as e:
+                raise SnapshotError(
+                    'snapshot-download-error',
+                    "An unexpected exception occurred.",
+                    cause=e
+                )
+        else:
+            raise SnapshotError(
+                'snapshot-download-error',
+                "failed with status code:{0}".format(r.status_code)
+            )
+
+        try:
+            with i_open(self.snapshot_job_info.full_path, 'wb') as snapshot_file:
+                for chunk in r.iter_content(1024):
+                    if chunk:
+                        snapshot_file.write(chunk)
+                OctolapseSettings.Logger.log_snapshot_save(
+                    "Snapshot - Snapshot saved to disk at {0}".format(self.snapshot_job_info.full_path))
+        except Exception as e:
+            raise SnapshotError(
+                'snapshot-save-error',
+                "An unexpected exception occurred.",
+                cause=e
+            )
 
     def write_metadata(self):
         try:
@@ -397,12 +432,15 @@ class SnapshotThread(Thread):
             sleep(delay_seconds)  # sleep the calculated amount
             delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
-    def post_process(self):
+    def post_process(self, request=None):
         # make sure the snapshot exists before attempting post-processing
         # since it's possible the image isn't on the pi.
         # for example it could be on a DSLR's SD memory
-        if os.path.isfile(self.snapshot_job_info.full_path):
-            ImagePostProcessingThread(self.snapshot_job_info, self.on_new_thumbnail_available_callback).start()
+        if request is not None or os.path.isfile(self.snapshot_job_info.full_path):
+            def post_process(post_processor):
+                post_processor.process()
+            post_processor = ImagePostProcessing(self.snapshot_job_info, self.on_new_thumbnail_available_callback, request=request)
+            Timer(0.5,post_process,[post_processor]).start()
 
 
 class ExternalScriptSnapshotJob(SnapshotThread):
@@ -534,7 +572,7 @@ class WebcamSnapshotJob(SnapshotThread):
                 if len(self.Username) > 0:
                     message = (
                         "Snapshot Download - Authenticating and "
-                        "downloading from {0:s} to {1:s}."
+                        "downloading from {0:s}."
                     ).format(self.Url, self.snapshot_job_info.directory)
                     self.Settings.Logger.log_snapshot_download(message)
                     r = requests.get(
@@ -545,7 +583,7 @@ class WebcamSnapshotJob(SnapshotThread):
                     )
                 else:
                     self.Settings.Logger.log_snapshot_download(
-                        "Snapshot - downloading from {0:s} to {1:s}.".format(self.Url, self.snapshot_job_info.directory))
+                        "Snapshot - downloading from {0:s}.".format(self.Url))
                     r = requests.get(
                         self.Url, verify=not self.IgnoreSslError,
                         timeout=float(self.snapshot_job_info.TimeoutSeconds)
@@ -556,47 +594,15 @@ class WebcamSnapshotJob(SnapshotThread):
                     "An unexpected exception occurred.",
                     cause=e
                 )
-
-            if r.status_code == requests.codes.ok:
-                try:
-                    # make the directory
-                    if not os.path.exists(self.snapshot_job_info.directory):
-                        os.makedirs(self.snapshot_job_info.directory)
-                    # try to download the file.
-                except Exception as e:
-                    raise SnapshotError(
-                        'snapshot-download-error',
-                        "An unexpected exception occurred.",
-                        cause=e
-                    )
-            else:
-                raise SnapshotError(
-                    'snapshot-download-error',
-                    "failed with status code:{0}".format(r.status_code)
-                )
-
-            try:
-                with i_open(self.snapshot_job_info.full_path, 'wb') as snapshot_file:
-                    for chunk in r.iter_content(1024):
-                        if chunk:
-                            snapshot_file.write(chunk)
-                    self.Settings.Logger.log_snapshot_save(
-                        "Snapshot - Snapshot saved to disk at {0}".format(self.snapshot_job_info.full_path))
-            except Exception as e:
-                raise SnapshotError(
-                    'snapshot-save-error',
-                    "An unexpected exception occurred.",
-                    cause=e
-                )
             # start post processing
-            self.post_process()
+            self.post_process(request=r)
             self.snapshot_job_info.success = True
         except SnapshotError as e:
             self.Settings.Logger.log_exception(e)
             self.snapshot_job_info.error = str(e)
         finally:
             self.Settings.Logger.log_snapshot_download(
-                "Snapshot Download Job completed, signaling task queue.")
+                "Snapshot Download Job completed.")
 
 
 class SnapshotError(Exception):

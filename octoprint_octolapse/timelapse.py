@@ -1168,7 +1168,7 @@ class Timelapse(object):
             # Notify any callbacks
             if self.OnStateChangedCallback is not None:
 
-                    def send_change_message(has_position_state_error):
+                    def send_real_time_change_message(has_position_state_error):
                         trigger_change_list = None
                         position_change_dict = None
                         position_state_change_dict = None
@@ -1207,7 +1207,8 @@ class Timelapse(object):
                             "Extruder": extruder_change_dict,
                             "Position": position_change_dict,
                             "PositionState": position_state_change_dict,
-                            "TriggerState": trigger_changes_dict
+                            "TriggerState": trigger_changes_dict,
+                            "StabilizationType": "real-time"
                         }
 
                         if (
@@ -1219,16 +1220,37 @@ class Timelapse(object):
                             self.OnStateChangedCallback(change_dict)
                             self.LastStateChangeMessageTime = time.time()
 
-                    position_errors = False
-                    if self.has_position_errors_to_report:
-                        position_errors = self.position_errors_to_report
-                    elif self.Position.current_pos.HasPositionError:
-                        position_errors = self.Position.current_pos.PositionError
+                    def send_pre_calculated_change_message(has_position_state_error):
+                        # if there are any state changes, send them
+                        next_snapshot_line = None
+                        if self.current_snapshot_plan is not None:
+                            next_snapshot_line = self.current_snapshot_plan.file_line_number
 
-                    # Send a delayed message
-                    self.StateChangeMessageThread = snapshot_complete_callback_thread = threading.Thread(
-                        target=send_change_message, args=[position_errors]
-                    )
+                        change_dict = {
+                            "StabilizationType": "pre-calculated",
+                            "PreCalculatedStabilizationState": {
+                                "CurrentLine": self.CurrentFileLine,
+                                "NextSnapshotLine": self.current_snapshot_plan
+                            }
+
+                        }
+
+                        self.OnStateChangedCallback(change_dict)
+                        self.LastStateChangeMessageTime = time.time()
+
+                    if self.is_realtime:
+                        position_errors = False
+                        if self.has_position_errors_to_report:
+                            position_errors = self.position_errors_to_report
+                        elif self.Position.current_pos.HasPositionError:
+                            position_errors = self.Position.current_pos.PositionError
+                        self.StateChangeMessageThread = threading.Thread(
+                            target=send_real_time_change_message, args=[position_errors]
+                        )
+                    else:
+                        self.StateChangeMessageThread = threading.Thread(
+                            target=send_pre_calculated_change_message
+                        )
                     self.StateChangeMessageThread.daemon = True
                     self.StateChangeMessageThread.start()
 
