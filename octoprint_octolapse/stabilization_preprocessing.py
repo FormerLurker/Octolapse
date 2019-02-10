@@ -28,8 +28,6 @@ import time
 import os
 import fastgcodeparser
 import utility
-import mmap
-import json
 
 class PositionPreprocessor(object):
     def __init__(
@@ -63,9 +61,11 @@ class PositionPreprocessor(object):
         self.current_file_position = 0
         self.file_size_bytes = 0
         self._last_notification_time = None
+        self._next_notification_time = None
         self.start_time = None
         self.end_time = None
         self.snapshot_plans = []
+        self.file = None
 
     def process_file(self, target_file_path):
         self.current_line = 0
@@ -93,8 +93,8 @@ class PositionPreprocessor(object):
     def process_forwards(self, target_file_path):
         # open the file for streaming
         # we're using binary read to avoid file.tell() issues with windows
-        with open(target_file_path, 'rb') as f:
-            for line in f:
+        with open(target_file_path, 'rb') as self.file:
+            for line in self.file:
                 fast_cmd = fastgcodeparser.ParseGcode(line)
                 if not fast_cmd:
                     continue
@@ -107,19 +107,25 @@ class PositionPreprocessor(object):
 
                 if self._next_notification_line < self.current_line:
                     if self._next_notification_time < time.time():
-                        self.notify_progress(file=f)
+                        self.notify_progress()
                         self._next_notification_time = time.time() + self.notification_period_seconds
                     self._last_notification_line = self.current_line + self.notification_lines_min
 
-    def notify_progress(self, end_progress=False, file=None):
+        self.file = None
+
+    def notify_progress(self, end_progress=False):
         if self.update_progress_callback is None:
             return
         if end_progress:
             self.update_progress_callback(100, self.end_time - self.start_time, self.current_line)
         else:
-            if file is not None:
-                self.current_file_position = file.tell()
+            if self.file is None:
+                self.current_file_position = self.file.tell()
             self.update_progress_callback(self.get_percent_finished(), time.time() - self.start_time, self.current_line)
+
+    def get_current_file_position(self):
+        if self.file is not None:
+            return self.file.tell()
 
     def get_results(self):
         return {
@@ -162,21 +168,22 @@ class SnapshotPlanStep(object):
 
 
 class SnapshotPlan(object):
-    def __init__(self, initial_position, file_line_number, z_lift_height, retraction_length, parsed_command,
+    def __init__(self, initial_position, file_line_number, saved_position_file_position, z_lift_height, retraction_length, parsed_command,
                  send_parsed_command='first'):
         self.file_line_number = file_line_number
-        self.x = initial_position.X
-        self.y = initial_position.Y
-        self.z = initial_position.Z
-        self.speed = initial_position.F
-        self.is_xyz_relative = initial_position.IsRelative
-        self.is_e_relative = initial_position.IsExtruderRelative
+        self.x = initial_position.x
+        self.y = initial_position.y
+        self.z = initial_position.z
+        self.speed = initial_position.f
+        self.is_xyz_relative = initial_position.is_relative
+        self.is_e_relative = initial_position.is_extruder_relative
         self.lift_amount = initial_position.distance_to_zlift(z_lift_height)
         self.retract_amount = initial_position.length_to_retract(retraction_length)
-        self.is_metric = initial_position.IsMetric
+        self.is_metric = initial_position.is_metric
         self.steps = []
         self.parsed_command = parsed_command
         self.send_parsed_command = send_parsed_command
+        self.saved_position_file_position = saved_position_file_position
 
     def add_step(self, step):
         assert (isinstance(step, SnapshotPlanStep))
@@ -226,10 +233,11 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
         self.current_height = 0
         self.saved_position = None
         self.saved_position_line = 0
+        self.saved_position_file_position = 0
     def position_received(self, position):
         current_pos = position.current_pos
         if (
-            current_pos.IsLayerChange and
+            current_pos.is_layer_change and
             self.saved_position is not None
         ):
             # On layer change create a plan
@@ -238,6 +246,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
             plan = SnapshotPlan(
                 self.saved_position,
                 self.saved_position_line,
+                self.saved_position_file_position,
                 self.z_lift_height,
                 self.retraction_distance,
                 self.saved_position.parsed_command,
@@ -247,29 +256,29 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
             plan.add_step(SnapshotPlanStep(SNAPSHOT_ACTION))
             # add the plan to our list of plans
             self.add_snapshot_plan(plan)
-            self.current_height = self.saved_position.Height
-            self.current_layer = self.saved_position.Layer
+            self.current_height = self.saved_position.height
+            self.current_layer = self.saved_position.layer
             # set the state for the next layer
             self.saved_position = None
             self.saved_position_line = None
+            self.current_file_position = None
         if (
-            current_pos.Layer > 0 and
-            current_pos.X is not None and
-            current_pos.Y is not None and
-            current_pos.Z is not None and
-            current_pos.Height is not None and
+            current_pos.layer > 0 and
+            current_pos.x is not None and
+            current_pos.y is not None and
+            current_pos.z is not None and
+            current_pos.height is not None and
             (
-                current_pos.IsExtruding and
+                current_pos.is_extruding and
                 (
                     self.height_increment == 0 or
                     self.current_height == 0 or
                     (
                         utility.round_to_float_equality_range(
-                                current_pos.Height - self.current_height) >= self.height_increment
+                                current_pos.height - self.current_height) >= self.height_increment
                         and
                         (
-                            self.saved_position is None or current_pos.Height > self.current_height
-
+                            self.saved_position is None or current_pos.height > self.current_height
                         )
                     )
                 )
@@ -278,26 +287,27 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
             if self.is_closer(current_pos):
                 self.saved_position = current_pos
                 self.saved_position_line = self.current_line
+                self.saved_position_file_position = self.get_current_file_position()
 
     def is_closer(self, position):
         # check our bounding box
         if self.is_bound:
             if (
-                position.X < self.x_min or
-                position.X > self.x_max or
-                position.Y < self.y_min or
-                position.Y > self.y_max or
-                position.Z < self.z_min or
-                position.Z > self.z_max
+                position.x < self.x_min or
+                position.x > self.x_max or
+                position.y < self.y_min or
+                position.y > self.y_max or
+                position.z < self.z_min or
+                position.z > self.z_max
             ):
                 return False
         if self.saved_position is None:
             return True
 
-        first_coordinate = position.X if self.favor_x else position.Y
-        first_coordinate_saved = self.saved_position.X if self.favor_x else self.saved_position.Y
-        second_coordinate = position.Y if self.favor_x else position.X
-        second_coordinate_saved = self.saved_position.Y if self.favor_x else self.saved_position.X
+        first_coordinate = position.x if self.favor_x else position.y
+        first_coordinate_saved = self.saved_position.x if self.favor_x else self.saved_position.y
+        second_coordinate = position.y if self.favor_x else position.x
+        second_coordinate_saved = self.saved_position.y if self.favor_x else self.saved_position.x
 
         if self.nearest_to == NearestToPrintPreprocessor.FRONT_LEFT:
             if first_coordinate < first_coordinate_saved:

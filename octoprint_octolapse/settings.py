@@ -31,6 +31,8 @@ import log
 import math
 import collections
 import gcode_preprocessing
+from six import string_types
+
 
 class SettingsJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -41,17 +43,18 @@ class SettingsJsonEncoder(json.JSONEncoder):
             return None
         elif isinstance(obj, bool):
             return str(obj).lower()
-
         return json.JSONEncoder.default(self, obj)
 
 
 class SettingsJsonDecoder(json.JSONDecoder):
+    # noinspection PyCallByClass
     def default(self, obj):
         if isinstance(obj, Settings) or isinstance(obj, StaticSettings):
             return obj.__dict__
         # Let the base class default method raise the TypeError
         if isinstance(obj, log.Logger):
             return None
+        # noinspection PyTypeChecker
         return json.JSONEncoder.default(self, obj)
 
 
@@ -67,27 +70,27 @@ class Settings(object):
     def to_dict(self):
         return self.__dict__.copy()
 
-    def to_json(self, indent=0):
+    def to_json(self):
         return json.dumps(self.to_dict(), cls=SettingsJsonEncoder)
 
     @classmethod
     def encode_json(cls, o):
         return o.__dict__
 
-    def update(self, iterable, **kwargs):
-        Settings._update(self, iterable, **kwargs)
+    def update(self, iterable):
+        Settings._update(self, iterable)
 
     @staticmethod
-    def _update(source, iterable, **kwargs):
-        try:
-            if isinstance(source, log.Logger) or isinstance(source, StaticSettings):
-                return
-            item_to_iterate = iterable
+    def _update(source, iterable):
+        if isinstance(source, log.Logger) or isinstance(source, StaticSettings):
+            return
+        item_to_iterate = iterable
 
-            if not isinstance(iterable, collections.Iterable):
-                item_to_iterate = iterable.__dict__
+        if not isinstance(iterable, collections.Iterable):
+            item_to_iterate = iterable.__dict__
 
-            for key, value in item_to_iterate.items():
+        for key, value in item_to_iterate.items():
+            try:
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
                 if not (isinstance(class_item, (str, unicode)) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, log.Logger):
@@ -96,8 +99,9 @@ class Settings(object):
                         class_item.update(value)
                     else:
                         source.__dict__[key] = source.try_convert_value(class_item, value, key)
-        except Exception as e:
-            raise e
+            except Exception as e:
+                OctolapseSettings.Logger.log_exception(e)
+                continue
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
@@ -117,31 +121,14 @@ class Settings(object):
             # default action, just return the value
             return value
 
-    @staticmethod
-    def from_json(json_string):
-        data = json.loads(json_string)
-        return ProfileSettings.create_from(data)
-
-    def save_as_json(self, output_file_path, indent=0):
+    def save_as_json(self, output_file_path):
         with open(output_file_path, 'w') as output_file:
             json.dump(self.to_dict(), output_file, cls=SettingsJsonEncoder)
 
     @classmethod
-    def load_from_json(cls, input_file_path, log_file_path, plugin_version, get_debug_function):
-        with open(input_file_path, 'r') as defaultSettingsJson:
-            data = json.load(defaultSettingsJson)
-            # if a settings file does not exist, create one ??
-            return cls.create_from(
-                log_file_path,
-                plugin_version,
-                data,
-                get_debug_function=get_debug_function
-            )
-
-    @classmethod
-    def create_from(cls, iterable=(), **kwargs):
+    def create_from(cls, iterable=()):
         new_object = cls()
-        new_object.update(iterable, **kwargs)
+        new_object.update(iterable)
         return new_object
 
 
@@ -157,9 +144,9 @@ class ProfileSettings(Settings):
         return {}
 
     @classmethod
-    def create_from(cls, iterable=(), **kwargs):
+    def create_from(cls, iterable=()):
         new_object = cls("")
-        new_object.update(iterable, **kwargs)
+        new_object.update(iterable)
         return new_object
 
 
@@ -211,7 +198,7 @@ class PrinterProfile(ProfileSettings):
         self.snapshot_min_z = 0.0
         self.snapshot_max_z = 0.0
         self.auto_position_detection_commands = ""
-        self.priming_height = 0.75 # Extrusion must occur BELOW this level before layer tracking will begin
+        self.priming_height = 0.75  # Extrusion must occur BELOW this level before layer tracking will begin
         self.minimum_layer_height = 0.05  # Layer tracking won't start until extrusion at this height is reached.
         self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
         self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
@@ -285,13 +272,13 @@ class PrinterProfile(ProfileSettings):
 
     def get_gcode_settings_from_file(self, gcode_file_path):
         simplify_preprocessor = gcode_preprocessing.Simplify3dSettingsProcessor(
-            search_direction="both", max_forward_search=1000,max_reverse_search=1000
+            search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
         slic3r_preprocessor = gcode_preprocessing.Slic3rSettingsProcessor(
-            search_direction="both", max_forward_search=1000,max_reverse_search=1000
+            search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
         cura_preprocessor = gcode_preprocessing.CuraSettingsProcessor(
-            search_direction="both", max_forward_search=1000,max_reverse_search=1000
+            search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
         file_processor = gcode_preprocessing.GcodeFileProcessor(
             [simplify_preprocessor, slic3r_preprocessor, cura_preprocessor], 1, None
@@ -301,7 +288,7 @@ class PrinterProfile(ProfileSettings):
         # determine which results have the most settings
         current_max_slicer_type = None
         current_max_settings = 0
-        if not 'settings' in results:
+        if 'settings' not in results:
             return False
         settings = results['settings']
 
@@ -314,7 +301,7 @@ class PrinterProfile(ProfileSettings):
         if current_max_slicer_type is not None:
             new_settings = settings[current_max_slicer_type]
             self.slicer_type = current_max_slicer_type
-            new_slicer_settings = None
+
             if self.slicer_type == 'slic3r-pe':
                 new_slicer_settings = Slic3rPeSettings()
             elif self.slicer_type == 'simplify-3d':
@@ -397,6 +384,7 @@ class StabilizationProfile(ProfileSettings):
         ):
             return False
         return True
+
     @staticmethod
     def get_options():
         return {
@@ -517,39 +505,39 @@ class SnapshotPositionRestrictions(Settings):
             raise TypeError(
                 "SnapshotPosition shape=circle requires that r is not None")
 
-        self.Type = restriction_type
-        self.Shape = shape
-        self.X = float(x)
-        self.Y = float(y)
-        self.X2 = float(x2)
-        self.Y2 = float(y2)
-        self.R = float(r)
-        self.CalculateIntersections = calculate_intersections
+        self.type = restriction_type
+        self.shape = shape
+        self.x = float(x)
+        self.y = float(y)
+        self.x2 = float(x2)
+        self.y2 = float(y2)
+        self.r = float(r)
+        self.calculate_intersections = calculate_intersections
 
     def to_dict(self):
         return {
-            'Type': self.Type,
-            'Shape': self.Shape,
-            'X': self.X,
-            'Y': self.Y,
-            'X2': self.X2,
-            'Y2': self.Y2,
-            'R': self.R,
-            'CalculateIntersections': self.CalculateIntersections
+            'type': self.type,
+            'shape': self.shape,
+            'x': self.x,
+            'y': self.y,
+            'x2': self.x2,
+            'y2': self.y2,
+            'r': self.r,
+            'calculate_intersections': self.calculate_intersections
         }
 
     def get_intersections(self, x, y, previous_x, previous_y):
-        if not self.CalculateIntersections:
+        if not self.calculate_intersections:
             return False
 
         if x is None or y is None or previous_x is None or previous_y is None:
             return False
 
         if self.Shape == 'rect':
-            intersections = utility.get_intersections_rectangle(previous_x, previous_y, x, y, self.X, self.Y, self.X2,
-                                                                self.Y2)
+            intersections = utility.get_intersections_rectangle(previous_x, previous_y, x, y, self.x, self.y, self.x2,
+                                                                self.y2)
         elif self.Shape == 'circle':
-            intersections = utility.get_intersections_circle(previous_x, previous_y, x, y, self.X, self.Y, self.R)
+            intersections = utility.get_intersections_circle(previous_x, previous_y, x, y, self.x, self.y, self.r)
         else:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
@@ -563,27 +551,28 @@ class SnapshotPositionRestrictions(Settings):
             return False
 
         if self.Shape == 'rect':
-            return self.X <= x <= self.X2 and self.Y <= y <= self.Y2
+            return self.x <= x <= self.x2 and self.y <= y <= self.y2
         elif self.Shape == 'circle':
-            lsq = math.pow(x - self.X, 2) + math.pow(y - self.Y, 2)
-            rsq = math.pow(self.R, 2)
+            lsq = math.pow(x - self.x, 2) + math.pow(y - self.y, 2)
+            rsq = math.pow(self.r, 2)
             return utility.is_close(lsq, rsq, tolerance) or lsq < rsq
         else:
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
 
 class SnapshotProfile(ProfileSettings):
-    ExtruderTriggerIgnoreValue = ""
-    ExtruderTriggerRequiredValue = "trigger_on"
-    ExtruderTriggerForbiddenValue = "forbidden"
-    LayerTriggerType = 'layer'
-    TimerTriggerType = 'timer'
-    GcodeTriggerType = 'gcode'
+
+    EXTRUDER_TRIGGER_IGNORE_VALUE = ""
+    EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
+    EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
+    LAYER_TRIGGER_TYPE = 'layer'
+    TIMER_TRIGGER_TYPE = 'timer'
+    GCODE_TRIGGER_TYPE = 'gcode'
 
     def __init__(self, name="New Snapshot Profile"):
         super(SnapshotProfile, self).__init__(name)
         self.is_default = False
-        self.trigger_type = self.LayerTriggerType
+        self.trigger_type = self.LAYER_TRIGGER_TYPE
         # timer trigger settings
         self.timer_trigger_seconds = 30
         # layer trigger settings
@@ -630,9 +619,6 @@ class SnapshotProfile(ProfileSettings):
         self.feature_trigger_on_normal_print_speed = False
         self.feature_trigger_on_skirt_brim = False
         self.feature_trigger_on_first_layer_travel = False
-        # Lift and retract before move
-        #self.lift_before_move = True
-        #self.retract_before_move = True
 
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
@@ -642,9 +628,9 @@ class SnapshotProfile(ProfileSettings):
     def get_options():
         return {
             'trigger_types': [
-                dict(value=SnapshotProfile.LayerTriggerType, name="Layer/Height"),
-                dict(value=SnapshotProfile.TimerTriggerType, name="Timer"),
-                dict(value=SnapshotProfile.GcodeTriggerType, name="Gcode")
+                dict(value=SnapshotProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
+                dict(value=SnapshotProfile.TIMER_TRIGGER_TYPE, name="Timer"),
+                dict(value=SnapshotProfile.GCODE_TRIGGER_TYPE, name="Gcode")
             ],
             'position_restriction_shapes': [
                 dict(value="rect", name="Rectangle"),
@@ -655,28 +641,28 @@ class SnapshotProfile(ProfileSettings):
                 dict(value="forbidden", name="Cannot be inside")
             ],
             'snapshot_extruder_trigger_options': [
-                dict(value=SnapshotProfile.ExtruderTriggerIgnoreValue, name='Ignore', visible=True),
-                dict(value=SnapshotProfile.ExtruderTriggerRequiredValue, name='Trigger', visible=True),
-                dict(value=SnapshotProfile.ExtruderTriggerForbiddenValue, name='Forbidden', visible=True)
+                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
+                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
+                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
             ]
         }
 
     def get_extruder_trigger_value_string(self, value):
         if value is None:
-            return self.ExtruderTriggerIgnoreValue
+            return self.EXTRUDER_TRIGGER_IGNORE_VALUE
         elif value:
-            return self.ExtruderTriggerRequiredValue
+            return self.EXTRUDER_TRIGGER_REQUIRED_VALUE
         elif not value:
-            return self.ExtruderTriggerForbiddenValue
+            return self.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
 
     @staticmethod
     def get_extruder_trigger_value(value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             if value is None or len(value) == 0:
                 return None
-            elif value.lower() == SnapshotProfile.ExtruderTriggerRequiredValue:
+            elif value.lower() == SnapshotProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
                 return True
-            elif value.lower() == SnapshotProfile.ExtruderTriggerForbiddenValue:
+            elif value.lower() == SnapshotProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE:
                 return False
             else:
                 return None
@@ -687,14 +673,22 @@ class SnapshotProfile(ProfileSettings):
     def get_trigger_position_restrictions(value):
         restrictions = []
         for restriction in value:
-            restrictions.append(
-                SnapshotPositionRestrictions(
-                    restriction["Type"], restriction["Shape"],
-                    restriction["X"], restriction["Y"],
-                    restriction["X2"], restriction["Y2"],
-                    restriction["R"], restriction["CalculateIntersections"]
+            try:
+                restrictions.append(
+                    SnapshotPositionRestrictions(
+                        restriction["type"],
+                        restriction["shape"],
+                        restriction["x"],
+                        restriction["y"],
+                        restriction["x2"],
+                        restriction["y2"],
+                        restriction["r"],
+                        restriction["calculate_intersections"]
+                    )
                 )
-            )
+            except KeyError as e:
+                OctolapseSettings.Logger.log_exception(e)
+                continue
         return restrictions
 
     @staticmethod
@@ -1096,7 +1090,6 @@ class Profiles(Settings):
         return self.defaults.debug
 
     def active_cameras(self):
-        # todo: make more pythonic
         _active_cameras = []
         for key in self.cameras:
             _current_camera = self.cameras[key]
@@ -1115,7 +1108,9 @@ class Profiles(Settings):
 
         if profile_type == "Printer":
             new_profile = PrinterProfile.create_from(profile)
-            new_profile.gcode_generation_settings = new_profile.get_current_slicer_settings().get_gcode_generation_settings()
+            new_profile.gcode_generation_settings = (
+                new_profile.get_current_slicer_settings().get_gcode_generation_settings()
+            )
             self.printers[guid] = new_profile
             if len(self.printers) == 1:
                 self.current_printer_profile_guid = new_profile.guid
@@ -1197,7 +1192,7 @@ class Profiles(Settings):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, (str, unicode)) and class_item == '{octolapse_no_property_found}'):
                     if key == 'printers':
                         self.printers = {}
                         for profile_key, profile_value in value.items():
@@ -1238,30 +1233,36 @@ class OctolapseSettings(Settings):
     get_debug_function = None
     Logger = None
 
-    def __init__(self, logging_path, plugin_version="unknown", get_debug_function=None):
+    def __init__(self, logging_path, fallback_logger, plugin_version="unknown", get_debug_function=None):
         self.main_settings = MainSettings(plugin_version)
         self.profiles = Profiles()
-        if get_debug_function is not None and OctolapseSettings.Logger is None:
+        if OctolapseSettings.Logger is None:
             # create the logger if it doesn't exist
-            OctolapseSettings.Logger = log.Logger(logging_path, get_debug_function)
+            OctolapseSettings.Logger = log.Logger(logging_path, fallback_logger, get_debug_function)
+        elif OctolapseSettings.get_debug_function is None and get_debug_function is not None:
+            OctolapseSettings.get_debug_function = get_debug_function
 
     def save(self, file_path):
         self.save_as_json(file_path)
 
     @classmethod
-    def load(cls, file_path, log_file_path, plugin_version, get_debug_function):
-        return cls.load_from_json(file_path, log_file_path, plugin_version, get_debug_function)
+    def load(cls, file_path, log_file_path, fallback_logger, plugin_version, get_debug_function):
+        with open(file_path, 'r') as defaultSettingsJson:
+            data = json.load(defaultSettingsJson)
+            # if a settings file does not exist, create one ??
+            return OctolapseSettings.create_from_iterable(
+                log_file_path,
+                fallback_logger,
+                plugin_version,
+                data,
+                get_debug_function=get_debug_function
+            )
 
     @classmethod
-    def create_from(cls, logging_path, plugin_version, iterable=(), get_debug_function=None, **kwargs):
-        new_object = cls(logging_path, plugin_version, get_debug_function=get_debug_function)
-        new_object.update(iterable, **kwargs)
+    def create_from_iterable(cls, logging_path, fallback_logger, plugin_version, iterable=(), get_debug_function=None):
+        new_object = cls(logging_path, fallback_logger, plugin_version, get_debug_function=get_debug_function)
+        new_object.update(iterable)
         return new_object
-
-    @staticmethod
-    def from_json(logging_path, plugin_version, json_string):
-        data = json.loads(json_string)
-        return OctolapseSettings.create_from(logging_path, plugin_version, data)
 
 
 class OctolapseGcodeSettings(Settings):
@@ -1326,12 +1327,6 @@ class SlicerSettings(Settings):
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
         """Returns a speed in mm/min for a setting name"""
         raise NotImplementedError("You must implement get_speed_mm_min")
-
-    # TODO: figure out a cleaner method that doesn't require a callback
-    @staticmethod
-    def calculate_speed(layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs):
-        """Calculates a speed/underspeed in mm/min for a layer"""
-        raise NotImplementedError("You must implement calculate_speed")
 
     def update_settings_from_gcode(self, settings_dict):
         raise NotImplementedError("You must implement update_settings_from_gcode")
@@ -1413,26 +1408,14 @@ class CuraSettings(SlicerSettings):
     def get_speed_infill(self):
         return self.get_speed_mm_min(self.speed_infill)
 
-   #def get_slow_layer_speed_infill(self):
-   #    return self.get_slow_layer_speed_print()
-
     def get_speed_wall_0(self):
         return self.get_speed_mm_min(self.speed_wall_0)
-
-    #def get_slow_layer_speed_wall_0(self):
-    #    return self.get_slow_layer_speed_print()
 
     def get_speed_wall_x(self):
         return self.get_speed_mm_min(self.speed_wall_x)
 
-    #def get_slow_layer_speed_wall_x(self):
-    #    return self.get_slow_layer_speed_print()
-
     def get_speed_topbottom(self):
         return self.get_speed_mm_min(self.speed_topbottom)
-
-    #def get_slow_layer_speed_topbottom_speed(self):
-    #    return self.get_slow_layer_speed_print()
 
     def get_speed_travel(self):
         return self.get_speed_mm_min(self.speed_travel)
@@ -1503,7 +1486,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_speed_tolerance()
             ),
-           PrintFeatureSetting(
+            PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
                 "Inner Wall",
                 None,
@@ -1566,12 +1549,6 @@ class CuraSettings(SlicerSettings):
         speed = float(speed) * 60.0
         # round to .1
         return utility.round_to(speed, 0.1)
-
-    @staticmethod
-    def calculate_speed(layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs):
-        return SlicerPrintFeatures.calculate_speed(
-            layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs
-        )
 
     def update_settings_from_gcode(self, settings_dict):
         # for cura we can just call the regular update function!
@@ -1638,12 +1615,6 @@ class Simplify3dSettings(SlicerSettings):
 
         return utility.round_to(speed, 0.1)
 
-    @staticmethod
-    def calculate_speed(layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs):
-        return SlicerPrintFeatures.calculate_speed(
-            layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs
-        )
-
     def get_retraction_distance(self):
         return float(self.retraction_distance)
 
@@ -1704,7 +1675,7 @@ class Simplify3dSettings(SlicerSettings):
         return self.get_speed_mm_min(self.default_printing_speed, multiplier=self.solid_infill_speed_multiplier)
 
     def get_first_layer_solid_infill_speed(self):
-        return  self.get_speed_mm_min(self.get_solid_infill_speed(), multiplier=self.first_layer_speed_multiplier)
+        return self.get_speed_mm_min(self.get_solid_infill_speed(), multiplier=self.first_layer_speed_multiplier)
 
     def get_support_structure_speed(self):
         return self.get_speed_mm_min(self.default_printing_speed, multiplier=self.support_structure_speed_multiplier)
@@ -1776,7 +1747,10 @@ class Simplify3dSettings(SlicerSettings):
                 self.get_default_printing_speed(),
                 self.get_first_layere_default_printing_speed(),
                 snapshot_profile.feature_trigger_on_normal_print_speed,
-                snapshot_profile.feature_trigger_on_normal_print_speed and snapshot_profile.feature_trigger_on_first_layer,
+                (
+                    snapshot_profile.feature_trigger_on_normal_print_speed and
+                    snapshot_profile.feature_trigger_on_first_layer
+                ),
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1786,7 +1760,10 @@ class Simplify3dSettings(SlicerSettings):
                 self.get_exterior_outline_speed(),
                 self.get_first_layer_exterior_outline_speed(),
                 snapshot_profile.feature_trigger_on_external_perimeters,
-                snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer,
+                (
+                    snapshot_profile.feature_trigger_on_external_perimeters and
+                    snapshot_profile.feature_trigger_on_first_layer
+                ),
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1849,7 +1826,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_speed_tolerance()
             ),
-           PrintFeatureSetting(
+            PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
                 None,
                 "First Prime",
@@ -1858,7 +1835,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 snapshot_profile.feature_trigger_on_deretract and snapshot_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
-           )
+            )
         ]
 
     def update_settings_from_gcode(self, settings_dict):
@@ -1955,6 +1932,14 @@ class Slic3rPeSettings(SlicerSettings):
         self.first_layer_speed = ''
         self.axis_speed_display_units = 'mm-sec'
 
+    def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
+        if speed is None:
+            return None
+        speed = float(speed)
+        if self.axis_speed_display_units == "mm-sec":
+            speed = speed * 60.0
+        return speed
+
     def get_num_slow_layers(self):
         return 1
 
@@ -1979,7 +1964,7 @@ class Slic3rPeSettings(SlicerSettings):
         retract_length = self.get_retract_length()
         if (
             self.retract_before_travel is not None and
-            float(self.retract_before_travel)>0 and
+            float(self.retract_before_travel) > 0 and
             retract_length is not None and
             retract_length > 0
         ):
@@ -2016,7 +2001,7 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             if parse_string is None:
                 return None
-            if isinstance(parse_string, (str,unicode)):
+            if isinstance(parse_string, (str, unicode)):
                 percent_index = str(parse_string).strip().find('%')
                 if percent_index < 1:
                     return None
@@ -2237,7 +2222,10 @@ class Slic3rPeSettings(SlicerSettings):
                 self.get_small_perimeter_speed(),
                 self.get_first_layer_small_perimeter_speed(),
                 snapshot_profile.feature_trigger_on_small_perimeters,
-                snapshot_profile.feature_trigger_on_small_perimeters and snapshot_profile.feature_trigger_on_first_layer,
+                (
+                    snapshot_profile.feature_trigger_on_small_perimeters and
+                    snapshot_profile.feature_trigger_on_first_layer
+                ),
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2247,7 +2235,10 @@ class Slic3rPeSettings(SlicerSettings):
                 self.get_external_perimeter_speed(),
                 self.get_first_layer_external_perimeter_speed(),
                 snapshot_profile.feature_trigger_on_external_perimeters,
-                snapshot_profile.feature_trigger_on_external_perimeters and snapshot_profile.feature_trigger_on_first_layer,
+                (
+                    snapshot_profile.feature_trigger_on_external_perimeters and
+                    snapshot_profile.feature_trigger_on_first_layer
+                ),
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2277,7 +2268,10 @@ class Slic3rPeSettings(SlicerSettings):
                 self.get_top_solid_infill_speed(),
                 self.get_first_layer_top_solid_infill_speed(),
                 snapshot_profile.feature_trigger_on_top_solid_infill,
-                snapshot_profile.feature_trigger_on_top_solid_infill and snapshot_profile.feature_trigger_on_first_layer,
+                (
+                    snapshot_profile.feature_trigger_on_top_solid_infill and
+                    snapshot_profile.feature_trigger_on_first_layer
+                ),
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2336,7 +2330,7 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             for key, value in settings_dict.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, (str,unicode)) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, (str, unicode)) and class_item == '{octolapse_no_property_found}'):
                     if key in [
                         'retract_before_wipe',
                         'support_material_interface_speed',
@@ -2364,21 +2358,21 @@ class Slic3rPeSettings(SlicerSettings):
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
-        if value is None or (isinstance(value, (str,unicode)) and value == 'None'):
+        if value is None or (isinstance(value, (str, unicode)) and value == 'None'):
             return None
         # all of the following can be either strings or percent strings, we need to save them as strings
         if(
             key in [
-            'retract_before_wipe',
-            'support_material_interface_speed',
-            'support_material_xy_spacing',
-            'fill_density',
-            'infill_overlap',
-            'top_solid_infill_speed',
-            'first_layer_speed',
-            'small_perimeter_speed',
-            'solid_infill_speed',
-            'external_perimeter_speed'
+                'retract_before_wipe',
+                'support_material_interface_speed',
+                'support_material_xy_spacing',
+                'fill_density',
+                'infill_overlap',
+                'top_solid_infill_speed',
+                'first_layer_speed',
+                'small_perimeter_speed',
+                'solid_infill_speed',
+                'external_perimeter_speed'
             ]
         ):
             return str(value)
@@ -2417,6 +2411,9 @@ class OtherSlicerSettings(SlicerSettings):
         self.speed_tolerance = 1
         self.axis_speed_display_units = 'mm-min'
 
+    def update_settings_from_gcode(self, settings_dict):
+        raise Exception("Cannot update 'Other Slicer' from gcode file!  Please select another slicer type to use this "
+                        "function.")
 
     def get_num_slow_layers(self):
         return self.num_slow_layers
@@ -2449,7 +2446,7 @@ class OtherSlicerSettings(SlicerSettings):
     def get_z_hop_speed(self):
         return self.get_travel_speed()
 
-    def get_speed_mm_min(self, speed, setting_name=None):
+    def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
             return None
         speed = float(speed)
@@ -2702,12 +2699,6 @@ class OtherSlicerSettings(SlicerSettings):
             )
         ]
 
-    @staticmethod
-    def calculate_speed(layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs):
-        return SlicerPrintFeatures.calculate_speed(
-            layer_name, slow_layer_name, speed, under_speed, num_slow_layers, layer_num, *args, **kwargs
-        )
-
 
 class SlicerPrintFeatures(Settings):
     def __init__(self, slicer_settings, snapshot_settings):
@@ -2740,7 +2731,9 @@ class SlicerPrintFeatures(Settings):
                 return False
             if feature.num_slow_layers > 1:
                 calculated_speed = (
-                    feature.under_speed + ((layer_num - 1) * (feature.speed - feature.under_speed) / feature.num_slow_layers)
+                    feature.under_speed + (
+                        (layer_num - 1) * (feature.speed - feature.under_speed) / feature.num_slow_layers
+                    )
                 )
             else:
                 calculated_speed = feature.under_speed
@@ -2817,7 +2810,9 @@ class SlicerPrintFeatures(Settings):
     ):
         all_speed_list = []
         non_unique_speed_dict = {}
+        non_unique_speed_list = []
         missing_speeds_list = []
+        missing_speeds_list_unique = []
         divisor = 1.0
         if speed_units == 'mm-sec':
             divisor = 60.0
@@ -2870,7 +2865,11 @@ class SlicerPrintFeatures(Settings):
             if include_missing_speeds:
                 if speed is None and feature.layer_name is not None and len(feature.layer_name.strip()) > 0:
                     missing_speeds_list.append(feature.layer_name)
-                if under_speed is None and feature.slow_layer_name is not None and len(feature.slow_layer_name.strip()) > 0:
+                if (
+                    under_speed is None
+                    and feature.slow_layer_name is not None
+                    and len(feature.slow_layer_name.strip()) > 0
+                ):
                     missing_speeds_list.append(feature.slow_layer_name)
 
         if include_nonunique_speeds:
@@ -2884,13 +2883,11 @@ class SlicerPrintFeatures(Settings):
             seen = set()
             seen_add = seen.add
             missing_speeds_list_unique = [x for x in missing_speeds_list if not (x in seen or seen_add(x))]
-            non_unique_speed_list = []
 
         # convert the non_unique speed dict into an array of dicts so that it is easily iterable in javascript
         for key, val in non_unique_speed_dict.items():
             key_string = str.format("{key}{speed_units}", key=key, speed_units=speed_units)
             non_unique_speed_list.append({"speed": key_string, "feature_names": val})
-
 
         return {
             'non-unique-speeds': non_unique_speed_list,
@@ -2900,9 +2897,10 @@ class SlicerPrintFeatures(Settings):
 
 
 class PrintFeatureSetting(Settings):
-    def __init__(self, is_enabled_function, is_detected_function, layer_name, initial_layer_name, speed, under_speed, enabled,
-                 enabled_for_slow_layer, tolerance, num_slow_layers=1):
-
+    def __init__(
+        self, is_enabled_function, is_detected_function, layer_name, initial_layer_name, speed, under_speed,
+        enabled, enabled_for_slow_layer, tolerance, num_slow_layers=1
+    ):
         self.layer_name = layer_name
         self.slow_layer_name = initial_layer_name
         self.speed = speed

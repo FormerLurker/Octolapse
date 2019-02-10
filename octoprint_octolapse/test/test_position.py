@@ -62,7 +62,7 @@ class TestPosition(unittest.TestCase):
             }
         }
 
-    def test_PositionError(self):
+    def test_position_error(self):
         """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move
         out of bounds. """
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
@@ -343,7 +343,7 @@ class TestPosition(unittest.TestCase):
         self.assertEqual(position.z(), 3)
         self.assertEqual(position.e(), 4)
 
-    def test_G90InfluencesExtruder_UpdatePosition(self):
+    def test_g90_influences_extruder_UpdatePosition(self):
         """Test G90 for machines where it influences the coordinate system of the extruder."""
         position = Position(self.Settings, self.OctoprintPrinterProfile, True)
         # Make sure the axis is homed
@@ -364,7 +364,7 @@ class TestPosition(unittest.TestCase):
         position.update_position(e=20)
         self.assertEqual(position.e(), 30)
 
-    def test_G90InfluencesExtruder_Update(self):
+    def test_g90_influences_extruder_Update(self):
         """Test G90 for machines where it influences the coordinate system of the extruder."""
         position = Position(self.Settings, self.OctoprintPrinterProfile, True)
         # Make sure the axis is homed
@@ -614,7 +614,7 @@ class TestPosition(unittest.TestCase):
         self.assertFalse(position.is_layer_change())
 
         # extrude again on same layer - Height Previous should now be updated, and
-        # IsLayerChange should be false
+        # is_layer_change should be false
         position.update(Commands.parse("G1 x0 y0 z0.20000 e1"))
         self.assertEqual(position.height(), .2)
         self.assertEqual(position.layer(), 2)

@@ -32,13 +32,19 @@ class Logger(object):
     ConsoleFormatString = '{asctime} - {levelname} - {message}'
     Logging_Executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-    def __init__(self, log_file_path, get_debug_function):
+    def __init__(self, log_file_path, fallback_logger, get_debug_function):
         self.log_file_path = log_file_path
         self.get_debug_function = get_debug_function
+        self._fallback_logger = fallback_logger
         if Logger.Logger is None:
-            Logger.Logger = self.get_logger()
+            Logger.Logger = self.create_logger()
 
     def get_logger(self):
+        if Logger.Logger is None:
+            return self._fallback_logger
+        return Logger.Logger
+
+    def create_logger(self):
         _logger = logging.getLogger(
             "octoprint.plugins.octolapse")
 
@@ -74,8 +80,10 @@ class Logger(object):
     def _log_to_console(self):
         if self.get_debug_function is None:
             return True
-
-        return self.get_debug_function()().log_to_console
+        get_debug_function = self.get_debug_function()
+        if get_debug_function is None:
+            return True
+        return get_debug_function().log_to_console
     
     def log_console(self, level_name, message, force=False):
         if self._log_to_console() or force:
@@ -84,21 +92,21 @@ class Logger(object):
 
     def log_info(self, message):
         if self._is_enabled():
-            Logger.Logging_Executor.submit(self.Logger.info, message)
+            Logger.Logging_Executor.submit(self.get_logger().info, message)
             self.log_console('info', message)
 
     def log_warning(self, message):
         if self._is_enabled():
-            Logger.Logging_Executor.submit(self.Logger.warning, message)
+            Logger.Logging_Executor.submit(self.get_logger().warning, message)
             self.log_console('warn', message)
 
     def log_exception(self, exception):
         message = utility.exception_to_string(exception)
-        Logger.Logging_Executor.submit(self.Logger.error, message)
+        Logger.Logging_Executor.submit(self.get_logger().error, message)
         self.log_console('error', message)
 
     def log_error(self, message):
-        Logger.Logging_Executor.submit(self.Logger.error, message)
+        Logger.Logging_Executor.submit(self.get_logger().error, message)
         self.log_console('error', message)
 
     def log_position_change(self, message):

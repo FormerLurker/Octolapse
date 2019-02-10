@@ -22,7 +22,7 @@
 ##################################################################################
 */
 Octolapse = {};
- Octolapse.Printers = { 'current_profile_guid': function () {return null;}}
+ Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
 OctolapseViewModel = {};
 
 $(function () {
@@ -766,40 +766,40 @@ $(function () {
 
         self.updateState = function (state) {
             //console.log(state);
-            if (state.StabilizationType != null)
-                Octolapse.Status.updateStabilizationType(state.StabilizationType)
+            if (state.stabilization_type != null)
+                Octolapse.Status.updateStabilizationType(state.stabilization_type)
 
-            if (state.StabilizationType == "real-time") {
+            if (state.stabilization_type == "real-time") {
                 if (state.Position != null) {
                     //console.log('octolapse.js - state-changed - Position');
-                    Octolapse.Status.updatePosition(state.Position);
+                    Octolapse.Status.updatePosition(state.position);
                 }
-                if (state.PositionState != null) {
+                if (state.position_state != null) {
                     //console.log('octolapse.js - state-changed - Position State');
-                    Octolapse.Status.updatePositionState(state.PositionState);
+                    Octolapse.Status.updatePositionState(state.position_state);
                 }
-                if (state.Extruder != null) {
+                if (state.extruder != null) {
                     //console.log('octolapse.js - state-changed - Extruder State');
-                    Octolapse.Status.updateExtruderState(state.Extruder);
+                    Octolapse.Status.updateExtruderState(state.extruder);
                 }
-                if (state.TriggerState != null) {
+                if (state.trigger_state != null) {
                     //console.log('octolapse.js - state-changed - Trigger State');
-                    Octolapse.Status.updateTriggerStates(state.TriggerState);
+                    Octolapse.Status.updateTriggerStates(state.trigger_state);
                 }
             }
             else if (state.StabilizationType == "pre-calculated")
             {
-                if(state.PreCalculatedStabilizationState)
-                    Octolapse.Status.updatePreCalculatedStabilization(state.PreCalculatedStabilizationState)
+                if(state.pre_calculated_stabilization_state)
+                    Octolapse.Status.updatePreCalculatedStabilization(state.pre_calculated_stabilization_state)
             }
-            if (state.MainSettings != null) {
+            if (state.main_settings != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');
                 // Do not update the main settings unless they are saved.
                 //Octolapse.SettingsMain.update(state.MainSettings);
                 // detect changes to auto_reload_latest_snapshot
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
 
-                Octolapse.Globals.update(state.MainSettings);
+                Octolapse.Globals.update(state.main_settings);
                 Octolapse.SettingsMain.setSettingsVisibility(Octolapse.Globals.enabled());
                 if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
@@ -808,9 +808,8 @@ $(function () {
                 }
 
             }
-            if (state.Status != null) {
-                //console.log('octolapse.js - state-changed - Trigger State');
-                Octolapse.Status.update(state.Status);
+            if (state.status != null) {
+                Octolapse.Status.update(state.status);
             }
             if (!self.HasLoadedState) {
                 Octolapse.Status.updateLatestSnapshotImage(true);
@@ -956,13 +955,13 @@ $(function () {
                     }
                 case "state-loaded":
                     {
-                        //console.log('octolapse.js - state-loaded');
+                        console.log('octolapse.js - state-loaded');
                         self.updateState(data);
                     }
                     break;
                 case "state-changed":
                     {
-                        //console.log('octolapse.js - state-changed');
+                        console.log('octolapse.js - state-changed');
                         self.updateState(data);
                     }
                     break;

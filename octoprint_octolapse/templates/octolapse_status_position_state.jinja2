@@ -31,10 +31,10 @@
                     </h4>
                 </span>
                 <span class="span3">
-                    Layer: <span data-bind="text:PositionState.Layer()" />
+                    Layer: <span data-bind="text:PositionState.layer()" />
                 </span>
                 <span class="span3">
-                    Height: <span data-bind="text:PositionState.Height()" /><i>&nbsp;mm</i>
+                    Height: <span data-bind="text:PositionState.height()" /><i>&nbsp;mm</i>
                 </span>
             </div>
         </div>
@@ -53,41 +53,41 @@
                                 <div>X Homed</div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getXHomedStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.XHomed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.XHomed(),'greenyellow','red','red')}"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.x_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.x_homed(),'greenyellow','red','red')}"></span>
                                 </span>
                             </div>
                             <div class="span4">
                                 <div>Y Homed</div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getYHomedStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.YHomed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.YHomed(),'greenyellow','red','red')}"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.y_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.y_homed(),'greenyellow','red','red')}"></span>
                                 </span>
                             </div>
                             <div class="span4">
                                 <div>Z Homed</div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getZHomedStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.ZHomed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.ZHomed(),'greenyellow','red','red')}"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.z_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.z_homed(),'greenyellow','red','red')}"></span>
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="span2 octolapse-container" data-bind="visible: PositionState.HasPositionError()">
+                <div class="span2 octolapse-container" data-bind="visible: PositionState.has_position_error()">
                     <div class="margin-small ">
                         <div>Errors</div>
                         <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getHasPositionErrorStateText}">
                             <span class="fa fa-square fa-stack-2x"></span>
-                            <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.HasPositionError(),'icon-ok-circle','icon-circle-blank','icon-circle-blank'), style: {color:PositionState.getColor(PositionState.HasPositionError(),'red','greenyellow','red')} "></span>
+                            <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.has_position_error(),'icon-ok-circle','icon-circle-blank','icon-circle-blank'), style: {color:PositionState.getColor(PositionState.has_position_error(),'red','greenyellow','red')} "></span>
                         </span>
                     </div>
                 </div>
-                <div class="span4 octolapse-container" data-bind="visible:PositionState.HasPositionError">
+                <div class="span4 octolapse-container" data-bind="visible:PositionState.has_position_error">
                     <div class="margin-small">
                         <div>Error Messages</div>
                         <div class="text-error">
-                            <span data-bind="text : PositionState.PositionError"></span>
+                            <span data-bind="text : PositionState.position_error"></span>
                         </div>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                                 </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsExtruderRelativeStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass( PositionState.IsExtruderRelative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.IsExtruderRelative(),'greenyellow','greenyellow','red')}"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass( PositionState.is_extruder_relative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.is_extruder_relative(),'greenyellow','greenyellow','red')}"></span>
                                 </span>
 
                             </div>
@@ -116,7 +116,7 @@
                                 </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsRelativeStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsRelative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.IsRelative(),'greenyellow','greenyellow','red')}"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.is_relative(),'icon-ok-circle','icon-ok-circle', 'fa-question'), style: {color:PositionState.getColor(PositionState.is_relative(),'greenyellow','greenyellow','red')}"></span>
                                 </span>
                             </div>
                         </div>
@@ -127,9 +127,9 @@
                                     <div class="ol-text-status-1">
                                         Units
                                     </div>
-                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsMetricStateText}">
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getis_metricStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
-                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsMetric(),'icon-ok-circle','icon-ban-circle','fa-question'),style: {color:PositionState.getColor(PositionState.IsMetric(),'greenyellow','red','red')}"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.is_metric(),'icon-ok-circle','icon-ban-circle','fa-question'),style: {color:PositionState.getColor(PositionState.is_metric(),'greenyellow','red','red')}"></span>
                                     </span>
                                 </div>
                             </div>
@@ -141,9 +141,9 @@
                                     <div class="ol-text-status-1">
                                         Position
                                     </div>
-                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsInPositionStateText}">
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getis_in_positionStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
-                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsInPosition() || PositionState.InPathPosition(), 'icon-ok-circle', 'icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.IsInPosition() || PositionState.InPathPosition(),'greenyellow','orange','orange')}"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.is_in_position() || PositionState.in_path_position(), 'icon-ok-circle', 'icon-ban-circle','icon-ban-circle'),style: {color:PositionState.getColor(PositionState.is_in_position() || PositionState.in_path_position(),'greenyellow','orange','orange')}"></span>
                                     </span>
                                 </div>
 
@@ -156,9 +156,9 @@
                                     <div class="ol-text-status-1">
                                         Change
                                     </div>
-                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsLayerChangeStateText}">
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getis_layer_changeStateText}">
                                         <span class="fa fa-square fa-stack-2x"></span>
-                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsLayerChange(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.is_layer_change(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
                                     </span>
 
                                 </div>
@@ -172,7 +172,7 @@
                                 </div>
                                 <span class="fa-stack fa-2x" data-bind="attr: {title: PositionState.getIsZHopStateText}">
                                     <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.IsZHop(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
+                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PositionState.getCheckedIconClass(PositionState.is_zhop(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
                                 </span>
 
                             </div>
@@ -184,7 +184,7 @@
         <div class="panel-footer ol-info-footer">
             <div class="row-fluid">
                 <div class="span8">
-                    Gcode:&nbsp;<span data-bind="text : PositionState.GCode"></span>
+                    Gcode:&nbsp;<span data-bind="text : PositionState.gcode"></span>
                 </div>
             </div>
         </div>

@@ -188,14 +188,14 @@ $(function () {
         self.addPositionRestriction = function () {
             //console.log("Adding " + type + " position restriction.");
             var restriction = ko.observable({
-                "Type": self.new_position_restriction_type(),
-                "Shape": self.new_position_restriction_shape(),
-                "X": self.new_position_restriction_x(),
-                "Y": self.new_position_restriction_y(),
-                "X2": self.new_position_restriction_x2(),
-                "Y2": self.new_position_restriction_y2(),
-                "R": self.new_position_restriction_r(),
-                "CalculateIntersections": self.new_calculate_intersections()
+                "type": self.new_position_restriction_type(),
+                "shape": self.new_position_restriction_shape(),
+                "x": self.new_position_restriction_x(),
+                "t": self.new_position_restriction_y(),
+                "x2": self.new_position_restriction_x2(),
+                "t2": self.new_position_restriction_y2(),
+                "r": self.new_position_restriction_r(),
+                "calculate_intersections": self.new_calculate_intersections()
             });
             self.position_restrictions.push(restriction);
         };

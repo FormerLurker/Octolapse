@@ -38,7 +38,7 @@ class SnapshotGcode(object):
 
         self.InitializationGcode = []  # commands executed here are not involved in timing calculations
         self.StartGcode = []
-        self.SnapshotCommands = []
+        self.snapshot_commands = []
         self.ReturnCommands = []
         self.EndGcode = []
         self.X = None
@@ -50,7 +50,7 @@ class SnapshotGcode(object):
         self.SnapshotIndex = -1
 
     def snapshot_gcode(self):
-        return self.InitializationGcode + self.StartGcode + self.SnapshotCommands + self.ReturnCommands + self.EndGcode
+        return self.InitializationGcode + self.StartGcode + self.snapshot_commands + self.ReturnCommands + self.EndGcode
 
     def append(self, command_type, command):
         if command_type == self.INITIALIZATION_GCODE:
@@ -58,17 +58,17 @@ class SnapshotGcode(object):
         elif command_type == self.START_GCODE:
             self.StartGcode.append(command)
         elif command_type == self.SNAPSHOT_COMMANDS:
-            self.SnapshotCommands.append(command)
+            self.snapshot_commands.append(command)
         elif command_type == self.RETURN_COMMANDS:
             self.ReturnCommands.append(command)
         elif command_type == self.END_GCODE:
             self.EndGcode.append(command)
 
     def end_index(self):
-        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.SnapshotCommands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
+        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
 
     def snapshot_index(self):
-        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.SnapshotCommands) - 1
+        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) - 1
 
 
 class SnapshotGcodeGenerator(object):
@@ -84,8 +84,8 @@ class SnapshotGcodeGenerator(object):
         self.OctoprintPrinterProfile = octoprint_printer_profile
         self.BoundingBox = utility.get_bounding_box(
             self.Printer, octoprint_printer_profile)
-        self.HasSnapshotPositionErrors = False
-        self.SnapshotPositionErrors = ""
+        self.has_snapshot_position_errors = False
+        self.snapshot_position_errors = ""
         self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
         assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
         # this will be determined by the supplied position object
@@ -120,13 +120,14 @@ class SnapshotGcodeGenerator(object):
         self.retracted_by_start_gcode = None
         self.zhopped_by_start_gcode = None
 
+        self.g90_influences_extruder = None
         # misc variables used for logging info
         self.last_extrusion_height = None
 
     def initialize_for_real_time_processing(self, position, trigger, parsed_command):
         # reset any errors
-        self.HasSnapshotPositionErrors = False
-        self.SnapshotPositionErrors = ""
+        self.has_snapshot_position_errors = False
+        self.snapshot_position_errors = ""
 
         # get the triggering command and extruder position by
         # undo the most recent position update since we haven't yet executed the most recent gcode command
@@ -135,24 +136,24 @@ class SnapshotGcodeGenerator(object):
         assert (isinstance(self.triggering_command_position, Pos))
         assert (isinstance(position, Position))
 
-        if len(position.Positions) < 1:
+        if len(position.position_history) < 1:
             return None
 
         # does G90/G91 influence the extruder
-        self.g90_influences_extruder = position.G90InfluencesExtruder
+        self.g90_influences_extruder = position.g90_influences_extruder
         # get the command we will be probably sending at the end of the process
         if not utility.is_snapshot_command(parsed_command.gcode, self.snapshot_command):
             self.parsed_gcode = parsed_command.gcode
         else:
             self.parsed_gcode = None
         # record the return position, which is the current position
-        self.x_return = position.current_pos.X
-        self.y_return = position.current_pos.Y
-        self.z_return = position.current_pos.Z
-        self.f_return = position.current_pos.F
-        self.is_relative_return = position.current_pos.IsRelative
-        self.is_extruder_relative_return = position.current_pos.IsExtruderRelative
-        self.is_metric_return = position.current_pos.IsMetric
+        self.x_return = position.current_pos.x
+        self.y_return = position.current_pos.y
+        self.z_return = position.current_pos.z
+        self.f_return = position.current_pos.f
+        self.is_relative_return = position.current_pos.is_relative
+        self.is_extruder_relative_return = position.current_pos.is_extruder_relative
+        self.is_metric_return = position.current_pos.is_metric
 
         # keep track of the current position while creating gcode below.
         # these values will be updated and used to make sure we don't
@@ -180,8 +181,8 @@ class SnapshotGcodeGenerator(object):
     def initialize_for_snapshot_plan_processing(self, snapshot_plan, parsed_command, g90_influences_extruder):
         assert(isinstance(snapshot_plan, Preprocessing.SnapshotPlan))
         # reset any errors
-        self.HasSnapshotPositionErrors = False
-        self.SnapshotPositionErrors = ""
+        self.has_snapshot_position_errors = False
+        self.snapshot_position_errors = ""
 
         # get the triggering command and extruder position by
         # undo the most recent position update since we haven't yet executed the most recent gcode command
@@ -226,10 +227,10 @@ class SnapshotGcodeGenerator(object):
     def has_initialization_errors(self):
         # check X Y and Z return
         if self.x_return is None or self.y_return is None or self.z_return is None:
-            self.HasSnapshotPositionErrors = True
+            self.has_snapshot_position_errors = True
             message = "Cannot create GCode when x,y,or z is None.  Values: x:{0} y:{1} z:{2}".format(
                 self.x_return, self.y_return, self.z_return)
-            self.SnapshotPositionErrors = message
+            self.snapshot_position_errors = message
             self.Settings.Logger.log_error(
                 "gcode.py - CreateSnapshotGcode - {0}".format(message))
             return True
@@ -257,7 +258,7 @@ class SnapshotGcodeGenerator(object):
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
                 coordinates["X"])
-            self.HasSnapshotPositionErrors = True
+            self.has_snapshot_position_errors = True
             self.Settings.Logger.log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
@@ -267,11 +268,11 @@ class SnapshotGcodeGenerator(object):
                     self.BoundingBox, x=coordinates["X"])["X"]
                 message += "  Using nearest in-bound position ({0}).".format(
                     coordinates["X"])
-            self.SnapshotPositionErrors += message
+            self.snapshot_position_errors += message
         if not utility.is_in_bounds(self.BoundingBox, None, coordinates["Y"], None):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
                 coordinates["Y"])
-            self.HasSnapshotPositionErrors = True
+            self.has_snapshot_position_errors = True
             self.Settings.Logger.log_error(
                 "gcode.py - GetSnapshotPosition - {0}".format(message))
             if self.Printer.abort_out_of_bounds:
@@ -281,9 +282,9 @@ class SnapshotGcodeGenerator(object):
                     self.BoundingBox, y=coordinates["Y"])["Y"]
                 message += "  Using nearest in-bound position ({0}).".format(
                     coordinates["Y"])
-            if len(self.SnapshotPositionErrors) > 0:
-                self.SnapshotPositionErrors += "  "
-            self.SnapshotPositionErrors += message
+            if len(self.snapshot_position_errors) > 0:
+                self.snapshot_position_errors += "  "
+            self.snapshot_position_errors += message
         return coordinates
 
     def get_snapshot_coordinate(self, path):
@@ -620,7 +621,7 @@ class SnapshotGcodeGenerator(object):
 
         # handle the trigger types
         if triggered_type == Triggers.TRIGGER_TYPE_DEFAULT:
-            if self.triggering_command_position.IsTravelOnly:
+            if self.triggering_command_position.is_travel_only:
                 self.Settings.Logger.log_snapshot_gcode(
                     "The triggering command is travel only, skipping return command generation"
                 )
@@ -643,7 +644,7 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.X = snapshot_position["X"]
         self.snapshot_gcode.Y = snapshot_position["Y"]
 
-        if not self.HasSnapshotPositionErrors:
+        if not self.has_snapshot_position_errors:
             # retract if necessary
             self.retract()
 
@@ -673,7 +674,7 @@ class SnapshotGcodeGenerator(object):
 
         # print out log messages
         self.Settings.Logger.log_snapshot_gcode(
-            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
+            "Snapshot Gcode - snapshot_commandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
                 self.snapshot_gcode.snapshot_index(),
                 self.snapshot_gcode.end_index(),
                 parsed_command.gcode
@@ -779,7 +780,7 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.X = snapshot_plan.x
         self.snapshot_gcode.Y = snapshot_plan.y
 
-        if not self.HasSnapshotPositionErrors:
+        if not self.has_snapshot_position_errors:
             if snapshot_plan.send_parsed_command == "first":
                 self.send_parsed_command(SnapshotGcode.INITIALIZATION_GCODE)
             # retract if necessary
@@ -822,7 +823,7 @@ class SnapshotGcodeGenerator(object):
 
         # print out log messages
         self.Settings.Logger.log_snapshot_gcode(
-            "Snapshot Gcode - SnapshotCommandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
+            "Snapshot Gcode - snapshot_commandIndex:{0}, EndIndex:{1}, Triggering Command:{2}".format(
                 self.snapshot_gcode.snapshot_index(),
                 self.snapshot_gcode.end_index(),
                 parsed_command.gcode

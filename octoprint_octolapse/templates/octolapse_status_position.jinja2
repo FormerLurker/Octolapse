@@ -37,7 +37,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">X:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.X"/>
+              <span data-bind="text: Position.x"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -46,7 +46,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">Y:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.Y"/>
+              <span data-bind="text: Position.y"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -55,7 +55,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">Z:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.Z"/>
+              <span data-bind="text: Position.z"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -64,7 +64,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">E:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.E"/>
+              <span data-bind="text: Position.e"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -76,7 +76,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">X:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.XOffset"/>
+              <span data-bind="text: Position.x_offset"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -85,7 +85,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">Y:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.YOffset"/>
+              <span data-bind="text: Position.y_offset"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -94,7 +94,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">Z:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.ZOffset"/>
+              <span data-bind="text: Position.z_offset"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -103,7 +103,7 @@
           <div class="row-fluid ol-compact-row">
             <div class="span2">E:</div>
             <div class="span4 text-right">
-              <span data-bind="text: Position.EOffset"/>
+              <span data-bind="text: Position.e_offset"/>
             </div>
             <div class="span2">
               <i>&nbsp;mm</i>
@@ -116,7 +116,7 @@
             <div class="row-fluid ol-compact-row">
                 <div class="span2">Speed:</div>
                 <div class="span6 text-right">
-                  <span data-bind="text: Position.F"/>
+                  <span data-bind="text: Position.f"/>
                 </div>
                 <div class="span2">
                   <i>&nbsp;mm/min</i>
@@ -124,7 +124,7 @@
             </div>
             <div>Features:&nbsp;&nbsp;
                 <!-- ko if: Position.Features().length === 0 -->Unknown<!-- /ko -->
-                <span data-bind="foreach: Position.Features"><!-- ko if: $index() !== 0 -->&#44;&nbsp;<!-- /ko --><span data-bind="text: $data"/></span>
+                <span data-bind="foreach: Position.features"><!-- ko if: $index() !== 0 -->&#44;&nbsp;<!-- /ko --><span data-bind="text: $data"/></span>
             </div>
 
         </span>

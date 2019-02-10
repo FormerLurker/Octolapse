@@ -88,7 +88,7 @@ class TestExtruder(unittest.TestCase):
         self.assertFalse(state.IsDeretractingStart)
         self.assertFalse(state.IsDeretracting)
         self.assertFalse(state.IsDeretracted)
-        self.assertFalse(state.HasChanged)
+        self.assertFalse(state.has_changed)
 
     def test_ExtruderStateCopy(self):
         # create a new state
@@ -110,7 +110,7 @@ class TestExtruder(unittest.TestCase):
         state.IsDeretractingStart = True
         state.IsDeretracting = True
         state.IsDeretracted = True
-        state.HasChanged = True
+        state.has_changed = True
 
         # copy to a new state
         new_state = ExtruderState(state)
@@ -130,10 +130,10 @@ class TestExtruder(unittest.TestCase):
         self.assertTrue(new_state.IsDeretractingStart)
         self.assertTrue(new_state.IsDeretracting)
         self.assertTrue(new_state.IsDeretracted)
-        self.assertTrue(new_state.HasChanged)
+        self.assertTrue(new_state.has_changed)
 
-    def test_HasChanged(self):
-        """Test the HasChanged flag"""
+    def test_has_changed(self):
+        """Test the has_changed flag"""
         # test the initial state
         self.assertFalse(self.Extruder.has_changed())
         # test updating with no movement - Change to primed
@@ -630,11 +630,11 @@ class TestExtruder(unittest.TestCase):
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, None)
         self.assertTrue(self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnExtrudingStart(self):
+    def test_extruderTriggers_on_extruding_start(self):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
-        # test OnExtrudingStart - True Filter
+        # test on_extruding_start - True Filter
         triggers = ExtruderTriggers(True, None, None, None, None, None, None, None, None, None)
         # test True with true filter
         state.IsExtrudingStart = True
@@ -643,7 +643,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsExtrudingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnExtrudingStart - False Filter
+        # test on_extruding_start - False Filter
         triggers = ExtruderTriggers(False, None, None, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsExtrudingStart = True
@@ -652,7 +652,7 @@ class TestExtruder(unittest.TestCase):
         state.IsExtrudingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnExtruding(self):
+    def test_extruderTriggers_on_extruding(self):
         # test onExtruding
         self.Extruder.reset()
         state = ExtruderState()
@@ -665,7 +665,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsExtruding = False
         self.assertFalse(self.Extruder.is_triggered(triggers))
-        # test OnExtruding - False Filter
+        # test on_extruding - False Filter
         triggers = ExtruderTriggers(None, False, None, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsExtruding = True
@@ -674,7 +674,7 @@ class TestExtruder(unittest.TestCase):
         state.IsExtruding = False
         self.assertFalse(self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnPrimed(self):
+    def test_extruderTriggers_on_primed(self):
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -685,7 +685,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsPrimed = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnPrimed - False Filter
+        # test on_primed - False Filter
         triggers = ExtruderTriggers(None, None, False, None, None, None, None, None, None, None)
         # test True with False filter
         state.IsPrimed = True
@@ -694,8 +694,8 @@ class TestExtruder(unittest.TestCase):
         state.IsPrimed = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnRetractingStart(self):
-        # test OnRetractingStart
+    def test_extruderTriggers_on_retracting_start(self):
+        # test on_retracting_start
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -707,7 +707,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsRetractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnRetractingStart - False Filter
+        # test on_retracting_start - False Filter
         triggers = ExtruderTriggers(None, None, None, False, None, None, None, None, None, None)
         # test True with False filter
         state.IsRetractingStart = True
@@ -716,8 +716,8 @@ class TestExtruder(unittest.TestCase):
         state.IsRetractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnRetracting(self):
-        # test OnRetracting
+    def test_extruderTriggers_on_retracting(self):
+        # test on_retracting
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -729,7 +729,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsRetracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnRetracting - False Filter
+        # test on_retracting - False Filter
         triggers = ExtruderTriggers(None, None, None, None, False, None, None, None, None, None)
         # test True with False filter
         state.IsRetracting = True
@@ -738,8 +738,8 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnPartiallyRetracted(self):
-        # test OnPartiallyRetracted
+    def test_extruderTriggers_on_partially_retracted(self):
+        # test on_partially_retracted
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -751,7 +751,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsPartiallyRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnPartiallyRetracted - False Filter
+        # test on_partially_retracted - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, False, None, None, None, None)
         # test True with False filter
         state.IsPartiallyRetracted = True
@@ -760,8 +760,8 @@ class TestExtruder(unittest.TestCase):
         state.IsPartiallyRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnRetracted(self):
-        # test OnRetracted
+    def test_extruderTriggers_on_retracted(self):
+        # test on_retracted
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -773,7 +773,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnRetracted - False Filter
+        # test on_retracted - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, False, None, None, None)
         # test True with False filter
         state.IsRetracted = True
@@ -782,8 +782,8 @@ class TestExtruder(unittest.TestCase):
         state.IsRetracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDeretractingStart(self):
-        # test OnDeretractingStart
+    def test_extruderTriggers_on_deretracting_start(self):
+        # test on_deretracting_start
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -795,7 +795,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsDeretractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDeretractingStart - False Filter
+        # test on_deretracting_start - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, False, None, None)
         # test True with False filter
         state.IsDeretractingStart = True
@@ -804,8 +804,8 @@ class TestExtruder(unittest.TestCase):
         state.IsDeretractingStart = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDeretracting(self):
-        # test OnDeretracting
+    def test_extruderTriggers_on_deretracting(self):
+        # test on_deretracting
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -817,7 +817,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsDeretracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDeretracting - False Filter
+        # test on_deretracting - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, False, None)
         # test True with False filter
         state.IsDeretracting = True
@@ -826,8 +826,8 @@ class TestExtruder(unittest.TestCase):
         state.IsDeretracting = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
 
-    def test_extruderTriggers_OnDeretracted(self):
-        # test OnDeretracted
+    def test_extruderTriggers_on_deretracted(self):
+        # test on_deretracted
         self.Extruder.reset()
         state = ExtruderState()
         self.Extruder.add_state(state)
@@ -839,7 +839,7 @@ class TestExtruder(unittest.TestCase):
         # test False with True filter
         state.IsDeretracted = False
         self.assertTrue(not self.Extruder.is_triggered(triggers))
-        # test OnDeretracted - False Filter
+        # test on_deretracted - False Filter
         triggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None, False)
         # test True with False filter
         state.IsDeretracted = True

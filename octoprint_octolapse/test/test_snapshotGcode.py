@@ -460,7 +460,7 @@ class TestSnapshotGcode(unittest.TestCase):
         self.assertTrue(snapshot_gcode.ReturnY == 10)
         self.assertTrue(snapshot_gcode.ReturnZ == 200)
 
-    def test_GetSnapshotGcode_SnapshotCommands(self):
+    def test_GetSnapshotGcode_snapshot_commands(self):
         # test with relative paths, absolute extruder coordinates, retract and z hop
         # use relative coordinates for stabilizations
         self.Settings.profiles.current_stabilization().x_type = "fixed_path"

@@ -188,16 +188,30 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
         profiles['stabilizations'][stabilization['guid']] = stabilization
 
     for snapshot in settings_dict['snapshots']:
-        snapshot["trigger_on_deretracting"] = snapshot["trigger_on_detracting"]
+        profiles["trigger_on_deretracting"] = snapshot["trigger_on_detracting"]
+        profiles["position_restrictions"] = []
+        for restriction in snapshot["position_restrictions"]:
+            new_restriction = {
+                "x2": restriction["X2"],
+                "shape": restriction["Shape"],
+                "r": restriction["R"],
+                "calculate_intersections": restriction["CalculateIntersections"],
+                "y": restriction["Y"],
+                "x": restriction["X"],
+                "y2": restriction["Y2"],
+                "type": restriction["Type"],
+            }
+            profiles["position_restrictions"].append(new_restriction)
+
         del snapshot["trigger_on_detracting"]
 
-        snapshot["trigger_on_deretracting_start"] = snapshot["trigger_on_detracting_start"]
+        profiles["trigger_on_deretracting_start"] = snapshot["trigger_on_detracting_start"]
         del snapshot["trigger_on_detracting_start"]
 
-        snapshot["feature_trigger_on_deretract"] = snapshot["feature_trigger_on_detract"]
+        profiles["feature_trigger_on_deretract"] = snapshot["feature_trigger_on_detract"]
         del snapshot["feature_trigger_on_detract"]
 
-        snapshot["trigger_on_deretracted"] = snapshot["trigger_on_detracted"]
+        profiles["trigger_on_deretracted"] = snapshot["trigger_on_detracted"]
         del snapshot["trigger_on_detracted"]
 
         profiles['snapshots'][snapshot['guid']] = snapshot

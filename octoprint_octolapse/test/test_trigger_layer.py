@@ -64,8 +64,8 @@ class TestLayerTrigger(unittest.TestCase):
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,
                                                     None)  # Ignore extruder
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = 0  # Trigger on any height change
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = 0  # Trigger on any height change
         # test initial state
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -152,8 +152,8 @@ class TestLayerTrigger(unittest.TestCase):
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(
             False, True, True, False, None, None, True, True, None, False)
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = 0  # Trigger on any height change
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = 0  # Trigger on any height change
         # create some gcode
         gcode = []
         # get the startup gcode
@@ -169,7 +169,7 @@ class TestLayerTrigger(unittest.TestCase):
         gcode.append(('G1 X240.0 E0 F1000.0', False, "Extruding"))
         # Object print is starting
         gcode.append(('G1 E-4.00000 F3000.00000', False,
-                      "On Retracting, OnRetractingStart"))
+                      "On Retracting, on_retracting_start"))
         gcode.append(('G1 Z0.700 F7200.000', False, "FullyRetracted, Zhop"))
         gcode.append(('G1 X117.061 Y98.921 F7200.000',
                       False, "FullyRetracted, Zhop"))
@@ -304,8 +304,8 @@ class TestLayerTrigger(unittest.TestCase):
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,
                                                     None)  # Ignore extruder
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = .25  # Trigger every .25
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = .25  # Trigger every .25
 
         # test initial state
         self.assertFalse(trigger.is_triggered(0))
@@ -413,8 +413,8 @@ class TestLayerTrigger(unittest.TestCase):
         """Make sure nothing triggers when the axis aren't homed"""
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
         trigger = LayerTrigger(self.Settings)
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = 0  # Trigger on every layer change
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = 0  # Trigger on every layer change
         position.Extruder.PrinterRetractionLength = 4
 
         # Try on extruding start
@@ -487,8 +487,8 @@ class TestLayerTrigger(unittest.TestCase):
         # home the axis
         position.update("G28")
         trigger = LayerTrigger(self.Settings)
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = 0  # Trigger on every layer change
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = 0  # Trigger on every layer change
 
         # get the current extruder state
         state = position.Extruder.current_state
@@ -623,8 +623,8 @@ class TestLayerTrigger(unittest.TestCase):
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
 
         trigger = LayerTrigger(self.Settings)
-        trigger.RequireZHop = False  # no zhop required
-        trigger.HeightIncrement = 0  # Trigger on every layer change
+        trigger.require_zhop = False  # no zhop required
+        trigger.height_increment = 0  # Trigger on every layer change
 
         # home the axis
         position.update("G28")
@@ -637,7 +637,7 @@ class TestLayerTrigger(unittest.TestCase):
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
         state.IsExtrudingStart = False
-        pos.IsLayerChange = True
+        pos.is_layer_change = True
 
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
@@ -661,7 +661,7 @@ class TestLayerTrigger(unittest.TestCase):
         trigger = LayerTrigger(self.Settings)
         trigger.ExtruderTriggers = ExtruderTriggers(None, None, None, None, None, None, None, None, None,
                                                     None)  # Ignore extruder
-        trigger.HeightIncrement = 0  # Trigger on any height change
+        trigger.height_increment = 0  # Trigger on any height change
         # test initial state
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

@@ -480,14 +480,14 @@
                                 </thead>
                                 <tbody data-bind="foreach: position_restrictions">
                                     <tr>
-                                        <td data-bind="text: Type"></td>
-                                        <td data-bind="text: Shape"></td>
-                                        <td data-bind="text: X"></td>
-                                        <td data-bind="text: Y"></td>
-                                        <td data-bind="text: (Shape == 'rect' ? X2 : '')"></td>
-                                        <td data-bind="text: (Shape == 'rect' ? Y2 : '')"></td>
-                                        <td data-bind="text: (Shape == 'circle' ? R : '')"></td>
-                                        <td data-bind="text: (CalculateIntersections ? 'True' : 'False')"></td>
+                                        <td data-bind="text: type"></td>
+                                        <td data-bind="text: shape"></td>
+                                        <td data-bind="text: x"></td>
+                                        <td data-bind="text: y"></td>
+                                        <td data-bind="text: (shape == 'rect' ? x2 : '')"></td>
+                                        <td data-bind="text: (shape == 'rect' ? y2 : '')"></td>
+                                        <td data-bind="text: (shape == 'circle' ? r : '')"></td>
+                                        <td data-bind="text: (calculate_intersections ? 'True' : 'False')"></td>
                                         <td>
                                             <a href="#" class="btn btn-default"
                                                data-bind="click: function() {$parent.removePositionRestriction($index);}">Remove</a>
