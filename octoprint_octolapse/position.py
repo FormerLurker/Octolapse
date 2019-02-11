@@ -653,12 +653,14 @@ class Position(object):
                 current.extrusion_length = abs(current.retraction_length)
                 # set the retraction length to 0 since we are extruding
                 current.retraction_length = 0
-            else:
-                current.extrusion_length = 0
+
                 # Update extrusion length
                 current.extrusion_length_total = utility.round_to_float_equality_range(
                     current.extrusion_length_total + current.extrusion_length
                 )
+            else:
+                current.extrusion_length = 0
+
             # calculate deretraction length
             if previous.retraction_length > current.retraction_length:
                 current.deretraction_length = utility.round_to_float_equality_range(

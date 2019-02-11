@@ -1,0 +1,107 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2017  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+
+<script type="text/html" id="snapshot-plan-template">
+    <div class="panel panel-default">
+        <div class="panel-heading ol-heading">
+            <div class="row-fluid">
+                <div class="span3"> <h4> Snapshot Plan </h4> </div>
+                <div class="span9 text-right">
+                    Showing Plan <span data-bind="text: SnapshotPlanState.plan_index" /> of <span data-bind="text: SnapshotPlanState.plan_count" />
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <div class="row-fluid">
+                <div class="span6">
+                    <strong>
+                        Next Snapshot Progress
+                    </strong>
+                    <div class="row-fluid">
+                        <div class="span6 text-right no-min-height">
+                            Current Plan:
+                        </div>
+                        <div class="span6 text-right no-min-height text-left">
+                            <span data-bind="text: SnapshotPlanState.current_plan_index" />
+                        </div>
+                    </div>
+                    <div class="row-fluid">
+                        <div class="span6 text-right no-min-height">
+                            Lines Remaining:
+                        </div>
+                        <div class="span6 text-right no-min-height text-left">
+                            <span data-bind="text: SnapshotPlanState.lines_remaining" /> of
+                            <span data-bind="text: SnapshotPlanState.lines_total" />
+                        </div>
+                    </div>
+                    <div class="row-fluid">
+                        <div class="span6 text-right no-min-height">
+                            Percent Complete:
+                        </div>
+                        <div class="span6 text-right no-min-height text-left">
+                            <span data-bind="text: SnapshotPlanState.progress_percent" />%
+                        </div>
+                    </div>
+                    <strong>Planned Positions</strong>
+                    <div class="row-fluid">
+                        <div class="span3 text-right no-min-height">
+                            Initial:&nbsp;
+                        </div>
+                        <div class="span9 text-left no-min-height">
+                            <strong>X</strong><span data-bind="text: SnapshotPlanState.x_initial" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_initial" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_initial" />
+                        </div>
+                    </div>
+                    <div class="ol-compact-row">
+                        <div class="span3 text-right no-min-height">
+                            Snapshot:&nbsp;
+                        </div>
+                        <div class="span9 text-left no-min-height">
+                            <div data-bind="foreach: SnapshotPlanState.snapshot_positions">
+                                <strong>X</strong><span data-bind="text: $data.x.toFixed(2)" />,&nbsp;<strong>Y</strong><span data-bind="text: $data.y.toFixed(2)" />,&nbsp;<strong>Z</strong><span data-bind="text: $data.z.toFixed(2)" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ol-compact-row">
+                        <div class="span3 text-right no-min-height">
+                            Return:&nbsp;
+                        </div>
+                        <div class="span9 text-left no-min-height">
+                            <strong>X</strong><span data-bind="text: SnapshotPlanState.x_return" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_return" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_return" />
+                        </div>
+                    </div>
+                </div>
+                <div class="span6 no-min-height">
+                    <div class="text-center ol_hover_button">
+                        <a href="#" data-bind="click: SnapshotPlanState.previous_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-minus fa-stack-1x"></i></span></a>
+                        <a href="#" data-bind="click: SnapshotPlanState.show_current_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-refresh fa-stack-1x"></i></span></a>
+                        <a href="#" data-bind="click: SnapshotPlanState.animate_plan_clicked, disable: SnapshotPlanState.is_animating_plans"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-play-circle fa-stack-1x"></i></span></a>
+                        <a href="#" data-bind="click: SnapshotPlanState.next_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-plus fa-stack-1x"></i></span></a>
+                    </div>
+                    <div id="snapshot_plan_canvas_container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>

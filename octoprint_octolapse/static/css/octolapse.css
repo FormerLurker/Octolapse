@@ -27,6 +27,9 @@
 #octolapse_settings .row {
     margin-left: 0;
 }
+.no-min-height{
+    min-height: auto !important;
+}
 #octolapse_add_edit_profile_dialog .input-xlg{
     width: 345px;
 }
@@ -45,27 +48,27 @@ a.disabled {
     word-wrap: break-word;
 }
 
-.snapshot_refresh_container a {
+.ol_hover_button a {
     color: greenyellow;
 }
 
 
-.snapshot_refresh_container .fa-square {
+.ol_hover_button .fa-square {
     color: black;
 }
 
-.snapshot_refresh_container a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
+.ol_hover_button a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
     color: lightgray;
 }
-.snapshot_refresh_container a:not(.disable):hover {
+.ol_hover_button a:not(.disable):hover {
     color: white;
 }
-.snapshot_refresh_container a:not(.disable):active {
+.ol_hover_button a:not(.disable):active {
     color: black;
 }
 
-.snapshot_refresh_container a:not(.disable):hover:not(:active)
-,.snapshot_refresh_container .fa-square
+.ol_hover_button a:not(.disable):hover:not(:active)
+,.ol_hover_button .fa-square
 {
     -webkit-transition: color 0.250s 0s ease-in;
     -moz-transition: color 0.250s 0s ease-in;

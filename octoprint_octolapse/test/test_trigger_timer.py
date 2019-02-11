@@ -135,7 +135,7 @@ class TestTimerTrigger(unittest.TestCase):
         # send another command, now the previous state has been homed, should trigger
         position.update("AnotherCommandNowPreviousHomed")
         # set is extruding start, wont be set by the above command!
-        position.Extruder.StateHistory[0].IsExtrudingStart = True
+        position.Extruder.StateHistory[0].is_extruding_start = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -146,7 +146,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on extruding
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
-        state.IsExtruding = True
+        state.is_extruding = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -158,7 +158,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on primed
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, True, None, None, None, None, None, None, None)
-        state.IsPrimed = True
+        state.is_primed = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -170,7 +170,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on retracting start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, True, None, None, None, None, None, None)
-        state.IsRetractingStart = True
+        state.is_retracting_start = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -182,7 +182,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on retracting
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, True, None, None, None, None, None)
-        state.IsRetracting = True
+        state.is_retracting = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -194,7 +194,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on partially retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, True, None, None, None, None)
-        state.IsPartiallyRetracted = True
+        state.is_partially_retracted = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -206,7 +206,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
-        state.IsRetracted = True
+        state.is_retracted = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -218,7 +218,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
-        state.IsDeretractingStart = True
+        state.is_deretracting_start = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -230,7 +230,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
-        state.IsDeretracting = True
+        state.is_deretracting = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -242,7 +242,7 @@ class TestTimerTrigger(unittest.TestCase):
         # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
-        state.IsDeretracted = True
+        state.is_deretracted = True
         trigger.get_state(0).trigger_start_time = time.time() - 1.01
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
@@ -262,7 +262,7 @@ class TestTimerTrigger(unittest.TestCase):
             True, None, None, None, None, None, None, None, None, None)
 
         # set the extruder trigger
-        position.Extruder.get_state(0).IsExtrudingStart = True
+        position.Extruder.get_state(0).is_extruding_start = True
         # will not wait or trigger because not enough time has elapsed
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
@@ -274,7 +274,7 @@ class TestTimerTrigger(unittest.TestCase):
         # send another command and try again
         position.update("PreviousPositionIsNowHomed")
         # set the extruder trigger
-        position.Extruder.get_state(0).IsExtrudingStart = True
+        position.Extruder.get_state(0).is_extruding_start = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

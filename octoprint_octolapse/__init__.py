@@ -155,6 +155,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             request_values["show_extruder_state_changes"]
         )
         self._octolapse_settings.main_settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
+        self._octolapse_settings.main_settings.show_snapshot_plan_information = request_values["show_snapshot_plan_information"]
         self._octolapse_settings.main_settings.show_real_snapshot_time = request_values["show_real_snapshot_time"]
         self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
             request_values["cancel_print_on_startup_error"]
@@ -215,6 +216,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self._octolapse_settings.main_settings.show_trigger_state_changes = (
                 not self._octolapse_settings.main_settings.show_trigger_state_changes
             )
+
+        elif panel_type == "show_snapshot_plan_information":
+            self._octolapse_settings.main_settings.show_snapshot_plan_information = (
+                not self._octolapse_settings.main_settings.show_snapshot_plan_information
+            )
+
         else:
             return json.dumps({'error': "Unknown panel_type."}), 500, {'ContentType': 'application/json'}
 
@@ -907,7 +914,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self._octolapse_settings.Logger.log_print_state_change(
                         "Octolapse cannot start the timelapse when printing from SD."
                     )
-                    self.on_print_start_failed(message)
+                    self.on_print_start_ffailed(message)
                     return
             if event == Events.PRINTER_STATE_CHANGED:
                 self.send_state_changed_message({"status": self.get_status_dict()})
@@ -1296,23 +1303,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     printer.snapshot_min_z,
                     printer.snapshot_max_z
                 )
-
-            snapshot_gcode_settings = printer.gcode_generation_settings
-            retraction_length = (
-                0 if not snapshot_gcode_settings.retract_before_move else snapshot_gcode_settings.retraction_length
-            )
-            z_lift_height = (
-                0 if not snapshot_gcode_settings.lift_when_retracted else snapshot_gcode_settings.z_lift_height
-            )
-
             preprocessor = octoprint_octolapse.stabilization_preprocessing.NearestToPrintPreprocessor(
                 self._octolapse_settings.Logger,
                 printer,
+                stabilization,
                 None,
                 octoprint_printer_profile,
                 False,
-                retraction_distance=0 if stabilization.lock_to_corner_disable_retract else retraction_length,
-                z_lift_height=0 if stabilization.lock_to_corner_disable_z_lift else z_lift_height,
                 nearest_to=stabilization.lock_to_corner_type,
                 favor_axis=stabilization.lock_to_corner_favor_axis,
                 height_increment=stabilization.lock_to_corner_height_increment,
@@ -1343,9 +1340,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def send_state_changed_message(self, state):
         data = {
-            "type": "state-changed"
+            "type": "state-changed",
+            "state": state
         }
-        data.update(state)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_settings_changed_message(self, client_id=""):
@@ -1399,12 +1396,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             type="render-complete", msg="Octolapse has completed a rendering."))
 
     def on_timelapse_start(self):
-        state_data = self._timelapse.to_state_dict()
         data = {
-            "type": "timelapse-start", "msg": "Octolapse has started a timelapse.", "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
+            "type": "timelapse-start",
+            "msg": "Octolapse has started a timelapse.",
+            "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            "state": self._timelapse.to_state_dict(include_timelapse_start_data=True)
         }
-        data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_timelapse_end(self):
@@ -1442,14 +1440,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_state_loaded_message(self):
+        state_date = None
+        if self._timelapse is not None:
+            state_data = self._timelapse.to_state_dict(include_timelapse_start_data=True)
         data = {
             "type": "state-loaded",
             "msg": "The current state has been loaded.",
             "main_settings": self._octolapse_settings.main_settings.to_dict(),
             "status": self.get_status_dict(),
+            "state": state_data
         }
-        data.update(self._timelapse.to_state_dict())
-        self._plugin_manager.send_plugin_message(self._identifier, data)
+        try:
+            self._plugin_manager.send_plugin_message(self._identifier, data)
+        except Exception as e:
+            raise e
 
     def on_timelapse_complete(self):
         state_data = self._timelapse.to_state_dict()
@@ -1461,13 +1465,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_snapshot_start(self):
-        state_data = self._timelapse.to_state_dict()
-
         data = {
-            "type": "snapshot-start", "msg": "Octolapse is taking a snapshot.", "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
+            "type": "snapshot-start",
+            "msg": "Octolapse is taking a snapshot.",
+            "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            "state": self._timelapse.to_state_dict(include_timelapse_start_data=False)
         }
-        data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_snapshot_end(self, *args):
@@ -1484,13 +1488,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 snapshot_error = snapshot_payload["error"]
 
         data = {
-            "type": "snapshot-complete", "msg": "Octolapse has completed the current snapshot.", "status": status_dict,
-            "main_settings": self._octolapse_settings.main_settings.to_dict(), 'success': success, 'error': error,
-            "snapshot_success": snapshot_success, "snapshot_error": snapshot_error
-
-        }
-        state_data = self._timelapse.to_state_dict()
-        data.update(state_data)
+            "type": "snapshot-complete",
+            "msg": "Octolapse has completed the current snapshot.",
+            "status": status_dict,
+            "state": self._timelapse.to_state_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            'success': success,
+            'error': error,
+            "snapshot_success": snapshot_success,
+            "snapshot_error": snapshot_error
+        };
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def on_new_thumbnail_available(self, guid):
@@ -1717,7 +1724,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.profiles.rendering.js",
                 "js/octolapse.profiles.camera.js",
                 "js/octolapse.profiles.debug.js",
-                "js/octolapse.status.js"
+                "js/octolapse.status.js",
+                "js/octolapse.status.snapshotplan.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"])

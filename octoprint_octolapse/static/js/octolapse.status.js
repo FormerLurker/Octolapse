@@ -51,16 +51,16 @@ $(function () {
                 'cameras': ko.observableArray([{name: "Unknown", guid: "", enabled: false}]),
                 'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
-
+            self.is_real_time = ko.observable(true);
             self.current_camera_guid = ko.observable()
-
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
             self.TriggerState = new Octolapse.triggersStateViewModel();
+            self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
             self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
-
+            self.current_print_volume = null;
 
             self.showLatestSnapshotDialog = function () {
 
@@ -166,7 +166,7 @@ $(function () {
                     }
                 }
                 return null;
-            }
+            };
 
             self.hasConfigIssues = ko.computed(function(){
                 var hasConfigIssues = !self.hasOneCameraEnabled() || !self.hasPrinterSelected() || !self.has_configured_printer_profile();
@@ -403,7 +403,7 @@ $(function () {
             /**
              * @return {string}
              */
-            self.GetTriggerStateTemplate = function (type) {
+            self.getTriggerStateTemplate = function (type) {
                 switch (type) {
                     case "gcode":
                         return "gcode-trigger-status-template";
@@ -428,7 +428,7 @@ $(function () {
                 }
                 if(!Octolapse.Globals.enabled())
                     return 'Octolapse is disabled.';
-                if(!self.PositionState._is_initialized())
+                if(!self.PositionState.is_initialized())
                     return 'Octolapse is waiting for more information from the server.';
                 if( self.PositionState.hasPositionStateErrors())
                     return 'Octolapse is waiting to initialize.';
@@ -442,7 +442,7 @@ $(function () {
                 //console.log("GettingTimelapseStateText")
                 if(!self.is_timelapse_active())
                     return 'Octolapse is not running';
-                if(!self.PositionState._is_initialized())
+                if(!self.PositionState.is_initialized())
                     return 'Waiting for update from server.  You may have to turn on the "Position State Info Panel" from the "Current Settings" below to receive an update.';
                 if( self.PositionState.hasPositionStateErrors())
                     return 'Waiting to initialize';
@@ -452,7 +452,7 @@ $(function () {
             self.getTimelapseStateColor =  ko.pureComputed(function () {
                 if(!self.is_timelapse_active())
                     return '';
-                if(!self.PositionState._is_initialized() || self.PositionState.hasPositionStateErrors())
+                if(!self.PositionState.is_initialized() || self.PositionState.hasPositionStateErrors())
                     return 'orange';
                 return 'greenyellow';
             }, self);
@@ -469,34 +469,31 @@ $(function () {
                 return 'Octolapse - Disabled';
             }, self);
 
-            self.updatePreCalculatedStabilization = function(state)
+            self.updateState = function(state)
             {
-                console.log("updatePreCalculatedStabilization NOT IMPLEMENTED!")
-                //TODO:  FILL THIS IN
-            }
-            self.updateStabilizationType = function(type)
-            {
-                console.log("updateStabilizationType")
-                //TODO:  FILL THIS IN
-            }
 
-            self.updatePositionState = function (state) {
-                // State variables
-                self.PositionState.update(state);
-            };
-
-            self.updatePosition = function (state) {
-                // State variables
-                self.Position.update(state);
-            };
-
-            self.updateExtruderState = function (state) {
-                // State variables
-                self.ExtruderState.update(state);
-            };
-
-            self.updateTriggerStates = function (states) {
-                self.TriggerState.update(states);
+                console.log("octolapse.status.js - Updating State")
+                self.is_real_time(state.stabilization_type == "real-time")
+                if ( self.is_real_time()) {
+                    if (state.position != null) {
+                        self.Position.update(state.position);
+                    }
+                    if (state.position_state != null) {
+                        self.PositionState.update(state.position_state);
+                    }
+                    if (state.extruder != null) {
+                        self.ExtruderState.update(state.extruder);
+                    }
+                    if (state.trigger_state != null) {
+                        self.TriggerState.update(state.trigger_state);
+                    }
+                }
+                else{
+                    if (state.snapshot_plan != null) {
+                        console.log("Updating Snapshot Plan State.")
+                        self.SnapshotPlanState.update(state.snapshot_plan);
+                    }
+                }
             };
 
             self.update = function (settings) {
@@ -526,7 +523,7 @@ $(function () {
 
             self.onTimelapseStart = function () {
                 self.TriggerState.removeAll();
-                self.PositionState._is_initialized(false);
+                self.PositionState.is_initialized(false);
             };
 
             self.onTimelapseStop = function () {
@@ -719,7 +716,7 @@ $(function () {
         */
         Octolapse.positionStateViewModel = function () {
             var self = this;
-            self.GCode = ko.observable("");
+            self.gcode = ko.observable("");
             self.x_homed = ko.observable(false);
             self.y_homed = ko.observable(false);
             self.z_homed = ko.observable(false);
@@ -739,7 +736,7 @@ $(function () {
             self.is_initialized = ko.observable(false);
 
             self.update = function (state) {
-                this.GCode(state.GCode);
+                this.gcode(state.gcode);
                 this.x_homed(state.x_homed);
                 this.y_homed(state.y_homed);
                 this.z_homed(state.z_homed);
@@ -756,7 +753,7 @@ $(function () {
                 this.has_position_error(state.has_position_error);
                 this.position_error(state.position_error);
                 this.is_metric(state.is_metric);
-                this._is_initialized(true);
+                this.is_initialized(true);
             };
 
             self.getCheckedIconClass = function (value, trueClass, falseClass, nullClass) {
@@ -883,29 +880,29 @@ $(function () {
         };
         Octolapse.positionViewModel = function () {
             var self = this;
-            self.F = ko.observable(0).extend({numeric: 2});
-            self.X = ko.observable(0).extend({numeric: 2});
-            self.XOffset = ko.observable(0).extend({numeric: 2});
-            self.Y = ko.observable(0).extend({numeric: 2});
-            self.YOffset = ko.observable(0).extend({numeric: 2});
-            self.Z = ko.observable(0).extend({numeric: 2});
-            self.ZOffset = ko.observable(0).extend({numeric: 2});
-            self.E = ko.observable(0).extend({numeric: 2});
-            self.EOffset = ko.observable(0).extend({numeric: 2});
-            self.Features = ko.observableArray([]);
+            self.f = ko.observable(0).extend({numeric: 2});
+            self.x = ko.observable(0).extend({numeric: 2});
+            self.x_offset = ko.observable(0).extend({numeric: 2});
+            self.y = ko.observable(0).extend({numeric: 2});
+            self.y_offset = ko.observable(0).extend({numeric: 2});
+            self.z = ko.observable(0).extend({numeric: 2});
+            self.z_offset = ko.observable(0).extend({numeric: 2});
+            self.e = ko.observable(0).extend({numeric: 2});
+            self.e_offset = ko.observable(0).extend({numeric: 2});
+            self.features = ko.observableArray([]);
             self.update = function (state) {
-                this.F(state.F);
-                this.X(state.X);
-                this.XOffset(state.XOffset);
-                this.Y(state.Y);
-                this.YOffset(state.YOffset);
-                this.Z(state.Z);
-                this.ZOffset(state.ZOffset);
-                this.E(state.E);
-                this.EOffset(state.EOffset);
-                this.Features(state.Features);
+                this.f(state.f);
+                this.x(state.x);
+                this.x_offset(state.x_offset);
+                this.y(state.y);
+                this.y_offset(state.y_offset);
+                this.z(state.z);
+                this.z_offset(state.z_offset);
+                this.e(state.e);
+                this.e_offset(state.e_offset);
+                this.features(state.features);
                 //console.log(this.Features());
-                //self.plotPosition(state.X, state.Y, state.Z);
+                //self.plotPosition(state.x, state.y, state.z);
             };
             /*
             self.plotPosition = function(x, y,z)
@@ -923,92 +920,92 @@ $(function () {
         Octolapse.extruderStateViewModel = function () {
             var self = this;
             // State variables
-            self.ExtrusionLengthTotal = ko.observable(0).extend({numeric: 2});
-            self.ExtrusionLength = ko.observable(0).extend({numeric: 2});
-            self.RetractionLength = ko.observable(0).extend({numeric: 2});
-            self.DeretractionLength = ko.observable(0).extend({numeric: 2});
-            self.IsExtrudingStart = ko.observable(false);
-            self.IsExtruding = ko.observable(false);
-            self.IsPrimed = ko.observable(false);
-            self.IsRetractingStart = ko.observable(false);
-            self.IsRetracting = ko.observable(false);
-            self.IsRetracted = ko.observable(false);
-            self.IsPartiallyRetracted = ko.observable(false);
-            self.IsDeretractingStart = ko.observable(false);
-            self.IsDeretracting = ko.observable(false);
-            self.IsDeretracted = ko.observable(false);
+            self.extrusion_length_total = ko.observable(0).extend({numeric: 2});
+            self.extrusion_length = ko.observable(0).extend({numeric: 2});
+            self.retraction_length = ko.observable(0).extend({numeric: 2});
+            self.deretraction_length = ko.observable(0).extend({numeric: 2});
+            self.is_extruding_start = ko.observable(false);
+            self.is_extruding = ko.observable(false);
+            self.is_primed = ko.observable(false);
+            self.is_retracting_start = ko.observable(false);
+            self.is_retracting = ko.observable(false);
+            self.is_retracted = ko.observable(false);
+            self.is_partially_retracted = ko.observable(false);
+            self.is_deretracting_start = ko.observable(false);
+            self.is_deretracting = ko.observable(false);
+            self.is_deretracted = ko.observable(false);
             self.has_changed = ko.observable(false);
 
             self.update = function (state) {
-                this.ExtrusionLengthTotal(state.ExtrusionLengthTotal);
-                this.ExtrusionLength(state.ExtrusionLength);
-                this.RetractionLength(state.RetractionLength);
-                this.DeretractionLength(state.DeretractionLength);
-                this.IsExtrudingStart(state.IsExtrudingStart);
-                this.IsExtruding(state.IsExtruding);
-                this.IsPrimed(state.IsPrimed);
-                this.IsRetractingStart(state.IsRetractingStart);
-                this.IsRetracting(state.IsRetracting);
-                this.IsRetracted(state.IsRetracted);
-                this.IsPartiallyRetracted(state.IsPartiallyRetracted);
-                this.IsDeretractingStart(state.IsDeretractingStart);
-                this.IsDeretracting(state.IsDeretracting);
-                this.IsDeretracted(state.IsDeretracted);
+                this.extrusion_length_total(state.extrusion_length_total);
+                this.extrusion_length(state.extrusion_length);
+                this.retraction_length(state.retraction_length);
+                this.deretraction_length(state.deretraction_length);
+                this.is_extruding_start(state.is_extruding_start);
+                this.is_extruding(state.is_extruding);
+                this.is_primed(state.is_primed);
+                this.is_retracting_start(state.is_retracting_start);
+                this.is_retracting(state.is_retracting);
+                this.is_retracted(state.is_retracted);
+                this.is_partially_retracted(state.is_partially_retracted);
+                this.is_deretracting_start(state.is_deretracting_start);
+                this.is_deretracting(state.is_deretracting);
+                this.is_deretracted(state.is_deretracted);
                 this.has_changed(state.has_changed);
             };
 
             self.getRetractionStateIconClass = ko.pureComputed(function () {
-                if (self.IsRetracting()) {
-                    if (self.IsPartiallyRetracted() && !self.IsRetracted())
+                if (self.is_retracting()) {
+                    if (self.is_partially_retracted() && !self.is_retracted())
                         return "fa-angle-up";
-                    else if (self.IsRetracted() && !self.IsPartiallyRetracted())
+                    else if (self.is_retracted() && !self.is_partially_retracted())
                         return "fa-angle-double-up";
                 }
                 return "fa-times-circle";
             }, self);
             self.getRetractionStateText = ko.pureComputed(function () {
 
-                if (self.IsRetracting()) {
+                if (self.is_retracting()) {
                     var text = "";
 
 
-                    if (self.IsPartiallyRetracted() && !self.IsRetracted()) {
-                        if (self.IsRetractingStart())
+                    if (self.is_partially_retracted() && !self.is_retracted()) {
+                        if (self.is_retracting_start())
                             text += "Start: ";
-                        text += self.RetractionLength() + "mm";
+                        text += self.retraction_length() + "mm";
                         return text;
                     }
-                    else if (self.IsRetracted() && !self.IsPartiallyRetracted()) {
-                        if (self.IsRetractingStart())
-                            return "Retracted Start: " + self.RetractionLength() + "mm";
+                    else if (self.is_retracted() && !self.is_partially_retracted()) {
+                        if (self.is_retracting_start())
+                            return "Retracted Start: " + self.retraction_length() + "mm";
                         else
-                            return "Retracted: " + self.RetractionLength() + "mm";
+                            return "Retracted: " + self.retraction_length() + "mm";
                     }
                 }
                 return "None";
             }, self);
             self.getDeretractionIconClass = ko.pureComputed(function () {
 
-                if (self.IsRetracting() && self.IsDeretracting())
+                if (self.is_retracting() && self.is_deretracting())
                     return "fa-exclamation-circle";
-                if (self.IsDeretracting() && self.IsDeretractingStart)
+                if (self.is_deretracting() && self.is_deretracting_start)
                     return "fa-level-down";
-                if (self.IsDeretracting())
+                if (self.is_deretracting())
                     return "fa-long-arrow-down";
                 return "fa-times-circle";
             }, self);
             self.getDeretractionStateText = ko.pureComputed(function () {
 
                 var text = "";
-                if (self.IsRetracting() && self.IsDeretracting())
+                if (self.is_retracting() && self.is_deretracting())
                     text = "Error";
-                else if (self.IsDeretracted()) {
-                    text = "Deretracted: " + self.DeretractionLength() + "mm";
+                else if (self.is_deretracted()) {
+                    text = "Deretracted: " + self.deretraction_length() + "mm";
                 }
-                else if (self.IsDeretracting()) {
-                    if (self.IsDeretractingStart())
+                else if (self.is_deretracting()) {
+                    if (self.is_deretracting_start())
                         text += "Start: ";
-                    text += self.DeretractionLength() + "mm";
+                    text += self.deretraction_length() + "mm";
                 }
                 else
                     text = "None";
@@ -1018,26 +1015,26 @@ $(function () {
 
             self.getExtrudingStateIconClass = ko.pureComputed(function () {
 
-                if (self.IsExtrudingStart() && !self.IsExtruding())
+                if (self.is_extruding_start() && !self.is_extruding())
                     return "exclamation-circle";
 
-                if (self.IsPrimed())
+                if (self.is_primed())
                     return "fa-arrows-h";
-                if (self.IsExtrudingStart())
+                if (self.is_extruding_start())
                     return "fa-play-circle-o";
-                if (self.IsExtruding())
+                if (self.is_extruding())
                     return "fa-play";
                 return "fa-times-circle";
             }, self);
             self.getExtrudingStateText = ko.pureComputed(function () {
-                if (self.IsExtrudingStart() && !self.IsExtruding())
+                if (self.is_extruding_start() && !self.is_extruding())
                     return "Error";
-                if (self.IsPrimed())
+                if (self.is_primed())
                     return "Primed";
-                if (self.IsExtrudingStart())
-                    return "Start: " + self.ExtrusionLength() + "mm";
-                if (self.IsExtruding())
-                    return self.ExtrusionLength() + "mm";
+                if (self.is_extruding_start())
+                    return "Start: " + self.extrusion_length() + "mm";
+                if (self.is_extruding())
+                    return self.extrusion_length() + "mm";
                 return "None";
             }, self);
         };
@@ -1045,12 +1042,12 @@ $(function () {
             var self = this;
 
             // State variables
-            self.Name = ko.observable();
-            self.Triggers = ko.observableArray();
+            self.name = ko.observable();
+            self.triggers = ko.observableArray();
             self.HasBeenCreated = false;
             self.create = function (trigger) {
                 var newTrigger = null;
-                switch (trigger.Type) {
+                switch (trigger.type) {
                     case "gcode":
                         newTrigger = new Octolapse.gcodeTriggerStateViewModel(trigger);
                         break;
@@ -1064,23 +1061,23 @@ $(function () {
                         newTrigger = new Octolapse.genericTriggerStateViewModel(trigger);
                         break;
                 }
-                self.Triggers.push(newTrigger);
+                self.triggers.push(newTrigger);
             };
 
             self.removeAll = function () {
-                self.Triggers.removeAll();
+                self.triggers.removeAll();
             };
 
             self.update = function (states) {
                 //console.log("Updating trigger states")
-                self.Name(states.Name);
-                var triggers = states.Triggers;
+                self.name(states.name);
+                var triggers = states.triggers;
                 for (var sI = 0; sI < triggers.length; sI++) {
                     var state = triggers[sI];
                     var foundState = false;
-                    for (var i = 0; i < self.Triggers().length; i++) {
-                        var currentTrigger = self.Triggers()[i];
-                        if (state.Type === currentTrigger.Type()) {
+                    for (var i = 0; i < self.triggers().length; i++) {
+                        var currentTrigger = self.triggers()[i];
+                        if (state.type === currentTrigger.type()) {
                             currentTrigger.update(state);
                             foundState = true;
                             break;
@@ -1096,8 +1093,8 @@ $(function () {
         Octolapse.genericTriggerStateViewModel = function (state) {
             //console.log("creating generic trigger state view model");
             var self = this;
-            self.Type = ko.observable(state.Type);
-            self.Name = ko.observable(state.Name);
+            self.type = ko.observable(state.type);
+            self.name = ko.observable(state.name);
             self.is_triggered = ko.observable(state.is_triggered);
             self.is_waiting = ko.observable(state.is_waiting);
             self.is_waiting_on_zhop = ko.observable(state.is_waiting_on_zhop);
@@ -1110,8 +1107,8 @@ $(function () {
             self.is_feature_allowed = ko.observable(state.is_feature_allowed);
             self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
-                self.Type(state.Type);
-                self.Name(state.Name);
+                self.type(state.type);
+                self.name(state.name);
                 self.is_triggered(state.is_triggered);
                 self.is_waiting(state.is_waiting);
                 self.is_waiting_on_zhop(state.is_waiting_on_zhop);
@@ -1189,8 +1186,8 @@ $(function () {
         Octolapse.gcodeTriggerStateViewModel = function (state) {
             //console.log("creating gcode trigger state view model");
             var self = this;
-            self.Type = ko.observable(state.Type);
-            self.Name = ko.observable(state.Name);
+            self.type = ko.observable(state.type);
+            self.name = ko.observable(state.name);
             self.is_triggered = ko.observable(state.is_triggered);
             self.is_waiting = ko.observable(state.is_waiting);
             self.is_waiting_on_zhop = ko.observable(state.is_waiting_on_zhop);
@@ -1203,8 +1200,8 @@ $(function () {
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
-                self.Type(state.Type);
-                self.Name(state.Name);
+                self.type(state.type);
+                self.name(state.name);
                 self.is_triggered(state.is_triggered);
                 self.is_waiting(state.is_waiting);
                 self.is_waiting_on_zhop(state.is_waiting_on_zhop);
@@ -1286,8 +1283,8 @@ $(function () {
         Octolapse.layerTriggerStateViewModel = function (state) {
             //console.log("creating layer trigger state view model");
             var self = this;
-            self.Type = ko.observable(state.Type);
-            self.Name = ko.observable(state.Name);
+            self.type = ko.observable(state.type);
+            self.name = ko.observable(state.name);
             self.is_triggered = ko.observable(state.is_triggered);
             self.is_waiting = ko.observable(state.is_waiting);
             self.is_waiting_on_zhop = ko.observable(state.is_waiting_on_zhop);
@@ -1306,8 +1303,8 @@ $(function () {
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
-                self.Type(state.Type);
-                self.Name(state.Name);
+                self.type(state.type);
+                self.name(state.name);
                 self.is_triggered(state.is_triggered);
                 self.is_waiting(state.is_waiting);
                 self.is_waiting_on_zhop(state.is_waiting_on_zhop);
@@ -1413,8 +1410,8 @@ $(function () {
         Octolapse.timerTriggerStateViewModel = function (state) {
             //console.log("creating timer trigger state view model");
             var self = this;
-            self.Type = ko.observable(state.Type);
-            self.Name = ko.observable(state.Name);
+            self.type = ko.observable(state.type);
+            self.name = ko.observable(state.name);
             self.is_triggered = ko.observable(state.is_triggered);
             self.is_waiting = ko.observable(state.is_waiting);
             self.is_waiting_on_zhop = ko.observable(state.is_waiting_on_zhop);
@@ -1430,8 +1427,8 @@ $(function () {
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
-                self.Type(state.Type);
-                self.Name(state.Name);
+                self.type(state.type);
+                self.name(state.name);
                 self.is_triggered(state.is_triggered);
                 self.is_waiting(state.is_waiting);
                 self.is_waiting_on_zhop(state.is_waiting_on_zhop);

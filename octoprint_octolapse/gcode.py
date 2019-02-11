@@ -77,7 +77,8 @@ class SnapshotGcodeGenerator(object):
 
     def __init__(self, octolapse_settings, octoprint_printer_profile):
         self.Settings = octolapse_settings  # type: OctolapseSettings
-        self.StabilizationPaths = self.Settings.profiles.current_stabilization().get_stabilization_paths()
+        self._stabilization = self.Settings.profiles.current_stabilization()
+        self.StabilizationPaths = self._stabilization.get_stabilization_paths()
         self.Snapshot = self.Settings.profiles.current_snapshot()
         self.Printer = self.Settings.profiles.current_printer()
         self.snapshot_command = self.Printer.snapshot_command
@@ -102,13 +103,16 @@ class SnapshotGcodeGenerator(object):
         # current valuse
         self.x_current = None
         self.y_current = None
+        self.z_current = None
         self.f_current = None
         self.is_relative_current = None
         self.is_extruder_relative_current = None
         self.retracted_length_current = None
         # calculated values
-        self.distance_to_lift = None
+        # calculate printer retract amount
         self.length_to_retract = None
+        self.distance_to_lift = None
+
         # stored gcode
         self.parsed_gcode = None
         # will hold the position and extruder state of the command that triggered the snapshot
@@ -161,6 +165,7 @@ class SnapshotGcodeGenerator(object):
         # the snapshot
         self.x_current = self.x_return
         self.y_current = self.y_return
+        self.z_current = self.z_return
         self.f_current = self.f_return
         self.is_relative_current = self.is_relative_return
         self.is_extruder_relative_current = self.is_extruder_relative_return
@@ -193,24 +198,26 @@ class SnapshotGcodeGenerator(object):
         self.parsed_gcode = parsed_command.gcode
 
         # record the return position, which is the current position
-        self.x_return = snapshot_plan.x
-        self.y_return = snapshot_plan.y
-        self.z_return = snapshot_plan.z
-        self.f_return = snapshot_plan.speed
-        self.is_relative_return = snapshot_plan.is_xyz_relative
-        self.is_extruder_relative_return = snapshot_plan.is_e_relative
-        self.is_metric_return = snapshot_plan.is_metric
+        self.x_return = snapshot_plan.return_position.x
+        self.y_return = snapshot_plan.return_position.y
+        self.z_return = snapshot_plan.return_position.z
+        self.f_return = snapshot_plan.return_position.f
+        self.is_relative_return = snapshot_plan.return_position.is_relative
+        self.is_extruder_relative_return = snapshot_plan.return_position.is_extruder_relative
+        self.is_metric_return = snapshot_plan.return_position.is_metric
 
         # keep track of the current position while creating gcode below.
         # these values will be updated and used to make sure we don't
         # issue gcodes that don't move the axis, which would slow down
         # the snapshot
-        self.x_current = self.x_return
-        self.y_current = self.y_return
-        self.f_current = self.f_return
-        self.is_relative_current = self.is_relative_return
-        self.is_extruder_relative_current = self.is_extruder_relative_return
-        self.retracted_length_current = 0
+        assert(isinstance(snapshot_plan.initial_position, Pos))
+        self.x_current = snapshot_plan.initial_position.x
+        self.y_current = snapshot_plan.initial_position.y
+        self.f_current = snapshot_plan.initial_position.z
+        self.is_relative_current = snapshot_plan.initial_position.is_relative
+        self.is_extruder_relative_current = snapshot_plan.initial_position.is_extruder_relative
+        self.retracted_length_current = snapshot_plan.initial_position.retraction_length
+
         self.distance_to_lift = snapshot_plan.lift_amount
         self.length_to_retract = snapshot_plan.retract_amount
 
@@ -777,8 +784,9 @@ class SnapshotGcodeGenerator(object):
         if not self.initialize_for_snapshot_plan_processing(snapshot_plan, parsed_command, g90_influences_extruder):
             return None
 
-        self.snapshot_gcode.X = snapshot_plan.x
-        self.snapshot_gcode.Y = snapshot_plan.y
+        self.snapshot_gcode.ReturnX = snapshot_plan.return_position.x
+        self.snapshot_gcode.ReturnY = snapshot_plan.return_position.y
+        self.snapshot_gcode.ReturnZ = snapshot_plan.return_position.z
 
         if not self.has_snapshot_position_errors:
             if snapshot_plan.send_parsed_command == "first":
@@ -796,7 +804,6 @@ class SnapshotGcodeGenerator(object):
                 if step.action == Preprocessing.TRAVEL_ACTION:
                     self.add_travel_action(step)
                 if step.action == Preprocessing.SNAPSHOT_ACTION:
-                    # todo: support multiple snapshots maybe? however, not today.
                     self.add_snapshot_action()
 
             # Create Return Gcode

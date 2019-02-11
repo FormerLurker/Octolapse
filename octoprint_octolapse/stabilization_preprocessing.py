@@ -119,7 +119,7 @@ class PositionPreprocessor(object):
         if end_progress:
             self.update_progress_callback(100, self.end_time - self.start_time, self.current_line)
         else:
-            if self.file is None:
+            if self.file is not None:
                 self.current_file_position = self.file.tell()
             self.update_progress_callback(self.get_percent_finished(), time.time() - self.start_time, self.current_line)
 
@@ -158,37 +158,62 @@ TRAVEL_ACTION = "travel"
 SNAPSHOT_ACTION = "snapshot"
 class SnapshotPlanStep(object):
     def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.e = e
+        self.f = f
         self.action = action
-        if action == TRAVEL_ACTION:
-            self.X = x
-            self.Y = y
-            self.Z = z
-            self.e = e
-            self.f = f
 
+    def to_dict(self):
+        return {
+            "action": self.action,
+            "x": self.x,
+            "y": self.y,
+            "z": self.z,
+            "e": self.e,
+            "f": self.f,
+        }
 
 class SnapshotPlan(object):
-    def __init__(self, initial_position, file_line_number, saved_position_file_position, z_lift_height, retraction_length, parsed_command,
+    def __init__(self,
+                 initial_position,
+                 snapshot_positions,
+                 return_position,
+                 file_line_number,
+                 saved_position_file_position,
+                 z_lift_height,
+                 retraction_length,
+                 parsed_command,
                  send_parsed_command='first'):
         self.file_line_number = file_line_number
-        self.x = initial_position.x
-        self.y = initial_position.y
-        self.z = initial_position.z
-        self.speed = initial_position.f
-        self.is_xyz_relative = initial_position.is_relative
-        self.is_e_relative = initial_position.is_extruder_relative
-        self.lift_amount = initial_position.distance_to_zlift(z_lift_height)
-        self.retract_amount = initial_position.length_to_retract(retraction_length)
-        self.is_metric = initial_position.is_metric
+        self.initial_position = initial_position
+        self.snapshot_positions = snapshot_positions
+        self.return_position = return_position
         self.steps = []
         self.parsed_command = parsed_command
         self.send_parsed_command = send_parsed_command
         self.saved_position_file_position = saved_position_file_position
+        self.lift_amount = z_lift_height
+        self.retract_amount = retraction_length
 
     def add_step(self, step):
         assert (isinstance(step, SnapshotPlanStep))
         self.steps.append(step)
 
+    def to_dict(self):
+        return {
+            "file_line_number": self.file_line_number,
+            "initial_position": self.initial_position.to_dict(),
+            "snapshot_positions": [x.to_dict() for x in self.snapshot_positions],
+            "return_position": self.return_position.to_dict(),
+            "steps": [x.to_dict() for x in self.steps],
+            "parsed_command": self.parsed_command.to_dict(),
+            "send_parsed_command": self.send_parsed_command,
+            "saved_position_file_position": self.saved_position_file_position,
+            "lift_amount": self.lift_amount,
+            "retract_amount": self.retract_amount,
+        }
 
 class NearestToPrintPreprocessor(PositionPreprocessor):
     FRONT_LEFT = "front-left"
@@ -198,7 +223,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
     FAVOR_X = "x"
     FAVOR_Y = "y"
 
-    def __init__(self, logger, printer_profile, snapshot_profile, octoprint_printer_profile, g90_influences_extruder,
+    def __init__(self, logger, printer_profile, stabilization_profile, snapshot_profile, octoprint_printer_profile, g90_influences_extruder,
                  nearest_to=FRONT_LEFT, favor_axis=FAVOR_X, bounding_box=None, update_progress_callback=None,
                  process_error_callback=None, z_lift_height=0, retraction_distance=0, height_increment=0):
         super(NearestToPrintPreprocessor, self).__init__(
@@ -224,10 +249,15 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
 
         self.nearest_to = nearest_to
         self.favor_x = favor_axis == self.FAVOR_X
-        self.z_lift_height = 0
-        self.retraction_distance = 0
-        self.z_lift_height = z_lift_height
-        self.retraction_distance = retraction_distance
+        snapshot_gcode_settings = printer_profile.gcode_generation_settings
+        retraction_length = (
+            0 if not snapshot_gcode_settings.retract_before_move else snapshot_gcode_settings.retraction_length
+        )
+        z_lift_height = (
+            0 if not snapshot_gcode_settings.lift_when_retracted else snapshot_gcode_settings.z_lift_height
+        )
+        self.retraction_distance = 0 if stabilization_profile.lock_to_corner_disable_retract else retraction_length
+        self.z_lift_height = 0 if stabilization_profile.lock_to_corner_disable_z_lift else z_lift_height
         self.height_increment = height_increment
         self.current_layer = 0
         self.current_height = 0
@@ -243,15 +273,17 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
             # On layer change create a plan
             # TODO:  get rid of newlines and whitespace in the fast gcode parser
             self.saved_position.parsed_command.gcode = self.saved_position.parsed_command.gcode.strip()
+            # the initial, snapshot and return positions are the same here
             plan = SnapshotPlan(
-                self.saved_position,
+                self.saved_position,  # the initial position
+                [self.saved_position],  # snapshot positions
+                self.saved_position,  # return position
                 self.saved_position_line,
                 self.saved_position_file_position,
                 self.z_lift_height,
                 self.retraction_distance,
                 self.saved_position.parsed_command,
                 send_parsed_command='first'
-
             )
             plan.add_step(SnapshotPlanStep(SNAPSHOT_ACTION))
             # add the plan to our list of plans
@@ -304,30 +336,65 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
         if self.saved_position is None:
             return True
 
-        first_coordinate = position.x if self.favor_x else position.y
-        first_coordinate_saved = self.saved_position.x if self.favor_x else self.saved_position.y
-        second_coordinate = position.y if self.favor_x else position.x
-        second_coordinate_saved = self.saved_position.y if self.favor_x else self.saved_position.x
-
         if self.nearest_to == NearestToPrintPreprocessor.FRONT_LEFT:
-            if first_coordinate < first_coordinate_saved:
-                return True
-            elif first_coordinate == first_coordinate_saved and second_coordinate < second_coordinate_saved:
-                return True
+            if self.favor_x:
+                if position.x > self.saved_position.x:
+                    return False
+                elif position.x < self.saved_position.x:
+                    return True
+                elif position.y < self.saved_position.y:
+                    return True
+            else:
+                if position.y > self.saved_position.y:
+                    return False
+                if position.y < self.saved_position.y:
+                    return True
+                elif position.x < self.saved_position.x:
+                    return True
         elif self.nearest_to == NearestToPrintPreprocessor.FRONT_RIGHT:
-            if first_coordinate < first_coordinate_saved:
-                return True
-            elif first_coordinate == first_coordinate_saved and second_coordinate > second_coordinate_saved:
-                return True
+            if self.favor_x:
+                if position.x < self.saved_position.x:
+                    return False
+                if position.x > self.saved_position.x:
+                    return True
+                elif position.y < self.saved_position.y:
+                    return True
+                else:
+                    if position.y > self.saved_position.y:
+                        return False
+                    if position.y < self.saved_position.y:
+                        return True
+                    elif position.x > self.saved_position.x:
+                        return True
         elif self.nearest_to == NearestToPrintPreprocessor.BACK_LEFT:
-            if first_coordinate > first_coordinate_saved:
-                return True
-            elif first_coordinate == first_coordinate_saved and second_coordinate < second_coordinate_saved:
-                return True
+            if self.favor_x:
+                if position.x > self.saved_position.x:
+                    return False
+                if position.x < self.saved_position.x:
+                    return True
+                elif position.y > self.saved_position.y:
+                    return True
+            else:
+                if position.y < self.saved_position.y:
+                    return False
+                if position.y > self.saved_position.y:
+                    return True
+                elif position.x < self.saved_position.x:
+                    return True
         elif self.nearest_to == NearestToPrintPreprocessor.BACK_RIGHT:
-            if first_coordinate > first_coordinate_saved:
-                return True
-            elif first_coordinate == first_coordinate_saved and second_coordinate > second_coordinate_saved:
-                return True
+            if self.favor_x:
+                if position.x < self.saved_position.x:
+                    return False
+                if position.x > self.saved_position.x:
+                    return True
+                elif position.y > self.saved_position.y:
+                    return True
+            else:
+                if position.y < self.saved_position.y:
+                    return False
+                if position.y > self.saved_position.y:
+                    return True
+                elif position.x > self.saved_position.x:
+                    return True
 
         return False

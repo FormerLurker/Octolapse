@@ -679,6 +679,7 @@ $(function () {
         self.show_position_changes = ko.observable(false);
         self.show_extruder_state_changes = ko.observable(false);
         self.show_trigger_state_changes = ko.observable(false);
+        self.show_snapshot_plan_information = ko.observable(false);
         self.auto_reload_latest_snapshot = ko.observable(false);
         self.auto_reload_frames = ko.observable(5);
         self.is_admin = ko.observable(false);
@@ -700,12 +701,14 @@ $(function () {
         };
 
         self.startup_complete = false;
+
         self.onStartupComplete = function () {
             //console.log("Startup Complete")
             self.getInitialState();
             self.startup_complete = true;
 
         };
+
         self.onDataUpdaterReconnect = function () {
             //console.log("Reconnected Client")
             self.getInitialState();
@@ -764,42 +767,20 @@ $(function () {
             Octolapse.Settings.clearSettings();
         };
 
-        self.updateState = function (state) {
+        self.updateState = function (data) {
             //console.log(state);
-            if (state.stabilization_type != null)
-                Octolapse.Status.updateStabilizationType(state.stabilization_type)
+            if (data.state != null) {
 
-            if (state.stabilization_type == "real-time") {
-                if (state.Position != null) {
-                    //console.log('octolapse.js - state-changed - Position');
-                    Octolapse.Status.updatePosition(state.position);
-                }
-                if (state.position_state != null) {
-                    //console.log('octolapse.js - state-changed - Position State');
-                    Octolapse.Status.updatePositionState(state.position_state);
-                }
-                if (state.extruder != null) {
-                    //console.log('octolapse.js - state-changed - Extruder State');
-                    Octolapse.Status.updateExtruderState(state.extruder);
-                }
-                if (state.trigger_state != null) {
-                    //console.log('octolapse.js - state-changed - Trigger State');
-                    Octolapse.Status.updateTriggerStates(state.trigger_state);
-                }
+                Octolapse.Status.updateState(data.state)
             }
-            else if (state.StabilizationType == "pre-calculated")
-            {
-                if(state.pre_calculated_stabilization_state)
-                    Octolapse.Status.updatePreCalculatedStabilization(state.pre_calculated_stabilization_state)
-            }
-            if (state.main_settings != null) {
+            if (data.main_settings != null) {
                 //console.log('octolapse.js - state-changed - Trigger State');
                 // Do not update the main settings unless they are saved.
-                //Octolapse.SettingsMain.update(state.MainSettings);
+                //Octolapse.SettingsMain.update(data.MainSettings);
                 // detect changes to auto_reload_latest_snapshot
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
 
-                Octolapse.Globals.update(state.main_settings);
+                Octolapse.Globals.update(data.main_settings);
                 Octolapse.SettingsMain.setSettingsVisibility(Octolapse.Globals.enabled());
                 if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
@@ -808,8 +789,9 @@ $(function () {
                 }
 
             }
-            if (state.status != null) {
-                Octolapse.Status.update(state.status);
+            if (data.status != null) {
+                console.log("Updating Status");
+                Octolapse.Status.update(data.status);
             }
             if (!self.HasLoadedState) {
                 Octolapse.Status.updateLatestSnapshotImage(true);
@@ -869,15 +851,20 @@ $(function () {
             else
                 self.show_extruder_state_changes(settings.show_extruder_state_changes);
 
+            if (ko.isObservable(settings.show_snapshot_plan_information))
+                self.show_snapshot_plan_information(settings.show_snapshot_plan_information());
+            else
+                self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
+
             if (ko.isObservable(settings.show_trigger_state_changes))
                 self.show_trigger_state_changes(settings.show_trigger_state_changes());
             else
-                self.show_trigger_state_changes(settings.show_trigger_state_changes)
+                self.show_trigger_state_changes(settings.show_trigger_state_changes);
 
             if (ko.isObservable(settings.show_real_snapshot_time))
                 self.show_real_snapshot_time(settings.show_real_snapshot_time());
             else
-                self.show_real_snapshot_time(settings.show_real_snapshot_time)
+                self.show_real_snapshot_time(settings.show_real_snapshot_time);
 
             if (ko.isObservable(settings.cancel_print_on_startup_error))
                 self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
@@ -893,7 +880,7 @@ $(function () {
             if (plugin !== "octolapse") {
                 return;
             }
-            //console.log("Message received.  Data:");
+            console.log("Message received.  Type:" + data.type);
             //console.log(data);
             switch (data.type) {
                 case "gcode-pre-processing-update":
@@ -962,6 +949,7 @@ $(function () {
                 case "state-changed":
                     {
                         console.log('octolapse.js - state-changed');
+                        console.log(data);
                         self.updateState(data);
                     }
                     break;

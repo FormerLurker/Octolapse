@@ -83,10 +83,11 @@ class Timelapse(object):
         self.position_errors_to_report = None
         # Settings that may be different after StartTimelapse is called
 
-        self._octoprint_printerProfile = None
+        self._octoprint_printer_profile = None
         self._current_job_info = None
         self._ffmpeg_path = None
         self._snapshot = None
+        self._stabilization = None
         self._gcode = None
         self._printer = None
         self._capture_snapshot = None
@@ -135,6 +136,10 @@ class Timelapse(object):
             return 0
         return self._capture_snapshot.SnapshotsTotal
 
+    def get_printer_volume_dict(self):
+        return utility.get_bounding_box(
+            self._printer, self._octoprint_printer_profile)
+
     def get_current_profiles(self):
         return self._current_profiles
 
@@ -153,6 +158,7 @@ class Timelapse(object):
         #  Also, we no longer need the original settings since we can use the global OctolapseSettings.Logger now
         self._printer = self._settings.profiles.current_printer()
         self._snapshot_command = self._printer.snapshot_command
+        self._stabilization = self._settings.profiles.current_stabilization()
         self.snapshot_plans = snapshot_plans
         self.current_snapshot_plan = None
         self.current_snapshot_plan_index = 0
@@ -166,7 +172,7 @@ class Timelapse(object):
         # time tracking - how much time did we add to the print?
         self.SecondsAddedByOctolapse = 0
         self.RequiresLocationDetectionAfterHome = False
-        self._octoprint_printerProfile = octoprint_printer_profile
+        self._octoprint_printer_profile = octoprint_printer_profile
         self._ffmpeg_path = ffmpeg_path
         self._current_job_info = utility.TimelapseJobInfo(
             job_guid=uuid.uuid4(),
@@ -614,29 +620,46 @@ class Timelapse(object):
         return timelapse_snapshot_payload
 
     # public functions
-    def to_state_dict(self):
+    def to_state_dict(self, include_timelapse_start_data=False):
         try:
             position_dict = None
             position_state_dict = None
             extruder_dict = None
             trigger_state = None
-
+            snapshot_plan = None
             if self._settings is not None:
-
-                if self._position is not None:
-                    position_dict = self._position.to_position_dict()
-                    position_state_dict = self._position.to_state_dict()
-                    extruder_dict = self._position.current_pos.to_extruder_state_dict()
-                if self._triggers is not None:
-                    trigger_state = {
-                        "name": self._triggers.name,
-                        "triggers": self._triggers.state_to_list()
+                if self.is_realtime:
+                    if self._position is not None:
+                        position_dict = self._position.to_position_dict()
+                        position_state_dict = self._position.to_state_dict()
+                        extruder_dict = self._position.current_pos.to_extruder_state_dict()
+                    if self._triggers is not None:
+                        trigger_state = {
+                            "name": self._triggers.name,
+                            "triggers": self._triggers.state_to_list()
+                        }
+                else:
+                    snapshot_plans = None
+                    printer_volume = None
+                    if include_timelapse_start_data:
+                        snapshot_plans = [x.to_dict() for x in self.snapshot_plans]
+                        printer_volume = self.get_printer_volume_dict()
+                    snapshot_plan = {
+                        "printer_volume": printer_volume,
+                        "snapshot_plans": snapshot_plans,
+                        "current_plan_index": self.current_snapshot_plan_index + 1,
+                        "current_file_line": self._current_file_line,
+                        "stabilization_type": "pre-calculated" if not self.is_realtime else "real-time",
                     }
+
             state_dict = {
                 "extruder": extruder_dict,
                 "position": position_dict,
                 "position_state": position_state_dict,
-                "trigger_state": trigger_state
+                "trigger_state": trigger_state,
+                "stabilization_type": "pre-calculated" if not self.is_realtime else "real-time",
+                "snapshot_plan": snapshot_plan
+
             }
             return state_dict
         except Exception as e:
@@ -1196,7 +1219,7 @@ class Timelapse(object):
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
 
-        if self._last_state_changed_message_time is not None:
+        if self._last_state_changed_message_time is not None and self._state != TimelapseState.Idle:
             # do not send more than 1 per second
 
             time_since_last_update = time.time() - self._last_state_changed_message_time
@@ -1214,90 +1237,96 @@ class Timelapse(object):
             # Notify any callbacks
             if self._state_changed_callback is not None:
 
-                    def send_real_time_change_message(has_position_state_error):
-                        trigger_change_list = None
-                        position_change_dict = None
-                        position_state_change_dict = None
-                        extruder_change_dict = None
-                        trigger_changes_dict = None
+                def send_real_time_change_message(has_position_state_error):
+                    trigger_change_list = None
+                    position_change_dict = None
+                    position_state_change_dict = None
+                    extruder_change_dict = None
+                    trigger_changes_dict = None
 
-                        # Get the changes
-                        if self._settings.main_settings.show_trigger_state_changes:
-                            trigger_change_list = self._triggers.state_to_list()
-                        if self._settings.main_settings.show_position_changes:
-                            position_change_dict = self._position.to_position_dict()
+                    # Get the changes
+                    if self._settings.main_settings.show_trigger_state_changes:
+                        trigger_change_list = self._triggers.state_to_list()
+                    if self._settings.main_settings.show_position_changes:
+                        position_change_dict = self._position.to_position_dict()
 
-                        update_position_state = (
-                            self._settings.main_settings.show_position_state_changes
-                            or has_position_state_error
-                        )
+                    update_position_state = (
+                        self._settings.main_settings.show_position_state_changes
+                        or has_position_state_error
+                    )
 
-                        if update_position_state:
-                            position_state_change_dict = self._position.to_state_dict()
-                        if self._settings.main_settings.show_extruder_state_changes:
-                            extruder_change_dict = self._position.current_pos.to_extruder_state_dict()
+                    if update_position_state:
+                        position_state_change_dict = self._position.to_state_dict()
+                    if self._settings.main_settings.show_extruder_state_changes:
+                        extruder_change_dict = self._position.current_pos.to_extruder_state_dict()
 
-                        # if there are any state changes, send them
-                        if (
-                            position_change_dict is not None
-                            or position_state_change_dict is not None
-                            or extruder_change_dict is not None
-                            or trigger_change_list is not None
-                        ):
-                            if trigger_change_list is not None and len(trigger_change_list) > 0:
-                                trigger_changes_dict = {
-                                    "name": self._triggers.name,
-                                    "triggers": trigger_change_list
-                                }
-                        change_dict = {
+                    # if there are any state changes, send them
+                    if (
+                        position_change_dict is not None
+                        or position_state_change_dict is not None
+                        or extruder_change_dict is not None
+                        or trigger_change_list is not None
+                    ):
+                        if trigger_change_list is not None and len(trigger_change_list) > 0:
+                            trigger_changes_dict = {
+                                "name": self._triggers.name,
+                                "triggers": trigger_change_list
+                            }
+                    change_dict = {
+                        "state": {
                             "extruder": extruder_change_dict,
                             "position": position_change_dict,
                             "position_state": position_state_change_dict,
                             "trigger_state": trigger_changes_dict,
-                            "StabilizationType": "real-time"
+                            "stabilization_type": self._stabilization.stabilization_type
                         }
+                    }
 
-                        if (
-                            change_dict["extruder"] is not None
-                            or change_dict["position"] is not None
-                            or change_dict["position_state"] is not None
-                            or change_dict["trigger_state"] is not None
-                        ):
-                            self._state_changed_callback(change_dict)
-                            self._last_state_changed_message_time = time.time()
-
-                    def send_pre_calculated_change_message():
-                        # if there are any state changes, send them
-                        next_snapshot_line = None
-                        if self.current_snapshot_plan is not None:
-                            next_snapshot_line = self.current_snapshot_plan.file_line_number
-
-                        change_dict = {
-                            "StabilizationType": "pre-calculated",
-                            "PreCalculatedStabilizationState":
-                            {
-                                "CurrentLine": self._current_file_line,
-                                "NextSnapshotLine": next_snapshot_line
-                            }
-                        }
+                    if (
+                        change_dict["extruder"] is not None
+                        or change_dict["position"] is not None
+                        or change_dict["position_state"] is not None
+                        or change_dict["trigger_state"] is not None
+                    ):
                         self._state_changed_callback(change_dict)
                         self._last_state_changed_message_time = time.time()
 
-                    if self.is_realtime:
-                        position_errors = False
-                        if self.has_position_errors_to_report:
-                            position_errors = self.position_errors_to_report
-                        elif self._position.current_pos.has_position_error:
-                            position_errors = self._position.current_pos.position_error
-                        self._state_change_message_thread = threading.Thread(
-                            target=send_real_time_change_message, args=[position_errors]
-                        )
-                    else:
-                        self._state_change_message_thread = threading.Thread(
-                            target=send_pre_calculated_change_message
-                        )
-                    self._state_change_message_thread.daemon = True
-                    self._state_change_message_thread.start()
+                def send_pre_calculated_change_message():
+                    if (
+                        not self._settings.main_settings.show_snapshot_plan_information or
+                        self.current_snapshot_plan is None
+                    ):
+                        return
+                    # if there are any state changes, send them
+                    change_dict = {
+                        "state": {
+                            "stabilization_type": "pre-calculated",
+                            "snapshot_plan":
+                            {
+                                "printer_volume": self.get_printer_volume_dict(),
+                                "current_plan_index": self.current_snapshot_plan_index + 1,
+                                "current_file_line": self._current_file_line,
+                            }
+                        }
+                    }
+                    self._state_changed_callback(change_dict)
+                    self._last_state_changed_message_time = time.time()
+
+                if self.is_realtime:
+                    position_errors = False
+                    if self.has_position_errors_to_report:
+                        position_errors = self.position_errors_to_report
+                    elif self._position.current_pos.has_position_error:
+                        position_errors = self._position.current_pos.position_error
+                    self._state_change_message_thread = threading.Thread(
+                        target=send_real_time_change_message, args=[position_errors]
+                    )
+                else:
+                    self._state_change_message_thread = threading.Thread(
+                        target=send_pre_calculated_change_message
+                    )
+                self._state_change_message_thread.daemon = True
+                self._state_change_message_thread.start()
 
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.

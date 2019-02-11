@@ -44,6 +44,7 @@ $(function () {
         self.show_position_changes = ko.observable();
         self.show_extruder_state_changes = ko.observable();
         self.show_trigger_state_changes = ko.observable();
+        self.show_snapshot_plan_information = ko.observable();
 
 
         // Informational Values
@@ -98,6 +99,7 @@ $(function () {
             self.show_position_changes(settings.show_position_changes);
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
+            self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
             self.show_real_snapshot_time(settings.show_real_snapshot_time);
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
             //self.platform(settings.platform());
@@ -142,6 +144,7 @@ $(function () {
             self.show_position_changes(Octolapse.Globals.show_position_changes());
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
+            self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information())
             self.show_real_snapshot_time(Octolapse.Globals.show_real_snapshot_time());
             self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error())
             var dialog = this;
@@ -254,6 +257,7 @@ $(function () {
                             , "show_position_changes": self.show_position_changes()
                             , "show_extruder_state_changes": self.show_extruder_state_changes()
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
+                            , "show_snapshot_plan_information": self.show_snapshot_plan_information()
                             , "show_real_snapshot_time": self.show_real_snapshot_time()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
                             , "client_id": Octolapse.Globals.client_id

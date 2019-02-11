@@ -951,6 +951,7 @@ class MainSettings(Settings):
         self.show_position_changes = False
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False
+        self.show_snapshot_plan_information = False
         self.show_real_snapshot_time = False
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform,

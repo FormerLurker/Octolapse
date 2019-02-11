@@ -127,6 +127,13 @@ class ParsedCommand(object):
         self.parameters = {} if parameters is None else parameters
         self.gcode = gcode
 
+    def to_dict(self):
+        return {
+            "cmd": self.cmd,
+            "parameters": self.parameters,
+            "gcode": self.gcode
+        }
+
 class Command(object):
 
     def __init__(self, command, name, display_template=None, parameters=None, text_only_parameter=False):

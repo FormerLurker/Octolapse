@@ -415,7 +415,7 @@ class TestLayerTrigger(unittest.TestCase):
         trigger = LayerTrigger(self.Settings)
         trigger.require_zhop = False  # no zhop required
         trigger.height_increment = 0  # Trigger on every layer change
-        position.Extruder.PrinterRetractionLength = 4
+        position.Extruder.Printerretraction_length = 4
 
         # Try on extruding start
         trigger.ExtruderTriggers = ExtruderTriggers(
@@ -495,7 +495,7 @@ class TestLayerTrigger(unittest.TestCase):
         # Try on extruding start right after home, should fail since we haven't extruded yet
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
-        state.IsExtrudingStart = True
+        state.is_extruding_start = True
         trigger.update(position)
         self.assertFalse(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -509,10 +509,10 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
 
         # try out on extruding
-        state.IsExtruding = True
+        state.is_extruding = True
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, True, None, None, None, None, None, None, None, None)
 
@@ -523,12 +523,12 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
 
         # try out on primed
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, True, None, None, None, None, None, None, None)
-        state.IsPrimed = True
+        state.is_primed = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -536,12 +536,12 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
 
         # try out on retracting start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, True, None, None, None, None, None, None)
-        state.IsRetractingStart = True
+        state.is_retracting_start = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -549,12 +549,12 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
 
         # try out on retracting
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, True, None, None, None, None, None)
-        state.IsRetracting = True
+        state.is_retracting = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -562,11 +562,11 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
         # try out on partially retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, True, None, None, None, None)
-        state.IsPartiallyRetracted = True
+        state.is_partially_retracted = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -574,11 +574,11 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
         # try out on retracted
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, True, None, None, None)
-        state.IsRetracted = True
+        state.is_retracted = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -586,11 +586,11 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
         # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, True, None, None)
-        state.IsDeretractingStart = True
+        state.is_deretracting_start = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -598,11 +598,11 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
         # try out on deretracting Start
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, True, None)
-        state.IsDeretracting = True
+        state.is_deretracting = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -610,10 +610,10 @@ class TestLayerTrigger(unittest.TestCase):
         # Reset the previous extruder state
         state = ExtruderState()
         position.Extruder.StateHistory[0] = state
-        state.IsPrimed = False
+        state.is_primed = False
         trigger.ExtruderTriggers = ExtruderTriggers(
             None, None, None, None, None, None, None, None, None, True)
-        state.IsDeretracted = True
+        state.is_deretracted = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))
@@ -632,11 +632,11 @@ class TestLayerTrigger(unittest.TestCase):
         # add the current state
         pos = position.current_pos
         state = position.Extruder.current_state
-        state.IsPrimed = False
+        state.is_primed = False
         # Use on extruding start for this test.
         trigger.ExtruderTriggers = ExtruderTriggers(
             True, None, None, None, None, None, None, None, None, None)
-        state.IsExtrudingStart = False
+        state.is_extruding_start = False
         pos.is_layer_change = True
 
         trigger.update(position)
@@ -648,7 +648,7 @@ class TestLayerTrigger(unittest.TestCase):
         self.assertFalse(trigger.is_triggered(0))
         self.assertTrue(trigger.is_waiting(0))
         # set the trigger and try again
-        state.IsExtrudingStart = True
+        state.is_extruding_start = True
         trigger.update(position)
         self.assertTrue(trigger.is_triggered(0))
         self.assertFalse(trigger.is_waiting(0))

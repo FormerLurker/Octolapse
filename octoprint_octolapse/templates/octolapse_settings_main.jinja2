@@ -88,6 +88,13 @@
       </span>
       <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
     </div>
+    <div>
+      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'}">
+        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_snapshot_plan_information()  ), 'fa-close': (!Octolapse.Globals.show_snapshot_plan_information() ) },style: { color: (Octolapse.Globals.show_snapshot_plan_information()  ) ? 'limegreen' : '' }"></span>
+      </span>
+      <span data-bind="text: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'"></span>
+    </div>
+
   </div>
   <div class="panel-footer">
     <div class="row-fluid">
@@ -248,6 +255,16 @@
                     </label>
                   </div>
                 </div>
+                <div class="control-group">
+                  <label class="control-label">Show Pre-Calculated Snapshot Plan Information</label>
+                  <div class="controls">
+                    <label class="checkbox">
+                      <input type="checkbox" title="Enable or disable the snapshot plan informaiton display" data-bind="checked:show_snapshot_plan_information" />Enabled
+                      <br/>
+                    </label>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

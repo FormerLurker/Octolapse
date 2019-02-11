@@ -116,7 +116,7 @@
                         </div>
 
 
-                        <div class="snapshot_refresh_container ">
+                        <div class="snapshot_refresh_container ol_hover_button">
                             <a class="start-animation"
                                data-bind="click:startSnapshotAnimation('octolapse_snapshot_thumbnail_container'),visible:Octolapse.Globals.auto_reload_latest_snapshot"
                                href="#">
@@ -167,11 +167,10 @@
                     <span data-bind="visible: Octolapse.Globals.show_real_snapshot_time, text: $data.snapshotTime()"></span>
                     <span data-bind="visible: !Octolapse.Globals.show_real_snapshot_time()"><i>Disabled</i></span>
                 </div>
-
             </div>
         </div>
     </div>
-    <div data-bind="visible: Octolapse.Status.is_timelapse_active">
+    <div data-bind="visible: Octolapse.Status.is_timelapse_active() && Octolapse.Status.is_real_time()">
         <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
             <div class="panel panel-default">
                 <div class="panel-heading ol-heading">
@@ -180,9 +179,9 @@
                     </h4>
                 </div>
                 <div class="panel-body">
-                    <div class="row-fluid" data-bind="foreach: TriggerState.Triggers">
+                    <div class="row-fluid" data-bind="foreach: TriggerState.triggers">
                         <div class="span4 octolapse-container"
-                             data-bind="template: { name: Octolapse.Status.GetTriggerStateTemplate(Type())}"></div>
+                             data-bind="template: { name: Octolapse.Status.getTriggerStateTemplate(type())}"></div>
                     </div>
                 </div>
             </div>
@@ -195,6 +194,10 @@
         </div>
 
     </div>
+    <div data-bind="visible: Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time()">
+        <div data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
+        </div>
+    </div>
     <div data-bind="template:'latest-snapshot-template'"></div>
     <div class="text-right"><h6>
         Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
@@ -206,6 +209,8 @@
 {% include "octolapse_status_extruder.jinja2" %}
 {% include "octolapse_status_position.jinja2" %}
 {% include "octolapse_status_position_state.jinja2" %}
+{% include "octolapse_status_snapshot_plan.jinja2" %}
 {% include "octolapse_tab_latest_snapshot.jinja2" %}
 {% include "octolapse_tab_settings_current.jinja2" %}
+
 
