@@ -613,8 +613,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.current_preprocessor_thread.stop()
             if self._printer.is_printing():
                 self._printer.cancel_print(tags={'startup-failed'})
-            return json.dumps({'success': True}), 404, {'ContentType': 'application/json'}
-        return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
+            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        return json.dumps({'success': False, 'message':"Preprocessing has already completed."}), 200, {'ContentType': 'application/json'}
     # blueprint helpers
     @staticmethod
     def get_download_file_response(file_path, download_filename):
