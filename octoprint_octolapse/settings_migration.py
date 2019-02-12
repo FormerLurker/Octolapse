@@ -185,6 +185,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
         profiles['printers'][printer['guid']] = printer
 
     for stabilization in settings_dict['stabilizations']:
+        stabilization["stabilization_type"] = StabilizationProfile.STABILIZATION_TYPE_REAL_TIME
         profiles['stabilizations'][stabilization['guid']] = stabilization
 
     for snapshot in settings_dict['snapshots']:
