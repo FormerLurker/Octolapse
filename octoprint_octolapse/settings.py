@@ -353,7 +353,7 @@ class StabilizationProfile(ProfileSettings):
         self.lock_to_corner_type = 'back-left'
         self.lock_to_corner_favor_axis = 'x'
         self.lock_to_corner_disable_z_lift = True
-        self.lock_to_corner_disable_retract = True
+        self.lock_to_corner_disable_retract = False
         self.lock_to_corner_height_increment = 0
         # Real Time stabilization options
         self.x_type = "relative"
@@ -1110,9 +1110,10 @@ class Profiles(Settings):
 
         if profile_type == "Printer":
             new_profile = PrinterProfile.create_from(profile)
-            new_profile.gcode_generation_settings = (
-                new_profile.get_current_slicer_settings().get_gcode_generation_settings()
-            )
+            if new_profile.slicer_type != 'automatic':
+                new_profile.gcode_generation_settings = (
+                    new_profile.get_current_slicer_settings().get_gcode_generation_settings()
+                )
             self.printers[guid] = new_profile
             if len(self.printers) == 1:
                 self.current_printer_profile_guid = new_profile.guid
