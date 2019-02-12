@@ -611,7 +611,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def cancel_preprocessing(self):
         if self.current_preprocessor_thread is not None:
             self.current_preprocessor_thread.stop()
-
+            if self._printer.is_printing():
+                self._printer.cancel_print(tags={'startup-failed'})
+            return json.dumps({'success': True}), 404, {'ContentType': 'application/json'}
+        return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
     # blueprint helpers
     @staticmethod
     def get_download_file_response(file_path, download_filename):
@@ -1380,11 +1383,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             self.current_preprocessor_thread.daemon = True
             self.current_preprocessor_thread.start()
-            self.current_preprocessor_thread = None
             return True
         return False
 
     def on_preprocessing_complete(self, results, parsed_command):
+        self.current_preprocessor_thread = None
         self.start_timelapse(results["snapshot_plans"])
         self._timelapse.preprocessing_finished(parsed_command)
 
