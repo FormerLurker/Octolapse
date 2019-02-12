@@ -1288,7 +1288,7 @@ class Timelapse(object):
                                 "triggers": trigger_change_list
                             }
                     change_dict = {
-                        "state": {
+                        {
                             "extruder": extruder_change_dict,
                             "position": position_change_dict,
                             "position_state": position_state_change_dict,
@@ -1314,14 +1314,13 @@ class Timelapse(object):
                         return
                     # if there are any state changes, send them
                     change_dict = {
-                        "state": {
-                            "stabilization_type": "pre-calculated",
-                            "snapshot_plan":
-                            {
-                                "printer_volume": self.get_printer_volume_dict(),
-                                "current_plan_index": self.current_snapshot_plan_index,
-                                "current_file_line": self._current_file_line,
-                            }
+
+                        "stabilization_type": "pre-calculated",
+                        "snapshot_plan":
+                        {
+                            "printer_volume": self.get_printer_volume_dict(),
+                            "current_plan_index": self.current_snapshot_plan_index,
+                            "current_file_line": self._current_file_line,
                         }
                     }
                     self._state_changed_callback(change_dict)

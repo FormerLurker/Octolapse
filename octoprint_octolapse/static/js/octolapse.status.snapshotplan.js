@@ -86,7 +86,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     previous_line = previous_plan.file_line_number;
                 var lines_total = current_plan.file_line_number - previous_line;
                 self.lines_total(lines_total);
-                self.progress_percent((1.0 - (lines_remaining / lines_total)) * 100);
+                self.progress_percent((1-(lines_remaining / lines_total)) * 100);
 
                 self.x_initial(showing_plan.initial_position.x);
                 self.y_initial(showing_plan.initial_position.y);
