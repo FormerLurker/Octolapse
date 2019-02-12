@@ -967,7 +967,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_print_paused(self):
         self._timelapse.on_print_paused()
 
-    def on_print_start(self):
+    def on_print_start(self, parsed_command):
 
         self._octolapse_settings.Logger.log_print_state_change(
             "Print start detected, attempting to start timelapse."
@@ -975,7 +975,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
             self._octolapse_settings.Logger.log_print_state_change("Octolapse is disabled.")
-            return
+            return True
 
         # see if the printer profile has been configured
 
@@ -983,7 +983,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             message = "Your Octolapse printer profile has not been configured.  Please copy your slicer settings" \
                       " into your printer profile and try again. "
             self.on_print_start_failed(message)
-            return
+            return True
 
         # determine the file source
         printer_data = self._printer.get_current_data()
@@ -996,7 +996,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             log_message = "Failed to get current job data on_print_start:" \
                           "  Current printer data: {0}".format(printer_data)
             self._octolapse_settings.Logger.log_error(log_message)
-            return
+            return True
 
         current_file = current_job.get("file", None)
         if not current_file:
@@ -1007,7 +1007,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             log_message = "Failed to get current file data on_print_start:" \
                           "  Current job data: {0}".format(current_job)
             self._octolapse_settings.Logger.log_error(log_message)
-            return
+            return True
 
         current_origin = current_file.get("origin", "unknown")
         if not current_origin:
@@ -1018,7 +1018,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "Current file data: {0}".format(current_file)
 
             self._octolapse_settings.Logger.log_error(log_message)
-            return
+            return True
 
         if current_origin != "local":
             message = "Octolapse only works when printing locally.  The current source ({0}) is incompatible.  " \
@@ -1026,13 +1026,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.on_print_start_failed(message)
             log_message = "Unable to start Octolapse when printing from {0}.".format(current_origin)
             self._octolapse_settings.Logger.log_warning(log_message)
-            return
+            return True
 
         if self._timelapse.get_current_state() != TimelapseState.Initializing:
             message = "Unable to start the timelapse when not in the Initializing state. StateId: " \
                       "{0}".format(self._timelapse.get_current_state())
             self.on_print_start_failed(message)
-            return
+            return True
 
         # test all cameras and look for at least one enabled camera
         found_camera = False
@@ -1048,7 +1048,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     except camera.CameraError as e:
                         self._octolapse_settings.Logger.log_exception(e)
                         self.on_print_start_failed(str(e))
-                        return
+                        return True
                     except Exception as e:
                         self._octolapse_settings.Logger.log_exception(e)
                         message = "An unknown exception occurred while testing the '{0}' camera profile.  Check " \
@@ -1066,7 +1066,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       "\" target=\"_blank\">this link</a> for assistance with this error.  Details:" \
                       " {0}".format(errors)
             self.on_print_start_failed(message)
-            return
+            return True
 
         success, errors = self.apply_camera_settings(settings_type="script")
         if not success:
@@ -1074,13 +1074,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       "script and try again, or remove the initialization script from your camera profile. Error " \
                       "Details: {0}".format(errors)
             self.on_print_start_failed(message)
-            return
+            return True
 
         try:
-            self._timelapse_settings = self.get_timelapse_parameters()
+            self._timelapse_settings = self.get_timelapse_parameters(parsed_command)
             if not self._timelapse_settings["success"]:
                 self.on_print_start_failed(self._timelapse_settings["error"])
-                return
+                return True
             if self._timelapse_settings["warning"]:
                 self.send_popup_message(self._timelapse_settings["warning"])
 
@@ -1088,17 +1088,20 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.start_timelapse()
                 if not self._timelapse_settings["success"]:
                     self.on_print_start_failed(self._timelapse_settings["error"])
-                    return
+                    return True
                 if self._timelapse_settings["warning"]:
                     self.send_popup_message(self._timelapse_settings["warning"])
+            else:
+                # we are preprocessing, return false so the print does not continue
+                return False
 
         except Exception as e:
             self._octolapse_settings.Logger.log_exception(e)
             self.send_popup_message("An unexpected error occurred while starting the Octolapse!  Please check "
                                     "plugin_octolapse.log for details")
-            return
+            return True
 
-    def get_timelapse_parameters(self):
+    def get_timelapse_parameters(self, parsed_command):
         # check for version 1.3.7 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
             return {'success': False,
@@ -1256,7 +1259,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if current_stabilization_clone.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED:
             # pre-process the stabilization
             preprocess_results = self.pre_process_stabilization(
-                current_stabilization_clone, current_printer_clone, octoprint_printer_profile, gcode_file_path)
+                current_stabilization_clone,
+                current_printer_clone,
+                octoprint_printer_profile,
+                gcode_file_path,
+                parsed_command
+            )
             if preprocess_results:
                 preprocessed = True
             else:
@@ -1331,8 +1339,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._octolapse_settings.Logger.log_print_state_change(message)
         self.send_plugin_message("print-start-error", message)
 
-    def pre_process_stabilization(self, stabilization, printer, octoprint_printer_profile, gcode_file_path):
-        snapshot_plan = None
+    def pre_process_stabilization(
+        self, stabilization, printer, octoprint_printer_profile, gcode_file_path, parsed_command
+    ):
         preprocessor = None
         if (
             stabilization.pre_calculated_stabilization_type ==
@@ -1366,7 +1375,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.send_pre_processing_start_message()
             # Create a thread to run the preprocessor
             self.current_preprocessor_thread = octoprint_octolapse.stabilization_preprocessing.PreprocessorThread(
-                preprocessor, gcode_file_path, self.on_preprocessing_complete
+                preprocessor, gcode_file_path, self.on_preprocessing_complete, parsed_command
             )
 
             self.current_preprocessor_thread.daemon = True
@@ -1375,8 +1384,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return True
         return False
 
-    def on_preprocessing_complete(self, results):
+    def on_preprocessing_complete(self, results, parsed_command):
         self.start_timelapse(results["snapshot_plans"])
+        self._timelapse.preprocessing_finished(parsed_command)
 
     def send_pre_processing_start_message(self):
         data = {

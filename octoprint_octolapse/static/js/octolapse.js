@@ -959,6 +959,7 @@ $(function () {
 
         self.cancelPreprocessing = function()
         {
+            console.log("Cancelling preprocessing")
             $.ajax({
                 url: "./plugin/octolapse/cancelPreprocessing",
                 type: "POST",
@@ -987,7 +988,7 @@ $(function () {
                 case "gcode-preprocessing-start":
                     // create the cancel popup
                     console.log("Creating a progress bar.");
-                    self.pre_processing_progress =  Octolapse.progressBar();
+                    self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     break;
                 case "gcode-preprocessing-update":
                     console.log("Octolapse received pre-processing update processing message.");

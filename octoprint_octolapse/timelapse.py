@@ -647,7 +647,7 @@ class Timelapse(object):
                     snapshot_plan = {
                         "printer_volume": printer_volume,
                         "snapshot_plans": snapshot_plans,
-                        "current_plan_index": self.current_snapshot_plan_index + 1,
+                        "current_plan_index": self.current_snapshot_plan_index,
                         "current_file_line": self._current_file_line,
                         "stabilization_type": "pre-calculated" if not self.is_realtime else "real-time",
                     }
@@ -779,14 +779,17 @@ class Timelapse(object):
     def get_is_taking_snapshot(self):
         return self._snapshot_task_queue.qsize() > 0
 
-    def on_print_start(self):
-        self._print_start_callback()
+    def on_print_start(self, parsed_command):
+        return self._print_start_callback(parsed_command)
 
     def on_print_start_failed(self, message):
         self._print_start_failed_callback(message)
 
     def on_gcode_queuing(self, command_string, cmd_type, gcode, tags):
-        self.detect_timelapse_start(command_string, tags)
+        if self.detect_timelapse_start(command_string, tags) == (None,):
+            # suppress command if the timelapse start detection routine tells us to
+            # this is because preprocessing happens on a thread, and will send any detected commands after completion.
+            return None,
 
         if not self.is_timelapse_active():
             if utility.is_snapshot_command(command_string, self._snapshot_command):
@@ -962,7 +965,7 @@ class Timelapse(object):
         if suppress_command:
             return None,
 
-    def detect_timelapse_start(self, cmd, tags):
+    def detect_timelapse_start(self, command_string, tags):
         # detect print start, including any start gcode script
         if (
             self._settings.main_settings.is_octolapse_enabled and
@@ -975,24 +978,36 @@ class Timelapse(object):
             )
         ):
             if self._octoprint_printer.set_job_on_hold(True):
-                try:
-                    self._state = TimelapseState.Initializing
 
-                    self._settings.Logger.log_print_state_change(
-                        "Print Start Detected.  Command: {0}, Tags:{1}".format(cmd, tags)
-                    )
-                    # call the synchronous callback on_print_start
-                    self.on_print_start()
+                self._state = TimelapseState.Initializing
 
+                self._settings.Logger.log_print_state_change(
+                    "Print Start Detected.  Command: {0}, Tags:{1}".format(command_string, tags)
+                )
+                # parse the command string
+                fast_cmd = fastgcodeparser.ParseGcode(command_string)
+                if fast_cmd:
+                    parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
+                else:
+                    parsed_command = ParsedCommand(None, None, command_string)
+
+                # call the synchronous callback on_print_start
+                if self.on_print_start(parsed_command):
                     if self._state == TimelapseState.WaitingForTrigger:
                         # set the current line to 0 so that the plugin checks for line 1 below after startup.
                         self._current_file_line = 0
-                finally:
                     self._octoprint_printer.set_job_on_hold(False)
+                else:
+                    return None,
             else:
                 self.on_print_start_failed(
                     "Unable to start timelapse, failed to acquire a job lock.  Print start failed."
                 )
+        return None
+
+    def preprocessing_finished(self, parsed_command):
+        self.send_snapshot_gcode_array([parsed_command.gcode])
+        self._octoprint_printer.set_job_on_hold(False)
 
     @staticmethod
     def get_current_file_line(tags):
@@ -1304,7 +1319,7 @@ class Timelapse(object):
                             "snapshot_plan":
                             {
                                 "printer_volume": self.get_printer_volume_dict(),
-                                "current_plan_index": self.current_snapshot_plan_index + 1,
+                                "current_plan_index": self.current_snapshot_plan_index,
                                 "current_file_line": self._current_file_line,
                             }
                         }

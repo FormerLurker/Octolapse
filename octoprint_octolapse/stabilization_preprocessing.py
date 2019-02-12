@@ -225,11 +225,12 @@ class SnapshotPlan(object):
 
 
 class PreprocessorThread(Thread):
-    def __init__(self, preprocessor, gcode_file_path, on_complete_callback):
+    def __init__(self, preprocessor, gcode_file_path, on_complete_callback, parsed_command):
         super(PreprocessorThread, self).__init__()
         self.preprocessor = preprocessor
         self.gcode_file_path = gcode_file_path
         self.on_complete_callback = on_complete_callback
+        self.parsed_command = parsed_command
 
     def join(self, timeout=None):
         super(PreprocessorThread, self).join(timeout=timeout)
@@ -237,12 +238,13 @@ class PreprocessorThread(Thread):
 
     def stop(self):
         self.preprocessor.running = False
+        self.on_complete_callback(self.preprocessor.get_results(), self.parsed_command)
 
     def run(self):
         self.preprocessor.running = True
         self.preprocessor.process_file(self.gcode_file_path)
         self.preprocessor.running = False
-        self.on_complete_callback(self.preprocessor.get_results())
+        self.on_complete_callback(self.preprocessor.get_results(), self.parsed_command)
 
 
 class NearestToPrintPreprocessor(PositionPreprocessor):
