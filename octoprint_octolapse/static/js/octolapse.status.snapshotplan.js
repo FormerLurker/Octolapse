@@ -108,6 +108,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 {
                     self.plan_index(index);
                 }
+                self.update_current_plan()
                 return false;
             };
 
@@ -116,10 +117,11 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.is_animating_plans(false);
                 self.view_current_plan(false);
                 var index = self.plan_index()-1;
-                if (index < self.snapshot_plans().length)
+                if (index > -1 && self.snapshot_plans().length > 0)
                 {
                     self.plan_index(index);
                 }
+                self.update_current_plan()
                 return false;
             };
 
@@ -128,6 +130,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.is_animating_plans(false);
                 self.view_current_plan(true);
                 self.plan_index(self.current_plan_index());
+                self.update_current_plan()
                 return false;
             };
 
@@ -158,10 +161,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     else
                     {
                         self.view_current_plan(true);
+                        self.plan_index(self.current_plan_index());
                         self.is_animating_plans(false);
                         self.update_current_plan();
                     }
-
                 }, 33.3);
             }
             // Canvass Variables
@@ -178,7 +181,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.x_canvas_scale = null;
             self.y_canvas_scale = null;
             self.z_canvas_scale = null;
-            self.canvas_location_radius=2.5;
+            self.canvas_location_radius=3;
             self.canvas = null;
             self.canvas_context = null;
 
@@ -288,11 +291,11 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // draw the Y label
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
-                var x_text_width = self.canvas_context.measureText("Y");
+                var text_width = self.canvas_context.measureText("Y");
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     "Y",
-                    self.canvas_border_size[0] * 0.5 - x_text_width.width/2,
+                    self.canvas_border_size[0] * 0.5 - text_width.width/2 - 1,
                     self.canvas_printer_size[1] - self.axis_line_length + self.canvas_border_size[1] * 1.5 - 2
                 )
 
@@ -333,13 +336,11 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // draw the X label
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
-                var y_text_height = self.canvas_context.measureText("X");
-                console.log(y_text_height);
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     "X",
                     self.canvas_border_size[0] * 0.5 + self.axis_line_length,
-                    self.canvas_printer_size[1] + self.canvas_border_size[1] * 1.5 + 4
+                    self.canvas_printer_size[1] + self.canvas_border_size[1] * 1.5 + 4.5
                 )
 
             };
@@ -408,12 +409,13 @@ Octolapse.snapshotPlanStateViewModel = function() {
             };
 
             self.canvas_erase_print_bed = function(){
+                console.log("Erasing Bed");
                 self.canvas_context.fillStyle = '#ffffff';
                 self.canvas_context.fillRect(
-                    self.canvas_border_size[0],
-                    self.canvas_border_size[1],
-                    self.canvas_printer_size[0],
-                    self.canvas_printer_size[1]
+                    self.canvas_border_size[0] - self.canvas_location_radius,
+                    self.canvas_border_size[1] - self.canvas_location_radius,
+                    self.canvas_printer_size[0] + self.canvas_location_radius*2,
+                    self.canvas_printer_size[1] + self.canvas_location_radius*2
                 );
             };
 

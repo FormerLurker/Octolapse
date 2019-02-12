@@ -28,7 +28,7 @@
             <div class="row-fluid">
                 <div class="span3"> <h4> Snapshot Plan </h4> </div>
                 <div class="span9 text-right">
-                    Showing Plan <span data-bind="text: SnapshotPlanState.plan_index" /> of <span data-bind="text: SnapshotPlanState.plan_count" />
+                    Showing<span data-bind="visible: SnapshotPlanState.view_current_plan">&nbsp;Current</span>&nbsp;Plan <span data-bind="text: (SnapshotPlanState.plan_index() + 1)" /> of <span data-bind="text: SnapshotPlanState.plan_count" />
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                             Current Plan:
                         </div>
                         <div class="span6 text-right no-min-height text-left">
-                            <span data-bind="text: SnapshotPlanState.current_plan_index" />
+                            <span data-bind="text: (SnapshotPlanState.current_plan_index() + 1)" />
                         </div>
                     </div>
                     <div class="row-fluid">
@@ -93,13 +93,13 @@
                     </div>
                 </div>
                 <div class="span6 no-min-height">
+                    <div id="snapshot_plan_canvas_container"></div>
                     <div class="text-center ol_hover_button">
                         <a href="#" data-bind="click: SnapshotPlanState.previous_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-minus fa-stack-1x"></i></span></a>
                         <a href="#" data-bind="click: SnapshotPlanState.show_current_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-refresh fa-stack-1x"></i></span></a>
                         <a href="#" data-bind="click: SnapshotPlanState.animate_plan_clicked, disable: SnapshotPlanState.is_animating_plans"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-play-circle fa-stack-1x"></i></span></a>
                         <a href="#" data-bind="click: SnapshotPlanState.next_plan_clicked"><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-plus fa-stack-1x"></i></span></a>
                     </div>
-                    <div id="snapshot_plan_canvas_container"></div>
                 </div>
             </div>
         </div>

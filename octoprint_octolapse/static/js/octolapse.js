@@ -22,7 +22,7 @@
 ##################################################################################
 */
 Octolapse = {};
- Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
+Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
 OctolapseViewModel = {};
 
 $(function () {
@@ -164,6 +164,78 @@ $(function () {
         });
     };
 
+    Octolapse.progressBar = function (cancel_callback, ok_callback)
+    {
+        var self = this;
+        self.notice = null;
+        self.$progress = null;
+        self.$progressText = null
+        self.cancel = function()
+        {
+            if (self.loader != null)
+                self.loader.remove();
+        }
+        self.update = function(percent_complete, seconds_elapsed)
+        {
+            self.notice.find(".remove_button").remove();
+
+            if (self.$progress == null)
+                return null;
+            if (percent_complete < 0)
+                percent_complete = 0;
+            if (percent_complete > 100)
+                percent_complete = 100;
+            if (percent_complete == 100) {
+                self.loader.remove();
+                return null
+            }
+            self.$progress.width(percent_complete + "%").attr("aria-valuenow", percent_complete).find("span").html(percent_complete + "%");
+            /*if(self.loader != null)
+                self.loader.update({
+                    icon: "fa fa-circle-o-notch fa-spin"
+                });*/
+            var elapsedText = "Elapsed: " + Octolapse.ToTimer(seconds_elapsed)
+            self.$progressText.text(elapsedText);
+            return self;
+        };
+        self.loader = null;
+        // create the pnotify loader
+        self.loader = new PNotify({
+            title: "Preprocessing Gcode File",
+            text: '<div class="progress progress-striped active" style="margin:0">\
+      <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0"></div>\
+    </div><div><span class="progress-text"></span></div>',
+            icon: 'fa fa-cog fa-spin',
+            confirm: {
+                confirm: true,
+                buttons: [{
+                    text: 'Cancel',
+                    click: cancel_callback
+                },{
+                    text: 'Close',
+                    addClass: 'remove_button'
+                }]
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            hide: false,
+            history: {
+                history: false
+            },
+            before_open: function(notice) {
+                self.notice = notice.get();
+                self.$progress = self.notice.find("div.progress-bar");
+                self.$progressText = self.notice.find("span.progress-text");
+                self.notice.find(".remove_button").remove();
+                self.update(0,0);
+            }
+        });
+
+        return self;
+
+    };
     // Cookies (only for UI display purposes, not for any tracking
     Octolapse.COOKIE_EXPIRE_DAYS = 30;
 
@@ -601,18 +673,25 @@ $(function () {
         result.raw = target;
         return result;
     };
+
+    Octolapse.pad = function pad(n, width, z)
+    {
+        z = z || '0';
+        return (String(z).repeat(width) + String(n)).slice(String(n).length)
+    }
+
     /**
      * @return {string}
      */
     Octolapse.ToTime = function (seconds) {
-        if (val == null)
+        if (seconds == null)
             return Octolapse.NullTimeText;
         var utcSeconds = seconds;
         var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
         d.setUTCSeconds(utcSeconds);
-        return d.getHours() + ":"
-            + d.getMinutes() + ":"
-            + d.getSeconds();
+        return Octolapse.pad(d.getHours(),2,"0") + ":"
+            + Octolapse.pad(d.getMinutes(),2,"0") + ":"
+            + Octolapse.pad(d.getSeconds(),2,"0");
     };
 
     /**
@@ -624,14 +703,16 @@ $(function () {
         if (seconds <= 0)
             return "0:00";
 
-        var hours = Math.floor(seconds / 3600);
+        seconds = Math.round(seconds)
+
+        var hours = Math.floor(seconds / 3600).toString();
         if (hours > 0) {
             return ("" + hours).slice(-2) + " Hrs"
         }
 
         seconds %= 3600;
-        var minutes = Math.floor(seconds / 60);
-        seconds = seconds % 60;
+        var minutes = Math.floor(seconds / 60).toString();
+        seconds = (seconds % 60).toString();
         return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
     };
 
@@ -695,6 +776,7 @@ $(function () {
         // Have we loaded the state yet?
         self.HasLoadedState = false;
 
+        self.pre_processing_progress = null;
 
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
@@ -875,6 +957,25 @@ $(function () {
 
         };
 
+        self.cancelPreprocessing = function()
+        {
+            $.ajax({
+                url: "./plugin/octolapse/cancelPreprocessing",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                dataType: "json",
+                success: function (result) {
+                    if (self.pre_processing_progress != null)
+                        self.pre_processing_progress.close();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Could not cancel preprocessing.");
+                    return false;
+                }
+            });
+        }
         // Handle Plugin Messages from Server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "octolapse") {
@@ -883,26 +984,24 @@ $(function () {
             console.log("Message received.  Type:" + data.type);
             //console.log(data);
             switch (data.type) {
-                case "gcode-pre-processing-update":
-                    //console.log("Octolapse received pre-processing update processing message.");
+                case "gcode-preprocessing-start":
+                    // create the cancel popup
+                    console.log("Creating a progress bar.");
+                    self.pre_processing_progress =  Octolapse.progressBar();
+                    break;
+                case "gcode-preprocessing-update":
+                    console.log("Octolapse received pre-processing update processing message.");
                     // TODO: CHANGE THIS TO A PROGRESS INDICATOR
-                    var percent_finished = data.percent_finished;
-                    var time_elapsed = data.time_elapsed;
-                    var lines_processed = data.lines_processed;
-
-                    msg = percent_finished.toFixed(2).toString() + "% completed";
-
-                    var options = {
-                        title: 'Pre-Processing Gcode',
-                        text: msg,
-                        type: 'notice',
-                        hide: true,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopupForKey(options,"gcode-pre-processing-update");
+                    var percent_finished = data.percent_finished.toFixed(1);
+                    var seconds_elapsed = data.seconds_elapsed;
+                    if (self.pre_processing_progress == null)
+                    {
+                        console.log("The pre-processing progress bar is missing, creating the progress bar.");
+                        self.pre_processing_progress =  Octolapse.progressBar();
+                    }
+                    if (self.pre_processing_progress != null) {
+                        self.pre_processing_progress = self.pre_processing_progress.update(percent_finished, seconds_elapsed);
+                    }
 
                     break;
                 case "settings-changed":

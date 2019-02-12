@@ -76,6 +76,10 @@ a.disabled {
     transition: color 0.250s 0s ease-in;
 }
 
+#snapshot_plan_canvas {
+    border: 2px solid black;
+    margin-top: 2px;
+}
 span.octolapse-icon-text {
     font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
     position: relative;

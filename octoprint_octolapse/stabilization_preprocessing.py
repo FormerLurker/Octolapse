@@ -28,6 +28,7 @@ import time
 import os
 import fastgcodeparser
 import utility
+from threading import Thread
 
 class PositionPreprocessor(object):
     def __init__(
@@ -44,6 +45,7 @@ class PositionPreprocessor(object):
         process_error_callback=None,
 
     ):
+        self.running = False
         self.process_position_callback = process_position_callback
         self.process_error_callback = process_error_callback
         self.commands = octoprint_octolapse.gcode_parser.Commands()
@@ -95,6 +97,9 @@ class PositionPreprocessor(object):
         # we're using binary read to avoid file.tell() issues with windows
         with open(target_file_path, 'rb') as self.file:
             for line in self.file:
+                if not self.running:
+                    return
+
                 fast_cmd = fastgcodeparser.ParseGcode(line)
                 if not fast_cmd:
                     continue
@@ -156,6 +161,8 @@ class PositionPreprocessor(object):
 
 TRAVEL_ACTION = "travel"
 SNAPSHOT_ACTION = "snapshot"
+
+
 class SnapshotPlanStep(object):
     def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
         self.x = x
@@ -174,6 +181,7 @@ class SnapshotPlanStep(object):
             "e": self.e,
             "f": self.f,
         }
+
 
 class SnapshotPlan(object):
     def __init__(self,
@@ -214,6 +222,28 @@ class SnapshotPlan(object):
             "lift_amount": self.lift_amount,
             "retract_amount": self.retract_amount,
         }
+
+
+class PreprocessorThread(Thread):
+    def __init__(self, preprocessor, gcode_file_path, on_complete_callback):
+        super(PreprocessorThread, self).__init__()
+        self.preprocessor = preprocessor
+        self.gcode_file_path = gcode_file_path
+        self.on_complete_callback = on_complete_callback
+
+    def join(self, timeout=None):
+        super(PreprocessorThread, self).join(timeout=timeout)
+        return self.preprocessor.get_results()
+
+    def stop(self):
+        self.preprocessor.running = False
+
+    def run(self):
+        self.preprocessor.running = True
+        self.preprocessor.process_file(self.gcode_file_path)
+        self.preprocessor.running = False
+        self.on_complete_callback(self.preprocessor.get_results())
+
 
 class NearestToPrintPreprocessor(PositionPreprocessor):
     FRONT_LEFT = "front-left"

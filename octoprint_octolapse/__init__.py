@@ -39,6 +39,7 @@ import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
+import threading
 from distutils.version import LooseVersion
 from io import BytesIO
 from octoprint.events import eventManager, Events
@@ -66,8 +67,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.RestartNeedingPlugin):
     TIMEOUT_DELAY = 1000
-    _octolapse_settings = None  # type: OctolapseSettings
-    _timelapse = None  # type: Timelapse
+
+
+    def __init__(self):
+        self._octolapse_settings = None  # type: OctolapseSettings
+        self._timelapse = None  # type: Timelapse
+        self.current_preprocessor_thread = None
+        self._timelapse_settings = None
 
     def get_sorting_key(self, context=None):
         return 1
@@ -599,6 +605,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return json.dumps({'success': "Deleted {} successfully.".format(filepath)}), 200, {
             'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/cancelPreprocessing", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def cancel_preprocessing(self):
+        if self.current_preprocessor_thread is not None:
+            self.current_preprocessor_thread.stop()
+
     # blueprint helpers
     @staticmethod
     def get_download_file_response(file_path, download_filename):
@@ -1064,50 +1077,28 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return
 
         try:
-            result = self.start_timelapse()
-            if not result["success"]:
-                self.on_print_start_failed(result["error"])
+            self._timelapse_settings = self.get_timelapse_parameters()
+            if not self._timelapse_settings["success"]:
+                self.on_print_start_failed(self._timelapse_settings["error"])
                 return
-            if result["warning"]:
-                self.send_popup_message(result["warning"])
+            if self._timelapse_settings["warning"]:
+                self.send_popup_message(self._timelapse_settings["warning"])
+
+            if not self._timelapse_settings["preprocessed"]:
+                self.start_timelapse()
+                if not self._timelapse_settings["success"]:
+                    self.on_print_start_failed(self._timelapse_settings["error"])
+                    return
+                if self._timelapse_settings["warning"]:
+                    self.send_popup_message(self._timelapse_settings["warning"])
+
         except Exception as e:
             self._octolapse_settings.Logger.log_exception(e)
             self.send_popup_message("An unexpected error occurred while starting the Octolapse!  Please check "
                                     "plugin_octolapse.log for details")
             return
 
-        # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
-        # the extruder.
-        if self._octolapse_settings.profiles.current_printer().xyz_axes_default_mode == 'force-absolute':
-            # send G90
-            self._printer.commands(['G90'], tags={"force_xyz_axis"})
-        elif self._octolapse_settings.profiles.current_printer().xyz_axes_default_mode == 'force-relative':
-            # send G91
-            self._printer.commands(['G91'], tags={"force_xyz_axis"})
-        # send G90/G91 if necessary
-        if self._octolapse_settings.profiles.current_printer().e_axis_default_mode == 'force-absolute':
-            # send M82
-            self._printer.commands(['M82'], tags={"force_e_axis"})
-        elif self._octolapse_settings.profiles.current_printer().e_axis_default_mode == 'force-relative':
-            # send M83
-            self._printer.commands(['M83'], tags={"force_e_axis"})
-
-        self._octolapse_settings.Logger.log_print_state_change(
-            "Print Started - Timelapse Started.")
-
-        self.on_timelapse_start()
-
-    def on_print_start_failed(self, error):
-        if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
-            message = "Unable to start the timelapse.  Cancelling print.  Error:  {0}".format(error)
-            self._printer.cancel_print(tags={'startup-failed'})
-        else:
-            message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
-
-        self._octolapse_settings.Logger.log_print_state_change(message)
-        self.send_plugin_message("print-start-error", message)
-
-    def start_timelapse(self):
+    def get_timelapse_parameters(self):
         # check for version 1.3.7 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
             return {'success': False,
@@ -1260,21 +1251,24 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         current_stabilization_clone = settings_clone.profiles.current_stabilization()
 
-        snapshot_plans = None
+        preprocessed = False
+
         if current_stabilization_clone.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED:
             # pre-process the stabilization
             preprocess_results = self.pre_process_stabilization(
                 current_stabilization_clone, current_printer_clone, octoprint_printer_profile, gcode_file_path)
-            snapshot_plans = preprocess_results["snapshot_plans"]
-
-        self._timelapse.start_timelapse(
-            settings_clone, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder, gcode_file_path,
-            snapshot_plans=snapshot_plans)
+            if preprocess_results:
+                preprocessed = True
+            else:
+                return {
+                    'success': False,
+                    'error': "Preprocessing failed, check plugin_octolapse.log for details."
+                }
 
         warning = ''
         if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
             warning = "This plugin has not yet been tested on printers with origins that are not in the lower " \
-                       "left.  Use at your own risk."
+                      "left.  Use at your own risk."
 
         if has_automatic_settings_issue:
             if len(warning) > 0:
@@ -1284,7 +1278,58 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if len(warning) == 0:
             warning = False
 
-        return {'success': True, 'warning': warning}
+        return {
+            'success': True,
+            'error': "Preprocessing failed, check plugin_octolapse.log for details.",
+            'warning': warning,
+            'preprocessed': preprocessed,
+            "settings": settings_clone,
+            "octoprint_printer_profile": octoprint_printer_profile,
+            "ffmpeg_path": ffmpeg_path,
+            "g90_influences_extruder": g90_influences_extruder,
+            "gcode_file_path": gcode_file_path
+        }
+
+    def start_timelapse(self, snapshot_plans=None):
+        self._timelapse.start_timelapse(
+            self._timelapse_settings["settings"],
+            self._timelapse_settings["octoprint_printer_profile"],
+            self._timelapse_settings["ffmpeg_path"],
+            self._timelapse_settings["g90_influences_extruder"],
+            self._timelapse_settings["gcode_file_path"],
+            snapshot_plans=snapshot_plans
+        )
+
+        # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
+        # the extruder.
+        if self._octolapse_settings.profiles.current_printer().xyz_axes_default_mode == 'force-absolute':
+            # send G90
+            self._printer.commands(['G90'], tags={"force_xyz_axis"})
+        elif self._octolapse_settings.profiles.current_printer().xyz_axes_default_mode == 'force-relative':
+            # send G91
+            self._printer.commands(['G91'], tags={"force_xyz_axis"})
+        # send G90/G91 if necessary
+        if self._octolapse_settings.profiles.current_printer().e_axis_default_mode == 'force-absolute':
+            # send M82
+            self._printer.commands(['M82'], tags={"force_e_axis"})
+        elif self._octolapse_settings.profiles.current_printer().e_axis_default_mode == 'force-relative':
+            # send M83
+            self._printer.commands(['M83'], tags={"force_e_axis"})
+
+        self._octolapse_settings.Logger.log_print_state_change(
+            "Print Started - Timelapse Started.")
+
+        self.on_timelapse_start()
+
+    def on_print_start_failed(self, error):
+        if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
+            message = "Unable to start the timelapse.  Cancelling print.  Error:  {0}".format(error)
+            self._printer.cancel_print(tags={'startup-failed'})
+        else:
+            message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
+
+        self._octolapse_settings.Logger.log_print_state_change(message)
+        self.send_plugin_message("print-start-error", message)
 
     def pre_process_stabilization(self, stabilization, printer, octoprint_printer_profile, gcode_file_path):
         snapshot_plan = None
@@ -1318,16 +1363,32 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             )
 
         if preprocessor is not None:
-            self.send_pre_processing_message(0)
-            snapshot_plan = preprocessor.process_file(gcode_file_path)
+            self.send_pre_processing_start_message()
+            # Create a thread to run the preprocessor
+            self.current_preprocessor_thread = octoprint_octolapse.stabilization_preprocessing.PreprocessorThread(
+                preprocessor, gcode_file_path, self.on_preprocessing_complete
+            )
 
-        return snapshot_plan
+            self.current_preprocessor_thread.daemon = True
+            self.current_preprocessor_thread.start()
+            self.current_preprocessor_thread = None
+            return True
+        return False
+
+    def on_preprocessing_complete(self, results):
+        self.start_timelapse(results["snapshot_plans"])
+
+    def send_pre_processing_start_message(self):
+        data = {
+            "type": "gcode-preprocessing-start"
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_pre_processing_message(self, percent_finished, time_elapsed=0, lines_processed=0):
         data = {
-            "type": "gcode-pre-processing-update",
+            "type": "gcode-preprocessing-update",
             "percent_finished": percent_finished,
-            "time_elapsed": time_elapsed,
+            "seconds_elapsed": time_elapsed,
             "lines_processed": lines_processed
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
