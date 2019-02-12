@@ -281,7 +281,7 @@ class NearestToPrintPreprocessor(PositionPreprocessor):
 
         self.nearest_to = nearest_to
         self.favor_x = favor_axis == self.FAVOR_X
-        snapshot_gcode_settings = printer_profile.gcode_generation_settings
+        snapshot_gcode_settings = printer_profile.get_current_state_detection_settings()
         retraction_length = (
             0 if not snapshot_gcode_settings.retract_before_move else snapshot_gcode_settings.retraction_length
         )
