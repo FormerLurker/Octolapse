@@ -627,6 +627,7 @@ class Timelapse(object):
             extruder_dict = None
             trigger_state = None
             snapshot_plan = None
+
             if self._settings is not None:
                 if self.is_realtime:
                     if self._position is not None:
@@ -649,7 +650,6 @@ class Timelapse(object):
                         "snapshot_plans": snapshot_plans,
                         "current_plan_index": self.current_snapshot_plan_index,
                         "current_file_line": self._current_file_line,
-                        "stabilization_type": "pre-calculated" if not self.is_realtime else "real-time",
                     }
 
             state_dict = {
@@ -657,7 +657,7 @@ class Timelapse(object):
                 "position": position_dict,
                 "position_state": position_state_dict,
                 "trigger_state": trigger_state,
-                "stabilization_type": "pre-calculated" if not self.is_realtime else "real-time",
+                "stabilization_type": "pre-calculated" if self.is_realtime else "real-time",
                 "snapshot_plan": snapshot_plan
 
             }
@@ -1288,13 +1288,12 @@ class Timelapse(object):
                                 "triggers": trigger_change_list
                             }
                     change_dict = {
-                        {
-                            "extruder": extruder_change_dict,
-                            "position": position_change_dict,
-                            "position_state": position_state_change_dict,
-                            "trigger_state": trigger_changes_dict,
-                            "stabilization_type": self._stabilization.stabilization_type
-                        }
+
+                        "stabilization_type": "real-time",
+                        "extruder": extruder_change_dict,
+                        "position": position_change_dict,
+                        "position_state": position_state_change_dict,
+                        "trigger_state": trigger_changes_dict
                     }
 
                     if (

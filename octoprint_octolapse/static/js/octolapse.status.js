@@ -52,7 +52,8 @@ $(function () {
                 'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
             self.is_real_time = ko.observable(true);
-            self.current_camera_guid = ko.observable()
+            self.current_camera_guid = ko.observable();
+            self.stabilization_requires_snapshot_profile = ko.observable();
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -150,12 +151,20 @@ $(function () {
                 return true;
             },this);
 
-            self.stabilization_requires_snapshot_profile = ko.pureComputed(function(){
+            self.current_stabilization_requires_snapshot_profile = function(){
                 var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
                 if (current_stabilization  != null)
                     return current_stabilization.requires_snapshot_profile;
                 return true;
-            }, this);
+            };
+
+            self.is_current_stabilization_real_time = function(){
+                var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
+                if (current_stabilization  != null)
+                    console.log(current_stabilization.stabilization_type);
+                    return current_stabilization.stabilization_type === "real-time";
+                return true;
+            };
 
             self.getCurrentProfileByGuid = function(profiles, guid){
                 if (guid != null) {
@@ -473,27 +482,25 @@ $(function () {
             {
 
                 console.log("octolapse.status.js - Updating State")
-                self.is_real_time(state.stabilization_type == "real-time")
-                if ( self.is_real_time()) {
-                    if (state.position != null) {
-                        self.Position.update(state.position);
-                    }
-                    if (state.position_state != null) {
-                        self.PositionState.update(state.position_state);
-                    }
-                    if (state.extruder != null) {
-                        self.ExtruderState.update(state.extruder);
-                    }
-                    if (state.trigger_state != null) {
-                        self.TriggerState.update(state.trigger_state);
-                    }
+                if (state.stabilization_type != null)
+                    self.is_real_time(state.stabilization_type == "real-time");
+
+                if (state.position != null) {
+                    self.Position.update(state.position);
                 }
-                else{
-                    if (state.snapshot_plan != null) {
-                        console.log("Updating Snapshot Plan State.")
-                        self.SnapshotPlanState.update(state.snapshot_plan);
-                    }
+                if (state.position_state != null) {
+                    self.PositionState.update(state.position_state);
                 }
+                if (state.extruder != null) {
+                    self.ExtruderState.update(state.extruder);
+                }
+                if (state.trigger_state != null) {
+                    self.TriggerState.update(state.trigger_state);
+                }
+                if (state.snapshot_plan != null) {
+                    self.SnapshotPlanState.update(state.snapshot_plan);
+                }
+
             };
 
             self.update = function (settings) {
@@ -519,6 +526,11 @@ $(function () {
                 // Only update the current camera guid if there is no value
                 if(self.current_camera_guid() == null)
                     self.current_camera_guid(settings.profiles.current_camera_profile_guid);
+
+                self.is_real_time(self.is_current_stabilization_real_time())
+                self.stabilization_requires_snapshot_profile(
+                    self.current_stabilization_requires_snapshot_profile()
+                );
             };
 
             self.onTimelapseStart = function () {

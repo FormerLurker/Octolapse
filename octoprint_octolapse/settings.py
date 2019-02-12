@@ -1031,7 +1031,8 @@ class Profiles(Settings):
             profiles_dict["stabilizations"].append({
                 "name": stabilization.name,
                 "guid": stabilization.guid,
-                "requires_snapshot_profile": stabilization.requires_snapshot_profile()
+                "requires_snapshot_profile": stabilization.requires_snapshot_profile(),
+                "stabilization_type": stabilization.stabilization_type
             })
 
         for key, snapshot in self.snapshots.items():

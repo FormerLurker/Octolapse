@@ -1087,16 +1087,16 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if self._timelapse_settings["warning"]:
                 self.send_popup_message(self._timelapse_settings["warning"])
 
-            if not self._timelapse_settings["preprocessed"]:
-                self.start_timelapse()
-                if not self._timelapse_settings["success"]:
-                    self.on_print_start_failed(self._timelapse_settings["error"])
-                    return True
-                if self._timelapse_settings["warning"]:
-                    self.send_popup_message(self._timelapse_settings["warning"])
-            else:
+            if self._timelapse_settings["preprocessed"]:
                 # we are preprocessing, return false so the print does not continue
                 return False
+
+            self.start_timelapse()
+            if not self._timelapse_settings["success"]:
+                self.on_print_start_failed(self._timelapse_settings["error"])
+            if self._timelapse_settings["warning"]:
+                self.send_popup_message(self._timelapse_settings["warning"])
+            return True
 
         except Exception as e:
             self._octolapse_settings.Logger.log_exception(e)

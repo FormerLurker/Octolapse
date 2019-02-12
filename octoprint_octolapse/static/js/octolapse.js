@@ -1105,7 +1105,7 @@ $(function () {
                     }
                 case "timelapse-start":
                     {
-                        //console.log('octolapse.js - timelapse-start');
+                        console.log('octolapse.js - timelapse-start');
                         // Erase any previous images
                         Octolapse.HasTakenFirstSnapshot = false;
                         // let the status tab know that a timelapse is starting
