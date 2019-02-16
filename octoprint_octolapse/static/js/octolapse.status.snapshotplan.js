@@ -80,7 +80,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
                 self.lines_remaining(lines_remaining);
                 var previous_line = 0;
-                if (self.plan_index - 1 > 0)
+                if (self.current_plan_index() - 1 > 0)
                     previous_plan = self.snapshot_plans()[self.current_plan_index() - 1]
                 if (previous_plan != null)
                     previous_line = previous_plan.file_line_number;

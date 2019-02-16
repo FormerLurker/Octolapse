@@ -166,7 +166,7 @@ class Timelapse(object):
         if self.snapshot_plans is not None and len(self.snapshot_plans) > 0:
             self.current_snapshot_plan = self.snapshot_plans[self.current_snapshot_plan_index]
         # if we have at least one snapshot plan, we must have preprocessed, so set is_realtime to false.
-        self.is_realtime = self.current_snapshot_plan is None
+        self.is_realtime = self.snapshot_plans is None
         assert (isinstance(self._printer, PrinterProfile))
 
         # time tracking - how much time did we add to the print?
@@ -210,7 +210,7 @@ class Timelapse(object):
             self._new_thumbnail_available_callback
         )
         self._position = Position(
-            self._settings.Logger, self._settings.profiles.current_printer(),
+            self._settings.profiles.current_printer(),
             self._settings.profiles.current_snapshot(), octoprint_printer_profile, g90_influences_extruder
         )
         self._state = TimelapseState.WaitingForTrigger
@@ -657,7 +657,7 @@ class Timelapse(object):
                 "position": position_dict,
                 "position_state": position_state_dict,
                 "trigger_state": trigger_state,
-                "stabilization_type": "pre-calculated" if self.is_realtime else "real-time",
+                "stabilization_type": "real-time" if self.is_realtime else "pre-calculated",
                 "snapshot_plan": snapshot_plan
 
             }
@@ -1006,7 +1006,9 @@ class Timelapse(object):
         return None
 
     def preprocessing_finished(self, parsed_command):
-        self.send_snapshot_gcode_array([parsed_command.gcode])
+        if parsed_command is not None:
+            self.send_snapshot_gcode_array([parsed_command.gcode])
+        self.is_realtime = False
         self._octoprint_printer.set_job_on_hold(False)
 
     @staticmethod
@@ -1303,13 +1305,9 @@ class Timelapse(object):
                         or change_dict["trigger_state"] is not None
                     ):
                         self._state_changed_callback(change_dict)
-                        self._last_state_changed_message_time = time.time()
 
                 def send_pre_calculated_change_message():
-                    if (
-                        not self._settings.main_settings.show_snapshot_plan_information or
-                        self.current_snapshot_plan is None
-                    ):
+                    if not self._settings.main_settings.show_snapshot_plan_information:
                         return
                     # if there are any state changes, send them
                     change_dict = {
@@ -1323,7 +1321,7 @@ class Timelapse(object):
                         }
                     }
                     self._state_changed_callback(change_dict)
-                    self._last_state_changed_message_time = time.time()
+
 
                 if self.is_realtime:
                     position_errors = False
@@ -1340,6 +1338,7 @@ class Timelapse(object):
                     )
                 self._state_change_message_thread.daemon = True
                 self._state_change_message_thread.start()
+                self._last_state_changed_message_time = time.time()
 
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.

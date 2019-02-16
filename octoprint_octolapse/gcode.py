@@ -140,9 +140,6 @@ class SnapshotGcodeGenerator(object):
         assert (isinstance(self.triggering_command_position, Pos))
         assert (isinstance(position, Position))
 
-        if len(position.position_history) < 1:
-            return None
-
         # does G90/G91 influence the extruder
         self.g90_influences_extruder = position.g90_influences_extruder
         # get the command we will be probably sending at the end of the process

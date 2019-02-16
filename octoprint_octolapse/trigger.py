@@ -85,6 +85,10 @@ class Triggers(object):
             self._settings.Logger.log_exception(e)
 
     def update(self, position, parsed_command):
+        # the previous command (not just the current) MUST have homed positions else
+        # we may have some null coordinates.
+        if not position.previous_pos.has_homed_position:
+            return
         """Update all triggers and return any that are triggering"""
         try:
             # Loop through all of the active current_triggers

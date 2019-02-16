@@ -270,7 +270,7 @@ class PrinterProfile(ProfileSettings):
     def get_current_state_detection_settings(self):
         if self.slicer_type == 'automatic':
             return None
-        
+
         return self.get_current_slicer_settings().get_gcode_generation_settings()
 
     def get_gcode_settings_from_file(self, gcode_file_path):
