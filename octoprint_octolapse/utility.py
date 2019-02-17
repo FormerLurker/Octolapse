@@ -338,40 +338,49 @@ def is_snapshot_command(command_string, snapshot_command):
 
 
 def get_bounding_box(octolapse_printer_profile, octoprint_printer_profile):
-    # get octolapse min and max
-    if octolapse_printer_profile.override_octoprint_print_volume:
-        min_x = octolapse_printer_profile.min_x
-        max_x = octolapse_printer_profile.max_x
-        min_y = octolapse_printer_profile.min_y
-        max_y = octolapse_printer_profile.max_y
-        min_z = octolapse_printer_profile.min_z
-        max_z = octolapse_printer_profile.max_z
-    else:
-        volume = octoprint_printer_profile["volume"]
-        custom_box = volume["custom_box"]
-        # see if we have a custom bounding box
-        if custom_box:
-            min_x = custom_box["x_min"]
-            max_x = custom_box["x_max"]
-            min_y = custom_box["y_min"]
-            max_y = custom_box["y_max"]
-            min_z = custom_box["z_min"]
-            max_z = custom_box["z_max"]
+    min_x = None
+    max_x = None
+    min_y = None
+    max_y = None
+    min_z = None
+    max_z = None
+
+    if octolapse_printer_profile is not None and octoprint_printer_profile is not None:
+
+        # get octolapse min and max
+        if octolapse_printer_profile.override_octoprint_print_volume:
+            min_x = octolapse_printer_profile.min_x
+            max_x = octolapse_printer_profile.max_x
+            min_y = octolapse_printer_profile.min_y
+            max_y = octolapse_printer_profile.max_y
+            min_z = octolapse_printer_profile.min_z
+            max_z = octolapse_printer_profile.max_z
         else:
-            min_x = 0
-            max_x = volume["width"]
-            min_y = 0
-            max_y = volume["depth"]
-            min_z = 0
-            max_z = volume["height"]
+            volume = octoprint_printer_profile["volume"]
+            custom_box = volume["custom_box"]
+            # see if we have a custom bounding box
+            if custom_box:
+                min_x = custom_box["x_min"]
+                max_x = custom_box["x_max"]
+                min_y = custom_box["y_min"]
+                max_y = custom_box["y_max"]
+                min_z = custom_box["z_min"]
+                max_z = custom_box["z_max"]
+            else:
+                min_x = 0
+                max_x = volume["width"]
+                min_y = 0
+                max_y = volume["depth"]
+                min_z = 0
+                max_z = volume["height"]
 
     return {
-        "min_x": float(min_x),
-        "max_x": float(max_x),
-        "min_y": float(min_y),
-        "max_y": float(max_y),
-        "min_z": float(min_z),
-        "max_z": float(max_z)
+        "min_x": None if min_x is None else float(min_x),
+        "max_x": None if max_x is None else float(max_x),
+        "min_y": None if min_y is None else float(min_y),
+        "max_y": None if max_y is None else float(max_y),
+        "min_z": None if min_z is None else float(min_z),
+        "max_z": None if max_z is None else float(max_z)
     }
 
 

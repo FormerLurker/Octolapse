@@ -84,10 +84,11 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
 
     # add all profiles
     for printer in settings_dict['printers']:
+
+        #
+
         speed_units = printer['axis_speed_display_units']
-
         printer['slicers'] = {}
-
         slicer_type = printer["slicer_type"]
         # Migrate all slicer settings based on the current slicer type
         if slicer_type == "cura":
