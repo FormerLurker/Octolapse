@@ -164,13 +164,13 @@ $(function () {
         });
     };
 
-    Octolapse.progressBar = function (cancel_callback, ok_callback)
+    Octolapse.progressBar = function (cancel_callback)
     {
         var self = this;
         self.notice = null;
         self.$progress = null;
         self.$progressText = null
-        self.cancel = function()
+        self.close = function()
         {
             if (self.loader != null)
                 self.loader.remove();
@@ -213,7 +213,8 @@ $(function () {
                     click: cancel_callback
                 },{
                     text: 'Close',
-                    addClass: 'remove_button'
+                    addClass: 'remove_button',
+                    click: cancel_callback
                 }]
             },
             buttons: {
@@ -817,7 +818,7 @@ $(function () {
                 type: "POST",
                 tryCount: 0,
                 retryLimit: 3,
-                ccontentType: "application/json",
+                contentType: "application/json",
                 dataType: "json",
                 success: function (result) {
                     //console.log("The state has been loaded.  Waiting for message");
@@ -960,23 +961,28 @@ $(function () {
         self.cancelPreprocessing = function()
         {
             console.log("Cancelling preprocessing")
+            var data = {"cancel":true};
             $.ajax({
                 url: "./plugin/octolapse/cancelPreprocessing",
                 type: "POST",
                 tryCount: 0,
                 retryLimit: 3,
                 contentType: "application/json",
+                data: JSON.stringify(data),
                 dataType: "json",
                 success: function (result) {
-                    if (self.pre_processing_progress != null)
-                        self.pre_processing_progress.close();
+                   if (self.pre_processing_progress != null) {
+                       self.pre_processing_progress.close();
+                   }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Octolapse - Could not cancel preprecessing" + errorThrown.toString());
                     alert("Could not cancel preprocessing.");
                     return false;
                 }
             });
-        }
+        };
+
         // Handle Plugin Messages from Server
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "octolapse") {
@@ -998,7 +1004,7 @@ $(function () {
                     if (self.pre_processing_progress == null)
                     {
                         console.log("The pre-processing progress bar is missing, creating the progress bar.");
-                        self.pre_processing_progress =  Octolapse.progressBar();
+                        self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     }
                     if (self.pre_processing_progress != null) {
                         self.pre_processing_progress = self.pre_processing_progress.update(percent_finished, seconds_elapsed);

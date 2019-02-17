@@ -153,7 +153,7 @@ $(function () {
 
             self.current_stabilization_requires_snapshot_profile = function(){
                 var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
-                if (current_stabilization  != null)
+                if (current_stabilization != null)
                     return current_stabilization.requires_snapshot_profile;
                 return true;
             };
@@ -527,7 +527,7 @@ $(function () {
                 if(self.current_camera_guid() == null)
                     self.current_camera_guid(settings.profiles.current_camera_profile_guid);
 
-                self.is_real_time(self.is_current_stabilization_real_time())
+                self.is_real_time(self.is_current_stabilization_real_time());
                 self.stabilization_requires_snapshot_profile(
                     self.current_stabilization_requires_snapshot_profile()
                 );
@@ -702,7 +702,7 @@ $(function () {
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
                 self.updateLatestSnapshotThumbnail(self.current_camera_guid());
                 self.updateLatestSnapshotImage(self.current_camera_guid());
-            }
+            };
 
             // Debug Profile Settings
             self.debug_sorted = ko.computed(function() { return self.nameSort(self.profiles().debug_profiles) });
@@ -830,7 +830,7 @@ $(function () {
                 if (self.is_in_position())
                     return "In position";
                 else if (self.in_path_position())
-                    return "In path position"
+                    return "In path position";
                 else
                     return "Not in position";
             }, self);

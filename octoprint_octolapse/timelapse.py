@@ -643,7 +643,8 @@ class Timelapse(object):
                     snapshot_plans = None
                     printer_volume = None
                     if include_timelapse_start_data:
-                        snapshot_plans = [x.to_dict() for x in self.snapshot_plans]
+                        if self.snapshot_plans is not None:
+                            snapshot_plans = [x.to_dict() for x in self.snapshot_plans]
                         printer_volume = self.get_printer_volume_dict()
                     snapshot_plan = {
                         "printer_volume": printer_volume,

@@ -113,8 +113,8 @@ class PositionPreprocessor(object):
         # start the processor by putting a file path in the queue
         self.file_input_queue.put(target_file_path)
 
-    def terminate(self):
-        self.file_input_queue.put(None)
+    def cancel(self):
+        self.cancel_queue.put(True)
 
     def get_progress(self):
         results = None
@@ -169,6 +169,9 @@ class GcodeParsingFileProcess(Process):
         fastgcodeparser.ParseGcode("")
         # signal the parent process that initialization is complete
         self.progress_queue.put(True)
+        self.process()
+
+    def process(self):
         while True:
             file_path = self.input_queue.get(True)
             self.current_line = 0
@@ -209,7 +212,7 @@ class GcodeParsingFileProcess(Process):
                                 self._next_notification_time + self.notification_period_seconds
                             )
 
-            if items_added > 0:
+            if not self.is_cancelled and items_added > 0:
                 self.output_queue.put(self.queue, True)
 
             self.progress_queue.put((100, time.time() - self.start_time, self.current_line))
