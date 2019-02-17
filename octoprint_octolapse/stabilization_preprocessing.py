@@ -116,6 +116,12 @@ class PositionPreprocessor(object):
     def cancel(self):
         self.cancel_queue.put(True)
 
+    def shutdown(self):
+        self.cancel_queue.put(True)
+        self.file_input_queue.put(None)
+        self.parser_process.join()
+        self.snapshot_generator_queue.put(None)
+        self.position_process.join()
     def get_progress(self):
         results = None
         if not self.parse_progress_queue.empty():
@@ -254,12 +260,12 @@ class PositionProcess(Process):
         while True:
             # get the processor we are using
             result = self.process_queue.get(True)
+            if result is None:
+                # sending None to the process queue is a signal to terminate the process
+                return
             # make sure we got the appropriate number of results
             assert(len(result) == 2)
             current_processor = result[0]
-            if current_processor is None:
-                # sending None to the process queue is a signal to terminate the process
-                return
             # make sure the process we got is a subclass of SnapshotPlanGenerator
             assert (isinstance(current_processor, SnapshotPlanGenerator))
             current_position = result[1]

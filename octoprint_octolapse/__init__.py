@@ -67,6 +67,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin,
                       octoprint.plugin.TemplatePlugin,
                       octoprint.plugin.StartupPlugin,
+                      octoprint.plugin.ShutdownPlugin,
                       octoprint.plugin.EventHandlerPlugin,
                       octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.RestartNeedingPlugin):
@@ -910,6 +911,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             else:
                 self._logger.critical(utility.exception_to_string(e))
             raise e
+
+    def on_shutdown(self):
+        self._octolapse_settings.Logger.log_info("Octolapse is shutting down processes.")
+        if self.gcode_preprocessor is not None:
+            self.gcode_preprocessor.shutdown()
+        self._octolapse_settings.Logger.log_info("Octolapse is ready to shut down.")
 
     # Event Mixin Handler
     def on_event(self, event, payload):
