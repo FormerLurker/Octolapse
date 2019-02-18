@@ -892,7 +892,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_plugin_message_sent=self.on_plugin_message_sent
         )
 
-    def on_after_startup(self):
+    def on_startup(self,host, port):
         try:
             # load settings
             self.load_settings()
@@ -911,7 +911,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             else:
                 self._logger.critical(utility.exception_to_string(e))
             raise e
-
     def on_shutdown(self):
         self._octolapse_settings.Logger.log_info("Octolapse is shutting down processes.")
         if self.gcode_preprocessor is not None:

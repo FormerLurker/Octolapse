@@ -26,7 +26,7 @@ from octoprint_octolapse.position import Position, Pos
 import time
 import os
 import utility
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Event
 from collections import deque
 import queue
 import fastgcodeparser
@@ -42,6 +42,9 @@ def clear_multiprocess_queue(queue_to_clear):
 
 def spawn_position_preprocessor():
     return PositionPreprocessor()
+
+
+CANCEL_TIMEOUT_SECONDS = 5
 
 
 class PositionPreprocessor(object):
@@ -61,13 +64,16 @@ class PositionPreprocessor(object):
         self.gcode_output_queue = Queue(output_queue_length)
         # A queue to hole progress updates from the GcodeParsingFileProcess
         self.parse_progress_queue = Queue(1)
-        # A queue used to cancel processing
-        self.cancel_queue = Queue(1)
         # an output queue used for returning results from the position processor
         self.snapshot_plan_queue = Queue(1)
         # a queue used for sending the current snapshot plan generator and a new position object
         # to the position processor
         self.snapshot_generator_queue = Queue(1)
+
+        # A queue used to cancel parsing
+        self.parsing_cancel_event = Event()
+        # clearing the event will cancel, because wait only waits for set events, not clear ones!
+        self.parsing_cancel_event.set()
 
         # create the gcode parsing file process and start it.  This process will continue to run
         # until the program terminates, or until 'None' is sent to the file_input_queue
@@ -75,7 +81,7 @@ class PositionPreprocessor(object):
             self.file_input_queue,
             self.gcode_output_queue,
             self.parse_progress_queue,
-            self.cancel_queue,
+            self.parsing_cancel_event,
             chunk_size=chunk_size,
             notification_period_seconds=notification_period_seconds
         )
@@ -86,9 +92,15 @@ class PositionPreprocessor(object):
         self.parse_progress_queue.get()
         # at this point the GcodeParsingFileProcess is initialized and ready to rock!
 
+        # A queue used to cancel snapshot plan generation
+        self.position_processing_cancel_event = Event()
+        # clearing the event will cancel, because wait only waits for set events, not clear ones!
+        self.position_processing_cancel_event .set()
+
         # now start up the position processor
         self.position_process = PositionProcess(
-            self.snapshot_generator_queue, self.gcode_output_queue, self.snapshot_plan_queue
+            self.snapshot_generator_queue, self.gcode_output_queue, self.snapshot_plan_queue,
+            self.position_processing_cancel_event
         )
         self.position_process.start()
         # the position_process will add True to the snapshot_plan_queue once it's initialized
@@ -97,31 +109,49 @@ class PositionPreprocessor(object):
 
         self.running = False
 
-    def clear_all_queues(self):
-        clear_multiprocess_queue(self.file_input_queue)
-        clear_multiprocess_queue(self.gcode_output_queue)
-        clear_multiprocess_queue(self.parse_progress_queue)
-        clear_multiprocess_queue(self.cancel_queue)
-        clear_multiprocess_queue(self.snapshot_plan_queue)
-        clear_multiprocess_queue(self.snapshot_generator_queue)
-
     def process_file(self, target_file_path, snapshot_plan_generator, position):
-        # clear any current queues
-        self.clear_all_queues()
         # send the position object and the snapshot_plan_generator to the position_process
         self.snapshot_generator_queue.put((snapshot_plan_generator, position))
         # start the processor by putting a file path in the queue
         self.file_input_queue.put(target_file_path)
 
-    def cancel(self):
-        self.cancel_queue.put(True)
+    def cancel(self, is_shutdown=False):
+        # set the cancel flag to stop any processing
+        if self.parsing_cancel_event.is_set():
+            self.parsing_cancel_event.clear()
+            if is_shutdown:
+                # if we're shutting down, we need to send None to the file_input_queue to unblock the process
+                self.file_input_queue.put(None)
+
+        result = self.parsing_cancel_event.wait(CANCEL_TIMEOUT_SECONDS)
+        if not result:
+            return False
+
+        if self.parsing_cancel_event.is_set():
+            self.position_processing_cancel_event.clear()
+
+            if is_shutdown:
+                # if we're shutting down, we need to send None to the snapshot_generator_queue to unblock the process
+                self.snapshot_generator_queue.put(None)
+
+        result = self.position_processing_cancel_event.wait(CANCEL_TIMEOUT_SECONDS)
+        if not result:
+            return False
+
+        return True
 
     def shutdown(self):
-        self.cancel_queue.put(True)
-        self.file_input_queue.put(None)
+        if not self.cancel(is_shutdown=True):
+            raise Exception("Could not cancel the preprocessing processes!  Cannot join processes, the might still be active!")
         self.parser_process.join()
-        self.snapshot_generator_queue.put(None)
         self.position_process.join()
+        self.file_input_queue.close()
+        self.gcode_output_queue.close()
+        self.parse_progress_queue.close()
+        self.cancel_queue.close()
+        self.snapshot_plan_queue.close()
+        self.snapshot_generator_queue.close()
+
     def get_progress(self):
         results = None
         if not self.parse_progress_queue.empty():
@@ -149,7 +179,7 @@ class GcodeParsingFileProcess(Process):
         input_queue,
         output_queue,
         progress_queue,
-        cancel_queue,
+        cancel_event,
         chunk_size=250,
         notification_period_seconds=1
     ):
@@ -157,8 +187,7 @@ class GcodeParsingFileProcess(Process):
         self.input_queue = input_queue
         self.output_queue = output_queue
         self.progress_queue = progress_queue
-        self.cancel_queue = cancel_queue
-        self.is_cancelled = False
+        self.cancel_event = cancel_event
         self.notification_period_seconds = notification_period_seconds
         self.start_time = 0
         self.current_line = 0
@@ -170,6 +199,23 @@ class GcodeParsingFileProcess(Process):
         self.daemon = True
         self._next_notification_time = None
 
+    def _is_cancelled(self):
+        # cancel means the event is CLEAR not set
+        # this is due to the wait command blocking until true.d
+        return not self.cancel_event.is_set()
+
+    def cancel(self):
+        # print ("GcodeParsingFileProcess - Cancelling")
+        # clear the input queue
+        clear_multiprocess_queue(self.input_queue)
+        # it's possible that the cancel event was not set, so check for this condition
+        if not self.cancel_event.is_set():
+            # print ("GcodeParsingFileProcess - Setting the cancel event")
+            # set the event to notify the canceller
+            self.cancel_event.set()
+
+        # print ("GcodeParsingFileProcess - Cancelled")
+
     def run(self):
         # initialize the fastgcodeparser
         fastgcodeparser.ParseGcode("")
@@ -179,13 +225,20 @@ class GcodeParsingFileProcess(Process):
 
     def process(self):
         while True:
-            file_path = self.input_queue.get(True)
+            # reset the current line and the internal _cancelled attribute for the next
+            # file to process
             self.current_line = 0
-            self.is_cancelled = False
+            _cancelled = False
+            # print ("GcodeParsingFileProcess - Waiting for a file to process")
+            file_path = self.input_queue.get(True)
             items_added = 0
             if file_path is None:
-                self.output_queue.put(None)
+                # print ("GcodeParsingFileProcess - Received a null file path")
+                # cancel the process and exit
+                self.cancel()
+                # print ("GcodeParsingFileProcess - Exiting")
                 return
+            # print ("GcodeParsingFileProcess - Processing {0}".format(file_path))
             self.start_time = time.time()
             self.file_size_bytes = os.path.getsize(file_path)
             # set the next notification time
@@ -205,24 +258,33 @@ class GcodeParsingFileProcess(Process):
                         print (e)
                     items_added += 1
                     if items_added == self.chunk_size:
-                        if not self.cancel_queue.empty():
-                            self.is_cancelled = True
-                            items_added = 0
+                        # print ("GcodeParsingFileProcess - Chunk size reached: {0} lines".format(self.chunk_size))
+                        if self._is_cancelled():
+                            # print ("GcodeParsingFileProcess - Cancel detected, setting cancel flag")
+                            # somebody requested a cancel, set our flag
+                            _cancelled = True
                             break
-                        self.output_queue.put(self.queue, True)
-                        self.queue = deque(maxlen=self.chunk_size)
-                        items_added = 0
-                        if self._next_notification_time < time.time():
-                            self.update_progress(gcode_file)
-                            self._next_notification_time = (
-                                self._next_notification_time + self.notification_period_seconds
-                            )
-
-            if not self.is_cancelled and items_added > 0:
-                self.output_queue.put(self.queue, True)
-
-            self.progress_queue.put((100, time.time() - self.start_time, self.current_line))
-            self.output_queue.put(None, True)
+                        else:
+                            # print ("GcodeParsingFileProcess - Sending Gcode to Position Processor")
+                            self.output_queue.put(self.queue, True)
+                            self.queue = deque(maxlen=self.chunk_size)
+                            items_added = 0
+                            if self._next_notification_time < time.time():
+                                # print ("GcodeParsingFileProcess - Sending progress")
+                                self.update_progress(gcode_file)
+                                self._next_notification_time = (
+                                    self._next_notification_time + self.notification_period_seconds
+                                )
+            if not _cancelled:
+                if items_added > 0:
+                    # print ("GcodeParsingFileProcess - Adding final gcodes to output queue")
+                    self.output_queue.put(self.queue, True)
+                    # print ("GcodeParsingFileProcess - Sending progress complete notification")
+                self.progress_queue.put((100, time.time() - self.start_time, self.current_line))
+                # print ("GcodeParsingFileProcess - Sending NULL to output queue to stop position processing")
+                self.output_queue.put(None, True)
+            else:
+                self.cancel()
 
     def update_progress(self, gcode_file):
         try:
@@ -231,24 +293,42 @@ class GcodeParsingFileProcess(Process):
             clear_multiprocess_queue(self.progress_queue)
             self.progress_queue.put((progress_percent, time.time() - self.start_time, self.current_line))
         except ValueError:
-            print ("A value error occurred when updating progress.")
+            # print ("GcodeParsingFileProcess - A value error occurred when updating progress.")
             pass
         except queue.Empty:
-            print ("The progress queue was empty")
+            # print ("GcodeParsingFileProcess - The progress queue was empty")
             pass
 
 
 class PositionProcess(Process):
 
-    def __init__(self, process_queue, input_queue, output_queue):
+    def __init__(self, process_queue, input_queue, output_queue, cancel_event):
         super(PositionProcess, self).__init__()
         # create a new queue so that the originating process can insert processor objects
         self.process_queue = process_queue
         self.input_queue = input_queue
         self.output_queue = output_queue
+        self.cancel_event = cancel_event
         self.daemon = True
         self.snapshot_plans = []
         self.current_line = 0
+
+    def is_cancelled(self):
+        # cancel means the event is CLEAR not set
+        # this is due to the wait command blocking until true.d
+        return not self.cancel_event.is_set()
+
+    def cancel(self):
+        # print ("PositionProcess - Cancelling")
+        # clear the input queue
+        clear_multiprocess_queue(self.input_queue)
+        # it's possible that this event was cancelled without
+        # the event being set.
+        if not self.cancel_event.is_set():
+            # print ("PositionProcess - Setting the cancel event")
+            self.cancel_event.set()
+
+        # print ("PositionProcess - Cancelled")
 
     def run(self):
         # hack to get the output time correct.  For some reason the fastgcodeparser is initialized here
@@ -257,11 +337,21 @@ class PositionProcess(Process):
         # TODO: prevent fastgcodeparser from being imported here somehow
         fastgcodeparser.ParseGcode("")
         self.output_queue.put(True)
+        self.process()
+
+    def process(self):
+
         while True:
+            # since we need to be able to cancel here, and this get blocks,
+            # we need to allow the caller to put Null on the queue to trigger a cancel
             # get the processor we are using
+            # print ("PositionProcess - Wating for new process")
             result = self.process_queue.get(True)
             if result is None:
+                # print ("PositionProcess - Received 'None' from process queue, shutting down process")
                 # sending None to the process queue is a signal to terminate the process
+                self.cancel()
+                # print ("PositionProcess - Exiting Process")
                 return
             # make sure we got the appropriate number of results
             assert(len(result) == 2)
@@ -274,24 +364,36 @@ class PositionProcess(Process):
             # reset any necessary parameters for the process
             self.current_line = 0
             while True:
-                # get the command to parse
-                commands = self.input_queue.get(True)
-                if commands is None:
-                    # sending None to the output_queue is a signal stop processing gcodes
-
-                    # our processor may have some additional data to add since it had no way of knowing that the
-                    # gcode file has completed
-                    current_processor.on_processing_complete()
-                    # add any snapshot plans (or an empty list if there are none) to the output queue here
-                    self.output_queue.put(current_processor.snapshot_plans)
-                    # break from the inner loop and wait for another process
+                # see if we've been cancelled
+                if self.is_cancelled():
+                    # print ("PositionProcess - Received cancel signal")
+                    self.cancel()
+                    # print ("PositionProcess - Breaking from current process")
                     break
-                for cmd in commands:
-                    self.current_line += 1
-                    if cmd.cmd is not None:
-                        current_position.update(cmd)
-                        current_processor.process_position(current_position.current_pos, self.current_line)
+                else:
+                    # get the command to parse
+                    commands = self.input_queue.get(True)
 
+                    if commands is None:
+                        # print ("PositionProcess - Received 'None' from input queue, current process finishing")
+                        # sending None to the output_queue is a signal stop processing gcodes
+
+                        # our processor may have some additional data to add since it had no way of knowing that the
+                        # gcode file has completed
+                        current_processor.on_processing_complete()
+                        # print ("PositionProcess - Added final snapshot plans, adding to output queue")
+                        # add any snapshot plans (or an empty list if there are none) to the output queue here
+                        self.output_queue.put(current_processor.snapshot_plans)
+                        # break from the inner loop and wait for another process
+                        # print ("PositionProcess - current process complete")
+                        break
+                    # print ("PositionProcess - processing {0} commands".format(len(commands)))
+                    for cmd in commands:
+                        self.current_line += 1
+                        if cmd.cmd is not None:
+                            current_position.update(cmd)
+                            current_processor.process_position(current_position.current_pos, self.current_line)
+                    # print ("PositionProcess - finished processing chunk".format(len(commands)))
 
 TRAVEL_ACTION = "travel"
 SNAPSHOT_ACTION = "snapshot"
