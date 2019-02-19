@@ -170,6 +170,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
             request_values["cancel_print_on_startup_error"]
         )
+        self._octolapse_settings.main_settings.preprocessing_command_queue_length = (
+            request_values["preprocessing_command_queue_length"]
+        )
+        self._octolapse_settings.main_settings.preprocessing_chunk_size = request_values["preprocessing_chunk_size"]
+
         # save the updated settings to a file.
         self.save_settings()
 
@@ -901,7 +906,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self.create_timelapse_object()
 
             # create the position processor
-            self.gcode_preprocessor = octoprint_octolapse.stabilization_preprocessing.PositionPreprocessor()
+            self.gcode_preprocessor = octoprint_octolapse.stabilization_preprocessing.PositionPreprocessor(
+                chunk_size=self._octolapse_settings.main_settings.preprocessing_chunk_size,
+                output_queue_length=self._octolapse_settings.main_settings.preprocessing_command_queue_length
+            )
 
             # log the loaded state
             self._octolapse_settings.Logger.log_info("Octolapse - loaded and active.")

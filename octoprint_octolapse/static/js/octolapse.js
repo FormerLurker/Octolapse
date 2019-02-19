@@ -770,6 +770,9 @@ $(function () {
         self.show_navbar_when_not_printing = ko.observable(false);
         self.show_real_snapshot_time = ko.observable(false);
         self.cancel_print_on_startup_error = ko.observable(true);
+        self.preprocessing_chunk_size = ko.observable(256);
+        self.preprocessing_command_queue_length = ko.observable(1);
+
 
         self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
@@ -964,7 +967,19 @@ $(function () {
             if (ko.isObservable(settings.cancel_print_on_startup_error))
                 self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
             else
-                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error)
+                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
+
+            if (ko.isObservable(settings.preprocessing_command_queue_length))
+                self.preprocessing_command_queue_length(settings.preprocessing_command_queue_length());
+            else
+                self.preprocessing_command_queue_length(settings.preprocessing_command_queue_length);
+
+            if (ko.isObservable(settings.preprocessing_chunk_size))
+                self.preprocessing_chunk_size(settings.preprocessing_chunk_size());
+            else
+                self.preprocessing_chunk_size(settings.preprocessing_chunk_size);
+
+
 
 
 

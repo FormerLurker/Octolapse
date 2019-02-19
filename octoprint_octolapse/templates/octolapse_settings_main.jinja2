@@ -264,7 +264,27 @@
                     </label>
                   </div>
                 </div>
-
+                <div class="control-group">
+                  <label class="control-label">Preprocessing Chunk Size</label>
+                  <div class="controls">
+                    <input name="preprocessing_chunk_size" class="input-small ignore_hidden_errors" title="Preprocessing chunk size" type="number" data-bind="value: preprocessing_chunk_size"  min="64" max="8192" step="1" required="true"/>
+                    <div class="error_label_container text-error"></div>
+                    <span class="help-inline">
+                        Controls the number of parsed gcode commands that are sent to the stabilization preprocessor at one time.  The optimal value is highly CPU/OS dependant.  On my development machine 256 is a good value.
+                        <span class="label label-important">Warning</span>  You must restart Octoprint for this setting to take effect.
+                    </span>
+                  </div>
+                </div>
+                <div class="control-group">
+                  <label class="control-label">Preprocessing Queue Length</label>
+                  <div class="controls">
+                      <input name="preprocessing_command_queue_length" class="input-small ignore_hidden_errors" title="Preprocessing command queue length" type="number" data-bind="value: preprocessing_command_queue_length"  min="1" max="255" step="1" required="true"/>
+                      <div class="error_label_container text-error"></div>
+                      <span class="help-inline">
+                        Controls how many parsed gcode command chunks can be stored for consumption by the stabilization preprocessor.  The optimal value is highly CPU/OS dependant.  On my development machine 1 is a good value.
+                        <span class="label label-important">Warning</span>  You must restart Octoprint for this setting to take effect.
+                      </span>
+                  </div>
               </div>
             </div>
           </div>

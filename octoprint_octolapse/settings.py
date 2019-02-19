@@ -957,6 +957,8 @@ class MainSettings(Settings):
         self.show_snapshot_plan_information = False
         self.show_real_snapshot_time = False
         self.cancel_print_on_startup_error = True
+        self.preprocessing_command_queue_length = 1
+        self.preprocessing_chunk_size = 256
         self.platform = sys.platform,
         self.version = plugin_version
 

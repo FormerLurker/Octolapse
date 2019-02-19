@@ -45,7 +45,8 @@ $(function () {
         self.show_extruder_state_changes = ko.observable();
         self.show_trigger_state_changes = ko.observable();
         self.show_snapshot_plan_information = ko.observable();
-
+        self.preprocessing_chunk_size = ko.observable();
+        self.preprocessing_command_queue_length = ko.observable();
 
         // Informational Values
         self.platform = ko.observable();
@@ -102,8 +103,10 @@ $(function () {
             self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
             self.show_real_snapshot_time(settings.show_real_snapshot_time);
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
-            //self.platform(settings.platform());
+            self.preprocessing_chunk_size(settings.preprocessing_chunk_size);
+            self.preprocessing_command_queue_length(settings.preprocessing_command_queue_length);
 
+            //self.platform(settings.platform());
 
             // Set the tab-button/tab visibility
             self.setSettingsVisibility(settings.main_settings.is_octolapse_enabled);
@@ -144,9 +147,11 @@ $(function () {
             self.show_position_changes(Octolapse.Globals.show_position_changes());
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
-            self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information())
+            self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information());
             self.show_real_snapshot_time(Octolapse.Globals.show_real_snapshot_time());
-            self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error())
+            self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error());
+            self.preprocessing_chunk_size(Octolapse.Globals.preprocessing_chunk_size());
+            self.preprocessing_command_queue_length(Octolapse.Globals.preprocessing_command_queue_length());
             var dialog = this;
             dialog.$editDialog = $("#octolapse_edit_settings_main_dialog");
             dialog.$editForm = $("#octolapse_edit_main_settings_form");
@@ -237,7 +242,9 @@ $(function () {
                     self.show_position_changes(false);
                     self.show_extruder_state_changes(false);
                     self.show_trigger_state_changes(false);
-
+                    self.show_snapshot_plan_information(false);
+                    self.preprocessing_command_queue_length(1);
+                    self.preprocessing_chunk_size(256);
                 });
 
                 // Remove any click event bindings from the save button
@@ -258,6 +265,8 @@ $(function () {
                             , "show_extruder_state_changes": self.show_extruder_state_changes()
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
                             , "show_snapshot_plan_information": self.show_snapshot_plan_information()
+                            , "preprocessing_chunk_size": self.preprocessing_chunk_size()
+                            , "preprocessing_command_queue_length": self.preprocessing_command_queue_length()
                             , "show_real_snapshot_time": self.show_real_snapshot_time()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
                             , "client_id": Octolapse.Globals.client_id
