@@ -161,7 +161,7 @@ $(function () {
             self.is_current_stabilization_real_time = function(){
                 var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
                 if (current_stabilization  != null)
-                    console.log(current_stabilization.stabilization_type);
+                    //console.log(current_stabilization.stabilization_type);
                     return current_stabilization.stabilization_type === "real-time";
                 return true;
             };
@@ -481,7 +481,7 @@ $(function () {
             self.updateState = function(state)
             {
 
-                console.log("octolapse.status.js - Updating State")
+                //console.log("octolapse.status.js - Updating State")
                 if (state.stabilization_type != null)
                     self.is_real_time(state.stabilization_type == "real-time");
 

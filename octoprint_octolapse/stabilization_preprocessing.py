@@ -229,8 +229,20 @@ class GcodeParsingFileProcess(Process):
             # file to process
             self.current_line = 0
             _cancelled = False
+            file_path = None
             # print ("GcodeParsingFileProcess - Waiting for a file to process")
-            file_path = self.input_queue.get(True)
+            while True:
+
+                try:
+                    # check for a new file path to process
+                    file_path = self.input_queue.get(True, timeout=1)
+                    break
+                except queue.Empty:
+                    pass
+                # check for a cancel when we have nothing to cancel
+                if self._is_cancelled():
+                    self.cancel()
+
             items_added = 0
             if file_path is None:
                 # print ("GcodeParsingFileProcess - Received a null file path")
@@ -238,6 +250,10 @@ class GcodeParsingFileProcess(Process):
                 self.cancel()
                 # print ("GcodeParsingFileProcess - Exiting")
                 return
+            # Set the cancel event if there is one
+            if not self.cancel_event.is_set():
+                # just in case someone tried to cancel while the process wasn't running
+                self.cancel_event.set()
             # print ("GcodeParsingFileProcess - Processing {0}".format(file_path))
             self.start_time = time.time()
             self.file_size_bytes = os.path.getsize(file_path)
@@ -346,7 +362,17 @@ class PositionProcess(Process):
             # we need to allow the caller to put Null on the queue to trigger a cancel
             # get the processor we are using
             # print ("PositionProcess - Wating for new process")
-            result = self.process_queue.get(True)
+            while True:
+                try:
+
+                    result = self.process_queue.get(timeout=1)
+                    break
+                except queue.Empty:
+                    pass
+
+                if self.is_cancelled():
+                    self.cancel()
+
             if result is None:
                 # print ("PositionProcess - Received 'None' from process queue, shutting down process")
                 # sending None to the process queue is a signal to terminate the process

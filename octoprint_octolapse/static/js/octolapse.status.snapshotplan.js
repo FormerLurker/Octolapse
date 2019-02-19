@@ -137,10 +137,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.animate_plan_clicked = function()
             {
                 if(self.is_animating_plans()) {
-                    console.log("Snapshot Plans are already animating.");
+                    //console.log("Octolapse - Snapshot Plans are already animating.");
                     return;
                 }
-                console.log("Animating Snapshot Plans.");
+                //console.log("Animating Snapshot Plans.");
                 self.is_animating_plans(true);
                 self.view_current_plan(false);
 
@@ -409,7 +409,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             };
 
             self.canvas_erase_print_bed = function(){
-                console.log("Erasing Bed");
+                //console.log("Erasing Bed");
                 self.canvas_context.fillStyle = '#ffffff';
                 self.canvas_context.fillRect(
                     self.canvas_border_size[0] - self.canvas_location_radius,

@@ -207,7 +207,7 @@ $(function () {
     </div><div><span class="progress-text"></span></div>',
             icon: 'fa fa-cog fa-spin',
             confirm: {
-                confirm: true,
+                confirm: Octolapse.Globals.is_admin(),
                 buttons: [{
                     text: 'Cancel',
                     click: cancel_callback
@@ -850,6 +850,18 @@ $(function () {
             Octolapse.Settings.clearSettings();
         };
 
+        self.onEventPrinterStateChanged = function(payload)
+        {
+            //console.log("Octolapse.js - Received print state change.");
+            if (payload.state_id == "CANCELLING") {
+                //console.log("Octolapse.js - Printer is cancelling.");
+                // We need to close any progress diagogs
+                if (self.pre_processing_progress != null) {
+                    self.pre_processing_progress.close();
+                }
+            }
+        }
+
         self.updateState = function (data) {
             //console.log(state);
             if (data.state != null) {
@@ -873,7 +885,7 @@ $(function () {
 
             }
             if (data.status != null) {
-                console.log("Updating Status");
+                //console.log("Updating Status");
                 Octolapse.Status.update(data.status);
             }
             if (!self.HasLoadedState) {
@@ -960,7 +972,7 @@ $(function () {
 
         self.cancelPreprocessing = function()
         {
-            console.log("Cancelling preprocessing")
+            //console.log("Cancelling preprocessing")
             var data = {"cancel":true};
             $.ajax({
                 url: "./plugin/octolapse/cancelPreprocessing",
@@ -988,22 +1000,22 @@ $(function () {
             if (plugin !== "octolapse") {
                 return;
             }
-            console.log("Message received.  Type:" + data.type);
+            //console.log("Message received.  Type:" + data.type);
             //console.log(data);
             switch (data.type) {
                 case "gcode-preprocessing-start":
                     // create the cancel popup
-                    console.log("Creating a progress bar.");
+                    //console.log("Creating a progress bar.");
                     self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     break;
                 case "gcode-preprocessing-update":
-                    console.log("Octolapse received pre-processing update processing message.");
+                    //console.log("Octolapse received pre-processing update processing message.");
                     // TODO: CHANGE THIS TO A PROGRESS INDICATOR
                     var percent_finished = data.percent_finished.toFixed(1);
                     var seconds_elapsed = data.seconds_elapsed;
                     if (self.pre_processing_progress == null)
                     {
-                        console.log("The pre-processing progress bar is missing, creating the progress bar.");
+                        //console.log("The pre-processing progress bar is missing, creating the progress bar.");
                         self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     }
                     if (self.pre_processing_progress != null) {
@@ -1048,14 +1060,14 @@ $(function () {
                     }
                 case "state-loaded":
                     {
-                        console.log('octolapse.js - state-loaded');
+                        //console.log('octolapse.js - state-loaded');
                         self.updateState(data);
                     }
                     break;
                 case "state-changed":
                     {
-                        console.log('octolapse.js - state-changed');
-                        console.log(data);
+                        //console.log('octolapse.js - state-changed');
+                        //console.log(data);
                         self.updateState(data);
                     }
                     break;
@@ -1111,7 +1123,7 @@ $(function () {
                     }
                 case "timelapse-start":
                     {
-                        console.log('octolapse.js - timelapse-start');
+                        //console.log('octolapse.js - timelapse-start');
                         // Erase any previous images
                         Octolapse.HasTakenFirstSnapshot = false;
                         // let the status tab know that a timelapse is starting

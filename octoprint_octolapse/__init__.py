@@ -1430,7 +1430,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.send_pre_processing_start_message()
 
     def cancel_preprocessing(self):
-        self._preprocessing_cancel_event.set()
+        if not self._preprocessing_cancel_event.is_set():
+            self._preprocessing_cancel_event.set()
 
         event_is_set = self._preprocessing_cancel_event.wait(self.PREPROCESSING_CANCEL_TIMEOUT_SECONDS)
         if not event_is_set:
@@ -1654,6 +1655,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_print_cancelling(self):
         self._octolapse_settings.Logger.log_print_state_change("Print cancelling.")
+        # stop any preprocessing scripts if they are called
+        self.cancel_preprocessing()
+        # tell the timelapse object that we are cancelling
         self._timelapse.on_print_cancelling()
 
     def on_print_canceled(self):
