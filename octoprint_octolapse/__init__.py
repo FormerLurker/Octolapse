@@ -990,7 +990,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._timelapse.on_print_paused()
 
     def on_print_start(self, parsed_command):
-
+        """Return True in order to release the printer job lock, False keeps it locked."""
         self._octolapse_settings.Logger.log_print_state_change(
             "Print start detected, attempting to start timelapse."
         )
@@ -998,15 +998,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         results = self.test_timelapse_config()
         if not results["success"]:
             self.on_print_start_failed(results["error-message"])
-            return False
-
-
+            return True
 
         # get all of the settings we need
         timelapse_settings = self.get_timelapse_settings()
         if not timelapse_settings["success"]:
             self.on_print_start_failed(timelapse_settings["error-message"])
-            return False
+            return True
 
         if len(timelapse_settings["warnings"]) > 0:
             self.send_plugin_message("  ".join(timelapse_settings["warnings"]))
@@ -1110,8 +1108,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                         camera.test_web_camera(current_camera)
                     except camera.CameraError as e:
                         self._octolapse_settings.Logger.log_exception(e)
-                        self.on_print_start_failed(str(e))
-                        return True
+                        message = "Octolapse could not contact your camera '{0}'.  Please check your " \
+                                  "profile (especially the url) and try again.".format(current_camera.name)
+                        return {"success": False, "error": "camera-webcam-test-failed", "error-message": message}
                     except Exception as e:
                         self._octolapse_settings.Logger.log_exception(e)
                         message = "An unknown exception occurred while testing the '{0}' camera profile (GUID:{1})."  \
@@ -1348,7 +1347,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self._printer.cancel_print(tags={'startup-failed'})
         else:
             message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
-
         self._octolapse_settings.Logger.log_print_state_change(message)
         self.send_plugin_message("print-start-error", message)
 

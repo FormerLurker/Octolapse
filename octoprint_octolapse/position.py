@@ -566,8 +566,6 @@ class Position(object):
 
     def get_gcode_functions(self):
         return {
-            "G0": self.process_g0_g1,
-            "G1": self.process_g0_g1,
             "G2": self.process_g2,
             "G3": self.process_g3,
             "G10": self.process_g10,
@@ -671,7 +669,7 @@ class Position(object):
         # These two are by far the most used commands, so
         # call them directly and avoid the hash lookup and extra function call
         has_processed_command = False
-        if cmd == "G1" or cmd == "G0":
+        if cmd in ["G1", "G0"]:
             has_processed_command = True
             self.current_pos.update_position(
                 parsed_command.parameters["X"] if "X" in parsed_command.parameters else None,
@@ -706,50 +704,51 @@ class Position(object):
                 )
 
         # Update Extruder States - Note that e_relative must be rounded and non-null
-
-        current.extrusion_length_total += current.e_relative
-        if current.e_relative != 0:
-
-            # Update retraction_length and extrusion_length
-            current.retraction_length = utility.round_to_float_equality_range(
-                current.retraction_length - current.e_relative
-            )
-            if current.retraction_length <= 0:
-                # we can use the negative retraction length to calculate our extrusion length!
-                current.extrusion_length = abs(current.retraction_length)
-                # set the retraction length to 0 since we are extruding
-                current.retraction_length = 0
-            else:
-                current.extrusion_length = 0
-
-            # calculate deretraction length
-            if previous.retraction_length > current.retraction_length:
-                current.deretraction_length = utility.round_to_float_equality_range(
-                    previous.retraction_length - current.retraction_length,
-                )
-            else:
-                current.deretraction_length = 0
-
         if current.has_position_changed:
-            # *************Calculate extruder state*************
-            # rounding should all be done by now
-            current.is_extruding_start = True if current.extrusion_length > 0 and not previous.is_extruding else False
-            current.is_extruding = True if current.extrusion_length > 0 else False
-            current.is_primed = True if current.extrusion_length == 0 and current.retraction_length == 0 else False
-            current.is_retracting_start = (
-                True if not previous.is_retracting and current.retraction_length > 0 else False
-            )
-            current.is_retracting = True if current.retraction_length > previous.retraction_length else False
-            current.is_partially_retracted = True if (
-                0 < current.retraction_length < self._retraction_length) else False
-            current.is_retracted = True if current.retraction_length >= self._retraction_length else False
-            current.is_deretracting_start = (
-                True if current.deretraction_length > 0 and not previous.is_deretracting else False
-            )
-            current.is_deretracting = True if current.deretraction_length > previous.deretraction_length else False
-            current.is_deretracted = True if previous.is_retracted and current.retraction_length == 0 else False
+            current.extrusion_length_total += current.e_relative
+            if current.e_relative > 0 and previous.is_extruding and not previous.is_extruding_start:
+                current.extrusion_length = current.e_relative
+            else:
+                if current.e_relative != 0:
+                    # Update retraction_length and extrusion_length
+                    current.retraction_length = utility.round_to_float_equality_range(
+                        current.retraction_length - current.e_relative
+                    )
+                    if current.retraction_length <= 0:
+                        # we can use the negative retraction length to calculate our extrusion length!
+                        current.extrusion_length = current.e_relative
+                        # set the retraction length to 0 since we are extruding
+                        current.retraction_length = 0
+                    else:
+                        current.extrusion_length = 0
 
-            # *************End Calculate extruder state*************
+                    # calculate deretraction length
+                    if previous.retraction_length > current.retraction_length:
+                        current.deretraction_length = utility.round_to_float_equality_range(
+                            previous.retraction_length - current.retraction_length,
+                        )
+                    else:
+                        current.deretraction_length = 0
+
+                # *************Calculate extruder state*************
+                # rounding should all be done by now
+                current.is_extruding_start = True if current.extrusion_length > 0 and not previous.is_extruding else False
+                current.is_extruding = True if current.extrusion_length > 0 else False
+                current.is_primed = True if current.extrusion_length == 0 and current.retraction_length == 0 else False
+                current.is_retracting_start = (
+                    True if not previous.is_retracting and current.retraction_length > 0 else False
+                )
+                current.is_retracting = True if current.retraction_length > previous.retraction_length else False
+                current.is_partially_retracted = True if (
+                    0 < current.retraction_length < self._retraction_length) else False
+                current.is_retracted = True if current.retraction_length >= self._retraction_length else False
+                current.is_deretracting_start = (
+                    True if current.deretraction_length > 0 and not previous.is_deretracting else False
+                )
+                current.is_deretracting = True if current.deretraction_length > previous.deretraction_length else False
+                current.is_deretracted = True if previous.is_retracted and current.retraction_length == 0 else False
+
+                # *************End Calculate extruder state*************
 
             # calculate last_extrusion_height and height
             # If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
@@ -796,14 +795,15 @@ class Position(object):
                         False if current.is_extruding or current.z is None or current.last_extrusion_height is None
                         else current.z - current.last_extrusion_height >= self._z_lift_height
                     )
+
             # Calcluate position restructions
             if self._has_restricted_position:
-                # If we have a homed for the current and previous position, and either the exturder or position has 
+                # If we have a homed for the current and previous position, and either the exturder or position has
                 # # changed
                 if (
-                    current.x is not None and 
-                    current.y is not None and 
-                    previous.x is not None and 
+                    current.x is not None and
+                    current.y is not None and
+                    previous.x is not None and
                     previous.y is not None
                 ):
                     # If we're using restricted positions, calculate intersections and determine if we are in position
@@ -834,20 +834,6 @@ class Position(object):
                     )
             else:
                 current.has_one_feature_enabled = True
-        #self.position_history.appendleft(current)
-
-    # Todo:  Remove this, we use a different function
-    def process_g0_g1(self):
-        # If we're moving on the X/Y plane only, mark this position as travel only
-        parameters = self.current_pos.parsed_command.parameters
-        self.current_pos.update_position(
-            parameters["X"] if "X" in parameters else None,
-            parameters["T"] if "Y" in parameters else None,
-            parameters["Z"] if "Z" in parameters else None,
-            parameters["E"] if "E" in parameters else None,
-            parameters["F"] if "F" in parameters else None,
-            is_g1=True
-        )
 
     def process_g2(self):
         self.process_g2_g3("G2")
