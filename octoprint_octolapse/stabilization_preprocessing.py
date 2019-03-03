@@ -115,6 +115,10 @@ class StabilizationPreprocessingThread(Thread):
                 StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
             ):
                 ret_val = self._run_lock_to_print()
+                OctolapseSettings.Logger.log_info(
+                    "Received {0} snapshot plans from the GcodePositionProcessor stabilization.".format(
+                        len(ret_val[2])
+                    ))
                 results = (
                     ret_val[0],  # success
                     ret_val[1],  # errors
@@ -154,13 +158,11 @@ class StabilizationPreprocessingThread(Thread):
         seconds_elapsed = results[3]
         gcodes_processed = results[4]
         lines_processed = results[5]
-        OctolapseSettings.Logger.log_info("Adding complete item to progress queue")
-
         self.complete_callback(
             success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
             self.timelapse_settings, self.parsed_command
         )
-        OctolapseSettings.Logger.log_info("Exiting Stabilizatio Preprocessing Thread.")
+
 
     def _run_lock_to_print(self):
         # create position processor arguments
@@ -220,7 +222,6 @@ class StabilizationPreprocessingThread(Thread):
             self.cancel_event.set()
 
         # return true to continue processing
-        print "Returning {0} to c extensions".format(not self.is_cancelled)
         return not self.is_cancelled
 
 
@@ -290,7 +291,6 @@ class SnapshotPlan(object):
 
     @classmethod
     def create_from_cpp_snapshot_plans(cls, cpp_snapshot_plans):
-        OctolapseSettings.Logger.log_info("Building Snapshot Plans.")
         # turn the snapshot plans into a class
         snapshot_plans = []
         try:
@@ -331,9 +331,7 @@ class SnapshotPlan(object):
                     snapshot_plan.add_step(SnapshotPlanStep(action, x, y, z, e, f))
 
                 snapshot_plans.append(snapshot_plan)
-            OctolapseSettings.Logger.log_info("Snapshot Plans Built")
         except Exception as e:
-            traceback.print_exc()
             OctolapseSettings.Logger.log_exception(e)
             raise e
         return snapshot_plans

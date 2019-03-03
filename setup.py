@@ -83,9 +83,8 @@ cpp_gcode_parser = Extension(
     sources=plugin_ext_sources,
     language="c++",
     extra_compile_args=compiler_args  # , extra_link_args=['/DEBUG']
-
 )
-print ("Compiler Args:  ".format(compiler_args))
+
 additional_setup_parameters = {"ext_modules": [cpp_gcode_parser]}
 
 ########################################################################################################################
