@@ -27,7 +27,7 @@
 #include "GcodeParser.h"
 #include "Position.h"
 
-typedef struct position_args {
+struct position_args {
 	position_args() {
 		autodetect_position = true;
 		origin_x = 0;

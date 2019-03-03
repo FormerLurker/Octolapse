@@ -40,7 +40,7 @@ static const char* send_parsed_command_first = "first";
 static const char* send_parsed_command_last = "last";
 static const char* send_parsed_command_never = "never";
 
-typedef struct stabilization_args {
+struct stabilization_args {
 	stabilization_args() {
 		is_bound = false;
 		x_min = 0;
@@ -72,7 +72,7 @@ typedef struct stabilization_args {
 	double z_lift_height;
 	double height_increment;
 	double notification_period_seconds;
-} stabilization_args;
+};
 
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
