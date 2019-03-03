@@ -352,12 +352,21 @@ void gcode_position::UpdatePos(position* pos, double x, bool update_x, double y,
 		}
 		else
 		{
-			if (update_x && !pos->x_null)
+			if (update_x)
+			{
 				pos->x = x + pos->x_offset;
-			if (update_y && !pos->y_null)
+				pos->x_null = false;
+			}
+			if (update_y)
+			{
 				pos->y = y + pos->y_offset;
-			if (update_z && !pos->z_null)
+				pos->y_null = false;
+			}
+			if (update_z)
+			{
 				pos->z = z + pos->z_offset;
+				pos->z_null = false;
+			}
 		}
 	}
 
