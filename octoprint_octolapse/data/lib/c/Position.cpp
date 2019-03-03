@@ -1,7 +1,7 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 // Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 // Copyright(C) 2019  Brad Hochgesang
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
 // by the Free Software Foundation, either version 3 of the License, or
@@ -18,77 +18,8 @@
 //
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////////
 #include "Position.h"
-/*
-f
-f_null
-x
-x_null
-x_offset
-x_homed
-y
-y_null
-y_offset
-y_homed
-z
-z_null
-z_offset
-z_homed
-e
-e_offset
-is_relative
-is_relative_null
-is_extruder_relative
-is_extruder_relative_null
-is_metric
-is_metric_null
-last_extrusion_height
-last_extrusion_height_null
-layer
-height
-is_printer_primed
-minimum_layer_height_reached
-firmware_retraction_length
-firmware_retraction_length_null
-firmware_unretraction_additional_length
-firmware_unretraction_additional_length_null
-firmware_retraction_feedrate
-firmware_retraction_feedrate_null
-firmware_unretraction_feedrate
-firmware_unretraction_feedrate_null
-firmware_z_lift
-firmware_z_lift_null
-has_position_error
-position_error
-has_homed_position
-e_relative
-extrusion_length
-extrusion_length_total
-retraction_length
-deretraction_length
-is_extruding_start
-is_extruding
-is_primed
-is_retracting_start
-is_retracting
-is_retracted
-is_partially_retracted
-is_deretracting_start
-is_deretracting
-is_deretracted
-is_layer_change
-is_height_change
-is_travel_only
-is_zhop
-has_position_changed
-has_state_changed
-has_received_home_command
-has_one_feature_enabled
-is_in_position
-in_path_position
-*/
 
 void position::initialize()
 {
