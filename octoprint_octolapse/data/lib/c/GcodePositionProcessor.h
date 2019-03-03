@@ -53,7 +53,7 @@ extern "C"
 	static PyObject* Reset(PyObject* self, PyObject *args);
 	static PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args);
 }
-static bool ParsePositionArgs(PyObject *args, position_args* position_args);
+static bool ParsePositionArgs(PyObject *args, gcode_position_args* position_args);
 static bool ParseUpdateArgs(PyObject *args, std::string*);
 static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabilizationArgs);
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const long gcodes_processed, const long lines_processed);

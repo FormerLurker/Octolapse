@@ -57,7 +57,7 @@ struct stabilization_args {
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
 	};
-	position_args position_args;
+	gcode_position_args position_args;
 	bool is_bound;
 	double x_min;
 	double x_max;
@@ -103,7 +103,7 @@ private:
 	bool python_callbacks;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
 		long gcodes_processed, long lines_processed);
-	position_args* p_args_;
+	gcode_position_args* p_args_;
 protected:
 	virtual void process_pos(position* p_current_pos, parsed_command* p_command);
 	virtual void on_processing_complete();

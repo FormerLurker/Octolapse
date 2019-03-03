@@ -27,8 +27,8 @@
 #include "GcodeParser.h"
 #include "Position.h"
 
-struct position_args {
-	position_args() {
+struct gcode_position_args {
+	gcode_position_args() {
 		autodetect_position = true;
 		origin_x = 0;
 		origin_y = 0;
@@ -68,7 +68,7 @@ class gcode_position
 {
 public:
 	typedef void(gcode_position::*posFunctionType)(position*, parsed_command*);
-	gcode_position(position_args args);
+	gcode_position(gcode_position_args args);
 	gcode_position();
 	~gcode_position();
 

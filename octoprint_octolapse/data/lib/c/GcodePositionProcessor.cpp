@@ -133,7 +133,7 @@ extern "C"
 	
 	static PyObject* Initialize(PyObject* self, PyObject *args)
 	{
-		position_args positionArgs;
+		gcode_position_args positionArgs;
 
 		if (!ParsePositionArgs(args, &positionArgs))
 		{
@@ -147,7 +147,7 @@ extern "C"
 
 	static PyObject* Reset(PyObject* self, PyObject *args)
 	{
-		position_args positionArgs;
+		gcode_position_args positionArgs;
 		if (!ParsePositionArgs(args, &positionArgs))
 			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
 						 // Create the position object
@@ -242,7 +242,7 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 }
 
 /// Argument Parsing
-static bool ParsePositionArgs(PyObject *args, position_args *positionArgs)
+static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 {
 	PyObject * poLocationDetectionCommands; // Hold the PyList
 
@@ -347,7 +347,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 	stabilizationArgs->disable_retract = iDisableRetraction > 0;
 	stabilizationArgs->disable_z_lift = iDisableZLift > 0;
 	stabilizationArgs->stabilization_type = pStabilizationType;
-	position_args position_args;
+	gcode_position_args position_args;
 	if (!ParsePositionArgs(pPositionArgs, &position_args))
 		return false;
 	//Py_DECREF(pPositionArgs);

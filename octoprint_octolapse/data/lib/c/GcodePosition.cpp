@@ -48,7 +48,7 @@ gcode_position::gcode_position()
 	p_undo_pos = new position(_xyz_axis_default_mode, _e_axis_default_mode, _units_default);
 }
 
-gcode_position::gcode_position(position_args args)
+gcode_position::gcode_position(gcode_position_args args)
 {
 	_autodetect_position = args.autodetect_position;
 	_origin_x = args.origin_x;
