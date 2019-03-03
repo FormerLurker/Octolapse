@@ -29,12 +29,19 @@
 #include "ParsedCommandParameter.h"
 static const std::string GCODE_WORDS = "GMT";
 
+
+bool try_extract_double(char ** p, double * p_double);
+bool try_extract_gcode_command(char ** p_p_gcode, char ** command);
+bool try_extract_text_parameter(char ** p_p_gcode, char ** p_p_parameter);
+bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
+bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
 class gcode_parser
 {
 public:
 	gcode_parser();
 	~gcode_parser();
 	void parse_gcode(std::string gcode, parsed_command* command);
+	bool try_parse_gcode(const char * gcode, parsed_command * command);
 private:
 	gcode_parser(const gcode_parser &source);
 	// Variables and lookups
@@ -49,5 +56,6 @@ private:
 	static bool is_gcode_word(char c);
 	double parse_double(const char* p);
 	double parse_double(std::string value);
+
 };
 #endif

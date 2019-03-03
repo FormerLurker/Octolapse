@@ -408,3 +408,355 @@ void gcode_parser::get_parameters(std::string commandString, int startIndex, std
 
 	}
 }
+
+// Superfast gcode parser - v2
+bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
+{
+	char * p = const_cast<char *>(gcode);
+	char * gcode_command;
+	if(!try_extract_gcode_command(&p, &gcode_command ))
+	{
+		return false;
+	}
+	std::vector<parsed_command_parameter> parameters;
+
+	if (parsable_commands_.find(gcode_command) == parsable_commands_.end())
+	{
+		command->cmd = gcode_command;
+		command->gcode = gcode;
+		return true;
+	}
+
+	if (text_only_functions_.find(command->cmd) != text_only_functions_.end())
+	{
+		parsed_command_parameter * p_text_command = new parsed_command_parameter();
+		char * text_value;
+
+		if(!try_extract_text_parameter(&p, &text_value))
+		{
+			delete[] gcode_command;
+			return false;
+		}
+		p_text_command->name = "TEXT";
+		p_text_command->string_value = text_value;
+		std::cout << "Found a text only command.";
+	}
+	else
+	{
+		if (gcode_command[0]=='T')
+		{
+			parsed_command_parameter* param = new parsed_command_parameter();
+
+			if(!try_extract_t_parameter(&p,param))
+			{
+				delete param;
+			}
+			else
+				command->parameters.push_back(param);
+		}
+		else
+		{
+			while (true)
+			{
+				parsed_command_parameter* param = new parsed_command_parameter();
+				if (try_extract_parameter(&p, param))
+					command->parameters.push_back(param);
+				else
+				{
+					delete param;
+					break;
+				}
+			}
+		}
+	}
+	command->cmd = gcode_command;
+	return true;
+	
+}
+
+const unsigned int MAX_GCODE_COMMAND_LENGTH = 10;
+const unsigned int NEW_GCODE_COMMAND_ARRAY_LENGTH = MAX_GCODE_COMMAND_LENGTH + 1;
+
+bool try_extract_gcode_command(char ** p_p_gcode, char ** p_p_command)
+{
+	char * new_command = new char[NEW_GCODE_COMMAND_ARRAY_LENGTH];
+	int positions = MAX_GCODE_COMMAND_LENGTH; // We need to save one space as a null terminator
+	char * c = new_command;
+	char * p = *p_p_gcode;
+	char gcode_word;
+	bool found_command = false;
+
+	// Ignore Leading Spaces
+	while (*p == ' ')
+	{
+		p++;
+	}
+	// Deal with case sensitivity
+	if (*p >= 'a' && *p <= 'z')
+		gcode_word = *p - 32;
+	else
+		gcode_word = *p;
+	if (gcode_word == 'G' || gcode_word == 'M' || gcode_word == 'T')
+	{
+		// Set the gcode word of the new command to the current pointer's location and increment both
+		*c++ = gcode_word;
+		positions--;
+		p++;
+
+		if (gcode_word != 'T')
+		{
+			// the T command is special, it has no address
+
+			// Now look for a command address
+			while ((*p >= '0' && *p <= '9') || *p == ' ') {
+				if (*p != ' ')
+				{
+					if (positions-- == 0)
+					{
+						delete[] new_command;
+						return false;
+					}
+					else
+					{
+						found_command = true;
+						*c++ = *p++;
+					}
+
+				}
+				else
+					++p;
+			}
+			if (*p == '.') {
+				if (positions-- == 0)
+				{
+					delete[] new_command;
+					return false;
+				}
+				*c++ = *p++;
+				found_command = false;
+				while ((*p >= '0' && *p <= '9') || *p == ' ') {
+					if (*p != ' ')
+					{
+						if (positions-- == 0)
+						{
+							delete[] new_command;
+							return false;
+						}
+
+						found_command = true;
+						*c++ = *p++;
+					}
+					else
+						++p;
+				}
+			}
+		}
+		else
+		{
+			found_command = true;
+		}
+	}
+	if (!found_command)
+		delete [] new_command;
+	else
+	{
+		*c = '\0';
+		*p_p_command = new_command;
+		*p_p_gcode = p;
+	}
+	return found_command;
+}
+
+bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value) {
+	char * p = *p_p_gcode;
+	unsigned int r = 0;
+	bool found_numbers = false;
+	// skip any leading whitespace
+	while (*p == ' ')
+		++p;
+
+	while ((*p >= '0' && *p <= '9') || *p == ' ') {
+		if (*p != ' ')
+		{
+			found_numbers = true;
+			r = (r*10.0) + (*p - '0');
+		}
+		++p;
+	}
+	if (found_numbers)
+	{
+		*p_value = r;
+		*p_p_gcode = p;
+	}
+	
+	return found_numbers;
+}
+
+bool try_extract_double(char ** p_p_gcode, double * p_double) {
+	char * p = *p_p_gcode;
+	bool neg = false;
+	double r = 0;
+	bool found_numbers = false;
+	// skip any leading whitespace
+	while (*p == ' ')
+		++p;
+	// Check for negative sign
+	if (*p == '-') {
+		neg = true;
+		++p;
+		while (*p == ' ')
+			++p;
+	}
+	else if (*p == '+') {
+		// Positive sign doesn't affect anything since we assume positive
+		++p;
+		while (*p == ' ')
+			++p;
+	}
+	// skip any additional whitespace
+	
+
+	while ((*p >= '0' && *p <= '9') || *p == ' ') {
+		if (*p != ' ')
+		{
+			found_numbers = true;
+			r = (r*10.0) + (*p - '0');
+		}
+		++p;
+	}
+	if (*p == '.') {
+		double f = 0.0;
+		int n = 0;
+		++p;
+		while ((*p >= '0' && *p <= '9') || *p == ' ') {
+			if (*p != ' ')
+			{
+				found_numbers = true;
+				f = (f*10.0) + (*p - '0');
+				++n;
+			}
+			++p;
+		}
+		r += f / std::pow(10.0, n);
+	}
+	if (neg) {
+		r = -r;
+	}
+	if (found_numbers)
+	{
+		*p_double = r;
+		*p_p_gcode = p;
+	}
+	
+	return found_numbers;
+}
+
+const unsigned int MAX_GCODE_TEXT_PARAMETER_LENGTH = 50;
+const unsigned int NEW_GCODE_TEXT_PARAMETER_ARRAY_LENGTH = MAX_GCODE_TEXT_PARAMETER_LENGTH + 1;
+
+bool try_extract_text_parameter(char ** p_p_gcode, char ** p_p_parameter)
+{
+	// Skip initial whitespace
+	char * text_parameter = new char[NEW_GCODE_TEXT_PARAMETER_ARRAY_LENGTH];
+	int positions = MAX_GCODE_TEXT_PARAMETER_LENGTH; // We need to save one space as a null terminator
+	char * t = text_parameter;
+	char * p = *p_p_gcode;
+	
+	// Ignore Leading Spaces
+	while (*p == ' ')
+	{
+		p++;
+	}
+	// Add all values, stop at end of string or when we hit a ';'
+
+	while (*p != '\0' && *p != ';')
+	{
+		if(positions-- == 0)
+		{
+			delete[] text_parameter;
+			return false;
+		}
+		*t++ = *p++;
+	}
+	if(positions == MAX_GCODE_TEXT_PARAMETER_LENGTH)
+	{
+		delete[] text_parameter;
+		return false;
+	}
+	*t = '\0';
+	*p_p_parameter = text_parameter;
+	*p_p_gcode = p;
+	return true;
+
+}
+
+bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter)
+{
+	char * p = *p_p_gcode;
+	char param_name;
+
+	// Ignore Leading Spaces
+	while (*p == ' ')
+	{
+		p++;
+	}
+
+	// Deal with case sensitivity
+	if (*p >= 'a' && *p <= 'z')
+		param_name = *p++ - 32;
+	else if (*p >= 'A' && *p <= 'Z')
+		param_name = *p++;
+	else
+		return false;
+
+	// Add all values, stop at end of string or when we hit a ';'
+	if (try_extract_double(&p,&parameter->double_value))
+	{
+		parameter->value_type = 'F';
+	}
+	else
+	{
+		char * text_value;
+		if(try_extract_text_parameter(&p, &text_value))
+		{
+			parameter->string_value = text_value;
+			parameter->value_type = 'S';
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	parameter->name = param_name;
+	*p_p_gcode = p;
+	return true;
+
+}
+
+bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter)
+{
+	char * p = *p_p_gcode;
+	parameter->name = "T";
+	// Ignore Leading Spaces
+	while (*p == ' ')
+	{
+		p++;
+	}
+	if (*p == 'c' || *p == 'C')
+		parameter->string_value = "C";
+	if (*p == 'x' || *p == 'X')
+		parameter->string_value = "X"; 
+	else if (*p == '?')
+		parameter->string_value = "?";
+	else
+	{
+		unsigned int value;
+		if(!try_extract_unsigned_long(&p,&parameter->unsigned_long_value))
+		{
+			return false;
+		}
+		parameter->value_type = 'U';
+	}
+	return true;
+}

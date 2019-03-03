@@ -158,8 +158,7 @@ stabilization_results* stabilization::process_file(const std::string& file_path)
 		{
 			lines_processed_++;
 			cmd->clear();
-
-			gcode_parser_->parse_gcode(line, cmd);
+			gcode_parser_->try_parse_gcode(line.c_str(), cmd);
 			if (!cmd->cmd.empty())
 			{
 

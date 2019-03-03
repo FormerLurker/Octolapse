@@ -38,11 +38,14 @@ public:
 	parsed_command_parameter(parsed_command_parameter & source);
 	parsed_command_parameter(std::string name, double double_value);
 	parsed_command_parameter(std::string name, std::string string_value);
+	parsed_command_parameter(std::string name, unsigned int unsigned_int_value);
+
 	PyObject * value_to_py_object();
 
 	std::string name;
 	char value_type;
 	double double_value;
+	unsigned long unsigned_long_value;
 	std::string string_value;
 };
 

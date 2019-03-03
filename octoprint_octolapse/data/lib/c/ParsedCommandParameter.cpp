@@ -29,6 +29,7 @@ parsed_command_parameter::parsed_command_parameter()
 	value_type = 'N';
 	double_value = 0.0;
 	string_value = "";
+	unsigned_long_value = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & source)
@@ -37,20 +38,29 @@ parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & so
 	value_type = source.value_type;
 	double_value = source.double_value;
 	string_value = source.string_value;
+	unsigned_long_value = source.unsigned_long_value;
 }
 
 parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name(name), double_value(double_value)
 {
 	value_type = 'F';
 	string_value = "";
+	unsigned_long_value = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name(name), string_value(string_value)
 {
 	value_type = 'S';
 	double_value = 0.0;
+	unsigned_long_value = 0;
 }
 
+parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name(name), string_value(string_value), unsigned_long_value(unsigned_int_value)
+{
+	value_type = 'U';
+	double_value = 0.0;
+	string_value = "";
+}
 parsed_command_parameter::~parsed_command_parameter()
 {
 
@@ -82,6 +92,10 @@ PyObject * parsed_command_parameter::value_to_py_object()
 			return NULL;
 		}
 		
+	}
+	else if (value_type == 'U')
+	{
+		ret_val = PyLong_FromUnsignedLong(unsigned_long_value);
 	}
 	else
 	{
