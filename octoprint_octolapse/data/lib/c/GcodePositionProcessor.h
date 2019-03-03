@@ -1,7 +1,7 @@
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 // Copyright(C) 2019  Brad Hochgesang
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
 // by the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +18,8 @@
 //
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef GcodePositionProcessor_H
 #define GcodePositionProcessor_H
 #ifdef _DEBUG
@@ -37,17 +38,21 @@ namespace gpp {
 	static gcode_position* position;
 	static gcode_parser* parser;
 }
-extern "C" void initGcodePositionProcessor(void);
-extern "C" static PyObject* Initialize(PyObject* self, PyObject *args);
-extern "C" static PyObject* Undo(PyObject* self, PyObject *args);
-extern "C" static PyObject* Update(PyObject* self, PyObject *args);
-extern "C" static PyObject* Parse(PyObject* self, PyObject *args);
-extern "C" static PyObject* GetCurrentPositionTuple(PyObject* self);
-extern "C" static PyObject* GetCurrentPositionDict(PyObject* self);
-extern "C" static PyObject* GetPreviousPositionTuple(PyObject* self);
-extern "C" static PyObject* GetPreviousPositionDict(PyObject* self);
-extern "C" static PyObject* Reset(PyObject* self, PyObject *args);
-extern "C" PyObject* GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args);
+
+extern "C"
+{
+	void initGcodePositionProcessor(void);
+	static PyObject* Initialize(PyObject* self, PyObject *args);
+	static PyObject* Undo(PyObject* self, PyObject *args);
+	static PyObject* Update(PyObject* self, PyObject *args);
+	static PyObject* Parse(PyObject* self, PyObject *args);
+	static PyObject* GetCurrentPositionTuple(PyObject* self);
+	static PyObject* GetCurrentPositionDict(PyObject* self);
+	static PyObject* GetPreviousPositionTuple(PyObject* self);
+	static PyObject* GetPreviousPositionDict(PyObject* self);
+	static PyObject* Reset(PyObject* self, PyObject *args);
+	static PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args);
+}
 static bool ParsePositionArgs(PyObject *args, position_args* position_args);
 static bool ParseUpdateArgs(PyObject *args, std::string*);
 static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabilizationArgs);

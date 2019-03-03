@@ -1,7 +1,7 @@
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 // Copyright(C) 2019  Brad Hochgesang
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
 // by the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +18,8 @@
 //
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
-///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include "GcodePositionProcessor.h"
 #include <iostream>
 #include "StabilizationSnapToPrint.h"
@@ -44,173 +45,170 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 
 { NULL, NULL, 0, NULL }
 };
-// externs
-extern "C" void initGcodePositionProcessor(void)
+
+extern "C"
 {
-	std::cout << "Initializing GcodePositionProcessor V1.0.0 - Copyright (C) 2019  Brad Hochgesang...";
-	Py_Initialize();
-	PyEval_InitThreads();
+	void initGcodePositionProcessor(void)
+	{
+		std::cout << "Initializing GcodePositionProcessor V1.0.0 - Copyright (C) 2019  Brad Hochgesang...";
+		Py_Initialize();
+		PyEval_InitThreads();
+
+		PyObject *m = Py_InitModule("GcodePositionProcessor", GcodePositionProcessorMethods);
+		gpp::position = NULL;
+		gpp::parser = new gcode_parser();
+
+		std::cout << "complete\r\n";
+	}
+
+	PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args)
+	{
+		PyObject *p_stabilization_args;
+		PyObject *p_progress_callback;
+		char * file_path;
+		char * nearest_to_corner;
+
+		int iFavorXAxis;
+		if (!PyArg_ParseTuple(
+			args,
+			"sOOsi",
+			&file_path,
+			&p_stabilization_args,
+			&p_progress_callback,
+			&nearest_to_corner,
+			&iFavorXAxis))
+		{
+			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GetSnapshotPlansLockToPrint.");
+			return NULL;
+		}
+		// get the progress callback
+		if (!PyCallable_Check(p_progress_callback)) {
+			PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+			return NULL;
+		}
+		// Extract the stabilization args
+		stabilization_args s_args;
+		if (!ParseStabilizationArgs(p_stabilization_args, &s_args))
+		{
+			return NULL;
+		}
+		//Py_DECREF(p_stabilization_args);
+
+		const bool favor_x_axis = iFavorXAxis > 0;
+		// Create our stabilization object
+		StabilizationSnapToPrint* p_stabilization = new StabilizationSnapToPrint(&s_args,
+			pythonProgressCallback(ExecuteStabilizationProgressCallback),
+			p_progress_callback,
+			nearest_to_corner,
+			favor_x_axis);
+
+		stabilization_results* results = p_stabilization->process_file(file_path);
+		/*snapshot_plan * p_plan1 = results.snapshot_plans[0];
+		PyObject * py_test_return = p_plan1->to_py_object();
+		return py_test_return;*/
+
+		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results->p_snapshot_plans);
+		if (py_snapshot_plans == NULL)
+		{
+			PyErr_Print();
+			return NULL;
+		}
+		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results->success, results->errors.c_str(), py_snapshot_plans, results->seconds_elapsed, results->gcodes_processed, results->lines_processed);
+		if (py_results == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
+			return NULL;
+		}
+
+		PyGILState_STATE state = PyGILState_Ensure();
+		//Py_DECREF(py_snapshot_plans);
+		//Py_DECREF(p_progress_callback);
+		delete p_stabilization;
+		delete results;
+		PyGILState_Release(state);
+
+		return py_results;
+	}
+	static PyObject* Initialize(PyObject* self, PyObject *args)
+	{
+		position_args positionArgs;
+
+		if (!ParsePositionArgs(args, &positionArgs))
+		{
+			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
+		}
+
+		// Create the parser object (only done once, not redone in Reset()
+		gpp::position = new gcode_position(positionArgs);
+		return Py_BuildValue("O", Py_True);
+	}
+
+	static PyObject* Reset(PyObject* self, PyObject *args)
+	{
+		position_args positionArgs;
+		if (!ParsePositionArgs(args, &positionArgs))
+			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
+						 // Create the position object
+
+		delete gpp::position;
+		gpp::position = new gcode_position(positionArgs);
+		return Py_BuildValue("O", Py_True);
+	}
+
+	static PyObject* Undo(PyObject* self, PyObject *args)
+	{
+		gpp::position->undo_update();
+		return Py_BuildValue("O", Py_True);
+	}
+
+	static PyObject* Update(PyObject* self, PyObject *args)
+	{
+		std::string gcode;
+		if (!ParseUpdateArgs(args, &gcode))
+		{
+			return NULL;
+		}
+		parsed_command command;
+		gpp::parser->parse_gcode(gcode, &command);
+		gpp::position->update(&command);
+
+		return Py_BuildValue("O", Py_True);
+	}
+
+	static PyObject* Parse(PyObject* self, PyObject *args)
+	{
+		std::string gcode;
+		if (!ParseUpdateArgs(args, &gcode))
+		{
+			return NULL;
+		}
+		parsed_command command;
+		gpp::parser->parse_gcode(gcode, &command);
+		// Convert ParsedCommand to python object
+		return command.to_py_object();
+	}
+
+	static PyObject* GetCurrentPositionTuple(PyObject* self)
+	{
+		return gpp::position->p_current_pos->to_py_tuple();
+	}
 	
-	PyObject *m = Py_InitModule("GcodePositionProcessor", GcodePositionProcessorMethods);
-	gpp::position = NULL;
-	gpp::parser = new gcode_parser();
-
-	std::cout << "complete\r\n";
-}
-
-extern "C" PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args)
-{
-	
-	PyObject *p_stabilization_args;
-	PyObject *p_progress_callback;
-	char * file_path;
-	char * nearest_to_corner;
-
-	int iFavorXAxis;
-	if (!PyArg_ParseTuple(
-		args,
-		"sOOsi",
-		&file_path,
-		&p_stabilization_args,
-		&p_progress_callback,
-		&nearest_to_corner,
-		&iFavorXAxis))
+	static PyObject* GetCurrentPositionDict(PyObject* self)
 	{
-		PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GetSnapshotPlansLockToPrint.");
-		return NULL;
+		return gpp::position->p_current_pos->to_py_dict();
 	}
-	// get the progress callback
-	if (!PyCallable_Check(p_progress_callback)) {
-		PyErr_SetString(PyExc_TypeError, "parameter must be callable");
-		return NULL;
-	}
-	// Extract the stabilization args
-	stabilization_args s_args;
-	if (!ParseStabilizationArgs(p_stabilization_args, &s_args))
+
+	static PyObject* GetPreviousPositionTuple(PyObject* self)
 	{
-		return NULL;
+		return gpp::position->p_previous_pos->to_py_tuple();
 	}
-	//Py_DECREF(p_stabilization_args);
 
-	const bool favor_x_axis = iFavorXAxis > 0;
-	// Create our stabilization object
-	StabilizationSnapToPrint* p_stabilization = new StabilizationSnapToPrint(&s_args,
-		pythonProgressCallback(ExecuteStabilizationProgressCallback),
-		p_progress_callback,
-		nearest_to_corner,
-		favor_x_axis);
-	
-	stabilization_results* results = p_stabilization->process_file(file_path);
-	/*snapshot_plan * p_plan1 = results.snapshot_plans[0];
-	PyObject * py_test_return = p_plan1->to_py_object();
-	return py_test_return;*/
-	
-	PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results->p_snapshot_plans);
-	if (py_snapshot_plans == NULL)
+	static PyObject* GetPreviousPositionDict(PyObject* self)
 	{
-		PyErr_Print();
-		return NULL;
+		return gpp::position->p_previous_pos->to_py_dict();
 	}
-	PyObject * py_results= Py_BuildValue("(l,s,O,d,l,l)", results->success, results->errors.c_str(), py_snapshot_plans, results->seconds_elapsed, results->gcodes_processed, results->lines_processed);
-	if (py_results == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
-		return NULL;
-	}
-
-	PyGILState_STATE state = PyGILState_Ensure();
-	//Py_DECREF(py_snapshot_plans);
-	//Py_DECREF(p_progress_callback);
-	delete p_stabilization;
-	delete results;
-	PyGILState_Release(state);
-	
-	return py_results;
 }
-
-extern "C" static PyObject* Initialize(PyObject* self, PyObject *args)
-{
-	position_args positionArgs;
-
-	if (!ParsePositionArgs(args, &positionArgs))
-	{
-		return NULL; // The call failed, ParsePositionArgs has taken care of the error message
-	}
-
-	// Create the parser object (only done once, not redone in Reset()
-	gpp::position = new gcode_position(positionArgs);
-	return Py_BuildValue("O", Py_True);
-}
-
-extern "C" static PyObject* Reset(PyObject* self, PyObject *args)
-{
-
-	position_args positionArgs;
-	if (!ParsePositionArgs(args, &positionArgs))
-		return NULL; // The call failed, ParsePositionArgs has taken care of the error message
-					 // Create the position object
-
-	delete gpp::position;
-	gpp::position = new gcode_position(positionArgs);
-	return Py_BuildValue("O", Py_True);
-}
-
-extern "C" static PyObject* Undo(PyObject* self, PyObject *args)
-{
-	gpp::position->undo_update();
-	return Py_BuildValue("O", Py_True);
-}
-
-extern "C" static PyObject* Update(PyObject* self, PyObject *args)
-{
-	std::string gcode;
-	if (!ParseUpdateArgs(args, &gcode))
-	{
-		return NULL;
-	}
-	parsed_command command;
-	gpp::parser->parse_gcode(gcode, &command);
-	gpp::position->update(&command);
-
-	return Py_BuildValue("O", Py_True);
-}
-
-extern "C" static PyObject* Parse(PyObject* self, PyObject *args)
-{
-	std::string gcode;
-	if (!ParseUpdateArgs(args, &gcode))
-	{
-		return NULL;
-	}
-	parsed_command command;
-	gpp::parser->parse_gcode(gcode, &command);
-	// Convert ParsedCommand to python object
-	return command.to_py_object();
-}
-
-extern "C" static PyObject* GetCurrentPositionTuple(PyObject* self)
-{
-	return gpp::position->p_current_pos->to_py_tuple();
-}
-
-extern "C" static PyObject* GetCurrentPositionDict(PyObject* self)
-{
-	return gpp::position->p_current_pos->to_py_dict();
-}
-
-extern "C" static PyObject* GetPreviousPositionTuple(PyObject* self)
-{
-	return gpp::position->p_previous_pos->to_py_tuple();
-}
-
-extern "C" static PyObject* GetPreviousPositionDict(PyObject* self)
-{
-	return gpp::position->p_previous_pos->to_py_dict();
-}
-
-// Callbacks
-// Process the progress callback. Return true to continue processing, false to cancel.
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const long gcodes_processed, const long lines_processed)
 {
 	PyObject * funcArgs = Py_BuildValue("(d,d,d,i,i)", percent_complete, seconds_elapsed, estimated_seconds_remaining, gcodes_processed, lines_processed);
@@ -235,18 +233,18 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 	const bool continue_processing = PyInt_AsLong(pContinueProcessing) > 0;
 	Py_DECREF(pContinueProcessing);
-		
+
 	// Returns true if not cancelled, false if cancelled.
 	std::cout << "Is Cancelled = " << !continue_processing << "\r\n";
 	return continue_processing;
-	
+
 }
 
 /// Argument Parsing
 static bool ParsePositionArgs(PyObject *args, position_args *positionArgs)
 {
 	PyObject * poLocationDetectionCommands; // Hold the PyList
-	
+
 	char * pXYZAxisDefaultMode;
 	char * pEAxisDefaultMode;
 	char * pUnitsDefault;
@@ -295,7 +293,7 @@ static bool ParsePositionArgs(PyObject *args, position_args *positionArgs)
 		return false;
 	}
 
-	for (int index = 0; index<listSize; index++) {
+	for (int index = 0; index < listSize; index++) {
 		PyObject *pListItem = PyList_GetItem(poLocationDetectionCommands, index);
 		//Py_INCREF(pListItem);
 		if (!PyString_Check(pListItem)) {
