@@ -57,23 +57,23 @@ plugin_ignored_packages = []
 #
 # Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-compiler_args = ['-O3']
+
+compiler_args = ['-O2']
 if sys.platform == 'win32':
     # DEBUG SETTINGS
     # compiler_args = ['/Zi','/Od']
     compiler_args = ['/O2']
+
 ## Build our c++ parser extension
 plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/GcodePositionProcessor.cpp',
     'octoprint_octolapse/data/lib/c/GcodeParser.cpp',
     'octoprint_octolapse/data/lib/c/GcodePosition.cpp',
-
     'octoprint_octolapse/data/lib/c/ParsedCommand.cpp',
     'octoprint_octolapse/data/lib/c/ParsedCommandParameter.cpp',
     'octoprint_octolapse/data/lib/c/Position.cpp',
     'octoprint_octolapse/data/lib/c/SnapshotPlan.cpp',
     'octoprint_octolapse/data/lib/c/SnapshotPlanStep.cpp',
-
     'octoprint_octolapse/data/lib/c/Stabilization.cpp',
     'octoprint_octolapse/data/lib/c/StabilizationResults.cpp',
     'octoprint_octolapse/data/lib/c/StabilizationSnapToPrint.cpp'
@@ -82,8 +82,7 @@ cpp_gcode_parser = Extension(
     'GcodePositionProcessor',
     sources=plugin_ext_sources,
     language="c++",
-    extra_compile_args=compiler_args,
-    extra_link_args=['/DEBUG']
+    extra_compile_args=compiler_args  # , extra_link_args=['/DEBUG']
 
 )
 print ("Compiler Args:  ".format(compiler_args))
