@@ -40,7 +40,6 @@ import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 from octoprint_octolapse.position import Position
 import octoprint_octolapse.utility as utility
-import time
 from distutils.version import LooseVersion
 from io import BytesIO
 from octoprint.events import eventManager, Events
@@ -52,8 +51,10 @@ from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, Stab
     RenderingProfile, SnapshotProfile, DebugProfile, SlicerPrintFeatures, \
     SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, Slic3rPeSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
-import octoprint_octolapse.stabilization_preprocessing
+from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 import threading
+import Queue
+import time
 
 try:
     # noinspection PyCompatibility
@@ -73,13 +74,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.RestartNeedingPlugin):
     TIMEOUT_DELAY = 1000
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
+    PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 0.5
 
     def __init__(self):
         self._octolapse_settings = None  # type: OctolapseSettings
         self._timelapse = None  # type: Timelapse
         self.gcode_preprocessor = None
+        self._preprocessing_progress_queue = None
         self._preprocessing_cancel_event = threading.Event()
-        self._preprocessing_cancel_event.clear()
 
     def get_sorting_key(self, context=None):
         return 1
@@ -905,12 +907,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # create our timelapse object
             self.create_timelapse_object()
 
-            # create the position processor
-            self.gcode_preprocessor = octoprint_octolapse.stabilization_preprocessing.PositionPreprocessor(
-                chunk_size=self._octolapse_settings.main_settings.preprocessing_chunk_size,
-                output_queue_length=self._octolapse_settings.main_settings.preprocessing_command_queue_length
-            )
-
             # log the loaded state
             self._octolapse_settings.Logger.log_info("Octolapse - loaded and active.")
         except Exception as e:
@@ -1018,9 +1014,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # pre-process the stabilization
             # this is done in another process, so we'll have to exit and wait for the results
             self.pre_process_stabilization(
-                timelapse_settings,
-                gcode_file_path,
-                parsed_command
+                timelapse_settings, parsed_command
             )
             # return false so the print job lock isn't released
             return False
@@ -1233,8 +1227,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             g90_influences_extruder = False
         elif settings_clone.profiles.current_printer().g90_influences_extruder == 'use-octoprint-settings':
             try:
-                g90_influences_extruder = self._settings.global_get(["feature", "g90_influences_extruder"])
-
+                octoprint_g90_influences_extruder = self._settings.global_get(["feature", "g90_influences_extruder"])
+                if octoprint_g90_influences_extruder is not None:
+                    g90_influences_extruder = octoprint_g90_influences_extruder
             except Exception as e:
                 self._octolapse_settings.Logger.log_exception(e)
                 message = "An exception occurred and was logged while trying to extract the OctoPrint setting - " \
@@ -1351,111 +1346,76 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.send_plugin_message("print-start-error", message)
 
     def pre_process_stabilization(
-        self, timelapse_settings, gcode_file_path, parsed_command
+        self, timelapse_settings,  parsed_command
     ):
-        def preprocess(
-            file_path, preprocessor, generator, position, parsed_command, progress_callback, complete_callback, cancel_event
-        ):
-            is_complete = False
-            is_cancelled = False
-            success = False
-            errors = None
-            try:
-                preprocessor.process_file(file_path, generator, position)
-
-                results = None
-                while not is_complete:
-                    if cancel_event.is_set():
-                        # cancel preprocessing
-                        self.gcode_preprocessor.cancel()
-                        is_cancelled = True
-                        break
-                    results = self.gcode_preprocessor.get_results()
-                    if results is not None:
-                        is_complete = True
-                    progress = self.gcode_preprocessor.get_progress()
-                    if progress is not None:
-                        progress_callback(progress[0], progress[1], progress[2])
-                    time.sleep(0.250)
-                if is_cancelled:
-                    success = False
-                    errors = ""
-                    cancel_event.clear()
-
-                # null results means preprocessing was cancelled or terminated, do not set error message
-                if results is not None:
-                    if len(results) == 0:
-                        errors = ("No snapshots plans were generated by the preprocessing routine.  "
-                                   "This usually indicates printer profile or gcode errors.  Stopping Print.")
-                    else:
-                        success = True
-                        self.start_timelapse(timelapse_settings, results)
-            finally:
-                complete_callback(success, parsed_command, errors)
-
-        gcode_file_path = timelapse_settings["gcode_file_path"]
-        g90_influences_extruder = timelapse_settings["g90_influences_extruder"]
-        printer = timelapse_settings["settings"].profiles.current_printer()
-        stabilization = timelapse_settings["settings"].profiles.current_stabilization()
-        octoprint_printer_profile = timelapse_settings['octoprint_printer_profile']
-
-        # create a new position object
-        current_position = Position(
-            printer, None, octoprint_printer_profile, g90_influences_extruder
+        self._preprocessing_progress_queue = Queue.Queue()
+        # create the   thread
+        preprocessor = StabilizationPreprocessingThread(
+            timelapse_settings,
+            self.send_pre_processing_progress_message,
+            self.pre_preocessing_complete,
+            self._preprocessing_cancel_event,
+            parsed_command,
+            notification_period_seconds=self.PREPROCESSING_NOTIFICATION_PERIOD_SECONDS
         )
 
-        snapshot_plan_generator = None
-        if (
-            stabilization.pre_calculated_stabilization_type ==
-            StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
-        ):
-            snapshot_plan_generator = octoprint_octolapse.stabilization_preprocessing.NearestToCorner(
-                printer, stabilization
-            )
-
-        # if no snapshot plan generator was found
-        if snapshot_plan_generator is None:
-            message = (
-                "Unknown stabilization type for preprocessing({0}), cannot preprocess gocde file."
-                    .format(stabilization.pre_calculated_stabilization_type)
-            )
-            self.pre_processing_complete(False, parsed_command, message)
-            return
-
-        if self._preprocessing_cancel_event.is_set():
-            # clear the cancel event if it's set
-            self._preprocessing_cancel_event.clear()
-        # start the thread
-        threading.Thread(
-            target=preprocess,
-            args=[
-                gcode_file_path, self.gcode_preprocessor, snapshot_plan_generator, current_position, parsed_command,
-                self.send_pre_processing_message, self.pre_processing_complete, self._preprocessing_cancel_event
-            ]
-        ).start()
+        # notify webclients of preprocessing start
         self.send_pre_processing_start_message()
+        preprocessor.start()
+
+    def pre_preocessing_complete(self, success, errors, is_cancelled, snapshot_plans, seconds_elapsed,
+                                 gcodes_processed, lines_processed, timelapse_settings, parsed_command):
+        if not success:
+            # An error occurred
+            self.pre_processing_failed(errors)
+        else:
+            if is_cancelled:
+                self._timelapse.preprocessing_finished(None)
+                self.pre_processing_cancelled()
+            else:
+
+                self.pre_processing_success(
+                    timelapse_settings, parsed_command, snapshot_plans, seconds_elapsed,
+                    gcodes_processed, lines_processed
+                )
+        # complete, exit loop
 
     def cancel_preprocessing(self):
-        if not self._preprocessing_cancel_event.is_set():
-            self._preprocessing_cancel_event.set()
+        if self._preprocessing_cancel_event.is_set():
+            self._preprocessing_cancel_event.clear()
 
-        event_is_set = self._preprocessing_cancel_event.wait(self.PREPROCESSING_CANCEL_TIMEOUT_SECONDS)
-        if not event_is_set:
-            # we ran into a timeout while waiting for a fresh position
-            self._settings.Logger.log_warning(
-                "Warning:  A timeout occurred while canceling preprocessing."
-            )
+    def pre_processing_cancelled(self):
+        # signal complete to the UI (will close the progress popup
+        self.send_pre_processing_progress_message(
+            100, 0, 0, 0, 0)
 
-    def pre_processing_complete(self, success, parsed_command, errors):
-        if not success:
-            parsed_command = None
-            if self._printer.is_printing():
-                if errors != "":
-                    self.on_print_start_failed(errors)
-                else:
-                    self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
+    def pre_processing_failed(self, errors):
+        if self._printer.is_printing():
+            if errors != "":
+                # display error messages if there are any
+                self.on_print_start_failed(errors)
+        # cancel the print
+        self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
+        # inform the timelapse object that preprocessing has failed
+        self._timelapse.preprocessing_finished(None)
+        # close the UI progress popup
+        self.send_pre_processing_progress_message(
+            100, 0, 0, 0, 0)
+
+    def pre_processing_success(
+        self, timelapse_settings, parsed_command, snapshot_plans, total_seconds,
+        gcodes_processed, lines_processed
+    ):
+        # inform the timelapse object that preprocessing is complete and successful by sending it the first gcode
+        # which was saved when pring start was detected
+        self.send_pre_processing_progress_message(100, total_seconds, 0, gcodes_processed, lines_processed)
+
+        # initialize the timelapse obeject
+        self.start_timelapse(timelapse_settings, snapshot_plans)
 
         self._timelapse.preprocessing_finished(parsed_command)
+
+
 
     def send_pre_processing_start_message(self):
         data = {
@@ -1463,11 +1423,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_pre_processing_message(self, percent_finished, time_elapsed=0, lines_processed=0):
+    def send_pre_processing_progress_message(
+        self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed, lines_processed
+    ):
         data = {
             "type": "gcode-preprocessing-update",
-            "percent_finished": percent_finished,
-            "seconds_elapsed": time_elapsed,
+            "percent_progress": percent_progress,
+            "seconds_elapsed": seconds_elapsed,
+            "seconds_to_complete": seconds_to_complete,
+            "gcodes_processed": gcodes_processed,
             "lines_processed": lines_processed
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
@@ -1818,6 +1782,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # notify Octoprint using the event manager.  Is there a way to do this that is more in the
             # spirit of the API?
             eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
+
             # we've either successfully rendered or rendered and synchronized
             self.send_render_end_message(True, True)
         else:

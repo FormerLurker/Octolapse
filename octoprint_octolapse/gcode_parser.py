@@ -134,6 +134,10 @@ class ParsedCommand(object):
             "gcode": self.gcode
         }
 
+    @classmethod
+    def create_from_cpp_parsed_command(cls, cppParsedCommand):
+        return ParsedCommand(cppParsedCommand[0], cppParsedCommand[1], cppParsedCommand[2])
+
 class Command(object):
 
     def __init__(self, command, name, display_template=None, parameters=None, text_only_parameter=False):

@@ -76,15 +76,15 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 var previous_plan = null;
                 var previous_line = 0;
 
-                var lines_remaining = current_plan.file_line_number - self.current_file_line();
+                var lines_remaining = current_plan.file_gcode_number - self.current_file_line();
 
                 self.lines_remaining(lines_remaining);
                 var previous_line = 0;
                 if (self.current_plan_index() - 1 > 0)
                     previous_plan = self.snapshot_plans()[self.current_plan_index() - 1]
                 if (previous_plan != null)
-                    previous_line = previous_plan.file_line_number;
-                var lines_total = current_plan.file_line_number - previous_line;
+                    previous_line = previous_plan.file_gcode_number;
+                var lines_total = current_plan.file_gcode_number - previous_line;
                 self.lines_total(lines_total);
                 self.progress_percent((1-(lines_remaining / lines_total)) * 100);
 
@@ -97,7 +97,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.snapshot_positions(showing_plan.snapshot_positions);
                 // Update Canvass
                 self.updateCanvas();
-            }
+            };
 
             self.next_plan_clicked = function()
             {

@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2019  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -20,409 +20,208 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-
-from octoprint_octolapse.gcode_parser import ParsedCommand
-from octoprint_octolapse.position import Position, Pos
+from threading import Thread, Event
+import Queue
+from gcode_parser import ParsedCommand
+from settings import PrinterProfile, StabilizationProfile, OctolapseSettings
+from octoprint_octolapse.position import Pos
+import GcodePositionProcessor
 import time
-import os
-import utility
-from multiprocessing import Process, Queue, Event
-from collections import deque
-import queue
-import fastgcodeparser
-
-
-def clear_multiprocess_queue(queue_to_clear):
-    try:
-        while True:
-            queue_to_clear.get_nowait()
-    except queue.Empty:
-        pass
-
-
-def spawn_position_preprocessor():
-    return PositionPreprocessor()
-
-
-CANCEL_TIMEOUT_SECONDS = 5
-
-
-class PositionPreprocessor(object):
-    def __init__(
-        self,
-        notification_period_seconds=1,
-        output_queue_length=2,
-        chunk_size=256
-
-    ):
-        # queue to hold a list of files to process
-        # we can only process one at a time
-        self.file_input_queue = Queue(1)
-        # queue to hold chunks of parsed gcode from files
-        # this will be filled by the gcode file process and consumed by the
-        # position process
-        self.gcode_output_queue = Queue(output_queue_length)
-        # A queue to hole progress updates from the GcodeParsingFileProcess
-        self.parse_progress_queue = Queue(1)
-        # an output queue used for returning results from the position processor
-        self.snapshot_plan_queue = Queue(1)
-        # a queue used for sending the current snapshot plan generator and a new position object
-        # to the position processor
-        self.snapshot_generator_queue = Queue(1)
-
-        # A queue used to cancel parsing
-        self.parsing_cancel_event = Event()
-        # clearing the event will cancel, because wait only waits for set events, not clear ones!
-        self.parsing_cancel_event.set()
-
-        # create the gcode parsing file process and start it.  This process will continue to run
-        # until the program terminates, or until 'None' is sent to the file_input_queue
-        self.parser_process = GcodeParsingFileProcess(
-            self.file_input_queue,
-            self.gcode_output_queue,
-            self.parse_progress_queue,
-            self.parsing_cancel_event,
-            chunk_size=chunk_size,
-            notification_period_seconds=notification_period_seconds
-        )
-        # start the process
-        self.parser_process.start()
-        # the GcodeParsingFileProcess will add True to the progress queue once it's initialized
-        # so perform a blocking get until it's ready.
-        self.parse_progress_queue.get()
-        # at this point the GcodeParsingFileProcess is initialized and ready to rock!
-
-        # A queue used to cancel snapshot plan generation
-        self.position_processing_cancel_event = Event()
-        # clearing the event will cancel, because wait only waits for set events, not clear ones!
-        self.position_processing_cancel_event .set()
-
-        # now start up the position processor
-        self.position_process = PositionProcess(
-            self.snapshot_generator_queue, self.gcode_output_queue, self.snapshot_plan_queue,
-            self.position_processing_cancel_event
-        )
-        self.position_process.start()
-        # the position_process will add True to the snapshot_plan_queue once it's initialized
-        # so perform a blocking get so that we know it's ready!
-        self.snapshot_plan_queue.get()
-
-        self.running = False
-
-    def process_file(self, target_file_path, snapshot_plan_generator, position):
-        # send the position object and the snapshot_plan_generator to the position_process
-        self.snapshot_generator_queue.put((snapshot_plan_generator, position))
-        # start the processor by putting a file path in the queue
-        self.file_input_queue.put(target_file_path)
-
-    def cancel(self, is_shutdown=False):
-        # set the cancel flag to stop any processing
-        if self.parsing_cancel_event.is_set():
-            self.parsing_cancel_event.clear()
-            if is_shutdown:
-                # if we're shutting down, we need to send None to the file_input_queue to unblock the process
-                self.file_input_queue.put(None)
-
-        result = self.parsing_cancel_event.wait(CANCEL_TIMEOUT_SECONDS)
-        if not result:
-            return False
-
-        if self.parsing_cancel_event.is_set():
-            self.position_processing_cancel_event.clear()
-
-            if is_shutdown:
-                # if we're shutting down, we need to send None to the snapshot_generator_queue to unblock the process
-                self.snapshot_generator_queue.put(None)
-
-        result = self.position_processing_cancel_event.wait(CANCEL_TIMEOUT_SECONDS)
-        if not result:
-            return False
-
-        return True
-
-    def shutdown(self):
-        if not self.cancel(is_shutdown=True):
-            raise Exception("Could not cancel the preprocessing processes!  Cannot join processes, the might still be active!")
-        self.parser_process.join()
-        self.position_process.join()
-        self.file_input_queue.close()
-        self.gcode_output_queue.close()
-        self.parse_progress_queue.close()
-        self.cancel_queue.close()
-        self.snapshot_plan_queue.close()
-        self.snapshot_generator_queue.close()
-
-    def get_progress(self):
-        results = None
-        if not self.parse_progress_queue.empty():
-            try:
-                progress = self.parse_progress_queue.get()
-                results = progress[0], progress[1], progress[2]
-            except queue.Empty:
-                pass
-        return results
-
-    def get_results(self):
-        if self.snapshot_plan_queue.empty():
-            return None
-
-        return self.snapshot_plan_queue.get()
-
-    def default_matching_function(self, matches):
-        pass
-
-
-class GcodeParsingFileProcess(Process):
-
-    def __init__(
-        self,
-        input_queue,
-        output_queue,
-        progress_queue,
-        cancel_event,
-        chunk_size=250,
-        notification_period_seconds=1
-    ):
-        super(GcodeParsingFileProcess, self).__init__()
-        self.input_queue = input_queue
-        self.output_queue = output_queue
-        self.progress_queue = progress_queue
-        self.cancel_event = cancel_event
-        self.notification_period_seconds = notification_period_seconds
-        self.start_time = 0
-        self.current_line = 0
-        self.current_file_position = 0
-        self.file_size_bytes = 0
-        self.total_file_length = 1
-        self.chunk_size = chunk_size
-        self.queue = deque(maxlen=chunk_size)
-        self.daemon = True
-        self._next_notification_time = None
-
-    def _is_cancelled(self):
-        # cancel means the event is CLEAR not set
-        # this is due to the wait command blocking until true.d
-        return not self.cancel_event.is_set()
-
-    def cancel(self):
-        # print ("GcodeParsingFileProcess - Cancelling")
-        # clear the input queue
-        clear_multiprocess_queue(self.input_queue)
-        # it's possible that the cancel event was not set, so check for this condition
-        if not self.cancel_event.is_set():
-            # print ("GcodeParsingFileProcess - Setting the cancel event")
-            # set the event to notify the canceller
-            self.cancel_event.set()
-
-        # print ("GcodeParsingFileProcess - Cancelled")
-
-    def run(self):
-        # initialize the fastgcodeparser
-        fastgcodeparser.ParseGcode("")
-        # signal the parent process that initialization is complete
-        self.progress_queue.put(True)
-        self.process()
-
-    def process(self):
-        while True:
-            # reset the current line and the internal _cancelled attribute for the next
-            # file to process
-            self.current_line = 0
-            _cancelled = False
-            file_path = None
-            # print ("GcodeParsingFileProcess - Waiting for a file to process")
-            while True:
-
-                try:
-                    # check for a new file path to process
-                    file_path = self.input_queue.get(True, timeout=1)
-                    break
-                except queue.Empty:
-                    pass
-                # check for a cancel when we have nothing to cancel
-                if self._is_cancelled():
-                    self.cancel()
-
-            items_added = 0
-            if file_path is None:
-                # print ("GcodeParsingFileProcess - Received a null file path")
-                # cancel the process and exit
-                self.cancel()
-                # print ("GcodeParsingFileProcess - Exiting")
-                return
-            # Set the cancel event if there is one
-            if not self.cancel_event.is_set():
-                # just in case someone tried to cancel while the process wasn't running
-                self.cancel_event.set()
-            # print ("GcodeParsingFileProcess - Processing {0}".format(file_path))
-            self.start_time = time.time()
-            self.file_size_bytes = os.path.getsize(file_path)
-            # set the next notification time
-            self._next_notification_time = time.time() + self.notification_period_seconds
-            # add an initial notification time of 0 percent at line 0
-            self.progress_queue.put((0, 0, 0))
-            with open(file_path, 'rb') as gcode_file:
-                for line in gcode_file:
-                    try:
-                        fast_cmd = fastgcodeparser.ParseGcode(line)
-                        if not fast_cmd:
-                            continue
-                        self.current_line += 1
-                        cmd = ParsedCommand(fast_cmd[0], fast_cmd[1], line)
-                        self.queue.append(cmd)
-                    except Exception as e:
-                        print (e)
-                    items_added += 1
-                    if items_added == self.chunk_size:
-                        # print ("GcodeParsingFileProcess - Chunk size reached: {0} lines".format(self.chunk_size))
-                        if self._is_cancelled():
-                            # print ("GcodeParsingFileProcess - Cancel detected, setting cancel flag")
-                            # somebody requested a cancel, set our flag
-                            _cancelled = True
-                            break
-                        else:
-                            # print ("GcodeParsingFileProcess - Sending Gcode to Position Processor")
-                            self.output_queue.put(self.queue, True)
-                            self.queue = deque(maxlen=self.chunk_size)
-                            items_added = 0
-                            if self._next_notification_time < time.time():
-                                # print ("GcodeParsingFileProcess - Sending progress")
-                                self.update_progress(gcode_file)
-                                self._next_notification_time = (
-                                    self._next_notification_time + self.notification_period_seconds
-                                )
-            if not _cancelled:
-                if items_added > 0:
-                    # print ("GcodeParsingFileProcess - Adding final gcodes to output queue")
-                    self.output_queue.put(self.queue, True)
-                    # print ("GcodeParsingFileProcess - Sending progress complete notification")
-                self.progress_queue.put((100, time.time() - self.start_time, self.current_line))
-                # print ("GcodeParsingFileProcess - Sending NULL to output queue to stop position processing")
-                self.output_queue.put(None, True)
-            else:
-                self.cancel()
-
-    def update_progress(self, gcode_file):
-        try:
-            # print("Updating progress at " + str(time.time()))
-            progress_percent = float(gcode_file.tell()) / float(self.file_size_bytes) * 100.0
-            clear_multiprocess_queue(self.progress_queue)
-            self.progress_queue.put((progress_percent, time.time() - self.start_time, self.current_line))
-        except ValueError:
-            # print ("GcodeParsingFileProcess - A value error occurred when updating progress.")
-            pass
-        except queue.Empty:
-            # print ("GcodeParsingFileProcess - The progress queue was empty")
-            pass
-
-
-class PositionProcess(Process):
-
-    def __init__(self, process_queue, input_queue, output_queue, cancel_event):
-        super(PositionProcess, self).__init__()
-        # create a new queue so that the originating process can insert processor objects
-        self.process_queue = process_queue
-        self.input_queue = input_queue
-        self.output_queue = output_queue
-        self.cancel_event = cancel_event
-        self.daemon = True
-        self.snapshot_plans = []
-        self.current_line = 0
-
-    def is_cancelled(self):
-        # cancel means the event is CLEAR not set
-        # this is due to the wait command blocking until true.d
-        return not self.cancel_event.is_set()
-
-    def cancel(self):
-        # print ("PositionProcess - Cancelling")
-        # clear the input queue
-        clear_multiprocess_queue(self.input_queue)
-        # it's possible that this event was cancelled without
-        # the event being set.
-        if not self.cancel_event.is_set():
-            # print ("PositionProcess - Setting the cancel event")
-            self.cancel_event.set()
-
-        # print ("PositionProcess - Cancelled")
-
-    def run(self):
-        # hack to get the output time correct.  For some reason the fastgcodeparser is initialized here
-        # no matter what, so let's wait for it to complete, then send True to the output queue
-        # so that we can exclude the init time from our progress update
-        # TODO: prevent fastgcodeparser from being imported here somehow
-        fastgcodeparser.ParseGcode("")
-        self.output_queue.put(True)
-        self.process()
-
-    def process(self):
-
-        while True:
-            # since we need to be able to cancel here, and this get blocks,
-            # we need to allow the caller to put Null on the queue to trigger a cancel
-            # get the processor we are using
-            # print ("PositionProcess - Wating for new process")
-            while True:
-                try:
-
-                    result = self.process_queue.get(timeout=1)
-                    break
-                except queue.Empty:
-                    pass
-
-                if self.is_cancelled():
-                    self.cancel()
-
-            if result is None:
-                # print ("PositionProcess - Received 'None' from process queue, shutting down process")
-                # sending None to the process queue is a signal to terminate the process
-                self.cancel()
-                # print ("PositionProcess - Exiting Process")
-                return
-            # make sure we got the appropriate number of results
-            assert(len(result) == 2)
-            current_processor = result[0]
-            # make sure the process we got is a subclass of SnapshotPlanGenerator
-            assert (isinstance(current_processor, SnapshotPlanGenerator))
-            current_position = result[1]
-            # make sure the position we got is an instance of Position
-            assert (isinstance(current_position, Position))
-            # reset any necessary parameters for the process
-            self.current_line = 0
-            while True:
-                # see if we've been cancelled
-                if self.is_cancelled():
-                    # print ("PositionProcess - Received cancel signal")
-                    self.cancel()
-                    # print ("PositionProcess - Breaking from current process")
-                    break
-                else:
-                    # get the command to parse
-                    commands = self.input_queue.get(True)
-
-                    if commands is None:
-                        # print ("PositionProcess - Received 'None' from input queue, current process finishing")
-                        # sending None to the output_queue is a signal stop processing gcodes
-
-                        # our processor may have some additional data to add since it had no way of knowing that the
-                        # gcode file has completed
-                        current_processor.on_processing_complete()
-                        # print ("PositionProcess - Added final snapshot plans, adding to output queue")
-                        # add any snapshot plans (or an empty list if there are none) to the output queue here
-                        self.output_queue.put(current_processor.snapshot_plans)
-                        # break from the inner loop and wait for another process
-                        # print ("PositionProcess - current process complete")
-                        break
-                    # print ("PositionProcess - processing {0} commands".format(len(commands)))
-                    for cmd in commands:
-                        self.current_line += 1
-                        if cmd.cmd is not None:
-                            current_position.update(cmd)
-                            current_processor.process_position(current_position.current_pos, self.current_line)
-                    # print ("PositionProcess - finished processing chunk".format(len(commands)))
-
+import traceback
 TRAVEL_ACTION = "travel"
 SNAPSHOT_ACTION = "snapshot"
+
+
+class StabilizationPreprocessingThread(Thread):
+
+    def __init__(
+        self,
+        timelapse_settings,
+        progress_callback,
+        complete_callback,
+        cancel_event,
+        parsed_command,
+        notification_period_seconds=1
+    ):
+
+        super(StabilizationPreprocessingThread, self).__init__()
+        #assert (isinstance(progress_queue, Queue.Queue))
+        printer = timelapse_settings["settings"].profiles.current_printer()
+        stabilization = timelapse_settings["settings"].profiles.current_stabilization()
+        assert (isinstance(printer, PrinterProfile))
+        assert (isinstance(stabilization, StabilizationProfile))
+        assert (
+            stabilization.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
+        )
+        self.progress_callback = progress_callback
+        self.complete_callback = complete_callback
+        self.timelapse_settings = timelapse_settings
+        g90_influences_extruder = timelapse_settings["g90_influences_extruder"]
+        self.daemon = True
+        self.parsed_command = parsed_command
+        self.cancel_event = cancel_event
+        self.is_cancelled = False
+        # make sure the event is set to start with
+        if not self.cancel_event.is_set():
+            self.cancel_event.set()
+
+        self.notification_period_seconds = notification_period_seconds
+        self.snapshot_plans = []
+        self.printer_profile = printer
+        self.stabilization_profile = stabilization
+        self.error = None
+        self.total_seconds = 0
+        self.gcodes_processed = 0
+        self.lines_processed = 0
+
+        # create the position args
+        autodetect_position = printer.auto_detect_position
+        origin_x = printer.origin_x
+        origin_y = printer.origin_y
+        origin_z = printer.origin_z
+        retraction_length = printer.gcode_generation_settings.retraction_length
+        z_lift_height = printer.gcode_generation_settings.z_lift_height
+        priming_height = printer.priming_height
+        minimum_layer_height = printer.minimum_layer_height
+        xyz_axis_default_mode = printer.xyz_axes_default_mode
+        e_axis_default_mode = printer.e_axis_default_mode
+        units_default = printer.units_default
+        location_detection_commands = printer.get_location_detection_command_list()
+
+        self.cpp_position_args = (
+            autodetect_position,
+            0.0 if origin_x is None else origin_x,
+            True if origin_x is None else False,  # is_origin_x_none
+            0.0 if origin_y is None else origin_y,
+            True if origin_y is None else False,  # is_origin_x_none
+            0.0 if origin_z is None else origin_z,
+            True if origin_z is None else False,  # is_origin_x_none
+            retraction_length,
+            z_lift_height,
+            priming_height,
+            minimum_layer_height,
+            g90_influences_extruder,
+            xyz_axis_default_mode,
+            e_axis_default_mode,
+            units_default,
+            location_detection_commands
+        )
+
+    def run(self):
+        try:
+            # Run the correct stabilization
+            if (
+                self.stabilization_profile.pre_calculated_stabilization_type ==
+                StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
+            ):
+                ret_val = self._run_lock_to_print()
+                results = (
+                    ret_val[0],  # success
+                    ret_val[1],  # errors
+                    ret_val[2],  # snapshot_plans
+                    ret_val[3],  # seconds_elapsed
+                    ret_val[4],  # gcodes processed
+                    ret_val[5],  # lines_processed
+                )
+            else:
+                self.error = "Can't find a preprocessor named {0}, unable to preprocess gcode.".format(
+                    self.stabilization_profile.pre_calculated_stabilization_type)
+                results = (
+                    False,  # success
+                    self.error,  # errors
+                    [],  # snapshot_plans
+                    0,  # seconds_elapsed
+                    0,  # gcodes_processed
+                    0  # lines_processed
+                )
+        except Exception as e:
+            OctolapseSettings.Logger.log_exception(e)
+            self.error = "There was a problem preprocessing your gcode file.  See plugin_octolapse.log for details"
+            results = (
+                False,  # success
+                self.error,
+                False,
+                [],
+                0,
+                0,
+                0
+            )
+        OctolapseSettings.Logger.log_info("Unpacking results")
+        success = results[0]
+        errors = results[1]
+
+        snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(results[2])
+        seconds_elapsed = results[3]
+        gcodes_processed = results[4]
+        lines_processed = results[5]
+        OctolapseSettings.Logger.log_info("Adding complete item to progress queue")
+
+        self.complete_callback(
+            success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
+            self.timelapse_settings, self.parsed_command
+        )
+        OctolapseSettings.Logger.log_info("Exiting Stabilizatio Preprocessing Thread.")
+
+    def _run_lock_to_print(self):
+        # create position processor arguments
+        gcode_settings = self.printer_profile.gcode_generation_settings
+        is_bound = self.printer_profile.restrict_snapshot_area
+        x_min = self.printer_profile.snapshot_min_x
+        x_max = self.printer_profile.snapshot_max_x
+        y_min = self.printer_profile.snapshot_min_y
+        y_max = self.printer_profile.snapshot_max_y
+        z_min = self.printer_profile.snapshot_min_z
+        z_max = self.printer_profile.snapshot_max_z
+        stabilization_type = StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
+        disable_retract = self.stabilization_profile.lock_to_corner_disable_retract
+        retraction_length = gcode_settings.retraction_length
+        disable_z_lift = self.stabilization_profile.lock_to_corner_disable_z_lift
+        z_lift_height = gcode_settings.z_lift_height
+        height_increment = self.stabilization_profile.lock_to_corner_height_increment
+        nearest_to_corner = self.stabilization_profile.lock_to_corner_type
+        favor_x_axis = self.stabilization_profile.lock_to_corner_favor_axis == "x"
+        stabilization_args = (
+            self.cpp_position_args,
+            is_bound,
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            stabilization_type,
+            disable_retract,
+            retraction_length,
+            disable_z_lift,
+            z_lift_height,
+            height_increment,
+            self.notification_period_seconds
+        )
+        # Start the processor
+        return GcodePositionProcessor.GetSnapshotPlans_LockToPrint(
+            self.timelapse_settings["gcode_file_path"],
+            stabilization_args,
+            self.on_progress_received,
+            nearest_to_corner,
+            favor_x_axis)
+
+    def on_progress_received(self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed,
+                             lines_processed):
+        try:
+            # Block if the we are finished processing to ensure the mail thread is always informed
+            self.progress_callback(
+                percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed, lines_processed
+            )
+        except Queue.Full:
+            pass
+
+        if not self.cancel_event.is_set():
+            self.is_cancelled = True
+            self.cancel_event.set()
+
+        # return true to continue processing
+        print "Returning {0} to c extensions".format(not self.is_cancelled)
+        return not self.is_cancelled
 
 
 class SnapshotPlanStep(object):
@@ -451,19 +250,19 @@ class SnapshotPlan(object):
                  snapshot_positions,
                  return_position,
                  file_line_number,
-                 saved_position_file_position,
+                 file_gcode_number,
                  z_lift_height,
                  retraction_length,
                  parsed_command,
                  send_parsed_command='first'):
         self.file_line_number = file_line_number
+        self.file_gcode_number = file_gcode_number
         self.initial_position = initial_position
         self.snapshot_positions = snapshot_positions
         self.return_position = return_position
         self.steps = []
         self.parsed_command = parsed_command
         self.send_parsed_command = send_parsed_command
-        self.saved_position_file_position = saved_position_file_position
         self.lift_amount = z_lift_height
         self.retract_amount = retraction_length
 
@@ -472,215 +271,70 @@ class SnapshotPlan(object):
         self.steps.append(step)
 
     def to_dict(self):
-        return {
-            "file_line_number": self.file_line_number,
-            "initial_position": self.initial_position.to_dict(),
-            "snapshot_positions": [x.to_dict() for x in self.snapshot_positions],
-            "return_position": self.return_position.to_dict(),
-            "steps": [x.to_dict() for x in self.steps],
-            "parsed_command": self.parsed_command.to_dict(),
-            "send_parsed_command": self.send_parsed_command,
-            "saved_position_file_position": self.saved_position_file_position,
-            "lift_amount": self.lift_amount,
-            "retract_amount": self.retract_amount,
-        }
+        try:
+            return {
+                "initial_position": self.initial_position.to_dict(),
+                "snapshot_positions": [x.to_dict() for x in self.snapshot_positions],
+                "return_position": self.return_position.to_dict(),
+                "steps": [x.to_dict() for x in self.steps],
+                "parsed_command": self.parsed_command.to_dict(),
+                "send_parsed_command": self.send_parsed_command,
+                "file_line_number": self.file_line_number,
+                "file_gcode_number": self.file_gcode_number,
+                "lift_amount": self.lift_amount,
+                "retract_amount": self.retract_amount,
+            }
+        except Exception as e:
+            OctolapseSettings.Logger.log_exception(e)
+            raise e
 
+    @classmethod
+    def create_from_cpp_snapshot_plans(cls, cpp_snapshot_plans):
+        OctolapseSettings.Logger.log_info("Building Snapshot Plans.")
+        # turn the snapshot plans into a class
+        snapshot_plans = []
+        try:
+            for cpp_plan in cpp_snapshot_plans:
+                # extract the arguments
+                file_line_number = cpp_plan[0]
+                file_gcode_number = cpp_plan[1]
+                initial_position = Pos.create_from_cpp_pos(cpp_plan[2])
+                snapshot_positions = []
+                for cpp_snapshot_position in cpp_plan[3]:
+                    try:
+                        pos = Pos.create_from_cpp_pos(cpp_snapshot_position)
+                    except Exception as e:
+                        OctolapseSettings.Logger.log_exception(e)
+                        return None
+                    snapshot_positions.append(pos)
+                return_position = Pos.create_from_cpp_pos(cpp_plan[4])
+                parsed_command = ParsedCommand.create_from_cpp_parsed_command(cpp_plan[6])
+                send_parsed_command = cpp_plan[7]
+                z_lift_height = cpp_plan[8]
+                retraction_length = cpp_plan[9]
+                snapshot_plan = SnapshotPlan(initial_position,
+                                             snapshot_positions,
+                                             return_position,
+                                             file_line_number,
+                                             file_gcode_number,
+                                             z_lift_height,
+                                             retraction_length,
+                                             parsed_command,
+                                             send_parsed_command)
+                for step in cpp_plan[5]:
+                    action = step[0]
+                    x = step[1]
+                    y = step[2]
+                    z = step[3]
+                    e = step[4]
+                    f = step[5]
+                    snapshot_plan.add_step(SnapshotPlanStep(action, x, y, z, e, f))
 
-class SnapshotPlanGenerator(object):
-    def __init__(self):
-        self.snapshot_plans = []
-
-    def process_position(self, position):
-        raise NotImplementedError("You must implement process_position!")
-
-
-class NearestToCorner(SnapshotPlanGenerator):
-    FRONT_LEFT = "front-left"
-    FRONT_RIGHT = "front-right"
-    BACK_LEFT = "back-left"
-    BACK_RIGHT = "back-right"
-    FAVOR_X = "x"
-    FAVOR_Y = "y"
-
-    # TODO:  remove nearest_to and favor_axis parameters, they can be extracted frm the snapshot profile.
-    def __init__(self, printer_profile, stabilization_profile):
-        super(NearestToCorner, self).__init__()
-        self.is_bound = False
-        if printer_profile.restrict_snapshot_area:
-            self.is_bound = True
-            self.x_min = printer_profile.snapshot_min_x
-            self.x_max = printer_profile.snapshot_max_x
-            self.y_min = printer_profile.snapshot_min_y
-            self.y_max = printer_profile.snapshot_max_y
-            self.z_min = printer_profile.snapshot_min_z
-            self.z_max = printer_profile.snapshot_max_z
-
-        self.nearest_to = stabilization_profile.lock_to_corner_type
-
-        self.favor_x = stabilization_profile.lock_to_corner_favor_axis == self.FAVOR_X
-        snapshot_gcode_settings = printer_profile.get_current_state_detection_settings()
-        retraction_length = (
-            0 if not snapshot_gcode_settings.retract_before_move else snapshot_gcode_settings.retraction_length
-        )
-        z_lift_height = (
-            0 if not snapshot_gcode_settings.lift_when_retracted else snapshot_gcode_settings.z_lift_height
-        )
-        self.retraction_distance = 0 if stabilization_profile.lock_to_corner_disable_retract else retraction_length
-        self.z_lift_height = 0 if stabilization_profile.lock_to_corner_disable_z_lift else z_lift_height
-        self.height_increment = (
-            None if stabilization_profile.lock_to_corner_height_increment == 0 else
-            stabilization_profile.lock_to_corner_height_increment
-        )
-        self.is_layer_change_wait = False
-        self.current_layer = 0
-        self.current_height = 0
-        self.saved_position = None
-        self.saved_position_line = 0
-        self.saved_position_file_position = 0
-        self.current_file_position = 0
-
-    def on_processing_complete(self):
-        if self.saved_position is not None:
-            self.add_saved_plan()
-
-    def add_saved_plan(self):
-        # On layer change create a plan
-        # TODO:  get rid of newlines and whitespace in the fast gcode parser
-        self.saved_position.parsed_command.gcode = self.saved_position.parsed_command.gcode.strip()
-        # the initial, snapshot and return positions are the same here
-        plan = SnapshotPlan(
-            self.saved_position,  # the initial position
-            [self.saved_position],  # snapshot positions
-            self.saved_position,  # return position
-            self.saved_position_line,
-            self.saved_position_file_position,
-            self.z_lift_height,
-            self.retraction_distance,
-            self.saved_position.parsed_command,
-            send_parsed_command='first'
-        )
-        plan.add_step(SnapshotPlanStep(SNAPSHOT_ACTION))
-        # add the plan to our list of plans
-        self.snapshot_plans.append(plan)
-        self.current_height = self.saved_position.height
-        self.current_layer = self.saved_position.layer
-        # set the state for the next layer
-        self.saved_position = None
-        self.saved_position_line = None
-        self.current_file_position = None
-        self.is_layer_change_wait = False
-
-    def process_position(self, current_pos, current_line):
-        # if we're at a layer change, add the current saved plan
-        if current_pos.is_layer_change:
-            self.is_layer_change_wait = True
-
-        if not current_pos.is_extruding:
-            return
-
-        if self.is_layer_change_wait and self.saved_position is not None:
-            self.add_saved_plan()
-
-        # check for errors in position, layer, or height, and make sure we are extruding.
-        if (
-            current_pos.layer == 0 or current_pos.x is None or current_pos.y is None or current_pos.z is None or
-            current_pos.height is None
-        ):
-            return
-
-        if self.height_increment is not None:
-            # todo:  improve this check, it doesn't need to be done on every command if Z hasn't changed
-            current_increment = utility.round_to_float_equality_range(current_pos.height - self.current_height)
-            if current_increment < self.height_increment:
-                return
-
-        if self.is_closer(current_pos):
-                # we need to make sure that we copy current_pos, because it's value will change
-                # as we update the Position object
-                # this was done to substantially increase performance within the position class, which
-                # can take a long time to run on slower hardware.
-                self.saved_position = Pos(copy_from_pos=current_pos)
-                self.saved_position_line = current_line
-
-
-    def is_closer(self, position):
-        # check the bounding box
-        if self.is_bound:
-            if (
-                position.x < self.x_min or
-                position.x > self.x_max or
-                position.y < self.y_min or
-                position.y > self.y_max or
-                position.z < self.z_min or
-                position.z > self.z_max
-            ):
-                return False
-        # if we have no saved position, this is the closest!
-        if self.saved_position is None:
-            return True
-
-        # use a local here for speed
-        saved_position = self.saved_position
-        if self.nearest_to == NearestToCorner.FRONT_LEFT:
-            if self.favor_x:
-                if position.x > saved_position.x:
-                    return False
-                elif position.x < saved_position.x:
-                    return True
-                elif position.y < saved_position.y:
-                    return True
-            else:
-                if position.y > saved_position.y:
-                    return False
-                if position.y < saved_position.y:
-                    return True
-                elif position.x < saved_position.x:
-                    return True
-        elif self.nearest_to == NearestToCorner.FRONT_RIGHT:
-            if self.favor_x:
-                if position.x < saved_position.x:
-                    return False
-                if position.x > saved_position.x:
-                    return True
-                elif position.y < saved_position.y:
-                    return True
-            else:
-                if position.y > saved_position.y:
-                    return False
-                if position.y < saved_position.y:
-                    return True
-                elif position.x > saved_position.x:
-                    return True
-        elif self.nearest_to == NearestToCorner.BACK_LEFT:
-            if self.favor_x:
-                if position.x > saved_position.x:
-                    return False
-                if position.x < saved_position.x:
-                    return True
-                elif position.y > saved_position.y:
-                    return True
-            else:
-                if position.y < saved_position.y:
-                    return False
-                if position.y > saved_position.y:
-                    return True
-                elif position.x < saved_position.x:
-                    return True
-        elif self.nearest_to == NearestToCorner.BACK_RIGHT:
-            if self.favor_x:
-                if position.x < saved_position.x:
-                    return False
-                if position.x > saved_position.x:
-                    return True
-                elif position.y > saved_position.y:
-                    return True
-            else:
-                if position.y < saved_position.y:
-                    return False
-                if position.y > saved_position.y:
-                    return True
-                elif position.x > saved_position.x:
-                    return True
-
-        return False
+                snapshot_plans.append(snapshot_plan)
+            OctolapseSettings.Logger.log_info("Snapshot Plans Built")
+        except Exception as e:
+            traceback.print_exc()
+            OctolapseSettings.Logger.log_exception(e)
+            raise e
+        return snapshot_plans
 

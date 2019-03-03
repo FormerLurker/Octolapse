@@ -20,34 +20,76 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef GCODE_PARSER_H
-#define GCODE_PARSER_H
-#include <string>
-#include <vector>
-#include <set>
-#include "ParsedCommand.h"
 #include "ParsedCommandParameter.h"
-static const std::string GCODE_WORDS = "GMT";
+#include "ParsedCommand.h"
 
-class gcode_parser
+parsed_command_parameter::parsed_command_parameter()
 {
-public:
-	gcode_parser();
-	~gcode_parser();
-	void parse_gcode(std::string gcode, parsed_command* command);
-private:
-	gcode_parser(const gcode_parser &source);
-	// Variables and lookups
-	std::set<std::string> text_only_functions_;
-	std::set<std::string> parsable_commands_;
-	// Functions
-	void get_parameters(std::string, int startIndex, std::vector<parsed_command_parameter*> *parameters);
-	void get_text_only_parameter(std::string command_name, std::string gcode_param, std::vector<parsed_command_parameter*> *parameters);
-	static std::string strip_gcode(std::string);
-	std::string strip_new_lines(std::string gcode);
-	static int get_double_end_index(std::string gcode, int start_index);
-	static bool is_gcode_word(char c);
-	double parse_double(const char* p);
-	double parse_double(std::string value);
-};
-#endif
+	name = "";
+	value_type = 'N';
+	double_value = 0.0;
+	string_value = "";
+}
+
+parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & source)
+{
+	name = source.name;
+	value_type = source.value_type;
+	double_value = source.double_value;
+	string_value = source.string_value;
+}
+
+parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name(name), double_value(double_value)
+{
+	value_type = 'F';
+	string_value = "";
+}
+
+parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name(name), string_value(string_value)
+{
+	value_type = 'S';
+	double_value = 0.0;
+}
+
+parsed_command_parameter::~parsed_command_parameter()
+{
+
+}
+
+PyObject * parsed_command_parameter::value_to_py_object()
+{
+	PyObject * ret_val;
+	// check the parameter type
+	if (value_type == 'F')
+	{
+		ret_val = PyFloat_FromDouble(double_value);
+		if (ret_val == NULL)
+		{
+			return NULL;
+		}
+	}
+	else if (value_type == 'N')
+	{
+		// None Type
+		Py_INCREF(Py_None);
+		ret_val = Py_None;
+	}
+	else if (value_type == 'S')
+	{
+		ret_val = PyString_FromString(string_value.c_str());
+		if (ret_val == NULL)
+		{
+			return NULL;
+		}
+		
+	}
+	else
+	{
+		// There has been an error, we don't support this value_type!
+		PyErr_SetString(PyExc_ValueError, "Error creating ParsedCommand: Unknown value_type");
+		return NULL;
+	}
+
+	return ret_val;
+
+}

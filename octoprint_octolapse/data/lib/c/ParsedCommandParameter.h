@@ -20,34 +20,30 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef GCODE_PARSER_H
-#define GCODE_PARSER_H
+#ifndef PARSED_COMMAND_PARAMETER_H
+#define PARSED_COMMAND_PARAMETER_H
 #include <string>
-#include <vector>
-#include <set>
-#include "ParsedCommand.h"
-#include "ParsedCommandParameter.h"
-static const std::string GCODE_WORDS = "GMT";
-
-class gcode_parser
+#ifdef _DEBUG
+#undef _DEBUG
+#include <Python.h>
+#define _DEBUG
+#else
+#include <Python.h>
+#endif
+class parsed_command_parameter
 {
 public:
-	gcode_parser();
-	~gcode_parser();
-	void parse_gcode(std::string gcode, parsed_command* command);
-private:
-	gcode_parser(const gcode_parser &source);
-	// Variables and lookups
-	std::set<std::string> text_only_functions_;
-	std::set<std::string> parsable_commands_;
-	// Functions
-	void get_parameters(std::string, int startIndex, std::vector<parsed_command_parameter*> *parameters);
-	void get_text_only_parameter(std::string command_name, std::string gcode_param, std::vector<parsed_command_parameter*> *parameters);
-	static std::string strip_gcode(std::string);
-	std::string strip_new_lines(std::string gcode);
-	static int get_double_end_index(std::string gcode, int start_index);
-	static bool is_gcode_word(char c);
-	double parse_double(const char* p);
-	double parse_double(std::string value);
+	parsed_command_parameter();
+	~parsed_command_parameter();
+	parsed_command_parameter(parsed_command_parameter & source);
+	parsed_command_parameter(std::string name, double double_value);
+	parsed_command_parameter(std::string name, std::string string_value);
+	PyObject * value_to_py_object();
+
+	std::string name;
+	char value_type;
+	double double_value;
+	std::string string_value;
 };
+
 #endif

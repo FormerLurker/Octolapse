@@ -164,18 +164,20 @@ $(function () {
         });
     };
 
-    Octolapse.progressBar = function (cancel_callback)
+    Octolapse.progressBar = function (cancel_callback, initial_text)
     {
         var self = this;
         self.notice = null;
         self.$progress = null;
-        self.$progressText = null
+        self.$progressText = null;
+        self.initial_text = initial_text;
         self.close = function()
         {
             if (self.loader != null)
                 self.loader.remove();
-        }
-        self.update = function(percent_complete, seconds_elapsed)
+        };
+
+        self.update = function(percent_complete, progress_text)
         {
             self.notice.find(".remove_button").remove();
 
@@ -186,16 +188,12 @@ $(function () {
             if (percent_complete > 100)
                 percent_complete = 100;
             if (percent_complete == 100) {
+                //console.log("Received 100% complete progress message, removing progress bar.");
                 self.loader.remove();
                 return null
             }
             self.$progress.width(percent_complete + "%").attr("aria-valuenow", percent_complete).find("span").html(percent_complete + "%");
-            /*if(self.loader != null)
-                self.loader.update({
-                    icon: "fa fa-circle-o-notch fa-spin"
-                });*/
-            var elapsedText = "Elapsed: " + Octolapse.ToTimer(seconds_elapsed)
-            self.$progressText.text(elapsedText);
+            self.$progressText.text(progress_text);
             return self;
         };
         self.loader = null;
@@ -230,7 +228,7 @@ $(function () {
                 self.$progress = self.notice.find("div.progress-bar");
                 self.$progressText = self.notice.find("span.progress-text");
                 self.notice.find(".remove_button").remove();
-                self.update(0,0);
+                self.update(0,self.initial_text);
             }
         });
 
@@ -1020,21 +1018,34 @@ $(function () {
             switch (data.type) {
                 case "gcode-preprocessing-start":
                     // create the cancel popup
-                    //console.log("Creating a progress bar.");
-                    self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
+                    console.log("Creating a progress bar.");
+                    self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing, "Initializing...");
                     break;
                 case "gcode-preprocessing-update":
                     //console.log("Octolapse received pre-processing update processing message.");
+
                     // TODO: CHANGE THIS TO A PROGRESS INDICATOR
-                    var percent_finished = data.percent_finished.toFixed(1);
+                    var percent_finished = data.percent_progress.toFixed(1);
                     var seconds_elapsed = data.seconds_elapsed;
+                    var seconds_to_complete = data.seconds_to_complete;
+                    var gcodes_processed = data.gcodes_processed;
+                    var lines_processed = data.lines_processed;
+
                     if (self.pre_processing_progress == null)
                     {
                         //console.log("The pre-processing progress bar is missing, creating the progress bar.");
+                        console.log("Creating progress bar");
                         self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     }
                     if (self.pre_processing_progress != null) {
-                        self.pre_processing_progress = self.pre_processing_progress.update(percent_finished, seconds_elapsed);
+                        var progress_text =
+                            "Remaining:" + Octolapse.ToTimer(seconds_to_complete)
+                            + " Elapsed:" + Octolapse.ToTimer(seconds_elapsed)
+                        + " Line:" + lines_processed.toString();
+                        console.log("Receiving Progress - Percent Complete:" + percent_finished + " " + progress_text);
+                        self.pre_processing_progress = self.pre_processing_progress.update(
+                            percent_finished, progress_text
+                        );
                     }
 
                     break;
@@ -1056,7 +1067,11 @@ $(function () {
                     }
                     break;
                 case "slicer_settings_detected":
-                    //console.log("slicer_settings_detected")
+                    if(data.saved)
+                        console.log("Slicer settings detected and saved.");
+                    else
+                        console.log("Slicer settings detected but not saved.");
+                    /*
                     if(data.saved) {
                         if (self.is_admin())
                             Octolapse.Settings.loadSettings();
@@ -1073,6 +1088,8 @@ $(function () {
                         };
                         Octolapse.displayPopup(options);
                     }
+                    */
+                    // Todo:  we ened to do something here...
                 case "state-loaded":
                     {
                         //console.log('octolapse.js - state-loaded');

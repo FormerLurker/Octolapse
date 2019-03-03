@@ -19,35 +19,30 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef GCODE_PARSER_H
-#define GCODE_PARSER_H
-#include <string>
-#include <vector>
-#include <set>
+#ifndef SNAPSHOT_PLAN_H
+#define SNAPSHOT_PLAN_H
+#include "SnapshotPlanStep.h"
 #include "ParsedCommand.h"
-#include "ParsedCommandParameter.h"
-static const std::string GCODE_WORDS = "GMT";
-
-class gcode_parser
+#include "Position.h"
+#include <vector>
+class snapshot_plan
 {
 public:
-	gcode_parser();
-	~gcode_parser();
-	void parse_gcode(std::string gcode, parsed_command* command);
-private:
-	gcode_parser(const gcode_parser &source);
-	// Variables and lookups
-	std::set<std::string> text_only_functions_;
-	std::set<std::string> parsable_commands_;
-	// Functions
-	void get_parameters(std::string, int startIndex, std::vector<parsed_command_parameter*> *parameters);
-	void get_text_only_parameter(std::string command_name, std::string gcode_param, std::vector<parsed_command_parameter*> *parameters);
-	static std::string strip_gcode(std::string);
-	std::string strip_new_lines(std::string gcode);
-	static int get_double_end_index(std::string gcode, int start_index);
-	static bool is_gcode_word(char c);
-	double parse_double(const char* p);
-	double parse_double(std::string value);
+	snapshot_plan();
+	snapshot_plan(const snapshot_plan & source);
+	~snapshot_plan();
+	PyObject * to_py_object();
+	static PyObject * build_py_object(std::vector<snapshot_plan *>* p_plans);
+	long file_line;
+	long file_gcode_number;
+	position * p_initial_position;
+	std::vector<position*>  snapshot_positions;
+	position * p_return_position;
+	std::vector<snapshot_plan_step*> steps;
+	parsed_command * p_parsed_command;
+	std::string send_parsed_command;
+	double lift_amount;
+	double retract_amount;
 };
+
 #endif

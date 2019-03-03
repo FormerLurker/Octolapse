@@ -328,6 +328,23 @@ class PrinterProfile(ProfileSettings):
 
         return False, "no-settings-detected", ["No settings were detected in the gcode file."]
 
+    def get_location_detection_command_list(self):
+        if self.auto_position_detection_commands is not None:
+            trimmed_commands = self.auto_position_detection_commands.strip()
+            if len(trimmed_commands) > 0:
+                return [
+                    x.strip().upper()
+                    for x in
+                    self.auto_position_detection_commands.split(',')
+                ]
+        return []
+
+    def try_convert_value(cls, destination, value, key):
+        if key in ['origin_x','origin_y','origin_z']:
+            if value is not None:
+                return float(value)
+        return super(PrinterProfile, cls).try_convert_value(destination, value, key)
+
 
 class StabilizationPath(Settings):
     def __init__(self):

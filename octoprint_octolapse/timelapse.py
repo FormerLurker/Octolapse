@@ -39,7 +39,7 @@ from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
 from octoprint_octolapse.trigger import Triggers
 import octoprint_octolapse.stabilization_preprocessing as preprocessing
-import fastgcodeparser
+import GcodePositionProcessor
 
 
 class Timelapse(object):
@@ -816,10 +816,10 @@ class Timelapse(object):
             )
         )
 
-        fast_cmd = fastgcodeparser.ParseGcode(command_string)
+        fast_cmd = GcodePositionProcessor.Parse(command_string)
 
         if fast_cmd:
-            parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
+            parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], fast_cmd[2])
         else:
             parsed_command = ParsedCommand(None, None, command_string)
 
@@ -867,7 +867,7 @@ class Timelapse(object):
             if (
                 self._state == TimelapseState.WaitingForTrigger
                 and self._octoprint_printer.is_printing()
-                and self.current_snapshot_plan.file_line_number == self.get_current_file_line(tags)
+                and self.current_snapshot_plan.file_gcode_number == self.get_current_file_line(tags)
             ):
                 # time to take a snapshot!
                 if self.current_snapshot_plan.parsed_command.gcode != parsed_command.gcode:
@@ -986,7 +986,7 @@ class Timelapse(object):
                     "Print Start Detected.  Command: {0}, Tags:{1}".format(command_string, tags)
                 )
                 # parse the command string
-                fast_cmd = fastgcodeparser.ParseGcode(command_string)
+                fast_cmd = GcodePositionProcessor.Parse(command_string)
                 if fast_cmd:
                     parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
                 else:
@@ -1009,7 +1009,8 @@ class Timelapse(object):
     def preprocessing_finished(self, parsed_command):
         if parsed_command is not None:
             self.send_snapshot_gcode_array([parsed_command.gcode])
-        self.is_realtime = False
+
+
         self._octoprint_printer.set_job_on_hold(False)
 
     @staticmethod

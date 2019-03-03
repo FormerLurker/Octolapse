@@ -24,7 +24,7 @@
 import math
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.settings import SlicerPrintFeatures, OctolapseGcodeSettings
-
+from octoprint_octolapse.gcode_parser import ParsedCommand
 
 class Pos(object):
     # Add slots for faster copy and init
@@ -211,6 +211,64 @@ class Pos(object):
 
         return initial_pos
 
+    @classmethod
+    def create_from_cpp_pos(cls, cpp_pos):
+        pos = Pos()
+        pos.x = None if cpp_pos[52] else cpp_pos[0]
+        pos.y = None if cpp_pos[53] else cpp_pos[1]
+        pos.z = None if cpp_pos[54] else cpp_pos[2]
+        pos.f = None if cpp_pos[55] else cpp_pos[3]
+        pos.e = cpp_pos[4]
+        pos.x_offset = cpp_pos[5]
+        pos.y_offset = cpp_pos[6]
+        pos.z_offset = cpp_pos[7]
+        pos.e_offset = cpp_pos[8]
+        pos.e_relative = cpp_pos[9]
+        pos.extrusion_length = cpp_pos[10]
+        pos.extrusion_length_total = cpp_pos[11]
+        pos.retraction_length = cpp_pos[12]
+        pos.deretraction_length = cpp_pos[13]
+        pos.last_extrusion_height = None if cpp_pos[58] else cpp_pos[14]
+        pos.height = cpp_pos[15]
+        pos.firmware_retraction_length = None if cpp_pos[60] else cpp_pos[16]
+        pos.firmware_unretraction_additional_length = None if cpp_pos[61] else cpp_pos[17]
+        pos.firmware_retraction_feedrate = None if cpp_pos[62] else cpp_pos[18]
+        pos.firmware_unretraction_feedrate = None if cpp_pos[63] else cpp_pos[19]
+        pos.firmware_z_lift = None if cpp_pos[64] else cpp_pos[20]
+        pos.layer = cpp_pos[21]
+        pos.x_homed = cpp_pos[22]
+        pos.y_homed = cpp_pos[23]
+        pos.z_homed = cpp_pos[24]
+        pos.is_relative = None if cpp_pos[56] else cpp_pos[25]
+        pos.is_extruder_relative = None if cpp_pos[57] else cpp_pos[26]
+        pos.is_metric = None if cpp_pos[59] else cpp_pos[27]
+        pos.is_printer_primed = cpp_pos[28]
+        pos.minimum_layer_height_reached = cpp_pos[29]
+        pos.has_position_error = cpp_pos[30]
+        pos.has_homed_position = cpp_pos[31]
+        pos.is_extruding_start = cpp_pos[32]
+        pos.is_extruding = cpp_pos[33]
+        pos.is_primed = cpp_pos[34]
+        pos.is_retracting_start = cpp_pos[35]
+        pos.is_retracting = cpp_pos[36]
+        pos.is_retracted = cpp_pos[37]
+        pos.is_partially_retracted = cpp_pos[38]
+        pos.is_deretracting_start = cpp_pos[39]
+        pos.is_deretracting = cpp_pos[40]
+        pos.is_deretracted = cpp_pos[41]
+        pos.is_layer_change = cpp_pos[42]
+        pos.is_height_change = cpp_pos[43]
+        pos.is_travel_only = cpp_pos[44]
+        pos.is_zhop = cpp_pos[45]
+        pos.has_position_changed = cpp_pos[46]
+        pos.has_state_changed = cpp_pos[47]
+        pos.has_received_home_command = cpp_pos[48]
+        pos.has_one_feature_enabled = cpp_pos[49]
+        pos.is_in_position = cpp_pos[50]
+        pos.in_path_position = cpp_pos[51]
+        return pos
+
+    # Todo: do we need this?
     def is_state_equal(self, pos):
         if (
             self.x_homed == pos.x_homed and self.y_homed == pos.y_homed
@@ -248,6 +306,7 @@ class Pos(object):
 
         return False
 
+    # Todo: do we need this?
     def is_position_equal(self, pos):
 
         return (
@@ -373,20 +432,21 @@ class Pos(object):
                 self.e = utility.round_to_float_equality_range(e + self.e_offset)
             return
 
-        if self.is_relative:
-            if x is not None:
-                self.x = None if self.x is None else utility.round_to_float_equality_range(x + self.x)
-            if y is not None:
-                self.y = None if self.y is None else utility.round_to_float_equality_range(y + self.y)
-            if z is not None:
-                self.z = None if self.z is None else utility.round_to_float_equality_range(z + self.z)
-        else:
-            if x is not None:
-                self.x = utility.round_to_float_equality_range(x + self.x_offset)
-            if y is not None:
-                self.y = utility.round_to_float_equality_range(y + self.y_offset)
-            if z is not None:
-                self.z = utility.round_to_float_equality_range(z + self.z_offset)
+        if self.is_relative is not None:
+            if self.is_relative:
+                if x is not None:
+                    self.x = None if self.x is None else utility.round_to_float_equality_range(x + self.x)
+                if y is not None:
+                    self.y = None if self.y is None else utility.round_to_float_equality_range(y + self.y)
+                if z is not None:
+                    self.z = None if self.z is None else utility.round_to_float_equality_range(z + self.z)
+            else:
+                if x is not None:
+                    self.x = utility.round_to_float_equality_range(x + self.x_offset)
+                if y is not None:
+                    self.y = utility.round_to_float_equality_range(y + self.y_offset)
+                if z is not None:
+                    self.z = utility.round_to_float_equality_range(z + self.z_offset)
 
         if e is not None:
             if self.is_extruder_relative:
@@ -439,8 +499,7 @@ class Position(object):
             "y": printer_profile.origin_y,
             "z": printer_profile.origin_z
         }
-        # Todo:  Do we need this?
-        self._printer_bounding_box = utility.get_bounding_box(printer_profile, octoprint_printer_profile)
+
         self._gcode_generation_settings = printer_profile.get_current_state_detection_settings()
         self._retraction_length = self._gcode_generation_settings.retraction_length
 
@@ -958,7 +1017,7 @@ class Position(object):
         # Home
         self.current_pos.has_received_home_command = True
         x = True if "X" in parameters else None
-        y = True if "T" in parameters else None
+        y = True if "Y" in parameters else None
         z = True if "Z" in parameters else None
         # ignore the W parameter, it's used in Prusa firmware to indicate a home without mesh bed leveling
         # w = parameters["W"] if "W" in parameters else None
@@ -1098,8 +1157,8 @@ class Position(object):
             self.current_pos.firmware_retraction_feedrate = parameters["F"]
         if "T" in parameters:
             self.current_pos.firmware_unretraction_feedrate = parameters["T"]
-        if "z" in parameters:
-            self.current_pos.firmware_z_lift = parameters["z"]
+        if "Z" in parameters:
+            self.current_pos.firmware_z_lift = parameters["Z"]
 
     def process_m208(self):
         parameters = self.current_pos.parsed_command.parameters
