@@ -62,7 +62,7 @@ typedef struct position_args {
 	std::string e_axis_default_mode;
 	std::string units_default;
 	std::vector<std::string> location_detection_commands; // Final list of location detection commands
-}position_args;
+};
 
 class gcode_position
 {

@@ -61,7 +61,7 @@ extern "C"
 		std::cout << "complete\r\n";
 	}
 
-	PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args)
+	static PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args)
 	{
 		PyObject *p_stabilization_args;
 		PyObject *p_progress_callback;
@@ -130,6 +130,7 @@ extern "C"
 
 		return py_results;
 	}
+	
 	static PyObject* Initialize(PyObject* self, PyObject *args)
 	{
 		position_args positionArgs;
