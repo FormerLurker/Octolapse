@@ -61,9 +61,9 @@ plugin_ignored_packages = []
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
 copt = {
-    'msvc': ['/Ox','/fp:fast'],
+    'msvc': ['/Ox','/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot'],
     'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native'],
-    'gcc': ['-Ofast']
+    'gcc': ['-O3']
 }
 lopt = {'mingw32': ['-fopenmp']}
 
