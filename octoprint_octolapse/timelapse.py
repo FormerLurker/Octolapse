@@ -864,15 +864,23 @@ class Timelapse(object):
         if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags) and 'source:file' in tags:
             if self.current_snapshot_plan is None:
                 return None
+            current_file_line = self.get_current_file_line(tags)
             if (
                 self._state == TimelapseState.WaitingForTrigger
                 and self._octoprint_printer.is_printing()
-                and self.current_snapshot_plan.file_gcode_number == self.get_current_file_line(tags)
+                and self.current_snapshot_plan.file_gcode_number == current_file_line
             ):
                 # time to take a snapshot!
                 if self.current_snapshot_plan.parsed_command.gcode != parsed_command.gcode:
-                    self._settings.Logger.log_error("The snapshot plan position does not match the actual position!  "
-                                                    "Aborting Snapshot, moving to next plan.")
+                    self._settings.Logger.log_error(
+                        "The snapshot plan position ({0}:{1}) does not match the actual position ({2}:{3})!  "
+                        "Aborting Snapshot, moving to next plan.".format(
+                            self.current_snapshot_plan.file_gcode_number,
+                            self.current_snapshot_plan.parsed_command.gcode,
+                            current_file_line,
+                            parsed_command.gcode
+                        )
+                    )
                     self.set_next_snapshot_plan()
                     return None
 

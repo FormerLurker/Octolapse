@@ -470,6 +470,8 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		}
 	}
 	command->cmd = gcode_command;
+	command->gcode = gcode;
+
 	return true;
 	
 }
