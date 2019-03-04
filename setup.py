@@ -60,14 +60,18 @@ plugin_ignored_packages = []
 # Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
-copt = {'msvc': ['/openmp', '/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
-     'mingw32' : ['-fopenmp', '-O3', '-ffast-math', '-march=native']}
+copt = {
+    'msvc': ['/Ox','/fp:fast'],
+    'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native'],
+    'gcc': ['-oFast']
+}
 lopt = {'mingw32': ['-fopenmp']}
 
 
 class build_ext_subclass( build_ext ):
     def build_extensions(self):
         c = self.compiler.compiler_type
+        print("Compiling Octolapse Parser Extension with {0}".format(c))
         if copt.has_key(c):
             for e in self.extensions:
                 e.extra_compile_args = copt[c]
@@ -75,13 +79,6 @@ class build_ext_subclass( build_ext ):
             for e in self.extensions:
                 e.extra_link_args = lopt[c]
         build_ext.build_extensions(self)
-
-
-compiler_args = ['-O2']
-if sys.platform == 'win32':
-    # DEBUG SETTINGS
-    # compiler_args = ['/Zi','/Od']
-    compiler_args = ['/O2']
 
 ## Build our c++ parser extension
 plugin_ext_sources = [
@@ -100,8 +97,8 @@ plugin_ext_sources = [
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',
     sources=plugin_ext_sources,
-    language="c++",
-    extra_compile_args=compiler_args  # , extra_link_args=['/DEBUG']
+    language="c++"
+    #,extra_compile_args=compiler_args  , extra_link_args=['/DEBUG']
 )
 
 
