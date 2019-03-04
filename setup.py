@@ -1,5 +1,6 @@
 # coding=utf-8
 from distutils.core import Extension
+from distutils.command.build_ext import build_ext
 import sys
 import os
 ########################################################################################################################
@@ -27,7 +28,8 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards"]
+plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards", "setuptools>=6.0"]
+
 
 # TODO:  Get fontconfig to work
 #from sys import platform
@@ -58,6 +60,23 @@ plugin_ignored_packages = []
 # Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
+copt = {'msvc': ['/openmp', '/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+     'mingw32' : ['-fopenmp', '-O3', '-ffast-math', '-march=native']}
+lopt = {'mingw32': ['-fopenmp']}
+
+
+class build_ext_subclass( build_ext ):
+    def build_extensions(self):
+        c = self.compiler.compiler_type
+        if copt.has_key(c):
+            for e in self.extensions:
+                e.extra_compile_args = copt[c]
+        if lopt.has_key(c):
+            for e in self.extensions:
+                e.extra_link_args = lopt[c]
+        build_ext.build_extensions(self)
+
+
 compiler_args = ['-O2']
 if sys.platform == 'win32':
     # DEBUG SETTINGS
@@ -85,7 +104,8 @@ cpp_gcode_parser = Extension(
     extra_compile_args=compiler_args  # , extra_link_args=['/DEBUG']
 )
 
-additional_setup_parameters = {"ext_modules": [cpp_gcode_parser]}
+
+additional_setup_parameters = {"ext_modules": [cpp_gcode_parser], "cmdclass": {"build_ext": build_ext_subclass}}
 
 ########################################################################################################################
 

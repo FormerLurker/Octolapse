@@ -116,9 +116,10 @@ class StabilizationPreprocessingThread(Thread):
             ):
                 ret_val = self._run_lock_to_print()
                 OctolapseSettings.Logger.log_info(
-                    "Received {0} snapshot plans from the GcodePositionProcessor stabilization.".format(
-                        len(ret_val[2])
-                    ))
+                    "Received {0} snapshot plans from the GcodePositionProcessor stabilization in {1} seconds.".format(
+                        len(ret_val[2]), ret_val[3]
+                    )
+                )
                 results = (
                     ret_val[0],  # success
                     ret_val[1],  # errors
