@@ -186,7 +186,7 @@ position::position(position & source)
 	is_relative = source.is_relative;
 	is_relative_null = source.is_relative_null;
 	is_extruder_relative = source.is_extruder_relative;
-	is_extruder_relative_null = source.is_extruder_relative;
+	is_extruder_relative_null = source.is_extruder_relative_null;
 	is_metric = source.is_metric;
 	is_metric_null = source.is_metric_null;
 	last_extrusion_height = source.last_extrusion_height	;

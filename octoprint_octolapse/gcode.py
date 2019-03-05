@@ -786,6 +786,8 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.ReturnZ = snapshot_plan.return_position.z
 
         if not self.has_snapshot_position_errors:
+            # Todo:  it's possible that the current command is a detract.  If it is we eventually will want to prevent
+            # a detract/retract/detract
             if snapshot_plan.send_parsed_command == "first":
                 self.send_parsed_command(SnapshotGcode.INITIALIZATION_GCODE)
             # retract if necessary

@@ -96,7 +96,7 @@ StabilizationSnapToPrint::~StabilizationSnapToPrint()
 void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_command* p_command)
 {
  	// if we're at a layer change, add the current saved plan
-	if (p_current_pos->is_layer_change)
+	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)
 	{
 		is_layer_change_wait = true;
 	}
