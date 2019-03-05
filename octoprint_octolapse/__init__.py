@@ -90,6 +90,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if self._octolapse_settings is not None:
             return self._octolapse_settings.profiles.current_debug_profile
 
+    def get_current_octolapse_settings(self):
+        # returns a guaranteed up-to-date settings object
+        return self._octolapse_settings
     # Blueprint Plugin Mixin Requests
     @octoprint.plugin.BlueprintPlugin.route("/downloadTimelapse/<filename>", methods=["GET"])
     @restricted_access
@@ -878,7 +881,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def create_timelapse_object(self):
         self._timelapse = Timelapse(
-            self._octolapse_settings,
+            self.get_current_octolapse_settings,
             self._printer,
             self.get_plugin_data_folder(),
             self._settings.settings.getBaseFolder("timelapse"),

@@ -45,7 +45,7 @@ import GcodePositionProcessor
 class Timelapse(object):
 
     def __init__(
-            self, settings, octoprint_printer, data_folder, timelapse_folder,
+            self, get_current_octolapse_settings, octoprint_printer, data_folder, timelapse_folder,
             on_print_started=None, on_print_start_failed=None,
             on_snapshot_start=None, on_snapshot_end=None, on_new_thumbnail_available=None,
             on_render_start=None, on_render_success=None, on_render_error=None,
@@ -54,7 +54,8 @@ class Timelapse(object):
             on_snapshot_position_error=None, on_position_error=None, on_plugin_message_sent=None):
         # config variables - These don't change even after a reset
         self._data_folder = data_folder
-        self._settings = settings  # type: OctolapseSettings
+        self.get_current_octolapse_settings = get_current_octolapse_settings
+        self._settings = self.get_current_octolapse_settings() # type: OctolapseSettings
         self._octoprint_printer = octoprint_printer
         self._default_timelapse_directory = timelapse_folder
         self._print_start_callback = on_print_started
@@ -977,14 +978,12 @@ class Timelapse(object):
     def detect_timelapse_start(self, command_string, tags):
         # detect print start, including any start gcode script
         if (
-            self._settings.main_settings.is_octolapse_enabled and
-            self._state == (
-                (
-                    TimelapseState.Idle and
-                    {'trigger:comm.start_print', 'trigger:comm.reset_line_numbers'} <= tags or
-                    {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags
-                ) and self._octoprint_printer.is_printing()
-            )
+            self._state == TimelapseState.Idle and
+            self.get_current_octolapse_settings().main_settings.is_octolapse_enabled and
+            (
+                {'trigger:comm.start_print', 'trigger:comm.reset_line_numbers'} <= tags or
+                {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags
+            ) and self._octoprint_printer.is_printing()
         ):
             if self._octoprint_printer.set_job_on_hold(True):
 
