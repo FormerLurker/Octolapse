@@ -23,6 +23,7 @@
 #ifndef POSITION_H
 #define POSITION_H
 #include <string>
+#include "ParsedCommand.h"
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -43,6 +44,7 @@ public:
 	void reset_state();
 	PyObject * to_py_tuple();
 	PyObject * to_py_dict();
+	parsed_command* p_command;
 	double f;
 	bool f_null;
 	double x;

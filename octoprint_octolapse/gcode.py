@@ -762,10 +762,7 @@ class SnapshotGcodeGenerator(object):
         self.y_return = intersection[1]  # will be in absolute coordinates
 
         # recalculate z_lift and retract distance since we have moved a bit
-        fast_cmd = GcodePositionProcessor.Parse(gcode1)
-        command_1 = ParsedCommand(fast_cmd[0], fast_cmd[1], gcode1)
-
-        position.update(command_1)
+        position.update(gcode1)
         # set self.z_return to the new z position
         # must be absolute
         self.z_return = position.z()

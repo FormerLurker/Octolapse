@@ -208,7 +208,7 @@ $(function () {
                 'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
                 'lock_to_print_type_options': settings.profiles.options.stabilization.lock_to_print_type_options,
                 'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options
-            }
+            };
             Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
             Object.keys(settings.profiles.stabilizations).forEach(function(key) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
@@ -222,7 +222,7 @@ $(function () {
                 'snapshot_extruder_trigger_options': settings.profiles.options.snapshot.snapshot_extruder_trigger_options,
                 'position_restriction_shapes': settings.profiles.options.snapshot.position_restriction_shapes,
                 'position_restriction_types': settings.profiles.options.snapshot.position_restriction_types
-            }
+            };
             Octolapse.Snapshots.current_profile_guid(settings.profiles.current_snapshot_profile_guid);
             Object.keys(settings.profiles.snapshots).forEach(function(key) {
                 Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(settings.profiles.snapshots[key]));
@@ -239,7 +239,7 @@ $(function () {
                 'overlay_text_alignment_options': settings.profiles.options.rendering.overlay_text_alignment_options,
                 'overlay_text_valign_options': settings.profiles.options.rendering.overlay_text_valign_options,
                 'overlay_text_halign_options': settings.profiles.options.rendering.overlay_text_halign_options
-            }
+            };
             Octolapse.Renderings.current_profile_guid(settings.profiles.current_rendering_profile_guid);
             Object.keys(settings.profiles.renderings).forEach(function(key) {
                 Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(settings.profiles.renderings[key]));
@@ -255,8 +255,8 @@ $(function () {
                 'snapshot_transpose_options': settings.profiles.options.camera.snapshot_transpose_options,
                 'camera_type_options': settings.profiles.options.camera.camera_type_options
 
-            }
-
+            };
+            console.log("Creating initial camera profiles.");
             Object.keys(settings.profiles.cameras).forEach(function(key) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
             });
@@ -506,6 +506,14 @@ $(function () {
                     dialog.validator.destroy();
                     dialog.validator = null;
                 }
+                // see if the current viewmodel has an on_closed function
+                if (typeof self.profileObservable().on_closed === 'function')
+                {
+                    // call the function
+                    self.profileObservable().on_closed();
+                }
+
+
             });
             // configure the dialog show event
             dialog.$addEditDialog.on("show.bs.modal", function () {
@@ -557,6 +565,12 @@ $(function () {
                 dialog.$cancelButton.bind("click", function () {
                     // Hide the dialog
                     self.hideAddEditDialog();
+                    // see if the current viewmodel has an on_canceled function
+                    if (typeof self.profileObservable().on_cancelled === 'function')
+                    {
+                        // call the function
+                        self.profileObservable().on_cancelled();
+                    }
                 });
 
                 // remove any click event bindings from the defaults button
@@ -605,6 +619,13 @@ $(function () {
                     }
 
                 });
+
+                // see if the current viewmodel has an on_opened function
+                if (typeof self.profileObservable().on_opened === 'function')
+                {
+                    // call the function
+                    self.profileObservable().on_opened();
+                }
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();

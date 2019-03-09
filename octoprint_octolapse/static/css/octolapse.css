@@ -146,15 +146,29 @@ table.octolapse-profiles td.profile_action {
         align-items: center;
     }
 
-
-#octolapse_add_edit_profile_dialog.modal,
-#octolapse_edit_settings_main_dialog.modal {
-    width: 700px;
-    margin-left: -350px;
+.webcam_settings_preview{
+    padding:5px;
+}
+.webcam_stream_preview
+{
+    width:588px;
+    height:331px;
+    border:1px solid;
+    vertical-align: middle;
+    text-align:center;
+    display:table-cell;
 }
 
+#octolapse_add_edit_profile_dialog.modal,
+#octolapse_edit_settings_main_dialog.modal,
+#octolapse_webcam_settings_dialog.modal
+{
+    width:940px;
+    margin-left: -470px;
+}
 form.octolapse_form {
     margin: 0;
+    max-height:100%;
 }
 
 form.octolapse_form .alert {
@@ -169,6 +183,7 @@ form.octolapse_form .modal-footer {
 form.octolapse_form .modal-body {
     padding: 5px 15px;
 }
+
 
 .ol-compact-row.row-fluid [class*="span"] {
     min-height: unset;
@@ -2621,6 +2636,43 @@ witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
     -ms-transform: translateX(10px);
     transform: translateX(10px);
 }
+fieldset.octolapse {
+    display: block;
+    margin: 0px 2px 10px 2px;
+    padding: 0.35em 0.75em 0.625em;
+    border: 2px groove;
+}
+fieldset.octolapse legend
+{
+    width:auto;
+    display: block;
+    margin-bottom: 0px;
+    padding-inline-start: 2px;
+    padding-inline-end: 2px;
+    border-width: initial;
+    border-style: none;
+    border-color: initial;
+    border-image: initial;
+}
+
+.full-width {
+    width:100%;
+}
+/* The slider itself */
+.slider {
+  width: 100%; /* Full-width */
+  height: 25px; /* Specified height */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+
 /*Some modified Bootstrap 3 css to make life easier*/
 /* The license for bootstrap can be found here:  https://github.com/twbs/bootstrap/blob/v4.0.0/LICENSE */
 .panel-body {

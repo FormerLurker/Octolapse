@@ -597,6 +597,68 @@ $(function () {
 
     };
 
+    ko.bindingHandlers.streamLoading = {
+      update: function(element, valueAccessor) {
+          console.log("Adding stream loading binding handler");
+        var options = valueAccessor();
+        var error_selector = ko.unwrap(options.error_selector);
+        var loading_selector = ko.unwrap(options.loading_selector);
+        var src = ko.unwrap(options.src);
+        $(element).hide();
+        $(error_selector).hide();
+        $(loading_selector).show();
+        $('<img />').attr('src', src).on('load', function() {
+            console.log("Webcam stream loaded.");
+          $(element).attr('src', src);
+          $(element).show();
+          $(error_selector).hide();
+          $(loading_selector).hide();
+        }).on('error', function() {
+            console.log("Webcam stream error.");
+          $(element).attr('src', '');
+          $(element).hide();
+          $(error_selector).show();
+          $(loading_selector).hide();
+        });
+      }
+    };
+
+    ko.bindingHandlers.octolapseSlicerValue = {
+          // Init, runs on initialization
+          init: function (element, valueAccessor, allBindings, viewModel, bindingContext)  {
+            if ( ko.isObservable(valueAccessor()) && (element instanceof HTMLInputElement) && (element.type === "range") )
+            {
+              // Add event listener to the slider, this will update the observable on input (just moving the slider),
+              // Otherwise, you have to move the slider then release it for the value to change
+              element.addEventListener('input', function(){
+                // Update the observable
+                if (ko.unwrap(valueAccessor()) != element.value)
+                {
+                  valueAccessor()(element.value);
+
+                  // Trigger the change event, awesome fix that makes
+                  // changing a dropdown and a range slider function the same way
+                  element.dispatchEvent(new Event('change'));
+                }
+              }); // End event listener
+            }
+          }, // End init
+          // Update, runs whenever observables for this binding change(and on initialization)
+          update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            // Make sure the parameter passed is an observable
+            if ( ko.isObservable(valueAccessor()) && (element instanceof HTMLInputElement) && (element.type === "range") )
+            {
+              // Update the slider value (so if the value changes programatically, the slider will update)
+              if (element.value != ko.unwrap(valueAccessor()))
+              {
+                element.value = ko.unwrap(valueAccessor());
+                element.dispatchEvent(new Event('input'));
+              }
+            }
+          } // End update
+        }; // End octolapseSlicerValue
+
+
     ko.extenders.axis_speed_unit = function (target, options) {
         //console.log("rounding to axis speed units");
         var result = ko.pureComputed({

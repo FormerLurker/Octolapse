@@ -190,9 +190,10 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
         profiles['stabilizations'][stabilization['guid']] = stabilization
 
     for snapshot in settings_dict['snapshots']:
-        profiles["trigger_on_deretracting"] = snapshot["trigger_on_detracting"]
-        profiles["position_restrictions"] = []
-        for restriction in snapshot["position_restrictions"]:
+
+        position_restrictions = snapshot["position_restrictions"]
+        snapshot["position_restrictions"] = []
+        for restriction in position_restrictions:
             new_restriction = {
                 "x2": restriction["X2"],
                 "shape": restriction["Shape"],
@@ -203,18 +204,23 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
                 "y2": restriction["Y2"],
                 "type": restriction["Type"],
             }
-            profiles["position_restrictions"].append(new_restriction)
+            snapshot["position_restrictions"].append(new_restriction)
 
-        del snapshot["trigger_on_detracting"]
-
-        profiles["trigger_on_deretracting_start"] = snapshot["trigger_on_detracting_start"]
+        trigger_on_deretracting_start = snapshot["trigger_on_detracting_start"]
         del snapshot["trigger_on_detracting_start"]
+        snapshot["trigger_on_deretracting_start"] = trigger_on_deretracting_start
 
-        profiles["feature_trigger_on_deretract"] = snapshot["feature_trigger_on_detract"]
-        del snapshot["feature_trigger_on_detract"]
+        trigger_on_deretracting = snapshot["trigger_on_detracting"]
+        del snapshot["trigger_on_detracting"]
+        snapshot["trigger_on_deretracting"] = trigger_on_deretracting
 
-        profiles["trigger_on_deretracted"] = snapshot["trigger_on_detracted"]
+        trigger_on_deretracted = snapshot["trigger_on_detracted"]
         del snapshot["trigger_on_detracted"]
+        snapshot["trigger_on_deretracted"] = trigger_on_deretracted
+
+        feature_trigger_on_deretract = snapshot["feature_trigger_on_detract"]
+        del snapshot["feature_trigger_on_detract"]
+        snapshot["feature_trigger_on_deretract"] = feature_trigger_on_deretract
 
         profiles['snapshots'][snapshot['guid']] = snapshot
 
@@ -222,6 +228,61 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
         profiles['renderings'][rendering['guid']] = rendering
 
     for camera in settings_dict['cameras']:
+        camera['webcam_settings'] = {
+            "white_balance_temperature": camera['white_balance_temperature'],
+            "sharpness": camera['sharpness'],
+            "focus": camera['focus'],
+            "backlight_compensation_enabled": camera['backlight_compensation_enabled'],
+            "snapshot_request_template": camera['snapshot_request_template'],
+            "stream_template": camera['stream_template'],
+            "led1_mode": camera['led1_mode'],
+            "ignore_ssl_error": camera['ignore_ssl_error'],
+            "tilt": camera['tilt'],
+            "exposure_auto_priority_enabled": camera['exposure_auto_priority_enabled'],
+            "exposure_type": camera['exposure_type'],
+            "pan": camera['pan'],
+            "username": camera['username'],
+            "saturation": camera['saturation'],
+            "autofocus_enabled": camera['autofocus_enabled'],
+            "white_balance_auto": camera['white_balance_auto'],
+            "led1_frequency": camera['led1_frequency'],
+            "contrast": camera['contrast'],
+            "gain": camera['gain'],
+            "address": camera['address'],
+            "password": camera['password'],
+            "exposure": camera['exposure'],
+            "brightness": camera['brightness'],
+            "zoom": camera['zoom'],
+            "jpeg_quality": camera['jpeg_quality'],
+            "powerline_frequency": camera['powerline_frequency'],
+        }
+
+        del camera['white_balance_temperature'],
+        del camera['sharpness'],
+        del camera['focus'],
+        del camera['backlight_compensation_enabled'],
+        del camera['snapshot_request_template'],
+        del camera['stream_template'],
+        del camera['led1_mode'],
+        del camera['ignore_ssl_error'],
+        del camera['tilt'],
+        del camera['exposure_auto_priority_enabled'],
+        del camera['exposure_type'],
+        del camera['pan'],
+        del camera['username'],
+        del camera['saturation'],
+        del camera['autofocus_enabled'],
+        del camera['white_balance_auto'],
+        del camera['led1_frequency'],
+        del camera['contrast'],
+        del camera['gain'],
+        del camera['address'],
+        del camera['password'],
+        del camera['exposure'],
+        del camera['brightness'],
+        del camera['zoom'],
+        del camera['jpeg_quality'],
+        del camera['powerline_frequency'],
         profiles['cameras'][camera['guid']] = camera
 
     for debug in settings_dict['debug_profiles']:

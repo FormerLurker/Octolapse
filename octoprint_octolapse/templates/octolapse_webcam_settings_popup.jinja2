@@ -1,0 +1,74 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2019  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="webcam-settings-popup-template">
+    <div id="octolapse_webcam_settings_dialog" class="modal hide fade octolapse_webcam_settings_dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="octolapse_webcam_settings_form" class="form-horizontal octolapse_form">
+                    <div class="modal-header">
+                        <div>
+                            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                        </div>
+                        <div>
+                            <h3>Camera Settings - <span data-bind="text:Octolapse.Status.WebcamSettings.webcam_settings.name" /></h3>
+                            <div class="webcam_settings_preview">
+                                <div class="row-fluid">
+                                    <div class="span2"></div>
+                                    <div class="span8">
+                                        <img id="octolapse_webcam_settings_stream" class="webcam_stream_preview"  style="display:none;" data-bind="streamLoading:{src: Octolapse.Status.WebcamSettings.webcam_settings.stream_url, loading_selector: '#octolapse_webcam_settings_stream_loading', error_selector: '#octolapse_webcam_settings_stream_error'}">
+                                        <div id="octolapse_webcam_settings_stream_error" class="webcam_stream_preview" style="display:none;">
+                                            Unable to load the webcam stream
+                                        </div>
+                                        <div id="octolapse_webcam_settings_stream_loading" class="webcam_stream_preview" style="display:none;">
+                                            Unable to load the webcam stream
+                                        </div>
+                                    </div>
+                                    <div class="span2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-body" data-bind="template:{name:'webcam-settings-template', data:Octolapse.Status.WebcamSettings.webcam_settings}">
+                    </div>
+                    <div class="modal-footer" style="bottom:0;position:relative">
+                        <div class="row-fluid">
+                            <span class="span4">
+                                <a href="#" class="btn btn-default cancel input-block-level">Cancel</a>
+                            </span>
+                            <span class="span4">
+                                <a href="#" class="btn btn-default set-defaults input-block-level">Defaults</a>
+                            </span>
+                            <span class="span4">
+                                <a href="#" class="btn btn-primary save input-block-level">Save</a>
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</script>
+{% include "octolapse_webcam_settings.jinja2" %}
+

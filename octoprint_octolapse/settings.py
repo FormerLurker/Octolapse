@@ -22,6 +22,7 @@
 ##################################################################################
 
 import pprint
+import shutil
 import copy
 import json
 import uuid
@@ -97,6 +98,8 @@ class Settings(object):
                         continue
                     elif isinstance(class_item, Settings):
                         class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        pass
                     else:
                         source.__dict__[key] = source.try_convert_value(class_item, value, key)
             except Exception as e:
@@ -122,8 +125,10 @@ class Settings(object):
             return value
 
     def save_as_json(self, output_file_path):
-        with open(output_file_path, 'w') as output_file:
+        temp_file_path = output_file_path + ".tmp";
+        with open(temp_file_path, 'w') as output_file:
             json.dump(self.to_dict(), output_file, cls=SettingsJsonEncoder)
+        shutil.move(temp_file_path, output_file_path)
 
     @classmethod
     def create_from(cls, iterable=()):
@@ -807,6 +812,100 @@ class RenderingProfile(ProfileSettings):
         }
 
 
+class WebcamSettings(Settings):
+    def __init__(self):
+        self.address = "http://127.0.0.1/webcam/"
+        self.snapshot_request_template = "{camera_address}?action=snapshot"
+        self.stream_template = "{camera_address}?action=stream"
+        self.ignore_ssl_error = False
+        self.username = ""
+        self.password = ""
+        self.brightness = 128
+        self.contrast = 128
+        self.saturation = 128
+        self.white_balance_auto = True
+        self.gain = 100
+        self.powerline_frequency = 60
+        self.white_balance_temperature = 4000
+        self.sharpness = 128
+        self.backlight_compensation_enabled = False
+        self.exposure_type = 1
+        self.exposure = 250
+        self.exposure_auto_priority_enabled = True
+        self.pan = 0
+        self.tilt = 0
+        self.autofocus_enabled = True
+        self.focus = 28
+        self.zoom = 100
+        self.led1_mode = 'auto'
+        self.led1_frequency = 0        
+        self.jpeg_quality = 90
+        self.mjpegstreamer = MjpegStreamerStaticSettings()
+
+
+class MjpegStreamerStaticSettings(StaticSettings):
+    
+    def template_to_string(self, destination, plugin, setting_id, group):
+        return (
+            "{camera_address}?action=command&"
+            + "dest=" + str(destination)
+            + "&plugin=" + str(plugin)
+            + "&id=" + str(setting_id)
+            + "&group=" + str(group)
+            + "&value={value}"
+        )
+    
+    def __init__(self):
+        try:
+            self.brightness_request_template = self.template_to_string(0, 0, 9963776, 1)
+            self.contrast_request_template = self.template_to_string(0, 0, 9963777, 1)
+            self.saturation_request_template = self.template_to_string(0, 0, 9963778, 1)
+            self.white_balance_auto_request_template = self.template_to_string(0, 0, 9963788, 1)
+            self.gain_request_template = self.template_to_string(0, 0, 9963795, 1)
+            self.powerline_frequency_request_template = self.template_to_string(0, 0, 9963800, 1)
+            self.white_balance_temperature_request_template = self.template_to_string(0, 0, 9963802, 1)
+            self.sharpness_request_template = self.template_to_string(0, 0, 9963803, 1)
+            self.backlight_compensation_enabled_request_template = self.template_to_string(0, 0, 9963804, 1)
+            self.exposure_type_request_template = self.template_to_string(0, 0, 10094849, 1)
+            self.exposure_request_template = self.template_to_string(0, 0, 10094850, 1)
+            self.exposure_auto_priority_enabled_request_template = self.template_to_string(0, 0, 10094851, 1)
+            self.pan_request_template = self.template_to_string(0, 0, 10094856, 1)
+            self.tilt_request_template = self.template_to_string(0, 0, 10094857, 1)
+            self.autofocus_enabled_request_template = self.template_to_string(0, 0, 10094860, 1)
+            self.focus_request_template = self.template_to_string(0, 0, 10094858, 1)
+            self.zoom_request_template = self.template_to_string(0, 0, 10094861, 1)
+            self.led1_mode_request_template = self.template_to_string(0, 0, 168062213, 1)
+            self.led1_frequency_request_template = self.template_to_string(0, 0, 168062214, 1)
+            self.jpeg_quality_request_template = self.template_to_string(0, 0, 1, 3)
+            self.file_request_template = "{camera_address}{value}"
+            self.options = self.get_options()
+        except Exception as e:
+            print (e)
+    
+    @staticmethod
+    def get_options():
+        return {
+            'camera_powerline_frequency_options': [
+                dict(value='0', name='Disabled'),
+                dict(value='1', name='50 HZ (Europe, China, India, etc)'),
+                dict(value='2', name='60 HZ (North/South America, Japan, etc)')
+            ],
+            'camera_exposure_type_options': [
+                dict(value='0', name='Brightness'),
+                dict(value='1', name='Manual Mode'),
+                dict(value='2', name='rast'),
+                dict(value='3', name='Auto - Aperture Priority Mode')
+            ],
+            'camera_led_1_mode_options': [
+                dict(value='on', name='On'),
+                dict(value='off', name='Off'),
+                dict(value='blink', name='Blink'),
+                dict(value='auto', name='Auto')
+            ]
+        }
+    
+
+
 class CameraProfile(ProfileSettings):
     def __init__(self, name="New Camera Profile"):
         super(CameraProfile, self).__init__(name)
@@ -822,75 +921,56 @@ class CameraProfile(ProfileSettings):
         self.delay = 125
         self.timeout_ms = 5000
         self.apply_settings_before_print = False
-        self.address = "http://127.0.0.1/webcam/"
-        self.snapshot_request_template = "{camera_address}?action=snapshot"
         self.snapshot_transpose = ""
-        self.ignore_ssl_error = False
-        self.username = ""
-        self.password = ""
-        self.brightness = 128
-        self.brightness_request_template = self.template_to_string(0, 0, 9963776, 1)
-        self.contrast = 128
-        self.contrast_request_template = self.template_to_string(0, 0, 9963777, 1)
-        self.saturation = 128
-        self.saturation_request_template = self.template_to_string(0, 0, 9963778, 1)
-        self.white_balance_auto = True
-        self.white_balance_auto_request_template = self.template_to_string(0, 0, 9963788, 1)
-        self.gain = 100
-        self.gain_request_template = self.template_to_string(0, 0, 9963795, 1)
-        self.powerline_frequency = 60
-        self.powerline_frequency_request_template = self.template_to_string(0, 0, 9963800, 1)
-        self.white_balance_temperature = 4000
-        self.white_balance_temperature_request_template = self.template_to_string(0, 0, 9963802, 1)
-        self.sharpness = 128
-        self.sharpness_request_template = self.template_to_string(0, 0, 9963803, 1)
-        self.backlight_compensation_enabled = False
-        self.backlight_compensation_enabled_request_template = self.template_to_string(0, 0, 9963804, 1)
-        self.exposure_type = 1
-        self.exposure_type_request_template = self.template_to_string(0, 0, 10094849, 1)
-        self.exposure = 250
-        self.exposure_request_template = self.template_to_string(0, 0, 10094850, 1)
-        self.exposure_auto_priority_enabled = True
-        self.exposure_auto_priority_enabled_request_template = self.template_to_string(0, 0, 10094851, 1)
-        self.pan = 0
-        self.pan_request_template = self.template_to_string(0, 0, 10094856, 1)
-        self.tilt = 0
-        self.tilt_request_template = self.template_to_string(0, 0, 10094857, 1)
-        self.autofocus_enabled = True
-        self.autofocus_enabled_request_template = self.template_to_string(0, 0, 10094860, 1)
-        self.focus = 28
-        self.focus_request_template = self.template_to_string(0, 0, 10094858, 1)
-        self.zoom = 100
-        self.zoom_request_template = self.template_to_string(0, 0, 10094861, 1)
-        self.led1_mode = 'auto'
-        self.led1_mode_request_template = self.template_to_string(0, 0, 168062213, 1)
-        self.led1_frequency = 0
-        self.led1_frequency_request_template = self.template_to_string(0, 0, 168062214, 1)
-        self.jpeg_quality = 90
-        self.jpeg_quality_request_template = self.template_to_string(0, 0, 1, 3)
+        self.webcam_settings = WebcamSettings()
 
-    @staticmethod
-    def template_to_string(destination, plugin, setting_id, group):
-        return (
-            "{camera_address}?action=command&"
-            + "dest=" + str(destination)
-            + "&plugin=" + str(plugin)
-            + "&id=" + str(setting_id)
-            + "&group=" + str(group)
-            + "&value={value}"
-        )
+    def format_snapshot_request_template(self):
+        return self.snapshot_request_template.format(camera_address=self.address)
+
+    def format_stream_template(self):
+        return self.stream_template.format(camera_address=self.address)
+
+    def get_image_preferences(self):
+        return {
+            'guid': self.guid,
+            'name': self.name,
+            'stream_template': self.format_stream_template(),
+            'address': self.address,
+            'brightness': self.brightness,
+            'contrast': self.contrast,
+            'saturation': self.saturation,
+            'white_balance_auto': self.white_balance_auto,
+            'gain': self.gain,
+            'powerline_frequency': self.powerline_frequency,
+            'white_balance_temperature':  self.white_balance_temperature,
+            'sharpness': self.sharpness,
+            'backlight_compensation_enabled': self.backlight_compensation_enabled,
+            'exposure_type': self.exposure_type,
+            'exposure': self.exposure,
+            'exposure_auto_priority_enabled': self.exposure_auto_priority_enabled,
+            'pan': self.pan,
+            'tilt': self.tilt,
+            'autofocus_enabled': self.autofocus_enabled,
+            'focus': self.focus,
+            'zoom': self.zoom,
+            'led1_mode': self.led1_mode,
+            'led1_frequency': self.led1_frequency,
+            'jpeg_quality': self.jpeg_quality,
+            'options': self.get_options()
+        }
 
     @staticmethod
     def get_options():
         return {
             'camera_powerline_frequency_options': [
-                dict(value='50', name='50 HZ (Europe, China, India, etc)'),
-                dict(value='60', name='60 HZ (North/South America, Japan, etc)')
+                dict(value='0', name='Disabled'),
+                dict(value='1', name='50 HZ (Europe, China, India, etc)'),
+                dict(value='2', name='60 HZ (North/South America, Japan, etc)')
             ],
             'camera_exposure_type_options': [
-                dict(value='0', name='Unknown - Let me know if you know what this option does.'),
-                dict(value='1', name='Manual'),
-                dict(value='2', name='Unknown - Let me know if you know what this option does.'),
+                dict(value='0', name='Brightness'),
+                dict(value='1', name='Manual Mode'),
+                dict(value='2', name='rast'),
                 dict(value='3', name='Auto - Aperture Priority Mode')
             ],
             'camera_led_1_mode_options': [

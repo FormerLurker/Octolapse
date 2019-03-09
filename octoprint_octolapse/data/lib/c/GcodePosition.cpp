@@ -72,10 +72,12 @@ gcode_position::gcode_position(gcode_position_args args)
 	p_current_pos = new position(_xyz_axis_default_mode, _e_axis_default_mode, _units_default);
 	p_undo_pos = new position(_xyz_axis_default_mode, _e_axis_default_mode, _units_default);
 }
+
 gcode_position::gcode_position(const gcode_position &source)
 {
 	// Private copy constructor - you can't copy this class
 }
+
 gcode_position::~gcode_position()
 {
 	if (p_previous_pos != NULL)
@@ -131,7 +133,12 @@ void gcode_position::update(parsed_command *command)
 	p_current_pos = old_undo_pos;
 	position::copy(*p_previous_pos, p_current_pos);
 	p_current_pos->reset_state();
-	
+
+	// add our parsed command to the current position
+	if (p_current_pos->p_command != NULL)
+		delete p_current_pos->p_command;
+	p_current_pos->p_command = new parsed_command(*command);
+
 	// Does our function exist in our functions map?
 	_gcode_functions_iterator = _gcode_functions.find(command->cmd);
 	if (_gcode_functions_iterator != _gcode_functions.end())
@@ -226,6 +233,7 @@ void gcode_position::update(parsed_command *command)
 				if (p_current_pos->is_extruding)
 				{
 					p_current_pos->last_extrusion_height = p_current_pos->z;
+					p_current_pos->last_extrusion_height_null = false;
 					// Is Primed
 					if (!p_current_pos->is_printer_primed)
 					{
@@ -318,14 +326,17 @@ std::map<std::string, gcode_position::posFunctionType> gcode_position::GetGcodeF
 	return newMap;
 }
 
-void gcode_position::UpdatePos(position* pos, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1)
+void gcode_position::update_position(position* pos, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1)
 {
 	if (is_g1)
 	{
 		pos->is_travel_only = !update_e && !update_z && (update_x || update_y);
 	}
 	if (update_f)
+	{
 		pos->f = f;
+		pos->f_null = false;
+	}
 
 	if (force)
 	{
@@ -427,7 +438,7 @@ void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedComma
 			f = p_cur_param->double_value;
 		}
 	}
-	UpdatePos(posPtr, x, update_x, y, update_y, z, update_z, e, update_e, f, update_f, false, true);
+	update_position(posPtr, x, update_x, y, update_y, z, update_z, e, update_e, f, update_f, false, true);
 }
 
 void gcode_position::process_g2(position* posPtr, parsed_command* parsedCommandPtr)
@@ -696,5 +707,5 @@ void gcode_position::process_m207(position* posPtr, parsed_command* parsedComman
 
 void gcode_position::process_m208(position* posPtr, parsed_command* parsedCommandPtr)
 {
-	// Todo: impemente firmware retract
+	// Todo: implement firmware retract
 }

@@ -87,8 +87,9 @@ class Triggers(object):
     def update(self, position, parsed_command):
         # the previous command (not just the current) MUST have homed positions else
         # we may have some null coordinates.
-        if not position.previous_pos.has_homed_position:
-            return
+        #if not position.current_pos.has_homed_position:
+        #    return
+        ## Note:  I think we need to add waits to handle the above
         """Update all triggers and return any that are triggering"""
         try:
             # Loop through all of the active current_triggers
@@ -180,6 +181,7 @@ class TriggerState(object):
         self.in_path_position = False if state is None else state.in_path_position
         self.is_feature_allowed = False if state is None else state.is_feature_allowed
         self.is_waiting = False if state is None else state.is_waiting
+        self.is_home_position_wait = False if state is None else state.is_home_position_wait
         self.is_waiting_on_zhop = False if state is None else state.is_waiting_on_zhop
         self.is_waiting_on_extruder = False if state is None else state.is_waiting_on_extruder
         self.is_waiting_on_feature = False if state is None else state.is_waiting_on_feature
@@ -194,6 +196,7 @@ class TriggerState(object):
             "is_in_position": self.is_in_position,
             "is_feature_allowed": self.is_feature_allowed,
             "is_waiting": self.is_waiting,
+            "is_home_position_wait": self.is_home_position_wait,
             "is_waiting_on_zhop": self.is_waiting_on_zhop,
             "is_waiting_on_extruder": self.is_waiting_on_extruder,
             "is_waiting_on_feature": self.is_waiting_on_feature,
@@ -217,6 +220,7 @@ class TriggerState(object):
                 and self.is_in_position == state.is_in_position
                 and self.in_path_position == state.in_path_position
                 and self.is_waiting == state.is_waiting
+                and self.is_home_position_wait == state.is_home_position_wait
                 and self.is_waiting_on_zhop == state.is_waiting_on_zhop
                 and self.is_waiting_on_extruder == state.is_waiting_on_extruder
                 and self.is_waiting_on_feature == state.is_waiting_on_feature
@@ -395,7 +399,11 @@ class GcodeTrigger(Trigger):
                     state.is_waiting = True
                 if state.is_waiting:
                     if position.is_extruder_triggered(self.extruder_triggers):
-                        if self.require_zhop and not position.current_pos.is_zhop:
+                        if not position.previous_pos.has_homed_position:
+                            state.is_waiting_for_homed_position = True
+                            self._settings.Logger.log_trigger_wait_state(
+                                "GcodeTrigger - Triggering - Waiting for the previous position to be homed.")
+                        elif self.require_zhop and not position.current_pos.is_zhop:
                             state.is_waiting_on_zhop = True
                             self._settings.Logger.log_trigger_wait_state(
                                 "GcodeTrigger - Waiting on ZHop.")
@@ -469,6 +477,7 @@ class LayerTriggerState(TriggerState):
 
     def is_equal(self, state):
         if (super(LayerTriggerState, self).is_equal(state)
+                and self.is_home_position_wait == state.is_home_position_wait
                 and self.current_increment == state.current_increment
                 and self.is_layer_change_wait == state.is_layer_change_wait
                 and self.is_height_change == state.is_height_change
@@ -617,7 +626,11 @@ class LayerTrigger(Trigger):
                             self._settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if self.require_zhop and not position.current_pos.is_zhop:
+                        if not position.previous_pos.has_homed_position:
+                            state.is_waiting_for_homed_position = True
+                            self._settings.Logger.log_trigger_wait_state(
+                                "LayerTrigger - Triggering - Waiting for the previous position to be homed.")
+                        elif self.require_zhop and not position.current_pos.is_zhop:
                             state.is_waiting_on_zhop = True
                             self._settings.Logger.log_trigger_wait_state(
                                 "LayerTrigger - Triggering - Waiting on ZHop.")
@@ -834,6 +847,10 @@ class TimerTrigger(Trigger):
 
                     # see if the exturder is in the right position
                     if position.is_extruder_triggered(self.extruder_triggers):
+                        if not position.previous_pos.has_homed_position:
+                            state.is_waiting_for_homed_position = True
+                            self._settings.Logger.log_trigger_wait_state(
+                                "TimerTrigger - Triggering - Waiting for the previous position to be homed.")
                         if self.require_zhop and not position.current_pos.is_zhop:
                             self._settings.Logger.log_trigger_wait_state(
                                 "TimerTrigger - Waiting on ZHop.")

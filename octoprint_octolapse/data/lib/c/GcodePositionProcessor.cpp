@@ -35,12 +35,12 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 	{ "Initialize", (PyCFunction)Initialize,  METH_VARARGS  ,"Initialize the internal shared position processor." },
 { "Undo",  (PyCFunction)Undo,  METH_VARARGS  ,"Undo an update made to the current position.  You can only undo once." },
 { "Update",  (PyCFunction)Update,  METH_VARARGS  ,"Undo an update made to the current position.  You can only undo once." },
+{ "UpdatePosition",  (PyCFunction)UpdatePosition,  METH_VARARGS  ,"Update x,y,z,e and f for the given position key." },
 { "Parse",  (PyCFunction)Parse,  METH_VARARGS  ,"Parse gcode text into a ParsedCommand." },
-{ "GetCurrentPositionTuple",  (PyCFunction)GetCurrentPositionTuple,  METH_NOARGS  ,"Returns the current position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
-{ "GetCurrentPositionDict",  (PyCFunction)GetCurrentPositionDict,  METH_NOARGS  ,"Returns the current position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
-{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_NOARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
-{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_NOARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
-{ "Reset",  (PyCFunction)Reset,  METH_VARARGS  ,"Reset the current position, optionally from a supplied position." },
+{ "GetCurrentPositionTuple",  (PyCFunction)GetCurrentPositionTuple,  METH_VARARGS  ,"Returns the current position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
+{ "GetCurrentPositionDict",  (PyCFunction)GetCurrentPositionDict,  METH_VARARGS  ,"Returns the current position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
+{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
+{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
 { "GetSnapshotPlans_LockToPrint", (PyCFunction)GetSnapshotPlans_LockToPrint, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SnapToPrint' stabilization." },
 
 { NULL, NULL, 0, NULL }
@@ -55,9 +55,7 @@ extern "C"
 		PyEval_InitThreads();
 
 		PyObject *m = Py_InitModule("GcodePositionProcessor", GcodePositionProcessorMethods);
-		gpp::position = NULL;
 		gpp::parser = new gcode_parser();
-
 		std::cout << "complete\r\n";
 	}
 
@@ -135,81 +133,238 @@ extern "C"
 	{
 		gcode_position_args positionArgs;
 
-		if (!ParsePositionArgs(args, &positionArgs))
+		if (!ParseInitializationArgs(args, &positionArgs))
 		{
 			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
 		}
 
-		// Create the parser object (only done once, not redone in Reset()
-		gpp::position = new gcode_position(positionArgs);
-		return Py_BuildValue("O", Py_True);
-	}
+		// Create the gcode position object 
+		gcode_position * p_new_position = new gcode_position(positionArgs);
+		// see if we already have a gcode_position object for the given key
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(positionArgs.key);
+		if (gcode_position_iterator != gpp::gcode_positions.end())
+		{
+			delete gcode_position_iterator->second;
+			gpp::gcode_positions.erase(gcode_position_iterator);
+		}
 
-	static PyObject* Reset(PyObject* self, PyObject *args)
-	{
-		gcode_position_args positionArgs;
-		if (!ParsePositionArgs(args, &positionArgs))
-			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
-						 // Create the position object
+		// add the new gcode position to our list of objects
+		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(positionArgs.key, p_new_position));
 
-		delete gpp::position;
-		gpp::position = new gcode_position(positionArgs);
 		return Py_BuildValue("O", Py_True);
 	}
 
 	static PyObject* Undo(PyObject* self, PyObject *args)
 	{
-		gpp::position->undo_update();
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "s", &key_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "Undo requires at least one parameter: the gcode_position key");
+			return NULL;
+		}
+		
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		p_gcode_position->undo_update();
 		return Py_BuildValue("O", Py_True);
 	}
 
 	static PyObject* Update(PyObject* self, PyObject *args)
 	{
-		std::string gcode;
-		if (!ParseUpdateArgs(args, &gcode))
+		char* gcode_param;
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "ss", &key_param, &gcode_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "Update requires at least two parameters: the key and the gcode string");
+			return NULL;
+		}
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		parsed_command command;
+		gpp::parser->parse_gcode(gcode_param, &command);
+		p_gcode_position->update(&command);
+
+		PyObject * py_position = p_gcode_position->p_current_pos->to_py_tuple();
+		if(py_position == NULL)
 		{
 			return NULL;
 		}
-		parsed_command command;
-		gpp::parser->parse_gcode(gcode, &command);
-		gpp::position->update(&command);
 
-		return Py_BuildValue("O", Py_True);
+		return py_position;
+	}
+
+	static PyObject* UpdatePosition(PyObject* self, PyObject *args)
+	{
+		char* gcode_param;
+		char* key_param;
+		double x;
+		long update_x;
+		double y;
+		long update_y;
+		double z;
+		long update_z;
+		double e;
+		long update_e;
+		double f;
+		long update_f;
+
+		if (!PyArg_ParseTuple(
+			args, "sdldldldldl", 
+			&key_param, 
+			&x,
+			&update_x,
+			&y,
+			&update_y,
+			&z,
+			&update_z,
+			&e,
+			&update_e,
+			&f,
+			&update_f
+		))
+		{
+			PyErr_SetString(PyExc_ValueError, "UpdatePosition requires at least 11 parameters: key, x, update_x, y, update_y, z, update_z, e, update_e, f and update_f.  The 'NONE' is not allowed for any parameters!");
+			return NULL;
+		}
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		p_gcode_position->update_position(
+			p_gcode_position->p_current_pos,
+			x,
+			update_x>0,
+			y,
+			update_y > 0,
+			z,
+			update_z > 0,
+			e,
+			update_e > 0,
+			f,
+			update_f > 0,
+			true,
+			false);
+
+		PyObject * py_position = p_gcode_position->p_current_pos->to_py_tuple();
+		if (py_position == NULL)
+		{
+			return NULL;
+		}
+
+		return py_position;
 	}
 
 	static PyObject* Parse(PyObject* self, PyObject *args)
 	{
-		std::string gcode;
-		if (!ParseUpdateArgs(args, &gcode))
+		char* gcode_param;
+		if (!PyArg_ParseTuple(args, "s", &gcode_param))
 		{
+			PyErr_SetString(PyExc_ValueError, "Parse requires at least one parameter: the gcode string");
 			return NULL;
 		}
 		parsed_command command;
-		gpp::parser->parse_gcode(gcode, &command);
+		gpp::parser->parse_gcode(gcode_param, &command);
 		// Convert ParsedCommand to python object
 		return command.to_py_object();
 	}
 
-	static PyObject* GetCurrentPositionTuple(PyObject* self)
+	static PyObject* GetCurrentPositionTuple(PyObject* self, PyObject *args)
 	{
-		return gpp::position->p_current_pos->to_py_tuple();
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "s", &key_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "GetCurrentPositionTuple requires at least one parameter: the gcode_position key");
+			return NULL;
+		}
+
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		return p_gcode_position->p_current_pos->to_py_tuple();
 	}
 	
-	static PyObject* GetCurrentPositionDict(PyObject* self)
+	static PyObject* GetCurrentPositionDict(PyObject* self, PyObject *args)
 	{
-		return gpp::position->p_current_pos->to_py_dict();
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "s", &key_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "GetCurrentPositionTuple requires at least one parameter: the gcode_position key");
+			return NULL;
+		}
+
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		return p_gcode_position->p_current_pos->to_py_dict();
 	}
 
-	static PyObject* GetPreviousPositionTuple(PyObject* self)
+	static PyObject* GetPreviousPositionTuple(PyObject* self, PyObject *args)
 	{
-		return gpp::position->p_previous_pos->to_py_tuple();
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "s", &key_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "GetCurrentPositionTuple requires at least one parameter: the gcode_position key");
+			return NULL;
+		}
+
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		return p_gcode_position->p_previous_pos->to_py_tuple();
 	}
 
-	static PyObject* GetPreviousPositionDict(PyObject* self)
+	static PyObject* GetPreviousPositionDict(PyObject* self, PyObject *args)
 	{
-		return gpp::position->p_previous_pos->to_py_dict();
+		char* key_param;
+		if (!PyArg_ParseTuple(args, "s", &key_param))
+		{
+			PyErr_SetString(PyExc_ValueError, "GetCurrentPositionTuple requires at least one parameter: the gcode_position key");
+			return NULL;
+		}
+
+		// Get the parser
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key_param);
+		if (gcode_position_iterator == gpp::gcode_positions.end())
+		{
+			return Py_BuildValue("O", Py_False);
+		}
+		gcode_position* p_gcode_position = gcode_position_iterator->second;
+
+		return p_gcode_position->p_previous_pos->to_py_dict();
 	}
 }
+
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const long gcodes_processed, const long lines_processed)
 {
 	PyObject * funcArgs = Py_BuildValue("(d,d,d,i,i)", percent_complete, seconds_elapsed, estimated_seconds_remaining, gcodes_processed, lines_processed);
@@ -242,19 +397,95 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 }
 
 /// Argument Parsing
+static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positionArgs)
+{
+	PyObject_Print(args, stdout, Py_PRINT_RAW);
+
+	PyObject * poLocationDetectionCommands; // Hold the PyList
+
+	char * pKey;
+	char * pXYZAxisDefaultMode;
+	char * pEAxisDefaultMode;
+	char * pUnitsDefault;
+	long iAutoDetectPosition;
+	long iOriginXIsNone;
+	long iOriginYIsNone;
+	long iOriginZIsNone;
+	if (!PyArg_ParseTuple(
+		args, "(sldldldlddddlsssO)",
+		&pKey,
+		&iAutoDetectPosition,
+		&positionArgs->origin_x,
+		&iOriginXIsNone,
+		&positionArgs->origin_y,
+		&iOriginYIsNone,
+		&positionArgs->origin_z,
+		&iOriginZIsNone,
+		&positionArgs->retraction_length,
+		&positionArgs->z_lift_height,
+		&positionArgs->priming_height,
+		&positionArgs->minimum_layer_height,
+		&positionArgs->g90_influences_extruder,
+		&pXYZAxisDefaultMode,
+		&pEAxisDefaultMode,
+		&pUnitsDefault,
+		&poLocationDetectionCommands
+	))
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ParsePositionArgs failed: unable to parse parameters.");
+		return false;
+	}
+	positionArgs->key = pKey;
+	positionArgs->autodetect_position = iAutoDetectPosition;
+	positionArgs->origin_x_none = iOriginXIsNone > 0;
+	positionArgs->origin_y_none = iOriginYIsNone > 0;
+	positionArgs->origin_z_none = iOriginZIsNone > 0;
+	positionArgs->xyz_axis_default_mode = pXYZAxisDefaultMode;
+	positionArgs->e_axis_default_mode = pEAxisDefaultMode;
+	positionArgs->units_default = pUnitsDefault;
+	
+	// Extract the elements from  the location detection command list pyobject
+	int listSize = PyList_Size(poLocationDetectionCommands);
+	if (listSize < 0)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, "Unable to build position arguments, LocationDetectionCommands is not a list.");
+		return false;
+	}
+
+	for (int index = 0; index < listSize; index++) {
+		PyObject *pListItem = PyList_GetItem(poLocationDetectionCommands, index);
+		//Py_INCREF(pListItem);
+		if (!PyString_Check(pListItem)) {
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Argument 13 (location_detection_commands) must be a list of strings.");
+			return false;
+		}
+		std::string command = PyString_AsString(pListItem);
+		positionArgs->location_detection_commands.push_back(command);
+		//Py_DECREF(pListItem);
+	}
+	//Py_DECREF(poLocationDetectionCommands);
+
+	return true;
+}
+
 static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 {
+	PyObject_Print(args, stdout, Py_PRINT_RAW);
+
 	PyObject * poLocationDetectionCommands; // Hold the PyList
 
 	char * pXYZAxisDefaultMode;
 	char * pEAxisDefaultMode;
 	char * pUnitsDefault;
-	int iAutoDetectPosition;
-	int iOriginXIsNone;
-	int iOriginYIsNone;
-	int iOriginZIsNone;
+	long iAutoDetectPosition;
+	long iOriginXIsNone;
+	long iOriginYIsNone;
+	long iOriginZIsNone;
 	if (!PyArg_ParseTuple(
-		args, "ififififfffisssO",
+		args, "ldldldlddddlsss",
 		&iAutoDetectPosition,
 		&positionArgs->origin_x,
 		&iOriginXIsNone,
@@ -306,7 +537,6 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 		positionArgs->location_detection_commands.push_back(command);
 		//Py_DECREF(pListItem);
 	}
-
 	//Py_DECREF(poLocationDetectionCommands);
 
 	return true;
@@ -355,14 +585,3 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 	return true;
 }
 
-static bool ParseUpdateArgs(PyObject *args, std::string* gcode)
-{
-	char* gcode_param;
-	if (!PyArg_ParseTuple(args, "s", &gcode_param))
-	{
-		PyErr_SetString(PyExc_ValueError, "Update requires at least one parameter: the gcode string");
-		return false;
-	}
-	(*gcode) = gcode_param;
-	return true;
-}

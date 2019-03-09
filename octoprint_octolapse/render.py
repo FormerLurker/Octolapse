@@ -39,7 +39,6 @@ import sarge
 from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.settings import CameraProfile, RenderingProfile
 from octoprint_octolapse.snapshot import SnapshotMetadata
 
 

@@ -92,6 +92,7 @@ in_path_position
 
 void position::initialize()
 {
+	p_command = NULL;
 	f = 0;
 	f_null = true;
 	x = 0;
@@ -167,6 +168,8 @@ position::position()
 
 position::position(position & source)
 {
+	if(source.p_command != NULL)
+		p_command = new parsed_command(*source.p_command);
 	f = source.f;
 	f_null = source.f_null;
 	x = source.x;
@@ -240,23 +243,23 @@ position::position(const std::string& xyz_axis_default_mode, const std::string& 
 {
 	initialize();
 
-	if (xyz_axis_default_mode == "relative")
+	if (xyz_axis_default_mode == "relative" || xyz_axis_default_mode == "force-relative")
 	{
 		is_relative = true;
 		is_relative_null = false;
 	}
-	else if (xyz_axis_default_mode == "absolute")
+	else if (xyz_axis_default_mode == "absolute" || xyz_axis_default_mode == "force-absolute")
 	{
 		is_relative = false;
 		is_relative_null = false;
 	}
 
-	if (e_axis_default_mode == "relative")
+	if (e_axis_default_mode == "relative" || e_axis_default_mode == "force-relative")
 	{
 		is_extruder_relative = true;
 		is_extruder_relative_null = false;
 	}
-	else if (e_axis_default_mode == "absolute")
+	else if (e_axis_default_mode == "absolute" || e_axis_default_mode == "force-absolute")
 	{
 		is_extruder_relative = false;
 		is_extruder_relative_null = false;
@@ -273,13 +276,22 @@ position::position(const std::string& xyz_axis_default_mode, const std::string& 
 		is_metric_null = false;
 	}
 }
+
 position::~position()
 {
-	
+	if (p_command != NULL)
+		delete p_command;
 }
 
 void position::copy(position &source, position* target)
 {
+	if (target->p_command != NULL)
+	{
+		delete target->p_command;
+		target->p_command = NULL;
+	}
+	if(source.p_command != NULL)
+		target->p_command = new parsed_command(*source.p_command);
 	target->f = source.f;
 	target->f_null = source.f_null;
 	target->x = source.x;
@@ -350,9 +362,19 @@ void position::copy(position &source, position* target)
 
 PyObject* position::to_py_tuple()
 {
+	PyObject * py_command;
+	if(p_command == NULL)
+	{
+		Py_IncRef(Py_None);
+		py_command = Py_None;
+	}
+	else
+	{
+		py_command = p_command->to_py_object();
+	}
 	PyObject* p_position = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddddddddddddddddllllllllllllllllllllllllllllllllllllllllllll",
+		"dddddddddddddddddddddllllllllllllllllllllllllllllllllllllllllllllO",
 		// Floats
 		x, // 0
 		y, // 1
@@ -421,7 +443,9 @@ PyObject* position::to_py_tuple()
 		firmware_unretraction_additional_length_null, // 61
 		firmware_retraction_feedrate_null, // 62
 		firmware_unretraction_feedrate_null, // 63
-		firmware_z_lift_null // 64
+		firmware_z_lift_null,  // 64
+		// Objects
+		py_command // 65
 	);
 	if (p_position == NULL)
 	{
@@ -440,10 +464,24 @@ void position::reset_state()
 	has_state_changed = false;
 	has_received_home_command = false;
 }
+
 PyObject* position::to_py_dict()
 {
+	PyObject * py_command;
+	if (p_command == NULL)
+	{
+		Py_IncRef(Py_None);
+		py_command = Py_None;
+	}
+	else
+	{
+		py_command = p_command->to_py_object();
+	}
+
 	PyObject * p_position = Py_BuildValue(
-		"{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"parsed_command",
+		py_command,
 		// FLOATS
 		"x",
 		x,

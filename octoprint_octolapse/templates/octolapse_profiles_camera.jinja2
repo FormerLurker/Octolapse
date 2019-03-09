@@ -102,7 +102,7 @@
         <div class="control-group">
             <label class="control-label">Base Address</label>
             <div class="controls">
-                <input id="camera_profile_address" type="text" name="address" class="input-xxl ignore_hidden_errors" data-bind="value: address" required="true" />
+                <input id="camera_profile_address" type="text" name="address" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.address" required="true" />
                 <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#base-address" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 <div class="error_label_container text-error" data-error-for="camera_profile_address"></div>
                 <span class="help-inline">The full address to the camera, including http:// or https://</span>
@@ -111,8 +111,9 @@
         <div class="control-group">
             <label class="control-label">Snapshot Address Template</label>
             <div class="controls">
-                <input id="camera_profile_snapshot_request_template" name="snapshot_request_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: snapshot_request_template" required="true" />
+                <input id="camera_profile_snapshot_request_template" name="snapshot_request_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.snapshot_request_template" required="true" />
                 <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#snapshot-address-template" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <button class="btn btn-default input-xxl" data-bind="click: function() {$data.testCamera();}">Test</button>
                 <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_request_template"></div>
                 <span class="help-inline">
                     Enter a full url for accessing a snapshot image from your webcam.  The token <i>{camera_address}</i> will be replaced with the camera address above.
@@ -120,12 +121,13 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Test Webcam Snapshot Address</label>
+            <label class="control-label">Stream Address Template</label>
             <div class="controls">
-                <button class="btn btn-default input-xxl" data-bind="click: function() {$data.testCamera();}">Test</button>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#test-webcam-snapshot-address" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <input id="camera_profile_stream_template" name="stream_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.stream_template" required="true" />
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#stream-template" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="camera_profile_stream_template"></div>
                 <span class="help-inline">
-                    Octolapse will attempt to take a snapshot using the Snapshot Address template above and will report success or failure.
+                    This is ONLY used for previewing webcam custom image preferences.
                 </span>
             </div>
         </div>
@@ -221,267 +223,47 @@
         </div>
     </div>
     <hr/>
-    <div >
-        <div>
-            <h4>Custom Image Preferences</h4>
-            <div data-bind="visible: camera_type()=='webcam'">
-                <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
-                <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
-            </div>
-            <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
-                <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
-            </div>
-
-        </div>
+    <div>
+        <h4>Custom Image Preferences</h4>
         <div data-bind="visible: camera_type()=='webcam'">
-            <div class="control-group">
-                <div class="controls">
-                    <label class="checkbox">
-                        <a href="#" data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
-                        <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                    </label>
-                    <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
-                </div>
-            </div>
-            <div data-bind="visible: apply_settings_before_print">
-                <div>
-                    <div>
-                        <h5>General Image Preferences</h5>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Apply Camera Settings</label>
-                        <div class="controls">
-                            <button class="btn btn-default input-xxl" data-bind="click: function() {$data.applySettingsToCamera('web-request');}">Apply Now</button>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#apply-now" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <span class="help-inline">
-                                Click to apply all settings to your camera right now so you can see the results without starting a print or saving your changes.
-                            </span>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Brightness (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_brightness" name="brightness" type="number" class="input-small" data-bind="value: brightness" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_brightness"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Contrast (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_contrast" name="contrast" type="number" class="input-small" data-bind="value: contrast" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_contrast"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Saturation (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_saturation" name="saturation" type="number" class="input-small" data-bind="value: saturation" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_saturation"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Sharpness (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_sharpness" name="sharpness" type="number" class="input-small" data-bind="value: sharpness" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_sharpness"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">JPEG Quality (1-100)</label>
-                        <div class="controls">
-                            <input id="camera_profile_jpeg_quality" name="jpeg_quality" type="number" class="input-small" data-bind="value: jpeg_quality" min="1" max="100" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#jpeg-quality" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality"></div>
-                            <span class="help-inline">There are known issues with this setting, which is availiable within the /webcam/control.htm screen, but doesn't appear to do anything to the image quality/size.</span>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>White Balance</h5>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Auto White Balance Temperature</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance" />Enabled
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#auto-white-balance-temperature" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:! white_balance_auto()">
-                        <label class="control-label">White Balance Temeprature (2000-6500)</label>
-                        <div class="controls">
-                            <SPAN class="input-append">
-                                <input id="camera_profile_white_balance_temperature" name="white_balance_temperature" type="number" class="input-small" data-bind="value: white_balance_temperature" required="True" min="2000" max="6500" step="1" />
-                                <span class="add-on">K</span>
-                            </SPAN>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#white-balance-temperature" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature"></div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>Exposure and Gain</h5>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Backlight Compensation</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation" />Enabled
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#backlight-compensation" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Exposure Type</label>
-                        <div class="controls">
-                            <select id="camera_profile_exposure_type" name="exposure_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_exposure_type_options,
-                                     optionsText: 'name',
-                                     optionsValue: 'value',
-                                     optionsCaption: 'Select One...',
-                                     value: exposure_type"></select>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type"></div>
-                        </div>
-                    </div>
-                    <div data-bind="visible:exposure_type() == '1'">
-                        <div>
-                            <div class="control-group">
-                                <label class="control-label">Exposure (3-2047)</label>
-                                <div class="controls">
-                                    <input id="camera_profile_exposure" name="exposure" type="number" class="input-small" data-bind="value: exposure" min="3" max="2047" step="1" required="true" />
-                                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                                    <div class="error_label_container text-error" data-error-for="camera_profile_exposure"></div>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">Gain (0-255)</label>
-                                <div class="controls">
-                                    <input id="camera_profile_gain" name="gain" type="number" class="input-small" data-bind="value: gain" min="0" max="255" step="1" required="true" />
-                                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#gain" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                                    <div class="error_label_container text-error" data-error-for="camera_profile_gain"></div>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">Exposure Auto Priority</label>
-                                <div class="controls">
-                                    <label class="checkbox">
-                                        <input type="checkbox" data-bind="checked: exposure_auto_priority_enabled" />Enabled
-                                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure-auto-priority" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                                    </label>
-                                </div>
-                            </div>
+            <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
+            <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
+        </div>
+        <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
+            <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
+        </div>
 
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>Pan, Tilt, and Zoom</h5>
-                    </div>
-
-                    <div class="control-group">
-                        <label class="control-label">Pan (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_pan" name="pan" type="number" class="input-small" data-bind="value: pan" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-
-                            <div class="error_label_container text-error" data-error-for="camera_profile_pan"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Tilt (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_tilt" name="tilt" type="number" class="input-small" data-bind="value: tilt" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_tilt"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Zoom (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_zoom" name="zoom" type="number" class="input-small" data-bind="value: zoom" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_zoom"></div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>Focus</h5>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Autofocus Enabled</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus" />Enabled
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#autofocus-enabled" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:!autofocus_enabled()">
-                        <label class="control-label">Absolute Focus (0-255)</label>
-                        <div class="controls">
-                            <input id="camera_profile_focus" name="focus" type="number" class="input-small" data-bind="value: focus" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#absolute-focus" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_focus"></div>
-
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>LEDs</h5>
-                        <p>My camera does not have an LED, so I was unable to test LED settings.  If you get this to work, please let me know.</p>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">LED 1 Mode</label>
-                        <div class="controls">
-                            <select id="camera_profile_led_1_mode" name="led_1_mode" data-bind="options: Octolapse.Cameras.profileOptions.camera_led_1_mode_options,
-                                     optionsText: 'name',
-                                     optionsValue: 'value',
-                                     optionsCaption: 'Select One...',
-                                     value: led1_mode"></select>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#led-1-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_led_1_mode"></div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">LED 1 Frequency</label>
-                        <div class="controls">
-                            <input id="camera_profile_led1_frequency" name="led1_frequency" type="number" class="input-small" data-bind="value: led1_frequency" min="0" max="255" step="1" required="true" />
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#led-1-frequency" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency"></div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h5>Misc</h5>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Powerline Frequency</label>
-                        <div class="controls">
-                            <select id="camera_profile_camera_powerline_frequency" class="input-xlg"  name="powerline_frequency" data-bind="options: Octolapse.Cameras.profileOptions.camera_powerline_frequency_options,
-                                     optionsText: 'name',
-                                     optionsValue: 'value',
-                                     optionsCaption: 'Select One...',
-                                     value: powerline_frequency"></select>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#powerline-frequency" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-                            <div class="error_label_container text-error" data-error-for="camera_profile_camera_powerline_frequency"></div>
-                            <span class="help-inline">I did not notice any difference when testing this setting.  Please let me know if it affects your image quality.</span>
-                        </div>
-                    </div>
-                </div>
+    </div>
+    <div data-bind="visible: camera_type()=='webcam'">
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <a href="#" data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
+                    <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
             </div>
         </div>
+        <div data-bind="visible: apply_settings_before_print">
+            <div class="webcam_settings_preview">
+                <div class="row-fluid">
+                    <div class="span2"></div>
+                    <div class="span8">
+                        <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}">
+                        <div id="octolapse_camera_profile_stream_error" class="webcam_stream_preview" style="display:none;">
+                            Unable to load the webcam stream
+                        </div>
+                        <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
+                            Unable to load the webcam stream
+                        </div>
+                    </div>
+                    <div class="span2"></div>
+                </div>
+            </div>
+            <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>
+        </div>
+
     </div>
     <hr />
     <div>
@@ -500,7 +282,7 @@
                     <label class="control-label">Ignore SSL Errors</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: ignore_ssl_error" />Enabled
+                            <input type="checkbox" data-bind="checked: webcam_settings.ignore_ssl_error" />Enabled
                             <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#ignore-ssl-errors" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         </label>
                         <span class="help-inline">
@@ -511,7 +293,7 @@
                 <div class="control-group">
                     <label class="control-label">User Name</label>
                     <div class="controls">
-                        <input name="username" type="text" class="input" data-bind="value: username" />
+                        <input name="username" type="text" class="input" data-bind="value: webcam_settings.username" />
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#user-name" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         <span class="help-inline">
                             Enter a username to be sent with the camera snapshot request.  If you leave this blank, no sign-in credentials will be sent
@@ -524,179 +306,15 @@
                         <!-- The text and password here are to prevent FF from auto filling my login credentials because it ignores autocomplete="off"-->
                         <input type="text" style="display:none" />
                         <input type="password" style="display:none" />
-                        <input name="camera_profile_password" type="password" autocomplete="off" class="input" data-bind="value: password" />
+                        <input name="camera_profile_password" type="password" autocomplete="off" class="input" data-bind="value: webcam_settings.password" />
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#password" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         <span class="help-inline">
                             If required, enter a password to be sent with the camera snapshot request.  <span class="label label-important">Attention</span>&nbsp;Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
                         </span>
-                    </div>
-
-                </div>
-            </div>
-            <div data-bind="visible: camera_type()=='webcam'">
-                <div>
-                    <h4>Camera Settings Request Templates</h4>
-                    <p>I'm pretty sure the defaults will not work for all cameras, but hopefully these templates will allow image control on a wider group of cameras.  I used Firebug to inspect the request URL while changing webcam settings from the /webcam/control.html page to determine what templates to use for my camera.</p>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Brightness Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_brightness_request_template" name="brightness_request_template" type="text" class="input-block-level" data-bind="value: brightness_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_brightness_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Contrast Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_contrast_request_template" name="contrast_request_template" type="text" class="input-block-level" data-bind="value: contrast_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_contrast_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Saturation Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_saturation_request_template" name="saturation_request_template" type="text" class="input-block-level" data-bind="value: saturation_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_saturation_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">White Balance Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_white_balance_auto_request_template" name="white_balance_auto_request_template" type="text" class="input-block-level" data-bind="value: white_balance_auto_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_auto_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Gain Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_gain_request_template" name="gain_request_template" type="text" class="input-block-level" data-bind="value: gain_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_gain_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Powerline Frequency Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_powerline_frequency_request_template" name="powerline_frequency_request_template" type="text" class="input-block-level" data-bind="value: powerline_frequency_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_powerline_frequency_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">White Balance Temperature Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_white_balance_temperature_request_template" name="white_balance_temperature_request_template" type="text" class="input-block-level" data-bind="value: white_balance_temperature_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_white_balance_temperature_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Sharpness Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_sharpness_request_template" name="sharpness_request_template" type="text" class="input-block-level" data-bind="value: sharpness_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_sharpness_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Backlight Compensation Enabled Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_backlight_compensation_enabled_request_template" name="backlight_compensation_enabled_request_template" type="text" class="input-block-level" data-bind="value: backlight_compensation_enabled_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_backlight_compensation_enabled_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Exposure Type Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_exposure_type_request_template" name="exposure_type_request_template" type="text" class="input-block-level" data-bind="value: exposure_type_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_type_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Exposure Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_exposure_request_template" name="exposure_request_template" type="text" class="input-block-level" data-bind="value: exposure_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Auto Priority Enabled Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_exposure_auto_priority_enabled_request_template" name="exposure_auto_priority_enabled_request_template" type="text" class="input-block-level" data-bind="value: exposure_auto_priority_enabled_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_exposure_auto_priority_enabled_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Pan Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_pan_request_template" name="pan_request_template" type="text" class="input-block-level" data-bind="value: pan_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_pan_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Tilt Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_tilt_request_template" name="tilt_request_template" type="text" class="input-block-level" data-bind="value: tilt_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_tilt_request_template"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Autofocus Enabled Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_autofocus_enabled_request_template" name="autofocus_enabled_request_template" type="text" class="input-block-level" data-bind="value: autofocus_enabled_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_autofocus_enabled_request_template"></div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Focus Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_focus_request_template" name="focus_request_template" type="text" class="input-block-level" data-bind="value: focus_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_focus_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Zoom Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_zoom_request_template" name="zoom_request_template" type="text" class="input-block-level" data-bind="value: zoom_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_zoom_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">LED 1 Mode Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_led1_mode_request_template" name="led1_mode_request_template" type="text" class="input-block-level" data-bind="value: led1_mode_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_mode_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">LED 1 Frequency Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_led1_frequency_request_template" name="led1_frequency_request_template" type="text" class="input-block-level" data-bind="value: led1_frequency_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_led1_frequency_request_template"></div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">JPEG Quality Request Template</label>
-                    <div class="controls">
-                        <textarea id="camera_profile_jpeg_quality_request_template" name="jpeg_quality_request_template" type="text" class="input-block-level" data-bind="value: jpeg_quality_request_template" required="true" />
-                        <div class="error_label_container text-error" data-error-for="camera_profile_jpeg_quality_request_template"></div>
-                        <span class="help-inline">This setting does not appear to work with my camera.  If anyone knows how to solve this, please let me know!</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </script>
+{% include "octolapse_webcam_settings.jinja2" %}

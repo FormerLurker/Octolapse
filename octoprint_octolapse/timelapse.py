@@ -210,6 +210,7 @@ class Timelapse(object):
             self.send_gcode_for_camera,
             self._new_thumbnail_available_callback
         )
+
         self._position = Position(
             self._settings.profiles.current_printer(),
             self._settings.profiles.current_snapshot(), octoprint_printer_profile, g90_influences_extruder
@@ -817,17 +818,10 @@ class Timelapse(object):
             )
         )
 
-        fast_cmd = GcodePositionProcessor.Parse(command_string)
-
-        if fast_cmd:
-            parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], fast_cmd[2])
-        else:
-            parsed_command = ParsedCommand(None, None, command_string)
-
         if self.is_realtime:
-            return_value = self.process_realtime_gcode(parsed_command, tags)
+            return_value = self.process_realtime_gcode(command_string, tags)
         else:
-            return_value = self.process_pre_calculated_gcode(parsed_command, tags)
+            return_value = self.process_pre_calculated_gcode(command_string, tags)
 
         # notify any callbacks
         self._send_state_changed_message()
@@ -835,6 +829,7 @@ class Timelapse(object):
         if return_value == (None,) or utility.is_snapshot_command(command_string, self._snapshot_command):
             return None,
 
+        parsed_command = self._position.current_pos.parsed_command
         if parsed_command.cmd is not None:
             # see if the current command is G92 with a dummy parameter (O)
             # note that this must be done BEFORE stripping commands for test mode
@@ -898,7 +893,7 @@ class Timelapse(object):
                     return None,
         return None
 
-    def process_realtime_gcode(self, parsed_command, tags):
+    def process_realtime_gcode(self, gcode, tags):
         # a flag indicating that we should suppress the command (prevent it from being sent to the printer)
         suppress_command = False
 
@@ -909,14 +904,15 @@ class Timelapse(object):
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
 
-            self._position.update(parsed_command)
+            self._position.update(gcode)
+            parsed_command = self._position.current_pos.parsed_command
 
             # if this code is snapshot gcode, simply return it to the printer.
             if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
                 if not self.check_for_non_metric_errors():
                     if (self._state == TimelapseState.WaitingForTrigger
                         and (self._position.command_requires_location_detection(
-                            parsed_command.cmd) and self._octoprint_printer.is_printing())):
+                            self._position.previous_pos.parsed_command.cmd) and self._octoprint_printer.is_printing())):
                         # there is no longer a need to detect Octoprint start/end script, so
                         # we can put the job on hold without fear!
                         self._state = TimelapseState.AcquiringLocation
@@ -1117,8 +1113,7 @@ class Timelapse(object):
                     current_position["y"],
                     current_position["z"],
                     current_position["e"],
-                    None,
-                    force=True)
+                    None)
 
             # adjust the triggering command
             gcode = parsed_command.gcode

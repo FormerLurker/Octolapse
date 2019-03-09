@@ -42,7 +42,6 @@ class StabilizationSnapToPrint :
 	public stabilization
 {
 public:
-	StabilizationSnapToPrint(StabilizationSnapToPrint& source);
 	StabilizationSnapToPrint(stabilization_args* args, progressCallback progress, std::string nearest_to_corner, bool favor_x_axis);
 	StabilizationSnapToPrint(
 		stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress, 

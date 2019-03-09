@@ -554,7 +554,7 @@ class WebcamSnapshotJob(SnapshotThread):
         self.Password = self.snapshot_job_info.camera.password
         self.IgnoreSslError = self.snapshot_job_info.camera.ignore_ssl_error
         url = camera.format_request_template(
-            self.snapshot_job_info.camera.address, self.snapshot_job_info.camera.snapshot_request_template, ""
+            self.snapshot_job_info.camera.webcam_settings.address, self.snapshot_job_info.camera.webcam_settings.snapshot_request_template, ""
         )
         self.Url = url
 

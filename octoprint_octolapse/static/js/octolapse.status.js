@@ -28,7 +28,6 @@ $(function () {
             // Add this object to our Octolapse namespace
             Octolapse.Status = this;
             // Assign the Octoprint settings to our namespace
-
             self.is_timelapse_active = ko.observable(false);
             self.is_taking_snapshot = ko.observable(false);
             self.is_rendering = ko.observable(false);
@@ -59,9 +58,12 @@ $(function () {
             self.ExtruderState = new Octolapse.extruderStateViewModel();
             self.TriggerState = new Octolapse.triggersStateViewModel();
             self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
+            self.WebcamSettings = new Octolapse.WebcamSettingsPopupViewModel();
             self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
+
+
 
             self.showLatestSnapshotDialog = function () {
 

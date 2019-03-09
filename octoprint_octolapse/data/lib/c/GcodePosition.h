@@ -58,6 +58,7 @@ struct gcode_position_args {
 	double priming_height;
 	double minimum_layer_height;
 	bool g90_influences_extruder;
+	std::string key;
 	std::string xyz_axis_default_mode;
 	std::string e_axis_default_mode;
 	std::string units_default;
@@ -73,6 +74,7 @@ public:
 	~gcode_position();
 
 	void update(parsed_command* cmd);
+	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
 	void undo_update();
 	position* p_previous_pos;
 	position* p_current_pos;
@@ -104,7 +106,7 @@ private:
 	std::map<std::string, posFunctionType>::iterator _gcode_functions_iterator;
 	// Private Functions
 	double RoundDouble(double);
-	void UpdatePos(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
+	
 	std::map<std::string, posFunctionType> GetGcodeFunctions();
 	/// Process Gcode Command Functions
 	void process_g0_g1(position*, parsed_command*);
