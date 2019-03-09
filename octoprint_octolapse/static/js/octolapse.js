@@ -501,12 +501,20 @@ $(function () {
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
-            return jQuery.validator.methods.url.call(this, testUrl, element);
+            var is_valid = (
+                jQuery.validator.methods.url.call(this, testUrl, element) ||
+                jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
+            )
+            return is_valid;
         });
     $.validator.addMethod('octolapseCameraRequestTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}", "1");
-            return jQuery.validator.methods.url.call(this, testUrl, element);
+            var is_valid = (
+                jQuery.validator.methods.url.call(this, testUrl, element) ||
+                jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
+            )
+            return is_valid;
         });
     $.validator.addMethod('octolapseRenderingTemplate',
         function (value, element) {
@@ -613,7 +621,7 @@ $(function () {
           $(element).show();
           $(error_selector).hide();
           $(loading_selector).hide();
-        }).on('error', function() {
+        }).on('error', function(a, b) {
             console.log("Webcam stream error.");
           $(element).attr('src', '');
           $(element).hide();
