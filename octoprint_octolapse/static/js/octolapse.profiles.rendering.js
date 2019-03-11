@@ -71,6 +71,9 @@ $(function() {
         self.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
+        self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
+        self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
+
         // Text position as a JSON string.
         self.overlay_text_pos = ko.pureComputed({
             read: function() {

@@ -37,7 +37,7 @@ def format_request_template(camera_address, template, value):
     return template.format(camera_address=camera_address, value=value)
 
 
-def test_web_camera(camera_profile, timeout_seconds=2):
+def test_web_camera(camera_profile, timeout_seconds=2, is_before_print_test=False):
     url = format_request_template(
         camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
     try:
@@ -60,7 +60,9 @@ def test_web_camera(camera_profile, timeout_seconds=2):
                     "The returned daata was not an image for the '{0}' camera profile."
                     .format(camera_profile.name)
                 )
-            elif camera_profile.apply_settings_before_print:
+            elif (camera_profile.camera_image_settings_enabled and (
+                    not is_before_print_test or camera_profile.apply_settings_before_print)
+            ):
                 test_web_camera_image_preferences(camera_profile, timeout_seconds)
         else:
             raise CameraError(
@@ -628,9 +630,9 @@ class CameraControl(object):
         errors = []
         threads = []
         if settings_type is None or settings_type == 'web-request':
-            threads += self._get_web_request_threads(self.Cameras, force)
+            threads += self._get_web_request_threads( force, camera_profiles=self.Cameras)
         if settings_type is None or settings_type == 'script':
-            threads += self._get_script_threads(self.Cameras, force)
+            threads += self._get_script_threads(force, self.Cameras)
         for thread in threads:
             thread.start()
 
@@ -667,7 +669,7 @@ class CameraControl(object):
         return threads
 
     @classmethod
-    def _get_script_threads(cls, cameras, force):
+    def _get_script_threads(cls, force, cameras):
         threads = []
         for current_camera in cameras:
             if not force and (not current_camera.enabled or not current_camera.on_print_start_script):

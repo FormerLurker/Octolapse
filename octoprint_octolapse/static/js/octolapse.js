@@ -240,10 +240,11 @@ $(function () {
 
     Octolapse.setLocalStorage = function (name, value) {
         localStorage.setItem("octolapse_"+name,value)
-    }
+    };
+
     Octolapse.getLocalStorage = function (name, value) {
         return localStorage.getItem("octolapse_"+name)
-    }
+    };
 
     Octolapse.displayPopup = function (options) {
         new PNotify(options);
@@ -253,16 +254,18 @@ $(function () {
     Octolapse.convertAxisSpeedUnit = function (speed, newUnit, previousUnit, tolerance, tolerance_unit){
         if (speed == null)
             return null;
-        if(tolerance_unit != newUnit)
+        if(tolerance_unit !== newUnit)
         {
             switch (newUnit){
                 case "mm-min":
                     tolerance = tolerance * 60.0;
+                    break;
                 case "mm-sec":
                     tolerance = tolerance / 60.0;
+                    break;
             }
         }
-        if(newUnit == previousUnit)
+        if(newUnit === previousUnit)
             return Octolapse.roundToIncrement(speed, tolerance);
 
         switch (newUnit){
@@ -277,20 +280,20 @@ $(function () {
 
     // rounding to an increment
     Octolapse.roundToIncrement = function (num, increment) {
-        if (increment == 0)
+        if (increment === 0)
             return 0;
         if (num == null)
             return null;
 
-        if (num != parseFloat(num))
+        if (num !== parseFloat(num))
             return num;
 
         var div = Math.round(num / increment);
-        var value = increment * div
+        var value = increment * div;
 
         // Find the number of decimals in the increment
         var numDecimals = 0;
-        if ((increment % 1) != 0)
+        if ((increment % 1) !== 0)
             numDecimals = increment.toString().split(".")[1].length;
 
         // tofixed can only support 20 decimals, reduce if necessary
@@ -305,11 +308,16 @@ $(function () {
     }
 
     Octolapse.Popups = {};
-    Octolapse.displayPopupForKey = function (options, key) {
-        if (key in Octolapse.Popups) {
-            Octolapse.Popups[key].remove();
+    Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
+        for (var index = 0; index < remove_keys.length; index++) {
+            key = remove_keys[index];
+            if (key in Octolapse.Popups) {
+
+                Octolapse.Popups[key].remove();
+                delete Octolapse.Popups[key];
+            }
         }
-        Octolapse.Popups[key] = new PNotify(options);
+        Octolapse.Popups[popup_key] = new PNotify(options);
     };
 
     Octolapse.ConfirmDialogs = {};
@@ -330,7 +338,7 @@ $(function () {
                 },
                 buttons: {
                     closer: false,
-                    sticker: false,
+                    sticker: false
                 },
                 history: {
                     history: false
@@ -366,12 +374,8 @@ $(function () {
     $.validator.addMethod("check_one", function(value, elem, param)
         {
             //console.log("Validating trigger checks");
-            $(param).val()
-                if($(param + ":checkbox:checked").length > 0){
-                   return true;
-                }else {
-                   return false;
-                }
+            $(param).val();
+            return $(param + ":checkbox:checked").length > 0;
         }
     );
 
@@ -395,8 +399,8 @@ $(function () {
             return false;
         if (!value)
             return false;
-        var value = value.trim();
-        if(! (value.length > 1 && value[value.length-1] == "%"))
+        value = value.trim();
+        if(! (value.length > 1 && value[value.length-1] === "%"))
             return false;
         value = value.substr(0,value.length-1);
         return Octolapse.isFloat(value)
@@ -415,8 +419,8 @@ $(function () {
     };
 
     Octolapse.parsePercent = function(value){
-        var value = value.trim();
-        if(value.length > 1 && value[value.length-1] == "%")
+        value = value.trim();
+        if(value.length > 1 && value[value.length-1] === "%")
             value = value.substr(0,value.length-1);
         else
             return null;
@@ -504,7 +508,7 @@ $(function () {
             var is_valid = (
                 jQuery.validator.methods.url.call(this, testUrl, element) ||
                 jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
-            )
+            );
             return is_valid;
         });
     $.validator.addMethod('octolapseCameraRequestTemplate',
@@ -513,7 +517,7 @@ $(function () {
             var is_valid = (
                 jQuery.validator.methods.url.call(this, testUrl, element) ||
                 jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
-            )
+            );
             return is_valid;
         });
     $.validator.addMethod('octolapseRenderingTemplate',
@@ -580,7 +584,7 @@ $(function () {
                 return null;
         }
         else
-            val = Octolapse.parseFloat(val)
+            val = Octolapse.parseFloat(val);
 
         if (val == null || isNaN(val))
             return null;
@@ -589,7 +593,7 @@ $(function () {
             if (is_percent) {
                 round_to_increment = round_to_percent
             }
-            else if (current_units_observable() == 'mm-sec') {
+            else if (current_units_observable() === 'mm-sec') {
                 round_to_increment = round_to_increment_mm_sec;
             }
             var rounded = Octolapse.roundToIncrement(val, round_to_increment);
@@ -606,29 +610,47 @@ $(function () {
     };
 
     ko.bindingHandlers.streamLoading = {
-      update: function(element, valueAccessor) {
-          console.log("Adding stream loading binding handler");
-        var options = valueAccessor();
-        var error_selector = ko.unwrap(options.error_selector);
-        var loading_selector = ko.unwrap(options.loading_selector);
-        var src = ko.unwrap(options.src);
-        $(element).hide();
-        $(error_selector).hide();
-        $(loading_selector).show();
-        $('<img />').attr('src', src).on('load', function() {
-            console.log("Webcam stream loaded.");
-          $(element).attr('src', src);
-          $(element).show();
-          $(error_selector).hide();
-          $(loading_selector).hide();
-        }).on('error', function(a, b) {
-            console.log("Webcam stream error.");
-          $(element).attr('src', '');
-          $(element).hide();
-          $(error_selector).show();
-          $(loading_selector).hide();
-        });
-      }
+        update: function(element, valueAccessor) {
+            console.log("Binding element to streamLoading");
+            var self = this;
+            var options = valueAccessor();
+            var error_selector = ko.unwrap(options.error_selector);
+            var loading_selector = ko.unwrap(options.loading_selector);
+            self.src = ko.unwrap(options.src);
+            $(element).hide();
+            $(error_selector).hide();
+            $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+
+            // ensures this works for some older browsers
+            MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+            new MutationObserver(function onSrcChange(e){
+                if ($(element).attr('src') === '') {
+                    console.log("The src has changed to nothing, just return.");
+                    $(element).hide();
+                    return;
+                }
+                else{
+                    console.log("Stream src changed");
+                }
+
+              // src attribute just changed!!! put code here
+                $(element).one('load', function() {
+                    console.log("Stream Loaded.");
+                    $(error_selector).hide();
+                    $(loading_selector).hide();
+                    $(element).fadeIn(1000);
+                    //$(element).attr('src', src);
+                }).one('error', function(event_data) {
+                    console.log("Stream Error.");
+                    $(element).hide();
+                    $(loading_selector).hide();
+                    $(error_selector).html("<div><p>Error loading the stream at: " + src + "</p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
+                    $(element).attr('src', '');
+                });
+            }).observe(element,{attributes:true,attributeFilter:["src"]});
+            $(element).attr('src', self.src);
+
+        }
     };
 
     ko.bindingHandlers.octolapseSlicerValue = {
@@ -824,6 +846,7 @@ $(function () {
 
         self.loginState = parameters[0];
         Octolapse.PrinterStatus = parameters[1];
+        self.OctoprintTimelapse = parameters[2]
         // Global Values
         self.show_position_state_changes = ko.observable(false);
         self.show_position_changes = ko.observable(false);
@@ -1220,7 +1243,7 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKey(options,"print-start-error")
+                        Octolapse.displayPopupForKey(options,"print-start-error",["print-start-error"])
                         break;
                     }
                 case "timelapse-start":
@@ -1251,7 +1274,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "snapshot_error");
+                    Octolapse.displayPopupForKey(options, "snapshot_error",["snapshot_error"]);
                     break;
                 case "snapshot-start":
                     {
@@ -1280,7 +1303,7 @@ $(function () {
                                     hide: false,
                                     addclass: "octolapse"
                                 };
-                                Octolapse.displayPopupForKey(options, "stabilization_error")
+                                Octolapse.displayPopupForKey(options, "stabilization_error", ["stabilization_error"])
                             }
                             if (!data.snapshot_success)
                             {
@@ -1291,7 +1314,7 @@ $(function () {
                                     hide: false,
                                     addclass: "octolapse"
                                 };
-                                Octolapse.displayPopupForKey(options, "camera_error")
+                                Octolapse.displayPopupForKey(options, "camera_error",["camera_error"])
                             }
 
 
@@ -1314,9 +1337,12 @@ $(function () {
                         }
                     }
                     break;
+                case "prerender-start":
+                    self.updateState(data);
+                    break;
                 case "render-start":
                     {
-                        //console.log('octolapse.js - render-start');
+                        console.log('octolapse.js - render-start');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(false);
 
@@ -1330,11 +1356,11 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopup(options);
+                        Octolapse.displayPopupForKey(options,"render_message", ["render_message"]);
                     }
                     break;
                 case "render-failed":{
-                        //console.log('octolapse.js - render-failed');
+                        console.log('octolapse.js - render-failed');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Rendering Failed',
@@ -1346,52 +1372,52 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopup(options);
+                        Octolapse.displayPopupForKey(options,"render_failed",["render_message"]);
                         break;
                 }
-                case "before-after-render-error": {
-                    // If only the camera image acquisition failed, use the camera error message
-                    var options = {
-                        title: 'Octolapse - Before/After Render Script Error',
-                        text: data.msg,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse"
-                    };
-                    Octolapse.displayPopupForKey(options, "before_after_render_script_error");
-                    break;
+                case "post-render-failed":{
+                        console.log('octolapse.js - post-render-failed');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Post-Rendering Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"post_render_error_message",["render_message"]);
+                        break;
                 }
                 case "render-complete":
-                    {
-                        //console.log('octolapse.js - render-complete');
-                    }
+                    self.updateState(data);
+                    console.log('octolapse.js - render-complete');
+                    self.OctoprintTimelapse.requestData();
+
+                    // Make sure we aren't synchronized, else there's no reason to display a popup
+                    var options = {
+                        title: 'Octolapse Rendering Complete',
+                        text: data.msg,
+                        type: 'success',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options,"render_complete",["render_message"]);
                     break;
                 case "render-end":
                     {
-                        //console.log('octolapse.js - render-end');
+                        console.log('octolapse.js - render-end');
                         self.updateState(data);
-                        if (!data.is_synchronized) {
-                            // Make sure we aren't synchronized, else there's no reason to display a popup
-                            if (!data.is_synchronized && data.success) {
-                                var options = {
-                                    title: 'Octolapse Rendering Complete',
-                                    text: data.msg,
-                                    type: 'success',
-                                    hide: false,
-                                    addclass: "octolapse",
-                                    desktop: {
-                                        desktop: true
-                                    }
-                                };
-                                Octolapse.displayPopup(options);
-                            }
-                        }
-
                     }
                     break;
                 case "synchronize-failed":
                     {
-                        //console.log('octolapse.js - synchronize-failed');
+                        console.log('octolapse.js - synchronize-failed');
                         var options = {
                             title: 'Octolapse Synchronization Failed',
                             text: data.msg,
@@ -1479,7 +1505,7 @@ $(function () {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options,"out-of-bounds");
+                        Octolapse.displayPopupForKey(options,"out-of-bounds", ["out-of-bounds"]);
                     }
                     break;
                 case "position-error":
@@ -1492,7 +1518,7 @@ $(function () {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "position-error");
+                        Octolapse.displayPopupForKey(options, "position-error", ["position-error"]);
                     }
                     break;
                 case "warning":
@@ -1516,7 +1542,7 @@ $(function () {
     };
     OCTOPRINT_VIEWMODELS.push([
         OctolapseViewModel
-        , ["loginStateViewModel", "printerStateViewModel"]
+        , ["loginStateViewModel", "printerStateViewModel", "timelapseViewModel"]
         , ["#octolapse"]
     ]);
 

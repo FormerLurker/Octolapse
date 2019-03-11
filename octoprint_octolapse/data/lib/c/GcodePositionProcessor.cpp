@@ -135,7 +135,7 @@ extern "C"
 
 		if (!ParseInitializationArgs(args, &positionArgs))
 		{
-			return NULL; // The call failed, ParsePositionArgs has taken care of the error message
+			return NULL; // The call failed, ParseInitializationArgs has taken care of the error message
 		}
 
 		// Create the gcode position object 
@@ -433,7 +433,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 	))
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ParsePositionArgs failed: unable to parse parameters.");
+		PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ParseInitializationArgs failed: unable to parse parameters.");
 		return false;
 	}
 	positionArgs->key = pKey;
@@ -485,7 +485,7 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 	long iOriginYIsNone;
 	long iOriginZIsNone;
 	if (!PyArg_ParseTuple(
-		args, "ldldldlddddlsss",
+		args, "ldldldlddddlsssO",
 		&iAutoDetectPosition,
 		&positionArgs->origin_x,
 		&iOriginXIsNone,

@@ -224,7 +224,10 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
 
         profiles['snapshots'][snapshot['guid']] = snapshot
 
+    current_updated_snapshot_profile = settings_dict["profiles"]['snapshots'][settings_dict['current_rendering_profile_guid']]
     for rendering in settings_dict['renderings']:
+        rendering.cleanup_after_render_complete = settings_dict['cleanup_after_render_complete']
+        rendering.cleanup_after_render_fail = settings_dict['cleanup_after_render_fail']
         profiles['renderings'][rendering['guid']] = rendering
 
     for camera in settings_dict['cameras']:

@@ -238,6 +238,11 @@
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
+                    <a href="#" data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
+                    <span data-bind="click: toggleApplySettingsAtStartup">Enable And Apply Preferences at Startup</span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+                <label class="checkbox">
                     <a href="#" data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
                     <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
@@ -245,20 +250,14 @@
                 <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
             </div>
         </div>
-        <div data-bind="visible: apply_settings_before_print">
+        <div data-bind="visible: camera_stream_visible">
             <div class="webcam_settings_preview">
-                <div class="row-fluid">
-                    <div class="span2"></div>
-                    <div class="span8">
-                        <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}">
-                        <div id="octolapse_camera_profile_stream_error" class="webcam_stream_preview" style="display:none;">
-                            Unable to load the webcam stream
-                        </div>
-                        <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
-                            Unable to load the webcam stream
-                        </div>
-                    </div>
-                    <div class="span2"></div>
+                <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
+                <div id="octolapse_camera_profile_stream_error" class="alert webcam_stream_preview" style="display:none;">
+                    Unable to load the webcam stream
+                </div>
+                <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
+                    Unable to load the webcam stream
                 </div>
             </div>
             <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>

@@ -599,7 +599,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         settings_type = request_values["settings_type"]
         camera_profile = CameraProfile.create_from(profile)
         success, errors = self.apply_camera_settings(
-            camera_profile=camera_profile, force=True, settings_type=settings_type
+            camera_profiles=[camera_profile], force=True, settings_type=settings_type
         )
         if not success:
             self.send_plugin_message('camera-settings-error', errors)
@@ -832,10 +832,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             return response
         return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
 
-    def apply_camera_settings(self, camera_profile=None, force=False, settings_type=None):
+    def apply_camera_settings(self, camera_profiles=None, force=False, settings_type=None):
 
-        if camera_profile is not None:
-            camera_control = camera.CameraControl([camera_profile])
+        if camera_profiles is not None:
+            camera_control = camera.CameraControl(camera_profiles)
         else:
             camera_control = camera.CameraControl(self._octolapse_settings.profiles.cameras.values())
 
@@ -1082,6 +1082,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_render_start=self.on_render_start,
             on_render_success=self.on_render_success,
             on_render_error=self.on_render_error,
+            on_render_end=self.on_render_end,
             on_snapshot_start=self.on_snapshot_start,
             on_snapshot_end=self.on_snapshot_end,
             on_new_thumbnail_available=self.on_new_thumbnail_available,
@@ -1101,6 +1102,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             # create our timelapse object
             self.create_timelapse_object()
+
+            # apply camera settings if necessary
+            startup_cameras = self._octolapse_settings.profiles.startup_cameras()
+            self.apply_camera_settings(camera_profiles=startup_cameras)
 
             # log the loaded state
             self._octolapse_settings.Logger.log_info("Octolapse - loaded and active.")
@@ -1294,7 +1299,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     # test the camera and see if it works.
 
                     try:
-                        camera.test_web_camera(current_camera)
+                        camera.test_web_camera(current_camera, is_before_print_test=True)
                     except camera.CameraError as e:
                         self._octolapse_settings.Logger.log_exception(e)
                         message = "Octolapse could not contact your camera '{0}'.  Please check your " \
@@ -1664,6 +1669,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._plugin_manager.send_plugin_message(
             self._identifier, dict(type=message_type, msg=msg))
 
+    def send_prerender_start_message(self, payload):
+        data = {
+            "type": "prerender-start", "payload": payload, "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict()
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
     def send_render_start_message(self, msg):
         data = {
             "type": "render-start", "msg": msg, "status": self.get_status_dict(),
@@ -1671,28 +1683,45 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
+    def send_post_render_failed_message(self, msg):
+        data = {
+            "type": "post-render-failed",
+            "msg": msg,
+            "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            "status": self.get_status_dict()
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
     def send_render_failed_message(self, msg):
         data = {
-            "type": "render-failed", "msg": msg, "status": self.get_status_dict(),
+            "type": "render-failed",
+            "msg": msg,
+            "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            "status": self.get_status_dict()
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_render_end_message(self):
+
+        data = {
+            "type": "render-end",
+            "status": self.get_status_dict(),
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_end_message(self, success, synchronized, message="Octolapse is finished rendering a timelapse."):
-
+    def send_render_success_message(self, message, synchronized):
         data = {
-            "type": "render-end",
+            "type": "render-complete",
             "msg": message,
-            "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict(),
             "is_synchronized": synchronized,
-            'success': success
+            "status": self.get_status_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_complete_message(self):
-        self._plugin_manager.send_plugin_message(self._identifier, dict(
-            type="render-complete", msg="Octolapse has completed a rendering."))
 
     def on_timelapse_start(self):
         data = {
@@ -1915,6 +1944,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         state_change_dict = args[0]
         self.send_state_changed_message(state_change_dict)
 
+    def on_prerender_start(self, payload):
+        self.send_prerender_start_message(payload)
+
     def on_render_start(self, payload):
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the
         constructor. """
@@ -1923,9 +1955,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # later.
         # Generate a notification message
         job_message = ""
-        if payload.TotalJobs > 1:
-            job_message = "Rendering {0} of {1} for camera '{2}' - ".format(
-                payload.JobNumber, payload.TotalJobs, payload.CameraName
+        if payload.JobsRemaining > 1:
+            job_message = "Rendering for camera '{0}'.  {1} jobs remaining.".format(
+                payload.CameraName, payload.JobsRemaining
             )
 
         if payload.SecondsAddedToPrint > 0:
@@ -1951,6 +1983,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_success(self, payload):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
+        message = "Rendering completed and was successful."
         if payload.BeforeRenderError or payload.AfterRenderError:
             pre_post_render_message = "Rendering completed and was successful, but there were some script errors: "
             if payload.BeforeRenderError:
@@ -1959,35 +1992,26 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if payload.AfterRenderError:
                 pre_post_render_message += " The after script failed with the following error:" \
                                            "  {0}".format(payload.AfterRenderError)
-            self.send_plugin_message('before-after-render-error', pre_post_render_message)
+            self.send_post_render_failed_message(pre_post_render_message)
 
         if payload.Synchronize:
-            # create a message that makes sense, since Octoprint will display its own popup message that already
-            # contains text
-            message = "from Octolapse for camera '{0}' has been synchronized and is now available within the default " \
-                      "timelapse plugin tab as '{1}'.  Octolapse ".format(payload.CameraName,
-                                                                          payload.get_synchronization_filename())
-            # Here we create a special payload to notify the default timelapse plugin of a new timelapse
-            octoprint_payload = dict(gcode="unknown",
-                                     movie=payload.get_synchronization_path(),
-                                     movie_basename=payload.get_synchronization_filename(),
-                                     movie_prefix=message,
-                                     returncode=payload.ReturnCode,
-                                     reason=payload.Reason)
-            # notify Octoprint using the event manager.  Is there a way to do this that is more in the
-            # spirit of the API?
-            eventManager().fire(Events.MOVIE_DONE, octoprint_payload)
+            # If we are synchronizing with the Octoprint timelapse plugin, we will send a tailored message
+            message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Your video is now available " \
+                      "within the default timelapse plugin tab as '{1}'.  Octolapse ".format(
+                payload.CameraName,
+                payload.get_synchronization_filename()
+            )
 
-            # we've either successfully rendered or rendered and synchronized
-            self.send_render_end_message(True, True)
         else:
+            # This timelapse won't be moved into the octoprint timelapse plugin folder.
             message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Due to your rendering " \
                       "settings, the timelapse was not synchronized with the OctoPrint plugin.  You should be able" \
                       " to find your video within your octoprint server here:<br/> '{1}'".format(
                         payload.CameraName,
                         payload.get_rendering_path()
                       )
-            self.send_render_end_message(True, False, message)
+
+        self.send_render_success_message(message, payload.Synchronize)
 
     def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
@@ -2000,9 +2024,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if payload.AfterRenderError:
                 pre_post_render_message += " The after script failed with the following error:" \
                                            "  {0}".format(payload.AfterRenderError)
-            self.send_plugin_message('before-after-render-error', pre_post_render_message)
-        message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
-        self.send_plugin_message('render-failed', str(message))
+            self.send_render_failed_message(pre_post_render_message)
+
+        if error != None:
+            message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
+            self.send_render_failed_message(str(message))
+
+    def on_render_end(self):
+        self.send_render_end_message()
+
 
     # ~~ AssetPlugin mixin
     def get_assets(self):

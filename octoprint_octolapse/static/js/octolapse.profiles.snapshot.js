@@ -90,12 +90,6 @@ $(function () {
         self.feature_trigger_on_wipe = ko.observable(values.feature_trigger_on_wipe);
 
         self.require_zhop = ko.observable(values.require_zhop);
-        /*
-        * Snapshot Cleanup Settings
-        */
-        self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
-        self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
-
 
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');

@@ -549,10 +549,10 @@ class WebcamSnapshotJob(SnapshotThread):
             settings,
             on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
         )
-        self.Address = self.snapshot_job_info.camera.address
-        self.Username = self.snapshot_job_info.camera.username
-        self.Password = self.snapshot_job_info.camera.password
-        self.IgnoreSslError = self.snapshot_job_info.camera.ignore_ssl_error
+        self.Address = self.snapshot_job_info.camera.webcam_settings.address
+        self.Username = self.snapshot_job_info.camera.webcam_settings.username
+        self.Password = self.snapshot_job_info.camera.webcam_settings.password
+        self.IgnoreSslError = self.snapshot_job_info.camera.webcam_settings.ignore_ssl_error
         url = camera.format_request_template(
             self.snapshot_job_info.camera.webcam_settings.address, self.snapshot_job_info.camera.webcam_settings.snapshot_request_template, ""
         )

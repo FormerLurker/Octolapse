@@ -645,9 +645,7 @@ class SnapshotProfile(ProfileSettings):
         self.feature_trigger_on_skirt_brim = False
         self.feature_trigger_on_first_layer_travel = False
 
-        # Snapshot Cleanup
-        self.cleanup_after_render_complete = True
-        self.cleanup_after_render_fail = False
+
 
     @staticmethod
     def get_options():
@@ -758,6 +756,9 @@ class RenderingProfile(ProfileSettings):
         self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
         self.overlay_text_color = [255, 255, 255, 128]
         self.thread_count = 1
+        # Snapshot Cleanup
+        self.cleanup_after_render_complete = True
+        self.cleanup_after_render_fail = False
 
     @staticmethod
     def get_options():
@@ -920,7 +921,9 @@ class CameraProfile(ProfileSettings):
         self.on_after_render_script = ""
         self.delay = 125
         self.timeout_ms = 5000
+        self.camera_image_settings_enabled = False
         self.apply_settings_before_print = False
+        self.apply_settings_at_startup = False
         self.snapshot_transpose = ""
         self.webcam_settings = WebcamSettings()
 
@@ -1200,6 +1203,17 @@ class Profiles(Settings):
             if _current_camera.enabled:
                 _active_cameras.append(_current_camera)
         return _active_cameras
+
+    def startup_cameras(self):
+        _startup_cameras = []
+        for key in self.cameras:
+            _current_camera = self.cameras[key]
+            if (
+                _current_camera.enabled and _current_camera.camera_image_settings_enabled
+                and _current_camera.apply_settings_at_startup
+            ):
+                _startup_cameras.append(_current_camera)
+        return _startup_cameras
 
     # Add/Update/Remove/set current profile
 

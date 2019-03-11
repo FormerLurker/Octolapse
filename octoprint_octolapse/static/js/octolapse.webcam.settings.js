@@ -226,13 +226,17 @@ $(function() {
             self.options.update(values.options);
         };
     };
-    Octolapse.WebcamSettingsViewModel = function (values, observables) {
+    Octolapse.WebcamSettingsViewModel = function (values, camera_stream_visible_observable) {
         var self = this;
 
+        if (camera_stream_visible_observable == null)
+            self.camera_stream_visible = ko.observable(true);
+        else
+            self.camera_stream_visible = camera_stream_visible_observable;
         self.throttle_ms = 250;
         self.guid = ko.observable('');
         self.name = ko.observable('unknown');
-
+        self.visible = ko.observable(false);
         self.stream_template = ko.observable('');
         self.snapshot_request_template = ko.observable();
         self.address = ko.observable('');
@@ -312,6 +316,8 @@ $(function() {
         self.mjpegstreamer = new Octolapse.MjpegStreamerViewModel()
 
         self.stream_url = ko.computed(function(){
+            if(!self.camera_stream_visible())
+                return '';
             console.log("Calculating stream url.");
             var url = self.stream_template();
             if (url != "")
@@ -608,6 +614,6 @@ $(function() {
         };
 
         if (values != null)
-            self.updateWebcamSettings(values, observables);
+            self.updateWebcamSettings(values);
     }
 });

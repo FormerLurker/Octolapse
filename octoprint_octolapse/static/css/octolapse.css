@@ -140,23 +140,33 @@ table.octolapse-profiles td.profile_action {
     display: flex
 }
 
-    .octolapse_status div {
-        flex-direction: row;
-        display: flex;
-        align-items: center;
-    }
-
-.webcam_settings_preview{
-    padding:5px;
+.octolapse_status div {
+    flex-direction: row;
+    display: flex;
+    align-items: center;
 }
-.webcam_stream_preview
-{
+
+div.webcam_settings_preview{
     width:588px;
-    height:331px;
-    border:1px solid;
+    height:auto;
     vertical-align: middle;
     text-align:center;
+    margin: 0 auto;
+}
+div.webcam_settings_preview img{
+    min-width: 100%;
+    height: auto;
+    border:1px solid;
+    padding-bottom: 1px;
+}
+div.webcam_settings_preview div{
+    height:333px;
+    width:100%;
+    display:table;
+}
+div.webcam_settings_preview div div{
     display:table-cell;
+    vertical-align:middle;
 }
 
 #octolapse_add_edit_profile_dialog.modal,

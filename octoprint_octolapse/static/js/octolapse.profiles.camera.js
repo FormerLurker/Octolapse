@@ -42,8 +42,15 @@ $(function() {
         self.delay = ko.observable(values.delay);
         self.timeout_ms = ko.observable(values.timeout_ms);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
+        self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(values);
+        self.camera_stream_visible = ko.pureComputed(function(){
+            return self.camera_type() === 'webcam' && (
+                self.apply_settings_before_print() || self.apply_settings_at_startup()
+            )
+
+        },this);
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(values, self.camera_stream_visible);
         self.is_testing_custom_image_preferences = ko.observable(false);
 
         self.applySettingsToCamera = function (settings_type) {
@@ -156,15 +163,38 @@ $(function() {
             });
         };
 
-        self.toggleApplySettingsBeforePrint = function () {
-
-
-            if(self.apply_settings_before_print())
+        self.toggleApplySettingsAtStartup = function () {
+            var id = 'camera_profile_apply_settings_at_startup';
+            if(self.apply_settings_at_startup())
             {
+                self.apply_settings_at_startup(false);
+                return;
+            }
+            if (self.camera_stream_visible()) {
+                self.apply_settings_at_startup(true);
+                $('#'+ id).prop("checked",true);
+                return;
+            }
+            self.testCustomImagePreferences(self.apply_settings_at_startup,id);
+        }
+        self.toggleApplySettingsBeforePrint = function () {
+            var id = 'camera_profile_apply_settings_before_print';
+
+            if (self.apply_settings_before_print()) {
                 self.apply_settings_before_print(false);
                 return;
             }
 
+            if (self.camera_stream_visible()) {
+                self.apply_settings_before_print(true);
+                $('#'+ id).prop("checked",true);
+                return;
+            }
+
+            self.testCustomImagePreferences(self.apply_settings_before_print,id);
+        };
+        self.testCustomImagePreferences = function(bool_observable, id)
+        {
             self.is_testing_custom_image_preferences(true);
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
@@ -177,8 +207,8 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if (results.success){
-                        self.apply_settings_before_print(true);
-                        $('#camera_profile_apply_settings_before_print').prop("checked",true);
+                        bool_observable(true);
+                        $('#'+ id).prop("checked",true);
                     }
                     else {
                         var options = {

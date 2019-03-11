@@ -28,11 +28,12 @@ import os
 import shutil
 import sys
 import threading
+import Queue
 import time
 import json
 from csv import DictReader
 # sarge was added to the additional requirements for the plugin
-from datetime import datetime, timedelta
+import datetime
 from tempfile import mkdtemp
 
 import sarge
@@ -121,7 +122,7 @@ def preview_overlay(rendering_profile, image=None):
                    'file_name': 'image.jpg',
                    'time_taken': time.time(),
                    'current_time': datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
-                   'time_elapsed': str(timedelta(seconds=round(9001)))}
+                   'time_elapsed': str(datetime.timedelta(seconds=round(9001)))}
     image = TimelapseRenderJob.add_overlay(image,
                                            text_template=rendering_profile.overlay_text_template,
                                            format_vars=format_vars,
@@ -136,137 +137,145 @@ def preview_overlay(rendering_profile, image=None):
 
 
 class RenderJobInfo(object):
-    def __init__(self, timelapse_job_info, data_directory, current_camera, print_state, job_number, total_jobs):
+    def __init__(
+        self, timelapse_job_info, data_directory, current_camera, rendering, ffmpeg_path, job_number=0, jobs_remaining=0
+    ):
+        self.timelapse_job_info = timelapse_job_info
+
         self.job_id = timelapse_job_info.JobGuid
         self.job_number = job_number
-        self.total_jobs = total_jobs
+        self.jobs_remaining = jobs_remaining
         self.camera = current_camera
         self.job_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid)
         self.snapshot_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
         self.snapshot_filename_format = os.path.basename(utility.get_snapshot_filename(
             timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat)
         )
-        self.output_tokens = self._get_output_tokens(
-            data_directory, print_state, timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime,
-            timelapse_job_info.PrintEndTime
-        )
+        self.output_tokens = self._get_output_tokens(data_directory)
+        self.rendering = rendering.clone()
+        self.ffmpeg_path = ffmpeg_path
+        self.cleanup_after_complete = rendering.cleanup_after_render_complete
+        self.cleanup_after_fail = rendering.cleanup_after_render_fail
 
-    def _get_output_tokens(self, data_directory, print_state, print_name, print_start_time, print_end_time):
+    def _get_output_tokens(self, data_directory):
+        job_info = self.timelapse_job_info
+        assert(isinstance(job_info, utility.TimelapseJobInfo))
+
         return {
-            "FAILEDFLAG": "FAILED" if print_state != "COMPLETED" else "",
-            "FAILEDSEPARATOR": "_" if print_state != "COMPLETED" else "",
-            "FAILEDSTATE": "" if print_state == "COMPLETED" else print_state,
-            "PRINTSTATE": print_state,
-            "GCODEFILENAME": print_name,
-            "PRINTENDTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time)),
-            "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(print_end_time, 2) * 100)),
-            "PRINTSTARTTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time)),
-            "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(print_start_time, 2) * 100)),
+            "FAILEDFLAG": "FAILED" if job_info.PrintEndState != "COMPLETED" else "",
+            "FAILEDSEPARATOR": "_" if job_info.PrintEndState != "COMPLETED" else "",
+            "FAILEDSTATE": "" if job_info.PrintEndState == "COMPLETED" else job_info.PrintEndState,
+            "PRINTSTATE": job_info.PrintEndState,
+            "GCODEFILENAME": job_info.PrintFileName,
+            "PRINTENDTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(job_info.PrintEndTime)),
+            "PRINTENDTIMESTAMP": "{0:d}".format(math.trunc(round(job_info.PrintEndTime, 2) * 100)),
+            "PRINTSTARTTIME": time.strftime("%Y%m%d%H%M%S", time.localtime(job_info.PrintStartTime)),
+            "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(job_info.PrintStartTime, 2) * 100)),
             "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
             "DATADIRECTORY": data_directory,
+            "TIMEADDED": "{0:d}".format(math.trunc(round(job_info.SecondsAdded))),
             "SNAPSHOTCOUNT": 0,
             "FPS": 0,
         }
 
 
-class RenderingProcessor(object):
+class RenderingProcessor(threading.Thread):
     def __init__(
-        self, rendering_task_queue, logger, timelapse_job_info, rendering, cameras, data_directory, octoprint_timelapse_folder,
-        ffmpeg_path, on_start, on_success, on_error, cleanup_on_success, cleanup_on_fail
+        self, rendering_task_queue, logger, data_directory, octoprint_timelapse_folder,
+        on_prerender_start, on_start, on_success, on_error, on_end
     ):
+        super(RenderingProcessor, self).__init__()
+        self.lock = threading.Lock()
+
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
-        self.timelapse_job_info = utility.TimelapseJobInfo(job_info=timelapse_job_info)
-        self.rendering = rendering
         self.data_directory = data_directory
         self.octoprint_timelapse_folder = octoprint_timelapse_folder
-        self.ffmpeg_path = ffmpeg_path
-        self.thread_count = self.rendering.thread_count
+        self.on_prerender_start = on_prerender_start
         self.on_start = on_start
         self.on_success = on_success
         self.on_error = on_error
+        self.on_end = on_end
         self.logger = logger
         self.cameras = []
-        self.cleanup_on_success = cleanup_on_success
-        self.cleanup_on_fail = cleanup_on_fail
         self.print_state = "unknown"
         self.time_added = 0
-        for current_camera in cameras:
-            self.cameras.append(current_camera)
+        self.daemon = True
+        self.job_count = 0
+        self._is_processing = False
 
-    @property
-    def enabled(self):
-        return self.rendering.enabled
+    def is_processing(self):
+        with self.lock:
+            return self._is_processing
 
-    def _start(self, job_infos):
-        ## wait for any existing jobs to finish
-        self.rendering_task_queue.join()
-        # Add all the jobs
-        for job_info in job_infos:
-            self.rendering_task_queue.put(job_info.job_id)
-
-        for job_info in job_infos:
-            job = TimelapseRenderJob(
-                self.rendering,
-                self.logger,
-                job_info,
-                self.octoprint_timelapse_folder,
-                self.ffmpeg_path,
-                self.thread_count,
-                self.time_added,
-                self.on_start,
-                self.cleanup_on_success,
-                self.cleanup_on_fail
-            )
+    def run(self):
+        while True:
             try:
-                payload, error = job.process()
-            finally:
-                self.rendering_task_queue.get()
-                self.rendering_task_queue.task_done()
+                job_info = self.rendering_task_queue.get(timeout=5)
+                assert(isinstance(job_info, RenderJobInfo))
+                self.job_count += 1
+                with self.lock:
+                    self._is_processing = True
 
-            if error is None:
-                self.on_success(payload)
-            else:
-                self.logger.log_render_fail(error)
-                self.on_error(payload, error)
-
-    def start_rendering(
-        self,
-        print_state,
-        print_end_time,
-        time_added
-    ):
-        # set the print end time
-
-        self.print_state = print_state
-        self.time_added = time_added
-        self.timelapse_job_info.PrintEndTime = print_end_time
-        # we need to loop through all of the cameras and fire off a rendering process, one after the next, for all of
-        # the cameras....
-        job_infos = []
-
-        for current_camera in self.cameras:
-            job_infos.append(
-                RenderJobInfo(
-                    self.timelapse_job_info,
-                    self.data_directory,
-                    current_camera,
-                    print_state,
-                    len(job_infos) + 1,
-                    len(self.cameras)
+                job_info.job_number = self.job_count
+                job_info.jobs_remaining = self.rendering_task_queue.qsize()
+                job = TimelapseRenderJob(
+                    job_info.rendering,
+                    self.logger,
+                    job_info,
+                    self.octoprint_timelapse_folder,
+                    job_info.ffmpeg_path,
+                    job_info.rendering.thread_count,
+                    job_info.rendering.cleanup_after_render_complete,
+                    job_info.rendering.cleanup_after_render_fail,
+                    self.on_prerender_start,
+                    self.on_render_start,
+                    self.on_render_error,
+                    self.on_render_success
                 )
-            )
+                # send the rendering start message
+                try:
+                    job.process()
+                ## What exceptions can happen here?
+                except Exception as e:
+                    self.logger.log_exception(e)
+                finally:
+                    self.rendering_task_queue.task_done()
 
-        rendering_thread = threading.Thread(
-            target=self._start, args=(job_infos,)
-        )
-        rendering_thread.daemon = True
-        rendering_thread.start()
+                if self.rendering_task_queue.qsize() == 0:
+                    with self.lock:
+                        self._is_processing = False
+                    self.logger.log_render_complete("Sending render end message")
+                    self.on_render_end()
 
+            except Queue.Empty:
+                if self._is_processing:
+                    self._is_processing = False
+
+
+
+    def on_prerender_start(self, payload):
+        self.logger.log_render_start("Sending prerender start message")
+        self.on_prerender_start(payload)
+
+    def on_render_start(self, payload):
+        self.logger.log_render_start("Sending render start message")
+        self.on_start(payload)
+
+    def on_render_error(self, payload, error):
+        self.logger.log_render_fail("Sending render fail message")
+        self.on_error(payload, error)
+
+    def on_render_success(self, payload):
+        self.logger.log_render_complete("Sending render complete message")
+        self.on_success(payload)
+
+    def on_render_end(self):
+        self.logger.log_render_complete("Sending render end message")
+        self.on_end()
 
 class TimelapseRenderJob(object):
     render_job_lock = threading.RLock()
-
     def __init__(
         self,
         rendering,
@@ -275,10 +284,12 @@ class TimelapseRenderJob(object):
         octoprint_timelapse_folder,
         ffmpeg_path,
         threads,
-        time_added,
-        on_render_start,
         cleanup_on_success,
-        cleanup_on_fail
+        cleanup_on_fail,
+        on_prerender_start,
+        on_render_start,
+        on_render_error,
+        on_render_success
     ):
         self._rendering = rendering
         self._logger = logger
@@ -289,7 +300,7 @@ class TimelapseRenderJob(object):
         self._fps = None
         self._snapshot_metadata = None
         self._imageCount = None
-        self._secondsAddedToPrint = time_added
+        self._secondsAddedToPrint = render_job_info.timelapse_job_info.SecondsAdded
         self._threads = threads
         self._ffmpeg = None
         if ffmpeg_path is not None:
@@ -299,7 +310,6 @@ class TimelapseRenderJob(object):
         ###########
         # callbacks
         ###########
-        self._render_start_callback = on_render_start
         self._thread = None
         self.cleanAfterSuccess = cleanup_on_success
         self.cleanAfterFail = cleanup_on_fail
@@ -316,11 +326,16 @@ class TimelapseRenderJob(object):
         # render script errors
         self.before_render_error = None
         self.after_render_error = None
+        # callbacks
+        self.on_prerender_start = on_prerender_start
+        self.on_render_start = on_render_start
+        self.on_render_error = on_render_error
+        self.on_render_success = on_render_success
+
     def process(self):
         return self._render()
 
     def _pre_render(self):
-        self._pre_render_script()
 
         self._read_snapshot_metadata()
 
@@ -587,7 +602,7 @@ class TimelapseRenderJob(object):
     # Event Notification
     #####################
 
-    def _create_callback_payload(self, return_code, reason):
+    def create_callback_payload(self, return_code, reason):
         return RenderingCallbackArgs(
             reason,
             return_code,
@@ -601,31 +616,28 @@ class TimelapseRenderJob(object):
             self._synchronized_filename,
             self._synchronize,
             self._imageCount,
-            self._secondsAddedToPrint,
+            self.render_job_info.timelapse_job_info.SecondsAdded,
             self.render_job_info.job_number,
-            self.render_job_info.total_jobs,
+            self.render_job_info.jobs_remaining,
             self.render_job_info.camera.name,
             self.before_render_error,
             self.after_render_error
 
         )
 
-    def _on_start(self):
-        payload = self._create_callback_payload(0, "The rendering has started.")
-        self._render_start_callback(payload)
 
     def _render(self):
         """Rendering runnable."""
         # set an error variable to None, we will return None if there are no problems
         r_error = None
         try:
-
-            self._logger.log_render_start("Starting render.")
+            self.on_prerender_start(self.create_callback_payload(0,"Prerender is starting."))
+            self._pre_render_script()
 
             self._pre_render()
 
-            # notify any listeners that we are rendering.
-            self._on_start()
+            self._logger.log_render_start("Starting render.")
+            self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
 
             # Temporary directory to store intermediate results of rendering.
             self.temp_rendering_dir = mkdtemp(prefix='octolapse_render')
@@ -722,6 +734,7 @@ class TimelapseRenderJob(object):
                                       " information.  You should be able to find your video within your "
                                       " OctoPrint  server here:<br/> '{0}'".format(self._rendering_output_file_path),
                                       cause=e)
+
         except Exception as e:
             if isinstance(e, RenderError):
                 r_error = e
@@ -734,9 +747,10 @@ class TimelapseRenderJob(object):
                 if self.temp_rendering_dir is not None:
                     shutil.rmtree(self.temp_rendering_dir)
 
-        message = "Timelapse rendering is complete." if r_error is None else "The render process failed."
-
-        return self._create_callback_payload(self.render_job_info.job_id, message), r_error
+        if r_error is None:
+            self.on_render_success(self.create_callback_payload(0, "Timelapse rendering is complete."))
+        else:
+            self.on_render_error(self.create_callback_payload(0, "The render process failed."), r_error)
 
     def _preprocess_images(self, preprocessed_directory):
         self._logger.log_render_start("Starting preprocessing of images.")
@@ -775,8 +789,8 @@ class TimelapseRenderJob(object):
                     raise IOError("Cannot find file {}.".format(file_path))
 
                 # Calculate time elapsed since the beginning of the print.
-                format_vars['current_time'] = datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
-                format_vars['time_elapsed'] = str(timedelta(seconds=round(time_taken - first_timestamp)))
+                format_vars['current_time'] = datetime.datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
+                format_vars['time_elapsed'] = str(datetime.timedelta(seconds=round(time_taken - first_timestamp)))
 
                 # Open the image in Pillow and do preprocessing operations.
                 image = Image.open(file_path)
@@ -1020,7 +1034,7 @@ class RenderingCallbackArgs(object):
         snapshot_count,
         seconds_added_to_print,
         job_number,
-        total_jobs,
+        jobs_remaining,
         camera_name,
         before_render_error,
         after_render_error
@@ -1039,7 +1053,7 @@ class RenderingCallbackArgs(object):
         self.SnapshotCount = snapshot_count
         self.SecondsAddedToPrint = seconds_added_to_print
         self.JobNumber = job_number
-        self.TotalJobs = total_jobs
+        self.JobsRemaining = jobs_remaining
         self.CameraName = camera_name
         self.BeforeRenderError = before_render_error
         self.AfterRenderError = after_render_error
