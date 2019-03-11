@@ -135,7 +135,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_error");
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_failed"]);
                     }
                     else
                     {
@@ -150,7 +150,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options,"camera_settings_error");
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_failed"]);
                 }
             });
         };
@@ -185,7 +185,7 @@ $(function() {
                                 hide: false,
                                 addclass: "octolapse"
                             };
-                            Octolapse.displayPopupForKey(options,"camera_settings_failure");
+                            Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -196,7 +196,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options,"camera_settings_failure");
+                        Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
                     }
                 });
             };
@@ -431,7 +431,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_error");
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -442,7 +442,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options,"camera_settings_error");
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                 }
             });
             self.closeWebcamSettingsDialog();
@@ -470,7 +470,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_error");
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                     else {
                         self.updateWebcamSettings(results.defaults, true);
@@ -484,7 +484,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options,"camera_settings_error");
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                 }
             });
         };
@@ -597,7 +597,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_error");
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -608,7 +608,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options,"camera_settings_error");
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                 }
             });
         };

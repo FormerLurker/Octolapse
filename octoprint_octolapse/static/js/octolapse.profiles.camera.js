@@ -74,7 +74,7 @@ $(function() {
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_success");
+                        Octolapse.displayPopupForKey(options, "camera_settings_success", ["camera_settings_success"]);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -85,7 +85,7 @@ $(function() {
                         hide: true,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options,"camera_settings_success");
+                    Octolapse.displayPopupForKey(options,"camera_settings_success", ["camera_settings_success"]);
 
                 }
             });
@@ -136,7 +136,7 @@ $(function() {
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(success_options, "camera_settings_success");
+                        Octolapse.displayPopupForKey(success_options, "camera_settings_success", ["camera_settings_success"]);
                     }
                     else {
                         var fail_options = {
@@ -146,7 +146,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(fail_options, "camera_settings_failed");
+                        Octolapse.displayPopupForKey(fail_options, "camera_settings_failed",["camera_settings_failed"]);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -158,7 +158,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                    Octolapse.displayPopupForKey(options, "camera_settings_failed",["camera_settings_failed"]);
                 }
             });
         };
@@ -218,7 +218,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                        Octolapse.displayPopupForKey(options, "camera_settings_failed",["camera_settings_failed"]);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -230,7 +230,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "camera_settings_failed");
+                    Octolapse.displayPopupForKey(options, "camera_settings_failed",["camera_settings_failed"]);
                 },
                 complete: function (){
                     self.is_testing_custom_image_preferences(false);
