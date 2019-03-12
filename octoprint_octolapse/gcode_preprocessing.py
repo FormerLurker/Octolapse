@@ -716,6 +716,8 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             'retract_before_travel': SettingsDefinition('retract_before_travel', Slic3rParsingFunctions.parse_float,['octolapse_setting']),
             # this speed is not yet used
             'max_print_speed': SettingsDefinition('max_print_speed', Slic3rParsingFunctions.parse_float, ['octolapse_setting']),
+            'layer_height': SettingsDefinition('layer_height', Slic3rParsingFunctions.parse_float, ['octolapse_setting']),
+            'spiral_vase': SettingsDefinition('spiral_vase', Slic3rParsingFunctions.parse_bool, ['octolapse_setting']),
             'version': SettingsDefinition('version', None, ['slicer_info', 'octolapse_setting'], True),
             # End Octolapse Settings - The rest are included in case they become useful for Octolapse or another project
 
@@ -806,7 +808,7 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             'skirt_height': SettingsDefinition('skirt_height', Slic3rParsingFunctions.parse_float, ['misc']),
             'skirts': SettingsDefinition('skirts', Slic3rParsingFunctions.parse_bool, ['misc']),
             'slowdown_below_layer_time': SettingsDefinition('slowdown_below_layer_time', Slic3rParsingFunctions.parse_float, ['misc']),
-            'spiral_vase': SettingsDefinition('spiral_vase', Slic3rParsingFunctions.parse_bool, ['misc']),
+
             'standby_temperature_delta': SettingsDefinition('standby_temperature_delta', Slic3rParsingFunctions.parse_float, ['misc']),
             'start_filament_gcode': SettingsDefinition('start_filament_gcode', Slic3rParsingFunctions.get_string, ['misc']),
             'start_gcode': SettingsDefinition('start_gcode', Slic3rParsingFunctions.get_string, ['misc']),
@@ -834,7 +836,7 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             'first_layer_height': SettingsDefinition('first_layer_height', Slic3rParsingFunctions.parse_float, ['misc']),
             'infill_only_where_needed': SettingsDefinition('infill_only_where_needed', Slic3rParsingFunctions.parse_bool, ['misc']),
             'interface_shells': SettingsDefinition('interface_shells', Slic3rParsingFunctions.parse_int, ['misc']),
-            'layer_height': SettingsDefinition('layer_height', Slic3rParsingFunctions.parse_float, ['misc']),
+
             'raft_layers': SettingsDefinition('raft_layers', Slic3rParsingFunctions.parse_int, ['misc']),
             'seam_position': SettingsDefinition('seam_position', Slic3rParsingFunctions.get_string, ['misc']),
             'support_material': SettingsDefinition('support_material', Slic3rParsingFunctions.parse_bool, ['misc']),
@@ -931,6 +933,7 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
             'bridgingSpeedMultiplier': SettingsDefinition('bridging_speed_multiplier',Simplify3dParsingFunctions.parse_float,['octolapse_setting']),
             'extruderUseRetract': SettingsDefinition('extruder_use_retract', Simplify3dParsingFunctions.parse_bool_csv,['extruder', 'octolapse_setting']),
             'spiralVaseMode': SettingsDefinition('spiral_vase_mode', Simplify3dParsingFunctions.parse_bool, ['octolapse_setting']),
+            'layerHeight': SettingsDefinition('layer_height', Simplify3dParsingFunctions.parse_float, ['octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever useful for Octolapse of another project!
             'version': SettingsDefinition('version', Simplify3dParsingFunctions.strip_string, ['slicer_info'], True),
             'gcodeDate': SettingsDefinition('gcode_date', Simplify3dParsingFunctions.strip_string, ['gcode_info'], True),
@@ -955,7 +958,6 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
             'extruderCoastingDistance': SettingsDefinition('extruder_coasting_distance', Simplify3dParsingFunctions.parse_float_csv, ['extruder']),
             'extruderUseWipe': SettingsDefinition('extruder_use_wipe', Simplify3dParsingFunctions.parse_bool_csv, ['extruder']),
             'extruderWipeDistance': SettingsDefinition('extruder_wipe_distance', Simplify3dParsingFunctions.parse_float_csv, ['extruder']),
-            'layerHeight': SettingsDefinition('layer_height', Simplify3dParsingFunctions.parse_float, ['misc']),
             'topSolidLayers': SettingsDefinition('top_solid_layers', Simplify3dParsingFunctions.parse_int, ['misc']),
             'bottomSolidLayers': SettingsDefinition('bottom_solid_layers', Simplify3dParsingFunctions.parse_int, ['misc']),
             'perimeterOutlines': SettingsDefinition('perimeter_outlines', Simplify3dParsingFunctions.parse_int, ['misc']),
@@ -1183,9 +1185,12 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'version': SettingsDefinition('version', CuraParsingFunctions.strip_string, ['octolapse_setting']),
             'speed_print_layer_0': SettingsDefinition('speed_print_layer_0', CuraParsingFunctions.parse_float,
                                                       ['octolapse_setting']),
+            'layer_height': SettingsDefinition('layer_height', CuraParsingFunctions.parse_float, ['octolapse_setting']),
+            'smooth_spiralized_contours': SettingsDefinition('smooth_spiralized_contours',
+                                                             CuraParsingFunctions.parse_bool, ['octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
             'flavor': SettingsDefinition('flavor', CuraParsingFunctions.strip_string, ['misc']),
-            'layer_height': SettingsDefinition('layer_height', CuraParsingFunctions.parse_float, ['misc']),
+
             'filament_used_meters': SettingsDefinition('layer_height', CuraParsingFunctions.parse_float, ['misc']),
             'acceleration_enabled': SettingsDefinition('acceleration_enabled', CuraParsingFunctions.parse_bool, ['misc']),
             'acceleration_infill': SettingsDefinition('acceleration_infill', CuraParsingFunctions.parse_int, ['misc']),
@@ -1500,7 +1505,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             'skirt_gap': SettingsDefinition('skirt_gap', CuraParsingFunctions.parse_int, ['misc']),
             'skirt_line_count': SettingsDefinition('skirt_line_count', CuraParsingFunctions.parse_int, ['misc']),
             'slicing_tolerance': SettingsDefinition('slicing_tolerance', CuraParsingFunctions.strip_string, ['misc']),
-            'smooth_spiralized_contours': SettingsDefinition('smooth_spiralized_contours', CuraParsingFunctions.parse_bool, ['misc']),
             'spaghetti_flow': SettingsDefinition('spaghetti_flow', CuraParsingFunctions.parse_int, ['misc']),
             'spaghetti_infill_enabled': SettingsDefinition('spaghetti_infill_enabled', CuraParsingFunctions.parse_bool, ['misc']),
             'spaghetti_infill_extra_volume': SettingsDefinition('spaghetti_infill_extra_volume', CuraParsingFunctions.parse_int, ['misc']),

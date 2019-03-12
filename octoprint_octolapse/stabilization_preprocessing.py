@@ -26,6 +26,8 @@ from gcode_parser import ParsedCommand
 from settings import PrinterProfile, StabilizationProfile, OctolapseSettings
 from octoprint_octolapse.position import Pos
 import GcodePositionProcessor
+import math
+
 import time
 import traceback
 TRAVEL_ACTION = "travel"
@@ -154,8 +156,13 @@ class StabilizationPreprocessingThread(Thread):
         OctolapseSettings.Logger.log_info("Unpacking results")
         success = results[0]
         errors = results[1]
-
-        snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(results[2])
+        # get snapshot plans
+        cpp_snapshot_plans = results[2]
+        if not cpp_snapshot_plans:
+            snapshot_plans = []
+            success = False
+        else:
+            snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(cpp_snapshot_plans)
         seconds_elapsed = results[3]
         gcodes_processed = results[4]
         lines_processed = results[5]
@@ -180,7 +187,18 @@ class StabilizationPreprocessingThread(Thread):
         retraction_length = gcode_settings.retraction_length
         disable_z_lift = self.stabilization_profile.lock_to_corner_disable_z_lift
         z_lift_height = gcode_settings.z_lift_height
-        height_increment = self.stabilization_profile.lock_to_corner_height_increment
+
+        # height increment calculation.  If the self.stabilization_profile.lock_to_corner_height_increment == 0
+        # and vase mode is enabled, use the layer height setting if it exists
+        if self.stabilization_profile.lock_to_corner_height_increment == 0:
+            if gcode_settings.vase_mode and gcode_settings.layer_height:
+                height_increment = gcode_settings.layer_height
+            else:
+                # use the default height increment
+                height_increment = PrinterProfile.minimum_height_increment
+        else:
+            height_increment = self.stabilization_profile.lock_to_corner_height_increment
+
         nearest_to_corner = self.stabilization_profile.lock_to_corner_type
         favor_x_axis = self.stabilization_profile.lock_to_corner_favor_axis == "x"
         stabilization_args = (

@@ -464,22 +464,26 @@ $(function () {
                 return false;
             }
         }, 'Please enter a positive integer value.');
+
     $.validator.addMethod('ffmpegBitRate',
         function (value) {
             return /^\d+[KkMm]$/.test(value);
         }, 'Enter a bitrate, K for kBit/s and M for MBit/s.  Example: 1000K');
+
     $.validator.addMethod('lessThanOrEqual',
         function (value, element, param) {
             var i = parseFloat(value);
             var j = parseFloat($(param).val());
             return (i <= j);
         });
+
     $.validator.addMethod('greaterThanOrEqual',
         function (value, element, param) {
             var i = parseFloat(value);
             var j = parseFloat($(param).val());
             return (i >= j);
         });
+
     $.validator.addMethod('lessThan',
         function (value, element, param) {
             var i = parseFloat(value);
@@ -491,6 +495,7 @@ $(function () {
             var j = parseFloat($target.val());
             return (i < j);
         });
+
     $.validator.addMethod('greaterThan',
         function (value, element, param) {
             var i = parseFloat(value);
@@ -502,6 +507,38 @@ $(function () {
             var j = parseFloat($target.val());
             return (i > j);
         });
+
+    // Validator that returns true if the value is not null and all
+    // selectors values are also not null
+    $.validator.addMethod('ifCheckedEnsureNonNull',
+        function (value, element, param) {
+            console.log("ifCheckedEnsureNonNull");
+            if (value === "on")
+                for (var index = 0; index < param.length; index++)
+                {
+                    // Get the target selector
+                    var $target = $(param[index]);
+                    // If we found no target return false
+                    if ($target.length === 0)
+                        return false;
+                    var value = $target.val()
+                    if (value == null || value == '')
+                        return false;
+                }
+            return true;
+        });
+
+    // Validator that returns true if the value is not null and all
+    // selectors values are also not null
+    $.validator.addMethod('ifOtherCheckedEnsureNonNull',
+        function (value, element, param) {
+            // see if the target is checked
+            var target_checked = $(param + ":checkbox:checked").length > 0
+            if (target_checked)
+                return value != null && value != '';
+            return true;
+        });
+
     $.validator.addMethod('octolapseSnapshotTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
@@ -511,6 +548,7 @@ $(function () {
             );
             return is_valid;
         });
+
     $.validator.addMethod('octolapseCameraRequestTemplate',
         function (value, element) {
             var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}", "1");
@@ -520,6 +558,7 @@ $(function () {
             );
             return is_valid;
         });
+
     $.validator.addMethod('octolapseRenderingTemplate',
         function (value, element) {
             var data = {"rendering_template":value};

@@ -45,7 +45,16 @@ $(function() {
             slicer_slic3r_pe_external_perimeter_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
             slicer_slic3r_pe_solid_infill_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
             slicer_slic3r_pe_top_solid_infill_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
-            slicer_slic3r_pe_first_layer_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true}
+            slicer_slic3r_pe_first_layer_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
+            slicer_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#slicer_cura_layer_height"] },
+            slicer_other_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_other_slicer_layer_height"] },
+            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_simplify_3d_layer_height"] },
+            slicer_slic3r_pe_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_slic3r_pe_layer_height"] },
+            slicer_cura_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_cura_smooth_spiralized_contours'},
+            slicer_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_other_vase_mode'},
+            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_simplify_3d_vase_mode'},
+            slicer_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_slic3r_pe_vase_mode'}
+
         },
         messages: {
             name: "Please enter a name for your profile",
@@ -63,7 +72,15 @@ $(function() {
             snapshot_max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Z'' field." },
             minimum_layer_height: { lessThanOrEqual: "Must be less than or equal to the ''Priming Height'' field." },
             priming_height: { greaterThanOrEqual: "Must be greater than or equal to the ''Minimum Layer Height'' field." },
-            auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." }
+            auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." },
+            slicer_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            slicer_other_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            slicer_slic3r_pe_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            slicer_cura_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            slicer_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            slicer_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'}
         }
     };
     Octolapse.OctolapseGcodeSettings = function(values)

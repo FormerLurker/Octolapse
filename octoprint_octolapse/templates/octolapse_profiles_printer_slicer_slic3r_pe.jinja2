@@ -6,6 +6,31 @@
         </div>
         <div>
             <div>
+                <h5>Layers and Perimeters</h5>
+                <p>Can be found in 'Printer Settings->Layers and Printers</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_layer_height">Layer Height</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_slic3r_pe_layer_height" name="slicer_slic3r_pe_layer_height" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.layer_height" step="0.000001" min="0" max="100.0"/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#layer-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_layer_height"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_slic3r_pe_vase_mode">Single outline corkscrew printing mode (vase mode)</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input id="slicer_slic3r_pe_vase_mode" name="slicer_slic3r_pe_vase_mode" type="checkbox" data-bind="checked: slicers.slic3r_pe.vase_mode" title="Enable Vase Mode" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#vase-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                    <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_vase_mode"></div>
+                </div>
+            </div>
+            <div>
                 <h5>Extruder Retraction Settings</h5>
                 <p>Can be found in 'Printer Settings->Extruder->Retraction' in Slic3r PE.</p>
             </div>

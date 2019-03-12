@@ -25,6 +25,8 @@ Octolapse.OtherSlicerViewModel = function (values) {
     self.prime_pillar_speed = ko.observable(values.prime_pillar_speed);
     self.num_slow_layers = ko.observable(values.num_slow_layers);
     self.speed_tolerance = ko.observable(values.speed_tolerance);
+    self.vase_mode = ko.observable(values.vase_mode);
+    self.layer_height = ko.observable(values.layer_height);
     self.axis_speed_display_units = ko.observable(values.axis_speed_display_units);
 
     self.retract_before_move = ko.pureComputed(function () {

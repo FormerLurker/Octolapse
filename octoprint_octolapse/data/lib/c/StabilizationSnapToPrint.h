@@ -44,7 +44,7 @@ class StabilizationSnapToPrint :
 public:
 	StabilizationSnapToPrint(stabilization_args* args, progressCallback progress, std::string nearest_to_corner, bool favor_x_axis);
 	StabilizationSnapToPrint(
-		stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress, 
+		stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress,
 		std::string nearest_to_corner, bool favor_x_axis);
 	StabilizationSnapToPrint(stabilization_args* args, std::string nearest_to_corner, bool favor_x_axis);
 	StabilizationSnapToPrint();
@@ -62,6 +62,7 @@ protected:
 	bool favor_x;
 	int current_layer;
 	double current_height;
+	unsigned int current_height_increment;
 	bool has_saved_position;
 	position * p_saved_position;
 	parsed_command * p_saved_parsed_command;

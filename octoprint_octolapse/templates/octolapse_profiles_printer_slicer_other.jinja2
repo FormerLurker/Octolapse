@@ -341,6 +341,30 @@
                 </div>
             </div>
             <div>
+                <h5>Layer Settings</h5>
+            </div>
+            <div class="control-group">
+                    <label class="control-label" for="slicer_other_vase_mode">Vase Mode</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input id="slicer_other_vase_mode" name="slicer_other_vase_mode" type="checkbox" data-bind="checked: slicers.other.vase_mode" title="Enable retraction" />Enabled
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#vase-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        </label>
+                        <div class="error_label_container text-error" data-error-for="slicer_other_vase_mode"></div>
+                    </div>
+                </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_other_slicer_layer_height">Layer Height</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_other_slicer_layer_height" name="slicer_other_slicer_layer_height" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.layer_height" step="0.0001" min="0.0000" max="100.0"/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#layer-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_other_slicer_layer_height"></div>
+                </div>
+            </div>
+            <div>
                 <h5>Speed Tolerance</h5>
                 <p>Determines how closely the speeds must match to detect a feature</p>
             </div>

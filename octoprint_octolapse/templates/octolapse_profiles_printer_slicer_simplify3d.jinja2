@@ -66,6 +66,30 @@
                 <h5>Layer</h5>
             </div>
             <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_layer_height">Layer Height</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="slicer_simplify_3d_layer_height" name="slicer_simplify_3d_layer_height" type="number"
+                               class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.simplify_3d.layer_height" step="0.01" min="0" max="9999999"/>
+                        <span class="add-on">mm</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Simplify-3D-Settings#layer-height"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_layer_height"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="slicer_simplify_3d_vase_mode">Single outline corkscrew printing mode (vase mode)</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input id="slicer_simplify_3d_vase_mode" name="slicer_simplify_3d_vase_mode" type="checkbox" data-bind="checked: slicers.simplify_3d.vase_mode" title="Enable Vase Mode" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Simplify-3D-Settings#vase-mode"
+                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                     <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_vase_mode"></div>
+                </div>
+            </div>
+            <div class="control-group">
                 <label class="control-label" for="slicer_simplify_3d_first_layer_speed_multiplier">First Layer Speed</label>
                 <div class="controls">
                     <div class="input-append form-inline">

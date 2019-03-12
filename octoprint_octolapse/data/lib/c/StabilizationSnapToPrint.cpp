@@ -33,6 +33,7 @@ StabilizationSnapToPrint::StabilizationSnapToPrint(
 	is_layer_change_wait = false;
 	current_layer = 0;
 	current_height = 0.0;
+	current_height_increment = 0;
 	has_saved_position = false;
 	saved_position_file_line = 0;
 	saved_position_file_gcode_number = 0;
@@ -42,13 +43,14 @@ StabilizationSnapToPrint::StabilizationSnapToPrint(
 }
 
 
-StabilizationSnapToPrint::StabilizationSnapToPrint(): stabilization()
+StabilizationSnapToPrint::StabilizationSnapToPrint() : stabilization()
 {
 	nearest_to = "front-left";
 	favor_x = false;
 	is_layer_change_wait = false;
 	current_layer = 0;
 	current_height = 0.0;
+	current_height_increment = 0;
 	has_saved_position = false;
 	saved_position_file_line = 0;
 	saved_position_file_gcode_number = 0;
@@ -66,6 +68,7 @@ StabilizationSnapToPrint::StabilizationSnapToPrint(
 	is_layer_change_wait = false;
 	current_layer = 0;
 	current_height = 0.0;
+	current_height_increment = 0;
 	has_saved_position = false;
 	saved_position_file_line = 0;
 	saved_position_file_gcode_number = 0;
@@ -95,11 +98,12 @@ StabilizationSnapToPrint::~StabilizationSnapToPrint()
 
 void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_command* p_command)
 {
- 	// if we're at a layer change, add the current saved plan
+	// if we're at a layer change, add the current saved plan
 	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)
 	{
 		is_layer_change_wait = true;
 	}
+
 	if (!p_current_pos->is_extruding)
 	{
 		return;
@@ -107,7 +111,26 @@ void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_comma
 
 	if (is_layer_change_wait && has_saved_position)
 	{
-		AddSavedPlan();
+		if (p_stabilization_args_->height_increment != 0)
+		{
+			// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
+			unsigned const int increment = int(p_current_pos->height / p_stabilization_args_->height_increment);
+
+			if (increment > current_height_increment)
+			{
+				if (increment > 1 && has_saved_position)
+					AddSavedPlan();
+				// TODO:  LOG MISSED LAYER
+				//else
+				//   Log missed layer
+				current_height_increment = increment;
+			}
+		}
+		else
+		{
+			AddSavedPlan();
+		}
+		
 	}
 
 	// check for errors in position, layer, or height, and make sure we are extruding.
@@ -116,16 +139,7 @@ void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_comma
 		return;
 	}
 
-	if (p_stabilization_args_->height_increment != 0)
-	{
-		// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
-
-		double current_increment = p_current_pos->height - current_height;
-		if (current_increment < p_stabilization_args_->height_increment)
-		{
-			return;
-		}
-	}
+	
 	if (IsCloser(p_current_pos))
 	{
 		// we need to make sure that we copy current_pos, because it's value will change
@@ -269,16 +283,16 @@ void StabilizationSnapToPrint::AddSavedPlan()
 	p_plan->snapshot_positions.push_back(p_snapshot_position);
 	p_plan->p_return_position = new position(*p_saved_position);
 	p_plan->p_parsed_command = new parsed_command(*p_saved_parsed_command);
-	
+
 	p_plan->file_line = saved_position_file_line;
 	p_plan->file_gcode_number = saved_position_file_gcode_number;
 	p_plan->lift_amount = p_stabilization_args_->disable_z_lift ? 0.0 : p_stabilization_args_->z_lift_height;
 	p_plan->retract_amount = p_stabilization_args_->disable_retract ? 0.0 : p_stabilization_args_->retraction_length;
 	p_plan->send_parsed_command = send_parsed_command_first;
-	
-	snapshot_plan_step* p_step = new snapshot_plan_step(0,0,0,0,0,snapshot_action);
+
+	snapshot_plan_step* p_step = new snapshot_plan_step(0, 0, 0, 0, 0, snapshot_action);
 	p_plan->steps.push_back(p_step);
-	
+
 	// Add the plan
 	(*p_snapshot_plans).push_back(p_plan);
 

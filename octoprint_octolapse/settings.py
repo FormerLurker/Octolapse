@@ -171,6 +171,9 @@ class PrinterProfileSlicers(Settings):
 
 
 class PrinterProfile(ProfileSettings):
+
+    minimum_height_increment = 0.05
+
     def __init__(self, name="New Printer Profile"):
         super(PrinterProfile, self).__init__(name)
         # flag that is false until the profile has been saved by the user at least once
@@ -1395,6 +1398,8 @@ class OctolapseGcodeSettings(Settings):
         self.lift_when_retracted = None
         self.z_lift_height = None
         self.z_lift_speed = None
+        self.vase_mode = None
+        self.layer_height = None
 
 
 class SlicerSettings(Settings):
@@ -1472,7 +1477,8 @@ class CuraSettings(SlicerSettings):
         self.speed_slowdown_layers = None
         self.retraction_hop = None
         self.axis_speed_display_settings = 'mm-sec'
-
+        self.layer_height = None
+        self.smooth_spiralized_contours = None
     def get_num_slow_layers(self):
         if self.speed_slowdown_layers is None or len(str(self.speed_slowdown_layers).strip()) == 0:
             return None
@@ -1500,6 +1506,8 @@ class CuraSettings(SlicerSettings):
             settings.retraction_length is not None
             and settings.retraction_length > 0
         )
+        settings.layer_height = self.layer_height
+        settings.vase_mode = self.smooth_spiralized_contours
         return settings
 
     def get_retraction_amount(self):
@@ -1693,7 +1701,8 @@ class Simplify3dSettings(SlicerSettings):
         self.z_axis_movement_speed = None
         self.bridging_speed_multiplier = None
         self.extruder_use_retract = None
-
+        self.spiral_vase_mode = None
+        self.layer_height = None
         # simplify has a fixed speed tolerance
         self.axis_speed_display_settings = 'mm-min'
 
@@ -1719,7 +1728,8 @@ class Simplify3dSettings(SlicerSettings):
         settings.lift_when_retracted = (
             settings.retract_before_move and settings.z_lift_height is not None and settings.z_lift_height > 0
         )
-
+        settings.vase_mode = self.self.spiral_vase_mode
+        settings.layer_height = self.layer_height
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
@@ -2050,6 +2060,8 @@ class Slic3rPeSettings(SlicerSettings):
         self.travel_speed = None
         self.first_layer_speed = ''
         self.axis_speed_display_units = 'mm-sec'
+        self.layer_height = None
+        self.spiral_vase = None
 
     def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
@@ -2077,6 +2089,8 @@ class Slic3rPeSettings(SlicerSettings):
         # calculate retract before travel and lift when retracted
         settings.retract_before_move = self.get_retract_before_travel()
         settings.lift_when_retracted = self.get_lift_when_retracted()
+        settings.layer_height = self.layer_height
+        settings.vase_mode = self.spiral_vase
         return settings
 
     def get_retract_before_travel(self):
@@ -2529,6 +2543,8 @@ class OtherSlicerSettings(SlicerSettings):
         self.retract_before_move = None
         self.speed_tolerance = 1
         self.axis_speed_display_units = 'mm-min'
+        self.vase_mode = None
+        self.layer_height = None
 
     def update_settings_from_gcode(self, settings_dict):
         raise Exception("Cannot update 'Other Slicer' from gcode file!  Please select another slicer type to use this "
@@ -2554,6 +2570,8 @@ class OtherSlicerSettings(SlicerSettings):
         settings.z_lift_speed = self.get_z_hop_speed()
         settings.lift_when_retracted = self.lift_when_retracted
         settings.retract_before_move = self.retract_before_move
+        settings.layer_height = self.layer_height
+        settings.vase_mode = self.vase_mode
         return settings
 
     def get_retract_length(self):
