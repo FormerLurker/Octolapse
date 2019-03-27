@@ -193,8 +193,8 @@ extern "C"
 			PyErr_SetString(PyExc_TypeError, "parameter must be callable");
 			return NULL;
 		}
-		//Py_INCREF(py_progress_callback);
-		//Py_INCREF(py_stabilization_args);
+		Py_INCREF(py_progress_callback);
+		Py_INCREF(py_stabilization_args);
 		
 		// Extract the stabilization args
 		stabilization_args s_args;
@@ -202,7 +202,7 @@ extern "C"
 		{
 			return NULL;
 		}
-		Py_DECREF(py_stabilization_args);
+		
 
 		const bool favor_x_axis = iFavorXAxis > 0;
 		// Create our stabilization object
@@ -232,7 +232,8 @@ extern "C"
 		Py_DECREF(py_snapshot_plans);
 		delete results;
 		Py_DECREF(py_progress_callback);
-		
+		Py_DECREF(py_stabilization_args);
+
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
 		return py_results;
@@ -551,7 +552,7 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 /// Argument Parsing
 static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positionArgs)
 {
-	PyObject_Print(args, stdout, Py_PRINT_RAW);
+	//PyObject_Print(args, stdout, Py_PRINT_RAW);
 
 	PyObject * poLocationDetectionCommands; // Hold the PyList
 	const char * pKey;
@@ -589,7 +590,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	//Py_INCREF(poLocationDetectionCommands);
+	Py_INCREF(poLocationDetectionCommands);
 	
 
 	positionArgs->key = pKey;
@@ -614,7 +615,6 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 
 	for (int index = 0; index < listSize; index++) {
 		PyObject *pyListItem = PyList_GetItem(poLocationDetectionCommands, index);
-		Py_INCREF(pyListItem);
 		if (pyListItem == NULL)
 		{
 			std::string message = "Could not extract a list item from index from the location detection commands.";
@@ -623,7 +623,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return false;
 		}
-		//Py_INCREF(pListItem);
+		Py_INCREF(pyListItem);
 		if (!PyUnicode_SafeCheck(pyListItem)) {
 			std::string message = "An element in the location_detection_commands is not a unicode string.";
 			octolapse_log(GCODE_PARSER, ERROR, message);
@@ -632,8 +632,9 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 			return false;
 		}
 		std::string command = PyUnicode_SafeAsString(pyListItem);
-		Py_DECREF(pyListItem);
+		
 		positionArgs->location_detection_commands.push_back(command);
+		Py_DECREF(pyListItem);
 	}
 	Py_DECREF(poLocationDetectionCommands);
 	return true;
@@ -641,7 +642,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 
 static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 {
-	//PyObject_Print(args, stdout, Py_PRINT_RAW);
+	PyObject_Print(args, stdout, Py_PRINT_RAW);
 
 	PyObject* pyLocationDetectionCommands; // Hold the PyList
 	char* pXYZAxisDefaultMode;
@@ -677,7 +678,7 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	
+	Py_INCREF(pyLocationDetectionCommands);
 	positionArgs->autodetect_position = iAutoDetectPosition;
 	positionArgs->origin_x_none = iOriginXIsNone > 0;
 	positionArgs->origin_y_none = iOriginYIsNone > 0;
@@ -699,7 +700,6 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 
 	for (int index = 0; index < listSize; index++) {
 		PyObject *pyListItem = PyList_GetItem(pyLocationDetectionCommands, index);
-		Py_INCREF(pyListItem);
 		if (pyListItem == NULL)
 		{
 			std::string message = "Could not extract a list item from index from the location detection commands.";
@@ -717,9 +717,7 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 			return false;
 		}
 		std::string command = PyUnicode_SafeAsString(pyListItem);
-		Py_DECREF(pyListItem);
 		positionArgs->location_detection_commands.push_back(command);
-
 	}
 	Py_DECREF(pyLocationDetectionCommands);
 	return true;
@@ -758,6 +756,8 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
+	Py_INCREF(pyPositionArgs);
+	Py_INCREF(pyStabilizationType);
 	stabilizationArgs->is_bound = iIsBound > 0;
 	stabilizationArgs->disable_retract = iDisableRetraction > 0;
 	stabilizationArgs->disable_z_lift = iDisableZLift > 0;
