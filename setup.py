@@ -7,7 +7,7 @@ import os
 # The plugin's identifier, has to be unique
 plugin_identifier = "octolapse"
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
-plugin_package = "octolapse"
+plugin_package = "octoprint_octolapse"
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
 plugin_name = "Octolapse"
@@ -72,33 +72,34 @@ class build_ext_subclass( build_ext ):
     def build_extensions(self):
         c = self.compiler.compiler_type
         print("Compiling Octolapse Parser Extension with {0}".format(c))
-        if copt.has_key(c):
+        if c in copt:
             for e in self.extensions:
                 e.extra_compile_args = copt[c]
-        if lopt.has_key(c):
+        if c in lopt:
             for e in self.extensions:
                 e.extra_link_args = lopt[c]
         build_ext.build_extensions(self)
 
 ## Build our c++ parser extension
 plugin_ext_sources = [
-    'octolapse/data/lib/c/GcodePositionProcessor.cpp',
-    'octolapse/data/lib/c/GcodeParser.cpp',
-    'octolapse/data/lib/c/GcodePosition.cpp',
-    'octolapse/data/lib/c/ParsedCommand.cpp',
-    'octolapse/data/lib/c/ParsedCommandParameter.cpp',
-    'octolapse/data/lib/c/Position.cpp',
-    'octolapse/data/lib/c/SnapshotPlan.cpp',
-    'octolapse/data/lib/c/SnapshotPlanStep.cpp',
-    'octolapse/data/lib/c/Stabilization.cpp',
-    'octolapse/data/lib/c/StabilizationResults.cpp',
-    'octolapse/data/lib/c/StabilizationSnapToPrint.cpp',
-    'octolapse/data/lib/c/Logging.cpp'
+    'octoprint_octolapse/data/lib/c/GcodePositionProcessor.cpp',
+    'octoprint_octolapse/data/lib/c/GcodeParser.cpp',
+    'octoprint_octolapse/data/lib/c/GcodePosition.cpp',
+    'octoprint_octolapse/data/lib/c/ParsedCommand.cpp',
+    'octoprint_octolapse/data/lib/c/ParsedCommandParameter.cpp',
+    'octoprint_octolapse/data/lib/c/Position.cpp',
+    'octoprint_octolapse/data/lib/c/PythonHelpers.cpp',
+    'octoprint_octolapse/data/lib/c/SnapshotPlan.cpp',
+    'octoprint_octolapse/data/lib/c/SnapshotPlanStep.cpp',
+    'octoprint_octolapse/data/lib/c/Stabilization.cpp',
+    'octoprint_octolapse/data/lib/c/StabilizationResults.cpp',
+    'octoprint_octolapse/data/lib/c/StabilizationSnapToPrint.cpp',
+    'octoprint_octolapse/data/lib/c/Logging.cpp'
 ]
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',
     sources=plugin_ext_sources,
-    language="c++"
+    language="c++",
     #,extra_compile_args=compiler_args  , extra_link_args=['/DEBUG']
 )
 

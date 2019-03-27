@@ -1,0 +1,1555 @@
+/*
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2017  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+*/
+Octolapse = {};
+Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
+OctolapseViewModel = {};
+
+$(function () {
+    // Finds the first index of an array with the matching predicate
+    Octolapse.IsShowingSettingsChangedPopup = false;
+
+    Octolapse.toggleContentFunction = function ($elm, options, updateObservable)
+    {
+
+        if(options.toggle_observable){
+            //console.log("Toggling element.");
+            if(updateObservable) {
+                options.toggle_observable(!options.toggle_observable());
+                //console.log("Observable updated - " + options.toggle_observable())
+            }
+            if (options.toggle_observable()) {
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').addClass(options.class_showing);
+                    $elm.children('[class^="fa"]').addClass(options.class_showing);
+                }
+                if (options.class_hiding) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_hiding);
+                    $elm.children('[class^="fa"]').removeClass(options.class_hiding);
+                }
+                if(options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideDown('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideDown('fast', options.onComplete);
+                    }
+                }
+            }
+            else
+             {
+                 if (options.class_hiding) {
+                     $elm.children('[class^="icon-"]').addClass(options.class_hiding);
+                     $elm.children('[class^="fa"]').addClass(options.class_hiding);
+                 }
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_showing);
+                    $elm.children('[class^="fa"]').removeClass(options.class_showing);
+                }
+                if(options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideUp('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideUp('fast', options.onComplete);
+                    }
+                }
+            }
+        }
+        else {
+            if (options.class) {
+                $elm.children('[class^="icon-"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+                $elm.children('[class^="fa"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+            }
+            if (options.container) {
+                if (options.parent) {
+                    $elm.parents(options.parent).find(options.container).stop().slideToggle('fast', options.onComplete);
+                } else {
+                    $(options.container).stop().slideToggle('fast', options.onComplete);
+                }
+            }
+        }
+
+    };
+
+    Octolapse.toggleContent = {
+            init: function(element, valueAccessor) {
+                var $elm = $(element),
+                    options = $.extend({
+                        class_showing: null,
+                        class_hiding: null,
+                        container: null,
+                        parent: null,
+                        toggle_observable: null,
+                        onComplete: function() {
+                            $(document).trigger("slideCompleted");
+                        }
+                    }, valueAccessor());
+
+                    if(options.toggle_observable) {
+                        Octolapse.toggleContentFunction($elm, options, false);
+                    }
+
+
+                $elm.on("click", function(e) {
+                    e.preventDefault();
+                    Octolapse.toggleContentFunction($elm,options, true);
+
+                });
+            }
+        };
+    ko.bindingHandlers.octolapseToggle = Octolapse.toggleContent ;
+
+    Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
+        for (var i = 0, j = array.length; i < j; i++) {
+            if (predicate.call(predicateOwner, array[i])) {
+                return i;
+            }
+        }
+        return -1;
+    };
+    // Creates a pseudo-guid
+    Octolapse.guid = function () {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    };
+    Octolapse.HasTakenFirstSnapshot = false;
+    // Returns an observable sorted by name(), case insensitive
+    Octolapse.nameSort = function (observable) {
+        return observable().sort(
+            function (left, right) {
+                var leftName = left.name().toLowerCase();
+                var rightName = right.name().toLowerCase();
+                return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
+            });
+    };
+    // Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
+    // It will apply the on or off class to the result of each selector, which should return exactly one result.
+    Octolapse.toggle = function (caller, args) {
+        var elements = args.elements;
+        elements.forEach(function (item) {
+            var element = $(item.selector);
+            var onClass = item.onClass;
+            var offClass = item.offClass;
+            if (element.hasClass(onClass)) {
+                element.removeClass(onClass);
+                element.addClass(offClass);
+            } else {
+                element.removeClass(offClass);
+                element.addClass(onClass);
+            }
+        });
+    };
+
+    Octolapse.progressBar = function (cancel_callback, initial_text)
+    {
+        var self = this;
+        self.notice = null;
+        self.$progress = null;
+        self.$progressText = null;
+        self.initial_text = initial_text;
+        self.close = function()
+        {
+            if (self.loader != null)
+                self.loader.remove();
+        };
+
+        self.update = function(percent_complete, progress_text)
+        {
+            self.notice.find(".remove_button").remove();
+
+            if (self.$progress == null)
+                return null;
+            if (percent_complete < 0)
+                percent_complete = 0;
+            if (percent_complete > 100)
+                percent_complete = 100;
+            if (percent_complete == 100) {
+                //console.log("Received 100% complete progress message, removing progress bar.");
+                self.loader.remove();
+                return null
+            }
+            self.$progress.width(percent_complete + "%").attr("aria-valuenow", percent_complete).find("span").html(percent_complete + "%");
+            self.$progressText.text(progress_text);
+            return self;
+        };
+        self.loader = null;
+        // create the pnotify loader
+        self.loader = new PNotify({
+            title: "Preprocessing Gcode File",
+            text: '<div class="progress progress-striped active" style="margin:0">\
+      <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0"></div>\
+    </div><div><span class="progress-text"></span></div>',
+            icon: 'fa fa-cog fa-spin',
+            confirm: {
+                confirm: Octolapse.Globals.is_admin(),
+                buttons: [{
+                    text: 'Cancel',
+                    click: cancel_callback
+                },{
+                    text: 'Close',
+                    addClass: 'remove_button',
+                    click: cancel_callback
+                }]
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            hide: false,
+            history: {
+                history: false
+            },
+            before_open: function(notice) {
+                self.notice = notice.get();
+                self.$progress = self.notice.find("div.progress-bar");
+                self.$progressText = self.notice.find("span.progress-text");
+                self.notice.find(".remove_button").remove();
+                self.update(0,self.initial_text);
+            }
+        });
+
+        return self;
+
+    };
+    // Cookies (only for UI display purposes, not for any tracking
+    Octolapse.COOKIE_EXPIRE_DAYS = 30;
+
+    Octolapse.setLocalStorage = function (name, value) {
+        localStorage.setItem("octolapse_"+name,value)
+    };
+
+    Octolapse.getLocalStorage = function (name, value) {
+        return localStorage.getItem("octolapse_"+name)
+    };
+
+    Octolapse.displayPopup = function (options) {
+        new PNotify(options);
+    };
+
+     // Create Helpers
+    Octolapse.convertAxisSpeedUnit = function (speed, newUnit, previousUnit, tolerance, tolerance_unit){
+        if (speed == null)
+            return null;
+        if(tolerance_unit !== newUnit)
+        {
+            switch (newUnit){
+                case "mm-min":
+                    tolerance = tolerance * 60.0;
+                    break;
+                case "mm-sec":
+                    tolerance = tolerance / 60.0;
+                    break;
+            }
+        }
+        if(newUnit === previousUnit)
+            return Octolapse.roundToIncrement(speed, tolerance);
+
+        switch (newUnit){
+            case "mm-min":
+                return Octolapse.roundToIncrement(speed*60.0, tolerance);
+            case "mm-sec":
+                return Octolapse.roundToIncrement(speed/60.0, tolerance);
+        }
+        return null;
+    };
+
+
+    // rounding to an increment
+    Octolapse.roundToIncrement = function (num, increment) {
+        if (increment === 0)
+            return 0;
+        if (num == null)
+            return null;
+
+        if (num !== parseFloat(num))
+            return num;
+
+        var div = Math.round(num / increment);
+        var value = increment * div;
+
+        // Find the number of decimals in the increment
+        var numDecimals = 0;
+        if ((increment % 1) !== 0)
+            numDecimals = increment.toString().split(".")[1].length;
+
+        // tofixed can only support 20 decimals, reduce if necessary
+        if(numDecimals > 20) {
+            //console.log("Too much precision for tofixed:" + numDecimals + " - Reducing to 20");
+            numDecimals = 20;
+        }
+        // truncate value to numDecimals decimals
+        value = parseFloat(value.toFixed(numDecimals).toString())
+
+        return value;
+    }
+
+    Octolapse.Popups = {};
+    Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
+        for (var index = 0; index < remove_keys.length; index++) {
+            key = remove_keys[index];
+            if (key in Octolapse.Popups) {
+
+                Octolapse.Popups[key].remove();
+                delete Octolapse.Popups[key];
+            }
+        }
+        Octolapse.Popups[popup_key] = new PNotify(options);
+    };
+
+    Octolapse.ConfirmDialogs = {};
+    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel)
+    {
+        if (key in Octolapse.ConfirmDialogs) {
+            Octolapse.ConfirmDialogs[key].remove();
+        }
+        Octolapse.ConfirmDialogs[key] = (
+            new PNotify({
+                title: title,
+                text: text,
+                icon: 'fa fa-question',
+                hide: false,
+                addclass: "octolapse",
+                confirm: {
+                    confirm: true
+                },
+                buttons: {
+                    closer: false,
+                    sticker: false
+                },
+                history: {
+                    history: false
+                }
+            })
+        ).get().on('pnotify.confirm', onConfirm).on('pnotify.cancel', onCancel);
+    };
+
+    Octolapse.ToggleElement = function (element) {
+        var args = $(this).attr("data-toggle");
+        Octolapse.toggle(this, JSON.parse(args));
+    };
+
+    // Add custom validator for csv strings (no inner whitespace)
+    $.validator.addMethod('csvString', function (value) {
+        var csvStringRegex = /^(\s*[A-Z]\d+\s*(?:$|,))+$/gim;
+        var csvStringComponentRegex = /[A-Z]\d+/gim;
+        //console.log("Validating csvString: " + value);
+        // We will allow 0 length trimmed strings
+        if (value.length > 0) {
+            if (!value.match(csvStringRegex))
+                return false;
+            var values = value.split(",");
+            for (var index = 0; index < values.length; index++) {
+                if (!values[index].match(csvStringComponentRegex))
+                    return false;
+            }
+        }
+        return true;
+    }, 'Please enter a list of strings separated by commas.');
+
+
+    $.validator.addMethod("check_one", function(value, elem, param)
+        {
+            //console.log("Validating trigger checks");
+            $(param).val();
+            return $(param + ":checkbox:checked").length > 0;
+        }
+    );
+
+    // Add custom validator for csv floats
+    $.validator.addMethod('csvFloat', function (value) {
+        return /^(\s*-?\d+(\.\d+)?)(\s*,\s*-?\d+(\.\d+)?)*\s*$/.test(value);
+    }, 'Please enter a list of decimals separated by commas.');
+    // Add a custom validator for csv floats between 0 and 100
+    $.validator.addMethod('csvRelative', function (value) {
+        return /^(\s*\d{0,2}(\.\d+)?|100(\.0+)?)(\s*,\s*\d{0,2}(\.\d+)?|100(\.0+)?)*\s*$/.test(value);
+    }, 'Please enter a list of decimals between 0.0 and 100.0 separated by commas.');
+    // Add a custom validator for integers
+    $.validator.addMethod('integer',
+        function (value) {
+            return /^-?\d+$/.test(value);
+        }, 'Please enter an integer value.');
+
+    Octolapse.isPercent = function(value){
+        //console.log("is percent - Octolapse")
+        if(typeof value != 'string')
+            return false;
+        if (!value)
+            return false;
+        value = value.trim();
+        if(! (value.length > 1 && value[value.length-1] === "%"))
+            return false;
+        value = value.substr(0,value.length-1);
+        return Octolapse.isFloat(value)
+    };
+    Octolapse.isFloat = function(value){
+        if (!value)
+            return false;
+        return !isNaN(value) && !isNaN(parseFloat(value))
+    };
+
+    Octolapse.parseFloat = function(value){
+        var ret = parseFloat(value);
+        if(!isNaN(ret))
+            return ret;
+        return null;
+    };
+
+    Octolapse.parsePercent = function(value){
+        value = value.trim();
+        if(value.length > 1 && value[value.length-1] === "%")
+            value = value.substr(0,value.length-1);
+        else
+            return null;
+        return Octolapse.parseFloat(value)
+    }
+
+    $.validator.addMethod('slic3rPEFloatOrPercent',
+        function (value) {
+            if (!value)
+                return true;
+            if(!Octolapse.isPercent(value) && !Octolapse.isFloat(value))
+            {
+                return false;
+            }
+            return true;
+        }, 'Please enter a decimal or a percent.');
+
+    $.validator.addMethod('slic3rPEFloatOrPercentSteps',
+        function (value) {
+            if (!value)
+                return true;
+            if(Octolapse.isPercent(value))
+                value = Octolapse.parsePercent(value);
+            else if(Octolapse.isFloat(value))
+                value = Octolapse.parseFloat(value);
+            var rounded_value = Octolapse.roundToIncrement(value, 0.0001);
+            if (rounded_value == value)
+                return true;
+            return false
+
+        }, 'Please enter a multiple of 0.0001.');
+
+    // Add a custom validator for positive
+    $.validator.addMethod('integerPositive',
+        function (value) {
+            try {
+                var r = /^\d+$/.test(value); // Check the number against a regex to ensure it contains only digits.
+                var n = +value; // Try to convert to number.
+                return r && !isNaN(n) && n > 0 && n % 1 == 0;
+            } catch (e) {
+                return false;
+            }
+        }, 'Please enter a positive integer value.');
+
+    $.validator.addMethod('ffmpegBitRate',
+        function (value) {
+            return /^\d+[KkMm]$/.test(value);
+        }, 'Enter a bitrate, K for kBit/s and M for MBit/s.  Example: 1000K');
+
+    $.validator.addMethod('lessThanOrEqual',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var j = parseFloat($(param).val());
+            return (i <= j);
+        });
+
+    $.validator.addMethod('greaterThanOrEqual',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var j = parseFloat($(param).val());
+            return (i >= j);
+        });
+
+    $.validator.addMethod('lessThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.length === 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i < j);
+        });
+
+    $.validator.addMethod('greaterThan',
+        function (value, element, param) {
+            var i = parseFloat(value);
+            var $target = $(param);
+
+            // I we didn't find a target, return true
+            if ($target.length === 0)
+                return true;
+            var j = parseFloat($target.val());
+            return (i > j);
+        });
+
+    // Validator that returns true if the value is not null and all
+    // selectors values are also not null
+    $.validator.addMethod('ifCheckedEnsureNonNull',
+        function (value, element, param) {
+            console.log("ifCheckedEnsureNonNull");
+            if (value === "on")
+                for (var index = 0; index < param.length; index++)
+                {
+                    // Get the target selector
+                    var $target = $(param[index]);
+                    // If we found no target return false
+                    if ($target.length === 0)
+                        return false;
+                    var value = $target.val()
+                    if (value == null || value == '')
+                        return false;
+                }
+            return true;
+        });
+
+    // Validator that returns true if the value is not null and all
+    // selectors values are also not null
+    $.validator.addMethod('ifOtherCheckedEnsureNonNull',
+        function (value, element, param) {
+            // see if the target is checked
+            var target_checked = $(param + ":checkbox:checked").length > 0
+            if (target_checked)
+                return value != null && value != '';
+            return true;
+        });
+
+    $.validator.addMethod('octolapseSnapshotTemplate',
+        function (value, element) {
+            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/');
+            var is_valid = (
+                jQuery.validator.methods.url.call(this, testUrl, element) ||
+                jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
+            );
+            return is_valid;
+        });
+
+    $.validator.addMethod('octolapseCameraRequestTemplate',
+        function (value, element) {
+            var testUrl = value.toUpperCase().replace("{CAMERA_ADDRESS}", 'http://w.com/').replace("{value}", "1");
+            var is_valid = (
+                jQuery.validator.methods.url.call(this, testUrl, element) ||
+                jQuery.validator.methods.url.call(this, "http://w.com" + testUrl, element)
+            );
+            return is_valid;
+        });
+
+    $.validator.addMethod('octolapseRenderingTemplate',
+        function (value, element) {
+            var data = {"rendering_template":value};
+            $.ajax({
+                url: "./plugin/octolapse/validateRenderingTemplate",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (result) {
+                    if(result.success)
+                        return true;
+                    return false;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Octolapse could not validate the rendering template.");
+                    return false;
+                }
+            });
+
+        });
+
+    jQuery.extend(jQuery.validator.messages, {
+        name: "Please enter a name.",
+        required: "This field is required.",
+        url: "Please enter a valid URL.",
+        number: "Please enter a valid number.",
+        equalTo: "Please enter the same value again.",
+        maxlength: jQuery.validator.format("Please enter no more than {0} characters."),
+        minlength: jQuery.validator.format("Please enter at least {0} characters."),
+        rangelength: jQuery.validator.format("Please enter a value between {0} and {1} characters long."),
+        range: jQuery.validator.format("Please enter a value between {0} and {1}."),
+        max: jQuery.validator.format("Please enter a value less than or equal to {0}."),
+        min: jQuery.validator.format("Please enter a value greater than or equal to {0}."),
+        octolapseCameraRequestTemplate: "The value is not a url.  You may use {camera_address} or {value} tokens.",
+        octolapseSnapshotTemplate: "The value is not a url.  You may use {camera_address} to refer to the web camera address."
+    });
+    // Knockout numeric binding
+    Octolapse.NullNumericText = "none";
+
+    Octolapse.round_axis_speed_unit = function (val, options) {
+        var round_to_increment_mm_min = options.round_to_increment_mm_min;
+        var round_to_increment_mm_sec = options.round_to_increment_mm_sec;
+        var current_units_observable = options.current_units_observable;
+        var round_to_percent = options.round_to_percent;
+        var return_text = options.return_text || false;
+
+        if (val == null)
+            return null;
+
+        // Check to see if it is a percent
+        var is_percent = Octolapse.isPercent(val)
+        if(is_percent)
+        {
+            if(round_to_percent)
+            {
+                val = Octolapse.parsePercent(val);
+            }
+            else
+                return null;
+        }
+        else
+            val = Octolapse.parseFloat(val);
+
+        if (val == null || isNaN(val))
+            return null;
+        try{
+            var round_to_increment = round_to_increment_mm_min;
+            if (is_percent) {
+                round_to_increment = round_to_percent
+            }
+            else if (current_units_observable() === 'mm-sec') {
+                round_to_increment = round_to_increment_mm_sec;
+            }
+            var rounded = Octolapse.roundToIncrement(val, round_to_increment);
+            if(is_percent && return_text)
+                return rounded.toString() + "%";
+            else if (return_text)
+                return rounded.toString();
+            return rounded;
+        }
+        catch (e){
+            console.log("Error rounding axis_speed_unit");
+        }
+
+    };
+
+    ko.bindingHandlers.streamLoading = {
+        update: function(element, valueAccessor) {
+            console.log("Binding element to streamLoading");
+            var self = this;
+            var options = valueAccessor();
+            var error_selector = ko.unwrap(options.error_selector);
+            var loading_selector = ko.unwrap(options.loading_selector);
+            self.src = ko.unwrap(options.src);
+            $(element).hide();
+            $(error_selector).hide();
+            $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+
+            // ensures this works for some older browsers
+            MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+            new MutationObserver(function onSrcChange(e){
+                if ($(element).attr('src') === '') {
+                    console.log("The src has changed to nothing, just return.");
+                    $(element).hide();
+                    return;
+                }
+                else{
+                    console.log("Stream src changed");
+                }
+
+              // src attribute just changed!!! put code here
+                $(element).one('load', function() {
+                    console.log("Stream Loaded.");
+                    $(error_selector).hide();
+                    $(loading_selector).hide();
+                    $(element).fadeIn(1000);
+                    //$(element).attr('src', src);
+                }).one('error', function(event_data) {
+                    console.log("Stream Error.");
+                    $(element).hide();
+                    $(loading_selector).hide();
+                    $(error_selector).html("<div><p>Error loading the stream at: " + src + "</p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
+                    $(element).attr('src', '');
+                });
+            }).observe(element,{attributes:true,attributeFilter:["src"]});
+            $(element).attr('src', self.src);
+
+        }
+    };
+
+    ko.bindingHandlers.octolapseSlicerValue = {
+          // Init, runs on initialization
+          init: function (element, valueAccessor, allBindings, viewModel, bindingContext)  {
+            if ( ko.isObservable(valueAccessor()) && (element instanceof HTMLInputElement) && (element.type === "range") )
+            {
+              // Add event listener to the slider, this will update the observable on input (just moving the slider),
+              // Otherwise, you have to move the slider then release it for the value to change
+              element.addEventListener('input', function(){
+                // Update the observable
+                if (ko.unwrap(valueAccessor()) != element.value)
+                {
+                  valueAccessor()(element.value);
+
+                  // Trigger the change event, awesome fix that makes
+                  // changing a dropdown and a range slider function the same way
+                  element.dispatchEvent(new Event('change'));
+                }
+              }); // End event listener
+            }
+          }, // End init
+          // Update, runs whenever observables for this binding change(and on initialization)
+          update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            // Make sure the parameter passed is an observable
+            if ( ko.isObservable(valueAccessor()) && (element instanceof HTMLInputElement) && (element.type === "range") )
+            {
+              // Update the slider value (so if the value changes programatically, the slider will update)
+              if (element.value != ko.unwrap(valueAccessor()))
+              {
+                element.value = ko.unwrap(valueAccessor());
+                element.dispatchEvent(new Event('input'));
+              }
+            }
+          } // End update
+        }; // End octolapseSlicerValue
+
+
+    ko.extenders.axis_speed_unit = function (target, options) {
+        //console.log("rounding to axis speed units");
+        var result = ko.pureComputed({
+            read: target,
+            write: function (newValue) {
+                var current = target();
+                var valueToWrite = Octolapse.round_axis_speed_unit(newValue, options);
+                //only write if it changed
+                if (valueToWrite !== current) {
+                    target(valueToWrite);
+                } else {
+                    //if the rounded value is the same, but a different value was written, force a notification for the current field
+                    if (newValue !== current) {
+                        target.notifySubscribers(valueToWrite);
+                    }
+                }
+
+            }
+        }).extend({ notify: 'always' });
+
+        result(target());
+
+        return result;
+    };
+
+    ko.extenders.round_to_increment = function (target, options) {
+        //console.log("rounding to axis speed units");
+        var round_to_increment = options.round_to_increment;
+        var result = ko.pureComputed({
+            read: target,
+            write: function (newValue) {
+                var current = target();
+                var valueToWrite = Octolapse.roundToIncrement(newValue, round_to_increment);
+                //only write if it changed
+                if (valueToWrite !== current) {
+                    target(valueToWrite);
+                } else {
+                    //if the rounded value is the same, but a different value was written, force a notification for the current field
+                    if (newValue !== current) {
+                        target.notifySubscribers(valueToWrite);
+                    }
+                }
+
+            }
+        }).extend({ notify: 'always' });
+
+        result(target());
+
+        return result;
+    };
+
+    ko.extenders.numeric = function (target, precision) {
+        var result = ko.dependentObservable({
+            read: function () {
+                var val = target();
+                val = Octolapse.parseFloat(val)
+                if (val == null)
+                    return val;
+                try{
+                    // safari doesn't seem to like toFixed with a precision > 20
+                    if(precision > 20)
+                        precision = 20;
+                    return val.toFixed(precision);
+                }
+                catch (e){
+                    console.log("Error converting toFixed");
+                }
+
+            },
+            write: target
+        });
+
+        result.raw = target;
+        return result;
+    };
+
+    Octolapse.pad = function pad(n, width, z)
+    {
+        z = z || '0';
+        return (String(z).repeat(width) + String(n)).slice(String(n).length)
+    }
+
+    /**
+     * @return {string}
+     */
+    Octolapse.ToTime = function (seconds) {
+        if (seconds == null)
+            return Octolapse.NullTimeText;
+        var utcSeconds = seconds;
+        var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+        d.setUTCSeconds(utcSeconds);
+        return Octolapse.pad(d.getHours(),2,"0") + ":"
+            + Octolapse.pad(d.getMinutes(),2,"0") + ":"
+            + Octolapse.pad(d.getSeconds(),2,"0");
+    };
+
+    /**
+     * @return {string}
+     */
+    Octolapse.ToTimer = function (seconds) {
+        if (seconds == null)
+            return "";
+        if (seconds <= 0)
+            return "0:00";
+
+        seconds = Math.round(seconds)
+
+        var hours = Math.floor(seconds / 3600).toString();
+        if (hours > 0) {
+            return ("" + hours).slice(-2) + " Hrs"
+        }
+
+        seconds %= 3600;
+        var minutes = Math.floor(seconds / 60).toString();
+        seconds = (seconds % 60).toString();
+        return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
+    };
+
+    Octolapse.ToCompactInt = function (value) {
+        var newValue = value;
+        if (value >= 1000) {
+            var suffixes = ["", "k", "m", "b", "t"];
+            var suffixNum = Math.floor(("" + value).length / 3);
+            var shortValue = '';
+            for (var precision = 2; precision >= 1; precision--) {
+                shortValue = parseFloat((suffixNum !== 0 ? (value / Math.pow(1000, suffixNum)) : value).toPrecision(precision));
+                var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g, '');
+                if (dotLessShortValue.length <= 2) { break; }
+            }
+
+            if (shortValue % 1 !== 0) shortValue = shortValue.toFixed(1);
+
+            newValue = shortValue + suffixes[suffixNum];
+        }
+        return newValue;
+    };
+
+    Octolapse.NullTimeText = "none";
+    ko.extenders.time = function (target, options) {
+        var result = ko.dependentObservable({
+            read: function () {
+                val = target();
+                return Octolapse.ToTime(val)
+            },
+            write: target
+        });
+
+        result.raw = target;
+        return result;
+    };
+
+    OctolapseViewModel = function (parameters) {
+        var self = this;
+        Octolapse.Globals = self;
+
+        self.loginState = parameters[0];
+        Octolapse.PrinterStatus = parameters[1];
+        self.OctoprintTimelapse = parameters[2]
+        // Global Values
+        self.show_position_state_changes = ko.observable(false);
+        self.show_position_changes = ko.observable(false);
+        self.show_extruder_state_changes = ko.observable(false);
+        self.show_trigger_state_changes = ko.observable(false);
+        self.show_snapshot_plan_information = ko.observable(false);
+        self.auto_reload_latest_snapshot = ko.observable(false);
+        self.auto_reload_frames = ko.observable(5);
+        self.is_admin = ko.observable(false);
+        self.enabled = ko.observable(false);
+        self.navbar_enabled = ko.observable(false);
+        self.show_navbar_when_not_printing = ko.observable(false);
+        self.show_real_snapshot_time = ko.observable(false);
+        self.cancel_print_on_startup_error = ko.observable(true);
+
+        self.version = ko.observable("unknown");
+        // Create a guid to uniquely identify this client.
+        self.client_id = Octolapse.guid();
+        // Have we loaded the state yet?
+        self.HasLoadedState = false;
+
+        self.pre_processing_progress = null;
+
+        self.onBeforeBinding = function () {
+            self.is_admin(self.loginState.isAdmin());
+        };
+
+        self.startup_complete = false;
+
+        self.onStartupComplete = function () {
+            //console.log("Startup Complete")
+            self.getInitialState();
+            self.startup_complete = true;
+
+        };
+
+        self.onDataUpdaterReconnect = function () {
+            //console.log("Reconnected Client")
+            self.getInitialState();
+
+        };
+
+        self.getInitialState = function() {
+            //console.log("Getting initial state");
+            if (!self.startup_complete && self.is_admin()) {
+                //console.log("octolapse.js - Loading settings for current user after startup.");
+                Octolapse.Settings.loadSettings();
+            } else
+            {
+                self.loadState();
+            }
+
+            // reset snapshot error state
+            Octolapse.Status.snapshot_error(false);
+            //console.log("Finished loading initial state.");
+
+        }
+
+        self.loadState = function () {
+            console.log("octolapse.js - Loading State");
+            $.ajax({
+                url: "./plugin/octolapse/loadState",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                dataType: "json",
+                success: function (result) {
+                    //console.log("The state has been loaded.  Waiting for message");
+                    self.initial_state_loaded = true;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    //console.log("Octolapse was unable to retrieve the current state, trying again in 5 seconds");
+                    setTimeout(self.getInitialState, 5000);
+                    // Todo:  update the UI to show we're waiting for our state!
+                }
+            });
+        };
+
+        self.onUserLoggedIn = function (user) {
+            self.is_admin(self.loginState.isAdmin());
+            if(self.is_admin() && self.startup_complete) {
+                //console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
+                Octolapse.Settings.loadSettings();
+            }
+            //else
+                //console.log("octolapse.js - User Logged In before startup - waiting to load settings.  User: " + user.name);
+        };
+
+        self.onUserLoggedOut = function () {
+            //console.log("octolapse.js - User Logged Out");
+            self.is_admin(false);
+            Octolapse.Settings.clearSettings();
+        };
+
+        self.onEventPrinterStateChanged = function(payload)
+        {
+            //console.log("Octolapse.js - Received print state change.");
+            if (payload.state_id == "CANCELLING") {
+                //console.log("Octolapse.js - Printer is cancelling.");
+                // We need to close any progress diagogs
+                if (self.pre_processing_progress != null) {
+                    self.pre_processing_progress.close();
+                }
+            }
+        }
+
+        self.updateState = function (data) {
+            console.log("octolapse.js - updateState");
+            if (data.state != null) {
+
+                Octolapse.Status.updateState(data.state)
+            }
+            if (data.main_settings != null) {
+                console.log('octolapse.js - Main settings changed');
+                // detect changes to auto_reload_latest_snapshot
+                var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
+
+                Octolapse.Globals.update(data.main_settings);
+                Octolapse.SettingsMain.setSettingsVisibility(Octolapse.Globals.enabled());
+                if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
+                    Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
+                    Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
+                }
+
+            }
+            if (data.status != null) {
+                console.log("octolapse.js - Updating Status");
+                Octolapse.Status.update(data.status);
+            }
+            if (!self.HasLoadedState) {
+                Octolapse.Status.updateLatestSnapshotImage(true);
+                Octolapse.Status.updateLatestSnapshotThumbnail(true);
+            }
+
+            self.HasLoadedState = true;
+        };
+
+        self.update = function (settings) {
+            console.log("octolapse.js - Globals - Updating main_settings globals")
+            // enabled
+            if (ko.isObservable(settings.is_octolapse_enabled))
+                self.enabled(settings.is_octolapse_enabled());
+            else
+                self.enabled(settings.is_octolapse_enabled);
+
+            if (ko.isObservable(settings.version))
+                self.version(settings.version());
+            else
+                self.version(settings.version);
+
+            // self.auto_reload_latest_snapshot
+            if (ko.isObservable(settings.auto_reload_latest_snapshot))
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
+            else
+                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
+            //auto_reload_frames
+            if (ko.isObservable(settings.auto_reload_frames))
+                self.auto_reload_frames(settings.auto_reload_frames());
+            else
+                self.auto_reload_frames(settings.auto_reload_frames);
+            // navbar_enabled
+            if (ko.isObservable(settings.show_navbar_icon))
+                self.navbar_enabled(settings.show_navbar_icon());
+            else
+                self.navbar_enabled(settings.show_navbar_icon);
+
+            if (ko.isObservable(settings.show_navbar_when_not_printing))
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
+            else
+                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
+
+
+            if (ko.isObservable(settings.show_position_state_changes))
+                self.show_position_state_changes(settings.show_position_state_changes());
+            else
+                self.show_position_state_changes(settings.show_position_state_changes);
+
+            if (ko.isObservable(settings.show_position_changes))
+                self.show_position_changes(settings.show_position_changes());
+            else
+                self.show_position_changes(settings.show_position_changes);
+
+            if (ko.isObservable(settings.show_extruder_state_changes))
+                self.show_extruder_state_changes(settings.show_extruder_state_changes());
+            else
+                self.show_extruder_state_changes(settings.show_extruder_state_changes);
+
+            if (ko.isObservable(settings.show_snapshot_plan_information))
+                self.show_snapshot_plan_information(settings.show_snapshot_plan_information());
+            else
+                self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
+
+            if (ko.isObservable(settings.show_trigger_state_changes))
+                self.show_trigger_state_changes(settings.show_trigger_state_changes());
+            else
+                self.show_trigger_state_changes(settings.show_trigger_state_changes);
+
+            if (ko.isObservable(settings.show_real_snapshot_time))
+                self.show_real_snapshot_time(settings.show_real_snapshot_time());
+            else
+                self.show_real_snapshot_time(settings.show_real_snapshot_time);
+
+            if (ko.isObservable(settings.cancel_print_on_startup_error))
+                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
+            else
+                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
+
+        };
+
+        self.cancelPreprocessing = function()
+        {
+            //console.log("Cancelling preprocessing")
+            var data = {"cancel":true};
+            $.ajax({
+                url: "./plugin/octolapse/cancelPreprocessing",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                dataType: "json",
+                success: function (result) {
+                   if (self.pre_processing_progress != null) {
+                       self.pre_processing_progress.close();
+                   }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Octolapse - Could not cancel preprecessing" + errorThrown.toString());
+                    alert("Could not cancel preprocessing.");
+                    return false;
+                }
+            });
+        };
+
+        // Handle Plugin Messages from Server
+        self.onDataUpdaterPluginMessage = function (plugin, data) {
+            if (plugin !== "octolapse") {
+                return;
+            }
+            //console.log("Message received.  Type:" + data.type);
+            //console.log(data);
+            switch (data.type) {
+                case "gcode-preprocessing-start":
+                    // create the cancel popup
+                    console.log("Creating a progress bar.");
+                    self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing, "Initializing...");
+                    break;
+                case "gcode-preprocessing-update":
+                    //console.log("Octolapse received pre-processing update processing message.");
+
+                    // TODO: CHANGE THIS TO A PROGRESS INDICATOR
+                    var percent_finished = data.percent_progress.toFixed(1);
+                    var seconds_elapsed = data.seconds_elapsed;
+                    var seconds_to_complete = data.seconds_to_complete;
+                    var gcodes_processed = data.gcodes_processed;
+                    var lines_processed = data.lines_processed;
+
+                    if (self.pre_processing_progress == null)
+                    {
+                        //console.log("The pre-processing progress bar is missing, creating the progress bar.");
+                        console.log("Creating progress bar");
+                        self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
+                    }
+                    if (self.pre_processing_progress != null) {
+                        var progress_text =
+                            "Remaining:" + Octolapse.ToTimer(seconds_to_complete)
+                            + " Elapsed:" + Octolapse.ToTimer(seconds_elapsed)
+                        + " Line:" + lines_processed.toString();
+                        console.log("Receiving Progress - Percent Complete:" + percent_finished + " " + progress_text);
+                        self.pre_processing_progress = self.pre_processing_progress.update(
+                            percent_finished, progress_text
+                        );
+                    }
+
+                    break;
+                case "settings-changed":
+                    {
+                        // Was this from us?
+                        if (Octolapse.Settings.is_loaded())
+                            self.updateState(data);
+                        if (self.client_id !== data.client_id && self.is_admin())
+                        {
+                            Octolapse.showConfirmDialog(
+                                "reload-settings",
+                                "Reload Settings",
+                                "A settings change was detected from another client.  Reload settings?",
+                                function(){
+                                    Octolapse.Settings.loadSettings();
+                                });
+                        }
+                    }
+                    break;
+                case "slicer_settings_detected":
+                    if(data.saved)
+                        console.log("Slicer settings detected and saved.");
+                    else
+                        console.log("Slicer settings detected but not saved.");
+                    // Todo:  we ened to do something here...
+                case "state-loaded":
+                    {
+                        console.log('octolapse.js - state-loaded');
+                        self.updateState(data);
+                    }
+                    break;
+                case "state-changed":
+                    {
+                        console.log('octolapse.js - state-changed');
+                        //console.log(data);
+                        self.updateState(data);
+                    }
+                    break;
+                case "popup":
+                    {
+                        //console.log('octolapse.js - popup');
+                        var options = {
+                            title: 'Octolapse Notice',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "popup-error":
+                    {
+                        //console.log('octolapse.js - popup-error');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Error',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                        break;
+                    }
+                case "print-start-error":
+                    {
+                        //console.log('octolapse.js - popup-error');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Startup Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"print-start-error",["print-start-error"])
+                        break;
+                    }
+                case "timelapse-start":
+                    {
+                        //console.log('octolapse.js - timelapse-start');
+                        // Erase any previous images
+                        Octolapse.HasTakenFirstSnapshot = false;
+                        // let the status tab know that a timelapse is starting
+                        Octolapse.Status.onTimelapseStart();
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
+                    }
+                    break;
+                case "timelapse-complete":
+                    {
+                        //console.log('octolapse.js - timelapse-complete');
+                        Octolapse.Status.snapshot_error(false);
+                        self.updateState(data)
+
+                    }
+                    break;
+                case "camera-settings-error":
+                    // If only the camera image acquisition failed, use the camera error message
+                    var options = {
+                        title: 'Octolapse - Camera Settings Error',
+                        text: data.msg,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "snapshot_error",["snapshot_error"]);
+                    break;
+                case "snapshot-start":
+                    {
+                        //console.log('octolapse.js - snapshot-start');
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
+                    }
+                    break;
+                case "snapshot-complete":
+                    {
+                        //console.log('octolapse.js - snapshot-complete');
+                        //console.log(data);
+                        self.updateState(data);
+
+                        var hasError =!(data.success && data.snapshot_success);
+                        Octolapse.Status.snapshot_error(hasError);
+                        if(hasError)
+                        {
+                            // If only the camera image acquisition failed, use the camera error message
+                            if (!data.success)
+                            {
+                                var options = {
+                                    title: "Stabilization Error",
+                                    text: data.error,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse"
+                                };
+                                Octolapse.displayPopupForKey(options, "stabilization_error", ["stabilization_error"])
+                            }
+                            if (!data.snapshot_success)
+                            {
+                                var options = {
+                                    title: "Camera Error",
+                                    text: data.snapshot_error,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse"
+                                };
+                                Octolapse.displayPopupForKey(options, "camera_error",["camera_error"])
+                            }
+
+
+                        }
+
+                    }
+                    break;
+                case "new-thumbnail-available":
+                    if (data.guid == $("#octolapse_current_snapshot_camera").val()) {
+                        //console.log("New thumbnails available");
+                        if (!Octolapse.HasTakenFirstSnapshot) {
+                            Octolapse.HasTakenFirstSnapshot = true;
+                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container', true);
+                            Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container', true);
+                            Octolapse.Status.updateLatestSnapshotThumbnail(true);
+                            Octolapse.Status.updateLatestSnapshotImage();
+                        } else {
+                            Octolapse.Status.updateLatestSnapshotThumbnail();
+                            Octolapse.Status.updateLatestSnapshotImage();
+                        }
+                    }
+                    break;
+                case "prerender-start":
+                    self.updateState(data);
+                    break;
+                case "render-start":
+                    {
+                        console.log('octolapse.js - render-start');
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
+
+                        var options = {
+                            title: 'Octolapse Rendering Started',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"render_message", ["render_message"]);
+                    }
+                    break;
+                case "render-failed":{
+                        console.log('octolapse.js - render-failed');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Rendering Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"render_failed",["render_message"]);
+                        break;
+                }
+                case "post-render-failed":{
+                        console.log('octolapse.js - post-render-failed');
+                        self.updateState(data);
+                        var options = {
+                            title: 'Octolapse Post-Rendering Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"post_render_error_message",["render_message"]);
+                        break;
+                }
+                case "render-complete":
+                    self.updateState(data);
+                    console.log('octolapse.js - render-complete');
+                    self.OctoprintTimelapse.requestData();
+
+                    // Make sure we aren't synchronized, else there's no reason to display a popup
+                    var options = {
+                        title: 'Octolapse Rendering Complete',
+                        text: data.msg,
+                        type: 'success',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options,"render_complete",["render_message"]);
+                    break;
+                case "render-end":
+                    {
+                        console.log('octolapse.js - render-end');
+                        self.updateState(data);
+                    }
+                    break;
+                case "synchronize-failed":
+                    {
+                        console.log('octolapse.js - synchronize-failed');
+                        var options = {
+                            title: 'Octolapse Synchronization Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "timelapse-stopping":
+                    {
+                        //console.log('octolapse.js - timelapse-stoping');
+                        Octolapse.Status.is_timelapse_active(false);
+                        var options = {
+                            title: 'Octolapse Timelapse Stopping',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "timelapse-stopped":
+                    {
+                        //console.log('octolapse.js - timelapse-stopped');
+                        Octolapse.Status.onTimelapseStop();
+                        Octolapse.Status.snapshot_error(false);
+                        var options = {
+                            title: 'Octolapse Timelapse Stopped',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "disabled-running":
+                    {
+                        var options = {
+                            title: 'Octolapse Disabled for Next Print',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                break;
+                case "timelapse-stopped-error":
+                    {
+                        //console.log('octolapse.js - timelapse-stopped-error');
+                        Octolapse.Status.onTimelapseStop();
+                        var options = {
+                            title: 'Octolapse Timelapse Stopped',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                    break;
+                case "out-of-bounds":
+                    {
+                        //console.log("An out-of-bounds snapshot position was detected.")
+                        var options = {
+                            title: 'Octolapse - Out Of Bounds',
+                            text: data.msg ,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options,"out-of-bounds", ["out-of-bounds"]);
+                    }
+                    break;
+                case "position-error":
+                    {
+                        //console.log("An out-of-bounds snapshot position was detected.")
+                        var options = {
+                            title: 'Octolapse - Position Error',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "position-error", ["position-error"]);
+                    }
+                    break;
+                case "warning":
+                    //console.log("A warning was sent to the plugin.")
+                        var options = {
+                            title: 'Octolapse - Warning',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopup(options, "warning");
+                default:
+                    {
+                        //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);
+                    }
+            }
+        };
+
+
+    };
+    OCTOPRINT_VIEWMODELS.push([
+        OctolapseViewModel
+        , ["loginStateViewModel", "printerStateViewModel", "timelapseViewModel"]
+        , ["#octolapse"]
+    ]);
+
+
+
+});
