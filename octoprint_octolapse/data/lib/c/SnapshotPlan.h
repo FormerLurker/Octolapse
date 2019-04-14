@@ -32,7 +32,7 @@ public:
 	snapshot_plan(const snapshot_plan & source);
 	~snapshot_plan();
 	PyObject * to_py_object();
-	static PyObject * build_py_object(std::vector<snapshot_plan *>* p_plans);
+	static PyObject * build_py_object(std::vector<snapshot_plan *> plans);
 	long file_line;
 	long file_gcode_number;
 	position * p_initial_position;

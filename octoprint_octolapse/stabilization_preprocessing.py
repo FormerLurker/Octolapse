@@ -27,10 +27,6 @@ from octoprint_octolapse.gcode_parser import ParsedCommand
 from octoprint_octolapse.settings import PrinterProfile, StabilizationProfile
 from octoprint_octolapse.position import Pos
 import GcodePositionProcessor
-import math
-
-import time
-import traceback
 TRAVEL_ACTION = "travel"
 SNAPSHOT_ACTION = "snapshot"
 
@@ -192,6 +188,7 @@ class StabilizationPreprocessingThread(Thread):
         retraction_length = gcode_settings.retraction_length
         disable_z_lift = self.stabilization_profile.lock_to_corner_disable_z_lift
         z_lift_height = gcode_settings.z_lift_height
+        fastest_speed = self.stabilization_profile.fastest_speed
 
         # height increment calculation.  If the self.stabilization_profile.lock_to_corner_height_increment == 0
         # and vase mode is enabled, use the layer height setting if it exists
@@ -216,12 +213,14 @@ class StabilizationPreprocessingThread(Thread):
             z_min,
             z_max,
             stabilization_type,
+            fastest_speed,
             disable_retract,
             retraction_length,
             disable_z_lift,
             z_lift_height,
             height_increment,
             self.notification_period_seconds
+
         )
         # Start the processor
         return GcodePositionProcessor.GetSnapshotPlans_LockToPrint(

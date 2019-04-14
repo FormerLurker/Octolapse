@@ -38,7 +38,6 @@ stabilization::stabilization(stabilization_args* args, pythonProgressCallback pr
 		python_callbacks = false;
 		python_progress_callback_ = NULL;
 	}
-	p_snapshot_plans = NULL;
 	progress_callback_ = progress;
 	native_progress_callback_ = NULL;
 	p_stabilization_args_ = args;
@@ -58,7 +57,6 @@ stabilization::stabilization()
 	native_progress_callback_ = NULL;
 	python_progress_callback_ = NULL;
 	progress_callback_ = NULL;
-	p_snapshot_plans = NULL;
 	p_stabilization_args_ = NULL;
 	is_running_ = true;
 	gcode_parser_ = NULL;
@@ -76,7 +74,6 @@ stabilization::stabilization(stabilization_args* args, progressCallback progress
 	native_progress_callback_ = progress;
 	python_progress_callback_ = NULL;
 	progress_callback_ = NULL;
-	p_snapshot_plans = NULL;
 	p_stabilization_args_ = args;
 	is_running_ = true;
 	gcode_parser_ = new gcode_parser();
@@ -103,16 +100,7 @@ stabilization::~stabilization()
 		delete gcode_position_;
 		gcode_position_ = NULL;
 	}
-	if (p_snapshot_plans != NULL)
-	{
-		for (std::vector< snapshot_plan * >::iterator it = p_snapshot_plans->begin(); it != p_snapshot_plans->end(); ++it)
-		{
-			delete (*it);
-		}
-		p_snapshot_plans->clear();
-		delete p_snapshot_plans;
-		p_snapshot_plans = NULL;
-	}
+	
 }
 
 long stabilization::get_file_size(const std::string& file_path)
@@ -136,10 +124,10 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 	return static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 }
 
-stabilization_results* stabilization::process_file(const std::string& file_path)
+void stabilization::process_file(const std::string& file_path, stabilization_results* results)
 {
+	p_snapshot_plans = &results->snapshot_plans;
 	octolapse_log(SNAPSHOT_PLAN, INFO, "Processing File.");
-	p_snapshot_plans = new std::vector<snapshot_plan*>();
 	PyThreadState *_save = NULL;
 	is_running_ = true;
 	
@@ -150,9 +138,6 @@ stabilization_results* stabilization::process_file(const std::string& file_path)
 	file_size_ = get_file_size(file_path);
 	std::ifstream gcodeFile(file_path.c_str());
 	std::string line;
-	
-	//if(python_callbacks)
-	//	_save = PyEval_SaveThread();
 
 	if (gcodeFile.is_open())
 	{
@@ -167,8 +152,8 @@ stabilization_results* stabilization::process_file(const std::string& file_path)
 			{
 
 				gcodes_processed_++;
-				gcode_position_->update(cmd);
-				process_pos(gcode_position_->p_current_pos, cmd);
+				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
+				process_pos(gcode_position_->p_current_pos, gcode_position_->p_previous_pos);
 				if (next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
@@ -179,14 +164,9 @@ stabilization_results* stabilization::process_file(const std::string& file_path)
 					double bytesPerSecond = (double)currentPosition / secondsElapsed;
 					double secondsToComplete = bytesRemaining / bytesPerSecond;
 
-					//if (python_callbacks)
-					//	PyEval_RestoreThread(_save);
-
 					notify_progress(percentProgress, secondsElapsed, secondsToComplete, gcodes_processed_,
 						lines_processed_);
 
-					//if (python_callbacks)
-					//	_save = PyEval_SaveThread();
 					next_update_time = get_next_update_time();
 				}
 
@@ -197,24 +177,17 @@ stabilization_results* stabilization::process_file(const std::string& file_path)
 		gcodeFile.close();
 		on_processing_complete();
 		delete cmd;
-		//if (python_callbacks)
-		//	PyEval_RestoreThread(_save);
 	}
 
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
-	
-	stabilization_results* results = new stabilization_results();
 	results->success = errors_.empty();
 	results->errors = errors_;
-	results->p_snapshot_plans = p_snapshot_plans;
 	results->seconds_elapsed = total_seconds;
 	results->gcodes_processed = gcodes_processed_;
 	results->lines_processed = lines_processed_;
-
-	p_snapshot_plans = NULL;
 	octolapse_log(SNAPSHOT_PLAN, INFO, "Completed file processing.");
-	return results;
+	p_snapshot_plans = NULL;
 }
 
 void stabilization::notify_progress(const double percent_progress, const double seconds_elapsed, const double seconds_to_complete,
@@ -231,7 +204,7 @@ void stabilization::notify_progress(const double percent_progress, const double 
 
 }
 
-void stabilization::process_pos(position* current_pos, parsed_command* p_command)
+void stabilization::process_pos(position* current_pos, position* previous_pos)
 {
 	throw std::exception();
 }

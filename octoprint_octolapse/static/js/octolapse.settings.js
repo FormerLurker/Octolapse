@@ -424,9 +424,9 @@ $(function () {
             dialog.templateName = options.templateName;
             dialog.$addEditDialog = $("#octolapse_add_edit_profile_dialog");
             dialog.$addEditForm = dialog.$addEditDialog.find("#octolapse_add_edit_profile_form");
-            dialog.$cancelButton = $("a.cancel", dialog.$addEditDialog);
-            dialog.$saveButton = $("a.save", dialog.$addEditDialog);
-            dialog.$defaultButton = $("a.set-defaults", dialog.$addEditDialog);
+            dialog.$cancelButton = $("button.cancel", dialog.$addEditDialog);
+            dialog.$saveButton = $("button.save", dialog.$addEditDialog);
+            dialog.$defaultButton = $("button.set-defaults", dialog.$addEditDialog);
             dialog.$dialogTitle = $("h3.modal-title", dialog.$addEditDialog);
             dialog.$dialogWarningContainer = $("div.dialog-warning", dialog.$addEditDialog);
             dialog.$dialogWarningText = $("span", dialog.$dialogWarningContainer);

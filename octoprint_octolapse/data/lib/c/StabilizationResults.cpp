@@ -23,23 +23,19 @@
 
 stabilization_results::stabilization_results()
 {
-	p_snapshot_plans = NULL;
 	bool success = false;
 	double seconds_elapsed = 0;
 	long gcodes_processed = 0;
 	long lines_processed = 0;
 }
 stabilization_results::~stabilization_results()
-{
-	if(p_snapshot_plans != NULL)
-	{
-		for (std::vector< snapshot_plan * >::iterator it = p_snapshot_plans->begin(); it != p_snapshot_plans->end(); ++it)
-		{
-			delete (*it);
-		}
-		p_snapshot_plans->clear();
-		delete p_snapshot_plans;
-		p_snapshot_plans = NULL;
+{	
+	while (!snapshot_plans.empty()) {
+		snapshot_plan* p = snapshot_plans.back();
+		snapshot_plans.pop_back();
+		delete p;
+	}
+	
 
 		/*for (unsigned int index = 0; index < (*p_snapshot_plans).size(); index++)
 		{
@@ -49,5 +45,5 @@ stabilization_results::~stabilization_results()
 		p_snapshot_plans->clear();
 		delete p_snapshot_plans;
 		p_snapshot_plans = NULL;*/
-	}
+	
 }

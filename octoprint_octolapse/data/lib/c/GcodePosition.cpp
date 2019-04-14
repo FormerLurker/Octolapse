@@ -82,11 +82,20 @@ gcode_position::gcode_position(const gcode_position &source)
 gcode_position::~gcode_position()
 {
 	if (p_previous_pos != NULL)
+	{
 		delete p_previous_pos;
+		p_previous_pos = NULL;
+	}
 	if (p_current_pos != NULL)
+	{
 		delete p_current_pos;
+		p_current_pos = NULL;
+	}
 	if (p_undo_pos != NULL)
+	{
 		delete p_undo_pos;
+		p_undo_pos = NULL;
+	}
 }
 
 const double ZERO_TOLERANCE = 0.000000005;
@@ -121,7 +130,7 @@ bool gcode_position::is_zero(double x)
 	return fabs(x) < ZERO_TOLERANCE;
 }
 
-void gcode_position::update(parsed_command *command)
+void gcode_position::update(parsed_command *command,int file_line_number, int gcode_number)
 {
 	if (command->cmd.empty())
 		return;
@@ -137,9 +146,14 @@ void gcode_position::update(parsed_command *command)
 
 	// add our parsed command to the current position
 	if (p_current_pos->p_command != NULL)
+	{
 		delete p_current_pos->p_command;
+		p_current_pos->p_command = NULL;
+	}
 	p_current_pos->p_command = new parsed_command(*command);
 
+	p_current_pos->file_line_number = file_line_number;
+	p_current_pos->gcode_number = gcode_number;
 	// Does our function exist in our functions map?
 	_gcode_functions_iterator = _gcode_functions.find(command->cmd);
 	if (_gcode_functions_iterator != _gcode_functions.end())
@@ -150,9 +164,12 @@ void gcode_position::update(parsed_command *command)
 
 		// Have the XYZ positions changed after processing a command ?
 		p_current_pos->e_relative = p_current_pos->e - p_previous_pos->e;
-		p_current_pos->has_position_changed = (
+		p_current_pos->has_xy_position_changed = (
 			!is_equal(p_current_pos->x, p_previous_pos->x) ||
-			!is_equal(p_current_pos->y, p_previous_pos->y) ||
+			!is_equal(p_current_pos->y, p_previous_pos->y)
+		);
+		p_current_pos->has_position_changed = (
+			p_current_pos->has_xy_position_changed ||
 			!is_equal(p_current_pos->z, p_previous_pos->z) ||
 			!is_zero(p_current_pos->e_relative) ||
 			p_current_pos->x_null != p_previous_pos->x_null ||
@@ -188,28 +205,27 @@ void gcode_position::update(parsed_command *command)
 		}
 		else
 		{
-			if (!is_zero(p_current_pos->e_relative))
+			
+			// Update retraction_length and extrusion_length
+			p_current_pos->retraction_length = p_current_pos->retraction_length - p_current_pos->e_relative;
+			if (less_than_or_equal(p_current_pos->retraction_length, 0))
 			{
-				// Update retraction_length and extrusion_length
-				p_current_pos->retraction_length = p_current_pos->retraction_length - p_current_pos->e_relative;
-				if (less_than_or_equal(p_current_pos->retraction_length, 0))
-				{
-					// we can use the negative retraction length to calculate our extrusion length!
-					p_current_pos->extrusion_length = p_current_pos->e_relative;
-					// set the retraction length to 0 since we are extruding
-					p_current_pos->retraction_length = 0;
-				}
-				else
-					p_current_pos->extrusion_length = 0;
-
-				// calculate deretraction length
-				if (greater_than(p_previous_pos->retraction_length, p_current_pos->retraction_length))
-				{
-					p_current_pos->deretraction_length = p_previous_pos->retraction_length - p_current_pos->retraction_length;
-				}
-				else
-					p_current_pos->deretraction_length = 0;
+				// we can use the negative retraction length to calculate our extrusion length!
+				p_current_pos->extrusion_length = -1.0 * p_current_pos->retraction_length;
+				// set the retraction length to 0 since we are extruding
+				p_current_pos->retraction_length = 0;
 			}
+			else
+				p_current_pos->extrusion_length = 0;
+
+			// calculate deretraction length
+			if (greater_than(p_previous_pos->retraction_length, p_current_pos->retraction_length))
+			{
+				p_current_pos->deretraction_length = p_previous_pos->retraction_length - p_current_pos->retraction_length;
+			}
+			else
+				p_current_pos->deretraction_length = 0;
+			
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
 			p_current_pos->is_extruding_start = greater_than(p_current_pos->extrusion_length, 0) && !p_previous_pos->is_extruding;
@@ -217,11 +233,11 @@ void gcode_position::update(parsed_command *command)
 			p_current_pos->is_primed = is_zero(p_current_pos->extrusion_length) && is_zero(p_current_pos->retraction_length);
 			p_current_pos->is_retracting_start = !p_previous_pos->is_retracting && greater_than(p_current_pos->retraction_length, 0);
 			p_current_pos->is_retracting = greater_than(p_current_pos->retraction_length, p_previous_pos->retraction_length);
-			p_current_pos->is_partially_retracted = less_than(0, p_current_pos->retraction_length) && less_than(p_current_pos->retraction_length, _retraction_length);
+			p_current_pos->is_partially_retracted = greater_than(p_current_pos->retraction_length, 0) && less_than(p_current_pos->retraction_length, _retraction_length);
 			p_current_pos->is_retracted = greater_than_or_equal(p_current_pos->retraction_length, _retraction_length);
 			p_current_pos->is_deretracting_start = greater_than(p_current_pos->deretraction_length, 0) && !p_previous_pos->is_deretracting;
 			p_current_pos->is_deretracting = greater_than(p_current_pos->deretraction_length, p_previous_pos->deretraction_length);
-			p_current_pos->is_deretracted = p_previous_pos->is_retracted && is_zero(p_current_pos->retraction_length == 0);
+			p_current_pos->is_deretracted = greater_than(p_previous_pos->retraction_length,0) && is_zero(p_current_pos->retraction_length);
 			// *************End Calculate extruder state*************
 		}
 		// calculate last_extrusion_height and height

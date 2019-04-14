@@ -60,27 +60,36 @@ snapshot_plan::snapshot_plan(const snapshot_plan & source)
 snapshot_plan::~snapshot_plan()
 {
 	if (p_initial_position != NULL)
+	{
 		delete p_initial_position;
+		p_initial_position = NULL;
+	}
 	if (p_return_position != NULL)
+	{
 		delete p_return_position;
+		p_return_position = NULL;
+	}
 	if (p_parsed_command != NULL)
+	{
 		delete p_parsed_command;
-
-	for (std::vector< position * >::iterator it = snapshot_positions.begin(); it != snapshot_positions.end(); ++it)
-	{
-		delete (*it);
+		p_parsed_command = NULL;
 	}
-	snapshot_positions.clear();
+	while (!snapshot_positions.empty()) {
+		position * p = snapshot_positions.back();
+		snapshot_positions.pop_back();
+		delete p;
+	}
 	
-	for (std::vector< snapshot_plan_step * >::iterator it = steps.begin(); it != steps.end(); ++it)
-	{
-		delete (*it);
+	while (!steps.empty()) {
+		snapshot_plan_step * p = steps.back();
+		steps.pop_back();
+		delete p;
 	}
-	steps.clear();
+	
 		
 }
 
-PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *>* p_plans)
+PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 {
 	PyObject *py_snapshot_plans = PyList_New(0);
 	if (py_snapshot_plans == NULL)
@@ -90,9 +99,9 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *>* p_plans)
 	}
 	
 	// Create each snapshot plan
-	for (unsigned int plan_index = 0; plan_index < (*p_plans).size(); plan_index++)
+	for (unsigned int plan_index = 0; plan_index < p_plans.size(); plan_index++)
 	{
-		PyObject * py_snapshot_plan = (*p_plans)[plan_index]->to_py_object();
+		PyObject * py_snapshot_plan = p_plans[plan_index]->to_py_object();
 		if (py_snapshot_plan == NULL)
 		{
 			//PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.build_py_object: Unable to convert the snapshot plan to a PyObject.");
@@ -106,7 +115,9 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *>* p_plans)
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
 		Py_DECREF(py_snapshot_plan);
+		//std::cout << "py_snapshot_plan refcount = " << py_snapshot_plan->ob_refcnt << "\r\n";
 	}
+	
 	return py_snapshot_plans;
 }
 
@@ -136,7 +147,7 @@ PyObject * snapshot_plan::to_py_object()
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
 		Py_DECREF(py_snapshot_position);
-	
+		//std::cout << "py_snapshot_position refcount = " << py_snapshot_position->ob_refcnt << "\r\n";
 	}
 	PyObject * py_initial_position = p_initial_position->to_py_tuple();
 	if (py_initial_position == NULL)
@@ -174,6 +185,8 @@ PyObject * snapshot_plan::to_py_object()
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
 		Py_DECREF(py_step);
+		//std::cout << "py_step refcount = " << py_step->ob_refcnt << "\r\n";
+
 	}
 	PyObject* py_parsed_command = p_parsed_command->to_py_object();
 	if (py_parsed_command == NULL)
@@ -202,9 +215,15 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	// Py_BuildValue Increfs PyObjects, so we need to decref those here:
 	Py_DECREF(py_initial_position);
+	//std::cout << "py_initial_position refcount = " << py_initial_position->ob_refcnt << "\r\n";
 	Py_DECREF(py_snapshot_positions);
+	//std::cout << "py_snapshot_positions refcount = " << py_snapshot_positions->ob_refcnt << "\r\n";
 	Py_DECREF(py_return_position);
+	//std::cout << "py_return_position refcount = " << py_return_position->ob_refcnt << "\r\n";
 	Py_DECREF(py_steps);
+	//std::cout << "py_steps refcount = " << py_steps->ob_refcnt << "\r\n";
 	Py_DECREF(py_parsed_command);
+	//std::cout << "py_parsed_command refcount = " << py_parsed_command->ob_refcnt << "\r\n";
+	
 	return py_snapshot_plan;
 }

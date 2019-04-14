@@ -56,6 +56,7 @@ struct stabilization_args {
 		z_lift_height = 0.0;
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
+		fastest_speed = true;
 	};
 	gcode_position_args position_args;
 	bool is_bound;
@@ -72,7 +73,9 @@ struct stabilization_args {
 	double z_lift_height;
 	double height_increment;
 	double notification_period_seconds;
+	bool fastest_speed;
 };
+
 
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
@@ -93,7 +96,7 @@ public:
 	// constructor for use when being called from python
 	stabilization(stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress);
 	virtual ~stabilization();
-	stabilization_results* process_file(const std::string& file_path);
+	void process_file(const std::string& file_path, stabilization_results* results);
 
 private:
 	stabilization(const stabilization &source); // don't copy me!
@@ -105,7 +108,7 @@ private:
 		long gcodes_processed, long lines_processed);
 	gcode_position_args* p_args_;
 protected:
-	virtual void process_pos(position* p_current_pos, parsed_command* p_command);
+	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
 	virtual void on_processing_complete();
 	std::vector<snapshot_plan*>* p_snapshot_plans;
 	bool is_running_;

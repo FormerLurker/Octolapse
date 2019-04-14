@@ -73,18 +73,18 @@ public:
 	gcode_position();
 	~gcode_position();
 
-	void update(parsed_command* cmd);
+	void update(parsed_command* cmd, int file_line_number, int gcode_number);
 	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
 	void undo_update();
 	position* p_previous_pos;
 	position* p_current_pos;
 	position* p_undo_pos;
-	bool is_equal(double x, double y);
-	bool greater_than(double x, double y);
-	bool greater_than_or_equal(double x, double y);
-	bool less_than(double x, double y);
-	bool less_than_or_equal(double x, double y);
-	bool is_zero(double x);
+	static bool is_equal(double x, double y);
+	static bool greater_than(double x, double y);
+	static bool greater_than_or_equal(double x, double y);
+	static bool less_than(double x, double y);
+	static bool less_than_or_equal(double x, double y);
+	static bool is_zero(double x);
 private:
 	gcode_position(const gcode_position & source);
 	bool _autodetect_position;

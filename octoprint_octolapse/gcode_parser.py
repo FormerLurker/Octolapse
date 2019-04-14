@@ -598,7 +598,7 @@ class Commands(object):
         ix = gcode.find(";")
         if len(gcode) - 1 >= ix > -1:
             gcode = gcode[0:ix]
-        return gcode.translate(None, string.whitespace).upper()
+        return gcode.encode(u'utf-8').translate(None, string.whitespace).upper()
 
     @staticmethod
     def strip_comments(gcode, remove_parentheticals=True):

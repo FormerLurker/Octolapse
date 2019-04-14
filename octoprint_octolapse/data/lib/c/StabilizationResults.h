@@ -28,11 +28,11 @@ class stabilization_results
 {
 public:
 	stabilization_results();
-	~stabilization_results();
+	virtual ~stabilization_results();
 
 	bool success;
 	std::string errors;
-	std::vector<snapshot_plan*>* p_snapshot_plans;
+	std::vector<snapshot_plan*> snapshot_plans;
 	double seconds_elapsed;
 	long gcodes_processed;
 	long lines_processed;

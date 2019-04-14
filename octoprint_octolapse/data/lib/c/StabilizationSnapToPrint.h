@@ -53,7 +53,7 @@ public:
 protected:
 	StabilizationSnapToPrint(const StabilizationSnapToPrint &source); // don't copy me
 	void initialize(std::string nearest_to_corner, bool favor_x_axis);
-	void process_pos(position* p_position, parsed_command* p_parsed_command);
+	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();
 	void AddSavedPlan();
 	bool IsCloser(position* p_position);
@@ -65,10 +65,6 @@ protected:
 	unsigned int current_height_increment;
 	bool has_saved_position;
 	position * p_saved_position;
-	parsed_command * p_saved_parsed_command;
-	int saved_position_file_line;
-	long saved_position_file_gcode_number;
-	long current_file_position;
 };
 
 #endif

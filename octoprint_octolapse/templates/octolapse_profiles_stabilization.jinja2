@@ -111,6 +111,15 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
+            <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
+            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+        </label>
+        <p>When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.</p>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
             <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
             <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
         </label>

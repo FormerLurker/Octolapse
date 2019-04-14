@@ -380,6 +380,7 @@ class StabilizationProfile(ProfileSettings):
         self.stabilization_type = StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
         self.pre_calculated_stabilization_type = StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
         # Pre-Calculated stabilization options
+        self.fastest_speed = True
         self.lock_to_corner_type = 'back-left'
         self.lock_to_corner_favor_axis = 'x'
         self.lock_to_corner_disable_z_lift = True
@@ -2141,7 +2142,7 @@ class Slic3rPeSettings(SlicerSettings):
                 if percent_index < 1:
                     return None
                 try:
-                    percent = float("{}".format(parse_string).translate(None, '%')) / 100.0
+                    percent = float("{}".format(parse_string).encode(u'utf-8').translate(None, b'%')) / 100.0
                     return percent
                 except ValueError:
                     return None

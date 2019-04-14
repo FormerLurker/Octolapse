@@ -41,11 +41,11 @@ class Pos(object):
         "is_travel_only", "has_one_feature_enabled", "firmware_retraction_length",
         "firmware_unretraction_additional_length", "firmware_retraction_feedrate", "firmware_unretraction_feedrate", 
         "firmware_z_lift", "has_homed_position", "is_layer_change", "is_height_change", "is_zhop",
-        "has_position_changed", "has_state_changed", "has_received_home_command", "has_position_error", 
-        "position_error", 'e_relative', 'extrusion_length', 'extrusion_length_total', 'retraction_length', 
-        'deretraction_length', 'is_extruding_start', 'is_extruding', 'is_primed', 'is_retracting_start', 
-        'is_retracting', 'is_retracted', 'is_partially_retracted', 'is_deretracting_start', 'is_deretracting',
-        'is_deretracted'
+        "has_xy_position_changed", "has_position_changed", "has_state_changed", "has_received_home_command",
+        "has_position_error", "position_error", 'e_relative', 'extrusion_length', 'extrusion_length_total',
+        'retraction_length','deretraction_length', 'is_extruding_start', 'is_extruding', 'is_primed',
+        'is_retracting_start', 'is_retracting', 'is_retracted', 'is_partially_retracted', 'is_deretracting_start',
+        'is_deretracting', 'is_deretracted', 'file_line_number', 'gcode_number'
     ]
 
     def __init__(self, copy_from_pos=None, reset_state=False):
@@ -101,12 +101,15 @@ class Pos(object):
             self.has_one_feature_enabled = copy_from_pos.has_one_feature_enabled
             self.in_path_position = copy_from_pos.in_path_position
             self.is_zhop = copy_from_pos.is_zhop
+            self.file_line_number = copy_from_pos.file_line_number
+            self.gcode_number = copy_from_pos.gcode_number
             #######
             if reset_state:
                 # Resets state changes
                 self.is_layer_change = False
                 self.is_height_change = False
                 self.is_travel_only = False
+                self.has_xy_position_changed = False
                 self.has_position_changed = False
                 self.has_state_changed = False
                 self.has_received_home_command = False
@@ -115,6 +118,7 @@ class Pos(object):
                 self.is_layer_change = copy_from_pos.is_layer_change
                 self.is_height_change = copy_from_pos.is_height_change
                 self.is_travel_only = copy_from_pos.is_travel_only
+                self.has_xy_position_changed = copy_from_pos.has_xy_position_changed
                 self.has_position_changed = copy_from_pos.has_position_changed
                 self.has_state_changed = copy_from_pos.has_state_changed
                 self.has_received_home_command = copy_from_pos.has_received_home_command
@@ -172,20 +176,22 @@ class Pos(object):
             self.is_height_change = False
             self.is_travel_only = False
             self.is_zhop = False
+            self.has_xy_position_changed = False
             self.has_position_changed = False
             self.has_state_changed = False
             self.has_received_home_command = False
             self.has_one_feature_enabled = False
             self.is_in_position = False
             self.in_path_position = False
+            self.file_line_number = -1
+            self.gcode_number = -1
 
     @classmethod
     def copy_from_cpp_pos(cls, cpp_pos, target):
-
-        target.x = None if cpp_pos[52] > 0 else cpp_pos[0]
-        target.y = None if cpp_pos[53] > 0 else cpp_pos[1]
-        target.z = None if cpp_pos[54] > 0 else cpp_pos[2]
-        target.f = None if cpp_pos[55] > 0 else cpp_pos[3]
+        target.x = None if cpp_pos[53] > 0 else cpp_pos[0]
+        target.y = None if cpp_pos[54] > 0 else cpp_pos[1]
+        target.z = None if cpp_pos[55] > 0 else cpp_pos[2]
+        target.f = None if cpp_pos[56] > 0 else cpp_pos[3]
         target.e = cpp_pos[4]
         target.x_offset = cpp_pos[5]
         target.y_offset = cpp_pos[6]
@@ -196,20 +202,20 @@ class Pos(object):
         target.extrusion_length_total = cpp_pos[11]
         target.retraction_length = cpp_pos[12]
         target.deretraction_length = cpp_pos[13]
-        target.last_extrusion_height = None if cpp_pos[58] > 0 else cpp_pos[14]
+        target.last_extrusion_height = None if cpp_pos[59] > 0 else cpp_pos[14]
         target.height = cpp_pos[15]
-        target.firmware_retraction_length = None if cpp_pos[60] > 0 else cpp_pos[16]
-        target.firmware_unretraction_additional_length = None if cpp_pos[61] > 0 else cpp_pos[17]
-        target.firmware_retraction_feedrate = None if cpp_pos[62] > 0 else cpp_pos[18]
-        target.firmware_unretraction_feedrate = None if cpp_pos[63] > 0 else cpp_pos[19]
-        target.firmware_z_lift = None if cpp_pos[64] > 0 else cpp_pos[20]
+        target.firmware_retraction_length = None if cpp_pos[61] > 0 else cpp_pos[16]
+        target.firmware_unretraction_additional_length = None if cpp_pos[62] > 0 else cpp_pos[17]
+        target.firmware_retraction_feedrate = None if cpp_pos[63] > 0 else cpp_pos[18]
+        target.firmware_unretraction_feedrate = None if cpp_pos[64] > 0 else cpp_pos[19]
+        target.firmware_z_lift = None if cpp_pos[65] > 0 else cpp_pos[20]
         target.layer = cpp_pos[21]
         target.x_homed = cpp_pos[22] > 0
         target.y_homed = cpp_pos[23] > 0
         target.z_homed = cpp_pos[24] > 0
-        target.is_relative = None if cpp_pos[56] > 0 else cpp_pos[25] > 0
-        target.is_extruder_relative = None if cpp_pos[57] > 0 else cpp_pos[26] > 0
-        target.is_metric = None if cpp_pos[59] > 0 else cpp_pos[27] > 0
+        target.is_relative = None if cpp_pos[57] > 0 else cpp_pos[25] > 0
+        target.is_extruder_relative = None if cpp_pos[58] > 0 else cpp_pos[26] > 0
+        target.is_metric = None if cpp_pos[60] > 0 else cpp_pos[27] > 0
         target.is_printer_primed = cpp_pos[28] > 0
         target.minimum_layer_height_reached = cpp_pos[29] > 0
         target.has_position_error = cpp_pos[30] > 0
@@ -228,14 +234,17 @@ class Pos(object):
         target.is_height_change = cpp_pos[43] > 0
         target.is_travel_only = cpp_pos[44] > 0
         target.is_zhop = cpp_pos[45] > 0
-        target.has_position_changed = cpp_pos[46] > 0
-        target.has_state_changed = cpp_pos[47] > 0
-        target.has_received_home_command = cpp_pos[48] > 0
+        target.has_xy_position_changed = cpp_pos[46] > 0
+        target.has_position_changed = cpp_pos[47] > 0
+        target.has_state_changed = cpp_pos[48] > 0
+        target.has_received_home_command = cpp_pos[49] > 0
         # Todo:  figure out how to deal with these things which must be currently ignored
-        #target.has_one_feature_enabled = cpp_pos[49] > 0
-        #target.is_in_position = cpp_pos[50] > 0
-        #target.in_path_position = cpp_pos[51] > 0
-        fast_position = cpp_pos[65]
+        #target.has_one_feature_enabled = cpp_pos[50] > 0
+        #target.is_in_position = cpp_pos[51] > 0
+        #target.in_path_position = cpp_pos[52] > 0
+        target.file_line_number = cpp_pos[66] > 1
+        target.gcode_number = cpp_pos[67] > 1
+        fast_position = cpp_pos[68]
         if fast_position is not None:
             target.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
         else:
@@ -246,10 +255,10 @@ class Pos(object):
     @classmethod
     def create_from_cpp_pos(cls, cpp_pos):
         pos = Pos()
-        pos.x = None if cpp_pos[52] > 0 else cpp_pos[0]
-        pos.y = None if cpp_pos[53] > 0 else cpp_pos[1]
-        pos.z = None if cpp_pos[54] > 0 else cpp_pos[2]
-        pos.f = None if cpp_pos[55] > 0 else cpp_pos[3]
+        pos.x = None if cpp_pos[53] > 0 else cpp_pos[0]
+        pos.y = None if cpp_pos[54] > 0 else cpp_pos[1]
+        pos.z = None if cpp_pos[55] > 0 else cpp_pos[2]
+        pos.f = None if cpp_pos[56] > 0 else cpp_pos[3]
         pos.e = cpp_pos[4]
         pos.x_offset = cpp_pos[5]
         pos.y_offset = cpp_pos[6]
@@ -260,20 +269,20 @@ class Pos(object):
         pos.extrusion_length_total = cpp_pos[11]
         pos.retraction_length = cpp_pos[12]
         pos.deretraction_length = cpp_pos[13]
-        pos.last_extrusion_height = None if cpp_pos[58] > 0 else cpp_pos[14]
+        pos.last_extrusion_height = None if cpp_pos[59] > 0 else cpp_pos[14]
         pos.height = cpp_pos[15]
-        pos.firmware_retraction_length = None if cpp_pos[60] > 0 else cpp_pos[16]
-        pos.firmware_unretraction_additional_length = None if cpp_pos[61] > 0 else cpp_pos[17]
-        pos.firmware_retraction_feedrate = None if cpp_pos[62] > 0 else cpp_pos[18]
-        pos.firmware_unretraction_feedrate = None if cpp_pos[63] > 0 else cpp_pos[19]
-        pos.firmware_z_lift = None if cpp_pos[64] > 0 else cpp_pos[20]
+        pos.firmware_retraction_length = None if cpp_pos[61] > 0 else cpp_pos[16]
+        pos.firmware_unretraction_additional_length = None if cpp_pos[62] > 0 else cpp_pos[17]
+        pos.firmware_retraction_feedrate = None if cpp_pos[63] > 0 else cpp_pos[18]
+        pos.firmware_unretraction_feedrate = None if cpp_pos[64] > 0 else cpp_pos[19]
+        pos.firmware_z_lift = None if cpp_pos[65] > 0 else cpp_pos[20]
         pos.layer = cpp_pos[21]
         pos.x_homed = cpp_pos[22] > 1
         pos.y_homed = cpp_pos[23] > 1
         pos.z_homed = cpp_pos[24] > 1
-        pos.is_relative = None if cpp_pos[56] > 0 else cpp_pos[25] > 0
-        pos.is_extruder_relative = None if cpp_pos[57] > 0 else cpp_pos[26] > 0
-        pos.is_metric = None if cpp_pos[59] > 0 else cpp_pos[27] > 0
+        pos.is_relative = None if cpp_pos[57] > 0 else cpp_pos[25] > 0
+        pos.is_extruder_relative = None if cpp_pos[58] > 0 else cpp_pos[26] > 0
+        pos.is_metric = None if cpp_pos[60] > 0 else cpp_pos[27] > 0
         pos.is_printer_primed = cpp_pos[28] > 1
         pos.minimum_layer_height_reached = cpp_pos[29] > 1
         pos.has_position_error = cpp_pos[30] > 1
@@ -292,15 +301,17 @@ class Pos(object):
         pos.is_height_change = cpp_pos[43] > 1
         pos.is_travel_only = cpp_pos[44] > 1
         pos.is_zhop = cpp_pos[45] > 1
-        pos.has_position_changed = cpp_pos[46] > 1
-        pos.has_state_changed = cpp_pos[47] > 1
-        pos.has_received_home_command = cpp_pos[48] > 1
+        pos.has_xy_position_changed = cpp_pos[46] > 1
+        pos.has_position_changed = cpp_pos[47] > 1
+        pos.has_state_changed = cpp_pos[48] > 1
+        pos.has_received_home_command = cpp_pos[49] > 1
         # Todo:  figure out how to deal with these things which must be currently ignored
-        #pos.has_one_feature_enabled = cpp_pos[49] > 1
-        #pos.is_in_position = cpp_pos[50] > 1
-        #pos.in_path_position = cpp_pos[51] > 1
-
-        fast_position = cpp_pos[65]
+        #pos.has_one_feature_enabled = cpp_pos[50] > 1
+        #pos.is_in_position = cpp_pos[51] > 1
+        #pos.in_path_position = cpp_pos[52] > 1
+        pos.file_line_number = cpp_pos[66] > 1
+        pos.gcode_number = cpp_pos[67] > 1
+        fast_position = cpp_pos[68]
         if fast_position is not None:
             pos.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
         else:
@@ -394,11 +405,14 @@ class Pos(object):
             "minimum_layer_height_reached": self.minimum_layer_height_reached,
             "has_position_error": self.has_position_error,
             "position_error": self.position_error,
+            "has_xy_position_changed": self.has_xy_position_changed,
             "has_position_changed": self.has_position_changed,
             "has_state_changed": self.has_state_changed,
             "layer": self.layer,
             "height": self.height,
-            "has_received_home_command": self.has_received_home_command
+            "has_received_home_command": self.has_received_home_command,
+            "file_line_number": self.file_line_number,
+            "gcode_number": self.gcode_number
         }
 
     def distance_to_zlift(self, z_hop, restrict_lift_height=True):

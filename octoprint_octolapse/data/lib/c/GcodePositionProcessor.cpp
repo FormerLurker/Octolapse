@@ -27,6 +27,10 @@
 #include "Logging.h"
 #include "bytesobject.h"
 #include "PythonHelpers.h"
+#ifdef _DEBUG
+#include "test.h"
+#endif
+
 
 #if PY_MAJOR_VERSION >= 3
 int main(int argc, char *argv[])
@@ -54,12 +58,19 @@ int main(int argc, char *argv[])
 }
 
 #else
+
 int main(int argc, char *argv[])
 {
+#ifdef _DEBUG
+	run_tests(argc, argv);
+	return 0;
+#else
 	Py_SetProgramName(argv[0]);
 	Py_Initialize();
 	PyEval_InitThreads();
+	initGcodePositionProcessor();
 	return 0;
+#endif
 }
 #endif
 
@@ -211,17 +222,17 @@ extern "C"
 			py_progress_callback,
 			nearest_to_corner,
 			favor_x_axis);
-
-		stabilization_results* results = stabilization.process_file(file_path);
+		stabilization_results results;
+		stabilization.process_file(file_path, &results);
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Building snapshot plans.");
 
-		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results->p_snapshot_plans);
+		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans);
 		if (py_snapshot_plans == NULL)
 		{
 			return NULL;
 		}
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
-		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results->success, results->errors.c_str(), py_snapshot_plans, results->seconds_elapsed, results->gcodes_processed, results->lines_processed);
+		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success, results.errors.c_str(), py_snapshot_plans, results.seconds_elapsed, results.gcodes_processed, results.lines_processed);
 		if (py_results == NULL)
 		{
 			octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to create a Tuple from the snapshot plan list.");
@@ -230,10 +241,11 @@ extern "C"
 		}
 		// Bring the snapshot plan refcount to 1
 		Py_DECREF(py_snapshot_plans);
-		delete results;
+		//std::cout << "py_snapshot_plans refcount = " << py_snapshot_plans->ob_refcnt << "\r\n";
 		Py_DECREF(py_progress_callback);
+		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		Py_DECREF(py_stabilization_args);
-
+		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
 		return py_results;
@@ -313,7 +325,7 @@ extern "C"
 
 		parsed_command command;
 		if(gpp::parser->try_parse_gcode(gcode, &command))
-			p_gcode_position->update(&command);
+			p_gcode_position->update(&command, -1, -1);
 
 		PyObject * py_position = p_gcode_position->p_current_pos->to_py_tuple();
 		if (py_position == NULL)
@@ -591,7 +603,6 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 		return false;
 	}
 	Py_INCREF(poLocationDetectionCommands);
-	
 
 	positionArgs->key = pKey;
 	positionArgs->autodetect_position = iAutoDetectPosition;
@@ -642,7 +653,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 
 static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 {
-	PyObject_Print(args, stdout, Py_PRINT_RAW);
+	//PyObject_Print(args, stdout, Py_PRINT_RAW);
 
 	PyObject* pyLocationDetectionCommands; // Hold the PyList
 	char* pXYZAxisDefaultMode;
@@ -731,9 +742,10 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 	int iDisableRetraction;
 	int iDisableZLift;
 	int iIsBound;
+	int iFastestSpeed;
 	if (!PyArg_ParseTuple(
 		args,
-		"OiddddddUididdd",
+		"OiddddddUiididdd",
 		&pyPositionArgs,
 		&iIsBound,
 		&stabilizationArgs->x_min,
@@ -743,6 +755,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		&stabilizationArgs->z_min,
 		&stabilizationArgs->z_max,
 		&pyStabilizationType,
+		&iFastestSpeed,
 		&iDisableRetraction,
 		&stabilizationArgs->retraction_length,
 		&iDisableZLift,
@@ -758,6 +771,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 	}
 	Py_INCREF(pyPositionArgs);
 	Py_INCREF(pyStabilizationType);
+	stabilizationArgs->fastest_speed = iFastestSpeed > 0;
 	stabilizationArgs->is_bound = iIsBound > 0;
 	stabilizationArgs->disable_retract = iDisableRetraction > 0;
 	stabilizationArgs->disable_z_lift = iDisableZLift > 0;

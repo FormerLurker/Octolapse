@@ -161,6 +161,7 @@ PyObject * parsed_command::to_py_object()
 				return NULL;
 			}
 			Py_DECREF(param_value);
+			//std::cout << "param_value refcount = " << param_value->ob_refcnt << "\r\n";
 		}
 
 		ret_val = PyTuple_Pack(3, pyCommandName, pyParametersDict, pyGcode);
@@ -178,10 +179,13 @@ PyObject * parsed_command::to_py_object()
 		// PyTuple_Pack makes a reference of its own, decref pyParametersDict.  
 		// We will need to decref pyCommandName and pyGcode later
 		Py_DECREF(pyParametersDict);
-
+		//std::cout << "pyParametersDict refcount = " << pyParametersDict->ob_refcnt << "\r\n";
 	}
 	// If we're here, we need to decref pyCommandName and pyGcode.
 	Py_DECREF(pyCommandName);
 	Py_DECREF(pyGcode);
+	//std::cout << "pyCommandName refcount = " << pyCommandName->ob_refcnt << "\r\n";
+	//std::cout << "pyGcode refcount = " << pyGcode->ob_refcnt << "\r\n";
+	//std::cout << "ret_val refcount = " << ret_val->ob_refcnt << "\r\n";
 	return ret_val;
 }

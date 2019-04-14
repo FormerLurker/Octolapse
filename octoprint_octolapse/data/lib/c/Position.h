@@ -106,11 +106,14 @@ public:
 	bool is_travel_only;
 	bool is_zhop;
 	bool has_position_changed;
+	bool has_xy_position_changed;
 	bool has_state_changed;
 	bool has_received_home_command;
 	bool has_one_feature_enabled;
 	bool is_in_position;
 	bool in_path_position;
+	int file_line_number;
+	int gcode_number;
 private:
 	void initialize();
 };

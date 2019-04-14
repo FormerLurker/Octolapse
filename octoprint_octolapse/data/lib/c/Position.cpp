@@ -157,9 +157,12 @@ void position::initialize()
 	is_layer_change = false;
 	is_height_change = false;
 	is_travel_only = false;
+	has_xy_position_changed = false;
 	has_position_changed = false;
 	has_state_changed = false;
 	has_received_home_command = false;
+	file_line_number = -1;
+	gcode_number = -1;
 }
 
 position::position()
@@ -231,12 +234,15 @@ position::position(position & source)
 	is_height_change = source.is_height_change;
 	is_travel_only = source.is_travel_only;
 	is_zhop = source.is_zhop;
+	has_xy_position_changed = source.has_xy_position_changed;
 	has_position_changed = source.has_position_changed;
 	has_state_changed = source.has_state_changed;
 	has_received_home_command = source.has_received_home_command;
 	has_one_feature_enabled = source.has_one_feature_enabled;
 	is_in_position = source.is_in_position;
 	in_path_position = source.in_path_position;
+	file_line_number = source.file_line_number;
+	gcode_number = source.gcode_number;
 }
 
 position::position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
@@ -281,7 +287,10 @@ position::position(const std::string& xyz_axis_default_mode, const std::string& 
 position::~position()
 {
 	if (p_command != NULL)
+	{
 		delete p_command;
+		p_command = NULL;
+	}
 }
 
 void position::copy(position &source, position* target)
@@ -353,12 +362,15 @@ void position::copy(position &source, position* target)
 	target->is_height_change = source.is_height_change;
 	target->is_travel_only = source.is_travel_only;
 	target->is_zhop = source.is_zhop;
+	target->has_xy_position_changed = source.has_xy_position_changed;
 	target->has_position_changed = source.has_position_changed;
 	target->has_state_changed = source.has_state_changed;
 	target->has_received_home_command = source.has_received_home_command;
 	target->has_one_feature_enabled = source.has_one_feature_enabled;
 	target->is_in_position = source.is_in_position;
 	target->in_path_position = source.in_path_position;
+	target->file_line_number = source.file_line_number;
+	target->gcode_number = source.gcode_number;
 }
 
 PyObject* position::to_py_tuple()
@@ -374,7 +386,7 @@ PyObject* position::to_py_tuple()
 	}
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddddddddddddddddllllllllllllllllllllllllllllllllllllllllllllO",
+		"dddddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllllllllO",
 		// Floats
 		x, // 0
 		y, // 1
@@ -424,28 +436,32 @@ PyObject* position::to_py_tuple()
 		is_height_change, // 43
 		is_travel_only, // 44
 		is_zhop, // 45
-		has_position_changed, // 46
-		has_state_changed, // 47
-		has_received_home_command, // 48
-		has_one_feature_enabled, // 49
-		is_in_position, // 50
-		in_path_position, // 51
+		has_xy_position_changed, // 46
+		has_position_changed, // 47
+		has_state_changed, // 48
+		has_received_home_command, // 49
+		has_one_feature_enabled, // 50
+		is_in_position, // 51
+		in_path_position, // 52
 		// Null bool, represented as integers
-		x_null, // 52
-		y_null, // 53
-		z_null, // 54
-		f_null, // 55
-		is_relative_null, // 56
-		is_extruder_relative_null, // 57
-		last_extrusion_height_null, // 58
-		is_metric_null, // 59
-		firmware_retraction_length_null, // 60
-		firmware_unretraction_additional_length_null, // 61
-		firmware_retraction_feedrate_null, // 62
-		firmware_unretraction_feedrate_null, // 63
-		firmware_z_lift_null,  // 64
+		x_null, // 53
+		y_null, // 54
+		z_null, // 55
+		f_null, // 56
+		is_relative_null, // 57
+		is_extruder_relative_null, // 58
+		last_extrusion_height_null, // 59
+		is_metric_null, // 60
+		firmware_retraction_length_null, // 61
+		firmware_unretraction_additional_length_null, // 62
+		firmware_retraction_feedrate_null, // 63
+		firmware_unretraction_feedrate_null, // 64
+		firmware_z_lift_null,  // 65
+		// file statistics
+		file_line_number, // 66
+		gcode_number, // 67
 		// Objects
-		py_command // 65
+		py_command // 68
 	);
 	if (pyPosition == NULL)
 	{
@@ -483,7 +499,7 @@ PyObject* position::to_py_dict()
 	}
 
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
 		// FLOATS
@@ -605,6 +621,8 @@ PyObject* position::to_py_dict()
 		is_travel_only,
 		"is_zhop",
 		is_zhop,
+		"has_xy_position_changed",
+		has_xy_position_changed,
 		"has_position_changed",
 		has_position_changed,
 		"has_state_changed",
@@ -616,7 +634,11 @@ PyObject* position::to_py_dict()
 		"is_in_position",
 		is_in_position,
 		"in_path_position",
-		in_path_position
+		in_path_position,
+		"file_line_number",
+		file_line_number,
+		"gcode_number",
+		gcode_number
 
 	);
 	if (p_position == NULL)

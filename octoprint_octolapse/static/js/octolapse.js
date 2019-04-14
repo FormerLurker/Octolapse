@@ -24,7 +24,7 @@
 Octolapse = {};
 Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
 OctolapseViewModel = {};
-
+//UI_API_KEY = "";
 $(function () {
     // Finds the first index of an array with the matching predicate
     Octolapse.IsShowingSettingsChangedPopup = false;

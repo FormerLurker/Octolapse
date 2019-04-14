@@ -61,11 +61,15 @@ plugin_ignored_packages = []
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
 copt = {
-    'msvc': ['/Ox','/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot'],
+    'msvc': ['/Ox', '/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot'],
     'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native'],
     'gcc': ['-O3']
 }
-lopt = {'mingw32': ['-fopenmp']}
+
+lopt = {
+    'mingw32': ['-fopenmp'],
+    #'msvc': ['/DEBUG']
+}
 
 
 class build_ext_subclass( build_ext ):
@@ -99,12 +103,14 @@ plugin_ext_sources = [
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',
     sources=plugin_ext_sources,
-    language="c++",
-    #,extra_compile_args=compiler_args  , extra_link_args=['/DEBUG']
+    language="c++"
 )
 
 
-additional_setup_parameters = {"ext_modules": [cpp_gcode_parser], "cmdclass": {"build_ext": build_ext_subclass}}
+additional_setup_parameters = {
+    "ext_modules": [cpp_gcode_parser],
+    "cmdclass": {"build_ext": build_ext_subclass}
+}
 
 ########################################################################################################################
 

@@ -494,7 +494,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         str_array = parse_string.split(u' ')
         if len(str_array) == 2:
             mm_used = Slic3rParsingFunctions.parse_mm(str_array[0])
-            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].translate(None, u'()'))
+            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').translate(None, b'()'))
             return {
                 u'mm': mm_used,
                 u'cm3': cm3_used
@@ -505,9 +505,9 @@ class Slic3rParsingFunctions(ParsingFunctions):
         # separate the two values
         str_array = parse_string.split(u' ')
         if len(str_array) == 3:
-            hh = Slic3rParsingFunctions.parse_int(str_array[0].translate(None, 'h'))
-            mm = Slic3rParsingFunctions.parse_int(str_array[1].translate(None, 'm'))
-            ss = Slic3rParsingFunctions.parse_int(str_array[2].translate(None, 's'))
+            hh = Slic3rParsingFunctions.parse_int(str_array[0].encode(u'utf-8').translate(None, b'h'))
+            mm = Slic3rParsingFunctions.parse_int(str_array[1].encode(u'utf-8').translate(None, b'm'))
+            ss = Slic3rParsingFunctions.parse_int(str_array[2].encode(u'utf-8').translate(None, b's'))
             return {
                 u'hours': hh,
                 u'minutes': mm,
@@ -598,7 +598,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         if percent_index > -1:
             return None
         try:
-            percent = float(parse_string.translate(None, u'%'))
+            percent = float(parse_string.encode(u'utf-8').translate(None, b'%'))
             return {
                 u'percent': percent
             }
@@ -612,7 +612,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         percent_index = parse_string.find(u'%')
         try:
             if percent_index > -1:
-                percent = float(parse_string.encode(u'utf-8').translate(None, '%'))
+                percent = float(parse_string.encode(u'utf-8').translate(None, b'%'))
                 return {
                     u'percent': percent
                 }
@@ -632,7 +632,7 @@ class CuraParsingFunctions(ParsingFunctions):
         str_array = parse_string.split(u' ')
         if len(str_array) == 2:
             mm_used = Slic3rParsingFunctions.parse_mm(str_array[0])
-            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].translate(None, '()'))
+            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').translate(None, b'()'))
             return {
                 u'mm': mm_used,
                 u'cm3': cm3_used

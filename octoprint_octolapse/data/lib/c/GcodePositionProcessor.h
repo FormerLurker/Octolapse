@@ -44,7 +44,7 @@ extern "C"
 #if PY_MAJOR_VERSION >= 3
 	PyMODINIT_FUNC PyInit_GcodePositionProcessor(void);
 #else
-	void initGcodePositionProcessor(void);
+	extern "C" void initGcodePositionProcessor(void);
 #endif
 	static PyObject* Initialize(PyObject* self, PyObject *args);
 	static PyObject* Undo(PyObject* self, PyObject *args);

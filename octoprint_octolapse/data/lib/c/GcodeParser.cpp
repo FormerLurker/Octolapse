@@ -150,6 +150,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				message += gcode;
 				octolapse_log(GCODE_PARSER, ERROR, message);
 				delete param;
+				param = NULL;
 			}
 			else
 				command->parameters.push_back(param);
@@ -166,6 +167,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				{
 					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
 					delete param;
+					param = NULL;
 					break;
 				}
 			}
@@ -384,7 +386,7 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 
 bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter)
 {
-	std::cout << "Trying to extract a T parameter from " << *p_p_gcode << "\r\n";
+	//std::cout << "Trying to extract a T parameter from " << *p_p_gcode << "\r\n";
 	char * p = *p_p_gcode;
 	parameter->name = "T";
 	// Ignore Leading Spaces
@@ -395,31 +397,31 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 
 	if (*p == L'c' || *p == L'C')
 	{
-		std::cout << "Found C value for T parameter\r\n";
+		//std::cout << "Found C value for T parameter\r\n";
 		parameter->string_value = "C";
 		parameter->value_type = 'S';
 	}
 	else if (*p == L'x' || *p == L'X')
 	{
-		std::cout << "Found X value for T parameter\r\n";
+		//std::cout << "Found X value for T parameter\r\n";
 		parameter->string_value = "X";
 		parameter->value_type = 'S';
 	}
 	else if (*p == L'?')
 	{
-		std::cout << "Found ? value for T parameter\r\n";
+		//std::cout << "Found ? value for T parameter\r\n";
 		parameter->string_value = "?";
 		parameter->value_type = 'S';
 	}
 	else
 	{
 		unsigned int value;
-		std::cout << "No char t parameter found, looking for unsigned int values.\r\n";
+		//std::cout << "No char t parameter found, looking for unsigned int values.\r\n";
 		if(!try_extract_unsigned_long(&p,&(parameter->unsigned_long_value)))
 		{
 			std::string message = "GcodeParser.try_extract_t_parameter: Unable to extract parameters from the T command.";
 			octolapse_log(GCODE_PARSER, WARNING, message);
-			std::cout << "No parameter for the T command.\r\n";
+			//std::cout << "No parameter for the T command.\r\n";
 			return false;
 		}
 		parameter->value_type = 'U';

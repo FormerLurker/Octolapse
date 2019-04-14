@@ -24,7 +24,6 @@
 #include <iostream>
 #include "GcodePosition.h"
 #include "Logging.h"
-
 StabilizationSnapToPrint::StabilizationSnapToPrint(
 	stabilization_args* args, progressCallback progress, std::string nearest_to_corner, bool favor_x_axis
 ) : stabilization(args, progress)
@@ -36,11 +35,7 @@ StabilizationSnapToPrint::StabilizationSnapToPrint(
 	current_height = 0.0;
 	current_height_increment = 0;
 	has_saved_position = false;
-	saved_position_file_line = 0;
-	saved_position_file_gcode_number = 0;
-	current_file_position = 0;
 	p_saved_position = NULL;
-	p_saved_parsed_command = NULL;
 }
 
 
@@ -53,11 +48,7 @@ StabilizationSnapToPrint::StabilizationSnapToPrint() : stabilization()
 	current_height = 0.0;
 	current_height_increment = 0;
 	has_saved_position = false;
-	saved_position_file_line = 0;
-	saved_position_file_gcode_number = 0;
-	current_file_position = 0;
 	p_saved_position = NULL;
-	p_saved_parsed_command = NULL;
 }
 
 StabilizationSnapToPrint::StabilizationSnapToPrint(
@@ -71,11 +62,7 @@ StabilizationSnapToPrint::StabilizationSnapToPrint(
 	current_height = 0.0;
 	current_height_increment = 0;
 	has_saved_position = false;
-	saved_position_file_line = 0;
-	saved_position_file_gcode_number = 0;
-	current_file_position = 0;
 	p_saved_position = NULL;
-	p_saved_parsed_command = NULL;
 }
 
 StabilizationSnapToPrint::StabilizationSnapToPrint(const StabilizationSnapToPrint &source)
@@ -90,14 +77,9 @@ StabilizationSnapToPrint::~StabilizationSnapToPrint()
 		delete p_saved_position;
 		p_saved_position = NULL;
 	}
-	if (p_saved_parsed_command != NULL)
-	{
-		delete p_saved_parsed_command;
-		p_saved_parsed_command = NULL;
-	}
 }
 
-void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_command* p_command)
+void StabilizationSnapToPrint::process_pos(position* p_current_pos, position* p_previous_pos)
 {
 	// if we're at a layer change, add the current saved plan
 	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)
@@ -105,7 +87,7 @@ void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_comma
 		is_layer_change_wait = true;
 	}
 
-	if (!p_current_pos->is_extruding)
+	if (!p_current_pos->is_extruding || !p_current_pos->has_xy_position_changed)
 	{
 		return;
 	}
@@ -140,27 +122,31 @@ void StabilizationSnapToPrint::process_pos(position* p_current_pos, parsed_comma
 		return;
 	}
 
-	
+	// Is the endpoint of the current command closer
+	// Note that we need to save the position immediately
+	// so that the IsCloser check for the previous_pos will
+	// have a saved command to check.
 	if (IsCloser(p_current_pos))
 	{
-		// we need to make sure that we copy current_pos, because it's value will change
-		// as we update the Position object
-		// this was done to substantially increase performance within the position class, which
-		// can take a long time to run on slower hardware.
-		saved_position_file_line = lines_processed_;
-		saved_position_file_gcode_number = gcodes_processed_;
 		has_saved_position = true;
 		// delete the current saved position and parsed command
 		if (p_saved_position != NULL)
-		{
 			delete p_saved_position;
-		}
-		if (p_saved_parsed_command != NULL)
-		{
-			delete p_saved_parsed_command;
-		}
+
 		p_saved_position = new position(*p_current_pos);
-		p_saved_parsed_command = new parsed_command(*p_command);
+	}
+	// If the previous command was at the same height, and the extruder is primed, check the starting
+	// point of the current command to see if it's closer.
+	if (p_previous_pos->is_primed && gcode_position::is_equal(p_current_pos->z, p_previous_pos->z))
+	{
+		if (IsCloser(p_previous_pos))
+		{
+			has_saved_position = true;
+			// delete the current saved position and parsed command
+			if (p_saved_position != NULL)
+				delete p_saved_position;
+			p_saved_position = new position(*p_previous_pos);
+		}
 	}
 
 }
@@ -186,24 +172,32 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 	if (!has_saved_position)
 		return true;
 
+	// If the speed is faster than the saved speed, this is the closest point
+	if (p_stabilization_args_->fastest_speed)
+	{
+		if (gcode_position::greater_than(p_position->f, p_saved_position->f))
+			return true;
+		else if (gcode_position::less_than(p_position->f, p_saved_position->f))
+			return false;
+	}
 	if (nearest_to == FRONT_LEFT)
 	{
 		if (favor_x)
 		{
-			if (p_position->x > p_saved_position->x)
+			if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return false;
-			else if (p_position->x < p_saved_position->x)
+			else if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return true;
-			else if (p_position->y < p_saved_position->y)
+			else if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return true;
 		}
 		else
 		{
-			if (p_position->y > p_saved_position->y)
+			if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return false;
-			else if (p_position->y < p_saved_position->y)
+			else if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return true;
-			else if (p_position->x < p_saved_position->x)
+			else if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return true;
 		}
 	}
@@ -211,20 +205,20 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 	{
 		if (favor_x)
 		{
-			if (p_position->x < p_saved_position->x)
+			if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return false;
-			else if (p_position->x > p_saved_position->x)
+			else if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return true;
-			else if (p_position->y < p_saved_position->y)
+			else if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return true;
 		}
 		else
 		{
-			if (p_position->y > p_saved_position->y)
+			if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return false;
-			else if (p_position->y < p_saved_position->y)
+			else if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return true;
-			else if (p_position->x > p_saved_position->x)
+			else if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return true;
 		}
 	}
@@ -232,18 +226,18 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 	{
 		if (favor_x)
 		{
-			if (p_position->x > p_saved_position->x)
+			if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return false;
-			else if (p_position->x < p_saved_position->x)
+			else if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return true;
-			else if (p_position->y > p_saved_position->y)
+			else if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return true;
 		}
 		else
 		{
-			if (p_position->y < p_saved_position->y)
+			if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return false;
-			else if (p_position->y > p_saved_position->y)
+			else if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return true;
 			else if (p_position->x < p_saved_position->x)
 				return true;
@@ -253,20 +247,20 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 	{
 		if (favor_x)
 		{
-			if (p_position->x < p_saved_position->x)
+			if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return false;
-			else if (p_position->x > p_saved_position->x)
+			else if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return true;
-			else if (p_position->y > p_saved_position->y)
+			else if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return true;
 		}
 		else
 		{
-			if (p_position->y < p_saved_position->y)
+			if (gcode_position::less_than(p_position->y, p_saved_position->y))
 				return false;
-			else if (p_position->y > p_saved_position->y)
+			else if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return true;
-			else if (p_position->x > p_saved_position->x)
+			else if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return true;
 		}
 	}
@@ -283,10 +277,10 @@ void StabilizationSnapToPrint::AddSavedPlan()
 	position * p_snapshot_position = new position(*p_saved_position);
 	p_plan->snapshot_positions.push_back(p_snapshot_position);
 	p_plan->p_return_position = new position(*p_saved_position);
-	p_plan->p_parsed_command = new parsed_command(*p_saved_parsed_command);
+	p_plan->p_parsed_command = new parsed_command(*p_saved_position->p_command);
 
-	p_plan->file_line = saved_position_file_line;
-	p_plan->file_gcode_number = saved_position_file_gcode_number;
+	p_plan->file_line = p_saved_position->file_line_number;
+	p_plan->file_gcode_number = p_saved_position->gcode_number;
 	p_plan->lift_amount = p_stabilization_args_->disable_z_lift ? 0.0 : p_stabilization_args_->z_lift_height;
 	p_plan->retract_amount = p_stabilization_args_->disable_retract ? 0.0 : p_stabilization_args_->retraction_length;
 	p_plan->send_parsed_command = send_parsed_command_first;
@@ -295,19 +289,16 @@ void StabilizationSnapToPrint::AddSavedPlan()
 	p_plan->steps.push_back(p_step);
 
 	// Add the plan
-	(*p_snapshot_plans).push_back(p_plan);
+	p_snapshot_plans->push_back(p_plan);
 
 	current_height = p_saved_position->height;
 	current_layer = p_saved_position->layer;
 	// set the state for the next layer
 	has_saved_position = false;
-	saved_position_file_line = 0;
-	current_file_position = 0;
 	is_layer_change_wait = false;
 	delete p_saved_position;
 	p_saved_position = NULL;
-	delete p_saved_parsed_command;
-	p_saved_parsed_command = NULL;
+
 }
 
 void StabilizationSnapToPrint::on_processing_complete()
