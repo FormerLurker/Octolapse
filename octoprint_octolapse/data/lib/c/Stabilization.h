@@ -40,25 +40,11 @@ static const char* send_parsed_command_first = "first";
 static const char* send_parsed_command_last = "last";
 static const char* send_parsed_command_never = "never";
 
-struct stabilization_args {
-	stabilization_args() {
-		is_bound = false;
-		x_min = 0;
-		x_max = 0;
-		y_min = 0;
-		y_max = 0;
-		z_min = 0;
-		z_max = 0;
-		stabilization_type = "";
-		disable_retract = false;
-		retraction_length = 0.0;
-		disable_z_lift = false;
-		z_lift_height = 0.0;
-		height_increment = 0.0;
-		notification_period_seconds = 0.25;
-		fastest_speed = true;
-	};
-	gcode_position_args position_args;
+class stabilization_args {
+public:
+	stabilization_args();
+	~stabilization_args();
+	PyObject* py_on_progress_received;
 	bool is_bound;
 	double x_min;
 	double x_max;
@@ -67,6 +53,7 @@ struct stabilization_args {
 	double z_min;
 	double z_max;
 	std::string stabilization_type;
+	std::string file_path;
 	bool disable_retract;
 	double retraction_length;
 	bool disable_z_lift;
@@ -92,12 +79,12 @@ public:
 
 	stabilization();
 	// constructor for use when running natively
-	stabilization(stabilization_args* args, progressCallback progress);
+	stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress);
 	// constructor for use when being called from python
-	stabilization(stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress);
+	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonProgressCallback progress);
 	virtual ~stabilization();
-	void process_file(const std::string& file_path, stabilization_results* results);
-
+	void process_file(stabilization_results* results);
+	static double get_carteisan_distance(double x1, double y1, double x2, double y2);
 private:
 	stabilization(const stabilization &source); // don't copy me!
 	double update_period_seconds_;

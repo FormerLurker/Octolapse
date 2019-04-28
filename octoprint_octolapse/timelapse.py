@@ -200,7 +200,6 @@ class Timelapse(object):
             )
             self._rendering_processor.start()
 
-
         self._gcode = SnapshotGcodeGenerator(
             self._settings, octoprint_printer_profile)
 

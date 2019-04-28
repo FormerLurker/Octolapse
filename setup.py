@@ -97,6 +97,7 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/SnapshotPlanStep.cpp',
     'octoprint_octolapse/data/lib/c/Stabilization.cpp',
     'octoprint_octolapse/data/lib/c/StabilizationResults.cpp',
+    'octoprint_octolapse/data/lib/c/StabilizationMinimizeTravel.cpp',
     'octoprint_octolapse/data/lib/c/StabilizationSnapToPrint.cpp',
     'octoprint_octolapse/data/lib/c/Logging.cpp'
 ]

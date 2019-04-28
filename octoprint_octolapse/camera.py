@@ -195,7 +195,7 @@ def test_mjpgstreamer_control(camera_profile, timeout_seconds=2):
             logger.error(message)
             raise CameraError('unknown-server-type', message)
         if r.status_code == 501:
-            message = "The server denied access to the MJPG-Streamer control.html for the '{0}' camera profile.  <a " \
+            message = "The server denied access to the MJPG-Streamer control.htm for the '{0}' camera profile.  <a " \
                       "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
                       "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
                       "error.</a>, or disable 'Custom Image Preferences'.".format(camera_profile.name)

@@ -212,12 +212,12 @@ class LoggingConfigurator(object):
                     current_logger = self._root_logger.getChild(logger_name)
                     found_enabled_logger = None
                     for enabled_logger in debug_settings.enabled_loggers:
-                        if enabled_logger.name == logger_full_name:
+                        if enabled_logger["name"] == logger_full_name:
                             found_enabled_logger = enabled_logger
                             break
 
                     if found_enabled_logger is not None:
-                        current_logger.setLevel(found_enabled_logger.log_level)
+                        current_logger.setLevel(found_enabled_logger["log_level"])
                     else:
                         # log level critical + 1 will not log anything
                         current_logger.setLevel(logging.CRITICAL + 1)

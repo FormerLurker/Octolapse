@@ -132,7 +132,8 @@ class GcodeFileProcessor(object):
                     break
 
                 line_number += 1
-                # get the current file position
+                # getting the current file position is not possible
+                # with the reverse processor.  Need to write one that works for this purpose.
                 #self.current_file_position = f.tell()
 
                 has_incomplete_processor = False

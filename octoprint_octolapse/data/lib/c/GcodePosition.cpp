@@ -49,24 +49,24 @@ gcode_position::gcode_position()
 	p_undo_pos = new position(_xyz_axis_default_mode, _e_axis_default_mode, _units_default);
 }
 
-gcode_position::gcode_position(gcode_position_args args)
+gcode_position::gcode_position(gcode_position_args* args)
 {
-	_autodetect_position = args.autodetect_position;
-	_origin_x = args.origin_x;
-	_origin_y = args.origin_y;
-	_origin_z = args.origin_z;
-	_origin_x_none = args.origin_x_none;
-	_origin_y_none = args.origin_y_none;
-	_origin_z_none = args.origin_z_none;
+	_autodetect_position = args->autodetect_position;
+	_origin_x = args->origin_x;
+	_origin_y = args->origin_y;
+	_origin_z = args->origin_z;
+	_origin_x_none = args->origin_x_none;
+	_origin_y_none = args->origin_y_none;
+	_origin_z_none = args->origin_z_none;
 
-	_retraction_length = args.retraction_length;
-	_z_lift_height = args.z_lift_height;
-	_priming_height = args.priming_height;
-	_minimum_layer_height = args.minimum_layer_height;
-	_g90_influences_extruder = args.g90_influences_extruder;
-	_e_axis_default_mode = args.e_axis_default_mode;
-	_xyz_axis_default_mode = args.xyz_axis_default_mode;
-	_units_default = args.units_default;
+	_retraction_length = args->retraction_length;
+	_z_lift_height = args->z_lift_height;
+	_priming_height = args->priming_height;
+	_minimum_layer_height = args->minimum_layer_height;
+	_g90_influences_extruder = args->g90_influences_extruder;
+	_e_axis_default_mode = args->e_axis_default_mode;
+	_xyz_axis_default_mode = args->xyz_axis_default_mode;
+	_units_default = args->units_default;
 	_gcode_functions = GetGcodeFunctions();
 
 	p_previous_pos = new position(_xyz_axis_default_mode,_e_axis_default_mode, _units_default);

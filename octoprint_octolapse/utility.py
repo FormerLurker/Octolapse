@@ -680,8 +680,13 @@ class POpenWithTimeout(object):
                         self.stdout = p_stdout
                         self.stderr = p_stderr + '- The snapshot script timed out in {0} seconds.'.format(timeout_seconds)
                     self.completed = True
+            except AttributeError:
+                # It's possible that the process is killed AFTER we check for self.proc is None
+                # catch that here and pass
+                pass
             finally:
                 self.lock.release()
+
 
         if self.proc is not None:
             # raise any exceptions that were caught

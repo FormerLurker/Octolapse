@@ -23,6 +23,7 @@
 #include "GcodePositionProcessor.h"
 #include <iostream>
 #include "StabilizationSnapToPrint.h"
+#include "StabilizationMinimizeTravel.h"
 #include "Stabilization.h"
 #include "Logging.h"
 #include "bytesobject.h"
@@ -95,7 +96,8 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 	{ "GetCurrentPositionDict",  (PyCFunction)GetCurrentPositionDict,  METH_VARARGS  ,"Returns the current position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
 	{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
 	{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
-	{ "GetSnapshotPlans_LockToPrint", (PyCFunction)GetSnapshotPlans_LockToPrint, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SnapToPrint' stabilization." },
+	{ "GetSnapshotPlans_SnapToPrint", (PyCFunction)GetSnapshotPlans_SnapToPrint, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SnapToPrint' stabilization." },
+	{ "GetSnapshotPlans_MinimizeTravel", (PyCFunction)GetSnapshotPlans_MinimizeTravel, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'MinimizeTravel' stabilization." },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -178,35 +180,34 @@ extern "C"
 		std::cout << "complete\r\n";
 	}
 	*/
-	static PyObject * GetSnapshotPlans_LockToPrint(PyObject *self, PyObject *args)
+	static PyObject * GetSnapshotPlans_SnapToPrint(PyObject *self, PyObject *args)
 	{
 		// TODO:  add error reporting and logging
+		PyObject *py_position_args;
 		PyObject *py_stabilization_args;
-		PyObject *py_progress_callback;
-		char * file_path;
-		char * nearest_to_corner;
-
+		PyObject *py_stabilization_type_args;
+		
 		int iFavorXAxis;
 		if (!PyArg_ParseTuple(
 			args,
-			"sOOsi",
-			&file_path,
+			"OOO",
+			&py_position_args,
 			&py_stabilization_args,
-			&py_progress_callback,
-			&nearest_to_corner,
-			&iFavorXAxis))
+			&py_stabilization_type_args))
 		{
-			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GetSnapshotPlansLockToPrint.");
+			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
 		}
-		// get the progress callback
-		if (!PyCallable_Check(py_progress_callback)) {
-			PyErr_SetString(PyExc_TypeError, "parameter must be callable");
-			return NULL;
-		}
-		Py_INCREF(py_progress_callback);
+		Py_INCREF(py_position_args);
 		Py_INCREF(py_stabilization_args);
-		
+		Py_INCREF(py_stabilization_type_args);
+		// Extract the position args
+		gcode_position_args p_args;
+		if (!ParsePositionArgs(py_position_args, &p_args))
+		{
+			return NULL;
+		}
+
 		// Extract the stabilization args
 		stabilization_args s_args;
 		if (!ParseStabilizationArgs(py_stabilization_args, &s_args))
@@ -214,16 +215,21 @@ extern "C"
 			return NULL;
 		}
 		
-
-		const bool favor_x_axis = iFavorXAxis > 0;
+		snap_to_print_args st_args;
+		if (!ParseStabilizationArgs_SnapToPrint(py_stabilization_type_args, &st_args))
+		{
+			return NULL;
+		}
 		// Create our stabilization object
-		StabilizationSnapToPrint stabilization(&s_args,
-			pythonProgressCallback(ExecuteStabilizationProgressCallback),
-			py_progress_callback,
-			nearest_to_corner,
-			favor_x_axis);
+		StabilizationSnapToPrint stabilization(
+			&p_args, 
+			&s_args,
+			&st_args,
+			pythonProgressCallback(ExecuteStabilizationProgressCallback)
+		);
+
 		stabilization_results results;
-		stabilization.process_file(file_path, &results);
+		stabilization.process_file(&results);
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Building snapshot plans.");
 
 		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans);
@@ -241,10 +247,90 @@ extern "C"
 		}
 		// Bring the snapshot plan refcount to 1
 		Py_DECREF(py_snapshot_plans);
-		//std::cout << "py_snapshot_plans refcount = " << py_snapshot_plans->ob_refcnt << "\r\n";
-		Py_DECREF(py_progress_callback);
-		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
+		Py_DECREF(py_position_args);
 		Py_DECREF(py_stabilization_args);
+		Py_DECREF(py_stabilization_type_args);
+		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
+		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
+		return py_results;
+	}
+
+	static PyObject * GetSnapshotPlans_MinimizeTravel(PyObject *self, PyObject *args)
+	{
+		// TODO:  add error reporting and logging
+		PyObject *py_position_args;
+		PyObject *py_stabilization_args;
+		PyObject *py_stabilization_type_args;
+		//std::cout << "Parsing Arguments\r\n";
+		int iFavorXAxis;
+		if (!PyArg_ParseTuple(
+			args,
+			"OOO",
+			&py_position_args,
+			&py_stabilization_args,
+			&py_stabilization_type_args))
+		{
+			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
+			return NULL;
+		}
+		Py_INCREF(py_position_args);
+		Py_INCREF(py_stabilization_args);
+		Py_INCREF(py_stabilization_type_args);
+		// Extract the position args
+		gcode_position_args p_args;
+		//std::cout << "Parsing position arguments\r\n";
+		if (!ParsePositionArgs(py_position_args, &p_args))
+		{
+			return NULL;
+		}
+
+		// Extract the stabilization args
+		stabilization_args s_args;
+		//std::cout << "Parsing stabilization arguments\r\n";
+		if (!ParseStabilizationArgs(py_stabilization_args, &s_args))
+		{
+			return NULL;
+		}
+		//std::cout << "Parsing minimize travel arguments\r\n";
+		minimize_travel_args mt_args;
+		if (!ParseStabilizationArgs_MinimizeTravel(py_stabilization_type_args, &mt_args))
+		{
+			return NULL;
+		}
+		//std::cout << "Creating Stabilization.\r\n";
+		// Create our stabilization object
+		StabilizationMinimizeTravel stabilization(
+			&p_args,
+			&s_args,
+			&mt_args,
+			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
+			pythonProgressCallback(ExecuteStabilizationProgressCallback)
+		);
+
+		stabilization_results results;
+		//std::cout << "Processing gcode file.\r\n";
+		stabilization.process_file(&results);
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Building snapshot plans.");
+
+		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans);
+		if (py_snapshot_plans == NULL)
+		{
+			return NULL;
+		}
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
+		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success, results.errors.c_str(), py_snapshot_plans, results.seconds_elapsed, results.gcodes_processed, results.lines_processed);
+		if (py_results == NULL)
+		{
+			octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to create a Tuple from the snapshot plan list.");
+			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
+			return NULL;
+		}
+		// Bring the snapshot plan refcount to 1
+		Py_DECREF(py_snapshot_plans);
+		Py_DECREF(py_position_args);
+		Py_DECREF(py_stabilization_args);
+		Py_DECREF(py_stabilization_type_args);
 		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
@@ -262,7 +348,7 @@ extern "C"
 
 		// Create the gcode position object 
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Parsing initialization args.");
-		gcode_position * p_new_position = new gcode_position(positionArgs);
+		gcode_position * p_new_position = new gcode_position(&positionArgs);
 		// see if we already have a gcode_position object for the given key
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(positionArgs.key);
 		if (gcode_position_iterator != gpp::gcode_positions.end())
@@ -561,6 +647,63 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 }
 
+static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result )
+{
+	//std::cout << "Executing get_snapshot_position callback.\r\n";
+	octolapse_log(SNAPSHOT_PLAN, VERBOSE, "Executing the get_snapshot_position callback.");
+	PyObject * funcArgs = Py_BuildValue("(d,d)", x_initial, y_initial);
+	if (funcArgs == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Error building callback arguments - Terminating";
+		octolapse_log(GCODE_PARSER, ERROR, message);
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return false;
+	}
+
+
+	PyGILState_STATE gstate = PyGILState_Ensure();
+	//PyObject * pyCoordinates = PyObject_CallMethodObjArgs(py_octolapse_gcode_parser_logger, pyFunctionName, pyMessage, NULL);  
+	PyObject * pyCoordinates = PyObject_CallObject(py_get_snapshot_position_callback, funcArgs);
+	PyGILState_Release(gstate);
+
+	Py_DECREF(funcArgs);
+
+	if (pyCoordinates == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to call python - Terminating";
+		octolapse_log(GCODE_PARSER, ERROR, message);
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return false;
+	}
+	//std::cout << "Extracting X coordinate.\r\n";
+	PyObject * pyX = PyDict_GetItemString(pyCoordinates,"x");
+	if (pyX == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return x value - Terminating";
+		octolapse_log(GCODE_PARSER, ERROR, message);
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return false;
+	}
+	*x_result = PyFloat_AsDouble(pyX);
+	//std::cout << "Extracting Y coordinate.\r\n";
+	PyObject * pyY = PyDict_GetItemString(pyCoordinates, "y");
+	if (pyY == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return y value - Terminating";
+		octolapse_log(GCODE_PARSER, ERROR, message);
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return false;
+	}
+	*y_result = PyFloat_AsDouble(pyY);
+	Py_DECREF(pyCoordinates);
+	return true;
+
+}
+
 /// Argument Parsing
 static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positionArgs)
 {
@@ -736,52 +879,242 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 
 static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabilizationArgs)
 {
-	PyObject * pyPositionArgs; // Hold the position args
-
-	PyObject* pyStabilizationType;
-	int iDisableRetraction;
-	int iDisableZLift;
-	int iIsBound;
-	int iFastestSpeed;
-	if (!PyArg_ParseTuple(
-		args,
-		"OiddddddUiididdd",
-		&pyPositionArgs,
-		&iIsBound,
-		&stabilizationArgs->x_min,
-		&stabilizationArgs->x_max,
-		&stabilizationArgs->y_min,
-		&stabilizationArgs->y_max,
-		&stabilizationArgs->z_min,
-		&stabilizationArgs->z_max,
-		&pyStabilizationType,
-		&iFastestSpeed,
-		&iDisableRetraction,
-		&stabilizationArgs->retraction_length,
-		&iDisableZLift,
-		&stabilizationArgs->z_lift_height,
-		&stabilizationArgs->height_increment,
-		&stabilizationArgs->notification_period_seconds))
+	// get gcode_settings - retraction_length, z_lift_height
+	PyObject * py_gcode_settings = PyDict_GetItemString(args, "gcode_settings");
+	if (py_gcode_settings == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ParseStabilizationArgs failed: unable to parse parameters.";
-		octolapse_log(GCODE_PARSER, ERROR, message);
 		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_settings from the stabilization args dict.");
 		return false;
 	}
-	Py_INCREF(pyPositionArgs);
-	Py_INCREF(pyStabilizationType);
-	stabilizationArgs->fastest_speed = iFastestSpeed > 0;
-	stabilizationArgs->is_bound = iIsBound > 0;
-	stabilizationArgs->disable_retract = iDisableRetraction > 0;
-	stabilizationArgs->disable_z_lift = iDisableZLift > 0;
-	stabilizationArgs->stabilization_type = PyUnicode_SafeAsString(pyStabilizationType);
-	gcode_position_args position_args;
-	if (!ParsePositionArgs(pyPositionArgs, &position_args))
+	PyObject * py_retraction_length;
+	py_retraction_length = PyObject_GetAttrString(py_gcode_settings, "retraction_length");
+	if (py_retraction_length == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the gcode_settings object.");
 		return false;
-	Py_DECREF(pyPositionArgs);
-	Py_DECREF(pyStabilizationType);
-	stabilizationArgs->position_args = position_args;
+	}
+	stabilizationArgs->retraction_length = PyFloat_AS_DOUBLE(py_retraction_length);
+	Py_DecRef(py_retraction_length);
+	PyObject *  py_z_lift_height;
+	py_z_lift_height = PyObject_GetAttrString(py_gcode_settings, "z_lift_height");
+	if (py_z_lift_height == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the gcode_settings object.");
+		return false;
+	}
+	stabilizationArgs->z_lift_height = PyFloat_AS_DOUBLE(py_z_lift_height);
+	Py_DECREF(py_gcode_settings);
+	
+	// Get IsBound
+	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
+	if (py_is_bound == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve is_bound from the stabilization args dict.");
+		return false;
+	}
+	stabilizationArgs->is_bound = PyLong_AsLong(py_is_bound) > 0;
+
+	if (stabilizationArgs->is_bound)
+	{
+		// Extract the bounds
+		PyObject * py_bounds = PyDict_GetItemString(args, "bounds");
+		if (py_bounds == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the stabilization args dict.");
+			return false;
+		}
+		
+		PyObject * py_x_min = PyDict_GetItemString(py_bounds, "x_min");
+		if (py_x_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->x_min = PyFloat_AsDouble(py_x_min);
+
+		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
+		if (py_x_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->x_max = PyFloat_AsDouble(py_x_max);
+
+		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
+		if (py_y_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->y_min = PyFloat_AsDouble(py_y_min);
+
+		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
+		if (py_y_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->y_max = PyFloat_AsDouble(py_y_max);
+
+		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
+		if (py_z_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->z_min = PyFloat_AsDouble(py_z_min);
+
+		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
+		if (py_z_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
+			return false;
+		}
+		stabilizationArgs->z_max = PyFloat_AsDouble(py_z_max);
+	}
+
+	// height_increment
+	PyObject * py_height_increment = PyDict_GetItemString(args, "height_increment");
+	if (py_height_increment == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->height_increment = PyFloat_AsDouble(py_height_increment);
+
+	// disable_retract
+	PyObject * py_disable_retract = PyDict_GetItemString(args, "disable_retract");
+	if (py_disable_retract == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_retract from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->disable_retract = PyLong_AsLong(py_disable_retract) > 0;
+
+	// disable_z_lift
+	PyObject * py_disable_z_lift = PyDict_GetItemString(args, "disable_z_lift");
+	if (py_disable_z_lift == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_z_lift from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->disable_z_lift = PyLong_AsLong(py_disable_z_lift) > 0;
+
+	// fastest_speed
+	PyObject * py_fastest_speed = PyDict_GetItemString(args, "fastest_speed");
+	if (py_fastest_speed == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve fastest_speed from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->fastest_speed = PyLong_AsLong(py_fastest_speed) > 0;
+
+	// notification_period_seconds
+	PyObject * py_notification_period_seconds = PyDict_GetItemString(args, "notification_period_seconds");
+	if (py_notification_period_seconds == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->notification_period_seconds = PyFloat_AsDouble(py_notification_period_seconds);
+
+	// on_progress_received
+	PyObject * py_on_progress_received = PyDict_GetItemString(args, "on_progress_received");
+	if (py_on_progress_received == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve on_progress_received from the stabilization args.");
+		return false;
+	}
+	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
+	Py_IncRef(py_on_progress_received);
+	stabilizationArgs->py_on_progress_received = py_on_progress_received;
+
+	// file_path
+	PyObject * py_file_path = PyDict_GetItemString(args, "file_path");
+	if (py_file_path == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve file_path from the stabilization args.");
+		return false;
+	}
+	stabilizationArgs->file_path = PyUnicode_SafeAsString(py_file_path);
+	
 	return true;
 }
 
+static bool ParseStabilizationArgs_SnapToPrint(PyObject *args, snap_to_print_args* snapToPrintArgs)
+{
+
+	// nearest_to_corner
+	PyObject * py_nearest_to_corner = PyDict_GetItemString(args, "nearest_to_corner");
+	if (py_nearest_to_corner == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve nearest_to_corner from the snap_to_print_args args.");
+		return false;
+	}
+	snapToPrintArgs->nearest_to_corner = PyUnicode_SafeAsString(py_nearest_to_corner);
+
+	// favor_x_axis
+	PyObject * py_favor_x_axis = PyDict_GetItemString(args, "favor_x_axis");
+	if (py_favor_x_axis == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve favor_x_axis from the stabilization args.");
+		return false;
+	}
+	snapToPrintArgs->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
+
+	return true;
+}
+
+static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_travel_args* min_travel_args)
+{
+	// gcode_generator
+	PyObject * py_gcode_generator = PyDict_GetItemString(args, "gcode_generator");
+	if (py_gcode_generator == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_generator from the stabilization args.");
+		return false;
+	}
+	// py_gcode_generator is a borrowed reference, need to incref.
+	//Py_INCREF(py_gcode_generator);
+
+	// extract the get_snapshot_position callback
+	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
+	if (py_get_snapshot_position_callback == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve get_snapshot_position function from the gcode_generator object.");
+		return false;
+	}
+	// make sure it is callable
+	if (!PyCallable_Check(py_get_snapshot_position_callback)) {
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "The get_snapshot_position attribute must be callable.");
+		return NULL;
+	}
+	// py_get_snapshot_position_callback is a new reference, no reason to decref
+	min_travel_args->py_gcode_generator = py_gcode_generator;
+	min_travel_args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
+	min_travel_args->has_py_callbacks = true;
+	return true;
+}

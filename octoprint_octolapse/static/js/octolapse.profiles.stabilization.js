@@ -57,7 +57,29 @@ $(function() {
         self.y_relative_path = ko.observable(values.y_relative_path);
         self.y_relative_path_loop = ko.observable(values.y_relative_path_loop);
         self.y_relative_path_invert_loop = ko.observable(values.y_relative_path_invert_loop);
+
+        self.get_xy_stabilization_type_options = ko.pureComputed(
+        function(){
+            if(self.stabilization_type() == "pre-calculate" && self.pre_calculated_stabilization_type() == 'minimize-travel')
+            {
+                var options = [];
+                for (var index = 0; index < Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options.length; index++)
+                {
+                    var curItem = Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options[index];
+                    if (curItem.value == 'disabled')
+                    {
+                        continue;
+                    }
+                    options.push(curItem);
+                }
+                return options;
+            }
+            return Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options;
+        },this);
+
+
     };
+
 
     Octolapse.StabilizationProfileValidationRules = {
         rules: {

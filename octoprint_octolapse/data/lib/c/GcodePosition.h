@@ -69,7 +69,7 @@ class gcode_position
 {
 public:
 	typedef void(gcode_position::*posFunctionType)(position*, parsed_command*);
-	gcode_position(gcode_position_args args);
+	gcode_position(gcode_position_args* args);
 	gcode_position();
 	~gcode_position();
 

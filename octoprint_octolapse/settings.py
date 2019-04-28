@@ -358,22 +358,22 @@ class PrinterProfile(ProfileSettings):
 
 class StabilizationPath(Settings):
     def __init__(self):
-        self.Axis = ""
-        self.Path = []
-        self.CoordinateSystem = ""
-        self.Index = 0
-        self.Loop = True
-        self.InvertLoop = True
-        self.Increment = 1
-        self.CurrentPosition = None
-        self.Type = 'disabled'
-        self.Options = {}
+        self.path = []
+        self.coordinate_system = ""
+        self.index = 0
+        self.loop = True
+        self.invert_loop = True
+        self.increment = 1
+        self.current_position = None
+        self.type = 'disabled'
+        self.options = {}
 
 
 class StabilizationProfile(ProfileSettings):
     STABILIZATION_TYPE_PRE_CALCULATED = "pre-calculate"
     STABILIZATION_TYPE_REAL_TIME = "real-time"
     LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner"
+    MINIMIZE_TRAVEL_STABILIZATION = "minimize-travel"
 
     def __init__(self, name="New Stabilization Profile"):
         super(StabilizationProfile, self).__init__(name)
@@ -425,7 +425,7 @@ class StabilizationProfile(ProfileSettings):
             ],
             'pre_calculated_stabilization_type_options': [
                 dict(value='lock-to-print-corner', name='Lock To Print - Corner'),
-                dict(value='lock-to-print-nearest-point', name='Lock To Print - Nearest Point'),
+                dict(value='minimize-travel', name='Minimize Travel Distance'),
             ],
             'lock_to_corner_type_options': [
                 dict(value='front-right', name='Front Right'),
@@ -442,8 +442,7 @@ class StabilizationProfile(ProfileSettings):
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
                 dict(value='fixed_path', name='List of Fixed Coordinates'),
                 dict(value='relative', name='Relative Coordinate (0-100)'),
-                dict(value='relative_path', name='List of Relative Coordinates'),
-                dict(value='lock_to_print_min_max', name='Locked to Corner of Print')
+                dict(value='relative_path', name='List of Relative Coordinates')
             ],
             'lock_to_print_type_options': [
                 dict(value='front_left', name='Front Left'),
@@ -454,53 +453,51 @@ class StabilizationProfile(ProfileSettings):
             'favor_axis_options': [
                 dict(value='x', name='Favor X Axis'),
                 dict(value='y', name='Favor Y Axis')
-            ]
+            ],
         }
 
     def get_stabilization_paths(self):
         x_stabilization_path = StabilizationPath()
-        x_stabilization_path.Axis = "X"
-        x_stabilization_path.Type = self.x_type
+        x_stabilization_path.type = self.x_type
         if self.x_type == 'fixed_coordinate':
-            x_stabilization_path.Path.append(self.x_fixed_coordinate)
-            x_stabilization_path.CoordinateSystem = 'absolute'
+            x_stabilization_path.path.append(self.x_fixed_coordinate)
+            x_stabilization_path.coordinate_system = 'absolute'
         elif self.x_type == 'relative':
-            x_stabilization_path.Path.append(self.x_relative)
-            x_stabilization_path.CoordinateSystem = 'bed_relative'
+            x_stabilization_path.path.append(self.x_relative)
+            x_stabilization_path.coordinate_system = 'bed_relative'
         elif self.x_type == 'fixed_path':
-            x_stabilization_path.Path = self.parse_csv_path(self.x_fixed_path)
-            x_stabilization_path.CoordinateSystem = 'absolute'
-            x_stabilization_path.Loop = self.x_fixed_path_loop
-            x_stabilization_path.InvertLoop = self.x_fixed_path_invert_loop
+            x_stabilization_path.path = self.parse_csv_path(self.x_fixed_path)
+            x_stabilization_path.coordinate_system = 'absolute'
+            x_stabilization_path.loop = self.x_fixed_path_loop
+            x_stabilization_path.invert_loop = self.x_fixed_path_invert_loop
         elif self.x_type == 'relative_path':
-            x_stabilization_path.Path = self.parse_csv_path(self.x_relative_path)
-            x_stabilization_path.CoordinateSystem = 'bed_relative'
-            x_stabilization_path.Loop = self.x_relative_path_loop
-            x_stabilization_path.InvertLoop = self.x_relative_path_invert_loop
+            x_stabilization_path.path = self.parse_csv_path(self.x_relative_path)
+            x_stabilization_path.coordinate_system = 'bed_relative'
+            x_stabilization_path.loop = self.x_relative_path_loop
+            x_stabilization_path.invert_loop = self.x_relative_path_invert_loop
 
         y_stabilization_path = StabilizationPath()
-        y_stabilization_path.Axis = "Y"
-        y_stabilization_path.Type = self.y_type
+        y_stabilization_path.type = self.y_type
         if self.y_type == 'fixed_coordinate':
-            y_stabilization_path.Path.append(self.y_fixed_coordinate)
+            y_stabilization_path.path.append(self.y_fixed_coordinate)
             y_stabilization_path.CoordinateSystem = 'absolute'
         elif self.y_type == 'relative':
-            y_stabilization_path.Path.append(self.y_relative)
-            y_stabilization_path.CoordinateSystem = 'bed_relative'
+            y_stabilization_path.path.append(self.y_relative)
+            y_stabilization_path.coordinate_system = 'bed_relative'
         elif self.y_type == 'fixed_path':
-            y_stabilization_path.Path = self.parse_csv_path(self.y_fixed_path)
-            y_stabilization_path.CoordinateSystem = 'absolute'
-            y_stabilization_path.Loop = self.y_fixed_path_loop
-            y_stabilization_path.InvertLoop = self.y_fixed_path_invert_loop
+            y_stabilization_path.path = self.parse_csv_path(self.y_fixed_path)
+            y_stabilization_path.coordinate_system = 'absolute'
+            y_stabilization_path.loop = self.y_fixed_path_loop
+            y_stabilization_path.invert_loop = self.y_fixed_path_invert_loop
         elif self.y_type == 'relative_path':
-            y_stabilization_path.Path = self.parse_csv_path(self.y_relative_path)
-            y_stabilization_path.CoordinateSystem = 'bed_relative'
-            y_stabilization_path.Loop = self.y_relative_path_loop
-            y_stabilization_path.InvertLoop = self.y_relative_path_invert_loop
+            y_stabilization_path.path = self.parse_csv_path(self.y_relative_path)
+            y_stabilization_path.coordinate_system = 'bed_relative'
+            y_stabilization_path.loop = self.y_relative_path_loop
+            y_stabilization_path.invert_loop = self.y_relative_path_invert_loop
 
         return dict(
-            X=x_stabilization_path,
-            Y=y_stabilization_path
+            x=x_stabilization_path,
+            y=y_stabilization_path
         )
 
     @staticmethod

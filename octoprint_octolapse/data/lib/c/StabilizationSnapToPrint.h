@@ -31,6 +31,16 @@
 #else
 #include <Python.h>
 #endif
+class snap_to_print_args
+{
+public:
+	snap_to_print_args();
+	snap_to_print_args(std::string nearest_to_corner, bool favor_x_axis);
+	~snap_to_print_args();
+	std::string nearest_to_corner;
+	bool favor_x_axis;
+};
+
 static const char * FRONT_LEFT = "front-left";
 static const char * FRONT_RIGHT = "front-right";
 static const char * BACK_LEFT = "back-left";
@@ -42,29 +52,32 @@ class StabilizationSnapToPrint :
 	public stabilization
 {
 public:
-	StabilizationSnapToPrint(stabilization_args* args, progressCallback progress, std::string nearest_to_corner, bool favor_x_axis);
 	StabilizationSnapToPrint(
-		stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress,
-		std::string nearest_to_corner, bool favor_x_axis);
-	StabilizationSnapToPrint(stabilization_args* args, std::string nearest_to_corner, bool favor_x_axis);
+		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
+		progressCallback progress
+	);
+	StabilizationSnapToPrint(
+		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
+		pythonProgressCallback progress
+	);
+
 	StabilizationSnapToPrint();
 	~StabilizationSnapToPrint();
 
 protected:
 	StabilizationSnapToPrint(const StabilizationSnapToPrint &source); // don't copy me
-	void initialize(std::string nearest_to_corner, bool favor_x_axis);
 	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();
 	void AddSavedPlan();
 	bool IsCloser(position* p_position);
 	bool is_layer_change_wait;
-	std::string nearest_to;
-	bool favor_x;
+	snap_to_print_args* _snap_to_print_args;
 	int current_layer;
 	double current_height;
 	unsigned int current_height_increment;
 	bool has_saved_position;
 	position * p_saved_position;
 };
+
 
 #endif

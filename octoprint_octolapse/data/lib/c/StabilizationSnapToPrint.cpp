@@ -24,25 +24,25 @@
 #include <iostream>
 #include "GcodePosition.h"
 #include "Logging.h"
-StabilizationSnapToPrint::StabilizationSnapToPrint(
-	stabilization_args* args, progressCallback progress, std::string nearest_to_corner, bool favor_x_axis
-) : stabilization(args, progress)
-{
-	nearest_to = nearest_to_corner;
-	favor_x = favor_x_axis;
-	is_layer_change_wait = false;
-	current_layer = 0;
-	current_height = 0.0;
-	current_height_increment = 0;
-	has_saved_position = false;
-	p_saved_position = NULL;
-}
 
+snap_to_print_args::snap_to_print_args()
+{
+	nearest_to_corner = "back-left";
+	favor_x_axis = false;
+}
+snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x)
+{
+	nearest_to_corner = nearest_to;
+	favor_x_axis = favor_x;
+}
+snap_to_print_args::~snap_to_print_args()
+{
+
+}
 
 StabilizationSnapToPrint::StabilizationSnapToPrint() : stabilization()
 {
-	nearest_to = "front-left";
-	favor_x = false;
+	_snap_to_print_args = NULL;
 	is_layer_change_wait = false;
 	current_layer = 0;
 	current_height = 0.0;
@@ -52,11 +52,25 @@ StabilizationSnapToPrint::StabilizationSnapToPrint() : stabilization()
 }
 
 StabilizationSnapToPrint::StabilizationSnapToPrint(
-	stabilization_args* args, pythonProgressCallback progress, PyObject * python_progress,
-	std::string nearest_to_corner, bool favor_x_axis) :stabilization(args, progress, python_progress)
+	gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
+	progressCallback progress
+) : stabilization(position_args, stab_args, progress)
 {
-	nearest_to = nearest_to_corner;
-	favor_x = favor_x_axis;
+	_snap_to_print_args = snap_args;
+	is_layer_change_wait = false;
+	current_layer = 0;
+	current_height = 0.0;
+	current_height_increment = 0;
+	has_saved_position = false;
+	p_saved_position = NULL;
+}
+
+StabilizationSnapToPrint::StabilizationSnapToPrint(
+	gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
+	pythonProgressCallback progress
+) :stabilization(position_args, stab_args, progress)
+{
+	_snap_to_print_args = snap_args;
 	is_layer_change_wait = false;
 	current_layer = 0;
 	current_height = 0.0;
@@ -180,9 +194,9 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 		else if (gcode_position::less_than(p_position->f, p_saved_position->f))
 			return false;
 	}
-	if (nearest_to == FRONT_LEFT)
+	if (_snap_to_print_args->nearest_to_corner == FRONT_LEFT)
 	{
-		if (favor_x)
+		if (_snap_to_print_args->favor_x_axis)
 		{
 			if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return false;
@@ -201,9 +215,9 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 				return true;
 		}
 	}
-	else if (nearest_to == FRONT_RIGHT)
+	else if (_snap_to_print_args->nearest_to_corner == FRONT_RIGHT)
 	{
-		if (favor_x)
+		if (_snap_to_print_args->favor_x_axis)
 		{
 			if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return false;
@@ -222,9 +236,9 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 				return true;
 		}
 	}
-	else if (nearest_to == BACK_LEFT)
+	else if (_snap_to_print_args->nearest_to_corner == BACK_LEFT)
 	{
-		if (favor_x)
+		if (_snap_to_print_args->favor_x_axis)
 		{
 			if (gcode_position::greater_than(p_position->x, p_saved_position->x))
 				return false;
@@ -243,9 +257,9 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 				return true;
 		}
 	}
-	else if (nearest_to == BACK_RIGHT)
+	else if (_snap_to_print_args->nearest_to_corner == BACK_RIGHT)
 	{
-		if (favor_x)
+		if (_snap_to_print_args->favor_x_axis)
 		{
 			if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return false;

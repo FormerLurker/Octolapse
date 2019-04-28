@@ -135,7 +135,7 @@
       </div>
     </div>
   </div>
-  <div data-bind="visible: stabilization_type() == 'real-time'">
+  <div data-bind="visible: stabilization_type() == 'real-time' || (stabilization_type() == 'pre-calculate' && pre_calculated_stabilization_type()=='minimize-travel')">
     <div>
       <h4>X Axis Stabilization</h4>
       <p>Controls the X axis stabilizations, which is the position on the X axis where the bed/extruder will be when we take a snapshot.</p>
@@ -143,7 +143,7 @@
     <div class="control-group">
       <label class="control-label">X Stabilization Type</label>
       <div class="controls">
-        <select id="stabilization_profile_x_type" name ="x_type" class="ignore_hidden_errors"  data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
+        <select id="stabilization_profile_x_type" name ="x_type" class="ignore_hidden_errors"  data-bind="options: get_xy_stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: x_type"></select>
@@ -232,7 +232,7 @@
       </div>
     </div>
   </div>
-  <div data-bind="visible: stabilization_type() == 'real-time'">
+  <div data-bind="visible: stabilization_type() == 'real-time' || (stabilization_type() == 'pre-calculate' && pre_calculated_stabilization_type()=='minimize-travel')">
     <div>
       <h4>Y Axis Stabilization</h4>
       <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>
@@ -240,7 +240,7 @@
     <div class="control-group">
       <label class="control-label">Y Stabilization Type</label>
       <div class="controls">
-        <select id="stabilization_profile_y_type" name="y_type" class="ignore_hidden_errors" data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
+        <select id="stabilization_profile_y_type" name="y_type" class="ignore_hidden_errors" data-bind="options: get_xy_stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: y_type"></select>

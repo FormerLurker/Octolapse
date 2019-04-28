@@ -22,14 +22,14 @@
 ##################################################################################
 from __future__ import unicode_literals
 from octoprint_octolapse.position import Pos, Position
+from octoprint_octolapse.gcode_parser import ParsedCommand
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
-import octoprint_octolapse.stabilization_preprocessing as Preprocessing
-
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
+
 
 class SnapshotGcode(object):
     INITIALIZATION_GCODE = 'initialization-gcode'
@@ -73,6 +73,122 @@ class SnapshotGcode(object):
 
     def snapshot_index(self):
         return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) - 1
+
+
+class SnapshotPlanStep(object):
+    def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.e = e
+        self.f = f
+        self.action = action
+
+    def to_dict(self):
+        return {
+            "action": self.action,
+            "x": self.x,
+            "y": self.y,
+            "z": self.z,
+            "e": self.e,
+            "f": self.f,
+        }
+
+
+class SnapshotPlan(object):
+    TRAVEL_ACTION = "travel"
+    SNAPSHOT_ACTION = "snapshot"
+
+    def __init__(self,
+                 initial_position,
+                 snapshot_positions,
+                 return_position,
+                 file_line_number,
+                 file_gcode_number,
+                 z_lift_height,
+                 retraction_length,
+                 parsed_command,
+                 send_parsed_command='first'):
+        self.file_line_number = file_line_number
+        self.file_gcode_number = file_gcode_number
+        self.initial_position = initial_position
+        self.snapshot_positions = snapshot_positions
+        self.return_position = return_position
+        self.steps = []
+        self.parsed_command = parsed_command
+        self.send_parsed_command = send_parsed_command
+        self.lift_amount = z_lift_height
+        self.retract_amount = retraction_length
+
+    def add_step(self, step):
+        assert (isinstance(step, SnapshotPlanStep))
+        self.steps.append(step)
+
+    def to_dict(self):
+        try:
+            return {
+                "initial_position": self.initial_position.to_dict(),
+                "snapshot_positions": [x.to_dict() for x in self.snapshot_positions],
+                "return_position": self.return_position.to_dict(),
+                "steps": [x.to_dict() for x in self.steps],
+                "parsed_command": self.parsed_command.to_dict(),
+                "send_parsed_command": self.send_parsed_command,
+                "file_line_number": self.file_line_number,
+                "file_gcode_number": self.file_gcode_number,
+                "lift_amount": self.lift_amount,
+                "retract_amount": self.retract_amount,
+            }
+        except Exception as e:
+            logger.exception("An error occurred while converting the snapshot plan to a dict.")
+            raise e
+
+    @classmethod
+    def create_from_cpp_snapshot_plans(cls, cpp_snapshot_plans):
+        # turn the snapshot plans into a class
+        snapshot_plans = []
+        try:
+            for cpp_plan in cpp_snapshot_plans:
+                # extract the arguments
+                file_line_number = cpp_plan[0]
+                file_gcode_number = cpp_plan[1]
+                initial_position = Pos.create_from_cpp_pos(cpp_plan[2])
+                snapshot_positions = []
+                for cpp_snapshot_position in cpp_plan[3]:
+                    try:
+                        pos = Pos.create_from_cpp_pos(cpp_snapshot_position)
+                    except Exception as e:
+                        logger.exception("Error converting position to Pos.")
+                        raise  e
+                        return None
+                    snapshot_positions.append(pos)
+                return_position = Pos.create_from_cpp_pos(cpp_plan[4])
+                parsed_command = ParsedCommand.create_from_cpp_parsed_command(cpp_plan[6])
+                send_parsed_command = cpp_plan[7]
+                z_lift_height = cpp_plan[8]
+                retraction_length = cpp_plan[9]
+                snapshot_plan = SnapshotPlan(initial_position,
+                                             snapshot_positions,
+                                             return_position,
+                                             file_line_number,
+                                             file_gcode_number,
+                                             z_lift_height,
+                                             retraction_length,
+                                             parsed_command,
+                                             send_parsed_command)
+                for step in cpp_plan[5]:
+                    action = step[0]
+                    x = step[1]
+                    y = step[2]
+                    z = step[3]
+                    e = step[4]
+                    f = step[5]
+                    snapshot_plan.add_step(SnapshotPlanStep(action, x, y, z, e, f))
+
+                snapshot_plans.append(snapshot_plan)
+        except Exception as e:
+            logger.exception("Failed to create snapshot plans")
+            raise e
+        return snapshot_plans
 
 
 class SnapshotGcodeGenerator(object):
@@ -185,7 +301,7 @@ class SnapshotGcodeGenerator(object):
         return not self.has_initialization_errors()
 
     def initialize_for_snapshot_plan_processing(self, snapshot_plan, parsed_command, g90_influences_extruder):
-        assert(isinstance(snapshot_plan, Preprocessing.SnapshotPlan))
+        assert(isinstance(snapshot_plan, SnapshotPlan))
         # reset any errors
         self.has_snapshot_position_errors = False
         self.snapshot_position_errors = ""
@@ -253,92 +369,92 @@ class SnapshotGcodeGenerator(object):
         return False
 
     def get_snapshot_position(self, x_pos, y_pos):
-        x_path = self.StabilizationPaths["X"]
-        x_path.CurrentPosition = x_pos
-        y_path = self.StabilizationPaths["Y"]
-        y_path.CurrentPosition = y_pos
+        x_path = self.StabilizationPaths["x"]
+        x_path.current_position = x_pos
+        y_path = self.StabilizationPaths["y"]
+        y_path.current_position = y_pos
 
-        coordinates = dict(X=self.get_snapshot_coordinate(x_path),
-                           Y=self.get_snapshot_coordinate(y_path))
+        coordinates = dict(x=self.get_snapshot_coordinate(x_path, "x"),
+                           y=self.get_snapshot_coordinate(y_path, "y"))
 
-        if not utility.is_in_bounds(self.BoundingBox, coordinates["X"], None, None):
+        if not utility.is_in_bounds(self.BoundingBox, coordinates["x"], None, None):
 
             message = "The snapshot X position ({0}) is out of bounds!".format(
-                coordinates["X"])
+                coordinates["x"])
             self.has_snapshot_position_errors = True
             logger.error("gcode.py - GetSnapshotPosition - %s", message)
             if self.Printer.abort_out_of_bounds:
-                coordinates["X"] = None
+                coordinates["x"] = None
             else:
-                coordinates["X"] = utility.get_closest_in_bounds_position(
-                    self.BoundingBox, x=coordinates["X"])["X"]
+                coordinates["x"] = utility.get_closest_in_bounds_position(
+                    self.BoundingBox, x=coordinates["x"])["x"]
                 message += "  Using nearest in-bound position ({0}).".format(
-                    coordinates["X"])
+                    coordinates["x"])
             self.snapshot_position_errors += message
-        if not utility.is_in_bounds(self.BoundingBox, None, coordinates["Y"], None):
+        if not utility.is_in_bounds(self.BoundingBox, None, coordinates["y"], None):
             message = "The snapshot Y position ({0}) is out of bounds!".format(
-                coordinates["Y"])
+                coordinates["y"])
             self.has_snapshot_position_errors = True
             logger.error(message)
             if self.Printer.abort_out_of_bounds:
-                coordinates["Y"] = None
+                coordinates["y"] = None
             else:
-                coordinates["Y"] = utility.get_closest_in_bounds_position(
-                    self.BoundingBox, y=coordinates["Y"])["Y"]
+                coordinates["y"] = utility.get_closest_in_bounds_position(
+                    self.BoundingBox, y=coordinates["y"])["y"]
                 message += "  Using nearest in-bound position ({0}).".format(
-                    coordinates["Y"])
+                    coordinates["y"])
             if len(self.snapshot_position_errors) > 0:
                 self.snapshot_position_errors += "  "
             self.snapshot_position_errors += message
         return coordinates
 
-    def get_snapshot_coordinate(self, path):
-        if path.Type == 'disabled':
-            return path.CurrentPosition
+    def get_snapshot_coordinate(self, path, axis):
+        if path.type == 'disabled':
+            return path.current_position
 
         # Get the current coordinate from the path
-        coord = path.Path[path.Index]
+        coord = path.path[path.index]
         # move our index forward or backward
-        path.Index += path.Increment
+        path.index += path.increment
 
-        if path.Index >= len(path.Path):
-            if path.Loop:
-                if path.InvertLoop:
-                    if len(path.Path) > 1:
-                        path.Index = len(path.Path) - 2
+        if path.index >= len(path.path):
+            if path.loop:
+                if path.invert_loop:
+                    if len(path.path) > 1:
+                        path.index = len(path.path) - 2
                     else:
-                        path.Index = 0
-                    path.Increment = -1
+                        path.index = 0
+                    path.increment = -1
                 else:
-                    path.Index = 0
+                    path.index = 0
             else:
-                path.Index = len(path.Path) - 1
-        elif path.Index < 0:
-            if path.Loop:
-                if path.InvertLoop:
-                    if len(path.Path) > 1:
-                        path.Index = 1
+                path.index = len(path.path) - 1
+        elif path.index < 0:
+            if path.loop:
+                if path.invert_loop:
+                    if len(path.path) > 1:
+                        path.index = 1
                     else:
-                        path.Index = 0
-                    path.Increment = 1
+                        path.index = 0
+                    path.increment = 1
                 else:
-                    path.Index = len(path.Path) - 1
+                    path.index = len(path.path) - 1
             else:
-                path.Index = 0
+                path.index = 0
 
-        if path.CoordinateSystem == "absolute":
+        if path.coordinate_system == "absolute":
             return coord
-        elif path.CoordinateSystem == "bed_relative":
+        elif path.coordinate_system == "bed_relative":
             if self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle":
                 raise ValueError(
                     'Cannot calculate relative coordinates within a circular bed (yet...), sorry')
-            return self.get_bed_relative_coordinate(path.Axis, coord)
+            return self.get_bed_relative_coordinate(axis, coord)
 
     def get_bed_relative_coordinate(self, axis, coord):
         rel_coordinate = None
-        if axis == "X":
+        if axis == "x":
             rel_coordinate = self.get_bed_relative_x(coord)
-        elif axis == "Y":
+        elif axis == "y":
             rel_coordinate = self.get_bed_relative_y(coord)
         elif axis == "Z":
             rel_coordinate = self.get_bed_relative_z(coord)
@@ -427,7 +543,7 @@ class SnapshotGcodeGenerator(object):
         )
 
     def add_travel_action(self, step):
-        assert(isinstance(step, Preprocessing.SnapshotPlanStep))
+        assert(isinstance(step, SnapshotPlanStep))
         # Move to Snapshot Position
         self.set_xyz_to_absolute(SnapshotGcode.SNAPSHOT_COMMANDS)
         self.snapshot_gcode.append(
@@ -435,7 +551,7 @@ class SnapshotGcodeGenerator(object):
             self.get_gcode_travel(
                 step.x,
                 step.y,
-                self.get_altered_feedrate(step.f)
+                self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
             )
         )
         self.x_current = step.x
@@ -644,8 +760,8 @@ class SnapshotGcodeGenerator(object):
 
         # get the X and Y coordinates of the snapshot
         snapshot_position = self.get_snapshot_position(self.x_return, self.y_return)
-        self.snapshot_gcode.X = snapshot_position["X"]
-        self.snapshot_gcode.Y = snapshot_position["Y"]
+        self.snapshot_gcode.X = snapshot_position["x"]
+        self.snapshot_gcode.Y = snapshot_position["y"]
 
         if not self.has_snapshot_position_errors:
             # retract if necessary
@@ -792,12 +908,12 @@ class SnapshotGcodeGenerator(object):
             self.lift_z()
 
             has_taken_snapshot = False
-            assert(isinstance(snapshot_plan, Preprocessing.SnapshotPlan))
+            assert(isinstance(snapshot_plan, SnapshotPlan))
             for step in snapshot_plan.steps:
-                assert(isinstance(step, Preprocessing.SnapshotPlanStep))
-                if step.action == Preprocessing.TRAVEL_ACTION:
+                assert(isinstance(step, SnapshotPlanStep))
+                if step.action == SnapshotPlan.TRAVEL_ACTION:
                     self.add_travel_action(step)
-                if step.action == Preprocessing.SNAPSHOT_ACTION:
+                if step.action == SnapshotPlan.SNAPSHOT_ACTION:
                     self.add_snapshot_action()
 
             # Create Return Gcode
