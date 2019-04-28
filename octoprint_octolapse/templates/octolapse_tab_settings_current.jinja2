@@ -83,25 +83,6 @@
                         </a>
                     </td>
                 </tr>
-                <tr data-bind="visible: Octolapse.Status.stabilization_requires_snapshot_profile()">
-                    <td>Snapshot</td>
-                    <td>
-                        <select id="octolapse_tab_snapshot_profile"
-                                class="input-block-level"
-                                data-bind="
-                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
-                                options: Octolapse.Status.snapshots_sorted,
-                                optionsText: 'name',
-                                optionsValue: 'guid',
-                                event: {change: Octolapse.Status.defaultSnapshotChanged},
-                                value: Octolapse.Status.current_snapshot_profile_guid"></select>
-                    </td>
-                    <td>
-                        <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_snapshot_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentSnapshotProfile">
-                            <i class="fa fa-gear fa-2x"></i>
-                        </a>
-                    </td>
-                </tr>
                 <tr>
                     <td>Rendering</td>
                     <td>

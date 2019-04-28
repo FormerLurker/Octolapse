@@ -51,7 +51,7 @@ class StabilizationPreprocessingThread(Thread):
         assert (isinstance(printer, PrinterProfile))
         assert (isinstance(stabilization, StabilizationProfile))
         assert (
-            stabilization.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
+            stabilization.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types()
         )
         self.gcode_generator = SnapshotGcodeGenerator(timelapse_settings["settings"], timelapse_settings["octoprint_printer_profile"])
         self.progress_callback = progress_callback
@@ -195,8 +195,10 @@ class StabilizationPreprocessingThread(Thread):
     def _run_stabilization(self):
         results = None
         stabilization_args = self._create_stabilization_args()
-        is_precalculated = self.stabilization_profile.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
-        pre_calculation_type = self.stabilization_profile.pre_calculated_stabilization_type
+        stabilization_type = self.stabilization_profile.stabilization_type
+        is_precalculated = (
+            self.stabilization_profile.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types()
+        )
         # If the current stabilization is not precalculated, return an error
         if not is_precalculated:
             self.error = "The current stabilization is not a pre-calculated stabilization."
@@ -208,7 +210,7 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # gcodes_processed
                 0  # lines_processed
             )
-        elif pre_calculation_type == StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION:
+        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT:
             lock_to_print_args = {
                 'nearest_to_corner': self.stabilization_profile.lock_to_corner_type,
                 'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x"
@@ -219,7 +221,7 @@ class StabilizationPreprocessingThread(Thread):
                 stabilization_args,
                 lock_to_print_args
             )
-        elif pre_calculation_type == StabilizationProfile.MINIMIZE_TRAVEL_STABILIZATION:
+        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL:
             # run minimize travel stabilization
             minimize_travel_args = {
                 'gcode_generator': self.gcode_generator
@@ -231,7 +233,7 @@ class StabilizationPreprocessingThread(Thread):
             )
         else:
             self.error = "Can't find a preprocessor named {0}, unable to preprocess gcode.".format(
-                self.stabilization_profile.pre_calculated_stabilization_type)
+                self.stabilization_profile.stabilization_type)
             results = (
                 False,  # success
                 self.error,  # errors

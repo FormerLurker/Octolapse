@@ -36,7 +36,7 @@ class Triggers(object):
     TRIGGER_TYPE_IN_PATH = 'in-path'
 
     def __init__(self, settings):
-        self.snapshot = None
+        self.stabilization = None
         self._triggers = []
         self.reset()
         self._settings = settings
@@ -47,24 +47,24 @@ class Triggers(object):
         return len(self._triggers)
 
     def reset(self):
-        self.snapshot = None
+        self.stabilization = None
         self._triggers = []
 
     def create(self):
         self.reset()
         self.printer = self._settings.profiles.current_printer()
-        self.snapshot = self._settings.profiles.current_snapshot()
-        self.name = self.snapshot.name
+        self.stabilization = self._settings.profiles.current_stabilization()
+        self.name = self.stabilization.name
         # create the triggers
         # If the gcode trigger is enabled, add it
-        if self.snapshot.trigger_type == SnapshotProfile.GCODE_TRIGGER_TYPE:
+        if self.stabilization.trigger_type == StabilizationProfile.GCODE_TRIGGER_TYPE:
             # Add the trigger to the list
             self._triggers.append(GcodeTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.snapshot.trigger_type == SnapshotProfile.LAYER_TRIGGER_TYPE:
+        elif self.stabilization.trigger_type == StabilizationProfile.LAYER_TRIGGER_TYPE:
             self._triggers.append(LayerTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.snapshot.trigger_type == SnapshotProfile.TIMER_TRIGGER_TYPE:
+        elif self.stabilization.trigger_type == StabilizationProfile.TIMER_TRIGGER_TYPE:
             self._triggers.append(TimerTrigger(self._settings))
 
     def resume(self):
@@ -210,7 +210,7 @@ class Trigger(object):
     def __init__(self, octolapse_settings, max_states=5):
         self._settings = octolapse_settings
         self.printer = self._settings.profiles.current_printer()
-        self.snapshot = self._settings.profiles.current_snapshot()
+        self.stabilization = self._settings.profiles.current_stabilization()
 
         self.type = 'Trigger'
         self._state_history = []
@@ -219,7 +219,7 @@ class Trigger(object):
         self.trigger_count = 0
 
     def name(self):
-        return self.snapshot.name + " Trigger"
+        return self.stabilization.name + " Trigger"
 
     def add_state(self, state):
         self._state_history.insert(0, state)
@@ -297,20 +297,20 @@ class GcodeTrigger(Trigger):
         super(GcodeTrigger, self).__init__(octolapse_settings)
         self.snapshot_command = self.printer.snapshot_command
         self.type = "gcode"
-        self.require_zhop = self.snapshot.require_zhop
+        self.require_zhop = self.stabilization.require_zhop
 
-        if self.snapshot.extruder_state_requirements_enabled:
+        if self.stabilization.extruder_state_requirements_enabled:
             self.extruder_triggers = ExtruderTriggers(
-                self.snapshot.trigger_on_extruding_start,
-                self.snapshot.trigger_on_extruding,
-                self.snapshot.trigger_on_primed,
-                self.snapshot.trigger_on_retracting_start,
-                self.snapshot.trigger_on_retracting,
-                self.snapshot.trigger_on_partially_retracted,
-                self.snapshot.trigger_on_retracted,
-                self.snapshot.trigger_on_deretracting_start,
-                self.snapshot.trigger_on_deretracting,
-                self.snapshot.trigger_on_deretracted
+                self.stabilization.trigger_on_extruding_start,
+                self.stabilization.trigger_on_extruding,
+                self.stabilization.trigger_on_primed,
+                self.stabilization.trigger_on_retracting_start,
+                self.stabilization.trigger_on_retracting,
+                self.stabilization.trigger_on_partially_retracted,
+                self.stabilization.trigger_on_retracted,
+                self.stabilization.trigger_on_deretracting_start,
+                self.stabilization.trigger_on_deretracting,
+                self.stabilization.trigger_on_deretracted
             )
             message = (
                 "Extruder Triggers - on_extruding_start:%s, on_extruding:%s, on_primed:%s, "
@@ -319,16 +319,16 @@ class GcodeTrigger(Trigger):
             )
             logger.debug(
                 message,
-                self.snapshot.trigger_on_extruding_start,
-                self.snapshot.trigger_on_extruding,
-                self.snapshot.trigger_on_primed,
-                self.snapshot.trigger_on_retracting_start,
-                self.snapshot.trigger_on_retracting,
-                self.snapshot.trigger_on_partially_retracted,
-                self.snapshot.trigger_on_retracted,
-                self.snapshot.trigger_on_deretracting_start,
-                self.snapshot.trigger_on_deretracting,
-                self.snapshot.trigger_on_deretracted
+                self.stabilization.trigger_on_extruding_start,
+                self.stabilization.trigger_on_extruding,
+                self.stabilization.trigger_on_primed,
+                self.stabilization.trigger_on_retracting_start,
+                self.stabilization.trigger_on_retracting,
+                self.stabilization.trigger_on_partially_retracted,
+                self.stabilization.trigger_on_retracted,
+                self.stabilization.trigger_on_deretracting_start,
+                self.stabilization.trigger_on_deretracting,
+                self.stabilization.trigger_on_deretracted
             )
 
         # Logging
@@ -336,7 +336,7 @@ class GcodeTrigger(Trigger):
         logger.info(
             message,
             self.printer.snapshot_command,
-            self.snapshot.require_zhop
+            self.stabilization.require_zhop
         )
 
         # add an initial state
@@ -461,18 +461,18 @@ class LayerTrigger(Trigger):
     def __init__(self, octolapse_settings):
         super(LayerTrigger, self).__init__(octolapse_settings)
         self.type = "layer"
-        if self.snapshot.extruder_state_requirements_enabled:
+        if self.stabilization.extruder_state_requirements_enabled:
             self.extruder_triggers = ExtruderTriggers(
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_extruding_start),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_extruding),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_primed),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_retracting_start),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_retracting),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_partially_retracted),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_retracted),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_deretracting_start),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_deretracting),
-                SnapshotProfile.get_extruder_trigger_value(self.snapshot.trigger_on_deretracted)
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_extruding_start),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_extruding),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_primed),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_retracting_start),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_retracting),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_partially_retracted),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_retracted),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_deretracting_start),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_deretracting),
+                StabilizationProfile.get_extruder_trigger_value(self.stabilization.trigger_on_deretracted)
             )
             message = (
                 "Extruder Triggers - on_extruding_start:%s, "
@@ -483,20 +483,20 @@ class LayerTrigger(Trigger):
             )
             logger.info(
                 message,
-                self.snapshot.trigger_on_extruding_start,
-                self.snapshot.trigger_on_extruding,
-                self.snapshot.trigger_on_primed,
-                self.snapshot.trigger_on_retracting_start,
-                self.snapshot.trigger_on_retracting,
-                self.snapshot.trigger_on_partially_retracted,
-                self.snapshot.trigger_on_retracted,
-                self.snapshot.trigger_on_deretracting_start,
-                self.snapshot.trigger_on_deretracting,
-                self.snapshot.trigger_on_deretracted
+                self.stabilization.trigger_on_extruding_start,
+                self.stabilization.trigger_on_extruding,
+                self.stabilization.trigger_on_primed,
+                self.stabilization.trigger_on_retracting_start,
+                self.stabilization.trigger_on_retracting,
+                self.stabilization.trigger_on_partially_retracted,
+                self.stabilization.trigger_on_retracted,
+                self.stabilization.trigger_on_deretracting_start,
+                self.stabilization.trigger_on_deretracting,
+                self.stabilization.trigger_on_deretracted
             )
         # Configuration Variables
-        self.require_zhop = self.snapshot.require_zhop
-        self.height_increment = self.snapshot.layer_trigger_height
+        self.require_zhop = self.stabilization.require_zhop
+        self.height_increment = self.stabilization.layer_trigger_height
         if self.height_increment == 0:
             self.height_increment = None
         # debug output
@@ -505,8 +505,8 @@ class LayerTrigger(Trigger):
         )
         logger.info(
             message,
-            self.snapshot.layer_trigger_height,
-            self.snapshot.require_zhop
+            self.stabilization.layer_trigger_height,
+            self.stabilization.require_zhop
         )
         self.add_state(LayerTriggerState())
 
@@ -678,18 +678,18 @@ class TimerTrigger(Trigger):
     def __init__(self, octolapse_settings):
         super(TimerTrigger, self).__init__(octolapse_settings)
         self.type = "timer"
-        if self.snapshot.extruder_state_requirements_enabled:
+        if self.stabilization.extruder_state_requirements_enabled:
             self.extruder_triggers = ExtruderTriggers(
-                self.snapshot.trigger_on_extruding_start,
-                self.snapshot.trigger_on_extruding,
-                self.snapshot.trigger_on_primed,
-                self.snapshot.trigger_on_retracting_start,
-                self.snapshot.trigger_on_retracting,
-                self.snapshot.trigger_on_partially_retracted,
-                self.snapshot.trigger_on_retracted,
-                self.snapshot.trigger_on_deretracting_start,
-                self.snapshot.trigger_on_deretracting,
-                self.snapshot.trigger_on_deretracted
+                self.stabilization.trigger_on_extruding_start,
+                self.stabilization.trigger_on_extruding,
+                self.stabilization.trigger_on_primed,
+                self.stabilization.trigger_on_retracting_start,
+                self.stabilization.trigger_on_retracting,
+                self.stabilization.trigger_on_partially_retracted,
+                self.stabilization.trigger_on_retracted,
+                self.stabilization.trigger_on_deretracting_start,
+                self.stabilization.trigger_on_deretracting,
+                self.stabilization.trigger_on_deretracted
             )
             message = (
                 "Extruder Triggers - on_extruding_start:%s, "
@@ -700,20 +700,20 @@ class TimerTrigger(Trigger):
             )
             logger.info(
                 message,
-                self.snapshot.trigger_on_extruding_start,
-                self.snapshot.trigger_on_extruding,
-                self.snapshot.trigger_on_primed,
-                self.snapshot.trigger_on_retracting_start,
-                self.snapshot.trigger_on_retracting,
-                self.snapshot.trigger_on_partially_retracted,
-                self.snapshot.trigger_on_retracted,
-                self.snapshot.trigger_on_deretracting_start,
-                self.snapshot.trigger_on_deretracting,
-                self.snapshot.trigger_on_deretracted
+                self.stabilization.trigger_on_extruding_start,
+                self.stabilization.trigger_on_extruding,
+                self.stabilization.trigger_on_primed,
+                self.stabilization.trigger_on_retracting_start,
+                self.stabilization.trigger_on_retracting,
+                self.stabilization.trigger_on_partially_retracted,
+                self.stabilization.trigger_on_retracted,
+                self.stabilization.trigger_on_deretracting_start,
+                self.stabilization.trigger_on_deretracting,
+                self.stabilization.trigger_on_deretracted
             )
 
-        self.interval_seconds = self.snapshot.timer_trigger_seconds
-        self.require_zhop = self.snapshot.require_zhop
+        self.interval_seconds = self.stabilization.timer_trigger_seconds
+        self.require_zhop = self.stabilization.require_zhop
 
         # Log output
         message = (
@@ -721,8 +721,8 @@ class TimerTrigger(Trigger):
         )
         logger.info(
             message,
-            self.snapshot.timer_trigger_seconds,
-            self.snapshot.require_zhop
+            self.stabilization.timer_trigger_seconds,
+            self.stabilization.require_zhop
         )
 
         # add initial state

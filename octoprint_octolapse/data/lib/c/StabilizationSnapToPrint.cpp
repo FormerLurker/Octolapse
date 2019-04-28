@@ -253,7 +253,7 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 				return false;
 			else if (gcode_position::greater_than(p_position->y, p_saved_position->y))
 				return true;
-			else if (p_position->x < p_saved_position->x)
+			else if (gcode_position::less_than(p_position->x, p_saved_position->x))
 				return true;
 		}
 	}
@@ -284,7 +284,6 @@ bool StabilizationSnapToPrint::IsCloser(position * p_position)
 void StabilizationSnapToPrint::AddSavedPlan()
 {
 	snapshot_plan* p_plan = new snapshot_plan();
-
 	// create the initial position
 	p_plan->p_initial_position = new position(*p_saved_position);
 	// create the snapshot position (only 1)

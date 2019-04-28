@@ -369,149 +369,6 @@ class StabilizationPath(Settings):
         self.options = {}
 
 
-class StabilizationProfile(ProfileSettings):
-    STABILIZATION_TYPE_PRE_CALCULATED = "pre-calculate"
-    STABILIZATION_TYPE_REAL_TIME = "real-time"
-    LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner"
-    MINIMIZE_TRAVEL_STABILIZATION = "minimize-travel"
-
-    def __init__(self, name="New Stabilization Profile"):
-        super(StabilizationProfile, self).__init__(name)
-        self.stabilization_type = StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED
-        self.pre_calculated_stabilization_type = StabilizationProfile.LOCK_TO_PRINT_CORNER_STABILIZATION
-        # Pre-Calculated stabilization options
-        self.fastest_speed = True
-        self.lock_to_corner_type = 'back-left'
-        self.lock_to_corner_favor_axis = 'x'
-        self.lock_to_corner_disable_z_lift = True
-        self.lock_to_corner_disable_retract = False
-        self.lock_to_corner_height_increment = 0
-        # Real Time stabilization options
-        self.x_type = "relative"
-        self.x_fixed_coordinate = 0.0
-        self.x_fixed_path = "0"
-        self.x_fixed_path_loop = True
-        self.x_fixed_path_invert_loop = True
-        self.x_relative = 50.0
-        self.x_relative_print = 50.0
-        self.x_relative_path = "50.0"
-        self.x_relative_path_loop = True
-        self.x_relative_path_invert_loop = True
-        self.y_type = 'relative'
-        self.y_fixed_coordinate = 0.0
-        self.y_fixed_path = "0"
-        self.y_fixed_path_loop = True
-        self.y_fixed_path_invert_loop = True
-        self.y_relative = 50.0
-        self.y_relative_print = 50.0
-        self.y_relative_path = "50"
-        self.y_relative_path_loop = True
-        self.y_relative_path_invert_loop = True
-
-    def requires_snapshot_profile(self):
-        if(
-            self.stabilization_type == "pre-calculate" and
-            self.pre_calculated_stabilization_type in ['lock-to-print-corner']
-        ):
-            return False
-        return True
-
-    @staticmethod
-    def get_options():
-        return {
-            'stabilization_type_options': [
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED, name='Pre-Calculated'),
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time')
-            ],
-            'pre_calculated_stabilization_type_options': [
-                dict(value='lock-to-print-corner', name='Lock To Print - Corner'),
-                dict(value='minimize-travel', name='Minimize Travel Distance'),
-            ],
-            'lock_to_corner_type_options': [
-                dict(value='front-right', name='Front Right'),
-                dict(value='front-left', name='Front Left'),
-                dict(value='back-right', name='Back Right'),
-                dict(value='back-left', name='Back Left'),
-            ],
-            'lock_to_corner_favor_axis_options': [
-                dict(value='x', name='Favor X'),
-                dict(value='y', name='Favor Y')
-            ],
-            'real_time_xy_stabilization_type_options': [
-                dict(value='disabled', name='Disabled'),
-                dict(value='fixed_coordinate', name='Fixed Coordinate'),
-                dict(value='fixed_path', name='List of Fixed Coordinates'),
-                dict(value='relative', name='Relative Coordinate (0-100)'),
-                dict(value='relative_path', name='List of Relative Coordinates')
-            ],
-            'lock_to_print_type_options': [
-                dict(value='front_left', name='Front Left'),
-                dict(value='front_right', name='Front Right'),
-                dict(value='back_left', name='Back Left'),
-                dict(value='back_right', name='Back Right'),
-            ],
-            'favor_axis_options': [
-                dict(value='x', name='Favor X Axis'),
-                dict(value='y', name='Favor Y Axis')
-            ],
-        }
-
-    def get_stabilization_paths(self):
-        x_stabilization_path = StabilizationPath()
-        x_stabilization_path.type = self.x_type
-        if self.x_type == 'fixed_coordinate':
-            x_stabilization_path.path.append(self.x_fixed_coordinate)
-            x_stabilization_path.coordinate_system = 'absolute'
-        elif self.x_type == 'relative':
-            x_stabilization_path.path.append(self.x_relative)
-            x_stabilization_path.coordinate_system = 'bed_relative'
-        elif self.x_type == 'fixed_path':
-            x_stabilization_path.path = self.parse_csv_path(self.x_fixed_path)
-            x_stabilization_path.coordinate_system = 'absolute'
-            x_stabilization_path.loop = self.x_fixed_path_loop
-            x_stabilization_path.invert_loop = self.x_fixed_path_invert_loop
-        elif self.x_type == 'relative_path':
-            x_stabilization_path.path = self.parse_csv_path(self.x_relative_path)
-            x_stabilization_path.coordinate_system = 'bed_relative'
-            x_stabilization_path.loop = self.x_relative_path_loop
-            x_stabilization_path.invert_loop = self.x_relative_path_invert_loop
-
-        y_stabilization_path = StabilizationPath()
-        y_stabilization_path.type = self.y_type
-        if self.y_type == 'fixed_coordinate':
-            y_stabilization_path.path.append(self.y_fixed_coordinate)
-            y_stabilization_path.CoordinateSystem = 'absolute'
-        elif self.y_type == 'relative':
-            y_stabilization_path.path.append(self.y_relative)
-            y_stabilization_path.coordinate_system = 'bed_relative'
-        elif self.y_type == 'fixed_path':
-            y_stabilization_path.path = self.parse_csv_path(self.y_fixed_path)
-            y_stabilization_path.coordinate_system = 'absolute'
-            y_stabilization_path.loop = self.y_fixed_path_loop
-            y_stabilization_path.invert_loop = self.y_fixed_path_invert_loop
-        elif self.y_type == 'relative_path':
-            y_stabilization_path.path = self.parse_csv_path(self.y_relative_path)
-            y_stabilization_path.coordinate_system = 'bed_relative'
-            y_stabilization_path.loop = self.y_relative_path_loop
-            y_stabilization_path.invert_loop = self.y_relative_path_invert_loop
-
-        return dict(
-            x=x_stabilization_path,
-            y=y_stabilization_path
-        )
-
-    @staticmethod
-    def parse_csv_path(path_csv):
-        """Converts a list of floats separated by commas into an array of floats."""
-        path = []
-        items = path_csv.split(',')
-        for item in items:
-            item = item.strip()
-            if len(item) > 0:
-                path.append(float(item))
-        return path
-
-
 class SnapshotPositionRestrictions(Settings):
     def __init__(self, restriction_type, shape, x, y, x2=None, y2=None, r=None, calculate_intersections=False):
 
@@ -588,7 +445,10 @@ class SnapshotPositionRestrictions(Settings):
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
 
-class SnapshotProfile(ProfileSettings):
+class StabilizationProfile(ProfileSettings):
+    STABILIZATION_TYPE_REAL_TIME = "real-time"
+    STABILIZATION_TYPE_LOCK_TO_PRINT = "lock-to-print-corner"
+    STABILIZATION_TYPE_MINIMIZE_TRAVEL = "minimize-travel"
 
     EXTRUDER_TRIGGER_IGNORE_VALUE = ""
     EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
@@ -597,8 +457,39 @@ class SnapshotProfile(ProfileSettings):
     TIMER_TRIGGER_TYPE = 'timer'
     GCODE_TRIGGER_TYPE = 'gcode'
 
-    def __init__(self, name="New Snapshot Profile"):
-        super(SnapshotProfile, self).__init__(name)
+    def __init__(self, name="New Stabilization Profile"):
+        super(StabilizationProfile, self).__init__(name)
+        self.stabilization_type = StabilizationProfile.STABILIZATION_TYPE_REAL_TIME
+        # Pre-Calculated stabilization options
+        self.fastest_speed = True
+        self.lock_to_corner_type = 'back-left'
+        self.lock_to_corner_favor_axis = 'x'
+        self.lock_to_corner_disable_z_lift = True
+        self.lock_to_corner_disable_retract = False
+        self.lock_to_corner_height_increment = 0
+        # Real Time stabilization options
+        self.x_type = "relative"
+        self.x_fixed_coordinate = 0.0
+        self.x_fixed_path = "0"
+        self.x_fixed_path_loop = True
+        self.x_fixed_path_invert_loop = True
+        self.x_relative = 50.0
+        self.x_relative_print = 50.0
+        self.x_relative_path = "50.0"
+        self.x_relative_path_loop = True
+        self.x_relative_path_invert_loop = True
+        self.y_type = 'relative'
+        self.y_fixed_coordinate = 0.0
+        self.y_fixed_path = "0"
+        self.y_fixed_path_loop = True
+        self.y_fixed_path_invert_loop = True
+        self.y_relative = 50.0
+        self.y_relative_print = 50.0
+        self.y_relative_path = "50"
+        self.y_relative_path_loop = True
+        self.y_relative_path_invert_loop = True
+
+        # Settings that were formerly in the snapshot profile (now removed)
         self.is_default = False
         self.trigger_type = self.LAYER_TRIGGER_TYPE
         # timer trigger settings
@@ -649,12 +540,102 @@ class SnapshotProfile(ProfileSettings):
         self.feature_trigger_on_first_layer_travel = False
 
     @staticmethod
+    def get_precalculated_stabilization_types():
+        return [
+            StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT,
+            StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL
+        ]
+    def get_extruder_trigger_value_string(self, value):
+        if value is None:
+            return self.EXTRUDER_TRIGGER_IGNORE_VALUE
+        elif value:
+            return self.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        elif not value:
+            return self.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+
+    def get_stabilization_paths(self):
+        x_stabilization_path = StabilizationPath()
+        x_stabilization_path.type = self.x_type
+        if self.x_type == 'fixed_coordinate':
+            x_stabilization_path.path.append(self.x_fixed_coordinate)
+            x_stabilization_path.coordinate_system = 'absolute'
+        elif self.x_type == 'relative':
+            x_stabilization_path.path.append(self.x_relative)
+            x_stabilization_path.coordinate_system = 'bed_relative'
+        elif self.x_type == 'fixed_path':
+            x_stabilization_path.path = self.parse_csv_path(self.x_fixed_path)
+            x_stabilization_path.coordinate_system = 'absolute'
+            x_stabilization_path.loop = self.x_fixed_path_loop
+            x_stabilization_path.invert_loop = self.x_fixed_path_invert_loop
+        elif self.x_type == 'relative_path':
+            x_stabilization_path.path = self.parse_csv_path(self.x_relative_path)
+            x_stabilization_path.coordinate_system = 'bed_relative'
+            x_stabilization_path.loop = self.x_relative_path_loop
+            x_stabilization_path.invert_loop = self.x_relative_path_invert_loop
+
+        y_stabilization_path = StabilizationPath()
+        y_stabilization_path.type = self.y_type
+        if self.y_type == 'fixed_coordinate':
+            y_stabilization_path.path.append(self.y_fixed_coordinate)
+            y_stabilization_path.CoordinateSystem = 'absolute'
+        elif self.y_type == 'relative':
+            y_stabilization_path.path.append(self.y_relative)
+            y_stabilization_path.coordinate_system = 'bed_relative'
+        elif self.y_type == 'fixed_path':
+            y_stabilization_path.path = self.parse_csv_path(self.y_fixed_path)
+            y_stabilization_path.coordinate_system = 'absolute'
+            y_stabilization_path.loop = self.y_fixed_path_loop
+            y_stabilization_path.invert_loop = self.y_fixed_path_invert_loop
+        elif self.y_type == 'relative_path':
+            y_stabilization_path.path = self.parse_csv_path(self.y_relative_path)
+            y_stabilization_path.coordinate_system = 'bed_relative'
+            y_stabilization_path.loop = self.y_relative_path_loop
+            y_stabilization_path.invert_loop = self.y_relative_path_invert_loop
+
+        return dict(
+            x=x_stabilization_path,
+            y=y_stabilization_path
+        )
+
+    @staticmethod
     def get_options():
         return {
+            'stabilization_type_options': [
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time'),
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL, name='Minimize Travel'),
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT, name='Lock to Print')
+            ],
+            'lock_to_corner_type_options': [
+                dict(value='front-right', name='Front Right'),
+                dict(value='front-left', name='Front Left'),
+                dict(value='back-right', name='Back Right'),
+                dict(value='back-left', name='Back Left'),
+            ],
+            'lock_to_corner_favor_axis_options': [
+                dict(value='x', name='Favor X'),
+                dict(value='y', name='Favor Y')
+            ],
+            'real_time_xy_stabilization_type_options': [
+                dict(value='disabled', name='Disabled'),
+                dict(value='fixed_coordinate', name='Fixed Coordinate'),
+                dict(value='fixed_path', name='List of Fixed Coordinates'),
+                dict(value='relative', name='Relative Coordinate (0-100)'),
+                dict(value='relative_path', name='List of Relative Coordinates')
+            ],
+            'lock_to_print_type_options': [
+                dict(value='front_left', name='Front Left'),
+                dict(value='front_right', name='Front Right'),
+                dict(value='back_left', name='Back Left'),
+                dict(value='back_right', name='Back Right'),
+            ],
+            'favor_axis_options': [
+                dict(value='x', name='Favor X Axis'),
+                dict(value='y', name='Favor Y Axis')
+            ],
             'trigger_types': [
-                dict(value=SnapshotProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
-                dict(value=SnapshotProfile.TIMER_TRIGGER_TYPE, name="Timer"),
-                dict(value=SnapshotProfile.GCODE_TRIGGER_TYPE, name="Gcode")
+                dict(value=StabilizationProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
+                dict(value=StabilizationProfile.TIMER_TRIGGER_TYPE, name="Timer"),
+                dict(value=StabilizationProfile.GCODE_TRIGGER_TYPE, name="Gcode")
             ],
             'position_restriction_shapes': [
                 dict(value="rect", name="Rectangle"),
@@ -665,28 +646,31 @@ class SnapshotProfile(ProfileSettings):
                 dict(value="forbidden", name="Cannot be inside")
             ],
             'snapshot_extruder_trigger_options': [
-                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
-                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
-                dict(value=SnapshotProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
+                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
+                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
+                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
             ]
         }
 
-    def get_extruder_trigger_value_string(self, value):
-        if value is None:
-            return self.EXTRUDER_TRIGGER_IGNORE_VALUE
-        elif value:
-            return self.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        elif not value:
-            return self.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+    @staticmethod
+    def parse_csv_path(path_csv):
+        """Converts a list of floats separated by commas into an array of floats."""
+        path = []
+        items = path_csv.split(',')
+        for item in items:
+            item = item.strip()
+            if len(item) > 0:
+                path.append(float(item))
+        return path
 
     @staticmethod
     def get_extruder_trigger_value(value):
         if isinstance(value, string_types):
             if value is None or len(value) == 0:
                 return None
-            elif value.lower() == SnapshotProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
+            elif value.lower() == StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
                 return True
-            elif value.lower() == SnapshotProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE:
+            elif value.lower() == StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE:
                 return False
             else:
                 return None
@@ -726,9 +710,9 @@ class SnapshotProfile(ProfileSettings):
     def try_convert_value(cls, destination, value, key):
         if key == 'position_restrictions':
             if value is not None:
-                return SnapshotProfile.get_trigger_position_restrictions(value)
+                return StabilizationProfile.get_trigger_position_restrictions(value)
 
-        return super(SnapshotProfile, cls).try_convert_value(destination, value, key)
+        return super(StabilizationProfile, cls).try_convert_value(destination, value, key)
 
 
 class RenderingProfile(ProfileSettings):
@@ -1076,7 +1060,6 @@ class ProfileOptions(StaticSettings):
     def __init__(self):
         self.printer = PrinterProfile.get_options()
         self.stabilization = StabilizationProfile.get_options()
-        self.snapshot = SnapshotProfile.get_options()
         self.rendering = RenderingProfile.get_options()
         self.camera = CameraProfile.get_options()
         self.debug = DebugProfile.get_options()
@@ -1086,7 +1069,6 @@ class ProfileDefaults(StaticSettings):
     def __init__(self):
         self.printer = PrinterProfile("Default Printer")
         self.stabilization = StabilizationProfile("Default Stabilization")
-        self.snapshot = SnapshotProfile("Default Snapshot")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
         self.debug = DebugProfile("Default Debug")
@@ -1105,9 +1087,6 @@ class Profiles(Settings):
         self.current_stabilization_profile_guid = self.defaults.stabilization.guid
         self.stabilizations = {self.defaults.stabilization.guid: self.defaults.stabilization}
 
-        self.current_snapshot_profile_guid = self.defaults.snapshot.guid
-        self.snapshots = {self.defaults.snapshot.guid: self.defaults.snapshot}
-
         self.current_rendering_profile_guid = self.defaults.rendering.guid
         self.renderings = {self.defaults.rendering.guid: self.defaults.rendering}
 
@@ -1122,13 +1101,11 @@ class Profiles(Settings):
         profiles_dict = {
             'current_printer_profile_guid': self.current_printer_profile_guid,
             'current_stabilization_profile_guid': self.current_stabilization_profile_guid,
-            'current_snapshot_profile_guid': self.current_snapshot_profile_guid,
             'current_rendering_profile_guid': self.current_rendering_profile_guid,
             'current_camera_profile_guid': self.current_camera_profile_guid,
             'current_debug_profile_guid': self.current_debug_profile_guid,
             'printers': [],
             'stabilizations': [],
-            'snapshots': [],
             'renderings': [],
             'cameras': [],
             'debug': []
@@ -1145,14 +1122,7 @@ class Profiles(Settings):
             profiles_dict["stabilizations"].append({
                 "name": stabilization.name,
                 "guid": stabilization.guid,
-                "requires_snapshot_profile": stabilization.requires_snapshot_profile(),
                 "stabilization_type": stabilization.stabilization_type
-            })
-
-        for key, snapshot in self.snapshots.items():
-            profiles_dict["snapshots"].append({
-                "name": snapshot.name,
-                "guid": snapshot.guid
             })
 
         for key, rendering in self.renderings.items():
@@ -1184,11 +1154,6 @@ class Profiles(Settings):
         if self.current_stabilization_profile_guid in self.stabilizations:
             return self.stabilizations[self.current_stabilization_profile_guid]
         return self.defaults.stabilization
-
-    def current_snapshot(self):
-        if self.current_snapshot_profile_guid in self.snapshots:
-            return self.snapshots[self.current_snapshot_profile_guid]
-        return self.defaults.snapshot
 
     def current_rendering(self):
         if self.current_rendering_profile_guid in self.renderings:
@@ -1245,9 +1210,6 @@ class Profiles(Settings):
         elif profile_type == "Stabilization":
             new_profile = StabilizationProfile.create_from(profile)
             self.stabilizations[guid] = new_profile
-        elif profile_type == "Snapshot":
-            new_profile = SnapshotProfile.create_from(profile)
-            self.snapshots[guid] = new_profile
         elif profile_type == "Rendering":
             new_profile = RenderingProfile.create_from(profile)
             self.renderings[guid] = new_profile
@@ -1271,10 +1233,6 @@ class Profiles(Settings):
             if self.current_stabilization_profile_guid == guid:
                 return False
             del self.stabilizations[guid]
-        elif profile_type == "Snapshot":
-            if self.current_snapshot_profile_guid == guid:
-                return False
-            del self.snapshots[guid]
         elif profile_type == "Rendering":
             if self.current_rendering_profile_guid == guid:
                 return False
@@ -1297,8 +1255,6 @@ class Profiles(Settings):
             self.current_printer_profile_guid = guid
         elif profile_type == "Stabilization":
             self.current_stabilization_profile_guid = guid
-        elif profile_type == "Snapshot":
-            self.current_snapshot_profile_guid = guid
         elif profile_type == "Rendering":
             self.current_rendering_profile_guid = guid
         elif profile_type == "Camera":
@@ -1325,10 +1281,6 @@ class Profiles(Settings):
                         self.stabilizations = {}
                         for profile_key, profile_value in value.items():
                             self.stabilizations[profile_key] = StabilizationProfile.create_from(profile_value)
-                    elif key == 'snapshots':
-                        self.snapshots = {}
-                        for profile_key, profile_value in value.items():
-                            self.snapshots[profile_key] = SnapshotProfile.create_from(profile_value)
                     elif key == 'renderings':
                         self.renderings = {}
                         for profile_key, profile_value in value.items():
@@ -1556,7 +1508,7 @@ class CuraSettings(SlicerSettings):
     def get_speed_travel_z(self):
         return min(self.get_speed_mm_min(self.speed_travel), self.get_speed_mm_min(self.max_feedrate_z_override))
 
-    def get_print_features(self, snapshot_profile):
+    def get_print_features(self, stabilization_profile):
         return [
             PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
@@ -1564,9 +1516,9 @@ class CuraSettings(SlicerSettings):
                 "Initial Layer(s)",
                 self.get_speed_print(),
                 self.get_slow_layer_speed_print(),
-                snapshot_profile.feature_trigger_on_normal_print_speed,
+                stabilization_profile.feature_trigger_on_normal_print_speed,
                 (
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance(),
                 self.get_num_slow_layers()
@@ -1577,7 +1529,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_retraction_retract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_retract,
+                stabilization_profile.feature_trigger_on_retract,
                 None,
                 self.get_speed_tolerance(),
                 0
@@ -1588,7 +1540,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_retraction_prime_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_deretract,
+                stabilization_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance(),
                 0
@@ -1599,7 +1551,7 @@ class CuraSettings(SlicerSettings):
                 "",
                 self.get_speed_infill(),
                 None,
-                snapshot_profile.feature_trigger_on_infill,
+                stabilization_profile.feature_trigger_on_infill,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1609,7 +1561,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_speed_wall_0(),
                 None,
-                snapshot_profile.feature_trigger_on_external_perimeters,
+                stabilization_profile.feature_trigger_on_external_perimeters,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1619,7 +1571,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_speed_wall_x(),
                 None,
-                snapshot_profile.feature_trigger_on_perimeters,
+                stabilization_profile.feature_trigger_on_perimeters,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1629,7 +1581,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_speed_topbottom(),
                 None,
-                snapshot_profile.feature_trigger_on_top_solid_infill,
+                stabilization_profile.feature_trigger_on_top_solid_infill,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1639,8 +1591,8 @@ class CuraSettings(SlicerSettings):
                 "Slow Layer Travel",
                 self.get_speed_travel(),
                 self.get_slow_layer_speed_travel(),
-                snapshot_profile.feature_trigger_on_movement,
-                snapshot_profile.feature_trigger_on_first_layer_travel,
+                stabilization_profile.feature_trigger_on_movement,
+                stabilization_profile.feature_trigger_on_first_layer_travel,
                 self.get_speed_tolerance(),
                 self.get_num_slow_layers()
             ),
@@ -1650,7 +1602,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_skirt_brim_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_skirt_brim,
+                stabilization_profile.feature_trigger_on_skirt_brim,
                 None,
                 self.get_speed_tolerance(),
                 0
@@ -1661,7 +1613,7 @@ class CuraSettings(SlicerSettings):
                 None,
                 self.get_speed_travel_z(),
                 None,
-                snapshot_profile.feature_trigger_on_z_movement,
+                stabilization_profile.feature_trigger_on_z_movement,
                 None,
                 self.get_speed_tolerance(),
                 0
@@ -1827,7 +1779,7 @@ class Simplify3dSettings(SlicerSettings):
     def get_first_prime_speed(self):
         return self.get_speed_mm_min(self.get_retract_speed(), multiplier=30)
 
-    def get_print_features(self, snapshot_profile):
+    def get_print_features(self, stabilization_profile):
         return [
             PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
@@ -1835,8 +1787,8 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_retract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_retract,
-                snapshot_profile.feature_trigger_on_retract,
+                stabilization_profile.feature_trigger_on_retract,
+                stabilization_profile.feature_trigger_on_retract,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1845,8 +1797,8 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_above_raft_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_above_raft,
-                snapshot_profile.feature_trigger_on_above_raft,
+                stabilization_profile.feature_trigger_on_above_raft,
+                stabilization_profile.feature_trigger_on_above_raft,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1855,8 +1807,8 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Prime Pillar",
                 self.get_prime_pillar_speed(),
                 self.get_first_layer_prime_pillar_speed(),
-                snapshot_profile.feature_trigger_on_prime_pillar,
-                snapshot_profile.feature_trigger_on_prime_pillar and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_prime_pillar,
+                stabilization_profile.feature_trigger_on_prime_pillar and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1865,8 +1817,8 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Ooze Shield",
                 self.get_ooze_shield_speed(),
                 self.get_first_layer_ooze_shield_speed(),
-                snapshot_profile.feature_trigger_on_ooze_shield,
-                snapshot_profile.feature_trigger_on_ooze_shield and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_ooze_shield,
+                stabilization_profile.feature_trigger_on_ooze_shield and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1875,10 +1827,10 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Printing Speed",
                 self.get_default_printing_speed(),
                 self.get_first_layere_default_printing_speed(),
-                snapshot_profile.feature_trigger_on_normal_print_speed,
+                stabilization_profile.feature_trigger_on_normal_print_speed,
                 (
-                    snapshot_profile.feature_trigger_on_normal_print_speed and
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_normal_print_speed and
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance()
             ),
@@ -1888,10 +1840,10 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Exterior Outlines",
                 self.get_exterior_outline_speed(),
                 self.get_first_layer_exterior_outline_speed(),
-                snapshot_profile.feature_trigger_on_external_perimeters,
+                stabilization_profile.feature_trigger_on_external_perimeters,
                 (
-                    snapshot_profile.feature_trigger_on_external_perimeters and
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_external_perimeters and
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance()
             ),
@@ -1901,8 +1853,8 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Interior Outlines",
                 self.get_interior_outline_speed(),
                 self.get_first_layer_interior_outline_speed(),
-                snapshot_profile.feature_trigger_on_perimeters,
-                snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_perimeters,
+                stabilization_profile.feature_trigger_on_perimeters and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1911,8 +1863,8 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Solid Infill",
                 self.get_solid_infill_speed(),
                 self.get_first_layer_solid_infill_speed(),
-                snapshot_profile.feature_trigger_on_solid_infill,
-                snapshot_profile.feature_trigger_on_solid_infill and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_solid_infill,
+                stabilization_profile.feature_trigger_on_solid_infill and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1921,8 +1873,8 @@ class Simplify3dSettings(SlicerSettings):
                 "First Layer Supports",
                 self.get_support_structure_speed(),
                 self.get_first_layer_support_structure_speed(),
-                snapshot_profile.feature_trigger_on_supports,
-                snapshot_profile.feature_trigger_on_supports and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_supports,
+                stabilization_profile.feature_trigger_on_supports and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -1931,7 +1883,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_x_y_axis_movement_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_movement,
+                stabilization_profile.feature_trigger_on_movement,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1941,7 +1893,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_z_axis_movement_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_z_movement,
+                stabilization_profile.feature_trigger_on_z_movement,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1951,7 +1903,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_bridge_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_bridges,
+                stabilization_profile.feature_trigger_on_bridges,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -1962,7 +1914,7 @@ class Simplify3dSettings(SlicerSettings):
                 None,
                 self.get_first_prime_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_deretract and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_deretract and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             )
         ]
@@ -2316,7 +2268,7 @@ class Slic3rPeSettings(SlicerSettings):
             self.gap_fill_speed
         )
 
-    def get_print_features(self, snapshot_profile):
+    def get_print_features(self, stabilization_profile):
         return [
             PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
@@ -2324,7 +2276,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_retract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_retract,
+                stabilization_profile.feature_trigger_on_retract,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2334,7 +2286,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_deretract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_deretract,
+                stabilization_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2344,8 +2296,8 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Perimeters",
                 self.get_perimeter_speed(),
                 self.get_first_layer_perimeter_speed(),
-                snapshot_profile.feature_trigger_on_perimeters,
-                snapshot_profile.feature_trigger_on_perimeters and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_perimeters,
+                stabilization_profile.feature_trigger_on_perimeters and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2354,10 +2306,10 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Small Perimeters",
                 self.get_small_perimeter_speed(),
                 self.get_first_layer_small_perimeter_speed(),
-                snapshot_profile.feature_trigger_on_small_perimeters,
+                stabilization_profile.feature_trigger_on_small_perimeters,
                 (
-                    snapshot_profile.feature_trigger_on_small_perimeters and
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_small_perimeters and
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance()
             ),
@@ -2367,10 +2319,10 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer External Perimeters",
                 self.get_external_perimeter_speed(),
                 self.get_first_layer_external_perimeter_speed(),
-                snapshot_profile.feature_trigger_on_external_perimeters,
+                stabilization_profile.feature_trigger_on_external_perimeters,
                 (
-                    snapshot_profile.feature_trigger_on_external_perimeters and
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_external_perimeters and
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance()
             ),
@@ -2380,8 +2332,8 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Infill",
                 self.get_infill_speed(),
                 self.get_first_layer_infill_speed(),
-                snapshot_profile.feature_trigger_on_infill,
-                snapshot_profile.feature_trigger_on_infill and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_infill,
+                stabilization_profile.feature_trigger_on_infill and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2390,8 +2342,8 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Solid Infill",
                 self.get_solid_infill_speed(),
                 self.get_first_layer_solid_infill_speed(),
-                snapshot_profile.feature_trigger_on_solid_infill,
-                snapshot_profile.feature_trigger_on_solid_infill and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_solid_infill,
+                stabilization_profile.feature_trigger_on_solid_infill and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2400,10 +2352,10 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Top Solid Infill",
                 self.get_top_solid_infill_speed(),
                 self.get_first_layer_top_solid_infill_speed(),
-                snapshot_profile.feature_trigger_on_top_solid_infill,
+                stabilization_profile.feature_trigger_on_top_solid_infill,
                 (
-                    snapshot_profile.feature_trigger_on_top_solid_infill and
-                    snapshot_profile.feature_trigger_on_first_layer
+                    stabilization_profile.feature_trigger_on_top_solid_infill and
+                    stabilization_profile.feature_trigger_on_first_layer
                 ),
                 self.get_speed_tolerance()
             ),
@@ -2413,8 +2365,8 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Supports",
                 self.get_support_material_speed(),
                 self.get_first_layer_supports_speed(),
-                snapshot_profile.feature_trigger_on_supports,
-                snapshot_profile.feature_trigger_on_supports and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_supports,
+                stabilization_profile.feature_trigger_on_supports and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2423,7 +2375,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_bridge_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_bridges,
+                stabilization_profile.feature_trigger_on_bridges,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2433,8 +2385,8 @@ class Slic3rPeSettings(SlicerSettings):
                 "First Layer Gaps",
                 self.get_gap_fill_speed(),
                 self.get_first_layer_gaps_speed(),
-                snapshot_profile.feature_trigger_on_gap_fills,
-                snapshot_profile.feature_trigger_on_gap_fills and snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_gap_fills,
+                stabilization_profile.feature_trigger_on_gap_fills and stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2443,7 +2395,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_travel_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_movement,
+                stabilization_profile.feature_trigger_on_movement,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2453,7 +2405,7 @@ class Slic3rPeSettings(SlicerSettings):
                 None,
                 self.get_wipe_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_wipe,
+                stabilization_profile.feature_trigger_on_wipe,
                 None,
                 self.get_speed_tolerance()
             )
@@ -2652,7 +2604,7 @@ class OtherSlicerSettings(SlicerSettings):
     def get_skirt_brim_speed(self):
         return self.get_speed_mm_min(self.skirt_brim_speed)
 
-    def get_print_features(self, snapshot_profile):
+    def get_print_features(self, stabilization_profile):
         return [
             PrintFeatureSetting(
                 SlicerPrintFeatures.is_enabled, SlicerPrintFeatures.is_detected,
@@ -2660,8 +2612,8 @@ class OtherSlicerSettings(SlicerSettings):
                 "First Layer Print Speed",
                 self.get_print_speed(),
                 self.get_first_layer_print_speed(),
-                snapshot_profile.feature_trigger_on_normal_print_speed,
-                snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_normal_print_speed,
+                stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2670,8 +2622,8 @@ class OtherSlicerSettings(SlicerSettings):
                 "First Layer Travel",
                 self.get_travel_speed(),
                 self.get_first_layer_travel_speed(),
-                snapshot_profile.feature_trigger_on_movement,
-                snapshot_profile.feature_trigger_on_first_layer,
+                stabilization_profile.feature_trigger_on_movement,
+                stabilization_profile.feature_trigger_on_first_layer,
                 self.get_speed_tolerance()
             ),
             PrintFeatureSetting(
@@ -2680,7 +2632,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_z_travel_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_z_movement,
+                stabilization_profile.feature_trigger_on_z_movement,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2690,7 +2642,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_retract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_retract,
+                stabilization_profile.feature_trigger_on_retract,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2700,7 +2652,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_deretract_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_deretract,
+                stabilization_profile.feature_trigger_on_deretract,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2710,7 +2662,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_perimeter_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_perimeters,
+                stabilization_profile.feature_trigger_on_perimeters,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2720,7 +2672,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_small_perimeter_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_small_perimeters,
+                stabilization_profile.feature_trigger_on_small_perimeters,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2730,7 +2682,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_external_perimeter_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_external_perimeters,
+                stabilization_profile.feature_trigger_on_external_perimeters,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2740,7 +2692,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_infill_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_infill,
+                stabilization_profile.feature_trigger_on_infill,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2750,7 +2702,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_solid_infill_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_solid_infill,
+                stabilization_profile.feature_trigger_on_solid_infill,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2760,7 +2712,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_top_solid_infill_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_top_solid_infill,
+                stabilization_profile.feature_trigger_on_top_solid_infill,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2770,7 +2722,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_support_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_supports,
+                stabilization_profile.feature_trigger_on_supports,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2780,7 +2732,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_bridge_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_bridges,
+                stabilization_profile.feature_trigger_on_bridges,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2790,7 +2742,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_gap_fill_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_gap_fills,
+                stabilization_profile.feature_trigger_on_gap_fills,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2800,7 +2752,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_above_raft_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_above_raft,
+                stabilization_profile.feature_trigger_on_above_raft,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2810,7 +2762,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_ooze_shield_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_ooze_shield,
+                stabilization_profile.feature_trigger_on_ooze_shield,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2820,7 +2772,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_prime_pillar_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_prime_pillar,
+                stabilization_profile.feature_trigger_on_prime_pillar,
                 None,
                 self.get_speed_tolerance()
             ),
@@ -2830,7 +2782,7 @@ class OtherSlicerSettings(SlicerSettings):
                 None,
                 self.get_skirt_brim_speed(),
                 None,
-                snapshot_profile.feature_trigger_on_skirt_brim,
+                stabilization_profile.feature_trigger_on_skirt_brim,
                 None,
                 self.get_speed_tolerance()
             )
@@ -2838,18 +2790,18 @@ class OtherSlicerSettings(SlicerSettings):
 
 
 class SlicerPrintFeatures(Settings):
-    def __init__(self, slicer_settings, snapshot_settings):
+    def __init__(self, slicer_settings, stabilization_settings):
         assert (isinstance(slicer_settings, SlicerSettings))
-        assert (isinstance(snapshot_settings, SnapshotProfile))
+        assert (isinstance(stabilization_settings, StabilizationProfile))
         self.previous_speed = 0
         self.previous_is_one_enabled = False
         self.num_slow_layers = slicer_settings.get_num_slow_layers()
         self.speed_tolerance = slicer_settings.get_speed_tolerance()
         try:
-            self.features = slicer_settings.get_print_features(snapshot_settings)
+            self.features = slicer_settings.get_print_features(stabilization_settings)
         except Exception as e:
             raise e
-        self.feature_detection_enabled = snapshot_settings.feature_restrictions_enabled
+        self.feature_detection_enabled = stabilization_settings.feature_restrictions_enabled
 
     @staticmethod
     def is_enabled(feature, current_speed, layer_num):

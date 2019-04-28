@@ -28,11 +28,11 @@ minimize_travel_args::minimize_travel_args(double x, double y)
 }
 minimize_travel_args::~minimize_travel_args()
 {
-	/*if (has_py_callbacks)
+	if (has_py_callbacks)
 	{
 		Py_XDECREF(py_get_snapshot_position_callback);
 		Py_XDECREF(py_gcode_generator);
-	}*/
+	}
 }
 
 StabilizationMinimizeTravel::StabilizationMinimizeTravel()
@@ -274,6 +274,7 @@ void StabilizationMinimizeTravel::AddSavedPlan()
 	position * p_snapshot_position = new position(*p_saved_position);
 	p_snapshot_position->x = x_coord;
 	p_snapshot_position->y = y_coord;
+	
 	p_plan->snapshot_positions.push_back(p_snapshot_position);
 	p_plan->p_return_position = new position(*p_saved_position);
 	p_plan->p_parsed_command = new parsed_command(*p_saved_position->p_command);

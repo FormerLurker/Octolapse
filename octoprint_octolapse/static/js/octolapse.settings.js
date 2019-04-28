@@ -95,25 +95,6 @@ $(function () {
                 };
             Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
             /*
-                Create our snapshots view model
-            */
-            var snapshotSettings =
-                {
-                    'current_profile_guid': null,
-                    'profiles': [],
-                    'default_profile': null,
-                    'profileOptions': {},
-                    'profileViewModelCreateFunction': Octolapse.SnapshotProfileViewModel,
-                    'profileValidationRules': Octolapse.SnapshotProfileValidationRules,
-                    'bindingElementId': 'octolapse_snapshot_tab',
-                    'addEditTemplateName': 'snapshot-template',
-                    'profileTypeName': 'Snapshot',
-                    'addUpdatePath': 'addUpdateProfile',
-                    'removeProfilePath': 'removeProfile',
-                    'setCurrentProfilePath': 'setCurrentProfile'
-                };
-            Octolapse.Snapshots = new Octolapse.ProfilesViewModel(snapshotSettings);
-            /*
                 Create our rendering view model
             */
             var renderingSettings =
@@ -202,30 +183,19 @@ $(function () {
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
             Octolapse.Stabilizations.profileOptions = {
                 'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
-                'pre_calculated_stabilization_type_options': settings.profiles.options.stabilization.pre_calculated_stabilization_type_options,
                 'lock_to_corner_type_options': settings.profiles.options.stabilization.lock_to_corner_type_options,
                 'lock_to_corner_favor_axis_options': settings.profiles.options.stabilization.lock_to_corner_favor_axis_options,
                 'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
                 'lock_to_print_type_options': settings.profiles.options.stabilization.lock_to_print_type_options,
-                'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options
+                'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options,
+                'trigger_types': settings.profiles.options.stabilization.trigger_types,
+                'snapshot_extruder_trigger_options': settings.profiles.options.stabilization.snapshot_extruder_trigger_options,
+                'position_restriction_shapes': settings.profiles.options.stabilization.position_restriction_shapes,
+                'position_restriction_types': settings.profiles.options.stabilization.position_restriction_types
             };
             Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
             Object.keys(settings.profiles.stabilizations).forEach(function(key) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
-            });
-
-            // Snapshots
-            Octolapse.Snapshots.profiles([]);
-            Octolapse.Snapshots.default_profile(settings.profiles.defaults.snapshot);
-            Octolapse.Snapshots.profileOptions ={
-                'trigger_types': settings.profiles.options.snapshot.trigger_types,
-                'snapshot_extruder_trigger_options': settings.profiles.options.snapshot.snapshot_extruder_trigger_options,
-                'position_restriction_shapes': settings.profiles.options.snapshot.position_restriction_shapes,
-                'position_restriction_types': settings.profiles.options.snapshot.position_restriction_types
-            };
-            Octolapse.Snapshots.current_profile_guid(settings.profiles.current_snapshot_profile_guid);
-            Object.keys(settings.profiles.snapshots).forEach(function(key) {
-                Octolapse.Snapshots.profiles.push(new Octolapse.SnapshotProfileViewModel(settings.profiles.snapshots[key]));
             });
 
             // Renderings
@@ -356,11 +326,6 @@ $(function () {
             Octolapse.Stabilizations.default_profile(null);
             Octolapse.Stabilizations.current_profile_guid(null);
             Octolapse.Stabilizations.profileOptions = {};
-            // Snapshots
-            Octolapse.Snapshots.profiles([]);
-            Octolapse.Snapshots.default_profile(null);
-            Octolapse.Snapshots.current_profile_guid(null);
-            Octolapse.Snapshots.profileOptions = {};
             // Renderings
             Octolapse.Renderings.profiles([]);
             Octolapse.Renderings.default_profile(null);
@@ -387,9 +352,6 @@ $(function () {
                     break;
                 case "stabilization-template":
                     Octolapse.Stabilizations.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
-                    break;
-                case "snapshot-template":
-                    Octolapse.Snapshots.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
                     break;
                 case "rendering-template":
                     Octolapse.Renderings.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());

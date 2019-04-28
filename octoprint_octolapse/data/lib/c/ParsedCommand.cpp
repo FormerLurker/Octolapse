@@ -160,6 +160,7 @@ PyObject * parsed_command::to_py_object()
 				PyErr_SetString(PyExc_ValueError, message.c_str());
 				return NULL;
 			}
+			// Todo: evaluate the effects of this
 			Py_DECREF(param_value);
 			//std::cout << "param_value refcount = " << param_value->ob_refcnt << "\r\n";
 		}
@@ -178,11 +179,14 @@ PyObject * parsed_command::to_py_object()
 		}
 		// PyTuple_Pack makes a reference of its own, decref pyParametersDict.  
 		// We will need to decref pyCommandName and pyGcode later
+		// Todo: evaluate the effects of this
 		Py_DECREF(pyParametersDict);
 		//std::cout << "pyParametersDict refcount = " << pyParametersDict->ob_refcnt << "\r\n";
 	}
 	// If we're here, we need to decref pyCommandName and pyGcode.
+	// Todo: evaluate the effects of this
 	Py_DECREF(pyCommandName);
+	// Todo: evaluate the effects of this
 	Py_DECREF(pyGcode);
 	//std::cout << "pyCommandName refcount = " << pyCommandName->ob_refcnt << "\r\n";
 	//std::cout << "pyGcode refcount = " << pyGcode->ob_refcnt << "\r\n";

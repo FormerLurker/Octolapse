@@ -442,7 +442,7 @@ class Pos(object):
 
 
 class Position(object):
-    def __init__(self, printer_profile, snapshot_profile, octoprint_printer_profile,
+    def __init__(self, printer_profile, stabilization_profile, octoprint_printer_profile,
                  g90_influences_extruder):
         # This key is used to call the unique gcode_position object for Octolapse.
         # This way multiple position trackers can be used at the same time with no
@@ -506,15 +506,15 @@ class Position(object):
 
         GcodePositionProcessor.Initialize(cpp_position_args)
 
-        self._slicer_features = None if snapshot_profile is None else SlicerPrintFeatures(
-            printer_profile.get_current_slicer_settings(), snapshot_profile
+        self._slicer_features = None if stabilization_profile is None else SlicerPrintFeatures(
+            printer_profile.get_current_slicer_settings(), stabilization_profile
         )
         self.feature_restrictions_enabled = (
-            False if snapshot_profile is None else snapshot_profile.feature_restrictions_enabled
+            False if stabilization_profile is None else stabilization_profile.feature_restrictions_enabled
         )
         self._auto_detect_position = printer_profile.auto_detect_position
         self._priming_height = printer_profile.priming_height
-        self._position_restrictions = None if snapshot_profile is None else snapshot_profile.position_restrictions
+        self._position_restrictions = None if stabilization_profile is None else stabilization_profile.position_restrictions
         self._octoprint_printer_profile = octoprint_printer_profile
         self._origin = {
             "x": printer_profile.origin_x,
@@ -524,8 +524,8 @@ class Position(object):
 
         self._retraction_length = self._gcode_generation_settings.retraction_length
 
-        self._has_restricted_position = False if snapshot_profile is None else (
-            len(snapshot_profile.position_restrictions) > 0 and snapshot_profile.position_restrictions_enabled
+        self._has_restricted_position = False if stabilization_profile is None else (
+            len(stabilization_profile.position_restrictions) > 0 and stabilization_profile.position_restrictions_enabled
         )
         # Todo:  make sure this setting is being read correctly, it doesn't look correct
         if printer_profile.g90_influences_extruder in ['true', 'false']:
@@ -566,7 +566,6 @@ class Position(object):
         )
 
         Pos.copy_from_cpp_pos(cpp_pos, self.current_pos)
-
 
     def to_position_dict(self):
         ret_dict = self.current_pos.to_dict()

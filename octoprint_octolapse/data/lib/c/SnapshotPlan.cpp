@@ -114,6 +114,7 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 			return NULL;
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
+		// Todo: evaluate the effect of this  
 		Py_DECREF(py_snapshot_plan);
 		//std::cout << "py_snapshot_plan refcount = " << py_snapshot_plan->ob_refcnt << "\r\n";
 	}
@@ -147,6 +148,7 @@ PyObject * snapshot_plan::to_py_object()
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
 		Py_DECREF(py_snapshot_position);
+		// Todo: evaluate the effect of this 
 		//std::cout << "py_snapshot_position refcount = " << py_snapshot_position->ob_refcnt << "\r\n";
 	}
 	PyObject * py_initial_position = p_initial_position->to_py_tuple();
@@ -184,6 +186,7 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
+		// Todo: evaluate the effect of this 
 		Py_DECREF(py_step);
 		//std::cout << "py_step refcount = " << py_step->ob_refcnt << "\r\n";
 
@@ -214,14 +217,19 @@ PyObject * snapshot_plan::to_py_object()
 		return NULL;
 	}
 	// Py_BuildValue Increfs PyObjects, so we need to decref those here:
+	// Todo: evaluate the effect of this 
 	Py_DECREF(py_initial_position);
 	//std::cout << "py_initial_position refcount = " << py_initial_position->ob_refcnt << "\r\n";
+	// Todo: evaluate the effect of this 
 	Py_DECREF(py_snapshot_positions);
 	//std::cout << "py_snapshot_positions refcount = " << py_snapshot_positions->ob_refcnt << "\r\n";
+	// Todo: evaluate the effect of this 
 	Py_DECREF(py_return_position);
 	//std::cout << "py_return_position refcount = " << py_return_position->ob_refcnt << "\r\n";
+	// Todo: evaluate the effect of this 
 	Py_DECREF(py_steps);
 	//std::cout << "py_steps refcount = " << py_steps->ob_refcnt << "\r\n";
+	// Todo: evaluate the effect of this 
 	Py_DECREF(py_parsed_command);
 	//std::cout << "py_parsed_command refcount = " << py_parsed_command->ob_refcnt << "\r\n";
 	

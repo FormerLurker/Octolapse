@@ -69,7 +69,7 @@ from octoprint_octolapse.position import Position
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, CameraProfile, \
-    RenderingProfile, SnapshotProfile, DebugProfile, SlicerPrintFeatures, \
+    RenderingProfile, DebugProfile, SlicerPrintFeatures, \
     SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, Slic3rPeSettings, \
     SettingsJsonEncoder
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
@@ -312,7 +312,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         # extract the slicer settings
         data = SlicerPrintFeatures(
-            slicer_settings, self._octolapse_settings.profiles.current_snapshot()
+            slicer_settings, self._octolapse_settings.profiles.current_stabilization()
         ).get_feature_dict(speed_units)
 
         if self._octolapse_settings is None:
@@ -1213,7 +1213,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             settings_clone = timelapse_settings["settings"]
             current_stabilization_clone = settings_clone.profiles.current_stabilization()
             preprocessed = False
-            if current_stabilization_clone.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_PRE_CALCULATED:
+            if current_stabilization_clone.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types():
                 preprocessed = True
                 # pre-process the stabilization
                 # this is done in another process, so we'll have to exit and wait for the results
@@ -2038,7 +2038,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.profiles.printer.slicer.simplify_3d.js",
                 "js/octolapse.profiles.printer.slicer.slic3r_pe.js",
                 "js/octolapse.profiles.stabilization.js",
-                "js/octolapse.profiles.snapshot.js",
                 "js/octolapse.profiles.rendering.js",
                 "js/octolapse.profiles.camera.js",
                 "js/octolapse.profiles.debug.js",

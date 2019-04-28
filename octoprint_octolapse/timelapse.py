@@ -89,7 +89,6 @@ class Timelapse(object):
         self._octoprint_printer_profile = None
         self._current_job_info = None
         self._ffmpeg_path = None
-        self._snapshot = None
         self._stabilization = None
         self._gcode = None
         self._printer = None
@@ -184,8 +183,6 @@ class Timelapse(object):
             print_start_time=time.time(),
             print_file_name=utility.get_filename_from_full_path(gcode_file_path)
         )
-        # Note that the RenderingProcessor makes copies of all objects sent to it
-        self._snapshot = self._settings.profiles.current_snapshot()
 
         if self._rendering_processor is None:
             self._rendering_processor = RenderingProcessor(
@@ -214,7 +211,7 @@ class Timelapse(object):
 
         self._position = Position(
             self._settings.profiles.current_printer(),
-            self._settings.profiles.current_snapshot(), octoprint_printer_profile, g90_influences_extruder
+            self._settings.profiles.current_stabilization(), octoprint_printer_profile, g90_influences_extruder
         )
         self._state = TimelapseState.WaitingForTrigger
         self._is_test_mode = self._settings.profiles.current_debug_profile().is_test_mode

@@ -22,316 +22,756 @@
 ##################################################################################
 -->
 <script type="text/html" id="stabilization-template">
-  <input type="hidden"  data-bind="value : guid" />
-  <div>
+    <input type="hidden" data-bind="value : guid" />
     <div>
-      <h4>Profile</h4>
+        <div>
+            <h4>Profile</h4>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Name</label>
+            <div class="controls">
+                <input id="stabilization_profile_name" type="text" name="name" class="input-block-level form-input" data-bind="value: name" />
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_name"></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Description</label>
+            <div class="controls">
+                <textarea id="stabilization_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_description"></div>
+            </div>
+        </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Name</label>
-      <div class="controls">
-        <input id="stabilization_profile_name" type="text" name="name" class="input-block-level form-input" data-bind="value: name"/>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_name"></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Description</label>
-      <div class="controls">
-        <textarea id="stabilization_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024"/>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_description"></div>
-      </div>
-    </div>
-  </div>
-  <hr />
-  <div>
-      <div>
-          <h4>Stabilization Type</h4>
-          <p>
-              Choose betweeen real-time and pre-calculated stabilizations.  Pre-calculated stabilizations are new to version v0.4.
-          </p>
-      </div>
-      <div class="control-group">
-          <label class="control-label">Stabilization Type</label>
-          <div class="controls">
-            <select id="stabilization_profile_stabilization_type" name ="stabilization_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
+    <hr />
+    <div>
+        <div>
+            <h4>Stabilization Type</h4>
+            <p>
+                Choose different ways your printer can stabilize before taking a snapshot.
+            </p>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Stabilization Type</label>
+            <div class="controls">
+                <select id="stabilization_profile_stabilization_type" name="stabilization_type" data-bind="options: Octolapse.Stabilizations.profileOptions.stabilization_type_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: stabilization_type"></select>
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-            <div class="error_label_container text-error" data-error-for="stabilization_profile_stabilization_type"></div>
-          </div>
-      </div>
-  </div>
-  <hr />
-  <div data-bind="visible: stabilization_type() == 'pre-calculate'">
-      <div class="control-group">
-          <label class="control-label">Pre-Calculated Stabilization Type</label>
-          <div class="controls">
-            <select id="stabilization_profile_pre_calculated_stabilization_type" name ="pre_calculated_stabilization_type" data-bind="options: Octolapse.Stabilizations.profileOptions.pre_calculated_stabilization_type_options,
-                                       optionsText: 'name',
-                                       optionsValue: 'value',
-                                       value: pre_calculated_stabilization_type" required></select>
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
-            <div class="error_label_container text-error" data-error-for="stabilization_profile_stabilization_type"></div>
-          </div>
-      </div>
-  </div>
-  <div data-bind="visible: (stabilization_type() == 'pre-calculate' && pre_calculated_stabilization_type()=='lock-to-print-corner')">
-    <div>
-        <p>
-              This stabilization will force the extruder to always be at one corner of your print when taking snapshots.
-            This mode requires no snapshot profile, produces very high quality prints (few artifacts) and has very little impact on print time (very fast).
-            However, this mode produces quasi-stabilized timelapses that may not be smooth.  You'll get the idea when you try it out!
-
-        </p>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_stabilization_type"></div>
+            </div>
+        </div>
     </div>
-    <div class="control-group">
-      <label class="control-label">Lock Extruder to</label>
-      <div class="controls">
-        <select id="stabilization_profile_lock_to_corner_type" name ="lock_to_corner_type" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_type_options,
+    <hr />
+    <div data-bind="visible: (stabilization_type() == 'lock-to-print-corner')">
+        <div>
+            <p>
+                This stabilization will force the extruder to always be at one corner of your print when taking snapshots.
+                This mode requires no snapshot profile, produces very high quality prints (few artifacts) and has very little impact on print time (very fast).
+                However, this mode produces quasi-stabilized timelapses that may not be smooth.  You'll get the idea when you try it out!
+
+            </p>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Lock Extruder to</label>
+            <div class="controls">
+                <select id="stabilization_profile_lock_to_corner_type" name="lock_to_corner_type" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: lock_to_corner_type"></select>
-        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_type"></div>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Favor Axis</label>
-      <div class="controls">
-        <select id="stabilization_profile_lock_to_corner_favor_axis" name ="lock_to_corner_favor_axis" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_favor_axis_options,
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_type"></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Favor Axis</label>
+            <div class="controls">
+                <select id="stabilization_profile_lock_to_corner_favor_axis" name="lock_to_corner_favor_axis" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_favor_axis_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: lock_to_corner_favor_axis"></select>
-        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_favor_axis"></div>
-        <span class="help-inline">Prefer being closer to the X or Y plane when choosing the closest corner.</span>
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <label class="checkbox">
-            <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-        </label>
-        <p>When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.</p>
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <label class="checkbox">
-            <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <label class="checkbox">
-            <input name="lock_to_corner_disable_retract" type="checkbox" data-bind="checked: lock_to_corner_disable_retract" />Disable Retract Before Snapshot
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-        </label>
-          <p><span class="label label-important text-warning">Important:</span>  It is recommended that you disable both lift and retract when using this stabilization.  However, if your camera is exceptionally slow, allowing lift and retract may improve quality.</p>
-      </div>
-    </div>
-  </div>
-  <div data-bind="visible: stabilization_type() == 'real-time' || (stabilization_type() == 'pre-calculate' && pre_calculated_stabilization_type()=='minimize-travel')">
-    <div>
-      <h4>X Axis Stabilization</h4>
-      <p>Controls the X axis stabilizations, which is the position on the X axis where the bed/extruder will be when we take a snapshot.</p>
-    </div>
-    <div class="control-group">
-      <label class="control-label">X Stabilization Type</label>
-      <div class="controls">
-        <select id="stabilization_profile_x_type" name ="x_type" class="ignore_hidden_errors"  data-bind="options: get_xy_stabilization_type_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: x_type"></select>
-        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_type"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
-      <label class="control-label">Fixed Coordinate</label>
-      <div class="controls">
-        <div class="input-append">
-          <input id="stabilization_profile_x_fixed_coordinate" name ="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate"/>
-          <span class="add-on">mm</span>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_favor_axis"></div>
+                <span class="help-inline">Prefer being closer to the X or Y plane when choosing the closest corner.</span>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_coordinate"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
-      <label class="control-label">Fixed Path</label>
-      <div class="controls">
-        <div class="input-append input-block-level">
-          <input id="stabilization_profile_x_fixed_path" name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path"/>
-          <span class="add-on">mm</span>
-          <span class="add-on">csv</span>
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+                <p>When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.</p>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_path"></div>
-        <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
-      <label class="control-label">Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'fixed_path' && x_fixed_path_loop()">
-      <label class="control-label">Invert Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-            <input name="x_fixed_path_invert_loop" type="checkbox" data-bind="checked: x_fixed_path_invert_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'relative'">
-      <label class="control-label">Relative Coordinate</label>
-      <div class="controls">
-        <div class="input-append">
-          <input id="stabilization_profile_x_relative" name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative"/>
-          <span class="add-on">%</span>
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
-      <label class="control-label">Relative Path</label>
-      <div class="controls">
-        <div class="input-append input-block-level">
-          <input id="stabilization_profile_x_relative_path" name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path"/>
-          <span class="add-on">%</span>
-          <span class="add-on">csv</span>
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="lock_to_corner_disable_retract" type="checkbox" data-bind="checked: lock_to_corner_disable_retract" />Disable Retract Before Snapshot
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+                <p><span class="label label-important text-warning">Important:</span>  It is recommended that you disable both lift and retract when using this stabilization.  However, if your camera is exceptionally slow, allowing lift and retract may improve quality.</p>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative_path"></div>
-        <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
-      </div>
     </div>
-    <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
-      <label class="control-label">Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: x_type() === 'relative_path' && x_relative_path_loop()">
-      <label class="control-label">Invert Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-            <input name="x_relative_path_invert_loop" type="checkbox" data-bind="checked: x_relative_path_invert_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
-    </div>
-  </div>
-  <div data-bind="visible: stabilization_type() == 'real-time' || (stabilization_type() == 'pre-calculate' && pre_calculated_stabilization_type()=='minimize-travel')">
-    <div>
-      <h4>Y Axis Stabilization</h4>
-      <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>
-    </div>
-    <div class="control-group">
-      <label class="control-label">Y Stabilization Type</label>
-      <div class="controls">
-        <select id="stabilization_profile_y_type" name="y_type" class="ignore_hidden_errors" data-bind="options: get_xy_stabilization_type_options,
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time']">
+        <div>
+            <div>
+                <h4>X Axis Stabilization</h4>
+                <p>Controls the X axis stabilizations, which is the position on the X axis where the bed/extruder will be when we take a snapshot.</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label">X Stabilization Type</label>
+                <div class="controls">
+                    <select id="stabilization_profile_x_type" name="x_type" class="ignore_hidden_errors" data-bind="options: get_xy_stabilization_type_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: x_type"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_type"></div>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
+                <label class="control-label">Fixed Coordinate</label>
+                <div class="controls">
+                    <div class="input-append">
+                        <input id="stabilization_profile_x_fixed_coordinate" name="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate" />
+                        <span class="add-on">mm</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_coordinate"></div>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
+                <label class="control-label">Fixed Path</label>
+                <div class="controls">
+                    <div class="input-append input-block-level">
+                        <input id="stabilization_profile_x_fixed_path" name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path" />
+                        <span class="add-on">mm</span>
+                        <span class="add-on">csv</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_path"></div>
+                    <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
+                <label class="control-label">Loop</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'fixed_path' && x_fixed_path_loop()">
+                <label class="control-label">Invert Loop</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input name="x_fixed_path_invert_loop" type="checkbox" data-bind="checked: x_fixed_path_invert_loop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'relative'">
+                <label class="control-label">Relative Coordinate</label>
+                <div class="controls">
+                    <div class="input-append">
+                        <input id="stabilization_profile_x_relative" name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative" />
+                        <span class="add-on">%</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative"></div>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
+                <label class="control-label">Relative Path</label>
+                <div class="controls">
+                    <div class="input-append input-block-level">
+                        <input id="stabilization_profile_x_relative_path" name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path" />
+                        <span class="add-on">%</span>
+                        <span class="add-on">csv</span>
+                    </div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative_path"></div>
+                    <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
+                <label class="control-label">Loop</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group" data-bind="visible: x_type() === 'relative_path' && x_relative_path_loop()">
+                <label class="control-label">Invert Loop</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input name="x_relative_path_invert_loop" type="checkbox" data-bind="checked: x_relative_path_invert_loop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time'])>-1">
+        <div>
+            <h4>Y Axis Stabilization</h4>
+            <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Y Stabilization Type</label>
+            <div class="controls">
+                <select id="stabilization_profile_y_type" name="y_type" class="ignore_hidden_errors" data-bind="options: get_xy_stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: y_type"></select>
-        <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_type"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
-      <label class="control-label">Fixed Coordinate</label>
-      <div class="controls">
-        <div class="input-append">
-          <input id="stabilization_profile_y_fixed_coordinate" name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate"/>
-          <span class="add-on">mm</span>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_type"></div>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_coordinate"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
-      <label class="control-label">Fixed Path</label>
-      <div class="controls">
-        <div class="input-append input-block-level">
-          <input id="stabilization_profile_y_fixed_path" name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path"/>
-          <span class="add-on">mm</span>
-          <span class="add-on">csv</span>
+        <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
+            <label class="control-label">Fixed Coordinate</label>
+            <div class="controls">
+                <div class="input-append">
+                    <input id="stabilization_profile_y_fixed_coordinate" name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate" />
+                    <span class="add-on">mm</span>
+                </div>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_coordinate"></div>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_path"></div>
-        <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
-      <label class="control-label">Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+        <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
+            <label class="control-label">Fixed Path</label>
+            <div class="controls">
+                <div class="input-append input-block-level">
+                    <input id="stabilization_profile_y_fixed_path" name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path" />
+                    <span class="add-on">mm</span>
+                    <span class="add-on">csv</span>
+                </div>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_path"></div>
+                <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
+            <label class="control-label">Loop</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
 
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'fixed_path' && y_fixed_path_loop() ">
-      <label class="control-label">Invert Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-            <input name="y_fixed_path_invert_loop" type="checkbox" data-bind="checked: y_fixed_path_invert_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'relative'">
-      <label class="control-label">Relative Coordinate</label>
-      <div class="controls">
-        <div class="input-append">
-          <input id="stabilization_profile_y_relative" name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative"/>
-          <span class="add-on">%</span>
+                </label>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative"></div>
-      </div>
-    </div>
-    <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
-      <label class="control-label">Relative Path</label>
-      <div class="controls">
-        <div class="input-append input-block-level">
-          <input id="stabilization_profile_y_relative_path" name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path"/>
-          <span class="add-on">%</span>
-          <span class="add-on">csv</span>
+        <div class="control-group" data-bind="visible: y_type() === 'fixed_path' && y_fixed_path_loop() ">
+            <label class="control-label">Invert Loop</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="y_fixed_path_invert_loop" type="checkbox" data-bind="checked: y_fixed_path_invert_loop" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+            </div>
         </div>
-        <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative_path"></div>
-        <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
-      </div>
+        <div class="control-group" data-bind="visible: y_type() === 'relative'">
+            <label class="control-label">Relative Coordinate</label>
+            <div class="controls">
+                <div class="input-append">
+                    <input id="stabilization_profile_y_relative" name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative" />
+                    <span class="add-on">%</span>
+                </div>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative"></div>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
+            <label class="control-label">Relative Path</label>
+            <div class="controls">
+                <div class="input-append input-block-level">
+                    <input id="stabilization_profile_y_relative_path" name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path" />
+                    <span class="add-on">%</span>
+                    <span class="add-on">csv</span>
+                </div>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative_path"></div>
+                <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
+            <label class="control-label">Loop</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: y_type() === 'relative_path' && y_relative_path_loop()">
+            <label class="control-label">Invert Loop</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="y_relative_path_invert_loop" type="checkbox" data-bind="checked: y_relative_path_invert_loop" />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </label>
+            </div>
+        </div>
     </div>
-    <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
-      <label class="control-label">Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-          <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
     </div>
-    <div class="control-group" data-bind="visible: y_type() === 'relative_path' && y_relative_path_loop()">
-      <label class="control-label">Invert Loop</label>
-      <div class="controls">
-        <label class="checkbox">
-            <input name="y_relative_path_invert_loop" type="checkbox" data-bind="checked: y_relative_path_invert_loop" />Enabled
-            <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-        </label>
-      </div>
+    <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
+        <p>
+            <strong>
+                There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
+                currently enabled.
+            </strong>
+        </p>
+    </div>
+    <hr />
+    <div>
+        <div>
+            <h4>Trigger Type</h4>
+            <span>Allows you to take snapshots either every layer or on a specific height interval.</span>
+            <br />
+        </div>
+        <div class="control-group">
+            <label class="control-label">Trigger Type</label>
+            <div class="controls">
+                <select id="snapshot_profile_layer_trigger_type" data-bind="options: get_trigger_type_options,
+                       optionsText: 'name',
+                       optionsValue: 'value',
+                       value: trigger_type"></select>
+                <span data-bind="visible: trigger_type() == 'layer'">
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#layerheight-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </span>
+                <span data-bind="visible: trigger_type() == 'timer'">
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#timer-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </span>
+                <span data-bind="visible: trigger_type() == 'gcode'">
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#gcode-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                </span>
+                <div class="error_label_container text-error" data-error-for="snapshot_profile_layer_trigger_type"></div>
+            </div>
+        </div>
+
+        <div data-bind="visible: trigger_type() == 'layer'">
+            <div class="control-group">
+                <label class="control-label">Trigger Height</label>
+                <div class="controls">
+                    <span class="input-append">
+                        <input id="snapshot_profile_layer_trigger_height" name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors"
+                               data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true" />
+                        <span class="add-on">mm</span>
+                    </span>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#trigger-height" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="snapshot_profile_layer_trigger_height"></div>
+                    <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible: trigger_type() == 'timer'">
+            <div class="control-group">
+                <label class="control-label">Seconds to Trigger</label>
+                <div class="controls">
+                    <input id="snapshot_profile_timer_trigger_seconds" name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
+                           data-bind="value: timer_trigger_seconds" min="0" required="true" />
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#seconds-to-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="snapshot_profile_timer_trigger_seconds"></div>
+                    <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div data-bind="visible: print_quality_settings_available">
+        <h4>Print Quality Settings<a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#print-quality-settings" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a></h4>
+
+        <p>Here you can place restrictions on when Octolapse can trigger a snapshot.</p>
+
+        <div data-bind="visible: trigger_on_zhop_only_available">
+            <div>
+                <h5>Trigger on Z-Hop Only</h5>
+                <p>Only allow snapshots when your printer is lifted.</p>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: require_zhop" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#trigger-on-z-hop-only" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible:extruder_trigger_requirements_available">
+            <div>
+                <h5>Extruder Trigger Requirements</h5>
+                <p>
+                    Set extruder requirements for triggering a snapshot.
+                </p>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input id="snapshot_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#extruder-trigger-requirements" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div data-bind="visible:extruder_state_requirements_enabled">
+                <div class="control-group">
+                    <label class="control-label">Extrusion Starting</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_extruding_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_extruding_start"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_extruding_start"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">During Extrusion</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_extruding" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_extruding"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_extruding"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">On Extruder Primed</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_primed" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_primed"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_primed"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Start Retracting</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_retracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_retracting_start"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracting_start"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Retracting</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_retracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_retracting"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracting"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Partially Retracted</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_partially_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_partially_retracted"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_partially_retracted"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Fully Retracted</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_retracted"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracted"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Start Deretracting</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_deretracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_deretracting_start"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting_start"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Deretracting</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_deretracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_deretracting"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">On Deretracted</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_trigger_on_deretracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+
+                               value: trigger_on_deretracted"></select>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracted"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible: feature_detection_available">
+            <div>
+                <h5>Feature Detection</h5>
+                <p>Allow snapshots to be taken while printing certain types of features.  The detection is performed by matching the current gcode speeds with your printer profile settings.  They must match exactly in order to work!</p>
+                <p>Important Note: If your slicer has any features that slow down a layer speed detection will not work properly on these layers (in Slic3r, check Filament Settings->Cooling->Cooling Thresholds)</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Enable Feature Detection</label>
+                <div class="controls">
+                    <label class="checkbox" title="Enable or disable feature detection and restriction">
+                        <input type="checkbox" data-bind="checked: feature_restrictions_enabled" /> Enabled
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div data-bind="visible: feature_restrictions_enabled()">
+                <div data-bind="template:'printer-feature-template'"></div>
+                <div data-bind="template: feature_template_id"></div>
+            </div>
+            <div>
+                <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
+                    <p>
+                        <strong>
+                            There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
+                            currently enabled.
+                        </strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div data-bind="visible: position_restrictions_available">
+            <div>
+                <div>
+                    <h5>Position Restrictions</h5>
+                    <p>
+                        Restrict snapshots so that they can only occur within the boundries, either rectangular or
+                        circular, you set. You can add as many as you require.
+                    </p>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Enable Position Restrictions</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Enable or disable position restrictions">
+                            <input type="checkbox" data-bind="checked: position_restrictions_enabled" /> Enabled
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#position-restrictions" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div data-bind="visible: position_restrictions_enabled">
+                <!-- Add new position restriction -->
+                <div class="control-group">
+                    <label class="control-label">Position Restriction Type</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_new_position_restriction_type" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_types,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: new_position_restriction_type"></select>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_type"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Position Restriction Shape</label>
+                    <div class="controls">
+                        <select id="snapshot_profile_new_position_restriction_shape" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_shapes,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: new_position_restriction_shape"></select>
+                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-shape" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_shape"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <div class="row-fluid">
+                            <div class="span6">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on">X</span>
+                                    <input id="octolapse_new_position_restriction_x"
+                                           name="new_position_restriction_x" type="number"
+                                           class="input-small ignore_hidden_errors text-right"
+                                           data-bind="value: new_position_restriction_x" step="any"
+                                           required="true" />
+                                    <span class="add-on">mm</span>
+                                </div>
+                                <div class="error_label_container text-error" data-error-for="octolapse_new_position_restriction_x"></div>
+                            </div>
+                            <div class="span6">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on">Y</span>
+                                    <input id="octolapse_new_position_restriction_y"
+                                           name="new_position_restriction_y" type="number"
+                                           class="input-small ignore_hidden_errors text-right"
+                                           data-bind="value: new_position_restriction_y" step="any"
+                                           required="true" />
+                                    <span class="add-on">mm</span>
+                                </div>
+                                <div class="error_label_container text-error" data-error-for="octolapse_new_position_restriction_y"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: new_position_restriction_shape() == 'rect'">
+                    <div class="controls">
+                        <div class="row-fluid">
+                            <div class="span6">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on">X2</span>
+                                    <input id="octolapse_new_position_restriction_x2"
+                                           name="new_position_restriction_x2" type="number"
+                                           class="input-small ignore_hidden_errors text-right"
+                                           data-bind="value: new_position_restriction_x2" step="any"
+                                           required="true" />
+                                    <span class="add-on">mm</span>
+                                </div>
+                                <div class="error_label_container text-error" data-error-for="octolapse_new_position_restriction_x2"></div>
+                            </div>
+                            <div class="span6">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on">Y2</span>
+                                    <input id="octolapse_new_position_restriction_y2"
+                                           name="new_position_restriction_y2" type="number"
+                                           class="input-small ignore_hidden_errors text-right"
+                                           data-bind="value: new_position_restriction_y2" step="any"
+                                           required="true" />
+                                    <span class="add-on">mm</span>
+                                </div>
+                                <div class="error_label_container text-error" data-error-for="octolapse_new_position_restriction_y2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: new_position_restriction_shape() == 'circle'">
+                    <div class="controls">
+                        <div class="row-fluid">
+                            <div class="span12">
+                                <div class="input-prepend input-append">
+                                    <span class="add-on">Radius</span>
+                                    <input id="octolapse_new_position_restriction_r"
+                                           name="new_position_restriction_r" type="number"
+                                           class="input-small ignore_hidden_errors text-right"
+                                           data-bind="value: new_position_restriction_r" step="any" min="0"
+                                           required="true" />
+                                    <span class="add-on">mm</span>
+                                </div>
+                                <div class="error_label_container text-error" data-error-for="octolapse_new_position_restriction_r"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   data-bind="checked: new_calculate_intersections"
+                                   title="Calculate intersections and trigger if an intersection is in position." />Calculate Intersections
+                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#calculate-intersections" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        </label>
+                        <span class="help-inline">
+                            When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.
+                        </span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <small>
+                            <a href="#" class="btn btn-default"
+                               data-bind="click: function(){$data.addPositionRestriction();}">
+                                Add Position
+                                Restriction
+                            </a>
+                        </small>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: (position_restrictions().length > 0)">
+                    <div class="controls">
+                        <div>
+                            <div>
+                                <h4>
+                                    Current Position Restrictions
+                                </h4>
+                            </div>
+                            <table class="table-striped table-hover table-condensed table-hover octolapse-profiles">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Type
+                                        </th>
+                                        <th>
+                                            Shape
+                                        </th>
+                                        <th>
+                                            X
+                                        </th>
+                                        <th>
+                                            Y
+                                        </th>
+                                        <th>
+                                            X2
+                                        </th>
+                                        <th>
+                                            Y2
+                                        </th>
+                                        <th>
+                                            R
+                                        </th>
+                                        <th>
+                                            Intersect
+                                        </th>
+                                        <th>
+                                            Action
+                                        </th>
+                                        <th>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: position_restrictions">
+                                    <tr>
+                                        <td data-bind="text: type"></td>
+                                        <td data-bind="text: shape"></td>
+                                        <td data-bind="text: x"></td>
+                                        <td data-bind="text: y"></td>
+                                        <td data-bind="text: (shape == 'rect' ? x2 : '')"></td>
+                                        <td data-bind="text: (shape == 'rect' ? y2 : '')"></td>
+                                        <td data-bind="text: (shape == 'circle' ? r : '')"></td>
+                                        <td data-bind="text: (calculate_intersections ? 'True' : 'False')"></td>
+                                        <td>
+                                            <a href="#" class="btn btn-default"
+                                               data-bind="click: function() {$parent.removePositionRestriction($index);}">Remove</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-  </div>
 </script>
 
-
+{% include "octolapse_profiles_snapshot_slicer_features.jinja2" %}
 

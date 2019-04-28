@@ -199,7 +199,6 @@ class SnapshotGcodeGenerator(object):
         self.Settings = octolapse_settings  # type: OctolapseSettings
         self._stabilization = self.Settings.profiles.current_stabilization()
         self.StabilizationPaths = self._stabilization.get_stabilization_paths()
-        self.Snapshot = self.Settings.profiles.current_snapshot()
         self.Printer = self.Settings.profiles.current_printer()
         self.snapshot_command = self.Printer.snapshot_command
         self.OctoprintPrinterProfile = octoprint_printer_profile

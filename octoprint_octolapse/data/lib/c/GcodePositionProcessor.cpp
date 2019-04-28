@@ -198,9 +198,10 @@ extern "C"
 			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
 		}
-		Py_INCREF(py_position_args);
-		Py_INCREF(py_stabilization_args);
-		Py_INCREF(py_stabilization_type_args);
+		// Removed by BH on 4-28-2019
+		//Py_INCREF(py_position_args);
+		//Py_INCREF(py_stabilization_args);
+		//Py_INCREF(py_stabilization_type_args);
 		// Extract the position args
 		gcode_position_args p_args;
 		if (!ParsePositionArgs(py_position_args, &p_args))
@@ -247,9 +248,9 @@ extern "C"
 		}
 		// Bring the snapshot plan refcount to 1
 		Py_DECREF(py_snapshot_plans);
-		Py_DECREF(py_position_args);
-		Py_DECREF(py_stabilization_args);
-		Py_DECREF(py_stabilization_type_args);
+		//Py_DECREF(py_position_args);
+		//Py_DECREF(py_stabilization_args);
+		//Py_DECREF(py_stabilization_type_args);
 		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
@@ -274,9 +275,10 @@ extern "C"
 			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
 		}
-		Py_INCREF(py_position_args);
-		Py_INCREF(py_stabilization_args);
-		Py_INCREF(py_stabilization_type_args);
+		// Removed by BH on 4-28-2019
+		//Py_INCREF(py_position_args);
+		//Py_INCREF(py_stabilization_args);
+		//Py_INCREF(py_stabilization_type_args);
 		// Extract the position args
 		gcode_position_args p_args;
 		//std::cout << "Parsing position arguments\r\n";
@@ -328,9 +330,9 @@ extern "C"
 		}
 		// Bring the snapshot plan refcount to 1
 		Py_DECREF(py_snapshot_plans);
-		Py_DECREF(py_position_args);
-		Py_DECREF(py_stabilization_args);
-		Py_DECREF(py_stabilization_type_args);
+		//Py_DECREF(py_position_args);
+		//Py_DECREF(py_stabilization_args);
+		//Py_DECREF(py_stabilization_type_args);
 		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
@@ -745,7 +747,8 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	Py_INCREF(poLocationDetectionCommands);
+	// Removed by BH on 4-28-2019
+	//Py_INCREF(poLocationDetectionCommands);
 
 	positionArgs->key = pKey;
 	positionArgs->autodetect_position = iAutoDetectPosition;
@@ -790,7 +793,7 @@ static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positio
 		positionArgs->location_detection_commands.push_back(command);
 		Py_DECREF(pyListItem);
 	}
-	Py_DECREF(poLocationDetectionCommands);
+	//Py_DECREF(poLocationDetectionCommands);
 	return true;
 }
 
@@ -832,7 +835,8 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	Py_INCREF(pyLocationDetectionCommands);
+	// Removed by BH on 4/28/2019
+	//Py_INCREF(pyLocationDetectionCommands);
 	positionArgs->autodetect_position = iAutoDetectPosition;
 	positionArgs->origin_x_none = iOriginXIsNone > 0;
 	positionArgs->origin_y_none = iOriginYIsNone > 0;
@@ -873,7 +877,7 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 		std::string command = PyUnicode_SafeAsString(pyListItem);
 		positionArgs->location_detection_commands.push_back(command);
 	}
-	Py_DECREF(pyLocationDetectionCommands);
+	//Py_DECREF(pyLocationDetectionCommands);
 	return true;
 }
 
@@ -906,7 +910,6 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		return false;
 	}
 	stabilizationArgs->z_lift_height = PyFloat_AS_DOUBLE(py_z_lift_height);
-	Py_DECREF(py_gcode_settings);
 	
 	// Get IsBound
 	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
@@ -1095,9 +1098,8 @@ static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_trave
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_generator from the stabilization args.");
 		return false;
 	}
-	// py_gcode_generator is a borrowed reference, need to incref.
-	//Py_INCREF(py_gcode_generator);
-
+	// Need to incref py_gcode_generator, borrowed ref and we're holding it!
+	Py_INCREF(py_gcode_generator);
 	// extract the get_snapshot_position callback
 	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
 	if (py_get_snapshot_position_callback == NULL)
@@ -1112,7 +1114,9 @@ static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_trave
 		PyErr_SetString(PyExc_TypeError, "The get_snapshot_position attribute must be callable.");
 		return NULL;
 	}
-	// py_get_snapshot_position_callback is a new reference, no reason to decref
+	// py_get_snapshot_position_callback is a new reference, no reason to incref
+
+	// set the travel args values
 	min_travel_args->py_gcode_generator = py_gcode_generator;
 	min_travel_args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
 	min_travel_args->has_py_callbacks = true;

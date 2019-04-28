@@ -4,8 +4,8 @@ import json
 import sys
 import os
 from octoprint_octolapse.settings import \
-    OctolapseSettings, PrinterProfile, StabilizationProfile, SnapshotProfile,\
-    RenderingProfile, CameraProfile, DebugProfile, Slic3rPeSettings, Simplify3dSettings, CuraSettings, OtherSlicerSettings
+    OctolapseSettings, PrinterProfile, StabilizationProfile, RenderingProfile, CameraProfile, DebugProfile, \
+    Slic3rPeSettings, Simplify3dSettings, CuraSettings, OtherSlicerSettings
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -79,7 +79,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
         'defaults': {
             'printer':PrinterProfile().to_dict(),
             'stabilization':StabilizationProfile().to_dict(),
-            'snapshot': SnapshotProfile().to_dict(),
             'rendering': RenderingProfile().to_dict(),
             'camera': CameraProfile().to_dict(),
             'debug': DebugProfile().to_dict(),
@@ -88,9 +87,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, log_file_path, def
 
     # add all profiles
     for printer in settings_dict['printers']:
-
         #
-
         speed_units = printer['axis_speed_display_units']
         printer['slicers'] = {}
         slicer_type = printer["slicer_type"]

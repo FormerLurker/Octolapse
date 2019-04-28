@@ -517,7 +517,6 @@ $(function () {
                 //console.log("Updating Profiles");
                 self.profiles().printers(settings.profiles.printers);
                 self.profiles().stabilizations(settings.profiles.stabilizations);
-                self.profiles().snapshots(settings.profiles.snapshots);
                 self.profiles().renderings(settings.profiles.renderings);
                 self.profiles().cameras(settings.profiles.cameras);
                 self.profiles().debug_profiles(settings.profiles.debug_profiles);
@@ -622,23 +621,6 @@ $(function () {
                 }
             };
 
-            // Snapshot Profile Settings
-            self.snapshots_sorted = ko.computed(function() { return self.nameSort(self.profiles().snapshots) });
-            self.openCurrentSnapshotProfile = function () {
-                //console.log("Opening current snapshot profile from tab.")
-                Octolapse.Snapshots.showAddEditDialog(self.current_snapshot_profile_guid(), false);
-            };
-            self.defaultSnapshotChanged = function (obj, event) {
-                if (Octolapse.Globals.is_admin()) {
-                    if (event.originalEvent) {
-                        // Get the current guid
-                        var guid = $("#octolapse_tab_snapshot_profile").val();
-                        //console.log("Default Snapshot is changing to " + guid);
-                        Octolapse.Snapshots.setCurrentProfile(guid);
-                        return true;
-                    }
-                }
-            };
 
             // Rendering Profile Settings
             self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings) });
