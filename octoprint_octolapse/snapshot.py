@@ -25,7 +25,7 @@ import os as os
 import shutil
 from csv import DictWriter
 from io import open as i_open
-from time import sleep, time
+from time import sleep
 import requests
 from PIL import ImageFile
 import sys
@@ -39,7 +39,6 @@ from PIL import Image
 
 # create the module level logger
 import octoprint_octolapse.camera as camera
-from octoprint_octolapse.settings import CameraProfile, OctolapseSettings
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.utility import TimelapseJobInfo

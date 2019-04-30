@@ -50,7 +50,7 @@ class Timelapse(object):
             on_prerender_start=None, on_render_start=None, on_render_success=None, on_render_error=None,
             on_render_end=None, on_timelapse_stopping=None, on_timelapse_stopped=None,
             on_state_changed=None, on_timelapse_end=None,
-            on_snapshot_position_error=None, on_position_error=None, on_plugin_message_sent=None
+            on_snapshot_position_error=None, on_position_error=None
     ):
         # config variables - These don't change even after a reset
         self._data_folder = data_folder
@@ -74,7 +74,6 @@ class Timelapse(object):
         self._timelapse_end_callback = on_timelapse_end
         self._snapshot_position_error_callback = on_snapshot_position_error
         self._position_error_callback = on_position_error
-        self._plugin_message_sent_callback = on_plugin_message_sent
         self._commands = Commands()  # used to parse and generate gcode
         self._triggers = None
         self._print_end_status = "Unknown"
@@ -1357,14 +1356,6 @@ class Timelapse(object):
         except Exception as e:
             # no need to re-raise, callbacks won't be notified, however.
             logger.exception("Failed to send state change message.")
-
-    def _send_plugin_message(self, message_type, message):
-        self._plugin_message_sent_callback(message_type, message)
-
-    def _send_plugin_message_async(self, message_type, message):
-        warning_thread = threading.Thread(target=self._send_plugin_message, args=[message_type, message])
-        warning_thread.daemon = True
-        warning_thread.start()
 
     def _is_trigger_waiting(self):
         # make sure we're in a state that could want to check for triggers

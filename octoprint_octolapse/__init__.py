@@ -74,7 +74,7 @@ from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, Stab
     SettingsJsonEncoder
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
-
+from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
 
 try:
     # noinspection PyCompatibility
@@ -104,6 +104,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.gcode_preprocessor = None
         self._preprocessing_progress_queue = None
         self._preprocessing_cancel_event = threading.Event()
+
+        self._plugin_message_queue = queue.Queue()
+        self._message_worker = None
 
     def get_sorting_key(self, context=None):
         return 1
@@ -1014,6 +1017,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         """Get the plugin's current printer profile"""
         return self._printer_profile_manager.get_current()
 
+    def queue_plugin_message(self, plugin_message):
+        self._plugin_message_queue.put(plugin_message)
+
     # EVENTS
     #########
     def get_settings_defaults(self):
@@ -1095,8 +1101,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_timelapse_end=self.on_timelapse_end,
             on_state_changed=self.on_timelapse_state_changed,
             on_snapshot_position_error=self.on_snapshot_position_error,
-            on_position_error=self.on_position_error,
-            on_plugin_message_sent=self.on_plugin_message_sent
+            on_position_error=self.on_position_error
         )
 
     def on_startup(self, host, port):
@@ -1115,6 +1120,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             # create our timelapse object
             self.create_timelapse_object()
+
+            # create our message worker
+            self._message_worker = MessengerWorker(
+                self._plugin_message_queue, self._plugin_manager, self._identifier, update_period_seconds=1
+            )
+
+            # start the message worker
+            self._message_worker.start()
 
             # apply camera settings if necessary
             startup_cameras = self._octolapse_settings.profiles.startup_cameras()
@@ -1753,12 +1766,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def on_plugin_message_sent(self, message_type, message):
-        if message_type == "error":
-            self.send_popup_error(message)
-        else:
-            self.send_plugin_message(message_type, message)
-
     def on_snapshot_position_error(self, message):
         state_data = self._timelapse.to_state_dict()
         data = {
@@ -1795,13 +1802,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_snapshot_start(self):
         data = {
-            "type": "snapshot-start",
+            #"type": "snapshot-start",
             "msg": "Octolapse is taking a snapshot.",
             "status": self.get_status_dict(),
             "main_settings": self._octolapse_settings.main_settings.to_dict(),
             "state": self._timelapse.to_state_dict(include_timelapse_start_data=False)
         }
-        self._plugin_manager.send_plugin_message(self._identifier, data)
+        self.queue_plugin_message(PluginMessage(data, "snapshot-start"))
 
     def on_snapshot_end(self, *args):
         payload = args[0]
@@ -1817,7 +1824,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 snapshot_error = snapshot_payload["error"]
 
         data = {
-            "type": "snapshot-complete",
+            #"type": "snapshot-complete",
             "msg": "Octolapse has completed the current snapshot.",
             "status": status_dict,
             "state": self._timelapse.to_state_dict(),
@@ -1826,8 +1833,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             'error': error,
             "snapshot_success": snapshot_success,
             "snapshot_error": snapshot_error
-        };
-        self._plugin_manager.send_plugin_message(self._identifier, data)
+        }
+        self.queue_plugin_message(PluginMessage(data, "snapshot-complete"))
+
 
     def on_new_thumbnail_available(self, guid):
         payload = {
@@ -1927,7 +1935,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     def on_timelapse_state_changed(self, *args):
         state_change_dict = args[0]
-        self.send_state_changed_message(state_change_dict)
+        self.queue_plugin_message(PluginMessage(state_change_dict, "state-changed", rate_limit_seconds=1))
 
     def on_prerender_start(self, payload):
         self.send_prerender_start_message(payload)
@@ -2018,7 +2026,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_render_end(self):
         self.send_render_end_message()
 
-
     # ~~ AssetPlugin mixin
     def get_assets(self):
         logger.info("Octolapse is loading assets.")
@@ -2104,6 +2111,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):
         return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
+
+
+
+
 
 # If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
