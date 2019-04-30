@@ -118,6 +118,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def get_current_octolapse_settings(self):
         # returns a guaranteed up-to-date settings object
         return self._octolapse_settings
+
     # Blueprint Plugin Mixin Requests
     @octoprint.plugin.BlueprintPlugin.route("/downloadTimelapse/<filename>", methods=["GET"])
     @restricted_access
@@ -1780,14 +1781,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if self._timelapse is not None:
             state_data = self._timelapse.to_state_dict(include_timelapse_start_data=True)
         data = {
-            "type": "state-loaded",
             "msg": "The current state has been loaded.",
             "main_settings": self._octolapse_settings.main_settings.to_dict(),
             "status": self.get_status_dict(),
             "state": state_data
         }
         try:
-            self._plugin_manager.send_plugin_message(self._identifier, data)
+            self.queue_plugin_message(PluginMessage(data, "state-loaded"))
         except Exception as e:
             raise e
 
@@ -1836,13 +1836,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self.queue_plugin_message(PluginMessage(data, "snapshot-complete"))
 
-
     def on_new_thumbnail_available(self, guid):
-        payload = {
-            "type": "new-thumbnail-available",
+        data = {
             "guid": guid
         }
-        self._plugin_manager.send_plugin_message(self._identifier, payload)
+        self.queue_plugin_message(PluginMessage(data, "new-thumbnail-available"))
 
     def on_print_failed(self):
         self._timelapse.on_print_failed()
