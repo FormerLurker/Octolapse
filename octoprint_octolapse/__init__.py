@@ -2108,10 +2108,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):
-        return ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
+        allowed_extensions = ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
 
+        if sys.version_info < (3,0):
+            return [i.encode('ascii', 'replace') for i in allowed_extensions]
 
-
+        return allowed_extensions
 
 
 # If you want your plugin to be registered within OctoPrin#t under a different
@@ -2124,6 +2126,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
 __plugin_name__ = "Octolapse"
 __plugin_pythoncompat__ = ">=2.7,<4"
+
 
 def __plugin_load__():
     global __plugin_implementation__

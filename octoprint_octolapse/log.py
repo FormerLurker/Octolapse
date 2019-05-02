@@ -44,31 +44,6 @@ logging.Logger.verbose = verbose
 # end custom log level - VERBOSE
 
 
-#def _get_message_and_format(record):
-#    """ Replacement 'get_message' function for logger that calls the string.format using the message args"""
-#    # get msg and args from the record
-#
-#    if record.args:
-#        msg = str(record.msg)
-#        args = record.args
-#        # turn the args into a tuple
-#        if not isinstance(args, tuple):
-#            args = (args,)
-#        # format the message (not kwargs...)
-#        ## todo, get to work with kwargs maybe?
-#        return msg.format(*args)
-#    return record.msg
-#
-#
-#def _handle_wrapper(function):
-#    """Wrap handle to use our custom get_message function"""
-#    @functools.wraps(function)
-#    def handle(record):
-#        record.getMessage = types.MethodType(_get_message_and_format, record)
-#        return function(record)
-#    return handle
-
-
 def format_log_time(time_seconds):
     log_time = datetime.datetime.fromtimestamp(time_seconds)
     t = datetime.datetime.strftime(log_time, "%Y-%m-%d %H:%M:%S,{0:03}".format(int(log_time.microsecond/1000)))
@@ -97,12 +72,12 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class OctolapseConsoleHandler(logging.StreamHandler):
+class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
     def __init__(self, *args, **kwargs):
         super(OctolapseConsoleHandler, self).__init__(*args, **kwargs)
 
 
-class OctolapseFileHandler(CleaningTimedRotatingFileHandler):
+class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixin):
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
 
