@@ -1932,7 +1932,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return line
 
     def on_timelapse_state_changed(self, *args):
-        state_change_dict = args[0]
+        state_change_dict = {
+            "state": args[0]
+        }
         self.queue_plugin_message(PluginMessage(state_change_dict, "state-changed", rate_limit_seconds=1))
 
     def on_prerender_start(self, payload):

@@ -1680,7 +1680,7 @@ class Simplify3dSettings(SlicerSettings):
         settings.lift_when_retracted = (
             settings.retract_before_move and settings.z_lift_height is not None and settings.z_lift_height > 0
         )
-        settings.vase_mode = self.self.spiral_vase_mode
+        settings.vase_mode = self.spiral_vase_mode
         settings.layer_height = self.layer_height
         return settings
 

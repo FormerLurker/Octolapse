@@ -53,6 +53,7 @@ class Timelapse(object):
             on_snapshot_position_error=None, on_position_error=None
     ):
         # config variables - These don't change even after a reset
+        self.state_update_period_seconds = 1
         self._data_folder = data_folder
         self.get_current_octolapse_settings = get_current_octolapse_settings
         self._settings = self.get_current_octolapse_settings() # type: OctolapseSettings
@@ -78,7 +79,6 @@ class Timelapse(object):
         self._triggers = None
         self._print_end_status = "Unknown"
         self._last_state_changed_message_time = None
-        self._state_change_message_thread = None
         self._last_position_error_message_time = None
         self._position_error_message_thread = None
         self.has_position_errors_to_report = False
@@ -1253,16 +1253,12 @@ class Timelapse(object):
             # do not send more than 1 per second
 
             time_since_last_update = time.time() - self._last_state_changed_message_time
-            if time_since_last_update < 1:
+            if time_since_last_update < self.state_update_period_seconds:
                 if self._position.current_pos.has_position_error:
                     self.has_position_errors_to_report = True
                     self.position_errors_to_report = self._position.current_pos.has_position_error
                 return
 
-        # if another thread is trying to send the message, stop it
-        if self._state_change_message_thread is not None and self._state_change_message_thread.isAlive():
-            # don't send any messages if another thread is alive.
-            return
         try:
             # Notify any callbacks
             if self._state_changed_callback is not None:
@@ -1335,22 +1331,16 @@ class Timelapse(object):
                     }
                     self._state_changed_callback(change_dict)
 
-
                 if self.is_realtime:
                     position_errors = False
                     if self.has_position_errors_to_report:
                         position_errors = self.position_errors_to_report
                     elif self._position.current_pos.has_position_error:
                         position_errors = self._position.current_pos.position_error
-                    self._state_change_message_thread = threading.Thread(
-                        target=send_real_time_change_message, args=[position_errors]
-                    )
+                    send_real_time_change_message(position_errors)
                 else:
-                    self._state_change_message_thread = threading.Thread(
-                        target=send_pre_calculated_change_message
-                    )
-                self._state_change_message_thread.daemon = True
-                self._state_change_message_thread.start()
+                    send_pre_calculated_change_message()
+
                 self._last_state_changed_message_time = time.time()
 
         except Exception as e:
