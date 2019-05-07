@@ -485,7 +485,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         return json.dumps(
             {
-                "settings":self._octolapse_settings.to_json(), "msg": message
+                "settings": self._octolapse_settings.to_json(), "msg": message
             }
         ), 200, {'ContentType': 'application/json'}
 

@@ -692,6 +692,8 @@ class CameraControl(object):
         threads = []
         if camera_profiles is not None:
             for current_camera in camera_profiles:
+                if current_camera.camera_type != 'webcam':
+                    continue
                 if not force and (not current_camera.enabled or not current_camera.apply_settings_before_print):
                     continue
                 camera_settings_requests = get_mjpegstreamer_image_preferences_requests(current_camera)
@@ -713,6 +715,8 @@ class CameraControl(object):
     def _get_script_threads(cls, force, cameras):
         threads = []
         for current_camera in cameras:
+            if current_camera.camera_type != 'external-script':
+                continue
             if not force and (not current_camera.enabled or not current_camera.on_print_start_script):
                 continue
             threads.append(CameraSettingScriptThread(current_camera))

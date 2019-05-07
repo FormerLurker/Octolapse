@@ -65,8 +65,8 @@ $(function () {
                     dataType: "json",
                     success: function (data) {
                         self.import_text("");
-                        settings = data.settings
-                        message = data.msg
+                        settings = JSON.parse(data.settings);
+                        message = data.msg;
                         Octolapse.Settings.updateSettings(settings);
                         Octolapse.Globals.update(settings.main_settings);
                         // maybe add a success popup?

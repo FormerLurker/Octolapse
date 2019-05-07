@@ -201,24 +201,24 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             simlify3d["axis_speed_display_settings"] = 'mm-min'
             printer['slicers']['simplify_3d'] = simlify3d
         elif slicer_type == "slic3r-pe":
-            # slicer PE settings
             slic3rpe = {}
+            # slicer PE settings
             speed_multiplier = 1 if speed_units == "mm-sec" else 1.0 / 60.0
             slic3rpe["retract_length"] = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
             slic3rpe["retract_lift"] = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
             slic3rpe["deretract_speed"] = None if "detract_speed" not in printer or printer["detract_speed"] is None else float(printer["detract_speed"]) * speed_multiplier
             slic3rpe["retract_speed"] = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
             slic3rpe["perimeter_speed"] = None if "perimeter_speed" not in printer or printer["perimeter_speed"] is None else float(printer["perimeter_speed"]) * speed_multiplier
-            slic3rpe["small_perimeter_speed"] = '' if "small_perimeter_speed_text" not in printer or printer["small_perimeter_speed_text"] is None else unicode(printer["small_perimeter_speed_text"],"utf-8")
-            slic3rpe["external_perimeter_speed"] = '' if "external_perimeter_speed_text" not in printer or printer["external_perimeter_speed_text"] is None else unicode(printer["external_perimeter_speed_text"],"utf-8")
+            slic3rpe["small_perimeter_speed"] = '' if "small_perimeter_speed_text" not in printer or printer["small_perimeter_speed_text"] is None else printer["small_perimeter_speed_text"]
+            slic3rpe["external_perimeter_speed"] = '' if "external_perimeter_speed_text" not in printer or printer["external_perimeter_speed_text"] is None else printer["external_perimeter_speed_text"]
             slic3rpe["infill_speed"] = None if "infill_speed" not in printer or printer["infill_speed"] is None else float(printer["infill_speed"]) * speed_multiplier
-            slic3rpe["solid_infill_speed"] = '' if "solid_infill_speed_text" not in printer or printer["solid_infill_speed_text"] is None else unicode(printer["solid_infill_speed_text"],"utf-8")
-            slic3rpe["top_solid_infill_speed"] = '' if "top_solid_infill_speed_text" not in printer or printer["top_solid_infill_speed_text"] is None else unicode(printer["top_solid_infill_speed_text"],"utf-8")
+            slic3rpe["solid_infill_speed"] = '' if "solid_infill_speed_text" not in printer or printer["solid_infill_speed_text"] is None else printer["solid_infill_speed_text"]
+            slic3rpe["top_solid_infill_speed"] = '' if "top_solid_infill_speed_text" not in printer or printer["top_solid_infill_speed_text"] is None else printer["top_solid_infill_speed_text"]
             slic3rpe["support_material_speed"] = None if "support_speed" not in printer or printer["support_speed"] is None else float(printer["support_speed"]) * speed_multiplier
             slic3rpe["bridge_speed"] = None if "bridge_speed" not in printer or printer["bridge_speed"] is None else float(printer["bridge_speed"]) * speed_multiplier
             slic3rpe["gap_fill_speed"] = None if "gap_fill_speed" not in printer or printer["gap_fill_speed"] is None else float(printer["gap_fill_speed"]) * speed_multiplier
             slic3rpe["travel_speed"] = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
-            slic3rpe["first_layer_speed"] = '' if "first_layer_speed_text" not in printer or printer["first_layer_speed_text"] is None else unicode(printer["first_layer_speed_text"],"utf-8")
+            slic3rpe["first_layer_speed"] = '' if "first_layer_speed_text" not in printer or printer["first_layer_speed_text"] is None else printer["first_layer_speed_text"]
             slic3rpe["axis_speed_display_units"] = 'mm-sec'
             printer['slicers']['slic3r_pe'] = slic3rpe
 
