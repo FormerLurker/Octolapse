@@ -237,7 +237,7 @@ $(function () {
 
             // Debug
             Octolapse.DebugProfiles.profiles([]);
-            Octolapse.DebugProfiles.default_profile(settings.profiles.current_debug_profile_guid);
+            Octolapse.DebugProfiles.default_profile(settings.profiles.defaults.debug);
             Octolapse.DebugProfiles.profileOptions = {
                 'logging_levels': settings.profiles.options.debug.logging_levels,
                 'all_logger_names': settings.profiles.options.debug.all_logger_names

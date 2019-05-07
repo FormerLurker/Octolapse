@@ -25,7 +25,6 @@ def get_printer_profile():
           "z_hop": 0.5,
           "deretract_speed": 3000.0,
           "default_firmware_retractions": True,
-          "printer_position_confirmation_tolerance": 0.001,
           "units_default": "millimeters",
           "max_y": 0.0,
           "max_z": 0.0,

@@ -809,7 +809,6 @@ class TestPosition(unittest.TestCase):
         # x:119.9145519,y:113.33847,z:2.1
         # G1 X119.915 Y113.338 F7200
         position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        position.Printer.printer_position_confirmation_tolerance = .0051
         position.update(Commands.parse("M83"))
         position.update(Commands.parse("G90"))
         position.update(Commands.parse("G28"))

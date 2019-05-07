@@ -1018,7 +1018,6 @@ class TestTimelapse(unittest.TestCase):
             self.OctoprintTestPrinter, self.OctoprintPrinterProfile, self.FfMpegPath, False)
         self.Timelapse_GcodeTrigger.State = TimelapseState.RequestingSnapshotPosition
         # allow a difference up to +-0.0025 (0.005 total), but not at or over!
-        self.Timelapse_GcodeTrigger.Printer.printer_position_confirmation_tolerance = 0.005
 
         # Test JUST over tolerance
         # Test Pos 0,0,0 when at 0.005, 0.0025, 0.0025
