@@ -1185,6 +1185,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             # apply camera settings if necessary
             startup_cameras = self._octolapse_settings.profiles.startup_cameras()
+            # note that errors here will ONLY show up in the log.
             self.apply_camera_settings(camera_profiles=startup_cameras)
 
             # log the loaded state

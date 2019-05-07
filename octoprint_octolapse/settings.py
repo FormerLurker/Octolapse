@@ -904,7 +904,6 @@ class CameraProfile(ProfileSettings):
         self.on_after_render_script = ""
         self.delay = 125
         self.timeout_ms = 5000
-        self.camera_image_settings_enabled = False
         self.apply_settings_before_print = False
         self.apply_settings_at_startup = False
         self.snapshot_transpose = ""
@@ -1185,8 +1184,9 @@ class Profiles(Settings):
         for key in self.cameras:
             _current_camera = self.cameras[key]
             if (
-                _current_camera.enabled and _current_camera.camera_image_settings_enabled
-                and _current_camera.apply_settings_at_startup
+                _current_camera.enabled  and
+                _current_camera.camera_type == 'webcam' and
+                _current_camera.apply_settings_at_startup
             ):
                 _startup_cameras.append(_current_camera)
         return _startup_cameras
@@ -1499,7 +1499,6 @@ class OctolapseSettings(Settings):
         new_object.update(iterable)
         logger.info("Settings created from iterable.")
         return new_object
-
 
 
 class OctolapseGcodeSettings(Settings):

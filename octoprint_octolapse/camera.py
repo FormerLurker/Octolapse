@@ -63,12 +63,7 @@ def test_web_camera(camera_profile, timeout_seconds=2, is_before_print_test=Fals
                 )
                 logger.error(message)
                 raise CameraError('not-an-image',message)
-            elif (
-                camera_profile.camera_image_settings_enabled and
-                (
-                    not is_before_print_test or camera_profile.apply_settings_before_print
-                )
-            ):
+            elif not is_before_print_test or camera_profile.apply_settings_before_print:
                 test_web_camera_image_preferences(camera_profile, timeout_seconds)
         else:
             message = (
@@ -198,12 +193,14 @@ def test_mjpgstreamer_control(camera_profile, timeout_seconds=2):
             message = "The server denied access to the MJPG-Streamer control.htm for the '{0}' camera profile.  <a " \
                       "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
                       "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
-                      "error.</a>, or disable 'Custom Image Preferences'.".format(camera_profile.name)
+                      "error.</a>, or disable the 'Enable And Apply Preferences at Startup' and " \
+                      "'Enable And Apply Preferences Before Print' options.".format(camera_profile.name)
             logger.error(message)
             raise CameraError("mjpegstreamer-control-error", message)
         if r.status_code != requests.codes.ok:
             message = "Status code received ({0}) was not OK.  Double check your webcam 'Base Addresss' address and " \
-                      "your 'Snapshot Address Template'.  Or, disable 'Custom Image Preferences' for the {1} camera " \
+                      "your 'Snapshot Address Template'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
+                      "and 'Enable And Apply Preferences Before Print' options for the {1} camera " \
                       "profile and try again.".format(r.status_code, camera_profile.name)
             logger.error(message)
             raise CameraError('webcam_settings_apply_error', message)
@@ -254,7 +251,8 @@ def apply_camera_image_preference(
                       "1}' camera profile.  <a " \
                       "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
                       "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
-                      "error.</a>, or disable 'Custom Image Preferences'.".format(setting_name, camera_name)
+                      "error.</a>, disable the 'Enable And Apply Preferences at Startup' " \
+                      "and 'Enable And Apply Preferences Before Print' options '.".format(setting_name, camera_name)
             logger.error(message)
             raise CameraError("mjpegstreamer-control-error", message)
         if r.status_code != requests.codes.ok:
@@ -302,14 +300,16 @@ def get_mjpegstreamer_input_json(
                       "1}' camera profile.  <a " \
                       "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
                       "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
-                      "error.</a>, or disable 'Custom Image Preferences'.".format(setting_name, camera_name)
+                      "error.</a>, or disable the 'Enable And Apply Preferences at Startup' " \
+                      "and 'Enable And Apply Preferences Before Print' options.".format(setting_name, camera_name)
             logger.error(message)
             raise CameraError("mjpegstreamer-control-error", message)
         if r.status_code != requests.codes.ok:
             message = (
                 "Recived a status code of ({0}) while applying the {1} settings to the {2} camera profile.  Double "
                 "check your 'Base Address' and 'Snapshot Address Template' within your camera profile settings.  Or "
-                "disable 'Custom Image Preferences' for this profile and try again."
+                "disable the 'Enable And Apply Preferences at Startup' and 'Enable And Apply Preferences Before Print"  
+                "'options  for this profile and try again."
                 .format(r.status_code, setting_name, camera_name)
             )
             logger.error(message)
