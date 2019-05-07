@@ -116,7 +116,15 @@ table.octolapse-profiles td.profile_action {
     min-width: 120px;
 }
 
-
+.octolapse_dropzone
+{
+    z-index:10001; /* prevent octoprint's built in dropzone from completely taking over :)*/
+}
+.octolapse_dropzone:drop
+{
+    opacity: .5;
+    background-color: #000000;
+}
 .panel {
     margin-bottom: 20px;
     background-color: inherit;
@@ -3103,7 +3111,8 @@ fieldset.octolapse legend
     clear: both;
 }
 
-.progress-bar-container {
+.progress-bar-container{
+    width:100%;
     display: inline-flex;
     flex-grow: 1;
 }

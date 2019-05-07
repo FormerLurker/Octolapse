@@ -24,8 +24,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 # enable faulthandler for c extension
-
-
 # Create the root logger.  Note that it MUST be created before any imports that use the
 # plugin_octolapse.log.LoggingConfigurator, since it is a singleton and we want to be
 # the first to create it so that the name is correct.
@@ -35,7 +33,7 @@ root_logger = logging_configurator.get_root_logger()
 # so that we can
 logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
-
+from werkzeug.utils import secure_filename
 import sys
 import base64
 import json
@@ -43,8 +41,9 @@ import os
 import shutil
 import flask
 import threading
+import uuid
 from six.moves import queue
-
+from tempfile import mkdtemp
 # import python 3 specific modules
 if (sys.version_info) > (3,0):
     import faulthandler
@@ -59,7 +58,7 @@ import octoprint.filemanager
 from octoprint.events import Events
 from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
-import octoprint_octolapse.settings_migration as settings_migration
+
 import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
@@ -166,6 +165,37 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @admin_permission.require(403)
     def download_settings_request(self):
         return self.get_download_file_response(self.get_settings_file_path(), "Settings.json")
+
+    @octoprint.plugin.BlueprintPlugin.route("/downloadProfile", methods=["GET"])
+    @restricted_access
+    @admin_permission.require(403)
+    def download_profile_request(self):
+        # get the parameters
+        profile_type = flask.request.args["profile_type"]
+        guid = flask.request.args["guid"]
+        # get the profile settings
+        profile_json = self._octolapse_settings.get_profile_export_json(profile_type, guid)
+
+        # create a temp file
+        temp_directory = mkdtemp()
+        file_path = os.path.join(temp_directory,"profile_setting_json.json")
+        # see if the filename is valid
+        def delete_temp_path(file_path, temp_directory):
+            # delete the temp file and directory
+            os.unlink(file_path)
+            shutil.rmtree(temp_directory)
+
+        with open(file_path, "w") as settings_file:
+            settings_file.write(profile_json)
+            # create the download file response
+            download_file_response = self.get_download_file_response(
+                file_path,
+                "{0}_Profile.json".format(profile_type),
+                on_complete_callback=delete_temp_path,
+                on_complete_additional_args=temp_directory
+            )
+
+        return download_file_response
 
     @octoprint.plugin.BlueprintPlugin.route("/stopTimelapse", methods=["POST"])
     @restricted_access
@@ -411,6 +441,53 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @admin_permission.require(403)
     def load_settings_request(self):
         return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/importSettings", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def import_settings(self):
+        logger.info("Importing settings from file")
+        import_method = 'file'
+        import_text = ''
+        client_id = ''
+        # get the json request values
+        request_values = flask.request.get_json()
+        if request_values is not None:
+            import_method = request_values["import_method"]
+            import_text = request_values["import_text"]
+            client_id = request_values["client_id"]
+        if import_method == "file":
+            logger.debug("Importing settings from file.")
+            # Parse the request.
+            settings_path = flask.request.values['octolapse_settings_import_path_upload.path']
+            client_id = flask.request.values['client_id']
+            self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
+                settings_path,
+                self._plugin_version,
+                self.get_default_settings_folder(),
+            )
+            message = "Your settings have been updated from the supplied file."
+
+        elif import_method == "text":
+            logger.debug("Importing settings from text.")
+            # convert the settings json to a python object
+            self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
+                import_text,
+                self._plugin_version,
+                self.get_default_settings_folder(),
+            )
+            message = "Your settings have been updated from the uploaded text."
+
+        # if we're this far we need to save the settings.
+        self.save_settings()
+        # send a state changed message
+        self.send_settings_changed_message(client_id)
+
+        return json.dumps(
+            {
+                "settings":self._octolapse_settings.to_json(), "msg": message
+            }
+        ), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/getWebcamImagePreferences", methods=["POST"])
     @restricted_access
@@ -839,22 +916,26 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
     # blueprint helpers
     @staticmethod
-    def get_download_file_response(file_path, download_filename):
+    def get_download_file_response(file_path, download_filename, on_complete_callback=None, on_complete_additional_args=None):
         if os.path.isfile(file_path):
-            def single_chunk_generator(download_file):
-                while True:
-                    chunk = download_file.read(1024)
-                    if not chunk:
-                        break
-                    yield chunk
+            def single_chunk_generator(file_path):
+                with open(file_path, 'rb') as file_to_download:
+                    while True:
+                        chunk = file_to_download.read(1024)
+                        if not chunk:
+                            break
+                        yield chunk
+                if on_complete_callback is not None:
+                    on_complete_callback(file_path, on_complete_additional_args)
 
-            file_to_download = open(file_path, 'rb')
+
             response = flask.Response(flask.stream_with_context(
-                single_chunk_generator(file_to_download)))
+                single_chunk_generator(file_path)))
             response.headers.set('Content-Disposition',
                                  'attachment', filename=download_filename)
             response.headers.set('Content-Type', 'application/octet-stream')
             return response
+
         return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
 
     def apply_camera_settings(self, camera_profiles=None, force=False, settings_type=None):
@@ -880,7 +961,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())
 
     def get_default_settings_path(self):
-        return os.path.join(self.get_default_settings_folder(), "settings_default.json")
+        return os.path.join(
+            self.get_default_settings_folder(), "settings_default_{0}.json".format(self._plugin_version)
+        )
+
+    def get_default_settings_filename(self):
+        return "settings_default_{0}.json".format(self._plugin_version)
 
     def get_default_settings_folder(self):
         return os.path.join(self._basefolder, 'data')
@@ -897,59 +983,26 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         )
 
     def load_settings(self, force_defaults=False):
-        create_new_settings = False
-        settings_upgraded = False
-        if not os.path.isfile(self.get_settings_file_path()) or force_defaults:
-            # create new settings from default setting file
-            new_settings = OctolapseSettings.load(
-                self.get_default_settings_path(),
-                self._plugin_version
-            )
-           
-            if self._octolapse_settings is not None:
-                self._octolapse_settings.update(new_settings.to_dict())
-            else:
-                self._octolapse_settings = new_settings
-            # we have to update the logging configuration before we log anything new, else the settings might not
-            # be correct.
-            self.configure_loggers()
-            
-            logger.info("Creating new settings file from defaults.")
-            create_new_settings = True
+        if force_defaults:
+            settings_file_path = None
         else:
-            # Load settings from file
-            with open(self.get_settings_file_path()) as settingsJson:
-                data = json.load(settingsJson)
-                # do the settings need to be migrated?
-                if "version" in data and LooseVersion(data["version"]) != LooseVersion(self._plugin_version):
-                    data = settings_migration.migrate_settings(
-                        self._plugin_version, data, self.get_log_file_path(), self.get_default_settings_folder()
-                    )
-                    # No file existed, so we must have created default settings.  Save them!
-                    settings_upgraded = True
-                if self._octolapse_settings is None:
-                    #  create a new settings object
-                    self._octolapse_settings = OctolapseSettings.create_from_iterable(
-                        self._plugin_version,
-                        data
-                    )
-                    # we have to update the logging configuration before we log anything new, else the settings might not
-                    # be correct.
-                    self.configure_loggers()
-                    logger.info("Settings loaded from %s.", self.get_settings_file_path())
-                else:
-                    # update an existing settings object
-                    logger.info(
-                        "Settings loaded.  Updating existing settings object."
-                    )
-                    self._octolapse_settings.update(data)
+            settings_file_path = self.get_settings_file_path()
+
+        # create new settings from default setting file
+        new_settings, defaults_loaded = OctolapseSettings.load(
+            settings_file_path,
+            self._plugin_version,
+            self.get_default_settings_folder(),
+            self.get_default_settings_filename()
+        )
+        self._octolapse_settings = new_settings
+        self.configure_loggers()
+
         # Extract any settings from octoprint that would be useful to our users.
         self.copy_octoprint_default_settings(
-            apply_to_current_profile=create_new_settings)
+            apply_to_current_profile=defaults_loaded)
 
-        if create_new_settings or settings_upgraded:
-            # No file existed, so we must have created default settings.  Save them!
-            self.save_settings()
+        self.save_settings()
 
         return self._octolapse_settings.to_dict()
 
@@ -2038,6 +2091,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.js",
                 "js/octolapse.settings.js",
                 "js/octolapse.settings.main.js",
+                "js/octolapse.settings.import.js",
                 "js/octolapse.profiles.js",
                 "js/octolapse.profiles.printer.js",
                 "js/octolapse.profiles.printer.slicer.cura.js",
@@ -2118,6 +2172,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return allowed_extensions
 
 
+    def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+        max_upload_size_mb = 5  # 5mb bytes
+        return [("POST", "/importSettings", 1024*1024*max_upload_size_mb)]
+
 # If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here.  Same goes for the
@@ -2140,5 +2198,6 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.sent": (__plugin_implementation__.on_gcode_sent, -1),
         "octoprint.comm.protocol.gcode.sending": (__plugin_implementation__.on_gcode_sending, -1),
         "octoprint.comm.protocol.gcode.received": (__plugin_implementation__.on_gcode_received, -1),
-        "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions
+        "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions,
+        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
     }

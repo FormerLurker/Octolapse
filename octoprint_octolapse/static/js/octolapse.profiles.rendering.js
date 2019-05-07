@@ -223,6 +223,7 @@ $(function() {
                 // TODO: Octoprint limits file upload size on a per-endpoint basis.
                 // http://docs.octoprint.org/en/master/plugins/hooks.html#octoprint-server-http-bodysize
                 maxChunkSize: 100000,
+                 maxFilesize: 10,
                 progressall: function (e, data) {
                     // TODO: Get a better progress bar implementation.
                     var progress = parseInt(data.loaded / data.total * 100, 10);

@@ -74,6 +74,8 @@
                                             data-bind="click: function(){ $root.showAddEditDialog(guid(), isCopy=true);}"></a>
                             &nbsp;|&nbsp;<a href="#" class="fa fa-pencil" title="Edit profile"
                                             data-bind="click: function(){ $root.showAddEditDialog(guid());}"></a>
+                            &nbsp;|&nbsp;<a class="fa fa-download" title="Export profile"
+                                            data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_profile_request') }}' + '?apikey=' + UI_API_KEY + '&guid=' + guid() + '&profile_type=' + $root.profileTypeName()}" download=""></a>
                             &nbsp;|&nbsp;<a href="#" class="fa fa-trash-o" title="Delete profile"
                                             data-bind="click: function() {  if (guid() != $parent.current_profile_guid()) { $root.removeProfile($data.guid()); }}, css: {disabled: (guid() == $parent.current_profile_guid())}, enabled: (guid() != $parent.current_profile_guid())"></a>
                         </td>

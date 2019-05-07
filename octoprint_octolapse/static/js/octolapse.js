@@ -305,7 +305,7 @@ $(function () {
         value = parseFloat(value.toFixed(numDecimals).toString())
 
         return value;
-    }
+    };
 
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
@@ -370,6 +370,13 @@ $(function () {
         return true;
     }, 'Please enter a list of strings separated by commas.');
 
+    $.validator.addMethod("uploadFileRequired", function (value, element, callback) {
+        console.log("Validating upload file.");
+        if (callback != null)
+            return callback[0]();
+        return element.files.length > 0 && element.files[0].size > 0;
+
+    }, "You must select a file.");
 
     $.validator.addMethod("check_one", function(value, elem, param)
         {

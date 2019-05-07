@@ -23,271 +23,272 @@
 -->
 <script type="text/html" id="octolapse-settings-main">
 
-  <div class="panel-body">
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
+    <div class="panel-body">
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.enabled()  ), 'fa-close': (!Octolapse.Globals.enabled() ) },style: { color: (Octolapse.Globals.enabled()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_real_snapshot_time()  ), 'fa-close': (!Octolapse.Globals.show_real_snapshot_time() ) },style: { color: (Octolapse.Globals.show_real_snapshot_time()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.cancel_print_on_startup_error()  ), 'fa-close': (!Octolapse.Globals.cancel_print_on_startup_error() ) },style: { color: (Octolapse.Globals.cancel_print_on_startup_error()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'"></span>
+        </div>
+
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.'  : 'Auto snapshot reload is disabled'}">
+
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.' : 'Auto snapshot reload is disabled'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar control is enabled' : 'Navbar control is disabled'"></span>
+        </div>
+        <div data-bind="visible:Octolapse.Globals.navbar_enabled">
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_navbar_when_not_printing()  ), 'fa-close': (!Octolapse.Globals.show_navbar_when_not_printing() ) },style: { color: (Octolapse.Globals.show_navbar_when_not_printing()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
+
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'}">
+
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_changes() ) },style: { color: (Octolapse.Globals.show_position_changes()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_trigger_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_trigger_state_changes() ) },style: { color: (Octolapse.Globals.show_trigger_state_changes()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
+        </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_snapshot_plan_information()  ), 'fa-close': (!Octolapse.Globals.show_snapshot_plan_information() ) },style: { color: (Octolapse.Globals.show_snapshot_plan_information()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'"></span>
+        </div>
+
     </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_real_snapshot_time()  ), 'fa-close': (!Octolapse.Globals.show_real_snapshot_time() ) },style: { color: (Octolapse.Globals.show_real_snapshot_time()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.cancel_print_on_startup_error()  ), 'fa-close': (!Octolapse.Globals.cancel_print_on_startup_error() ) },style: { color: (Octolapse.Globals.cancel_print_on_startup_error()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'"></span>
+    <div class="panel-footer">
+        <div class="row-fluid">
+            <a href="#" class="span12 btn btn-default input-block-level" data-bind="click: showEditMainSettingsPopup">Edit Main Settings</a>
+        </div>
+
     </div>
 
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.'  : 'Auto snapshot reload is disabled'}">
+    <div id="octolapse_edit_settings_main_dialog" class="modal fade hide octolapse_add_edit_dialog">
 
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.auto_reload_latest_snapshot()  ), 'fa-close': (!Octolapse.Globals.auto_reload_latest_snapshot() ) },style: { color: (Octolapse.Globals.auto_reload_latest_snapshot()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + auto_reload_frames() + ' frames.' : 'Auto snapshot reload is disabled'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.navbar_enabled() ? 'The navbar control is enabled' : 'The navbar control is disabled'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.navbar_enabled()  ), 'fa-close': (!Octolapse.Globals.navbar_enabled() ) },style: { color: (Octolapse.Globals.navbar_enabled()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.navbar_enabled() ? 'Navbar control is enabled' : 'Navbar control is disabled'"></span>
-    </div>
-    <div data-bind="visible:Octolapse.Globals.navbar_enabled">
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_navbar_when_not_printing()  ), 'fa-close': (!Octolapse.Globals.show_navbar_when_not_printing() ) },style: { color: (Octolapse.Globals.show_navbar_when_not_printing()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_navbar_when_not_printing() ? 'The navbar will always display' : 'The navbar icon will be hidden unless a timelapse is running.'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'}">
+        <div class="modal-dialog" role="document">
 
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_state_changes() ) },style: { color: (Octolapse.Globals.show_position_state_changes()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_position_state_changes() ? 'Showing position state changes' : 'Not showing position state changes'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'}">
+            <div class="modal-content">
 
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_position_changes()  ), 'fa-close': (!Octolapse.Globals.show_position_changes() ) },style: { color: (Octolapse.Globals.show_position_changes()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_position_changes() ? 'Showing position changes' : 'Not showing position changes'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_extruder_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_extruder_state_changes() ) },style: { color: (Octolapse.Globals.show_extruder_state_changes()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_extruder_state_changes() ? 'Showing extruder state changes' : 'Not showing extruder state changes'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_trigger_state_changes()  ), 'fa-close': (!Octolapse.Globals.show_trigger_state_changes() ) },style: { color: (Octolapse.Globals.show_trigger_state_changes()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_trigger_state_changes() ? 'Showing trigger state changes' : 'Not showing trigger state changes'"></span>
-    </div>
-    <div>
-      <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'}">
-        <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_snapshot_plan_information()  ), 'fa-close': (!Octolapse.Globals.show_snapshot_plan_information() ) },style: { color: (Octolapse.Globals.show_snapshot_plan_information()  ) ? 'limegreen' : '' }"></span>
-      </span>
-      <span data-bind="text: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'"></span>
-    </div>
+                <form id="octolapse_edit_main_settings_form" class="form-horizontal octolapse_form">
+                    <div class="modal-header">
+                        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                        <h3 class="modal-title">Edit Main Settings</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <div>
+                                <h4>Plugin Status</h4>
+                            </div>
+                            <div class="control-group">
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
+                                    </label>
+                                    <span class="help-inline">
+                                        If you enable or disable the plugin during a print, the current timelapse will continue until it completes.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-bind="visible:is_octolapse_enabled">
+                            <hr />
+                            <div>
+                                <h4>Octolapse Startup</h4>
+                                <p>By default Octolapse will cancel your print immediately if any startup problems are detected.  Disable this opotion if you would like the print to continue even if obvious problems with Octolapse are detected.</p>
+                                <p>Note:  An error message will still be displayed if this option is disabled.  Disable Octolapse to prevent this</p>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Cancel if startup errors are detected</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
+                                    </label>
+                                </div>
+                            </div>
 
-  </div>
-  <div class="panel-footer">
-    <div class="row-fluid">
-      <a href="#" class="span12 btn btn-default input-block-level" data-bind="click: showEditMainSettingsPopup">Edit Main Settings</a>
-    </div>
+                            <hr />
+                            <div>
+                                <h4>Snapshot Time</h4>
+                                <p>Octolapse can determine the exact amount of time that it adds to your print, but this requires multiple M400 commands to be sent which can reduce quality on some printers in some situations.  Disable if you see any blobs on your print that weren't there before you started using Octolapse.</p>
+                                <p>Note:  A feature is in the works to calculate the snapshot time if this settings is disabled.</p>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Display real snapshot time</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Display real snapshot time" data-bind="checked:show_real_snapshot_time" />Enabled
+                                    </label>
+                                </div>
+                            </div>
 
-  </div>
+                            <hr />
+                            <div>
+                                <h4>Navbar Control</h4>
+                                <p>View the current Octolapse status at a glance.</p>
+                            </div>
+                            <div class="control-group">
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Enabled
+                                    </label>
+                                    <span class="help-inline">The navbar control shows you, at a glance, what Octolapse is doing.  Clicking the navbar opens the Octolapse tab.</span>
+                                </div>
+                            </div>
+                            <div class="control-group" data-bind="visible:show_navbar_icon">
+                                <label class="control-label">Always Display Navbar</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Show the navbar when not printing" data-bind="checked:show_navbar_when_not_printing" />Enabled
+                                    </label>
+                                    <span class="help-inline">When enabled, the navbar icon will always be shown.  When disabled, the navbar icon will be hidden unless a timelapse is running.</span>
+                                </div>
+                            </div>
+                            <hr />
+                            <div>
+                                <h4>Latest Snapshot Display</h4>
+                                <p>Options for the latest snapshot display, available within the Octolapse tab.</p>
+                                <p>
+                                    <span class="label label-important">Warning</span> Thumbnails are around 10K each and full sized images (click on the thumbnail to display) are much larger.  If you are concerned about bandwidth usage, you should disable auto-reload.
+                                </p>
+                            </div>
 
-  <div id="octolapse_edit_settings_main_dialog" class="modal fade hide octolapse_add_edit_dialog">
-
-    <div class="modal-dialog" role="document">
-
-      <div class="modal-content">
-
-        <form id="octolapse_edit_main_settings_form" class="form-horizontal octolapse_form">
-          <div class="modal-header">
-            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3 class="modal-title">Edit Main Settings</h3>
-          </div>
-          <div class="modal-body">
-            <div>
-              <div>
-                <h4>Plugin Status</h4>
-              </div>
-              <div class="control-group">
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
-                  </label>
-                  <span class="help-inline">
-                    If you enable or disable the plugin during a print, the current timelapse will continue until it completes.
-                  </span>
-                </div>
-              </div>
+                            <div class="control-group">
+                                <label class="control-label">Auto-Reload</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:auto_reload_latest_snapshot" />Enabled
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="control-group" data-bind="visible: auto_reload_latest_snapshot">
+                                <label class="control-label">Animation Frames</label>
+                                <div class="controls">
+                                    <input name="auto_reload_frames" class="input-small ignore_hidden_errors" title="The number of frames to animate during auto-reload" type="number" data-bind="value: auto_reload_frames" min="1" max="256" step="1" required="true" />
+                                    <div class="error_label_container text-error"></div>
+                                    <span class="help-inline">
+                                        Determines the number of frames that will be used to create an animation when the latest snapshot loads
+                                        <span class="label label-important">Warning</span>
+                                        Using a high value here might cause issues, especially with the popup image.  If you have problems with the preview animation, turn this setting down.
+                                    </span>
+                                </div>
+                            </div>
+                            <hr />
+                            <div>
+                                <div>
+                                    <h4>Info Panels</h4>
+                                    <p>
+                                        Show or hide panels that display various bits of information that can be used to monitor Octolapse.  They can be useful for understanding the effects of certain settings, to try untested printers with Octolapse (any that aren't listed in the default printer settings), or to track down bugs. They will only be shown while Octolapse is running and your printer is printing.  Disable these if you have bandwidth issues.
+                                    </p>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Show Position State Changes</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Show Position Changes</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
+                                            <br />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Show Extruder State Changes</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
+                                            <br />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Show Trigger State Changes</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
+                                            <br />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Show Pre-Calculated Snapshot Plan Information</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable the snapshot plan informaiton display" data-bind="checked:show_snapshot_plan_information" />Enabled
+                                            <br />
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="bottom:0;position:relative">
+                        <div class="row-fluid">
+                            <div id="edit_validation_summary" class="alert alert-danger span12" style="display:none;">
+                                <div class="error-count"></div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <span class="span4">
+                                <a href="#" class="btn btn-default cancel input-block-level">Cancel</a>
+                            </span>
+                            <span class="span4">
+                                <a href="#" class="btn btn-default set-defaults input-block-level"> Defaults</a>
+                            </span>
+                            <span class="span4">
+                                <a href="#" class="btn btn-primary save input-block-level"> Save</a>
+                            </span>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div data-bind="visible:is_octolapse_enabled">
-              <hr/>
-                <div>
-                <h4>Octolapse Startup</h4>
-                <p>By default Octolapse will cancel your print immediately if any startup problems are detected.  Disable this opotion if you would like the print to continue even if obvious problems with Octolapse are detected.</p>
-                  <p>Note:  An error message will still be displayed if this option is disabled.  Disable Octolapse to prevent this</p>
-              </div>
-              <div class="control-group">
-                  <label class="control-label">Cancel if startup errors are detected</label>
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
-                  </label>
-                </div>
-              </div>
-
-              <hr/>
-              <div>
-                <h4>Snapshot Time</h4>
-                <p>Octolapse can determine the exact amount of time that it adds to your print, but this requires multiple M400 commands to be sent which can reduce quality on some printers in some situations.  Disable if you see any blobs on your print that weren't there before you started using Octolapse.</p>
-                  <p>Note:  A feature is in the works to calculate the snapshot time if this settings is disabled.</p>
-              </div>
-              <div class="control-group">
-                  <label class="control-label">Display real snapshot time</label>
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Display real snapshot time" data-bind="checked:show_real_snapshot_time" />Enabled
-                  </label>
-                </div>
-              </div>
-
-              <hr/>
-              <div>
-                <h4>Navbar Control</h4>
-                <p>View the current Octolapse status at a glance.</p>
-              </div>
-              <div class="control-group">
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Enabled
-                  </label>
-                  <span class="help-inline">The navbar control shows you, at a glance, what Octolapse is doing.  Clicking the navbar opens the Octolapse tab.</span>
-                </div>
-              </div>
-              <div class="control-group" data-bind="visible:show_navbar_icon">
-                <label class="control-label">Always Display Navbar</label>
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Show the navbar when not printing" data-bind="checked:show_navbar_when_not_printing" />Enabled
-                  </label>
-                  <span class="help-inline">When enabled, the navbar icon will always be shown.  When disabled, the navbar icon will be hidden unless a timelapse is running.</span>
-                </div>
-              </div>
-              <hr/>
-              <div>
-                <h4>Latest Snapshot Display</h4>
-                <p>Options for the latest snapshot display, available within the Octolapse tab.</p>
-                <p>
-                  <span class="label label-important">Warning</span> Thumbnails are around 10K each and full sized images (click on the thumbnail to display) are much larger.  If you are concerned about bandwidth usage, you should disable auto-reload.
-                </p>
-              </div>
-
-              <div class="control-group">
-                <label class="control-label">Auto-Reload</label>
-                <div class="controls">
-                  <label class="checkbox">
-                    <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:auto_reload_latest_snapshot" />Enabled
-                  </label>
-                </div>
-              </div>
-              <div class="control-group" data-bind="visible: auto_reload_latest_snapshot">
-                <label class="control-label">Animation Frames</label>
-                <div class="controls">
-                  <input name="auto_reload_frames" class="input-small ignore_hidden_errors" title="The number of frames to animate during auto-reload" type="number" data-bind="value: auto_reload_frames"  min="1" max="256" step="1" required="true"/>
-                  <div class="error_label_container text-error"></div>
-                  <span class="help-inline">
-                    Determines the number of frames that will be used to create an animation when the latest snapshot loads
-                    <span class="label label-important">Warning</span>
-                    Using a high value here might cause issues, especially with the popup image.  If you have problems with the preview animation, turn this setting down.
-                  </span>
-                </div>
-              </div>
-              <hr/>
-              <div>
-                <div>
-                  <h4>Info Panels</h4>
-                  <p>
-                    Show or hide panels that display various bits of information that can be used to monitor Octolapse.  They can be useful for understanding the effects of certain settings, to try untested printers with Octolapse (any that aren't listed in the default printer settings), or to track down bugs. They will only be shown while Octolapse is running and your printer is printing.  Disable these if you have bandwidth issues.
-                  </p>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Show Position State Changes</label>
-                  <div class="controls">
-                    <label class="checkbox">
-                      <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
-                    </label>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Show Position Changes</label>
-                  <div class="controls">
-                    <label class="checkbox">
-                      <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
-                      <br/>
-                    </label>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Show Extruder State Changes</label>
-                  <div class="controls">
-                    <label class="checkbox">
-                      <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
-                      <br/>
-                    </label>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Show Trigger State Changes</label>
-                  <div class="controls">
-                    <label class="checkbox">
-                      <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
-                      <br/>
-                    </label>
-                  </div>
-                </div>
-                <div class="control-group">
-                  <label class="control-label">Show Pre-Calculated Snapshot Plan Information</label>
-                  <div class="controls">
-                    <label class="checkbox">
-                      <input type="checkbox" title="Enable or disable the snapshot plan informaiton display" data-bind="checked:show_snapshot_plan_information" />Enabled
-                      <br/>
-                    </label>
-                  </div>
-                </div>
-            </div>
-          </div>
-          <div class="modal-footer" style="bottom:0;position:relative">
-            <div class="row-fluid">
-              <div id="edit_validation_summary" class="alert alert-danger span12" style="display:none;">
-                <div class="error-count"></div>
-              </div>
-            </div>
-            <div class="row-fluid">
-              <span class="span4">
-                <a href="#" class="btn btn-default cancel input-block-level" >Cancel</a>
-              </span>
-              <span class="span4">
-                <a href="#" class="btn btn-default set-defaults input-block-level"> Defaults</a>
-              </span>
-              <span class="span4">
-                <a href="#" class="btn btn-primary save input-block-level"> Save</a>
-              </span>
-            </div>
-          </div>
-        </form>
-      </div>
+        </div>
     </div>
-  </div>
 </script>
 
 

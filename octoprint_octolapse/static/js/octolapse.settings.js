@@ -31,6 +31,7 @@ $(function () {
         var self = this;
         // Add this object to our Octolapse namespace
         Octolapse.Settings = this;
+        Octolapse.Settings.GlobalOptions = {};
         // Create an empty add/edit profile so that the initial binding to the empty template works without errors.
         Octolapse.Settings.AddEditProfile = ko.observable({
             "templateName": "empty-template",
@@ -38,14 +39,12 @@ $(function () {
         });
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
-
         Octolapse.Settings.is_loaded = ko.observable(false);
         self.loginState = parameters[1];
-
-
+        self.show_import_options = ko.observable(false);
+        Octolapse.SettingsImport = new Octolapse.SettingsImportViewModel();
         // Called before octoprint binds the viewmodel to the plugin
         self.onBeforeBinding = function () {
-
             /*
                 Create our global settings
             */
@@ -155,10 +154,15 @@ $(function () {
 
         };
 
+        self.onAfterBinding = function (){
+            Octolapse.SettingsImport.initialize();
+        };
         // Update all octolapse settings
         self.updateSettings = function (settings) {
             console.log("Settings Received:");
             //console.log(settings);
+            // GlobalOptions
+            Octolapse.SettingsImport.update(settings);
             // SettingsMain
             Octolapse.SettingsMain.update(settings.main_settings);
 
@@ -237,7 +241,7 @@ $(function () {
             Octolapse.DebugProfiles.profileOptions = {
                 'logging_levels': settings.profiles.options.debug.logging_levels,
                 'all_logger_names': settings.profiles.options.debug.all_logger_names
-            }
+            };
             Octolapse.DebugProfiles.current_profile_guid(settings.profiles.current_debug_profile_guid);
             //console.log("Creating Debug Profiles")
             Object.keys(settings.profiles.debug).forEach(function(key) {
@@ -405,24 +409,19 @@ $(function () {
                 errorPlacement: function (error, element) {
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    //console.log("Placing Error, element:" + error_id + ", Error: " + $(error).html());
                     $field_error.html(error);
                 },
-                unhighlight: function (element, errorClass) {
-                    //$(element).parent().parent().removeClass(errorClass);
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    //console.log("Unhighlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
-                    $field_error.addClass("checked");
-                    $field_error.removeClass(errorClass);
-                },
                 highlight: function (element, errorClass) {
-                    //$(element).parent().parent().addClass(errorClass);
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
-                    //console.log("Highlighting error for element:" + error_id + ", ErrorClass: " + errorClass);
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
+                },
+                unhighlight: function (element, errorClass) {
+                    var error_id = $(element).attr("id");
+                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    $field_error.addClass("checked");
+                    $field_error.removeClass(errorClass);
                 },
                 invalidHandler: function () {
                     //console.log("Invalid!");
@@ -442,21 +441,6 @@ $(function () {
                 },
                 onfocusout: function (element, event) {
                     dialog.validator.form();
-                    /*
-                    return;
-
-                    var also_validate = $(element).attr("data-also-validate");
-                    if(also_validate)
-                    {
-                        var fields_to_validate = also_validate.split(" ");
-                        fields_to_validate.forEach(function(item){
-                           $("#"+item).valid();
-                        });
-                    }
-
-                    $.validator.defaults.onfocusout.call(this, element, event);
-                    //
-                    */
                 }
 
             };
@@ -523,8 +507,8 @@ $(function () {
                     if (dialog.validator != null)
                         return dialog.validator.numberOfInvalids() == 0;
                     return true;
-                }
-                dialog.validator.form()
+                };
+                dialog.validator.form();
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog

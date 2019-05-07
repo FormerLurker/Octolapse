@@ -25,6 +25,7 @@ import pprint
 import shutil
 import copy
 import json
+import os
 import uuid
 import sys
 import octoprint_octolapse.utility as utility
@@ -32,6 +33,7 @@ import octoprint_octolapse.log as log
 import math
 import collections
 import octoprint_octolapse.gcode_preprocessing as gcode_preprocessing
+import octoprint_octolapse.settings_migration as settings_migration
 import logging
 from six import string_types
 
@@ -127,9 +129,10 @@ class Settings(object):
             return value
 
     def save_as_json(self, output_file_path):
-        temp_file_path = output_file_path + ".tmp";
+        temp_file_path = "{0}_{1}.tmp".format(output_file_path, uuid.uuid4())
         with open(temp_file_path, 'w') as output_file:
             json.dump(self.to_dict(), output_file, cls=SettingsJsonEncoder)
+        # Note:  Sometimes this line mysteriously fails
         shutil.move(temp_file_path, output_file_path)
 
     @classmethod
@@ -187,7 +190,6 @@ class PrinterProfile(ProfileSettings):
         self.slicers = PrinterProfileSlicers()
         self.snapshot_command = "snap"
         self.suppress_snapshot_command_always = True
-        self.printer_position_confirmation_tolerance = 0.001
         self.auto_detect_position = True
         self.origin_x = None
         self.origin_y = None
@@ -1189,7 +1191,49 @@ class Profiles(Settings):
                 _startup_cameras.append(_current_camera)
         return _startup_cameras
 
-    # Add/Update/Remove/set current profile
+    def get_profile(self, profile_type, guid):
+
+        if profile_type == "Printer":
+            profile = self.printers[guid]
+        elif profile_type == "Stabilization":
+            profile = self.stabilizations[guid]
+        elif profile_type == "Rendering":
+            profile = self.renderings[guid]
+        elif profile_type == "Camera":
+            profile = self.cameras[guid]
+        elif profile_type == "Debug":
+            profile = self.debug[guid]
+        else:
+            raise ValueError('An unknown profile type {} was received.'.format(profile_type))
+        return profile
+
+    def import_profile(self, profile_type, profile_json, update_existing=False):
+        logger.info("Importing a profile.")
+
+        # Create the profile by type
+        if profile_type == "Printer":
+            new_profile = PrinterProfile.create_from(profile_json)
+            existing_profiles = self.printers
+        elif profile_type == "Stabilization":
+            new_profile = StabilizationProfile.create_from(profile_json)
+            existing_profiles = self.stabilizations
+        elif profile_type == "Rendering":
+            new_profile = RenderingProfile.create_from(profile_json)
+            existing_profiles = self.renderings
+        elif profile_type == "Camera":
+            new_profile = CameraProfile.create_from(profile_json)
+            existing_profiles = self.cameras
+        elif profile_type == "Debug":
+            new_profile = DebugProfile.create_from(profile_json)
+            existing_profiles = self.debug
+        else:
+            raise Exception("Unknown settings type:{0}".format(profile_type))
+        # see if any existing profiles have the same name
+        new_profile.name = OctolapseSettings.get_unique_profile_name(existing_profiles, new_profile.name)
+        # create a new guid for the profile
+        if not update_existing and new_profile.guid in existing_profiles:
+            new_profile.guid = "{}".format(uuid.uuid4())
+        existing_profiles[new_profile.guid] = new_profile
 
     def add_update_profile(self, profile_type, profile):
         # check the guid.  If it is null or empty, assign a new value.
@@ -1304,12 +1348,23 @@ class Profiles(Settings):
             raise e
 
 
+class GlobalOptions(StaticSettings):
+    def __init__(self):
+        self.import_options = {
+            'settings_import_methods': [
+                dict(value='file', name='From a File'),
+                dict(value='text', name='From Text'),
+            ]
+        }
+
+
 class OctolapseSettings(Settings):
     DefaultDebugProfile = None
 
     def __init__(self, plugin_version="unknown"):
         self.main_settings = MainSettings(plugin_version)
         self.profiles = Profiles()
+        self.global_options = GlobalOptions()
 
     def save(self, file_path):
         logger.info("Saving settings to: %s.", file_path)
@@ -1317,18 +1372,125 @@ class OctolapseSettings(Settings):
         logger.info("Settings saved.")
 
     @classmethod
-    def load(cls, file_path, plugin_version):
-        logger.info("Loading existing settings file from: %s.", file_path)
-        with open(file_path, 'r') as defaultSettingsJson:
-            data = json.load(defaultSettingsJson)
+    def load(cls, file_path, plugin_version, default_settings_folder, default_settings_filename):
 
-            # if a settings file does not exist, create one ??
-            new_settings = OctolapseSettings.create_from_iterable(
-                plugin_version,
-                data
+        # try to load the file path if it exists
+        if file_path is not None:
+            load_defualt_settings = not os.path.isfile(file_path)
+        else:
+            load_defualt_settings = True
+        if not load_defualt_settings:
+            logger.info("Loading existing settings file from: %s.", file_path)
+            with open(file_path, 'r') as settings_file:
+                try:
+                    data = json.load(settings_file)
+                    data = settings_migration.migrate_settings(
+                        plugin_version, data, default_settings_folder
+                    )
+                    # if a settings file does not exist, create one ??
+                    new_settings = OctolapseSettings.create_from_iterable(
+                        plugin_version,
+                        data
+                    )
+                    logger.info("Settings file loaded.")
+                except ValueError as e:
+                    logger.exception("The existing settings file is corrupted.  Will attempt to load the defaults")
+                    load_defualt_settings = True
+        # do not use elif here!
+        if load_defualt_settings:
+            # try to load the defaults
+            with open(os.path.join(default_settings_folder, default_settings_filename), 'r') as settings_file:
+                try:
+                    data = json.load(settings_file)
+                    data = settings_migration.migrate_settings(
+                        plugin_version, data, default_settings_folder
+                    )
+                    # if a settings file does not exist, create one ??
+                    new_settings = OctolapseSettings.create_from_iterable(
+                        plugin_version,
+                        data
+                    )
+                    logger.info("Default settings loaded.")
+                except ValueError as e:
+                    logger.exception("The defualt settings file is corrupted.  Something is seriously wrong!")
+                    raise e
+
+        return new_settings, load_defualt_settings
+
+    def get_profile_export_json(self, profile_type, guid):
+        profile = self.profiles.get_profile(profile_type, guid)
+        export_dict = {
+            'version': self.main_settings.version,
+            'type': profile_type,
+            'profile': profile
+        }
+        return json.dumps(export_dict, cls=SettingsJsonEncoder)
+
+    def import_settings_from_file(
+        self, settings_path, plugin_version, migration_callback=None, default_settings_folder=None,
+        update_existing=False
+    ):
+        with open(settings_path, 'r') as settings_file:
+            settings = json.load(settings_file)
+
+        # see if this is a structured import
+        if "type" in settings:
+            if settings["version"] != plugin_version:
+                raise Exception(
+                    "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
+                    "Version:{1} ".format(settings.version, plugin_version)
+                )
+            else:
+                self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
+                return self
+        else:
+            # this is a regular settings file.  Try to migrate
+            migrated_settings = settings_migration.migrate_settings(
+                plugin_version, settings, default_settings_folder
             )
-            logger.info("Settings loaded.")
+            new_settings = OctolapseSettings(plugin_version)
+            new_settings.update(migrated_settings)
             return new_settings
+
+    def import_settings_from_text(
+        self, settings_text, plugin_version, default_settings_folder, update_existing=False
+    ):
+        logger.info("Importing python settings object.  Checking settings version.")
+        settings = json.loads(settings_text)
+        # see if this is a structured import
+        if "type" in settings:
+            if settings["version"] != plugin_version:
+                raise Exception(
+                    "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
+                    "Version:{1} ".format(settings.version, plugin_version)
+                )
+            else:
+                self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
+                return self
+        else:
+            # this is a regular settings file.  Try to migrate
+            migrated_settings = settings_migration.migrate_settings(
+                plugin_version, settings, default_settings_folder
+            )
+            new_settings = OctolapseSettings(plugin_version)
+            new_settings.update(migrated_settings)
+            return new_settings
+
+    @staticmethod
+    def get_unique_profile_name(profiles, name):
+        copy_version = 1
+        original_name = name
+        is_unique = False
+        while not is_unique:
+            is_unique = True
+            for profile_guid in profiles:
+                profile = profiles[profile_guid]
+                if profile.name == name:
+                    name = original_name + " - Copy({0})".format(copy_version)
+                    copy_version += 1
+                    is_unique = False
+                    break
+        return name
 
     @classmethod
     def create_from_iterable(cls, plugin_version, iterable=()):
@@ -1337,6 +1499,7 @@ class OctolapseSettings(Settings):
         new_object.update(iterable)
         logger.info("Settings created from iterable.")
         return new_object
+
 
 
 class OctolapseGcodeSettings(Settings):

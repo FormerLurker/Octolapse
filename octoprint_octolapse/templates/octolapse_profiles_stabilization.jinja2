@@ -63,6 +63,9 @@
         </div>
     </div>
     <hr />
+    <div>
+         <h4>Stabilization Options</h4>
+    </div>
     <div data-bind="visible: (stabilization_type() == 'lock-to-print-corner')">
         <div>
             <p>
@@ -98,15 +101,6 @@
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                </label>
-                <p>When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.</p>
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
                     <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
@@ -122,10 +116,27 @@
             </div>
         </div>
     </div>
-    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time']">
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'lock-to-print-corner'])>-1">
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+                <p>
+                    <span data-bind="visible: jQuery.inArray(stabilization_type(), ['lock-to-print-corner'])>-1">
+                        <span class="label label-important text-warning">Important:</span> The timelapse quality may be negatively affected by this option.
+                    </span>
+                    When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.
+                </p>
+
+            </div>
+        </div>
+    </div>
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time'])>-1">
         <div>
             <div>
-                <h4>X Axis Stabilization</h4>
+                <h5>X Axis Stabilization</h5>
                 <p>Controls the X axis stabilizations, which is the position on the X axis where the bed/extruder will be when we take a snapshot.</p>
             </div>
             <div class="control-group">
@@ -222,7 +233,7 @@
         </div>
         <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time'])>-1">
         <div>
-            <h4>Y Axis Stabilization</h4>
+            <h5>Y Axis Stabilization</h5>
             <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>
         </div>
         <div class="control-group">

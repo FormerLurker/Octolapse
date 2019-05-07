@@ -131,7 +131,7 @@ $(function () {
                 }
             });
             return true;
-        }
+        };
 
         self.showEditMainSettingsPopup = function () {
             //console.log("showing main settings")

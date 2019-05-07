@@ -181,6 +181,9 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.x_canvas_scale = null;
             self.y_canvas_scale = null;
             self.z_canvas_scale = null;
+
+            self.initial_position_radius=5;
+            self.snapshot_position_radius=4;
             self.canvas_location_radius=3;
             self.canvas = null;
             self.canvas_context = null;
@@ -355,7 +358,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // Draw the start circul
                 self.canvas_context.strokeStyle = '#ff0000';
                 self.canvas_context.beginPath();
-                self.canvas_context.arc(x,y, self.canvas_location_radius, 0, 2 * Math.PI);
+                self.canvas_context.arc(x,y, self.initial_position_radius, 0, 2 * Math.PI);
                 self.canvas_context.stroke();// draw start circle
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
@@ -372,7 +375,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 y+= lineHeight;
                 self.canvas_context.strokeStyle = '#0000ff';
                 self.canvas_context.beginPath();
-                self.canvas_context.arc(x,y, self.canvas_location_radius, 0, 2 * Math.PI);
+                self.canvas_context.arc(x,y, self.snapshot_position_radius, 0, 2 * Math.PI);
                 self.canvas_context.stroke();// draw start circle
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
@@ -387,10 +390,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // Return Position
                 // draw the circle
                 y += lineHeight;
-                self.canvas_context.strokeStyle = '#00ff00';
+                self.canvas_context.fillStyle = '#00ff00';
                 self.canvas_context.beginPath();
                 self.canvas_context.arc(x,y, self.canvas_location_radius, 0, 2 * Math.PI);
-                self.canvas_context.stroke();// draw start circle
+                self.canvas_context.fill();// draw start circle
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
@@ -422,7 +425,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.canvas_draw_start_location = function()             {
                 self.canvas_context.strokeStyle = '#ff0000';
                 self.canvas_context.beginPath();
-                self.canvas_context.arc(self.to_canvas_x(self.x_initial()), self.to_canvas_y(self.y_initial()), self.canvas_location_radius, 0, 2 * Math.PI);
+                self.canvas_context.arc(self.to_canvas_x(self.x_initial()), self.to_canvas_y(self.y_initial()), self.initial_position_radius, 0, 2 * Math.PI);
                 self.canvas_context.stroke();
             };
 
@@ -432,17 +435,17 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 {
                     var position = self.snapshot_positions()[index];
                     self.canvas_context.beginPath();
-                    self.canvas_context.arc(self.to_canvas_x(position.x), self.to_canvas_y(position.y), self.canvas_location_radius, 0, 2 * Math.PI);
+                    self.canvas_context.arc(self.to_canvas_x(position.x), self.to_canvas_y(position.y), self.snapshot_position_radius, 0, 2 * Math.PI);
                     self.canvas_context.stroke();
                 }
             };
 
             self.canvas_draw_return_location = function()
             {
-                self.canvas_context.strokeStyle = '#00ff00';
+                self.canvas_context.fillStyle = '#00ff00';
                 self.canvas_context.beginPath();
                 self.canvas_context.arc(self.to_canvas_x(self.x_return()), self.to_canvas_y(self.y_return()), self.canvas_location_radius, 0, 2 * Math.PI);
-                self.canvas_context.stroke();
+                self.canvas_context.fill();
             };
 
             self.to_canvas_x = function(x)

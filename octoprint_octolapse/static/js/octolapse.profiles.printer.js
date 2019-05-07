@@ -130,7 +130,6 @@ $(function() {
         self.has_been_saved_by_user = ko.observable(true);
         self.slicer_type = ko.observable(values.slicer_type);
         self.snapshot_command = ko.observable(values.snapshot_command);
-        self.printer_position_confirmation_tolerance = ko.observable(values.printer_position_confirmation_tolerance);
         self.auto_detect_position = ko.observable(values.auto_detect_position);
         self.auto_position_detection_commands = ko.observable(values.auto_position_detection_commands);
         self.origin_x = ko.observable(values.origin_x);
