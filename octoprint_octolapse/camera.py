@@ -715,8 +715,6 @@ class CameraControl(object):
     def _get_script_threads(cls, force, cameras):
         threads = []
         for current_camera in cameras:
-            if current_camera.camera_type != 'external-script':
-                continue
             if not force and (not current_camera.enabled or not current_camera.on_print_start_script):
                 continue
             threads.append(CameraSettingScriptThread(current_camera))
