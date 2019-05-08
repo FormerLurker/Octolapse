@@ -506,19 +506,20 @@ class StabilizationProfile(ProfileSettings):
         # Quality Settings
         self.require_zhop = False
         # Extruder State
-        self.extruder_state_requirements_enabled = False
-        self.trigger_on_extruding_start = None
-        self.trigger_on_extruding = None
-        self.trigger_on_primed = None
-        self.trigger_on_retracting_start = None
-        self.trigger_on_retracting = None
-        self.trigger_on_partially_retracted = None
-        self.trigger_on_retracted = None
-        self.trigger_on_deretracting_start = None
-        self.trigger_on_deretracting = None
-        self.trigger_on_deretracted = None
-        self.feature_trigger_on_wipe = None
+        self.extruder_state_requirements_enabled = True
+        self.trigger_on_extruding_start = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_extruding = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_primed = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_retracting_start = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_retracting = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_partially_retracted = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+        self.trigger_on_retracted = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_deretracting_start = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_deretracting = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+        self.trigger_on_deretracted = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+
         # Feature Detection
+        self.feature_trigger_on_wipe = None
         self.feature_restrictions_enabled = False
         self.feature_trigger_on_deretract = False
         self.feature_trigger_on_retract = False

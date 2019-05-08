@@ -367,8 +367,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
-                    x + self.canvas_location_radius*2,
-                    y + self.canvas_location_radius*2
+                    x + self.initial_position_radius*2,
+                    y + self.initial_position_radius
                 );
                 // Snapshot Position
                 // draw the circle
@@ -384,8 +384,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
-                    x + self.canvas_location_radius*2,
-                    y + self.canvas_location_radius*2
+                    x + self.initial_position_radius*2,
+                    y + self.snapshot_position_radius
                 );
                 // Return Position
                 // draw the circle
@@ -401,8 +401,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
-                    x + self.canvas_location_radius*2,
-                    y + self.canvas_location_radius*2
+                    x + self.initial_position_radius*2,
+                    y + self.canvas_location_radius
                 );
             };
 

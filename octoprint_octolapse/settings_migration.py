@@ -34,6 +34,7 @@ def migrate_post_0_3_5(current_version, settings_dict, log_file_path, default_se
     # so you don't forget :)
     raise NotImplementedError("You haven't created this migration yet.")
 
+
 def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, default_settings_path):
     # versions prior to or equal to 0.3.3rc3.dev0 need to have the snapshot profiles reset to the defaults
 
@@ -101,6 +102,7 @@ def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, default_settings_p
     settings_dict["version"] = current_version
     # return the dict
     return settings_dict
+
 
 def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_path):
 
