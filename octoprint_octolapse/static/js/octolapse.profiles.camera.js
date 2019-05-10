@@ -193,6 +193,7 @@ $(function() {
 
             self.testCustomImagePreferences(self.apply_settings_before_print,id);
         };
+
         self.testCustomImagePreferences = function(bool_observable, id)
         {
             self.is_testing_custom_image_preferences(true);
@@ -245,7 +246,11 @@ $(function() {
 
         self.on_cancelled = function(){
             console.log("Closing camera profile");
-            self.webcam_settings.cancelWebcamChanges();
+            if(
+                self.camera_type == "webcam" &&
+                (self.apply_settings_at_startup() || self.apply_settings_before_print())
+            )
+                self.webcam_settings.cancelWebcamChanges();
         }
     };
 

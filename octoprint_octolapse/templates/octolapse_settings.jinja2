@@ -43,7 +43,7 @@
                         <li>
                             <a href="#octolapse_printer_tab" data-toggle="tab" class="hide-disabled">
                                 Printer&nbsp;
-                                <i class="text-error fa fa-exclamation" data-bind="visible: Octolapse.Printers.current_profile_guid() == null"></i>
+                                <i class="text-error fa fa-exclamation" data-bind="visible: !Octolapse.Printers.current_profile_guid()"></i>
                             </a>
                         </li>
                         <li>

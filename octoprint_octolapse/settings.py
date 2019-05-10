@@ -27,6 +27,7 @@ import copy
 import json
 import os
 import uuid
+import tempfile
 import sys
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
@@ -129,11 +130,18 @@ class Settings(object):
             return value
 
     def save_as_json(self, output_file_path):
-        temp_file_path = "{0}_{1}.tmp".format(output_file_path, uuid.uuid4())
-        with open(temp_file_path, 'w') as output_file:
-            json.dump(self.to_dict(), output_file, cls=SettingsJsonEncoder)
-        # Note:  Sometimes this line mysteriously fails
-        shutil.move(temp_file_path, output_file_path)
+        # use a temporary file so that if there is an error creating the json the
+        temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        try:
+            json.dump(self.to_dict(), temp_file, cls=SettingsJsonEncoder)
+            temp_file.flush()
+            shutil.copy(temp_file.name, output_file_path)
+        finally:
+            try:
+                temp_file.close()
+                os.unlink(temp_file.name)
+            except WindowsError as e:
+                pass
 
     @classmethod
     def create_from(cls, iterable=()):
@@ -1117,7 +1125,8 @@ class Profiles(Settings):
             profiles_dict["printers"].append({
                 "name": printer.name,
                 "guid": printer.guid,
-                "has_been_saved_by_user": printer.has_been_saved_by_user
+                "has_been_saved_by_user": printer.has_been_saved_by_user,
+                "slicer_type": printer.slicer_type
             })
 
         for key, stabilization in self.stabilizations.items():
@@ -1374,7 +1383,6 @@ class OctolapseSettings(Settings):
 
     @classmethod
     def load(cls, file_path, plugin_version, default_settings_folder, default_settings_filename):
-
         # try to load the file path if it exists
         if file_path is not None:
             load_defualt_settings = not os.path.isfile(file_path)

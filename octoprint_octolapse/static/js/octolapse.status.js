@@ -149,7 +149,7 @@ $(function () {
                 //console.log("detecting configured printers.")
                 var current_printer = self.getCurrentProfileByGuid(self.profiles().printers(),Octolapse.Status.current_printer_profile_guid());
                 if (current_printer != null)
-                    return current_printer.has_been_saved_by_user;
+                    return current_printer.slicer_type == 'automatic' || current_printer.has_been_saved_by_user;
                 return true;
             },this);
 
@@ -463,7 +463,7 @@ $(function () {
             self.getTimelapseStateColor =  ko.pureComputed(function () {
                 if(!self.is_timelapse_active())
                     return '';
-                if(!self.PositionState.is_initialized() || self.PositionState.hasPositionStateErrors())
+                if(self.is_real_time() && (!self.PositionState.is_initialized() || self.PositionState.hasPositionStateErrors()))
                     return 'orange';
                 return 'greenyellow';
             }, self);

@@ -1303,11 +1303,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             logger.info("Octolapse is disabled.  Cannot start timelapse.")
             return {"success": False, "error": "disabled", "error-message": "Octolapse is disabled."}
 
-        # see if the printer profile has been configured
+        # make sure we have an active printer
+        if self._octolapse_settings.profiles.current_printer() is None:
+            message = "You must select a printer before using Octolapse.  Either choose a printer profile or disable" \
+                      " Octolapse via the Octolapse tab."
+            return {"success": False, "error": "printer-not-configured", "error-message": message}
 
-        if not self._octolapse_settings.profiles.current_printer().has_been_saved_by_user:
-            message = "Your Octolapse printer profile has not been configured.  Please copy your slicer settings" \
-                      " into your printer profile and try again."
+        # see if the printer profile has been configured
+        if (
+            not self._octolapse_settings.profiles.current_printer().has_been_saved_by_user and
+            not self._octolapse_settings.profiles.current_printer().slicer_type == "automatic"
+        ):
+            message = "Your Octolapse printer profile has not been configured.  To fix this error go to the Octolapse" \
+                      " tab, edit your selected printer via the 'gear' icon, and save your changes."
             return {"success": False, "error": "printer-not-configured", "error-message": message}
 
         # determine the file source
@@ -1952,7 +1960,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def on_gcode_queuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
             # only handle commands sent while printing
-            if self._timelapse is not None and self._octolapse_settings.profiles.current_printer() is not None:
+            #if self._timelapse is not None and self._octolapse_settings.profiles.current_printer() is not None:
+            if self._timelapse is not None:
                 # needed to handle non utf-8 characters
                 #cmd = cmd.encode('ascii', 'ignore')
                 return self._timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])

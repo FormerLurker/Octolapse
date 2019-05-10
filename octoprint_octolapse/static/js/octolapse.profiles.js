@@ -145,7 +145,6 @@ $(function() {
         };
         //Mark a profile as the current profile.
         self.setCurrentProfile = function(guid) {
-            var currentProfile = self.getProfileByGuid(guid)
             var data = { "client_id" : Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
             $.ajax({
                 url: "./plugin/octolapse/" + self.setCurrentProfilePath,
@@ -159,7 +158,14 @@ $(function() {
                     self.current_profile_guid(result.guid);
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    try {
+                        var currentProfile = self.getProfileByGuid(guid)
+                        alert("Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    }
+                    catch (e) {
+                        alert("Unable to set the current " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    }
+
                 }
             });
         };

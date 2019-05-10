@@ -38,6 +38,7 @@ import octoprint_octolapse.stabilization_preprocessing as preprocessing
 import GcodePositionProcessor
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
+
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 

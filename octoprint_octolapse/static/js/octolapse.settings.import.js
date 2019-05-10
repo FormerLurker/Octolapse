@@ -116,6 +116,7 @@ $(function () {
                 // Need to chunk large image files or else OctoPrint/Flask will reject them.
                 // TODO: Octoprint limits file upload size on a per-endpoint basis.
                 // http://docs.octoprint.org/en/master/plugins/hooks.html#octoprint-server-http-bodysize
+                maxChunkSize: 100000,
                 formData: {client_id: Octolapse.Globals.client_id},
                 dropZone: "#octolapse_settings_import_dialog .octolapse_dropzone",
                 add: function(e, data) {
