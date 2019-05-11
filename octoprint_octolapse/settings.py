@@ -1436,7 +1436,7 @@ class OctolapseSettings(Settings):
         return json.dumps(export_dict, cls=SettingsJsonEncoder)
 
     def import_settings_from_file(
-        self, settings_path, plugin_version, migration_callback=None, default_settings_folder=None,
+        self, settings_path, plugin_version, default_settings_folder,
         update_existing=False
     ):
         with open(settings_path, 'r') as settings_file:

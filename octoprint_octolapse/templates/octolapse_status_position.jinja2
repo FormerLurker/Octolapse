@@ -124,7 +124,7 @@
             </div>
             <div>Features:&nbsp;&nbsp;
                 <!-- ko if: Position.features().length === 0 -->Unknown<!-- /ko -->
-                <span data-bind="foreach: Position.features"><span data-bind="visible: $index != 0"></span><span data-bind="text: $data"/></span>
+                <span data-bind="foreach: Position.features"><span data-bind="visible: ($index() !== 0)">, </span><span data-bind="text: $data"/></span>
             </div>
 
         </span>

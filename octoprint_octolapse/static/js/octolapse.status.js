@@ -212,13 +212,14 @@ $(function () {
                 //console.log("Refreshing Snapshot Thumbnail");
                 // Hide and show the play/refresh button
                 if (Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    $('#' + targetId + ' .snapshot_refresh_container a.start-animation').fadeOut();
+                    var $startAnimationButton = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
+                    if (!$startAnimationButton.is(":hidden"))
+                        $startAnimationButton.fadeOut();
                 }
-
-
                 //console.log("Starting animation on " + targetId);
                 // Get the images
                 var $images = $('#' + targetId + ' .snapshot_container .previous-snapshots img');
+
                 // Remove any existing visible class
                 $images.each(function (index, element) {
                     $(element).removeClass('visible');
@@ -332,6 +333,10 @@ $(function () {
 
                 // create the newest image
                 var $newSnapshot = $(document.createElement('img'));
+
+                // Clear any existing events
+                $newSnapshot.off('load');
+                $newSnapshot.off('error');
                 // append the image to the container
 
                 //console.log("Adding the new snapshot image to the latest snapshot container.");

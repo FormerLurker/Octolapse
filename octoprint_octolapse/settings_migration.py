@@ -112,11 +112,11 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     # Create new settings areas
     profiles = {
         'current_printer_profile_guid': settings_dict['current_printer_profile_guid'],
-        'current_stabilization_profile_guid': settings_dict['current_stabilization_profile_guid'],
+        'current_stabilization_profile_guid': None,
         'current_snapshot_profile_guid': settings_dict['current_snapshot_profile_guid'],
         'current_rendering_profile_guid': settings_dict['current_rendering_profile_guid'],
         'current_camera_profile_guid': settings_dict['current_camera_profile_guid'],
-        'current_debug_profile_guid': settings_dict['current_debug_profile_guid'],
+        'current_debug_profile_guid': None,
         'printers': {},
         'stabilizations': {},
         'snapshots': {},
@@ -154,7 +154,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             printer['slicers']['cura'] = cura
         elif slicer_type == "other":
             ## other slicer settings
-            speed_multiplier = 1 if speed_units == "mm-min" else 60.0
+            speed_multiplier = 1  #  if speed_units == "mm-min" else 60.0
             other = {}
             other["retract_length"] = None if "retract_length" not in printer or printer["retract_length"] is None else float(printer["retract_length"])
             other["z_hop"] = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
@@ -322,8 +322,12 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         del camera['powerline_frequency'],
         profiles['cameras'][camera['guid']] = camera
 
-    for debug in settings_dict['debug_profiles']:
-        profiles['debug'][debug['guid']] = debug
+    # drop the existing debug profiles
+    for key, default_profile in six.iteritems(default_settings['profiles']['debug']):
+        profiles['debug'][key] = default_profile
+
+    profiles["current_debug_profile_guid"] = default_settings['profiles']['current_debug_profile_guid']
+
     default_main_settings = default_settings["main_settings"]
     main_settings = {
         'show_navbar_icon': settings_dict.get('show_navbar_icon',default_main_settings["show_navbar_icon"]),
