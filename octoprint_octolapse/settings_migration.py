@@ -113,7 +113,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     profiles = {
         'current_printer_profile_guid': settings_dict['current_printer_profile_guid'],
         'current_stabilization_profile_guid': None,
-        'current_snapshot_profile_guid': settings_dict['current_snapshot_profile_guid'],
         'current_rendering_profile_guid': settings_dict['current_rendering_profile_guid'],
         'current_camera_profile_guid': settings_dict['current_camera_profile_guid'],
         'current_debug_profile_guid': None,
@@ -230,7 +229,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     settings_dict["stabilizations"] = copy.deepcopy(default_settings["profiles"]["stabilizations"])
 
     # set the default stabilization
-    settings_dict["current_stabilization_profile_guid"] = (
+    profiles["current_stabilization_profile_guid"] = (
         default_settings["profiles"]["current_stabilization_profile_guid"]
     )
 

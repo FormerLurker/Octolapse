@@ -1842,7 +1842,7 @@
         "overlay_text_pos": "[10, 10]"
       }
     },
-    "current_debug_profile_guid": "63547b6b-f7a6-441c-8ab2-a52dae7df3ac",
+    "current_debug_profile_guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
     "defaults": {
       "debug": {
         "name": "Default Debug",
@@ -3999,9 +3999,88 @@
         "enabled_loggers": [],
         "description": ""
       },
+      "afbe12d6-0dee-4911-b77e-ee9ebfae7521": {
+        "name": "Log Errors",
+        "log_to_console": false,
+        "is_test_mode": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
+        "enabled_loggers": [
+          {
+            "log_level": 40,
+            "name": "octolapse.gcode"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.gcode_preprocessing"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 40,
+            "name": "octolapse.snapshot_plan"
+          }
+        ],
+        "description": ""
+      },
       "072f506e-3e5e-4e84-922b-fb4e01690398": {
         "name": "Full Diagnostic - Test Mode",
-        "log_to_console": true,
+        "log_to_console": false,
         "is_test_mode": true,
         "enabled": true,
         "default_log_level": 10,
