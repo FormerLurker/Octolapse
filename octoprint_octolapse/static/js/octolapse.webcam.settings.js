@@ -415,9 +415,10 @@ $(function() {
 
             var data = {
                 'guid': self.guid(),
+                'type': 'by_guid'
             };
             $.ajax({
-                url: "./plugin/octolapse/applyWebcamSettings",
+                url: "./plugin/octolapse/applyCameraSettings",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json",

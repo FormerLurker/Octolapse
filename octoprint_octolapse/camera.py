@@ -159,6 +159,7 @@ def test_web_camera_image_preferences(camera_profile, timeout_seconds=2):
         logger.error(message)
         raise CameraError('unknown-server-type', message)
 
+
 def get_webcam_server_type_from_request(r):
     webcam_server_type = "unknown"
     if "server" in r.headers:
@@ -331,6 +332,7 @@ def get_mjpegstreamer_input_json(
         )
         logger.exception(message)
         raise CameraError('webcam_settings_apply_error', message, cause=e)
+
 
 def get_mjpegstreamer_image_preferences_requests(camera_profile):
     camera_settings_requests = [
@@ -575,6 +577,7 @@ def get_mjpegstreamer_image_preferences_request(setting_name, setting_value):
         }
 
     return camera_settings_request
+
 
 class CameraControl(object):
     def __init__(self, cameras):

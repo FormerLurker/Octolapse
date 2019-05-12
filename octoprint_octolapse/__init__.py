@@ -529,27 +529,45 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         except camera.CameraError as e:
             return json.dumps({'success': False, 'error': "{}".format(e)}, 200, {'ContentType': 'application/json'})
 
-    @octoprint.plugin.BlueprintPlugin.route("/applyWebcamSettings", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
     def apply_webcam_settings(self):
         request_values = flask.request.get_json()
-        guid = request_values["guid"]
-        # get the current camera profile
-        if guid not in self._octolapse_settings.profiles.cameras:
-            return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
-                              {'ContentType': 'application/json'})
-        profile = self._octolapse_settings.profiles.cameras[guid]
+        type = request_values["type"]
+
+        # Get the settings we need to run applycamerasettings
+        if type == "by_guid":
+            guid = request_values["guid"]
+            settings_type = None
+            # get the current camera profile
+            if guid not in self._octolapse_settings.profiles.cameras:
+                return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
+                                  {'ContentType': 'application/json'})
+            profile = self._octolapse_settings.profiles.cameras[guid]
+            camera_profile = self._octolapse_settings.profiles.cameras[guid]
+        elif type == "from_new_profile":
+            profile = request_values["profile"]
+            settings_type = request_values["settings_type"]
+            camera_profile = CameraProfile.create_from(profile)
+        else:
+            return json.dumps(
+                {'success': False, 'error': 'Unknown request type: {0}.'.format(type)},
+                500,
+                {'ContentType': 'application/json'})
+
+        # Make sure the current profile is a webcam
         if not profile.camera_type == 'webcam':
             return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
                               {'ContentType': 'application/json'})
 
-        camera_profile = self._octolapse_settings.profiles.cameras[guid]
-
+        # Apply the settings
         try:
-            success, error = camera.CameraControl.apply_webcam_settings(camera_profile)
+            success, error = self.apply_camera_settings(
+                camera_profiles=[camera_profile], force=True, settings_type=settings_type
+            )
         except camera.CameraError as e:
-            logger.exception("Failed to apply webcam settings in /applyWebcamSettings.")
+            logger.exception("Failed to apply webcam settings in /applyCameraSettings.")
             return json.dumps({'success': False, 'error': e.message}, 200, {'ContentType': 'application/json'})
 
         return json.dumps({'success': success, 'error': error}, 200, {'ContentType': 'application/json'})
@@ -669,6 +687,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             password = request_values["password"]
             ignore_ssl_error = request_values["ignore_ssl_error"]
             timeout_ms = request_values["timeout_ms"]
+
+        # apply a single setting to the camera
         try:
             success, error = camera.CameraControl.apply_webcam_setting(
                 server_type, setting_name, value, camera_profile=camera_profile, name=name, address=address
@@ -683,21 +703,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         if not success:
             error_string = error.message
         return json.dumps({'success': success, 'error': error_string}, 200, {'ContentType': 'application/json'})
-
-    @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def apply_camera_settings_request(self):
-        request_values = flask.request.get_json()
-        profile = request_values["profile"]
-        settings_type = request_values["settings_type"]
-        camera_profile = CameraProfile.create_from(profile)
-        success, errors = self.apply_camera_settings(
-            camera_profiles=[camera_profile], force=True, settings_type=settings_type
-        )
-        if not success:
-            self.send_plugin_message('camera-settings-error', errors)
-        return json.dumps({'success': success}, 200, {'ContentType': 'application/json'})
 
     @octoprint.plugin.BlueprintPlugin.route("/cancelPreprocessing", methods=["POST"])
     @restricted_access

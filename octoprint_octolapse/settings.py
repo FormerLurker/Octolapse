@@ -813,7 +813,7 @@ class WebcamSettings(Settings):
     def __init__(self):
         self.address = "http://127.0.0.1/webcam/"
         self.snapshot_request_template = "{camera_address}?action=snapshot"
-        self.stream_template = "{camera_address}?action=stream"
+        self.stream_template = "/webcam/?action=stream"
         self.ignore_ssl_error = False
         self.username = ""
         self.password = ""
@@ -848,6 +848,9 @@ class MjpegStreamerStaticSettings(StaticSettings):
                 "{camera_address}", destination, plugin, setting_id, group, "{value}"
             )
         )
+
+    def format_request_template(camera_address, template, value):
+        return template.format(camera_address=camera_address, value=value)
     
     def __init__(self):
         try:
@@ -923,6 +926,12 @@ class CameraProfile(ProfileSettings):
 
     def format_stream_template(self):
         return self.stream_template.format(camera_address=self.address)
+
+    @staticmethod
+    def format_url(url):
+        if url[0] == "/":
+            url = "http://172.0.0.1" + url
+        return url
 
     def get_image_preferences(self):
         return {

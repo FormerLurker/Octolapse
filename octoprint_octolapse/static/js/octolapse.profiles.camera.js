@@ -57,6 +57,7 @@ $(function() {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'profile': ko.toJS(self),
+                'type': "from_new_profile",
                 'settings_type':settings_type
             };
             $.ajax({
