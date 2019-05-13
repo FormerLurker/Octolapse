@@ -262,9 +262,9 @@ $(function () {
                 "type": self.new_position_restriction_type(),
                 "shape": self.new_position_restriction_shape(),
                 "x": self.new_position_restriction_x(),
-                "t": self.new_position_restriction_y(),
+                "y": self.new_position_restriction_y(),
                 "x2": self.new_position_restriction_x2(),
-                "t2": self.new_position_restriction_y2(),
+                "y2": self.new_position_restriction_y2(),
                 "r": self.new_position_restriction_r(),
                 "calculate_intersections": self.new_calculate_intersections()
             });
@@ -272,8 +272,8 @@ $(function () {
         };
 
         self.removePositionRestriction = function (index) {
-            //console.log("Removing " + type + " restriction at index: " + index());
-            self.position_restrictions.splice(index(), 1);
+            console.log("Removing restriction at index: " + index);
+            self.position_restrictions.splice(index, 1);
         };
     };
 

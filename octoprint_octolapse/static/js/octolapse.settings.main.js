@@ -163,9 +163,9 @@ $(function () {
             var dialog = this;
             dialog.$editDialog = $("#octolapse_edit_settings_main_dialog");
             dialog.$editForm = $("#octolapse_edit_main_settings_form");
-            dialog.$cancelButton = $("a.cancel", dialog.$addEditDialog);
-            dialog.$saveButton = $("a.save", dialog.$addEditDialog);
-            dialog.$defaultButton = $("a.set-defaults", dialog.$addEditDialog);
+            dialog.$cancelButton = $(".cancel", dialog.$addEditDialog);
+            dialog.$saveButton = $(".save", dialog.$addEditDialog);
+            dialog.$defaultButton = $(".set-defaults", dialog.$addEditDialog);
             dialog.$summary = dialog.$editForm.find("#edit_validation_summary");
             dialog.$errorCount = dialog.$summary.find(".error-count");
             dialog.$errorList = dialog.$summary.find("ul.error-list");
@@ -241,6 +241,7 @@ $(function () {
                 dialog.$defaultButton.unbind("click");
                 dialog.$defaultButton.bind("click", function () {
                     // Set the options to the current settings
+                    self.show_real_snapshot_time(false);
                     self.is_octolapse_enabled(true);
                     self.auto_reload_latest_snapshot(true);
                     self.auto_reload_frames(5);

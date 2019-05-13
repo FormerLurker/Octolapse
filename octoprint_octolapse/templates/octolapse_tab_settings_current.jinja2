@@ -22,8 +22,7 @@
 ##################################################################################
 -->
 <script type="text/html" id="octolapse-settings-current">
-    <a href="#"
-       data-bind="css: {'muted': !hasConfigIssues(), 'text-error': hasConfigIssues()}, octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
+    <a data-bind="css: {'muted': !hasConfigIssues(), 'text-error': hasConfigIssues()}, octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
         <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Settings <i class="fa fa-no-shadow fa-caret-down"></i>
     </a>
     <div id="octolapse_status_settings_current_panel">
@@ -58,7 +57,7 @@
                         </div>
                     </td>
                     <td>
-                        <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile">
                             <i class="fa fa-gear fa-2x"></i>
                         </a>
                     </td>
@@ -78,7 +77,7 @@
 
                     </td>
                     <td>
-                        <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile">
                             <i class="fa fa-gear fa-2x"></i>
                         </a>
                     </td>
@@ -97,7 +96,7 @@
                                 value: Octolapse.Status.current_rendering_profile_guid"></select>
                     </td>
                     <td class="text-right">
-                        <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile">
                             <i class="fa fa-gear fa-2x"></i>
                         </a>
                     </td>
@@ -124,7 +123,7 @@
                                 value: Octolapse.Status.current_debug_profile_guid"></select>
                     </td>
                     <td>
-                        <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile">
                             <i class="fa fa-gear fa-2x"></i>
                         </a>
                     </td>

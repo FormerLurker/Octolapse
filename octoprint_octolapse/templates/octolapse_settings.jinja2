@@ -31,7 +31,7 @@
                 <div id="octolapse_settings_nav">
                     <ul class="nav nav-pills">
                         <li class="dropdown pull-right tabdrop hide">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <a class="dropdown-toggle" data-toggle="dropdown">
                                 <i class="icon-align-justify"></i>
                                 <b class="caret"></b>
                             </a>
@@ -182,11 +182,11 @@
                 <i class="fa fa-download"></i> Download Settings
             </a>
             {% include "octolapse_settings_import.jinja2" %}
-            <a href="#" class="span3 btn btn-default" data-bind="click: Octolapse.SettingsImport.showSettingsImportPopup">
+            <a class="span3 btn btn-default" data-bind="click: Octolapse.SettingsImport.showSettingsImportPopup">
                 <i class="fa fa-refresh"></i>
                 Import Settings
             </a>
-            <a href="#" class="span5 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
+            <a class="span5 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
                 <i class="fa fa-refresh"></i>
                 Restore All Default Settings
             </a>

@@ -708,7 +708,7 @@
                 <div class="control-group">
                     <div class="controls">
                         <small>
-                            <a href="#" class="btn btn-default"
+                            <a class="btn btn-default"
                                data-bind="click: function(){$data.addPositionRestriction();}">
                                 Add Position
                                 Restriction
@@ -769,8 +769,8 @@
                                         <td data-bind="text: (shape == 'circle' ? r : '')"></td>
                                         <td data-bind="text: (calculate_intersections ? 'True' : 'False')"></td>
                                         <td>
-                                            <a href="#" class="btn btn-default"
-                                               data-bind="click: function() {$parent.removePositionRestriction($index);}">Remove</a>
+                                            <a class="btn btn-default"
+                                               data-bind="click: function() {$parent.removePositionRestriction($index());}">Remove</a>
                                         </td>
                                     </tr>
                                 </tbody>

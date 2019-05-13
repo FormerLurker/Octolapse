@@ -3,23 +3,23 @@
 
     <div data-bind="foreach: Octolapse.Status.cameras_sorted">
         <div style="padding: 6px 0px 6px 3px;">
-                <a href="#" data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(), click: function() { Octolapse.Status.toggleCamera(guid); }">
+                <a data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(), click: function() { Octolapse.Status.toggleCamera(guid); }">
                     <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
                     <span data-bind="text: name"></span>
                 </a>
-                <span href="#" data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())">
+                <span data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())">
                     <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
                     <span data-bind="text: name"></span>
                 </span>
 
-                <a style="float:right;" href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(), click: function() { $parent.openCameraProfile(guid); } ">
+                <a style="float:right;" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(), click: function() { $parent.openCameraProfile(guid); } ">
                     <i class="fa fa-gear fa-2x"></i>
                 </a>
         </div>
     </div>
     <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
         <span class="text-error">You must add at least one camera profile.  </span>
-        <a style="float:right;" href="#" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded();, click: function() { Octolapse.Status.addNewCameraProfile(); } ">
+        <a style="float:right;" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded();, click: function() { Octolapse.Status.addNewCameraProfile(); } ">
             <i class="fa fa-plus fa-2x"></i>
         </a>
     </div>

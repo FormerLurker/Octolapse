@@ -238,12 +238,12 @@
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <a href="#" data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
+                    <a data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
                     <span data-bind="click: toggleApplySettingsAtStartup">Enable And Apply Preferences at Startup</span>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 </label>
                 <label class="checkbox">
-                    <a href="#" data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
+                    <a data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
                     <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                 </label>
@@ -267,7 +267,7 @@
     <hr />
     <div>
         <div class="control-group">
-            <a href="#" class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
+            <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
                 <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Advanced Camera Options') }}
             </a>
         </div>
