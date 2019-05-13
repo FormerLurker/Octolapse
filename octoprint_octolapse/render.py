@@ -127,7 +127,7 @@ def preview_overlay(rendering_profile, image=None):
     format_vars = {'snapshot_number': 1234,
                    'file_name': 'image.jpg',
                    'time_taken': time.time(),
-                   'current_time': datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S"),
+                   'current_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                    'time_elapsed': "{}".format(datetime.timedelta(seconds=round(9001)))}
     image = TimelapseRenderJob.add_overlay(image,
                                            text_template=rendering_profile.overlay_text_template,
@@ -780,7 +780,7 @@ class TimelapseRenderJob(object):
                     raise IOError("Cannot find file {0}.".format(file_path))
 
                 # Calculate time elapsed since the beginning of the print.
-                format_vars['current_time'] = datetime.datetime.fromtimestamp(time_taken).strftime("%Y-%m-%d %H:%M:%S")
+                format_vars['current_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_taken))
                 format_vars['time_elapsed'] = "{}".format(
                     datetime.timedelta(seconds=round(time_taken - first_timestamp))
                 )
