@@ -1220,11 +1220,27 @@ $(function () {
                     }
                     break;
                 case "slicer_settings_detected":
-                    if(data.saved)
+                    if(data.saved) {
                         console.log("Slicer settings detected and saved.");
+                        if(data.printer_profile_json != null)
+                        {
+                            var new_profile = JSON.parse(data.printer_profile_json);
+                            var current_profile = Octolapse.Printers.getProfileByGuid(new_profile.guid);
+                            if (current_profile != null)
+                            {
+                                Octolapse.Printers.profiles.replace(current_profile, new Octolapse.PrinterProfileViewModel(new_profile));
+                            }
+                            else
+                            {
+                                console.log("Octolapse.js - Unable to find the updated printer profile from the current profiles!");
+                            }
+                            //Octolapse.Printers.replace(currentProfile, newProfile);
+                        }
+
+                    }
                     else
                         console.log("Slicer settings detected but not saved.");
-                    // Todo:  we ened to do something here...
+
                 case "state-loaded":
                     {
                         console.log('octolapse.js - state-loaded');

@@ -1530,6 +1530,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
             if success:
                 settings_saved = False
+                updated_profile_json = None
                 if not current_printer_clone.slicers.automatic.disable_automatic_save:
                     # get the extracted slicer settings
                     extracted_slicer_settings = current_printer_clone.get_current_slicer_settings()
@@ -1539,9 +1540,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     ).update(extracted_slicer_settings.to_dict())
                     # save the live settings
                     self.save_settings()
+                    updated_profile_json = self._octolapse_settings.profiles.current_printer().to_json()
                     settings_saved = True
 
-                self.send_slicer_settings_detected_message(settings_saved)
+                self.send_slicer_settings_detected_message(settings_saved, updated_profile_json)
             else:
                 if not current_printer_clone.slicers.automatic.continue_on_failure:
                     # If you are using Cura, see this link:  TODO:  ADD LINK TO CURA FEATURE TEMPLATE AND INSTRUCTIONS
@@ -1747,10 +1749,11 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_slicer_settings_detected_message(self, settings_saved):
+    def send_slicer_settings_detected_message(self, settings_saved, printer_profile_json):
         data = {
             "type": "slicer_settings_detected",
-            "saved": settings_saved
+            "saved": settings_saved,
+            "printer_profile_json": printer_profile_json
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
