@@ -1695,7 +1695,7 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
         if u'layer_height' in self.active_settings_dictionary:
             layer_height = matches.group(u"height")
             self.results[u"layer_height"] = float(layer_height)
-            self.active_settings_dictionary.pop(u'height')
+            self.active_settings_dictionary.pop(u'layer_height')
 
 
 class GcodeFileLineProcessor(GcodeProcessor):
