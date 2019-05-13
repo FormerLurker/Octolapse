@@ -286,10 +286,32 @@ $(function () {
 
                             self.updateSettings(newSettings);
                             Octolapse.Globals.update(newSettings.main_settings);
-                            alert("The default settings have been restored.  It is recommended that you restart the OctoPrint server now.");
+                            var message = "The default settings have been restored.  It is recommended that you restart the OctoPrint server now.";
+                            var options = {
+                                title: 'Octolapse Defaults Restored',
+                                text: message,
+                                type: 'success',
+                                hide: true,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            Octolapse.displayPopup(options);
                         },
                         error: function (XMLHttpRequest, textStatus, errorThrown) {
-                            alert("Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                            var message = "Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown;
+                            var options = {
+                                title: 'Octolapse Defaults Restored',
+                                text: message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            Octolapse.displayPopup(options);
                         }
                     });
                 }
@@ -312,7 +334,18 @@ $(function () {
                     //console.log("Settings have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Octolapse was unable to load the current settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    var message = "Octolapse was unable to load the current settings.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                 }
             });
 
@@ -367,7 +400,18 @@ $(function () {
                     Octolapse.DebugProfiles.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
                     break;
                 default:
-                    alert("Cannot save the object, the template (" + profile.templateName + ") is unknown!");
+                    var message = "Cannot save the object, the template (" + profile.templateName + ") is unknown!";
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     break;
             }
 

@@ -583,7 +583,19 @@ $(function () {
                     return false;
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Octolapse could not validate the rendering template.");
+                    var message = "Octolapse could not validate the rendering template.";
+
+                    var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                    Octolapse.displayPopup(options);
                     return false;
                 }
             });
@@ -671,7 +683,7 @@ $(function () {
             MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
             new MutationObserver(function onSrcChange(e){
                 if ($(element).attr('src') === '') {
-                    console.log("The src has changed to nothing, just return.");
+                    console.log("The src has changed to nothing, hide the elementand return.");
                     $(element).hide();
                     return;
                 }
@@ -679,7 +691,15 @@ $(function () {
                     console.log("Stream src changed");
                 }
 
-              // src attribute just changed!!! put code here
+                // src attribute just changed
+                // First, remove any existing load or error events
+                $(element).off('load').off('error');
+                // Hide the element, the error element, and show the loading element
+                $(element).hide();
+                $(error_selector).hide();
+                $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+
+                // Create a handler to handle load and error
                 $(element).one('load', function() {
                     console.log("Stream Loaded.");
                     $(error_selector).hide();
@@ -1025,11 +1045,12 @@ $(function () {
                 console.log("octolapse.js - Updating Status");
                 Octolapse.Status.update(data.status);
             }
+            /*
             if (!self.HasLoadedState) {
                 Octolapse.Status.updateLatestSnapshotImage(true);
                 Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
-
+            */
             self.HasLoadedState = true;
         };
 
@@ -1123,8 +1144,18 @@ $(function () {
                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("Octolapse - Could not cancel preprecessing" + errorThrown.toString());
-                    alert("Could not cancel preprocessing.");
+                    var message = "Could not cancel preprocessing.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                     return false;
                 }
             });

@@ -113,7 +113,18 @@ $(function() {
 
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to add/update the " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    var message = "Unable to add/update the " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                 }
             });
         };
@@ -132,13 +143,32 @@ $(function() {
                         if(returnValue.success)
                             self.profiles.remove(self.getProfileByGuid(guid));
                         else
-                            alert("Unable to remove the " + currentProfile.name() +" profile!.  Error: " + returnValue.error);
-
-                        // close modal dialog.
-
+                            var message = "Unable to remove the " + currentProfile.name() +" profile!.  Error: " + returnValue.error;
+                            var options = {
+                                title: 'Octolapse Defaults Restored',
+                                text: message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            Octolapse.displayPopup(options);
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Unable to remove the " + currentProfile.name() + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        var message = "Unable to remove the " + currentProfile.name() + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
                     }
                 });
             }
@@ -159,11 +189,33 @@ $(function() {
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     try {
-                        var currentProfile = self.getProfileByGuid(guid)
-                        alert("Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        var currentProfile = self.getProfileByGuid(guid);
+                        var message = "Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
                     }
                     catch (e) {
-                        alert("Unable to set the current " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        var message = "Unable to set the current " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
                     }
 
                 }
@@ -198,7 +250,18 @@ $(function() {
                 }
             );
             if (index < 0) {
-                alert("Could not find a " + self.profileTypeName() +" profile with the guid:" + guid + "!");
+                var message = "Could not find a " + self.profileTypeName() +" profile with the guid:" + guid + "!";
+                var options = {
+                    title: 'Octolapse Defaults Restored',
+                    text: message,
+                    type: 'error',
+                    hide: false,
+                    addclass: "octolapse",
+                    desktop: {
+                        desktop: true
+                    }
+                };
+                Octolapse.displayPopup(options);
                 return null;
             }
             return self.profiles()[index];

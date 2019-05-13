@@ -84,7 +84,18 @@ $(function () {
                         self.closeSettingsImportPopup();
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Unable to import the provided settings:(  Status: " + textStatus + ".  Error: " + errorThrown);
+                        var message = "Unable to import the provided settings:(  Status: " + textStatus + ".  Error: " + errorThrown;
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
                     }
                 });
             }

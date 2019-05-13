@@ -785,10 +785,15 @@ class CameraControl(object):
                     min_val = int(item["min"])
                     max_val = int(item["max"])
                     if min_val > lookup_item["value"] or lookup_item["value"] > max_val:
-                        step = int(item["step"])
-                        range = max_val - min_val
-                        steps = round(range/2.0/step)
-                        lookup_item["value"] = min_val + (steps * step)
+
+                        if lookup_item["name"] == "zoom" and  min_val <= 100 <= max_val:
+                            # set zoom to 100% by default if possible
+                            lookup_item["value"] = 100
+                        else:
+                            step = int(item["step"])
+                            range = max_val - min_val
+                            steps = round(range/2.0/step)
+                            lookup_item["value"] = min_val + (steps * step)
 
             return {value['name']: value['value'] for key, value in defaults_lookup.items()}
 

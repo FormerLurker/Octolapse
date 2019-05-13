@@ -51,7 +51,7 @@ $(function () {
                 'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
             });
             self.is_real_time = ko.observable(true);
-            self.current_camera_guid = ko.observable();
+            self.current_camera_guid = ko.observable(null);
             self.stabilization_requires_snapshot_profile = ko.observable();
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
@@ -251,7 +251,10 @@ $(function () {
                         return
                     }
                 }
-                self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
+                if (self.current_camera_guid() === null || self.current_camera_guid() === "")
+                    console.log("Current camera guid requested, but it is null.");
+                else
+                    self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
                     + "&time=" + new Date().getTime());
 
             };
@@ -399,7 +402,10 @@ $(function () {
                     }
                 }
                 //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
-                self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
+                if(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == "")
+                    console.log("The current camera guid was requested, but it was null or empty.");
+                else
+                    self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
 
             };
 
@@ -411,7 +417,18 @@ $(function () {
                     contentType: "application/json",
                     dataType: "json",
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown);
+                        var message = "Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown;
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
                     }
                 });
             };
@@ -538,6 +555,9 @@ $(function () {
                 self.stabilization_requires_snapshot_profile(
                     self.current_stabilization_requires_snapshot_profile()
                 );
+                // Update snapshots
+                self.updateLatestSnapshotImage(true);
+                self.updateLatestSnapshotThumbnail(true);
             };
 
             self.onTimelapseStart = function () {
@@ -563,7 +583,18 @@ $(function () {
                                 //console.log("octolapse.status.js - stopTimelapse - success" + data);
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                alert("Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                                var message = "Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                                var options = {
+                                    title: 'Octolapse Defaults Restored',
+                                    text: message,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse",
+                                    desktop: {
+                                        desktop: true
+                                    }
+                                };
+                                Octolapse.displayPopup(options);
                             }
                         });
                     }
@@ -665,6 +696,8 @@ $(function () {
             self.snapshotCameraChanged = function(obj, event) {
                 // Update the current camera profile
                 var guid = $("#octolapse_current_snapshot_camera").val();
+                if (guid == "")
+                    return;
                 //console.log("Updating current snapshot camera preview: " + guid)
                 if(event.originalEvent) {
                     if (Octolapse.Globals.is_admin()) {
@@ -680,18 +713,29 @@ $(function () {
                                 //console.log("current profile guid updated: " + result.guid)
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                alert("Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown);
+                                var message = "Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
+                                var options = {
+                                    title: 'Octolapse Defaults Restored',
+                                    text: message,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse",
+                                    desktop: {
+                                        desktop: true
+                                    }
+                                };
+                                Octolapse.displayPopup(options);
                             }
                         });
                     }
                 }
 
-                //console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
+                console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
                 Octolapse.Status.current_camera_guid(guid);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
-                self.updateLatestSnapshotThumbnail(self.current_camera_guid());
-                self.updateLatestSnapshotImage(self.current_camera_guid());
+                self.updateLatestSnapshotThumbnail(true);
+                self.updateLatestSnapshotImage(true);
             };
 
             // Debug Profile Settings

@@ -25,8 +25,6 @@ $(function() {
     Octolapse.WebcamSettingsPopupViewModel = function (values) {
         var self = this;
         self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null, null);
-        if (values != null)
-            self.webcam_settings.updateWebcamSettings(values);
 
         self.openWebcamSettingsDialog = function()
         {
@@ -36,9 +34,9 @@ $(function() {
             dialog.$webcamSettingsDialog = $("#octolapse_webcam_settings_dialog");
             dialog.$webcamSettingsForm = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_form");
             dialog.$webcamStreamImg = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_stream");
-            dialog.$cancelButton = $("a.cancel", dialog.$webcamSettingsDialog);
-            dialog.$saveButton = $("a.save", dialog.$webcamSettingsDialog);
-            dialog.$defaultButton = $("a.set-defaults", dialog.$webcamSettingsDialog);
+            dialog.$cancelButton = $(".cancel", dialog.$webcamSettingsDialog);
+            dialog.$saveButton = $(".save", dialog.$webcamSettingsDialog);
+            dialog.$defaultButton = $(".set-defaults", dialog.$webcamSettingsDialog);
             dialog.$modalBody = dialog.$webcamSettingsDialog.find(".modal-body");
             dialog.$modalHeader = dialog.$webcamSettingsDialog.find(".modal-header");
             dialog.$modalFooter = dialog.$webcamSettingsDialog.find(".modal-footer");
@@ -92,33 +90,11 @@ $(function() {
         };
 
         self.saveWebcamSettings = function(){
-
             console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'guid': self.webcam_settings.guid(),
-                'webcam_settings': {
-                    'brightness': self.webcam_settings.brightness(),
-                    'contrast': self.webcam_settings.contrast(),
-                    'saturation': self.webcam_settings.saturation(),
-                    'white_balance_auto': self.webcam_settings.white_balance_auto(),
-                    'gain': self.webcam_settings.gain(),
-                    'powerline_frequency': self.webcam_settings.powerline_frequency(),
-                    'white_balance_temperature':  self.webcam_settings.white_balance_temperature(),
-                    'sharpness': self.webcam_settings.sharpness(),
-                    'backlight_compensation_enabled': self.webcam_settings.backlight_compensation_enabled(),
-                    'exposure_type': self.webcam_settings.exposure_type(),
-                    'exposure': self.webcam_settings.exposure(),
-                    'exposure_auto_priority_enabled': self.webcam_settings.exposure_auto_priority_enabled(),
-                    'pan': self.webcam_settings.pan(),
-                    'tilt': self.webcam_settings.tilt(),
-                    'autofocus_enabled': self.webcam_settings.autofocus_enabled(),
-                    'focus': self.webcam_settings.focus(),
-                    'zoom': self.webcam_settings.zoom(),
-                    'led1_mode': self.webcam_settings.led1_mode(),
-                    'led1_frequency': self.webcam_settings.led1_frequency(),
-                    'jpeg_quality': self.webcam_settings.jpeg_quality(),
-                }
+                'webcam_settings': self.webcam_settings.getSettingsFromUI()
             };
             $.ajax({
                 url: "./plugin/octolapse/saveWebcamSettings",
@@ -201,7 +177,8 @@ $(function() {
                 });
             };
 
-
+        if (values != null)
+            self.webcam_settings.updateWebcamSettings(values);
     };
     Octolapse.MjpegStreamerOptionsViewModel = function ()
     {
@@ -226,9 +203,9 @@ $(function() {
             self.options.update(values.options);
         };
     };
+
     Octolapse.WebcamSettingsViewModel = function (values, camera_stream_visible_observable) {
         var self = this;
-
         if (camera_stream_visible_observable == null)
             self.camera_stream_visible = ko.observable(true);
         else
@@ -246,75 +223,55 @@ $(function() {
         self.timeout_ms = ko.observable();
         // Need to subscribe to changes for these camera settings observables
         self.white_balance_auto = ko.observable(0);
-
         self.powerline_frequency = ko.observable('');
-
         self.backlight_compensation_enabled = ko.observable(false);
-
         self.exposure_type = ko.observable(0);
-
         self.exposure_auto_priority_enabled = ko.observable(0);
-
         self.autofocus_enabled = ko.observable(0);
-
         self.led1_mode = ko.observable(0);
 
         // Need to throttle our slider controls
         // Brightness
         self.brightness = ko.observable(0);
         self.throttled_brightness = ko.computed(self.brightness).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Contrast
         self.contrast = ko.observable(0);
         self.throttled_contrast = ko.computed(self.contrast).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Saturation
         self.saturation = ko.observable(0);
         self.throttled_saturation = ko.computed(self.saturation).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Gain
         self.gain = ko.observable(0);
         self.throttled_gain = ko.computed(self.gain).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Sharpness
         self.sharpness = ko.observable(0);
         self.throttled_sharpness = ko.computed(self.sharpness).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // White Balance Temperature
         self.white_balance_temperature = ko.observable(0);
         self.throttled_white_balance_temperature = ko.computed(self.white_balance_temperature).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Exposure
         self.exposure = ko.observable(0);
         self.throttled_exposure = ko.computed(self.exposure).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Pan
         self.pan = ko.observable(0);
         self.throttled_pan = ko.computed(self.pan).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Tilt
         self.tilt = ko.observable(0);
         self.throttled_tilt = ko.computed(self.tilt).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Zoom
         self.zoom = ko.observable(0);
         self.throttled_zoom = ko.computed(self.zoom).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Focus
         self.focus = ko.observable(0);
         self.throttled_focus = ko.computed(self.focus).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // Led 1 frequency
         self.led1_frequency = ko.observable(0);
         self.throttled_led1_frequency = ko.computed(self.led1_frequency).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // JPEG Quality
         self.jpeg_quality = ko.observable(0);
         self.throttled_jpeg_quality = ko.computed(self.jpeg_quality).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-
         // MJpegStreamer
         self.mjpegstreamer = new Octolapse.MjpegStreamerViewModel()
-
         self.stream_url = ko.computed(function(){
             if(!self.camera_stream_visible())
                 return '';
@@ -327,8 +284,32 @@ $(function() {
 
         self.subscriptions = [];
 
-        self.unsubscribe_to_settings_changes = function()
-        {
+        self.getSettingsFromUI = function() {
+            return {
+                    'brightness': self.brightness(),
+                    'contrast': self.contrast(),
+                    'saturation': self.saturation(),
+                    'white_balance_auto': self.white_balance_auto(),
+                    'gain': self.gain(),
+                    'powerline_frequency': self.powerline_frequency(),
+                    'white_balance_temperature':  self.white_balance_temperature(),
+                    'sharpness': self.sharpness(),
+                    'backlight_compensation_enabled': self.backlight_compensation_enabled(),
+                    'exposure_type': self.exposure_type(),
+                    'exposure': self.exposure(),
+                    'exposure_auto_priority_enabled': self.exposure_auto_priority_enabled(),
+                    'pan': self.pan(),
+                    'tilt': self.tilt(),
+                    'autofocus_enabled': self.autofocus_enabled(),
+                    'focus': self.focus(),
+                    'zoom': self.zoom(),
+                    'led1_mode': self.led1_mode(),
+                    'led1_frequency': self.led1_frequency(),
+                    'jpeg_quality': self.jpeg_quality(),
+                };
+        };
+
+        self.unsubscribe_to_settings_changes = function() {
             console.log("Unsubscribing to camera settings changes");
             for(var i in self.subscriptions)
             {
@@ -403,9 +384,8 @@ $(function() {
             self.subscriptions.push(self.throttled_jpeg_quality.subscribe(function (val) {
                 self.applyWebcamSetting('jpeg_quality', val);
             }, self));
-        }
+        };
         // I found this awesome binding handler created by Michael Rouse, available at https://codepen.io/mwrouse/pen/wWwvmN
-
 
         self.cancelWebcamChanges = function(){
             if (self.guid() == null || self.guid() == "")
@@ -415,7 +395,8 @@ $(function() {
 
             var data = {
                 'guid': self.guid(),
-                'type': 'by_guid'
+                'type': 'by_guid',
+                'settings_type': 'web-request'
             };
             $.ajax({
                 url: "./plugin/octolapse/applyCameraSettings",
@@ -474,7 +455,15 @@ $(function() {
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                     else {
-                        self.updateWebcamSettings(results.defaults, true);
+                        self.updateWebcamSettings(results.defaults);
+                        var options = {
+                            title: 'Webcam Settings',
+                            text: "Defaults successfully applied to the '" + self.name() + "' profile.",
+                            type: 'success',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopup(options);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -490,14 +479,11 @@ $(function() {
             });
         };
 
-        self.closeWebcamSettingsDialog = function()
-        {
+        self.closeWebcamSettingsDialog = function() {
             $("#octolapse_webcam_settings_dialog").modal("hide");
         };
 
-        self.updateWebcamSettings = function(values)
-        {
-
+        self.updateWebcamSettings = function(values) {
             self.unsubscribe_to_settings_changes();
             if ("mjpegstreamer" in values.webcam_settings)
             {
@@ -614,7 +600,46 @@ $(function() {
             });
         };
 
-        if (values != null)
-            self.updateWebcamSettings(values);
+        self.applyWebcamSettings = function(){
+            var webcam_settings = self.getSettingsFromUI();
+
+            var data = {
+                'type': 'new_webcam_settings_by_guid',
+                'guid': self.guid(),
+                'webcam_settings':webcam_settings,
+                'settings_type': 'web-request'
+            };
+
+            $.ajax({
+                url: "./plugin/octolapse/applyCameraSettings",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if(!results.success) {
+                        var options = {
+                            title: 'Error Applying Webcam Settings',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var options = {
+                        title: 'Error Applying Webcam Settings',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                }
+            });
+        };
+
     }
 });

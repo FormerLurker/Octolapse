@@ -51,6 +51,7 @@ $(function() {
 
         },this);
         self.webcam_settings = new Octolapse.WebcamSettingsViewModel(values, self.camera_stream_visible);
+        self.webcam_settings.updateWebcamSettings(values);
         self.is_testing_custom_image_preferences = ko.observable(false);
 
         self.applySettingsToCamera = function (settings_type) {
@@ -107,12 +108,34 @@ $(function() {
                         self.enabled(results.enabled);
                     }
                     else {
-                        alert(results.error);
+                        var options = {
+                            title: 'Octolapse Defaults Restored',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+
                     }
 
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown);
+                    var message = "Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
                 }
             });
         };
@@ -177,7 +200,8 @@ $(function() {
                 return;
             }
             self.testCustomImagePreferences(self.apply_settings_at_startup,id);
-        }
+        };
+
         self.toggleApplySettingsBeforePrint = function () {
             var id = 'camera_profile_apply_settings_before_print';
 
@@ -243,12 +267,12 @@ $(function() {
         self.on_closed = function(){
             console.log("Closing camera profile");
             self.webcam_settings.stream_template("");
-        }
+        };
 
         self.on_cancelled = function(){
-            console.log("Closing camera profile");
+            console.log("Cancelling camera profile");
             if(
-                self.camera_type == "webcam" &&
+                self.camera_type() == "webcam" &&
                 (self.apply_settings_at_startup() || self.apply_settings_before_print())
             )
                 self.webcam_settings.cancelWebcamChanges();

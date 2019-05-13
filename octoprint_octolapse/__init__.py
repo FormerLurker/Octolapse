@@ -532,14 +532,14 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
-    def apply_webcam_settings(self):
+    def apply_camera_settings_request(self):
         request_values = flask.request.get_json()
         type = request_values["type"]
+        settings_type = request_values["settings_type"]
 
         # Get the settings we need to run applycamerasettings
         if type == "by_guid":
             guid = request_values["guid"]
-            settings_type = None
             # get the current camera profile
             if guid not in self._octolapse_settings.profiles.cameras:
                 return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
@@ -548,8 +548,19 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             camera_profile = self._octolapse_settings.profiles.cameras[guid]
         elif type == "from_new_profile":
             profile = request_values["profile"]
-            settings_type = request_values["settings_type"]
             camera_profile = CameraProfile.create_from(profile)
+        elif type == "new_webcam_settings_by_guid":
+            guid = request_values["guid"]
+            webcam_settings = request_values["webcam_settings"]
+            # get the current camera profile
+            if guid not in self._octolapse_settings.profiles.cameras:
+                return json.dumps({'success': False,
+                                   'error': 'The requested camera profile does not exist.  Cannot adjust settings.'},
+                                  404,
+                                  {'ContentType': 'application/json'})
+            profile = self._octolapse_settings.profiles.cameras[guid].clone()
+            camera_profile = self._octolapse_settings.profiles.cameras[guid]
+            camera_profile.webcam_settings.update(webcam_settings)
         else:
             return json.dumps(
                 {'success': False, 'error': 'Unknown request type: {0}.'.format(type)},
@@ -557,7 +568,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 {'ContentType': 'application/json'})
 
         # Make sure the current profile is a webcam
-        if not profile.camera_type == 'webcam':
+        if not camera_profile.camera_type == 'webcam':
             return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
                               {'ContentType': 'application/json'})
 
@@ -1029,9 +1040,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 snapshot_action = urlparse(snapshot_url).query
                 snapshot_request_template = "{camera_address}?" + snapshot_action
                 # adjust the webcam stream url
-                o = urlparse(webcam_stream_url)
-                stream_action = urlparse(webcam_stream_url).query
-                webcam_stream_template = "{camera_address}?" + stream_action
+                webcam_stream_template = webcam_stream_url
 
                 logger.info("Setting octolapse camera snapshot template to %s.", snapshot_request_template.replace('{', '{{').replace('}','}}'))
                 self._octolapse_settings.profiles.defaults.camera.webcam_settings.address = camera_address
@@ -1050,7 +1059,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 # camera address from Octoprint.  Please configure your camera address and snapshot template before
                 # using Octolapse.")
                 logger.exception("Unable to copy the default webcam settings from OctoPrint.")
-                raise e
 
             bitrate = self._settings.global_get(["webcam", "bitrate"])
             self._octolapse_settings.profiles.defaults.rendering.bitrate = bitrate
@@ -1059,7 +1067,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     profile.bitrate = bitrate
         except Exception as e:
             logger.exception("Unable to copy default settings from OctoPrint.")
-            raise e
 
     def save_settings(self):
         # Save setting from file

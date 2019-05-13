@@ -126,7 +126,19 @@ $(function () {
 
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Unable to enable/disable Octolapse.  Status: " + textStatus + ".  Error: " + errorThrown);
+                    var message = "Unable to enable/disable Octolapse.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Octolapse Defaults Restored',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
+
                     Octolapse.Globals.enabled(previousEnabledValue);
                 }
             });
@@ -274,7 +286,18 @@ $(function () {
                                 self.$editDialog.modal("hide");
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                alert("Unable to save the main settings.  Status: " + textStatus + ".  Error: " + errorThrown);
+                                var message = "Unable to save the main settings.  Status: " + textStatus + ".  Error: " + errorThrown;
+                                var options = {
+                                    title: 'Octolapse Defaults Restored',
+                                    text: message,
+                                    type: 'error',
+                                    hide: false,
+                                    addclass: "octolapse",
+                                    desktop: {
+                                        desktop: true
+                                    }
+                                };
+                                Octolapse.displayPopup(options);
                             }
                         });
                     }
