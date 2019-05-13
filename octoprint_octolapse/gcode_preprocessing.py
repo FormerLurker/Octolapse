@@ -1687,14 +1687,14 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
 
     def firmware_flavor_matched(self, matches):
         if u'firmware_flavor' in self.active_settings_dictionary:
-            filament_used = matches.group(u"flavor")
-            self.results[u"firmware_flavor"] = float(filament_used)
+            firmware_flavor = matches.group(u"flavor")
+            self.results[u"firmware_flavor"] = float(firmware_flavor)
             self.active_settings_dictionary.pop(u'firmware_flavor')
 
     def layer_height_matched(self, matches):
         if u'layer_height' in self.active_settings_dictionary:
-            filament_used = matches.group(u"flavor")
-            self.results[u"layer_height"] = float(filament_used)
+            layer_height = matches.group(u"height")
+            self.results[u"layer_height"] = float(layer_height)
             self.active_settings_dictionary.pop(u'height')
 
 
