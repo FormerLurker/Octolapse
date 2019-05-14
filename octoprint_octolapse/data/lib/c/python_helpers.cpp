@@ -1,5 +1,5 @@
-#include "PythonHelpers.h"
-#include "Logging.h"
+#include "python_helpers.h"
+#include "logging.h"
 int PyUnicode_SafeCheck(PyObject * py)
 {
 #if PY_MAJOR_VERSION >= 3

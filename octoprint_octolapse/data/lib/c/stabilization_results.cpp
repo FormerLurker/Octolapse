@@ -19,34 +19,31 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include "stabilization_results.h"
 
-#ifndef PARSED_COMMAND_PARAMETER_H
-#define PARSED_COMMAND_PARAMETER_H
-#include <string>
-#ifdef _DEBUG
-#undef _DEBUG
-#include <Python.h>
-#define _DEBUG
-#else
-#include <Python.h>
-#endif
-class parsed_command_parameter
+stabilization_results::stabilization_results()
 {
-public:
-	parsed_command_parameter();
-	~parsed_command_parameter();
-	parsed_command_parameter(parsed_command_parameter & source);
-	parsed_command_parameter(std::string name, double double_value);
-	parsed_command_parameter(std::string name, std::string string_value);
-	parsed_command_parameter(std::string name, unsigned int unsigned_int_value);
+	bool success = false;
+	double seconds_elapsed = 0;
+	long gcodes_processed = 0;
+	long lines_processed = 0;
+}
+stabilization_results::~stabilization_results()
+{	
+	while (!snapshot_plans_.empty()) {
+		snapshot_plan* p = snapshot_plans_.back();
+		snapshot_plans_.pop_back();
+		delete p;
+	}
+	
 
-	PyObject * value_to_py_object();
-
-	std::string name;
-	char value_type;
-	double double_value;
-	unsigned long unsigned_long_value;
-	std::string string_value;
-};
-
-#endif
+		/*for (unsigned int index = 0; index < (*p_snapshot_plans).size(); index++)
+		{
+			delete (*p_snapshot_plans)[index];
+			(*p_snapshot_plans)[index] = NULL;
+		}
+		p_snapshot_plans->clear();
+		delete p_snapshot_plans;
+		p_snapshot_plans = NULL;*/
+	
+}

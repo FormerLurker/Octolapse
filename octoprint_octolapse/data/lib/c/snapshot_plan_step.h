@@ -19,23 +19,30 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef STABILIZATION_RESULTS_H
-#define STABILIZATION_RESULTS_H
+#ifndef SNAPSHOT_PLAN_STEP_H
+#define SNAPSHOT_PLAN_STEP_H
 #include <string>
-#include <vector>
-#include "SnapshotPlan.h"
-class stabilization_results
+#ifdef _DEBUG
+#undef _DEBUG
+#include <Python.h>
+#define _DEBUG
+#else
+#include <Python.h>
+#endif
+class snapshot_plan_step
 {
 public:
-	stabilization_results();
-	virtual ~stabilization_results();
-
-	bool success;
-	std::string errors;
-	std::vector<snapshot_plan*> snapshot_plans;
-	double seconds_elapsed;
-	long gcodes_processed;
-	long lines_processed;
+	snapshot_plan_step();
+	snapshot_plan_step(double x, double y, double z, double e, double f, std::string action);
+	snapshot_plan_step(const snapshot_plan_step & source);
+	~snapshot_plan_step();
+	PyObject * to_py_object();
+	double x_;
+	double y_;
+	double z_;
+	double e_;
+	double f_;
+	std::string action_;
 };
 
 #endif

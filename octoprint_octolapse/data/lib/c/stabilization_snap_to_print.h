@@ -22,8 +22,8 @@
 
 #ifndef StabilizationSnapToPrint_H
 #define StabilizationSnapToPrint_H
-#include "Stabilization.h"
-#include "Position.h"
+#include "stabilization.h"
+#include "position.h"
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -48,35 +48,35 @@ static const char * BACK_RIGHT = "back-right";
 static const char * FAVOR_X = "x";
 static const char * FAVOR_Y = "y";
 static const char* LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner";
-class StabilizationSnapToPrint :
+class stabilization_snap_to_print :
 	public stabilization
 {
 public:
-	StabilizationSnapToPrint(
+	stabilization_snap_to_print(
 		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
 		progressCallback progress
 	);
-	StabilizationSnapToPrint(
+	stabilization_snap_to_print(
 		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
 		pythonProgressCallback progress
 	);
 
-	StabilizationSnapToPrint();
-	~StabilizationSnapToPrint();
+	stabilization_snap_to_print();
+	~stabilization_snap_to_print();
 
 protected:
-	StabilizationSnapToPrint(const StabilizationSnapToPrint &source); // don't copy me
+	stabilization_snap_to_print(const stabilization_snap_to_print &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();
-	void AddSavedPlan();
-	bool IsCloser(position* p_position);
-	bool is_layer_change_wait;
-	snap_to_print_args* _snap_to_print_args;
-	int current_layer;
-	double current_height;
-	unsigned int current_height_increment;
-	bool has_saved_position;
-	position * p_saved_position;
+	void add_saved_plan();
+	bool is_closer(position* p_position);
+	bool is_layer_change_wait_;
+	snap_to_print_args* snap_to_print_args_;
+	int current_layer_;
+	double current_height_;
+	unsigned int current_height_increment_;
+	bool has_saved_position_;
+	position * p_saved_position_;
 };
 
 

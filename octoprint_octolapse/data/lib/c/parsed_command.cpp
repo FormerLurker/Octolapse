@@ -20,77 +20,77 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "ParsedCommand.h"
+#include "parsed_command.h"
 #include "bytesobject.h"
-#include "Logging.h"
+#include "logging.h"
 #include <iostream>
 #include <sstream>
 parsed_command::parsed_command()
 {
-	cmd = "";
-	gcode = "";
+	cmd_ = "";
+	gcode_ = "";
 }
 parsed_command::parsed_command(parsed_command & source)
 {
-	cmd = source.cmd;
-	gcode = source.gcode;
-	for (int index = 0; index < source.parameters.size(); index++)
-		parameters.push_back(new parsed_command_parameter(*source.parameters[index]));
+	cmd_ = source.cmd_;
+	gcode_ = source.gcode_;
+	for (unsigned int index = 0; index < source.parameters_.size(); index++)
+		parameters_.push_back(new parsed_command_parameter(*source.parameters_[index]));
 }
 
 parsed_command::~parsed_command()
 {
-	for (std::vector< parsed_command_parameter * >::iterator it = parameters.begin(); it != parameters.end(); ++it)
+	for (std::vector< parsed_command_parameter * >::iterator it = parameters_.begin(); it != parameters_.end(); ++it)
 	{
 		delete (*it);
 	}
-	parameters.clear();
+	parameters_.clear();
 }
 void parsed_command::clear()
 {
-	cmd = "";
-	gcode = "";
-	for (std::vector< parsed_command_parameter * >::iterator it = parameters.begin(); it != parameters.end(); ++it)
+	cmd_ = "";
+	gcode_ = "";
+	for (std::vector< parsed_command_parameter * >::iterator it = parameters_.begin(); it != parameters_.end(); ++it)
 	{
 		delete (*it);
 	}
-	parameters.clear();
+	parameters_.clear();
 }
 PyObject * parsed_command::to_py_object()
 {
 	PyObject *ret_val;
-	PyObject * pyCommandName = PyUnicode_FromString(cmd.c_str());
+	PyObject * pyCommandName = PyUnicode_FromString(cmd_.c_str());
 	
 	if (pyCommandName == NULL)
 	{
 		PyErr_Print();
 		std::string message = "Unable to convert the parameter name to unicode: ";
-		message += cmd;
+		message += cmd_;
 		octolapse_log(GCODE_PARSER, ERROR, message);
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
-	PyObject * pyGcode = PyUnicode_FromString(gcode.c_str());
+	PyObject * pyGcode = PyUnicode_FromString(gcode_.c_str());
 	if (pyGcode == NULL)
 	{
 		PyErr_Print();
 		std::string message = "Unable to convert the gcode to unicode: ";
-		message += gcode;
+		message += gcode_;
 		octolapse_log(GCODE_PARSER, ERROR, message);
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
 	
-	if (parameters.empty())
+	if (parameters_.empty())
 	{
 		ret_val = PyTuple_Pack(3, pyCommandName, Py_None, pyGcode);
 		if (ret_val == NULL)
 		{
 			PyErr_Print();
 			std::string message = "Unable to convert the parsed_command (no parameters) to a tuple.  Command: ";
-			message += cmd;
+			message += cmd_;
 			message += " Gcode: ";
-			message += gcode;
+			message += gcode_;
 			octolapse_log(GCODE_PARSER, ERROR, message);
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return NULL;
@@ -111,29 +111,29 @@ PyObject * parsed_command::to_py_object()
 			return NULL;
 		}
 		// Loop through our parameters vector and create and add PyDict items
-		for (unsigned int index = 0; index < parameters.size(); index++)
+		for (unsigned int index = 0; index < parameters_.size(); index++)
 		{
-			parsed_command_parameter* param = parameters[index];
+			parsed_command_parameter* param = parameters_[index];
 			PyObject * param_value = param->value_to_py_object();
 			// Errors here will be handled by value_to_py_object, just return NULL
 			if (param_value == NULL)
 				return NULL;
 			
 			//PyObject * pyParamNameUnicode = PyUnicode_FromString(param->name.c_str());
-			if (PyDict_SetItemString(pyParametersDict, param->name.c_str(), param_value) != 0)
+			if (PyDict_SetItemString(pyParametersDict, param->name_.c_str(), param_value) != 0)
 			{
 				PyErr_Print();
 				// Handle error here, display detailed message
 				std::string message = "Unable to add the command parameter to the parameters dictionary.  Parameter Name: ";
-				message += param->name;
+				message += param->name_;
 				message += " Value Type: ";
-				message += param->value_type;
+				message += param->value_type_;
 				message += " Value: ";
 
-				switch (param->value_type)
+				switch (param->value_type_)
 				{
 				case 'S':
-					message += param->string_value;
+					message += param->string_value_;
 					break;
 				case 'N':
 					message += "None";
@@ -141,17 +141,17 @@ PyObject * parsed_command::to_py_object()
 				case 'F':
 				{
 					std::ostringstream doubld_str;
-					doubld_str << param->double_value;
+					doubld_str << param->double_value_;
 					message += doubld_str.str();
-					message += param->string_value;
+					message += param->string_value_;
 				}
 					break;
 				case 'U':
 				{
 					std::ostringstream unsigned_strs;
-					unsigned_strs << param->unsigned_long_value;
+					unsigned_strs << param->unsigned_long_value_;
 					message += unsigned_strs.str();
-					message += param->string_value;
+					message += param->string_value_;
 				}
 					break;
 				default:
@@ -170,9 +170,9 @@ PyObject * parsed_command::to_py_object()
 		{
 			PyErr_Print();
 			std::string message = "Unable to convert the parsed_command (with parameters) to a tuple.  Command: ";
-			message += cmd;
+			message += cmd_;
 			message += " Gcode: ";
-			message += gcode;
+			message += gcode_;
 			octolapse_log(GCODE_PARSER, ERROR, message);
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return NULL;

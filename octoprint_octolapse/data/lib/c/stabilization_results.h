@@ -19,31 +19,23 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "StabilizationResults.h"
-
-stabilization_results::stabilization_results()
+#ifndef STABILIZATION_RESULTS_H
+#define STABILIZATION_RESULTS_H
+#include <string>
+#include <vector>
+#include "snapshot_plan.h"
+class stabilization_results
 {
-	bool success = false;
-	double seconds_elapsed = 0;
-	long gcodes_processed = 0;
-	long lines_processed = 0;
-}
-stabilization_results::~stabilization_results()
-{	
-	while (!snapshot_plans.empty()) {
-		snapshot_plan* p = snapshot_plans.back();
-		snapshot_plans.pop_back();
-		delete p;
-	}
-	
+public:
+	stabilization_results();
+	virtual ~stabilization_results();
 
-		/*for (unsigned int index = 0; index < (*p_snapshot_plans).size(); index++)
-		{
-			delete (*p_snapshot_plans)[index];
-			(*p_snapshot_plans)[index] = NULL;
-		}
-		p_snapshot_plans->clear();
-		delete p_snapshot_plans;
-		p_snapshot_plans = NULL;*/
-	
-}
+	bool success_;
+	std::string errors_;
+	std::vector<snapshot_plan*> snapshot_plans_;
+	double seconds_elapsed_;
+	long gcodes_processed_;
+	long lines_processed_;
+};
+
+#endif

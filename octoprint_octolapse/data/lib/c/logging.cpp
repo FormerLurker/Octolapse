@@ -1,3 +1,4 @@
+// Todo:  Convert to C++
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -5,11 +6,11 @@
 #else
 #include <Python.h>
 #endif
-#include "Logging.h"
+#include "logging.h"
 #include <string>
 #include <iostream>
 #include <climits>
-#include "PythonHelpers.h"
+#include "python_helpers.h"
 
 static bool octolapse_loggers_created = false;
 static PyObject *py_logging_module = NULL;

@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "GcodeParser.h"
-#include "Position.h"
+#include "gcode_parser.h"
+#include "position.h"
 
 struct gcode_position_args {
 	gcode_position_args() {
@@ -76,9 +76,8 @@ public:
 	void update(parsed_command* cmd, int file_line_number, int gcode_number);
 	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
 	void undo_update();
-	position* p_previous_pos;
-	position* p_current_pos;
-	position* p_undo_pos;
+	position * get_current_position();
+	position * get_previous_position();
 	static bool is_equal(double x, double y);
 	static bool greater_than(double x, double y);
 	static bool greater_than_or_equal(double x, double y);
@@ -87,27 +86,28 @@ public:
 	static bool is_zero(double x);
 private:
 	gcode_position(const gcode_position & source);
-	bool _autodetect_position;
-	double _priming_height;
-	double _origin_x;
-	double _origin_y;
-	double _origin_z;
-	bool _origin_x_none;
-	bool _origin_y_none;
-	bool _origin_z_none;
-	double _retraction_length;
-	double _z_lift_height;
-	double _minimum_layer_height;
-	bool _g90_influences_extruder;
-	std::string _e_axis_default_mode;
-	std::string _xyz_axis_default_mode;
-	std::string _units_default;
-	std::map<std::string, posFunctionType> _gcode_functions;
-	std::map<std::string, posFunctionType>::iterator _gcode_functions_iterator;
-	// Private Functions
-	double RoundDouble(double);
+	position* p_previous_pos_;
+	position* p_current_pos_;
+	position* p_undo_pos_;
+	bool autodetect_position_;
+	double priming_height_;
+	double origin_x_;
+	double origin_y_;
+	double origin_z_;
+	bool origin_x_none_;
+	bool origin_y_none_;
+	bool origin_z_none_;
+	double retraction_length_;
+	double z_lift_height_;
+	double minimum_layer_height_;
+	bool g90_influences_extruder_;
+	std::string e_axis_default_mode_;
+	std::string xyz_axis_default_mode_;
+	std::string units_default_;
+	std::map<std::string, posFunctionType> gcode_functions_;
+	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;
 	
-	std::map<std::string, posFunctionType> GetGcodeFunctions();
+	std::map<std::string, posFunctionType> get_gcode_functions();
 	/// Process Gcode Command Functions
 	void process_g0_g1(position*, parsed_command*);
 	void process_g2(position*, parsed_command*);

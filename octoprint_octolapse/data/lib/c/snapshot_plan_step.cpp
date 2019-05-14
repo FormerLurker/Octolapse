@@ -19,30 +19,44 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef SNAPSHOT_PLAN_H
-#define SNAPSHOT_PLAN_H
-#include "SnapshotPlanStep.h"
-#include "ParsedCommand.h"
-#include "Position.h"
-#include <vector>
-class snapshot_plan
+#include "snapshot_plan_step.h"
+#include "python_helpers.h"
+#include <iostream>
+snapshot_plan_step::snapshot_plan_step()
 {
-public:
-	snapshot_plan();
-	snapshot_plan(const snapshot_plan & source);
-	~snapshot_plan();
-	PyObject * to_py_object();
-	static PyObject * build_py_object(std::vector<snapshot_plan *> plans);
-	long file_line;
-	long file_gcode_number;
-	position * p_initial_position;
-	std::vector<position*>  snapshot_positions;
-	position * p_return_position;
-	std::vector<snapshot_plan_step*> steps;
-	parsed_command * p_parsed_command;
-	std::string send_parsed_command;
-	double lift_amount;
-	double retract_amount;
-};
+	x_ = 0.0;
+	y_ = 0.0;
+	z_ = 0.0;
+	e_ = 0.0;
+	f_ = 0.0;
+	action_ = "";
+}
 
-#endif
+snapshot_plan_step::snapshot_plan_step(const snapshot_plan_step & source)
+{
+	x_ = source.x_;
+	y_ = source.y_;
+	z_ = source.z_;
+	e_ = source.e_;
+	f_ = source.f_;
+	action_ = source.action_;
+}
+snapshot_plan_step::snapshot_plan_step(double x, double y, double z, double e, double f, std::string action) : x_(x), y_(y), z_(z), e_(e), f_(f), action_(action)
+{
+}
+
+snapshot_plan_step::~snapshot_plan_step()
+{
+}
+
+PyObject * snapshot_plan_step::to_py_object()
+{
+	PyObject * py_step = Py_BuildValue("sddddd", action_.c_str(), x_, y_, z_, e_, f_);
+	if (py_step == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to create the snapshot plan step PyObject.");
+		return NULL;
+	}
+	return py_step;
+}

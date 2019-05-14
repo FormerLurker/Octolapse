@@ -20,46 +20,46 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "ParsedCommandParameter.h"
-#include "ParsedCommand.h"
-#include "Logging.h"
+#include "parsed_command_parameter.h"
+#include "parsed_command.h"
+#include "logging.h"
 parsed_command_parameter::parsed_command_parameter()
 {
-	name = "";
-	value_type = 'N';
-	double_value = 0.0;
-	string_value = "";
-	unsigned_long_value = 0;
+	name_ = "";
+	value_type_ = 'N';
+	double_value_ = 0.0;
+	string_value_ = "";
+	unsigned_long_value_ = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & source)
 {
-	name = source.name;
-	value_type = source.value_type;
-	double_value = source.double_value;
-	string_value = source.string_value;
-	unsigned_long_value = source.unsigned_long_value;
+	name_ = source.name_;
+	value_type_ = source.value_type_;
+	double_value_ = source.double_value_;
+	string_value_ = source.string_value_;
+	unsigned_long_value_ = source.unsigned_long_value_;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name(name), double_value(double_value)
+parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name_(name), double_value_(double_value)
 {
-	value_type = 'F';
-	string_value = "";
-	unsigned_long_value = 0;
+	value_type_ = 'F';
+	string_value_ = "";
+	unsigned_long_value_ = 0;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name(name), string_value(string_value)
+parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name_(name), string_value_(string_value)
 {
-	value_type = 'S';
-	double_value = 0.0;
-	unsigned_long_value = 0;
+	value_type_ = 'S';
+	double_value_ = 0.0;
+	unsigned_long_value_ = 0;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name(name), string_value(string_value), unsigned_long_value(unsigned_int_value)
+parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name_(name), string_value_(string_value_), unsigned_long_value_(unsigned_int_value)
 {
-	value_type = 'U';
-	double_value = 0.0;
-	string_value = "";
+	value_type_ = 'U';
+	double_value_ = 0.0;
+	string_value_ = "";
 }
 parsed_command_parameter::~parsed_command_parameter()
 {
@@ -70,9 +70,9 @@ PyObject * parsed_command_parameter::value_to_py_object()
 {
 	PyObject * ret_val;
 	// check the parameter type
-	if (value_type == 'F')
+	if (value_type_ == 'F')
 	{
-		ret_val = PyFloat_FromDouble(double_value);
+		ret_val = PyFloat_FromDouble(double_value_);
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert double value to a PyObject.";
@@ -81,15 +81,15 @@ PyObject * parsed_command_parameter::value_to_py_object()
 			return NULL;
 		}
 	}
-	else if (value_type == 'N')
+	else if (value_type_ == 'N')
 	{
 		// None Type
 		Py_INCREF(Py_None);
 		ret_val = Py_None;
 	}
-	else if (value_type == 'S')
+	else if (value_type_ == 'S')
 	{
-		ret_val = PyUnicode_FromString(string_value.c_str());
+		ret_val = PyUnicode_FromString(string_value_.c_str());
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert string value to a PyObject.";
@@ -99,9 +99,9 @@ PyObject * parsed_command_parameter::value_to_py_object()
 		}
 		
 	}
-	else if (value_type == 'U')
+	else if (value_type_ == 'U')
 	{
-		ret_val = PyLong_FromUnsignedLong(unsigned_long_value);
+		ret_val = PyLong_FromUnsignedLong(unsigned_long_value_);
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert unsigned long value to a PyObject.";
@@ -113,7 +113,7 @@ PyObject * parsed_command_parameter::value_to_py_object()
 	else
 	{
 		std::string message = "The command parameter value type does not exist.  Value Type: ";
-		message += value_type;
+		message += value_type_;
 		octolapse_log(GCODE_PARSER, ERROR, message);
 		// There has been an error, we don't support this value_type!
 		PyErr_SetString(PyExc_ValueError, "Error creating ParsedCommand: Unknown value_type");

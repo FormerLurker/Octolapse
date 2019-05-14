@@ -19,12 +19,12 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "Stabilization.h"
+#include "stabilization.h"
 #include <fstream>
 #include <time.h>
 #include <iostream>
 #include <vector>
-#include "Logging.h"
+#include "logging.h"
 
 
 
@@ -35,12 +35,12 @@ stabilization::stabilization(
 	std::string errors_;
 	if (stab_args->py_on_progress_received != NULL)
 	{
-		python_callbacks = true;
+		python_callbacks_ = true;
 		python_progress_callback_ = stab_args->py_on_progress_received;
 	}
 	else
 	{
-		python_callbacks = false;
+		python_callbacks_ = false;
 		python_progress_callback_ = NULL;
 	}
 	progress_callback_ = progress;
@@ -52,13 +52,13 @@ stabilization::stabilization(
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
-	update_period_seconds_ = stab_args->notification_period_seconds;
+	update_period_seconds_ = stab_args->notification_period_seconds_;
 }
 
 stabilization::stabilization()
 {
 	std::string errors_;
-	python_callbacks = false;
+	python_callbacks_ = false;
 	native_progress_callback_ = NULL;
 	python_progress_callback_ = NULL;
 	progress_callback_ = NULL;
@@ -75,7 +75,7 @@ stabilization::stabilization()
 stabilization::stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress)
 {
 	std::string errors_; 
-	python_callbacks = false;
+	python_callbacks_ = false;
 	native_progress_callback_ = progress;
 	python_progress_callback_ = NULL;
 	progress_callback_ = NULL;
@@ -86,7 +86,7 @@ stabilization::stabilization(gcode_position_args* position_args, stabilization_a
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
-	update_period_seconds_ = args->notification_period_seconds;
+	update_period_seconds_ = args->notification_period_seconds_;
 }
 
 stabilization::stabilization(const stabilization &source)
@@ -113,9 +113,9 @@ long stabilization::get_file_size(const std::string& file_path)
 {
 	// Todo:  Fix this function.  This is a pretty weak implementation :(
 	std::ifstream file(file_path.c_str(), std::ios::in | std::ios::binary);
-	const long l = file.tellg();
+	const long l = (long)file.tellg();
 	file.seekg(0, std::ios::end);
-	const long m = file.tellg();
+	const long m = (long)file.tellg();
 	file.close();
 	return (m - l);
 }
@@ -133,7 +133,7 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 void stabilization::process_file(stabilization_results* results)
 {
 	
-	p_snapshot_plans = &results->snapshot_plans;
+	p_snapshot_plans_ = &results->snapshot_plans_;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
 	octolapse_log(SNAPSHOT_PLAN, INFO, "Processing File.");
 	PyThreadState *_save = NULL;
@@ -143,8 +143,8 @@ void stabilization::process_file(stabilization_results* results)
 	const clock_t start_clock = clock();
 
 	// todo : clear out everything for a fresh go!
-	file_size_ = get_file_size(p_stabilization_args_->file_path);
-	std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
+	file_size_ = get_file_size(p_stabilization_args_->file_path_);
+	std::ifstream gcodeFile(p_stabilization_args_->file_path_.c_str());
 	std::string line;
 
 	if (gcodeFile.is_open())
@@ -158,18 +158,18 @@ void stabilization::process_file(stabilization_results* results)
 			//std::cout << "stabilization::process_file - parsing gcode: " << line << "...";
 			gcode_parser_->try_parse_gcode(line.c_str(), cmd);
 			//std::cout << "Complete.\r\n";
-			if (!cmd->cmd.empty())
+			if (!cmd->cmd_.empty())
 			{
 
 				gcodes_processed_++;
 				//std::cout << "stabilization::process_file - updating position...";
 				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
 				//std::cout << "Complete.\r\n";
-				process_pos(gcode_position_->p_current_pos, gcode_position_->p_previous_pos);
+				process_pos(gcode_position_->get_current_position(), gcode_position_->get_previous_position());
 				if (next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
-					long currentPosition = gcodeFile.tellg();
+					long currentPosition = (long)gcodeFile.tellg();
 					long bytesRemaining = file_size_ - currentPosition;
 					double percentProgress = (double)currentPosition / (double)file_size_*100.0;
 					double secondsElapsed = get_time_elapsed(start_clock, clock());
@@ -194,13 +194,13 @@ void stabilization::process_file(stabilization_results* results)
 
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
-	results->success = errors_.empty();
-	results->errors = errors_;
-	results->seconds_elapsed = total_seconds;
-	results->gcodes_processed = gcodes_processed_;
-	results->lines_processed = lines_processed_;
+	results->success_ = errors_.empty();
+	results->errors_ = errors_;
+	results->seconds_elapsed_ = total_seconds;
+	results->gcodes_processed_ = gcodes_processed_;
+	results->lines_processed_ = lines_processed_;
 	octolapse_log(SNAPSHOT_PLAN, INFO, "Completed file processing.");
-	p_snapshot_plans = NULL;
+	p_snapshot_plans_ = NULL;
 }
 
 double stabilization::get_carteisan_distance(double x1, double y1, double x2, double y2)
@@ -220,7 +220,7 @@ double stabilization::get_carteisan_distance(double x1, double y1, double x2, do
 void stabilization::notify_progress(const double percent_progress, const double seconds_elapsed, const double seconds_to_complete,
 	const long gcodes_processed, const long lines_processed)
 {
-	if (python_callbacks)
+	if (python_callbacks_)
 	{
 		is_running_ = progress_callback_(python_progress_callback_, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed, lines_processed);
 	}
@@ -244,23 +244,23 @@ void stabilization::on_processing_complete()
 
 stabilization_args::stabilization_args() 
 {
-	stabilization_type = "";
-	is_bound = false;
-	x_min = 0;
-	x_max = 0;
-	y_min = 0;
-	y_max = 0;
-	z_min = 0;
-	z_max = 0;
-	height_increment = 0.0;
-	disable_retract = false;
-	disable_z_lift = false;
-	notification_period_seconds = 0.25;
-	fastest_speed = true;
+	stabilization_type_ = "";
+	is_bound_ = false;
+	x_min_ = 0;
+	x_max_ = 0;
+	y_min_ = 0;
+	y_max_ = 0;
+	z_min_ = 0;
+	z_max_ = 0;
+	height_increment_ = 0.0;
+	disable_retract_ = false;
+	disable_z_lift_ = false;
+	notification_period_seconds_ = 0.25;
+	fastest_speed_ = true;
 	// Gcode Generation Settings
-	retraction_length = 0.0;
-	z_lift_height = 0.0;
-	file_path = "";
+	retraction_length_ = 0.0;
+	z_lift_height_ = 0.0;
+	file_path_ = "";
 };
 
 stabilization_args::~stabilization_args()

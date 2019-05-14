@@ -20,8 +20,9 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef PARSED_COMMAND_H
-#define PARSED_COMMAND_H
+#ifndef PARSED_COMMAND_PARAMETER_H
+#define PARSED_COMMAND_PARAMETER_H
+#include <string>
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -29,21 +30,23 @@
 #else
 #include <Python.h>
 #endif
-#include <string>
-#include <vector>
-#include "ParsedCommandParameter.h"
-
-class parsed_command
+class parsed_command_parameter
 {
 public:
-	parsed_command();
-	parsed_command(parsed_command & source);
-	~parsed_command();
-	PyObject * to_py_object();
-	void clear();
-	std::string cmd;
-	std::string gcode;
-	std::vector<parsed_command_parameter* > parameters;
+	parsed_command_parameter();
+	~parsed_command_parameter();
+	parsed_command_parameter(parsed_command_parameter & source);
+	parsed_command_parameter(std::string name, double double_value);
+	parsed_command_parameter(std::string name, std::string string_value);
+	parsed_command_parameter(std::string name, unsigned int unsigned_int_value);
+
+	PyObject * value_to_py_object();
+
+	std::string name_;
+	char value_type_;
+	double double_value_;
+	unsigned long unsigned_long_value_;
+	std::string string_value_;
 };
 
 #endif

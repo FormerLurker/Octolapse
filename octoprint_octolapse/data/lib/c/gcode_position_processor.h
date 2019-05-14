@@ -30,11 +30,11 @@
 #include <Python.h>
 #endif
 #include <string>
-#include "GcodePosition.h"
-#include "GcodeParser.h"
-#include "Stabilization.h"
-#include "StabilizationSnapToPrint.h"
-#include "StabilizationMinimizeTravel.h"
+#include "gcode_position.h"
+#include "gcode_parser.h"
+#include "stabilization.h"
+#include "stabilization_snap_to_print.h"
+#include "stabilization_minimize_travel.h"
 namespace gpp {
 	static std::map<std::string, gcode_position*> gcode_positions;
 	static gcode_parser* parser;

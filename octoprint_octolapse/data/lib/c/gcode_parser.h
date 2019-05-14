@@ -25,8 +25,8 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "ParsedCommand.h"
-#include "ParsedCommandParameter.h"
+#include "parsed_command.h"
+#include "parsed_command_parameter.h"
 static const std::string GCODE_WORDS = "GMT";
 
 class gcode_parser

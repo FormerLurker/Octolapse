@@ -19,8 +19,8 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "GcodeParser.h"
-#include "Logging.h"
+#include "gcode_parser.h"
+#include "logging.h"
 #include <cmath>
 #include <iostream>
 gcode_parser::gcode_parser()
@@ -101,19 +101,20 @@ gcode_parser::~gcode_parser()
 // Superfast gcode parser - v2
 bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 {
+	// Create a command
 	//std::cout << "GcodeParser.try_parse_gcode - Parsing " << gcode << "\r\n";
 	char * p = const_cast<char *>(gcode);
-	if(!try_extract_gcode_command(&p, &(command->cmd)))
+	if(!try_extract_gcode_command(&p, &(command->cmd_)))
 	{
 		std::string message = "No gcode command was found: ";
 		message += gcode;
 		octolapse_log(GCODE_PARSER, WARNING, message);
 		return false;
 	}
-	command->gcode = gcode;
+	command->gcode_ = gcode;
 	std::vector<parsed_command_parameter> parameters;
 
-	if (parsable_commands_.find(command->cmd) == parsable_commands_.end())
+	if (parsable_commands_.find(command->cmd_) == parsable_commands_.end())
 	{
 		//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
 		std::string message = "The gcode command is not in the parsable commands set: ";
@@ -122,24 +123,23 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		return true;
 	}
 
-	if (text_only_functions_.find(command->cmd) != text_only_functions_.end())
+	if (text_only_functions_.find(command->cmd_) != text_only_functions_.end())
 	{
 		//std::cout << "GcodeParser.try_parse_gcode - Text only parameter found.\r\n";
 		parsed_command_parameter * p_text_command = new parsed_command_parameter();
-		char * text_value;
 
-		if(!try_extract_text_parameter(&p, &(p_text_command->string_value)))
+		if(!try_extract_text_parameter(&p, &(p_text_command->string_value_)))
 		{
 			std::string message = "Unable to extract a text parameter from: ";
 			message += p;
 			octolapse_log(GCODE_PARSER, WARNING, message);
 			return true;
 		}
-		p_text_command->name = "TEXT";
+		p_text_command->name_ = "TEXT";
 	}
 	else
 	{
-		if (command->cmd[0] == 'T')
+		if (command->cmd_[0] == 'T')
 		{
 			//std::cout << "GcodeParser.try_parse_gcode - T parameter found.\r\n";
 			parsed_command_parameter* param = new parsed_command_parameter();
@@ -153,7 +153,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				param = NULL;
 			}
 			else
-				command->parameters.push_back(param);
+				command->parameters_.push_back(param);
 		}
 		else
 		{
@@ -162,7 +162,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
 				parsed_command_parameter* param = new parsed_command_parameter();
 				if (try_extract_parameter(&p, param))
-					command->parameters.push_back(param);
+					command->parameters_.push_back(param);
 				else
 				{
 					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
@@ -249,7 +249,7 @@ bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * 
 		if (*p != ' ')
 		{
 			found_numbers = true;
-			r = (r*10.0) + (*p - '0');
+			r = (unsigned int)((r*10.0) + (*p - '0'));
 		}
 		++p;
 	}
@@ -356,22 +356,22 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 	
 	// Deal with case sensitivity
 	if (*p >= 'a' && *p <= 'z')
-		parameter->name += *p++ - 32;
+		parameter->name_ += *p++ - 32;
 	else if (*p >= 'A' && *p <= 'Z')
-		parameter->name += *p++;
+		parameter->name_ += *p++;
 	else
 		return false;
 
 	// Add all values, stop at end of string or when we hit a ';'
-	if (try_extract_double(&p,&(parameter->double_value)))
+	if (try_extract_double(&p,&(parameter->double_value_)))
 	{
-		parameter->value_type = 'F';
+		parameter->value_type_ = 'F';
 	}
 	else
 	{
-		if(try_extract_text_parameter(&p, &(parameter->string_value)))
+		if(try_extract_text_parameter(&p, &(parameter->string_value_)))
 		{
-			parameter->value_type = 'S';
+			parameter->value_type_ = 'S';
 		}
 		else
 		{
@@ -388,7 +388,7 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 {
 	//std::cout << "Trying to extract a T parameter from " << *p_p_gcode << "\r\n";
 	char * p = *p_p_gcode;
-	parameter->name = "T";
+	parameter->name_ = "T";
 	// Ignore Leading Spaces
 	while (*p == L' ')
 	{
@@ -398,33 +398,32 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 	if (*p == L'c' || *p == L'C')
 	{
 		//std::cout << "Found C value for T parameter\r\n";
-		parameter->string_value = "C";
-		parameter->value_type = 'S';
+		parameter->string_value_ = "C";
+		parameter->value_type_ = 'S';
 	}
 	else if (*p == L'x' || *p == L'X')
 	{
 		//std::cout << "Found X value for T parameter\r\n";
-		parameter->string_value = "X";
-		parameter->value_type = 'S';
+		parameter->string_value_ = "X";
+		parameter->value_type_ = 'S';
 	}
 	else if (*p == L'?')
 	{
 		//std::cout << "Found ? value for T parameter\r\n";
-		parameter->string_value = "?";
-		parameter->value_type = 'S';
+		parameter->string_value_ = "?";
+		parameter->value_type_ = 'S';
 	}
 	else
 	{
-		unsigned int value;
 		//std::cout << "No char t parameter found, looking for unsigned int values.\r\n";
-		if(!try_extract_unsigned_long(&p,&(parameter->unsigned_long_value)))
+		if(!try_extract_unsigned_long(&p,&(parameter->unsigned_long_value_)))
 		{
 			std::string message = "GcodeParser.try_extract_t_parameter: Unable to extract parameters from the T command.";
 			octolapse_log(GCODE_PARSER, WARNING, message);
 			//std::cout << "No parameter for the T command.\r\n";
 			return false;
 		}
-		parameter->value_type = 'U';
+		parameter->value_type_ = 'U';
 	}
 	return true;
 }

@@ -20,14 +20,14 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "GcodePositionProcessor.h"
+#include "gcode_position_processor.h"
 #include <iostream>
-#include "StabilizationSnapToPrint.h"
-#include "StabilizationMinimizeTravel.h"
-#include "Stabilization.h"
-#include "Logging.h"
+#include "stabilization_snap_to_print.h"
+#include "stabilization_minimize_travel.h"
+#include "stabilization.h"
+#include "logging.h"
 #include "bytesobject.h"
-#include "PythonHelpers.h"
+#include "python_helpers.h"
 #ifdef _DEBUG
 #include "test.h"
 #endif
@@ -187,7 +187,6 @@ extern "C"
 		PyObject *py_stabilization_args;
 		PyObject *py_stabilization_type_args;
 		
-		int iFavorXAxis;
 		if (!PyArg_ParseTuple(
 			args,
 			"OOO",
@@ -222,7 +221,7 @@ extern "C"
 			return NULL;
 		}
 		// Create our stabilization object
-		StabilizationSnapToPrint stabilization(
+		stabilization_snap_to_print stabilization(
 			&p_args, 
 			&s_args,
 			&st_args,
@@ -233,13 +232,13 @@ extern "C"
 		stabilization.process_file(&results);
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Building snapshot plans.");
 
-		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans);
+		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
 		if (py_snapshot_plans == NULL)
 		{
 			return NULL;
 		}
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
-		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success, results.errors.c_str(), py_snapshot_plans, results.seconds_elapsed, results.gcodes_processed, results.lines_processed);
+		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success_, results.errors_.c_str(), py_snapshot_plans, results.seconds_elapsed_, results.gcodes_processed_, results.lines_processed_);
 		if (py_results == NULL)
 		{
 			octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to create a Tuple from the snapshot plan list.");
@@ -264,7 +263,6 @@ extern "C"
 		PyObject *py_stabilization_args;
 		PyObject *py_stabilization_type_args;
 		//std::cout << "Parsing Arguments\r\n";
-		int iFavorXAxis;
 		if (!PyArg_ParseTuple(
 			args,
 			"OOO",
@@ -302,7 +300,7 @@ extern "C"
 		}
 		//std::cout << "Creating Stabilization.\r\n";
 		// Create our stabilization object
-		StabilizationMinimizeTravel stabilization(
+		stabilization_minimize_travel stabilization(
 			&p_args,
 			&s_args,
 			&mt_args,
@@ -315,13 +313,13 @@ extern "C"
 		stabilization.process_file(&results);
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Building snapshot plans.");
 
-		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans);
+		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
 		if (py_snapshot_plans == NULL)
 		{
 			return NULL;
 		}
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
-		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success, results.errors.c_str(), py_snapshot_plans, results.seconds_elapsed, results.gcodes_processed, results.lines_processed);
+		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success_, results.errors_.c_str(), py_snapshot_plans, results.seconds_elapsed_, results.gcodes_processed_, results.lines_processed_);
 		if (py_results == NULL)
 		{
 			octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to create a Tuple from the snapshot plan list.");
@@ -415,7 +413,7 @@ extern "C"
 		if(gpp::parser->try_parse_gcode(gcode, &command))
 			p_gcode_position->update(&command, -1, -1);
 
-		PyObject * py_position = p_gcode_position->p_current_pos->to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position()->to_py_tuple();
 		if (py_position == NULL)
 		{
 			std::string message = "GcodePositionProcessor.Update - Unable to convert the position to a tuple.";
@@ -474,7 +472,7 @@ extern "C"
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
 		p_gcode_position->update_position(
-			p_gcode_position->p_current_pos,
+			p_gcode_position->get_current_position(),
 			x,
 			update_x > 0,
 			y,
@@ -488,7 +486,7 @@ extern "C"
 			true,
 			false);
 
-		PyObject * py_position = p_gcode_position->p_current_pos->to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position()->to_py_tuple();
 		if (py_position == NULL)
 		{
 			return NULL;
@@ -540,7 +538,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating and returning the current position tuple.");
-		return p_gcode_position->p_current_pos->to_py_tuple();
+		return p_gcode_position->get_current_position()->to_py_tuple();
 	}
 
 	static PyObject* GetCurrentPositionDict(PyObject* self, PyObject *args)
@@ -563,7 +561,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
-		return p_gcode_position->p_current_pos->to_py_dict();
+		return p_gcode_position->get_current_position()->to_py_dict();
 	}
 
 	static PyObject* GetPreviousPositionTuple(PyObject* self, PyObject *args)
@@ -587,7 +585,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating and returning the previous position tuple.");
-		return p_gcode_position->p_previous_pos->to_py_tuple();
+		return p_gcode_position->get_previous_position()->to_py_tuple();
 	}
 
 	static PyObject* GetPreviousPositionDict(PyObject* self, PyObject *args)
@@ -610,7 +608,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
-		return p_gcode_position->p_previous_pos->to_py_dict();
+		return p_gcode_position->get_previous_position()->to_py_dict();
 	}
 }
 
@@ -899,7 +897,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the gcode_settings object.");
 		return false;
 	}
-	stabilizationArgs->retraction_length = PyFloat_AS_DOUBLE(py_retraction_length);
+	stabilizationArgs->retraction_length_ = PyFloat_AS_DOUBLE(py_retraction_length);
 	Py_DecRef(py_retraction_length);
 	PyObject *  py_z_lift_height;
 	py_z_lift_height = PyObject_GetAttrString(py_gcode_settings, "z_lift_height");
@@ -909,7 +907,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the gcode_settings object.");
 		return false;
 	}
-	stabilizationArgs->z_lift_height = PyFloat_AS_DOUBLE(py_z_lift_height);
+	stabilizationArgs->z_lift_height_ = PyFloat_AS_DOUBLE(py_z_lift_height);
 	
 	// Get IsBound
 	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
@@ -919,9 +917,9 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve is_bound from the stabilization args dict.");
 		return false;
 	}
-	stabilizationArgs->is_bound = PyLong_AsLong(py_is_bound) > 0;
+	stabilizationArgs->is_bound_ = PyLong_AsLong(py_is_bound) > 0;
 
-	if (stabilizationArgs->is_bound)
+	if (stabilizationArgs->is_bound_)
 	{
 		// Extract the bounds
 		PyObject * py_bounds = PyDict_GetItemString(args, "bounds");
@@ -939,7 +937,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->x_min = PyFloat_AsDouble(py_x_min);
+		stabilizationArgs->x_min_ = PyFloat_AsDouble(py_x_min);
 
 		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
 		if (py_x_max == NULL)
@@ -948,7 +946,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->x_max = PyFloat_AsDouble(py_x_max);
+		stabilizationArgs->x_max_ = PyFloat_AsDouble(py_x_max);
 
 		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
 		if (py_y_min == NULL)
@@ -957,7 +955,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->y_min = PyFloat_AsDouble(py_y_min);
+		stabilizationArgs->y_min_ = PyFloat_AsDouble(py_y_min);
 
 		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
 		if (py_y_max == NULL)
@@ -966,7 +964,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->y_max = PyFloat_AsDouble(py_y_max);
+		stabilizationArgs->y_max_ = PyFloat_AsDouble(py_y_max);
 
 		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
 		if (py_z_min == NULL)
@@ -975,7 +973,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->z_min = PyFloat_AsDouble(py_z_min);
+		stabilizationArgs->z_min_ = PyFloat_AsDouble(py_z_min);
 
 		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
 		if (py_z_max == NULL)
@@ -984,7 +982,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->z_max = PyFloat_AsDouble(py_z_max);
+		stabilizationArgs->z_max_ = PyFloat_AsDouble(py_z_max);
 	}
 
 	// height_increment
@@ -995,7 +993,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->height_increment = PyFloat_AsDouble(py_height_increment);
+	stabilizationArgs->height_increment_ = PyFloat_AsDouble(py_height_increment);
 
 	// disable_retract
 	PyObject * py_disable_retract = PyDict_GetItemString(args, "disable_retract");
@@ -1005,7 +1003,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_retract from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->disable_retract = PyLong_AsLong(py_disable_retract) > 0;
+	stabilizationArgs->disable_retract_ = PyLong_AsLong(py_disable_retract) > 0;
 
 	// disable_z_lift
 	PyObject * py_disable_z_lift = PyDict_GetItemString(args, "disable_z_lift");
@@ -1015,7 +1013,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_z_lift from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->disable_z_lift = PyLong_AsLong(py_disable_z_lift) > 0;
+	stabilizationArgs->disable_z_lift_ = PyLong_AsLong(py_disable_z_lift) > 0;
 
 	// fastest_speed
 	PyObject * py_fastest_speed = PyDict_GetItemString(args, "fastest_speed");
@@ -1025,7 +1023,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve fastest_speed from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->fastest_speed = PyLong_AsLong(py_fastest_speed) > 0;
+	stabilizationArgs->fastest_speed_ = PyLong_AsLong(py_fastest_speed) > 0;
 
 	// notification_period_seconds
 	PyObject * py_notification_period_seconds = PyDict_GetItemString(args, "notification_period_seconds");
@@ -1035,7 +1033,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->notification_period_seconds = PyFloat_AsDouble(py_notification_period_seconds);
+	stabilizationArgs->notification_period_seconds_ = PyFloat_AsDouble(py_notification_period_seconds);
 
 	// on_progress_received
 	PyObject * py_on_progress_received = PyDict_GetItemString(args, "on_progress_received");
@@ -1057,7 +1055,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve file_path from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->file_path = PyUnicode_SafeAsString(py_file_path);
+	stabilizationArgs->file_path_ = PyUnicode_SafeAsString(py_file_path);
 	
 	return true;
 }
@@ -1119,6 +1117,6 @@ static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_trave
 	// set the travel args values
 	min_travel_args->py_gcode_generator = py_gcode_generator;
 	min_travel_args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
-	min_travel_args->has_py_callbacks = true;
+	min_travel_args->has_py_callbacks_ = true;
 	return true;
 }

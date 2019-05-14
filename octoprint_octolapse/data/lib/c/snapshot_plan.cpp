@@ -19,70 +19,70 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "SnapshotPlan.h"
+#include "snapshot_plan.h"
 #include <iostream>
 
 snapshot_plan::snapshot_plan()
 {
-	file_line = 0;
-	file_gcode_number = 0;
-	p_initial_position = NULL;
-	p_return_position = NULL;
-	p_parsed_command = NULL;
-	send_parsed_command = "";
-	lift_amount = 0;
-	retract_amount = 0;
+	file_line_ = 0;
+	file_gcode_number_ = 0;
+	p_initial_position_ = NULL;
+	p_return_position_ = NULL;
+	p_parsed_command_ = NULL;
+	send_parsed_command_ = "";
+	lift_amount_ = 0;
+	retract_amount_ = 0;
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)
 {
-	file_line = source.file_line;
-	file_gcode_number = source.file_gcode_number;
-	p_initial_position = new position(*source.p_initial_position);
+	file_line_ = source.file_line_;
+	file_gcode_number_ = source.file_gcode_number_;
+	p_initial_position_ = new position(*source.p_initial_position_);
 	
-	for (unsigned int index=0; index < source.snapshot_positions.size(); index++)
+	for (unsigned int index=0; index < source.snapshot_positions_.size(); index++)
 	{
-		snapshot_positions.push_back(new position(*source.snapshot_positions[index]));
+		snapshot_positions_.push_back(new position(*source.snapshot_positions_[index]));
 	}
 	
-	for (unsigned int index = 0; index < source.steps.size(); index++)
+	for (unsigned int index = 0; index < source.steps_.size(); index++)
 	{
-		steps.push_back(new snapshot_plan_step(*source.steps[index]));
+		steps_.push_back(new snapshot_plan_step(*source.steps_[index]));
 	}
 
-	p_return_position = new position(*source.p_return_position);
-	p_parsed_command = new parsed_command(*source.p_parsed_command);
-	send_parsed_command = source.send_parsed_command;
-	lift_amount = source.lift_amount;
-	retract_amount = source.retract_amount;
+	p_return_position_ = new position(*source.p_return_position_);
+	p_parsed_command_ = new parsed_command(*source.p_parsed_command_);
+	send_parsed_command_ = source.send_parsed_command_;
+	lift_amount_ = source.lift_amount_;
+	retract_amount_ = source.retract_amount_;
 }
 
 snapshot_plan::~snapshot_plan()
 {
-	if (p_initial_position != NULL)
+	if (p_initial_position_ != NULL)
 	{
-		delete p_initial_position;
-		p_initial_position = NULL;
+		delete p_initial_position_;
+		p_initial_position_ = NULL;
 	}
-	if (p_return_position != NULL)
+	if (p_return_position_ != NULL)
 	{
-		delete p_return_position;
-		p_return_position = NULL;
+		delete p_return_position_;
+		p_return_position_ = NULL;
 	}
-	if (p_parsed_command != NULL)
+	if (p_parsed_command_ != NULL)
 	{
-		delete p_parsed_command;
-		p_parsed_command = NULL;
+		delete p_parsed_command_;
+		p_parsed_command_ = NULL;
 	}
-	while (!snapshot_positions.empty()) {
-		position * p = snapshot_positions.back();
-		snapshot_positions.pop_back();
+	while (!snapshot_positions_.empty()) {
+		position * p = snapshot_positions_.back();
+		snapshot_positions_.pop_back();
 		delete p;
 	}
 	
-	while (!steps.empty()) {
-		snapshot_plan_step * p = steps.back();
-		steps.pop_back();
+	while (!steps_.empty()) {
+		snapshot_plan_step * p = steps_.back();
+		steps_.pop_back();
 		delete p;
 	}
 	
@@ -132,9 +132,9 @@ PyObject * snapshot_plan::to_py_object()
 		return NULL;
 	}
 	
-	for (unsigned int index = 0; index < snapshot_positions.size(); index++)
+	for (unsigned int index = 0; index < snapshot_positions_.size(); index++)
 	{
-		PyObject * py_snapshot_position = snapshot_positions[index]->to_py_tuple();
+		PyObject * py_snapshot_position = snapshot_positions_[index]->to_py_tuple();
 		if (py_snapshot_position == NULL)
 		{
 			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert a snapshot position to a PyObject.");
@@ -151,14 +151,14 @@ PyObject * snapshot_plan::to_py_object()
 		// Todo: evaluate the effect of this 
 		//std::cout << "py_snapshot_position refcount = " << py_snapshot_position->ob_refcnt << "\r\n";
 	}
-	PyObject * py_initial_position = p_initial_position->to_py_tuple();
+	PyObject * py_initial_position = p_initial_position_->to_py_tuple();
 	if (py_initial_position == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create InitialPosition PyObject.");
 		return NULL;
 	}
-	PyObject * py_return_position = p_return_position->to_py_tuple();
+	PyObject * py_return_position = p_return_position_->to_py_tuple();
 	if (py_return_position == NULL)
 	{
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the return position to a tuple.");
@@ -170,11 +170,11 @@ PyObject * snapshot_plan::to_py_object()
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create a PyList object to hold the snapshot plan steps.");
 		return NULL;
 	}
-	for (unsigned int step_index = 0; step_index < steps.size(); step_index++)
+	for (unsigned int step_index = 0; step_index < steps_.size(); step_index++)
 	{
 		
 		// create the snapshot step object with build
-		PyObject * py_step = steps[step_index]->to_py_object();
+		PyObject * py_step = steps_[step_index]->to_py_object();
 		if (py_step == NULL)
 		{
 			return NULL;
@@ -191,7 +191,7 @@ PyObject * snapshot_plan::to_py_object()
 		//std::cout << "py_step refcount = " << py_step->ob_refcnt << "\r\n";
 
 	}
-	PyObject* py_parsed_command = p_parsed_command->to_py_object();
+	PyObject* py_parsed_command = p_parsed_command_->to_py_object();
 	if (py_parsed_command == NULL)
 	{
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the parsed_command to a PyObject.");
@@ -199,16 +199,16 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	PyObject *py_snapshot_plan = Py_BuildValue(
 		"llOOOOOsdd",
-		file_line,
-		file_gcode_number,
+		file_line_,
+		file_gcode_number_,
 		py_initial_position,
 		py_snapshot_positions,
 		py_return_position,
 		py_steps,
 		py_parsed_command,
-		send_parsed_command.c_str(),
-		lift_amount,
-		retract_amount
+		send_parsed_command_.c_str(),
+		lift_amount_,
+		retract_amount_
 	);
 	if (py_snapshot_plan == NULL)
 	{

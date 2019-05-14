@@ -19,9 +19,9 @@
 // You can contact the author either through the git - hub repository, or at the
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef SNAPSHOT_PLAN_STEP_H
-#define SNAPSHOT_PLAN_STEP_H
-#include <string>
+
+#ifndef PARSED_COMMAND_H
+#define PARSED_COMMAND_H
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -29,20 +29,23 @@
 #else
 #include <Python.h>
 #endif
-class snapshot_plan_step
+#include <string>
+#include <vector>
+#include "parsed_command_parameter.h"
+
+class parsed_command
 {
 public:
-	snapshot_plan_step();
-	snapshot_plan_step(double x, double y, double z, double e, double f, std::string action);
-	snapshot_plan_step(const snapshot_plan_step & source);
-	~snapshot_plan_step();
+	parsed_command();
+	parsed_command(parsed_command & source);
+	~parsed_command();
+	std::string cmd_;
+	std::string gcode_;
+	std::vector<parsed_command_parameter* > parameters_;
 	PyObject * to_py_object();
-	double x;
-	double y;
-	double z;
-	double e;
-	double f;
-	std::string action;
+	void clear();
+private:
+	
 };
 
 #endif

@@ -22,10 +22,10 @@
 
 #ifndef STABILIZATION_H
 #define STABILIZATION_H
-#include "Position.h"
-#include "GcodePosition.h"
-#include "SnapshotPlan.h"
-#include "StabilizationResults.h"
+#include "position.h"
+#include "gcode_position.h"
+#include "snapshot_plan.h"
+#include "stabilization_results.h"
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -45,22 +45,22 @@ public:
 	stabilization_args();
 	~stabilization_args();
 	PyObject* py_on_progress_received;
-	bool is_bound;
-	double x_min;
-	double x_max;
-	double y_min;
-	double y_max;
-	double z_min;
-	double z_max;
-	std::string stabilization_type;
-	std::string file_path;
-	bool disable_retract;
-	double retraction_length;
-	bool disable_z_lift;
-	double z_lift_height;
-	double height_increment;
-	double notification_period_seconds;
-	bool fastest_speed;
+	bool is_bound_;
+	double x_min_;
+	double x_max_;
+	double y_min_;
+	double y_max_;
+	double z_min_;
+	double z_max_;
+	std::string stabilization_type_;
+	std::string file_path_;
+	bool disable_retract_;
+	double retraction_length_;
+	bool disable_z_lift_;
+	double z_lift_height_;
+	double height_increment_;
+	double notification_period_seconds_;
+	bool fastest_speed_;
 };
 
 
@@ -90,14 +90,14 @@ private:
 	double update_period_seconds_;
 	double get_next_update_time() const;
 	static double get_time_elapsed(double start_clock, double end_clock);
-	bool python_callbacks;
+	bool python_callbacks_;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
 		long gcodes_processed, long lines_processed);
 	gcode_position_args* p_args_;
 protected:
 	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
 	virtual void on_processing_complete();
-	std::vector<snapshot_plan*>* p_snapshot_plans;
+	std::vector<snapshot_plan*>* p_snapshot_plans_;
 	bool is_running_;
 	std::string errors_;
 	stabilization_args* p_stabilization_args_;

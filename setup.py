@@ -86,20 +86,20 @@ class build_ext_subclass( build_ext ):
 
 ## Build our c++ parser extension
 plugin_ext_sources = [
-    'octoprint_octolapse/data/lib/c/GcodePositionProcessor.cpp',
-    'octoprint_octolapse/data/lib/c/GcodeParser.cpp',
-    'octoprint_octolapse/data/lib/c/GcodePosition.cpp',
-    'octoprint_octolapse/data/lib/c/ParsedCommand.cpp',
-    'octoprint_octolapse/data/lib/c/ParsedCommandParameter.cpp',
-    'octoprint_octolapse/data/lib/c/Position.cpp',
-    'octoprint_octolapse/data/lib/c/PythonHelpers.cpp',
-    'octoprint_octolapse/data/lib/c/SnapshotPlan.cpp',
-    'octoprint_octolapse/data/lib/c/SnapshotPlanStep.cpp',
-    'octoprint_octolapse/data/lib/c/Stabilization.cpp',
-    'octoprint_octolapse/data/lib/c/StabilizationResults.cpp',
-    'octoprint_octolapse/data/lib/c/StabilizationMinimizeTravel.cpp',
-    'octoprint_octolapse/data/lib/c/StabilizationSnapToPrint.cpp',
-    'octoprint_octolapse/data/lib/c/Logging.cpp'
+    'octoprint_octolapse/data/lib/c/gcode_position_processor.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_parser.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_position.cpp',
+    'octoprint_octolapse/data/lib/c/parsed_command.cpp',
+    'octoprint_octolapse/data/lib/c/parsed_command_parameter.cpp',
+    'octoprint_octolapse/data/lib/c/position.cpp',
+    'octoprint_octolapse/data/lib/c/python_helpers.cpp',
+    'octoprint_octolapse/data/lib/c/snapshot_plan.cpp',
+    'octoprint_octolapse/data/lib/c/snapshot_plan_step.cpp',
+    'octoprint_octolapse/data/lib/c/stabilization.cpp',
+    'octoprint_octolapse/data/lib/c/stabilization_results.cpp',
+    'octoprint_octolapse/data/lib/c/stabilization_minimize_travel.cpp',
+    'octoprint_octolapse/data/lib/c/stabilization_snap_to_print.cpp',
+    'octoprint_octolapse/data/lib/c/logging.cpp'
 ]
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',
