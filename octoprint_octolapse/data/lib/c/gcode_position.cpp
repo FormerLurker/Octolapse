@@ -293,8 +293,8 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 
 				// Calculate layer Change
 				if (
-					((p_current_pos_->is_primed_ && greater_than(p_current_pos_->layer_, 0)) || p_current_pos_->is_extruding_)
-					&& p_current_pos_->is_printer_primed_)
+					//((p_current_pos_->is_primed_ && p_current_pos_->layer_ > 0) || p_current_pos_->is_extruding_)
+					p_current_pos_->is_extruding_ && p_current_pos_->is_printer_primed_)
 				{
 
 					if (greater_than(p_current_pos_->z_, p_previous_pos_->height_))
