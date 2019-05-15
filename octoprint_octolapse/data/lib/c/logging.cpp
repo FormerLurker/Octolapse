@@ -118,7 +118,7 @@ void octolapse_log(int logger_type, int log_level, std::string message)
 		default:
 			return;
 	}
-	PyObject * pyMessage = PyUnicode_FromString(message.c_str());
+	PyObject * pyMessage = PyUnicode_SafeFromString(message.c_str());
 	if (pyMessage == NULL)
 	{
 		PyErr_Print();

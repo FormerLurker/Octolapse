@@ -60,7 +60,7 @@ void parsed_command::clear()
 PyObject * parsed_command::to_py_object()
 {
 	PyObject *ret_val;
-	PyObject * pyCommandName = PyUnicode_FromString(cmd_.c_str());
+	PyObject * pyCommandName = PyUnicode_SafeFromString(cmd_.c_str());
 	
 	if (pyCommandName == NULL)
 	{
@@ -120,7 +120,6 @@ PyObject * parsed_command::to_py_object()
 			if (param_value == NULL)
 				return NULL;
 			
-			//PyObject * pyParamNameUnicode = PyUnicode_FromString(param->name.c_str());
 			if (PyDict_SetItemString(pyParametersDict, param->name_.c_str(), param_value) != 0)
 			{
 				PyErr_Print();

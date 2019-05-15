@@ -23,6 +23,7 @@
 #include "parsed_command_parameter.h"
 #include "parsed_command.h"
 #include "logging.h"
+#include "python_helpers.h"
 parsed_command_parameter::parsed_command_parameter()
 {
 	name_ = "";
@@ -89,7 +90,7 @@ PyObject * parsed_command_parameter::value_to_py_object()
 	}
 	else if (value_type_ == 'S')
 	{
-		ret_val = PyUnicode_FromString(string_value_.c_str());
+		ret_val = PyUnicode_SafeFromString(string_value_.c_str());
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert string value to a PyObject.";
