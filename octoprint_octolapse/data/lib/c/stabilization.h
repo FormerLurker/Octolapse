@@ -22,6 +22,7 @@
 
 #ifndef STABILIZATION_H
 #define STABILIZATION_H
+#include <string>
 #include "position.h"
 #include "gcode_position.h"
 #include "snapshot_plan.h"
@@ -62,8 +63,6 @@ public:
 	double notification_period_seconds_;
 	bool fastest_speed_;
 };
-
-
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 
@@ -110,5 +109,7 @@ protected:
 	long file_size_;
 	long lines_processed_;
 	long gcodes_processed_;
+
+	
 };
 #endif

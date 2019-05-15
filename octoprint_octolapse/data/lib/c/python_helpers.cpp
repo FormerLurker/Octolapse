@@ -32,6 +32,8 @@ PyObject * PyUnicode_SafeFromString(std::string str)
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_FromString(str.c_str());
 #else
+	// TODO:  try PyUnicode_DecodeUnicodeEscape maybe?
+	//return PyUnicode_DecodeUTF8(str.c_str(), NULL, "replace");
 	PyObject * pyString = PyString_FromString(str.c_str());
 	if (pyString == NULL)
 	{
@@ -41,7 +43,7 @@ PyObject * PyUnicode_SafeFromString(std::string str)
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
-	PyObject * pyUnicode = PyUnicode_FromEncodedObject(pyString, NULL, "ignore");
+	PyObject * pyUnicode = PyUnicode_FromEncodedObject(pyString, NULL, "replace");
 	Py_DECREF(pyString);
 	return pyUnicode;
 #endif
