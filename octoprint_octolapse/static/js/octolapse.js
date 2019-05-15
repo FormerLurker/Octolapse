@@ -1289,7 +1289,7 @@ $(function () {
                     }
                 case "print-start-error":
                     {
-                        //console.log('octolapse.js - popup-error');
+                        console.log('octolapse.js - print-start-error');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Startup Failed',

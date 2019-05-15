@@ -27,11 +27,22 @@ PyObject * PyString_SafeFromString(const char * str)
 #endif
 }
 
-PyObject * PyString_SafeUnicodeFromString(std::string str)
+PyObject * PyUnicode_SafeFromString(std::string str)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_FromString(str.c_str());
 #else
-	return PyUnicode_FromString(str.c_str());
+	PyObject * pyString = PyString_FromString(str.c_str());
+	if (pyString == NULL)
+	{
+		PyErr_Print();
+		std::string message = "Unable to convert the c_str to a python string: ";
+		message += str;
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return NULL;
+	}
+	PyObject * pyUnicode = PyUnicode_FromEncodedObject(pyString, NULL, "ignore");
+	Py_DECREF(pyString);
+	return pyUnicode;
 #endif
 }

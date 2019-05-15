@@ -1633,7 +1633,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             self._printer.cancel_print(tags={'startup-failed'})
         else:
             message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
-        logger.info(message)
+        logger.error(message)
         self.send_plugin_message("print-start-error", message)
 
     def pre_process_stabilization(

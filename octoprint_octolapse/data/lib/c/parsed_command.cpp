@@ -22,6 +22,7 @@
 
 #include "parsed_command.h"
 #include "bytesobject.h"
+#include "python_helpers.h"
 #include "logging.h"
 #include <iostream>
 #include <sstream>
@@ -70,7 +71,7 @@ PyObject * parsed_command::to_py_object()
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
-	PyObject * pyGcode = PyUnicode_FromString(gcode_.c_str());
+	PyObject * pyGcode = PyUnicode_SafeFromString(gcode_.c_str());
 	if (pyGcode == NULL)
 	{
 		PyErr_Print();

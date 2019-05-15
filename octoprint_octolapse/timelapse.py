@@ -900,7 +900,8 @@ class Timelapse(object):
             if not {'plugin:octolapse', 'snapshot_gcode'}.issubset(tags):
                 if not self.check_for_non_metric_errors():
 
-                    if (self._state == TimelapseState.WaitingForTrigger
+                    if (
+                        self._state == TimelapseState.WaitingForTrigger
                         and self._position.previous_pos.parsed_command is not None
                         and (
                             self._position.command_requires_location_detection(

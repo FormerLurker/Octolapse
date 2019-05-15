@@ -128,23 +128,42 @@ class CommandParameter(object):
 
 class ParsedCommand(object):
     # define slots for faster creation
-    __slots__ = ['cmd', 'parameters', 'gcode']
+    __slots__ = ['cmd', 'parameters', 'gcode', 'comment']
 
-    def __init__(self, cmd, parameters, gcode):
+    def __init__(self, cmd, parameters, gcode, comment=None):
         self.cmd = cmd
         self.parameters = {} if parameters is None else parameters
-        self.gcode = gcode
+        if comment is None:
+            self.gcode, self.comment = ParsedCommand.extract_comment(gcode)
+        else:
+            self.gcode = gcode
+            self.comment = comment
 
     def to_dict(self):
         return {
             "cmd": self.cmd,
             "parameters": self.parameters,
-            "gcode": self.gcode
+            "gcode": self.gcode,
+            "comment": self.comment
         }
 
     @classmethod
-    def create_from_cpp_parsed_command(cls, cppParsedCommand):
-        return ParsedCommand(cppParsedCommand[0], cppParsedCommand[1], cppParsedCommand[2])
+    def create_from_cpp_parsed_command(cls, cpp_parsed_command):
+        gcode, comment = ParsedCommand.extract_comment(cpp_parsed_command[2])
+        return ParsedCommand(cpp_parsed_command[0], cpp_parsed_command[1], gcode, comment)
+
+    @staticmethod
+    def extract_comment(gcode):
+        # strip off any trailing comments
+        comment = ""
+        ix = gcode.find(";")
+        if ix > -1:
+            # we have a comment!
+            # see if we have anything AFTER the semicolon
+            if ix+1 < len(gcode):
+                comment = gcode[ix+1:].strip()
+                gcode = gcode[0:ix]
+        return gcode.strip(), comment
 
 class Command(object):
 
