@@ -809,8 +809,12 @@ class Timelapse(object):
             return_value = self.process_realtime_gcode(command_string, tags)
             parsed_command = self._position.current_pos.parsed_command
         else:
-            parsed_command_cpp = GcodePositionProcessor.Parse(command_string)
-            parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
+            parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace"))
+            if parsed_command_cpp:
+                parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
+            else:
+                parsed_command = ParsedCommand(None, None, command_string)
+
             return_value = self.process_pre_calculated_gcode(parsed_command, tags)
 
         # notify any callbacks
@@ -991,7 +995,7 @@ class Timelapse(object):
                 )
                 # parse the command string
                 try:
-                    fast_cmd = GcodePositionProcessor.Parse(command_string)
+                    fast_cmd = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace"))
                 except ValueError as e:
                     logger.exception(e)
                     # if we don't return NONE here, we will have problems with the print!
