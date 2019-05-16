@@ -163,6 +163,7 @@ void position::initialize()
 	has_received_home_command_ = false;
 	file_line_number_ = -1;
 	gcode_number_ = -1;
+	gcode_ignored_ = true;
 }
 
 position::position()
@@ -243,6 +244,7 @@ position::position(position & source)
 	in_path_position_ = source.in_path_position_;
 	file_line_number_ = source.file_line_number_;
 	gcode_number_ = source.gcode_number_;
+	gcode_ignored_ = source.gcode_ignored_;
 }
 
 position::position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
@@ -371,6 +373,7 @@ void position::copy(position &source, position* target)
 	target->in_path_position_ = source.in_path_position_;
 	target->file_line_number_ = source.file_line_number_;
 	target->gcode_number_ = source.gcode_number_;
+	target->gcode_ignored_ = source.gcode_ignored_;
 }
 
 PyObject* position::to_py_tuple()
@@ -484,6 +487,7 @@ void position::reset_state()
 	has_position_changed_ = false;
 	has_state_changed_ = false;
 	has_received_home_command_ = false;
+	gcode_ignored_ = true;
 }
 
 PyObject* position::to_py_dict()

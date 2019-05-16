@@ -452,6 +452,21 @@
                 </p>
             </div>
         </div>
+
+        <div class="control-group">
+            <label class="control-label" for="gocde_axis_compatibility_mode_enabled">Snapshot Gcode Axis Compatibility Mode</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="gocde_axis_compatibility_mode_enabled" type="checkbox" data-bind="checked: gocde_axis_compatibility_mode_enabled" title="When enabled, use relative axis mode for lift/retraction and absolute mode for travel." />Enabled
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#snapshot-gocde-axis-compatibility-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO!</a>
+                </label>
+                <span class="help-inline">When enabled, use relative axis mode for lift/retraction and absolute mode for travel.  This is the safest and most tested way for Octolapse to generate the gcode necessary to take a snapshot.</span>
+                <p>
+                    <span class="label label-important">Attention</span>  This is an experimental setting, and should remain ENABLED unless you are 100% sure about what you are doing.  If you uncheck this setting, and there are errors in the new routine, bad things could happen, like your nozzle crashing into the printed part or (worse yet) your bed.
+                </p>
+            </div>
+        </div>
+
     </div>
 
 </script>

@@ -55,9 +55,7 @@ public:
 	double z_max_;
 	std::string stabilization_type_;
 	std::string file_path_;
-	bool disable_retract_;
 	double retraction_length_;
-	bool disable_z_lift_;
 	double z_lift_height_;
 	double height_increment_;
 	double notification_period_seconds_;

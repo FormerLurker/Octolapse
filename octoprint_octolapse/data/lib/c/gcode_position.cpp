@@ -168,6 +168,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 	gcode_functions_iterator_ = gcode_functions_.find(command->cmd_);
 	if (gcode_functions_iterator_ != gcode_functions_.end())
 	{
+		p_current_pos_->gcode_ignored_ = false;
 		// Execute the function to process this gcode
 		posFunctionType func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos_, command);

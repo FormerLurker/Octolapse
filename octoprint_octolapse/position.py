@@ -419,7 +419,7 @@ class Pos(object):
         amount_to_lift = (
             None if self.z is None or 
             self.last_extrusion_height is None 
-            else self.z - self.last_extrusion_height - z_hop
+            else z_hop - (self.z - self.last_extrusion_height)
         )
         if restrict_lift_height:
             if amount_to_lift < utility.FLOAT_MATH_EQUALITY_RANGE:

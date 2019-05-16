@@ -125,7 +125,7 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 		is_layer_change_wait_ = true;
 	}
 
-	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_)
+	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_)
 	{
 		//std::cout << "Complete.\r\n";
 		return;
@@ -281,8 +281,10 @@ void stabilization_minimize_travel::add_saved_plan()
 
 	p_plan->file_line_ = p_saved_position_->file_line_number_;
 	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	p_plan->lift_amount_ = p_stabilization_args_->disable_z_lift_ ? 0.0 : p_stabilization_args_->z_lift_height_;
-	p_plan->retract_amount_ = p_stabilization_args_->disable_retract_ ? 0.0 : p_stabilization_args_->retraction_length_;
+	// Need to enter lift and retract amounts!
+	p_plan->lift_amount_ = p_stabilization_args_->z_lift_height_;
+	p_plan->retract_amount_ = p_stabilization_args_->retraction_length_;
+	std::cout << "Adding retraction length: " << p_stabilization_args_->z_lift_height_ << "\r\n";
 	p_plan->send_parsed_command_ = send_parsed_command_first;
 
 	snapshot_plan_step* p_travel_step = new snapshot_plan_step(x_coord_, y_coord_, 0, 0, 0, travel_action);

@@ -227,7 +227,7 @@ class PrinterProfile(ProfileSettings):
         self.axis_speed_display_units = 'mm-min'
         self.default_firmware_retractions = False
         self.default_firmware_retractions_zhop = False
-
+        self.gocde_axis_compatibility_mode_enabled = True
     @staticmethod
     def get_options():
         return {
@@ -1686,7 +1686,11 @@ class CuraSettings(SlicerSettings):
         return self.get_speed_mm_min(self.skirt_brim_speed)
 
     def get_speed_travel_z(self):
-        return min(self.get_speed_mm_min(self.speed_travel), self.get_speed_mm_min(self.max_feedrate_z_override))
+        z_max_feedrate = self.get_speed_mm_min(self.max_feedrate_z_override)
+        travel_feedrate = self.get_speed_mm_min(self.speed_travel)
+        if z_max_feedrate == 0:
+            return travel_feedrate
+        return min(z_max_feedrate, travel_feedrate)
 
     def get_print_features(self, stabilization_profile):
         return [

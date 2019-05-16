@@ -104,7 +104,11 @@ def preview_overlay(rendering_profile, image=None):
         # we don't have any overlay path, return
         return None
 
-    font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
+    try:
+        font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
+    except IOError as e:
+        logger.exception("An error occurred while opening the selected font")
+        raise e
 
     def draw_center(i, t, dx=0, dy=0):
         """Draws the text centered in the image, offsets by (dx, dy)."""

@@ -183,8 +183,6 @@ class StabilizationPreprocessingThread(Thread):
                 'z_max': self.printer_profile.snapshot_max_z,
             },
             'height_increment': height_increment,
-            'disable_retract': self.stabilization_profile.lock_to_corner_disable_retract,
-            'disable_z_lift': self.stabilization_profile.lock_to_corner_disable_z_lift,
             'fastest_speed': self.stabilization_profile.fastest_speed,
             'notification_period_seconds': self.notification_period_seconds,
             'on_progress_received': self.on_progress_received,
@@ -213,7 +211,9 @@ class StabilizationPreprocessingThread(Thread):
         elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT:
             lock_to_print_args = {
                 'nearest_to_corner': self.stabilization_profile.lock_to_corner_type,
-                'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x"
+                'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x",
+                'disable_retract': self.stabilization_profile.lock_to_corner_disable_retract,
+                'disable_z_lift': self.stabilization_profile.lock_to_corner_disable_z_lift
             }
             # run lock_to_print stabilization
             results = GcodePositionProcessor.GetSnapshotPlans_SnapToPrint(

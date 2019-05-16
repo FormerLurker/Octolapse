@@ -253,8 +253,6 @@ stabilization_args::stabilization_args()
 	z_min_ = 0;
 	z_max_ = 0;
 	height_increment_ = 0.0;
-	disable_retract_ = false;
-	disable_z_lift_ = false;
 	notification_period_seconds_ = 0.25;
 	fastest_speed_ = true;
 	// Gcode Generation Settings

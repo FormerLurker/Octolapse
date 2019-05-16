@@ -1169,7 +1169,7 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             # Octolapse Settings
             u'max_feedrate_z_override': SettingsDefinition(u'max_feedrate_z_override', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             u'retraction_amount': SettingsDefinition(u'retraction_amount', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
-            u'retraction_hop': SettingsDefinition(u'retraction_hop', CuraParsingFunctions.parse_int,[u'octolapse_setting']),
+            u'retraction_hop': SettingsDefinition(u'retraction_hop', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             u'retraction_hop_enabled': SettingsDefinition(u'retraction_hop_enabled', CuraParsingFunctions.parse_bool,[u'octolapse_setting']),
             u'retraction_prime_speed': SettingsDefinition(u'retraction_prime_speed', CuraParsingFunctions.parse_int,[u'octolapse_setting']),
             u'retraction_retract_speed': SettingsDefinition(u'retraction_retract_speed', CuraParsingFunctions.parse_int,[u'octolapse_setting']),

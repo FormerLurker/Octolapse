@@ -35,10 +35,12 @@ class snap_to_print_args
 {
 public:
 	snap_to_print_args();
-	snap_to_print_args(std::string nearest_to_corner, bool favor_x_axis);
+	snap_to_print_args(std::string nearest_to_corner, bool favor_x_axis, bool disable_retract, bool disable_z_lift);
 	~snap_to_print_args();
 	std::string nearest_to_corner;
 	bool favor_x_axis;
+	bool disable_retract_;
+	bool disable_z_lift_;
 };
 
 static const char * FRONT_LEFT = "front-left";

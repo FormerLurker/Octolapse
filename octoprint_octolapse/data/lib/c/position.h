@@ -114,6 +114,7 @@ public:
 	bool in_path_position_;
 	int file_line_number_;
 	int gcode_number_;
+	bool gcode_ignored_;
 private:
 	void initialize();
 };

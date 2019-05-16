@@ -29,11 +29,15 @@ snap_to_print_args::snap_to_print_args()
 {
 	nearest_to_corner = "back-left";
 	favor_x_axis = false;
+	disable_retract_ = false;
+	disable_z_lift_ = false;
 }
-snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x)
+snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x, bool disable_retract, bool disable_z_lift)
 {
 	nearest_to_corner = nearest_to;
 	favor_x_axis = favor_x;
+	disable_retract_ = disable_retract;
+	disable_z_lift_ = disable_z_lift;
 }
 snap_to_print_args::~snap_to_print_args()
 {
@@ -101,7 +105,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		is_layer_change_wait_ = true;
 	}
 
-	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_)
+	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_)
 	{
 		return;
 	}
@@ -294,8 +298,8 @@ void stabilization_snap_to_print::add_saved_plan()
 
 	p_plan->file_line_ = p_saved_position_->file_line_number_;
 	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	p_plan->lift_amount_ = p_stabilization_args_->disable_z_lift_ ? 0.0 : p_stabilization_args_->z_lift_height_;
-	p_plan->retract_amount_ = p_stabilization_args_->disable_retract_ ? 0.0 : p_stabilization_args_->retraction_length_;
+	p_plan->lift_amount_ = snap_to_print_args_->disable_z_lift_ ? 0.0 : p_stabilization_args_->z_lift_height_;
+	p_plan->retract_amount_ = snap_to_print_args_->disable_retract_ ? 0.0 : p_stabilization_args_->retraction_length_;
 	p_plan->send_parsed_command_ = send_parsed_command_first;
 
 	snapshot_plan_step* p_step = new snapshot_plan_step(0, 0, 0, 0, 0, snapshot_action);

@@ -687,7 +687,7 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	*x_result = PyFloat_AsDouble(pyX);
+	*x_result = PyFloatOrInt_AsDouble(pyX);
 	//std::cout << "Extracting Y coordinate.\r\n";
 	PyObject * pyY = PyDict_GetItemString(pyCoordinates, "y");
 	if (pyY == NULL)
@@ -698,7 +698,7 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return false;
 	}
-	*y_result = PyFloat_AsDouble(pyY);
+	*y_result = PyFloatOrInt_AsDouble(pyY);
 	Py_DECREF(pyCoordinates);
 	return true;
 
@@ -897,8 +897,10 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the gcode_settings object.");
 		return false;
 	}
-	stabilizationArgs->retraction_length_ = PyFloat_AS_DOUBLE(py_retraction_length);
-	Py_DecRef(py_retraction_length);
+	
+	stabilizationArgs->retraction_length_ = PyFloatOrInt_AsDouble(py_retraction_length);
+	std::cout << "Found Retraction Length: " << stabilizationArgs->retraction_length_ << "\r\n";
+
 	PyObject *  py_z_lift_height;
 	py_z_lift_height = PyObject_GetAttrString(py_gcode_settings, "z_lift_height");
 	if (py_z_lift_height == NULL)
@@ -907,8 +909,9 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the gcode_settings object.");
 		return false;
 	}
-	stabilizationArgs->z_lift_height_ = PyFloat_AS_DOUBLE(py_z_lift_height);
-	
+	stabilizationArgs->z_lift_height_ = PyFloatOrInt_AsDouble(py_z_lift_height);
+	std::cout << "Found Z-Lift Height: " << stabilizationArgs->z_lift_height_ << "\r\n";
+
 	// Get IsBound
 	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
 	if (py_is_bound == NULL)
@@ -937,7 +940,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->x_min_ = PyFloat_AsDouble(py_x_min);
+		stabilizationArgs->x_min_ = PyFloatOrInt_AsDouble(py_x_min);
 
 		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
 		if (py_x_max == NULL)
@@ -946,7 +949,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->x_max_ = PyFloat_AsDouble(py_x_max);
+		stabilizationArgs->x_max_ = PyFloatOrInt_AsDouble(py_x_max);
 
 		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
 		if (py_y_min == NULL)
@@ -955,7 +958,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->y_min_ = PyFloat_AsDouble(py_y_min);
+		stabilizationArgs->y_min_ = PyFloatOrInt_AsDouble(py_y_min);
 
 		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
 		if (py_y_max == NULL)
@@ -964,7 +967,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->y_max_ = PyFloat_AsDouble(py_y_max);
+		stabilizationArgs->y_max_ = PyFloatOrInt_AsDouble(py_y_max);
 
 		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
 		if (py_z_min == NULL)
@@ -973,7 +976,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->z_min_ = PyFloat_AsDouble(py_z_min);
+		stabilizationArgs->z_min_ = PyFloatOrInt_AsDouble(py_z_min);
 
 		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
 		if (py_z_max == NULL)
@@ -982,7 +985,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
 			return false;
 		}
-		stabilizationArgs->z_max_ = PyFloat_AsDouble(py_z_max);
+		stabilizationArgs->z_max_ = PyFloatOrInt_AsDouble(py_z_max);
 	}
 
 	// height_increment
@@ -993,27 +996,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->height_increment_ = PyFloat_AsDouble(py_height_increment);
-
-	// disable_retract
-	PyObject * py_disable_retract = PyDict_GetItemString(args, "disable_retract");
-	if (py_disable_retract == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_retract from the stabilization args.");
-		return false;
-	}
-	stabilizationArgs->disable_retract_ = PyLong_AsLong(py_disable_retract) > 0;
-
-	// disable_z_lift
-	PyObject * py_disable_z_lift = PyDict_GetItemString(args, "disable_z_lift");
-	if (py_disable_z_lift == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_z_lift from the stabilization args.");
-		return false;
-	}
-	stabilizationArgs->disable_z_lift_ = PyLong_AsLong(py_disable_z_lift) > 0;
+	stabilizationArgs->height_increment_ = PyFloatOrInt_AsDouble(py_height_increment);
 
 	// fastest_speed
 	PyObject * py_fastest_speed = PyDict_GetItemString(args, "fastest_speed");
@@ -1033,7 +1016,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->notification_period_seconds_ = PyFloat_AsDouble(py_notification_period_seconds);
+	stabilizationArgs->notification_period_seconds_ = PyFloatOrInt_AsDouble(py_notification_period_seconds);
 
 	// on_progress_received
 	PyObject * py_on_progress_received = PyDict_GetItemString(args, "on_progress_received");
@@ -1082,6 +1065,26 @@ static bool ParseStabilizationArgs_SnapToPrint(PyObject *args, snap_to_print_arg
 		return false;
 	}
 	snapToPrintArgs->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
+
+	// disable_retract
+	PyObject * py_disable_retract = PyDict_GetItemString(args, "disable_retract");
+	if (py_disable_retract == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_retract from the stabilization args.");
+		return false;
+	}
+	snapToPrintArgs->disable_retract_ = PyLong_AsLong(py_disable_retract) > 0;
+
+	// disable_z_lift
+	PyObject * py_disable_z_lift = PyDict_GetItemString(args, "disable_z_lift");
+	if (py_disable_z_lift == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_z_lift from the stabilization args.");
+		return false;
+	}
+	snapToPrintArgs->disable_z_lift_ = PyLong_AsLong(py_disable_z_lift) > 0;
 
 	return true;
 }
