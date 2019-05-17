@@ -98,9 +98,6 @@ class LoggingConfigurator(object):
         """Get a logger instance that uses new-style string formatting"""
         log = logging.getLogger(name)
         log.setLevel(logging.NOTSET)
-        #if not hasattr(log, "_formatted_messages"):
-        #    log.handle = _handle_wrapper(log.handle)
-        #log._formatted_messages = True
         log.propagate = False
         return log
 
@@ -124,9 +121,6 @@ class LoggingConfigurator(object):
 
         self.child_loggers.add(full_name)
         child = self._root_logger.getChild(name)
-        #if not hasattr(child, "_formatted_messages"):
-        #    child.handle = _handle_wrapper(child.handle)
-        #child._formatted_messages = True
         return child
 
     def _remove_handlers(self):
@@ -162,7 +156,7 @@ class LoggingConfigurator(object):
         # set the log level
         self._root_logger.setLevel(logging.NOTSET)
 
-        if debug_settings is None or debug_settings.enabled:
+        if debug_settings is None or debug_settings.enabled or debug_settings.enabled_loggers:
             if log_file_path is not None:
                 # ensure that the logging path and file exist
                 directory = os.path.dirname(log_file_path)
@@ -196,6 +190,12 @@ class LoggingConfigurator(object):
                     else:
                         # log level critical + 1 will not log anything
                         current_logger.setLevel(logging.CRITICAL + 1)
+
+                    # if log all errors is enabled and the current log level is less than error,
+                    # set to error log level.
+                    if current_logger.level > logging.ERROR and debug_settings.log_all_errors:
+                        current_logger.setLevel(logging.ERROR)
                 else:
                     current_logger = self._root_logger.getChild(logger_name)
                     current_logger.setLevel(default_log_level)
+

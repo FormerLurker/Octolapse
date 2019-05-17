@@ -428,7 +428,7 @@ class SnapshotThread(Thread):
             sleep(delay_seconds)  # sleep the calculated amount
             delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
-    def post_process(self, request=None):
+    def post_process(self, request=None, block=False):
         # make sure the snapshot exists before attempting post-processing
         # since it's possible the image isn't on the pi.
         # for example it could be on a DSLR's SD memory
@@ -436,7 +436,11 @@ class SnapshotThread(Thread):
             def post_process(post_processor):
                 post_processor.process()
             post_processor = ImagePostProcessing(self.snapshot_job_info, self.on_new_thumbnail_available_callback, request=request)
-            Timer(0.5,post_process,[post_processor]).start()
+            if not block:
+                Timer(0.5,post_process,[post_processor]).start()
+            else:
+                post_processor.process()
+
 
 
 class ExternalScriptSnapshotJob(SnapshotThread):
@@ -470,7 +474,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
             if self.script_type == 'snapshot':
                 # Make sure the expected snapshot exists before we start working with the snapshot file.
-                self.post_process()
+                self.post_process(block=self.on_new_thumbnail_available_callback is None)
 
             self.snapshot_job_info.success = True
 
@@ -587,7 +591,7 @@ class WebcamSnapshotJob(SnapshotThread):
                     cause=e
                 )
             # start post processing
-            self.post_process(request=r)
+            self.post_process(request=r, block=self.on_new_thumbnail_available_callback is None)
             self.snapshot_job_info.success = True
         except SnapshotError as e:
             logger.exception("Snapshot download job failed.")

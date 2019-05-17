@@ -1010,6 +1010,7 @@ class DebugProfile(ProfileSettings):
     def __init__(self, name="New Debug Profile"):
         super(DebugProfile, self).__init__(name)
         # Configure the logger if it has not been created
+        self.log_all_errors = True
         self.enabled = False
         self.log_to_console = False
         self.default_log_level = logging.DEBUG

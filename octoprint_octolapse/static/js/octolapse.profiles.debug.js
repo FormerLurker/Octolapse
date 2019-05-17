@@ -31,6 +31,7 @@ $(function() {
         self.enabled = ko.observable(values.enabled);
         self.is_test_mode = ko.observable(values.is_test_mode);
         self.log_to_console = ko.observable(values.log_to_console);
+        self.log_all_errors = ko.observable(values.log_all_errors);
         self.enabled_loggers = ko.observableArray();
         for (var index = 0; index < values.enabled_loggers.length; index++)
         {

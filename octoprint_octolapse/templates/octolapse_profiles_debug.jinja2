@@ -72,14 +72,23 @@
         </div>
     </div>
     <div class="control-group">
+        <label class="control-label">Log All Errors</label>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: log_all_errors" title="Log all errors no matter what." />Enabled
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-all-errors" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+            </label>
+            <span class="help-inline">When enabled, all errors will be logged, no matter what the other logging settings are.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Additional Logging</label>
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
                 <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-additional-information" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
             </label>
-        </div>
     </div>
-
     <div data-bind="visible: enabled">
         <div class="control-group">
             <label class="control-label">Write To Console</label>
