@@ -932,7 +932,7 @@ $(function () {
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid();
         // Have we loaded the state yet?
-        self.HasLoadedState = false;
+        self.has_loaded_state = ko.observable(false);
 
         self.pre_processing_progress = null;
 
@@ -1051,7 +1051,7 @@ $(function () {
                 Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
             */
-            self.HasLoadedState = true;
+            self.has_loaded_state(true);
         };
 
         self.update = function (settings) {

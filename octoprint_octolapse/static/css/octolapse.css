@@ -27,6 +27,19 @@
 #octolapse_settings .row {
     margin-left: 0;
 }
+#octolapse_tab .loading {
+    display:table;
+    text-align: center;
+    width: 100%;
+    height:400px;
+}
+
+#octolapse_tab .loading span{
+    display: table-cell;
+    vertical-align: middle;
+    font-size: large;
+}
+
 .no-min-height{
     min-height: auto !important;
 }

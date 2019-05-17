@@ -37,179 +37,188 @@
             //return "{{ url_for('plugin.octolapse.snapshot_request',file_type='thumbnail', camera_guid=camera_guid, apikey='') }}" + UI_API_KEY;
         }
     </script>
-    <div class="panel panel-default">
-        <div class="panel-heading ol-heading">
-            <div class="row-fluid">
+    <div data-bind="visible:Octolapse.Globals.has_loaded_state" style="display:none">
+        <div class="panel panel-default">
+            <div class="panel-heading ol-heading">
+                <div class="row-fluid">
 
-                <div class="span11">
-                    <h4 data-bind="text: getStatusText">
-                        Octolapse
-                    </h4>
-                </div>
-                <div class="span1 text-right">
-                    <label class="toggle-switch-fa-sm" data-bind="visible: Octolapse.Globals.is_admin, attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
-                        <input type="checkbox" data-bind="checked: Octolapse.Globals.enabled, click: function() {return Octolapse.SettingsMain.toggleOctolapse();}, enable: Octolapse.Globals.is_admin()">
-                        <span class="fa-slider"><i class="fa icon-off fa-inverse"></i></span>
-                    </label>
+                    <div class="span11">
+                        <h4 data-bind="text: getStatusText">
+                            Octolapse
+                        </h4>
+                    </div>
+                    <div class="span1 text-right">
+                        <label class="toggle-switch-fa-sm" data-bind="visible: Octolapse.Globals.is_admin, attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
+                            <input type="checkbox" data-bind="checked: Octolapse.Globals.enabled, click: function() {return Octolapse.SettingsMain.toggleOctolapse();}, enable: Octolapse.Globals.is_admin()">
+                            <span class="fa-slider"><i class="fa icon-off fa-inverse"></i></span>
+                        </label>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="panel-body">
+            <div class="panel-body">
 
-            <div class="row-fluid">
-                <div class="span6 text-center">
-                    <div class="text-left" style="min-height:50px;">
-                        Status: <span data-bind="text: getStateSummaryText"></span>
-                    </div>
-                    <div class="octolapse_status_container">
-                        <div class="octolapse_status">
-                            <div>
-                                <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: hasConfigIssues() ? 'Configuration issues detected' : 'No configuration issues detected'}">
-                                    <i class="fa fa-square fa-stack-2x"
-                                       data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-                                    <i class="fa fa-cog fa-stack-1x fa-inverse"
-                                       data-bind="style: { color: hasConfigIssues() ? 'red': 'greenyellow' }"></i>
-                                </span>
-                                <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: getTimelapseStateText }">
-                                    <i class="fa fa-square fa-stack-2x"
-                                       data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
-                                    <i class="fa fa-tachometer fa-stack-1x fa-inverse"
-                                       data-bind="style: { color: getTimelapseStateColor }"></i>
-                                </span>
-                                <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot' : 'Snapshot is idle'}">
-                                    <i class="fa fa-square fa-stack-2x"
-                                       data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
-                                    <i class="fa icon-camera fa-stack-1x fa-inverse"
-                                       data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
-                                </span>
-                                <span class="fa-stack fa-2x"
-                                      data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle')}">
-                                    <i class="fa fa-square fa-stack-2x"
-                                       data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
-                                    <i class="fa icon-film fa-stack-1x fa-inverse"
-                                       data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
-                                </span>
+                <div class="row-fluid">
+                    <div class="span6 text-center">
+                        <div class="text-left" style="min-height:50px;">
+                            Status: <span data-bind="text: getStateSummaryText"></span>
+                        </div>
+                        <div class="octolapse_status_container">
+                            <div class="octolapse_status">
+                                <div>
+                                    <span class="fa-stack fa-2x"
+                                          data-bind="attr: { title: hasConfigIssues() ? 'Configuration issues detected' : 'No configuration issues detected'}">
+                                        <i class="fa fa-square fa-stack-2x"
+                                           data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+                                        <i class="fa fa-cog fa-stack-1x fa-inverse"
+                                           data-bind="style: { color: hasConfigIssues() ? 'red': 'greenyellow' }"></i>
+                                    </span>
+                                    <span class="fa-stack fa-2x"
+                                          data-bind="attr: { title: getTimelapseStateText }">
+                                        <i class="fa fa-square fa-stack-2x"
+                                           data-bind="style: { color: is_timelapse_active() ? '' : 'lightgray' }"></i>
+                                        <i class="fa fa-tachometer fa-stack-1x fa-inverse"
+                                           data-bind="style: { color: getTimelapseStateColor }"></i>
+                                    </span>
+                                    <span class="fa-stack fa-2x"
+                                          data-bind="attr: { title: is_taking_snapshot() ? 'Octolapse is taking a snapshot' : 'Snapshot is idle'}">
+                                        <i class="fa fa-square fa-stack-2x"
+                                           data-bind="style: { color: snapshot_error() ? 'red' : is_taking_snapshot() ? '' : 'lightgray' }"></i>
+                                        <i class="fa icon-camera fa-stack-1x fa-inverse"
+                                           data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
+                                    </span>
+                                    <span class="fa-stack fa-2x"
+                                          data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle')}">
+                                        <i class="fa fa-square fa-stack-2x"
+                                           data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
+                                        <i class="fa icon-film fa-stack-1x fa-inverse"
+                                           data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
+                                    </span>
+                                </div>
+                                <div class="text-center"
+                                     data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
+                                    <button class="btn btn-default btn-small"
+                                            data-bind="click: function() {$data.stopTimelapse();}">
+                                        Stop Octolapse
+                                    </button>
+                                </div>
                             </div>
-                            <div class="text-center"
-                                 data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
-                                <button class="btn btn-default btn-small"
-                                        data-bind="click: function() {$data.stopTimelapse();}">
-                                    Stop Octolapse
-                                </button>
+                        </div>
+                    </div>
+                    <div class="span6 text-center">
+                        <div id="octolapse_snapshot_thumbnail_container">
+                            <div class="snapshot_container">
+                                <a id="show_latest_snapshot" data-bind="click:showLatestSnapshotDialog"
+                                   title="View a larger image">
+                                    <span class="previous-snapshots">
+                                    </span>
+                                    <span class="latest-snapshot">
+                                        <img class="latest" src=""></img>
+                                    </span>
+                                </a>
                             </div>
+
+
+                            <div class="snapshot_refresh_container ol_hover_button">
+                                <a class="start-animation"
+                                   data-bind="click:function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); },visible:Octolapse.Globals.auto_reload_latest_snapshot">
+                                    <span class="fa-stack" style="position: inline;">
+                                        <i class="fa fa-square fa-stack-2x"></i>
+                                        <i class="fa fa-play-circle fa-stack-1x"></i>
+                                    </span>
+                                </a>
+                                <a class="refresh"
+                                   data-bind="click: function() { refreshLatestImage('octolapse_snapshot_thumbnail_container',true); },visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
+                                    <span class="fa-stack" style="position:inline;">
+                                        <i class="fa fa-square fa-stack-2x"></i>
+                                        <i class="fa fa-refresh fa-stack-1x"></i>
+                                    </span>
+                                </a>
+                                <a class="edit-settings" data-bind="click:WebcamSettings.showWebcamSettings">
+                                    <span class="fa-stack" style="position:inline;">
+                                        <i class="fa fa-square fa-stack-2x"></i>
+                                        <i class="fa fa-gear fa-stack-1x"></i>
+                                    </span>
+                                </a>
+                            </div>
+
+                        </div>
+                        <div>
+                            <select id="octolapse_current_snapshot_camera"
+                                    class="input-block-level"
+                                    data-bind="
+                                    options: Octolapse.Status.cameras_sorted,
+                                    optionsText: 'name',
+                                    optionsValue: 'guid',
+                                    event: {change: Octolapse.Status.snapshotCameraChanged},
+                                    value: Octolapse.Status.current_camera_guid"></select>
                         </div>
                     </div>
                 </div>
-                <div class="span6 text-center">
-                    <div id="octolapse_snapshot_thumbnail_container">
-                        <div class="snapshot_container">
-                            <a id="show_latest_snapshot" data-bind="click:showLatestSnapshotDialog"
-                               title="View a larger image">
-                                <span class="previous-snapshots">
-                                </span>
-                                <span class="latest-snapshot">
-                                    <img class="latest" src=""></img>
-                                </span>
-                            </a>
-                        </div>
-
-
-                        <div class="snapshot_refresh_container ol_hover_button">
-                            <a class="start-animation"
-                               data-bind="click:function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); },visible:Octolapse.Globals.auto_reload_latest_snapshot">
-                                <span class="fa-stack" style="position: inline;">
-                                    <i class="fa fa-square fa-stack-2x"></i>
-                                    <i class="fa fa-play-circle fa-stack-1x"></i>
-                                </span>
-                            </a>
-                            <a class="refresh"
-                               data-bind="click: function() { refreshLatestImage('octolapse_snapshot_thumbnail_container',true); },visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
-                                <span class="fa-stack" style="position:inline;">
-                                    <i class="fa fa-square fa-stack-2x"></i>
-                                    <i class="fa fa-refresh fa-stack-1x"></i>
-                                </span>
-                            </a>
-                            <a class="edit-settings" data-bind="click:WebcamSettings.showWebcamSettings">
-                                <span class="fa-stack" style="position:inline;">
-                                    <i class="fa fa-square fa-stack-2x"></i>
-                                    <i class="fa fa-gear fa-stack-1x"></i>
-                                </span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div>
-                        <select id="octolapse_current_snapshot_camera"
-                                class="input-block-level"
-                                data-bind="
-                                options: Octolapse.Status.cameras_sorted,
-                                optionsText: 'name',
-                                optionsValue: 'guid',
-                                event: {change: Octolapse.Status.snapshotCameraChanged},
-                                value: Octolapse.Status.current_camera_guid"></select>
-                    </div>
-                </div>
+                <div data-bind="template:'octolapse-settings-current'"></div>
             </div>
-            <div data-bind="template:'octolapse-settings-current'"></div>
-        </div>
-        <div class="panel-footer ol-info-footer">
-            <div class="row-fluid">
+            <div class="panel-footer ol-info-footer">
+                <div class="row-fluid">
 
-                <div class="span3 text-right">
-                    Snapshot Count:
-                </div>
-                <div class="span3 text-left">
-                    <span data-bind="text: snapshot_count"></span>
-                </div>
-                <div class="span3 text-right">
-                    <span>Snapshot Time:</span>
-                </div>
-                <div class="span3 text-left">
-                    <span data-bind="visible: Octolapse.Globals.show_real_snapshot_time, text: $data.snapshotTime()"></span>
-                    <span data-bind="visible: !Octolapse.Globals.show_real_snapshot_time()"><i>Disabled</i></span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div data-bind="visible: Octolapse.Status.is_timelapse_active() && Octolapse.Status.is_real_time()">
-        <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
-            <div class="panel panel-default">
-                <div class="panel-heading ol-heading">
-                    <h4>
-                        Snapshot Profile: <span data-bind="text: TriggerState.Name"></span>
-                    </h4>
-                </div>
-                <div class="panel-body">
-                    <div class="row-fluid" data-bind="foreach: TriggerState.triggers">
-                        <div class="span4 octolapse-container"
-                             data-bind="template: { name: Octolapse.Status.getTriggerStateTemplate(type())}"></div>
+                    <div class="span3 text-right">
+                        Snapshot Count:
+                    </div>
+                    <div class="span3 text-left">
+                        <span data-bind="text: snapshot_count"></span>
+                    </div>
+                    <div class="span3 text-right">
+                        <span>Snapshot Time:</span>
+                    </div>
+                    <div class="span3 text-left">
+                        <span data-bind="visible: Octolapse.Globals.show_real_snapshot_time, text: $data.snapshotTime()"></span>
+                        <span data-bind="visible: !Octolapse.Globals.show_real_snapshot_time()"><i>Disabled</i></span>
                     </div>
                 </div>
             </div>
         </div>
-        <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
+        <div data-bind="visible: Octolapse.Status.is_timelapse_active() && Octolapse.Status.is_real_time()">
+            <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
+                <div class="panel panel-default">
+                    <div class="panel-heading ol-heading">
+                        <h4>
+                            Snapshot Profile: <span data-bind="text: TriggerState.Name"></span>
+                        </h4>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row-fluid" data-bind="foreach: TriggerState.triggers">
+                            <div class="span4 octolapse-container"
+                                 data-bind="template: { name: Octolapse.Status.getTriggerStateTemplate(type())}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
+            </div>
+            <div data-bind="visible: Octolapse.Globals.show_position_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
+            </div>
+            <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
+            </div>
+
         </div>
-        <div data-bind="visible: Octolapse.Globals.show_position_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
+        <div data-bind="visible: Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time()">
+            <div data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
+            </div>
         </div>
-        <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
+        <div data-bind="template:'latest-snapshot-template'"></div>
+        <div class="text-right">
+            <h6>
+                Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
+            </h6>
         </div>
+        <div data-bind="template:'webcam-settings-popup-template'"></div>
+    </div>
+    <div data-bind="visible:!Octolapse.Globals.has_loaded_state()" class="loading">
+        <span>
+            Loading Octolapse... <i class="fa fa-spinner fa-spin"></i>
+        </span>
 
     </div>
-    <div data-bind="visible: Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time()">
-        <div data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
-        </div>
-    </div>
-    <div data-bind="template:'latest-snapshot-template'"></div>
-    <div class="text-right">
-        <h6>
-            Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
-        </h6>
-    </div>
-    <div data-bind="template:'webcam-settings-popup-template'"></div>
 </div>
+
 
 {% include "octolapse_status_triggers.jinja2" %}
 {% include "octolapse_status_extruder.jinja2" %}
