@@ -330,135 +330,6 @@ class Timelapse(object):
 
         return snapshot_payload
 
-    def _take_timelapse_snapshot_realtime(
-        self, parsed_command, trigger
-    ):
-        timelapse_snapshot_payload = {
-            "snapshot_position": None,
-            "return_position": None,
-            "snapshot_gcode": None,
-            "snapshot_payload": None,
-            "current_snapshot_time": 0,
-            "total_snapshot_time": 0,
-            "success": False,
-            "error": ""
-        }
-        try:
-
-            has_error = False
-            show_real_snapshot_time = self._settings.main_settings.show_real_snapshot_time
-            snapshot_start_time = time.time()
-            # create the GCode for the timelapse and store it
-            snapshot_gcode = self._gcode.create_snapshot_gcode(
-                self._position,
-                trigger,
-                parsed_command
-            )
-            # save the gcode fo the payload
-            timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
-
-            if self._gcode.has_snapshot_position_errors:
-                timelapse_snapshot_payload["error"] = self._gcode.snapshot_position_errors
-
-            if snapshot_gcode is None:
-                logger.warning("No snapshot gcode was generated.")
-                return timelapse_snapshot_payload
-
-            assert (isinstance(snapshot_gcode, SnapshotGcode))
-
-            # If we have any initialization gcodes, send them before waiting for moves to finish (in case we are
-            # tracking itme)
-            if len(snapshot_gcode.InitializationGcode) > 0:
-                logger.info("Sending initialization gcode.")
-                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode)
-
-            if show_real_snapshot_time:
-                # wait for commands to finish before recording start time - this will give us a very accurate
-                # snapshot time, but requires an m400 + m114
-                logger.info("Waiting for commands to finish to calculate snapshot time accurately.")
-                start_position = self.get_position_async()
-                snapshot_start_time = time.time()
-                if start_position is None:
-                    has_error = True
-                    logger.error(
-                        "Unable to acquire the starting position.  Either the print has cancelled or a timeout has "
-                        "been reached. "
-                    )
-                    # don't send any more gcode if we're cancelling
-                    if self._octoprint_printer.get_state_id() == "CANCELLING":
-                        return None
-            # Combine the start gcode with the snapshot commands
-            gcodes_to_send = snapshot_gcode.StartGcode + snapshot_gcode.snapshot_commands
-
-            snapshot_position = None
-            # If we have any Start/Snapshot commands to send, do it!
-            if len(gcodes_to_send) > 0:
-                logger.info("Sending snapshot start gcode and snapshot commands.")
-                snapshot_position = self.get_position_async(
-                    start_gcode=gcodes_to_send
-                )
-                if snapshot_position is None:
-                    has_error = True
-                    logger.info(
-                        "The snapshot position is None.  Either the print has cancelled or a timeout has been reached."
-                    )
-
-                    # don't send any more gcode if we're cancelling
-                    if self._octoprint_printer.get_state_id() == "CANCELLING":
-                        return None
-
-            # record the snapshot position
-            timelapse_snapshot_payload["snapshot_position"] = snapshot_position
-            # by now we should be ready to take a snapshot
-            if not has_error:
-                snapshot_payload = self._take_snapshots()
-                timelapse_snapshot_payload["snapshot_payload"] = snapshot_payload
-
-            if not show_real_snapshot_time:
-                # return the print head to the start position
-                gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
-                if len(gcode_to_send) > 0:
-                    if self._state == TimelapseState.TakingSnapshot:
-                        logger.info("Sending snapshot return and end gcode.")
-                        self.send_snapshot_gcode_array(gcode_to_send)
-            else:
-                if len(snapshot_gcode.ReturnCommands) > 0:
-                    logger.info("Sending return gcode.")
-                    return_position = self.get_position_async(
-                        start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
-                    )
-                    timelapse_snapshot_payload["return_position"] = return_position
-                    if return_position is None:
-                        logger.error(
-                            "The snapshot_position is None.  Either the print has cancelled or a timeout has been "
-                            "reached. "
-                        )
-                        # don't send any more gcode if we're cancelling
-                        if self._octoprint_printer.get_state_id() == "CANCELLING":
-                            return None
-                # calculate the total snapshot time
-                snapshot_end_time = time.time()
-                snapshot_time = snapshot_end_time - snapshot_start_time
-                logger.info("Stabilization and snapshot process complected in %s seconds", snapshot_time)
-                self.SecondsAddedByOctolapse += snapshot_time
-                timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
-                timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
-
-                if len(snapshot_gcode.EndGcode) > 0:
-                    if self._state == TimelapseState.TakingSnapshot:
-                        logger.info("Sending end gcode.")
-                        self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
-
-            # we've completed the procedure, set success
-            timelapse_snapshot_payload["success"] = not has_error and not self._gcode.has_snapshot_position_errors
-
-        except Exception as e:
-            logger.exception("Failed to take a realtime timelapse snapshot.")
-            timelapse_snapshot_payload["error"] = "An unexpected error was encountered while running the timelapse " \
-                                                  "snapshot procedure. "
-
-        return timelapse_snapshot_payload
-
     def _take_timelapse_snapshot_precalculated(
         self, parsed_command
     ):
@@ -478,7 +349,8 @@ class Timelapse(object):
             show_real_snapshot_time = self._settings.main_settings.show_real_snapshot_time
             # create the GCode for the timelapse and store it
             snapshot_gcode = self._gcode.create_gcode_for_snapshot_plan(
-                self.current_snapshot_plan, parsed_command, self._position.g90_influences_extruder
+                self.current_snapshot_plan, self._position.g90_influences_extruder,
+                self._stabilization.get_snapshot_plan_options()
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
@@ -860,7 +732,7 @@ class Timelapse(object):
                 and self.current_snapshot_plan.file_gcode_number == current_file_line
             ):
                 # time to take a snapshot!
-                if self.current_snapshot_plan.parsed_command.gcode != parsed_command.gcode:
+                if self.current_snapshot_plan.triggering_command.gcode != parsed_command.gcode:
                     logger.error(
                         "The snapshot plan position (%s:%s) does not match the actual position (%s:%s)!  "
                         "Aborting Snapshot, moving to next plan.",
@@ -873,7 +745,8 @@ class Timelapse(object):
                     return None
 
                 if self._octoprint_printer.set_job_on_hold(True):
-                    self.job_on_hold = False
+                    # this was set to 'False' earlier.  Why?
+                    self.job_on_hold = True
                     # We are triggering, take a snapshot
                     self._state = TimelapseState.TakingSnapshot
                     # take the snapshot on a new thread
@@ -948,12 +821,19 @@ class Timelapse(object):
                                 # pause any timer triggers that are enabled
                                 self._triggers.pause()
 
+                                # create the snapshot plan
+                                self.current_snapshot_plan = self._gcode.create_snapshot_plan(
+                                    self._position, _first_triggering)
+
                                 # take the snapshot on a new thread
                                 thread = threading.Thread(
-                                    target=self.acquire_snapshot_realtime, args=[parsed_command, _first_triggering]
+                                    target=self.acquire_snapshot_precalculated, args=[parsed_command]
                                 )
                                 thread.daemon = True
                                 thread.start()
+
+                                # undo the position update since we'll be suppressing this command
+                                self._position.undo_update()
                                 # suppress the current command, we'll send it later
                                 return None,
 
@@ -1189,7 +1069,8 @@ class Timelapse(object):
                 self._most_recent_snapshot_payload = None
 
             # set the next snapshot plan
-            self.set_next_snapshot_plan()
+            if not self.is_realtime:
+                self.set_next_snapshot_plan()
             self._octoprint_printer.set_job_on_hold(False)
             self.job_on_hold = False
 

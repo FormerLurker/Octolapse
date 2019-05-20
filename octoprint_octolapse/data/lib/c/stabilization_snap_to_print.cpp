@@ -29,15 +29,13 @@ snap_to_print_args::snap_to_print_args()
 {
 	nearest_to_corner = "back-left";
 	favor_x_axis = false;
-	disable_retract_ = false;
-	disable_z_lift_ = false;
+
 }
-snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x, bool disable_retract, bool disable_z_lift)
+snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x)
 {
 	nearest_to_corner = nearest_to;
 	favor_x_axis = favor_x;
-	disable_retract_ = disable_retract;
-	disable_z_lift_ = disable_z_lift;
+
 }
 snap_to_print_args::~snap_to_print_args()
 {
@@ -289,22 +287,15 @@ void stabilization_snap_to_print::add_saved_plan()
 {
 	snapshot_plan* p_plan = new snapshot_plan();
 	// create the initial position
+	p_plan->p_triggering_command_ = new parsed_command(*p_saved_position_->p_command);
+	p_plan->p_start_command_ = new parsed_command(*p_saved_position_->p_command);
 	p_plan->p_initial_position_ = new position(*p_saved_position_);
-	// create the snapshot position (only 1)
-	position * p_snapshot_position = new position(*p_saved_position_);
-	p_plan->snapshot_positions_.push_back(p_snapshot_position);
-	p_plan->p_return_position_ = new position(*p_saved_position_);
-	p_plan->p_parsed_command_ = new parsed_command(*p_saved_position_->p_command);
-
-	p_plan->file_line_ = p_saved_position_->file_line_number_;
-	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	p_plan->lift_amount_ = snap_to_print_args_->disable_z_lift_ ? 0.0 : p_stabilization_args_->z_lift_height_;
-	p_plan->retract_amount_ = snap_to_print_args_->disable_retract_ ? 0.0 : p_stabilization_args_->retraction_length_;
-	p_plan->send_parsed_command_ = send_parsed_command_first;
-
 	snapshot_plan_step* p_step = new snapshot_plan_step(0, 0, 0, 0, 0, snapshot_action);
 	p_plan->steps_.push_back(p_step);
-
+	p_plan->p_return_position_ = new position(*p_saved_position_);
+	p_plan->p_end_command_ = NULL;
+	p_plan->file_line_ = p_saved_position_->file_line_number_;
+	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
 	// Add the plan
 	p_snapshot_plans_->push_back(p_plan);
 

@@ -440,6 +440,17 @@ class Pos(object):
         # return the calculated retraction length
         return retract_length
 
+    def offset_x(self):
+        return self.x - self.x_offset
+
+    def offset_y(self):
+        return self.y - self.y_offset
+
+    def offset_z(self):
+        return self.z - self.z_offset
+
+    def offset_e(self):
+        return self.e - self.e_offset
 
 class Position(object):
     def __init__(self, printer_profile, stabilization_profile, octoprint_printer_profile,
@@ -1043,25 +1054,8 @@ class Position(object):
 
         for intersection in intersections:
             if Position.calculate_is_in_position(restrictions, intersection[0], intersection[1], tolerance):
-                # calculate the distance from x/y previous to the intersection
-                distance_to_intersection = math.sqrt(
-                    math.pow(previous_x - intersection[0], 2) + math.pow(previous_y - intersection[1], 2)
-                )
-                # calculate the length of the lin x,y to previous_x, previous_y
-                total_distance = math.sqrt(
-                    math.pow(previous_x - x, 2) + math.pow(previous_y - y, 2)
-                )
-                if total_distance > 0:
-                    path_ratio_1 = distance_to_intersection / total_distance
-                    path_ratio_2 = 1.0 - path_ratio_1
-                else:
-                    path_ratio_1 = 0
-                    path_ratio_2 = 0
-
                 return {
-                    'intersection': intersection,
-                    'path_ratio_1': path_ratio_1,
-                    'path_ratio_2': path_ratio_2
+                    'intersection': intersection
                 }
         return False
 

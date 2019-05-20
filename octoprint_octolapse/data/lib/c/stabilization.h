@@ -55,8 +55,6 @@ public:
 	double z_max_;
 	std::string stabilization_type_;
 	std::string file_path_;
-	double retraction_length_;
-	double z_lift_height_;
 	double height_increment_;
 	double notification_period_seconds_;
 	bool fastest_speed_;

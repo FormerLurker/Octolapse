@@ -1,5 +1,6 @@
 #include "stabilization_minimize_travel.h"
 #include <math.h>
+#include "logging.h"
 #include <iostream>
 minimize_travel_args::minimize_travel_args()
 {
@@ -37,8 +38,8 @@ minimize_travel_args::~minimize_travel_args()
 
 stabilization_minimize_travel::stabilization_minimize_travel()
 {
-	x_coord_ = 0;
-	y_coord_ = 0;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_ = 0.0;
@@ -103,14 +104,15 @@ void stabilization_minimize_travel::get_next_xy_coordinates()
 	if (minimize_travel_args_->has_py_callbacks_)
 	{
 		//std::cout << "calling python...";
-		_get_coordinates_callback(minimize_travel_args_->py_get_snapshot_position_callback, minimize_travel_args_->x_coordinate_, minimize_travel_args_->y_coordinate_, &x_coord_, &y_coord_);
+		if(!_get_coordinates_callback(minimize_travel_args_->py_get_snapshot_position_callback, minimize_travel_args_->x_coordinate_, minimize_travel_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
+			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed to get snapshot coordinates.");
 	}
 
 	else
 	{
 		//std::cout << "extracting from args...";
-		x_coord_ = minimize_travel_args_->x_coordinate_;
-		y_coord_ = minimize_travel_args_->y_coordinate_;
+		stabilization_x_ = minimize_travel_args_->x_coordinate_;
+		stabilization_y_ = minimize_travel_args_->y_coordinate_;
 	}
 	//std::cout << " - X coord: " << x_coord;
 	//std::cout << " - Y coord: " << y_coord << "\r\n";
@@ -225,7 +227,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	// if we have no saved position, this is the closest!
 	if (!has_saved_position_)
 	{
-		double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, x_coord_, y_coord_);
+		double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 		if(distance  != -1)
 			//std::cout << " - IsCloser Complete, no saved position.\r\n";
 		return distance;
@@ -238,7 +240,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 		if (gcode_position::greater_than(p_position->f_, p_saved_position_->f_))
 		{
 			//std::cout << " - IsCloser Complete, faster.\r\n";
-			double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, x_coord_, y_coord_);
+			double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 			if (distance != -1)
 				//std::cout << " - IsCloser Complete, no saved position.\r\n";
 			return distance;
@@ -252,7 +254,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	}
 	//std::cout << "Checking for closer position...";
 	// Compare the saved points cartesian distance from the current point
-	double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, x_coord_, y_coord_);
+	double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 	if (distance != -1.0 && (current_closest_dist_ < 0 || gcode_position::greater_than(current_closest_dist_, distance)))
 	{
 		//std::cout << " - IsCloser Complete, closer.\r\n";
@@ -269,28 +271,19 @@ void stabilization_minimize_travel::add_saved_plan()
 	snapshot_plan* p_plan = new snapshot_plan();
 
 	// create the initial position
+	p_plan->p_triggering_command_ = new parsed_command(*p_saved_position_->p_command);
+	p_plan->p_start_command_ = new parsed_command(*p_saved_position_->p_command);
 	p_plan->p_initial_position_ = new position(*p_saved_position_);
-	// create the snapshot position (only 1)
-	position * p_snapshot_position = new position(*p_saved_position_);
-	p_snapshot_position->x_ = x_coord_;
-	p_snapshot_position->y_ = y_coord_;
-	
-	p_plan->snapshot_positions_.push_back(p_snapshot_position);
-	p_plan->p_return_position_ = new position(*p_saved_position_);
-	p_plan->p_parsed_command_ = new parsed_command(*p_saved_position_->p_command);
-
-	p_plan->file_line_ = p_saved_position_->file_line_number_;
-	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	// Need to enter lift and retract amounts!
-	p_plan->lift_amount_ = p_stabilization_args_->z_lift_height_;
-	p_plan->retract_amount_ = p_stabilization_args_->retraction_length_;
-	std::cout << "Adding retraction length: " << p_stabilization_args_->z_lift_height_ << "\r\n";
-	p_plan->send_parsed_command_ = send_parsed_command_first;
-
-	snapshot_plan_step* p_travel_step = new snapshot_plan_step(x_coord_, y_coord_, 0, 0, 0, travel_action);
+	snapshot_plan_step* p_travel_step = new snapshot_plan_step(stabilization_x_, stabilization_y_, 0, 0, 0, travel_action);
 	p_plan->steps_.push_back(p_travel_step);
 	snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(0, 0, 0, 0, 0, snapshot_action);
 	p_plan->steps_.push_back(p_snapshot_step);
+
+	p_plan->p_return_position_ = new position(*p_saved_position_);
+	p_plan->p_end_command_ = NULL;
+
+	p_plan->file_line_ = p_saved_position_->file_line_number_;
+	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
 
 	// Add the plan
 	p_snapshot_plans_->push_back(p_plan);

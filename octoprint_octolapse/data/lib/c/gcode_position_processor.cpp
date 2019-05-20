@@ -316,6 +316,8 @@ extern "C"
 		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
 		if (py_snapshot_plans == NULL)
 		{
+			octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
+			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
 			return NULL;
 		}
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
@@ -889,29 +891,7 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_settings from the stabilization args dict.");
 		return false;
 	}
-	PyObject * py_retraction_length;
-	py_retraction_length = PyObject_GetAttrString(py_gcode_settings, "retraction_length");
-	if (py_retraction_length == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the gcode_settings object.");
-		return false;
-	}
 	
-	stabilizationArgs->retraction_length_ = PyFloatOrInt_AsDouble(py_retraction_length);
-	std::cout << "Found Retraction Length: " << stabilizationArgs->retraction_length_ << "\r\n";
-
-	PyObject *  py_z_lift_height;
-	py_z_lift_height = PyObject_GetAttrString(py_gcode_settings, "z_lift_height");
-	if (py_z_lift_height == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the gcode_settings object.");
-		return false;
-	}
-	stabilizationArgs->z_lift_height_ = PyFloatOrInt_AsDouble(py_z_lift_height);
-	std::cout << "Found Z-Lift Height: " << stabilizationArgs->z_lift_height_ << "\r\n";
-
 	// Get IsBound
 	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
 	if (py_is_bound == NULL)
@@ -1065,26 +1045,6 @@ static bool ParseStabilizationArgs_SnapToPrint(PyObject *args, snap_to_print_arg
 		return false;
 	}
 	snapToPrintArgs->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
-
-	// disable_retract
-	PyObject * py_disable_retract = PyDict_GetItemString(args, "disable_retract");
-	if (py_disable_retract == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_retract from the stabilization args.");
-		return false;
-	}
-	snapToPrintArgs->disable_retract_ = PyLong_AsLong(py_disable_retract) > 0;
-
-	// disable_z_lift
-	PyObject * py_disable_z_lift = PyDict_GetItemString(args, "disable_z_lift");
-	if (py_disable_z_lift == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve disable_z_lift from the stabilization args.");
-		return false;
-	}
-	snapToPrintArgs->disable_z_lift_ = PyLong_AsLong(py_disable_z_lift) > 0;
 
 	return true;
 }

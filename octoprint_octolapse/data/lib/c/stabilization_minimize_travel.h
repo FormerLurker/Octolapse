@@ -44,8 +44,8 @@ protected:
 	void get_next_xy_coordinates();
 	double is_closer(position* p_position);
 	bool is_layer_change_wait_;
-	double x_coord_;
-	double y_coord_;
+	double stabilization_x_;
+	double stabilization_y_;
 	double current_closest_dist_;
 	int current_layer_;
 	double current_height_;

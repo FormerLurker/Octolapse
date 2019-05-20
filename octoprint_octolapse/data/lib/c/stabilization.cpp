@@ -255,9 +255,6 @@ stabilization_args::stabilization_args()
 	height_increment_ = 0.0;
 	notification_period_seconds_ = 0.25;
 	fastest_speed_ = true;
-	// Gcode Generation Settings
-	retraction_length_ = 0.0;
-	z_lift_height_ = 0.0;
 	file_path_ = "";
 };
 

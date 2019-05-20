@@ -25,6 +25,7 @@
 #include "parsed_command.h"
 #include "position.h"
 #include <vector>
+#include <map>
 class snapshot_plan
 {
 public:
@@ -35,14 +36,12 @@ public:
 	static PyObject * build_py_object(std::vector<snapshot_plan *> plans);
 	long file_line_;
 	long file_gcode_number_;
+	parsed_command * p_triggering_command_;
+	parsed_command * p_start_command_;
 	position * p_initial_position_;
-	std::vector<position*>  snapshot_positions_;
-	position * p_return_position_;
 	std::vector<snapshot_plan_step*> steps_;
-	parsed_command * p_parsed_command_;
-	std::string send_parsed_command_;
-	double lift_amount_;
-	double retract_amount_;
+	position * p_return_position_;
+	parsed_command * p_end_command_;
 };
 
 #endif

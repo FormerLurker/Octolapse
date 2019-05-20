@@ -147,6 +147,9 @@ class ParsedCommand(object):
             "comment": self.comment
         }
 
+    def update_gcode_string(self):
+        self.gcode = ParsedCommand.to_string(self)
+
     @classmethod
     def create_from_cpp_parsed_command(cls, cpp_parsed_command):
         gcode, comment = ParsedCommand.extract_comment(cpp_parsed_command[2])
@@ -164,6 +167,32 @@ class ParsedCommand(object):
                 comment = gcode[ix+1:].strip()
                 gcode = gcode[0:ix]
         return gcode.strip(), comment
+
+    @staticmethod
+    def to_string(parsed_command):
+        has_parameters = False
+        parameter_strings = []
+        for key, value in parsed_command.parameters.items():
+            has_parameters = True
+            if value is None:
+                value_string = ""
+            elif isinstance(value, float):
+                if key == "E":
+                    value_string = "{0:.5f}".format(value)
+                else:
+                    value_string = "{0:.3f}".format(value)
+            else:
+                value_string = "{0}".format(value)
+
+            parameter_strings.append("{0}{1}".format(key,value_string))
+
+        if has_parameters:
+            separator = " "
+        else:
+            separator = ""
+
+        return "{0}{1}{2}".format(parsed_command.cmd, separator, " ".join(parameter_strings))
+
 
 class Command(object):
 

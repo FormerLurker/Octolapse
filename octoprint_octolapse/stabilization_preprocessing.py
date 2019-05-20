@@ -110,7 +110,7 @@ class StabilizationPreprocessingThread(Thread):
 
     def run(self):
         try:
-            ret_val = self._run_stabilization()
+            ret_val, options = self._run_stabilization()
             logger.info(
                 "Received %s snapshot plans from the GcodePositionProcessor stabilization in %s seconds.",
                 len(ret_val[2]), ret_val[3]
@@ -122,6 +122,7 @@ class StabilizationPreprocessingThread(Thread):
                 ret_val[3],  # seconds_elapsed
                 ret_val[4],  # gcodes processed
                 ret_val[5],  # lines_processed
+                options,
             )
 
         except Exception as e:
@@ -192,6 +193,7 @@ class StabilizationPreprocessingThread(Thread):
 
     def _run_stabilization(self):
         results = None
+        options = {}
         stabilization_args = self._create_stabilization_args()
         stabilization_type = self.stabilization_profile.stabilization_type
         is_precalculated = (
@@ -211,7 +213,9 @@ class StabilizationPreprocessingThread(Thread):
         elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT:
             lock_to_print_args = {
                 'nearest_to_corner': self.stabilization_profile.lock_to_corner_type,
-                'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x",
+                'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x"
+            }
+            options = {
                 'disable_retract': self.stabilization_profile.lock_to_corner_disable_retract,
                 'disable_z_lift': self.stabilization_profile.lock_to_corner_disable_z_lift
             }
@@ -243,7 +247,7 @@ class StabilizationPreprocessingThread(Thread):
                 0  # lines_processed
             )
 
-        return results
+        return results, options
 
     def on_progress_received(self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed,
                              lines_processed):

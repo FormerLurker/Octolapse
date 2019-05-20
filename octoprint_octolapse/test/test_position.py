@@ -823,7 +823,7 @@ class TestPosition(unittest.TestCase):
         raise NotImplementedError
 
     @unittest.skip("Not yet implemented")
-    def test_extruder_axis_default_mode_absolute(self):
+    def test_extruder_axis_default_modoffset_e(self):
         # test e_axis_default_mode = 'absolute'
         raise NotImplementedError
 
@@ -838,7 +838,7 @@ class TestPosition(unittest.TestCase):
         raise NotImplementedError
 
     @unittest.skip("Not yet implemented")
-    def test_xyz_axis_default_mode_absolute(self):
+    def test_xyz_axis_default_modoffset_e(self):
         # test xyz_axes_default_mode = 'absolute'
         raise NotImplementedError
 

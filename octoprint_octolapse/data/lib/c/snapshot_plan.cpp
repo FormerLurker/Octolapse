@@ -26,24 +26,19 @@ snapshot_plan::snapshot_plan()
 {
 	file_line_ = 0;
 	file_gcode_number_ = 0;
+	p_triggering_command_ = NULL;
 	p_initial_position_ = NULL;
 	p_return_position_ = NULL;
-	p_parsed_command_ = NULL;
-	send_parsed_command_ = "";
-	lift_amount_ = 0;
-	retract_amount_ = 0;
+	p_start_command_ = NULL;
+	p_end_command_ = NULL;
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)
 {
 	file_line_ = source.file_line_;
 	file_gcode_number_ = source.file_gcode_number_;
+	p_triggering_command_ = new parsed_command(*source.p_triggering_command_);
 	p_initial_position_ = new position(*source.p_initial_position_);
-	
-	for (unsigned int index=0; index < source.snapshot_positions_.size(); index++)
-	{
-		snapshot_positions_.push_back(new position(*source.snapshot_positions_[index]));
-	}
 	
 	for (unsigned int index = 0; index < source.steps_.size(); index++)
 	{
@@ -51,14 +46,17 @@ snapshot_plan::snapshot_plan(const snapshot_plan & source)
 	}
 
 	p_return_position_ = new position(*source.p_return_position_);
-	p_parsed_command_ = new parsed_command(*source.p_parsed_command_);
-	send_parsed_command_ = source.send_parsed_command_;
-	lift_amount_ = source.lift_amount_;
-	retract_amount_ = source.retract_amount_;
+	p_start_command_ = new parsed_command(*source.p_start_command_);
+	p_end_command_ = new parsed_command(*source.p_end_command_);
 }
 
 snapshot_plan::~snapshot_plan()
 {
+	if(p_triggering_command_ != NULL)
+	{
+		delete p_triggering_command_;
+		p_triggering_command_ = NULL;
+	}
 	if (p_initial_position_ != NULL)
 	{
 		delete p_initial_position_;
@@ -69,15 +67,16 @@ snapshot_plan::~snapshot_plan()
 		delete p_return_position_;
 		p_return_position_ = NULL;
 	}
-	if (p_parsed_command_ != NULL)
+	if (p_start_command_ != NULL)
 	{
-		delete p_parsed_command_;
-		p_parsed_command_ = NULL;
+		delete p_start_command_;
+		p_start_command_ = NULL;
 	}
-	while (!snapshot_positions_.empty()) {
-		position * p = snapshot_positions_.back();
-		snapshot_positions_.pop_back();
-		delete p;
+
+	if (p_end_command_ != NULL)
+	{
+		delete p_end_command_;
+		p_end_command_ = NULL;
 	}
 	
 	while (!steps_.empty()) {
@@ -124,33 +123,31 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 
 PyObject * snapshot_plan::to_py_object()
 {
-	
-	PyObject *py_snapshot_positions = PyList_New(0);
-	if (py_snapshot_positions == NULL)
+	PyObject* py_triggering_command = p_triggering_command_->to_py_object();
+	if (py_triggering_command == NULL)
 	{
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create a PyList object to hold the snapshot positions.");
+		PyErr_Print();
+		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the triggering_command to a PyObject.");
 		return NULL;
 	}
-	
-	for (unsigned int index = 0; index < snapshot_positions_.size(); index++)
+
+	PyObject* py_start_command = NULL;
+	if (p_start_command_ == NULL)
 	{
-		PyObject * py_snapshot_position = snapshot_positions_[index]->to_py_tuple();
-		if (py_snapshot_position == NULL)
-		{
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert a snapshot position to a PyObject.");
-			return NULL;
-		}
-		bool success = !(PyList_Append(py_snapshot_positions, py_snapshot_position) < 0); // reference to pSnapshotPlan stolen
-		if (!success)
-		{
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to append the snapshot position to the snapshot position list.");
-			return NULL;
-		}
-		// Need to decref after PyList_Append, since it increfs the PyObject
-		Py_DECREF(py_snapshot_position);
-		// Todo: evaluate the effect of this 
-		//std::cout << "py_snapshot_position refcount = " << py_snapshot_position->ob_refcnt << "\r\n";
+		py_start_command = Py_None;
+		Py_IncRef(Py_None);
 	}
+	else
+	{
+		py_start_command = p_start_command_->to_py_object();
+		if (py_start_command == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the start_command to a PyObject.");
+			return NULL;
+		}
+	}
+
 	PyObject * py_initial_position = p_initial_position_->to_py_tuple();
 	if (py_initial_position == NULL)
 	{
@@ -158,30 +155,27 @@ PyObject * snapshot_plan::to_py_object()
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create InitialPosition PyObject.");
 		return NULL;
 	}
-	PyObject * py_return_position = p_return_position_->to_py_tuple();
-	if (py_return_position == NULL)
-	{
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the return position to a tuple.");
-		return NULL;
-	}
 	PyObject * py_steps = PyList_New(0);
 	if (py_steps == NULL)
 	{
+		PyErr_Print();
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create a PyList object to hold the snapshot plan steps.");
 		return NULL;
 	}
 	for (unsigned int step_index = 0; step_index < steps_.size(); step_index++)
 	{
-		
+
 		// create the snapshot step object with build
 		PyObject * py_step = steps_[step_index]->to_py_object();
 		if (py_step == NULL)
 		{
+			PyErr_Print();
 			return NULL;
 		}
 		bool success = !(PyList_Append(py_steps, py_step) < 0); // reference to pSnapshotPlan stolen
 		if (!success)
 		{
+			PyErr_Print();
 			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to append the snapshot plan step to the snapshot plan step list.");
 			return NULL;
 		}
@@ -191,24 +185,51 @@ PyObject * snapshot_plan::to_py_object()
 		//std::cout << "py_step refcount = " << py_step->ob_refcnt << "\r\n";
 
 	}
-	PyObject* py_parsed_command = p_parsed_command_->to_py_object();
-	if (py_parsed_command == NULL)
+
+	PyObject * py_return_position;
+	if (p_return_position_ == NULL)
 	{
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the parsed_command to a PyObject.");
-		return NULL;
+		py_return_position = Py_None;
+		Py_IncRef(Py_None);
 	}
+	else
+	{
+		py_return_position = p_return_position_->to_py_tuple();
+		if (py_return_position == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the return position to a tuple.");
+			return NULL;
+		}
+	}
+	
+	PyObject* py_end_command = NULL;
+	if (p_end_command_ == NULL)
+	{
+		py_end_command = Py_None;
+		Py_IncRef(Py_None);
+	}
+	else
+	{
+		py_end_command = p_end_command_->to_py_object();
+		if (py_end_command == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the end_command to a PyObject.");
+			return NULL;
+		}
+	}
+
 	PyObject *py_snapshot_plan = Py_BuildValue(
-		"llOOOOOsdd",
+		"llOOOOOO",
 		file_line_,
 		file_gcode_number_,
+		py_triggering_command,
+		py_start_command,
 		py_initial_position,
-		py_snapshot_positions,
-		py_return_position,
 		py_steps,
-		py_parsed_command,
-		send_parsed_command_.c_str(),
-		lift_amount_,
-		retract_amount_
+		py_return_position,
+		py_end_command
 	);
 	if (py_snapshot_plan == NULL)
 	{
@@ -216,22 +237,11 @@ PyObject * snapshot_plan::to_py_object()
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create SnapshotPlan PyObject.");
 		return NULL;
 	}
-	// Py_BuildValue Increfs PyObjects, so we need to decref those here:
-	// Todo: evaluate the effect of this 
+	Py_DECREF(py_triggering_command);
 	Py_DECREF(py_initial_position);
-	//std::cout << "py_initial_position refcount = " << py_initial_position->ob_refcnt << "\r\n";
-	// Todo: evaluate the effect of this 
-	Py_DECREF(py_snapshot_positions);
-	//std::cout << "py_snapshot_positions refcount = " << py_snapshot_positions->ob_refcnt << "\r\n";
-	// Todo: evaluate the effect of this 
 	Py_DECREF(py_return_position);
-	//std::cout << "py_return_position refcount = " << py_return_position->ob_refcnt << "\r\n";
-	// Todo: evaluate the effect of this 
 	Py_DECREF(py_steps);
-	//std::cout << "py_steps refcount = " << py_steps->ob_refcnt << "\r\n";
-	// Todo: evaluate the effect of this 
-	Py_DECREF(py_parsed_command);
-	//std::cout << "py_parsed_command refcount = " << py_parsed_command->ob_refcnt << "\r\n";
-	
+	Py_DECREF(py_start_command);
+	Py_DECREF(py_end_command);
 	return py_snapshot_plan;
 }

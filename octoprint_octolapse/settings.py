@@ -550,6 +550,14 @@ class StabilizationProfile(ProfileSettings):
         self.feature_trigger_on_skirt_brim = False
         self.feature_trigger_on_first_layer_travel = False
 
+    def get_snapshot_plan_options(self):
+        if self.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT:
+            return {
+                'disable_z_lift': self.lock_to_corner_disable_z_lift,
+                'disable_retract': self.lock_to_corner_disable_retract
+            }
+        return None
+
     @staticmethod
     def get_precalculated_stabilization_types():
         return [

@@ -479,6 +479,23 @@ PyObject* position::to_py_tuple()
 
 }
 
+double position::get_offset_x()
+{
+	return x_ - x_offset_;
+}
+double position::get_offset_y()
+{
+	return y_ - y_offset_;
+}
+double position::get_offset_z()
+{
+	return z_ - z_offset_;
+}
+double position::get_offset_e()
+{
+	return e_ - e_offset_;
+}
+
 void position::reset_state()
 {
 	is_layer_change_ = false;

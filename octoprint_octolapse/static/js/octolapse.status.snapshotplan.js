@@ -94,7 +94,26 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.x_return(showing_plan.return_position.x);
                 self.y_return(showing_plan.return_position.y);
                 self.z_return(showing_plan.return_position.z);
-                self.snapshot_positions(showing_plan.snapshot_positions);
+
+                var x_current = showing_plan.initial_position.x;
+                var y_current = showing_plan.initial_position.y;
+                var z_current = showing_plan.initial_position.z;
+                self.snapshot_positions([]);
+                // Create snapshot positions from steps
+                for (var stepIndex = 0; stepIndex < showing_plan.steps.length; stepIndex++)
+                {
+                    var current_step = showing_plan.steps[stepIndex];
+                    if (current_step.action == "travel")
+                    {
+                        x_current = current_step.x;
+                        y_current = current_step.y;
+                        z_current = current_step.z;
+                    }
+                    else if(current_step.action == "snapshot")
+                    {
+                        self.snapshot_positions.push({x: x_current, y: y_current, z: z_current});
+                    }
+                }
                 // Update Canvass
                 self.updateCanvas();
             };
@@ -431,6 +450,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
             self.canvas_draw_snapshot_locations = function() {
                 self.canvas_context.strokeStyle = '#0000ff';
+                if (self.snapshot_positions() == null)
+                    return;
                 for (var index = 0; index < self.snapshot_positions().length; index++)
                 {
                     var position = self.snapshot_positions()[index];
@@ -442,6 +463,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
             self.canvas_draw_return_location = function()
             {
+                if(self.x_return() == null || self.y_return == null)
+                    return;
                 self.canvas_context.fillStyle = '#00ff00';
                 self.canvas_context.beginPath();
                 self.canvas_context.arc(self.to_canvas_x(self.x_return()), self.to_canvas_y(self.y_return()), self.canvas_location_radius, 0, 2 * Math.PI);
@@ -451,16 +474,16 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.to_canvas_x = function(x)
             {
                 return (x + self.printer_volume.min_x)*self.x_canvas_scale + self.canvas_border_size[0];
-            }
+            };
 
             self.to_canvas_y = function(y)
             {
                 return (self.printer_volume.max_y - y)*self.y_canvas_scale + self.canvas_border_size[1];
-            }
+            };
 
             self.to_canvas_z = function(z)
             {
                 return (z + self.printer_volume.min_z)*self.z_canvas_scale + self.canvas_border_size[2];
-            }
+            };
 
-        }
+        };

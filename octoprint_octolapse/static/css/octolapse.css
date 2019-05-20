@@ -78,10 +78,14 @@ a.disabled {
 }
 .ol_hover_button a:not(.disable):active {
     color: black;
+    -webkit-transition: none;
+    -moz-transition: none;
+    -o-transition: none;
+    transition: none;
 }
 
 .ol_hover_button a:not(.disable):hover:not(:active)
-,.ol_hover_button .fa-square
+/*,.ol_hover_button .fa-square*/
 {
     -webkit-transition: color 0.250s 0s ease-in;
     -moz-transition: color 0.250s 0s ease-in;

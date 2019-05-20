@@ -115,6 +115,11 @@ public:
 	int file_line_number_;
 	int gcode_number_;
 	bool gcode_ignored_;
+
+	double get_offset_x();
+	double get_offset_y();
+	double get_offset_z();
+	double get_offset_e();
 private:
 	void initialize();
 };

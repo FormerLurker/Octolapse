@@ -209,38 +209,40 @@ $(function () {
             };
 
             self.startSnapshotAnimation = function (targetId) {
-                //console.log("Refreshing Snapshot Thumbnail");
+                if (self.IsAnimating) {
+                    return;
+                }
+                self.IsAnimating = true;
+                console.log("Starting Snapshot Animation for" + targetId);
                 // Hide and show the play/refresh button
                 if (Octolapse.Globals.auto_reload_latest_snapshot()) {
                     var $startAnimationButton = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
-                    if (!$startAnimationButton.is(":hidden"))
-                        $startAnimationButton.fadeOut();
-                }
-                //console.log("Starting animation on " + targetId);
-                // Get the images
-                var $images = $('#' + targetId + ' .snapshot_container .previous-snapshots img');
 
-                // Remove any existing visible class
-                $images.each(function (index, element) {
-                    $(element).removeClass('visible');
-                });
-                // Set a delay to unblock
-                setTimeout(function () {
-                    // Remove any hidden class and add visible to trigger the animation.
-                    $images.each(function (index, element) {
-                        $(element).removeClass('hidden');
-                        $(element).addClass('visible');
+                    $startAnimationButton.fadeOut({
+                        start: function () {
+                            var $images = $('#' + targetId + ' .snapshot_container .previous-snapshots img');
+
+                            // Remove any existing visible class
+                            $images.each(function (index, element) {
+                                $(element).removeClass('visible');
+                            });
+
+                            // Remove any hidden class and add visible to trigger the animation.
+                            $images.each(function (index, element) {
+                                $(element).removeClass('hidden');
+                                $(element).addClass('visible');
+                            });
+                        },
+                        complete: function() {
+                            $startAnimationButton.fadeIn();
+                        }
                     });
-                    if (Octolapse.Globals.auto_reload_latest_snapshot()) {
-                        $('#' + targetId + ' .snapshot_refresh_container a.start-animation').fadeIn();
-                    }
-                }, 1)
-
+                }
             };
 
             self.updateLatestSnapshotThumbnail = function (force) {
                 force = force || false;
-                //console.log("Trying to update the latest snapshot thumbnail.");
+                console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
                     if (!self.IsTabShowing) {
                         //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
@@ -274,7 +276,7 @@ $(function () {
             // takes the list of images, update the frames in the target accordingly and starts any animations
             self.IsAnimating = false;
             self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
-                //console.log("Updating animation for target id: " + targetId);
+                console.log("Updating animation for target id: " + targetId);
                 // Get the snapshot_container within the target
                 var $target = $('#' + targetId + ' .snapshot_container');
                 // Get the latest image
@@ -296,7 +298,6 @@ $(function () {
                             $latestSnapshot.remove();
                         }
                     }
-
                     // Get all of the images within the $previousSnapshotContainer, included the latest image we copied in
                     var $previousSnapshots = $previousSnapshotContainer.find("img");
 
@@ -309,10 +310,8 @@ $(function () {
 
                         numSnapshots--;
                     }
-
                     // Set the total animation duration based on the number of snapshots
                     $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots);
-
                     // TODO: Do we need to do this??  Find out
                     $previousSnapshots = $previousSnapshotContainer.find("img");
                     var numPreviousSnapshots = $previousSnapshots.length;
@@ -355,7 +354,6 @@ $(function () {
 
                 }
                 else {
-
                     $newSnapshot.one('load', function () {
                         // Hide the latest image
                         $latestSnapshot.fadeOut(250, function () {
