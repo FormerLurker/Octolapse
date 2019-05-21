@@ -110,6 +110,11 @@ position * gcode_position::get_previous_position()
 
 const double ZERO_TOLERANCE = 0.000000005;
 
+int gcode_position::round_up_to_int(double x)
+{
+	return int(x + ZERO_TOLERANCE);
+}
+
 bool gcode_position::is_equal(double x, double y)
 {
 	return fabs(x - y) < ZERO_TOLERANCE;

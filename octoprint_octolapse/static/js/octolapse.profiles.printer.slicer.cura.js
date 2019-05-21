@@ -21,6 +21,7 @@ Octolapse.CuraViewmodel = function (values) {
     self.retraction_enable = ko.observable(values.retraction_enable);
     self.layer_height = ko.observable(values.layer_height);
     self.smooth_spiralized_contours = ko.observable(values.smooth_spiralized_contours);
+    self.magic_mesh_surface_mode = ko.observable(values.magic_mesh_surface_mode);
     // Create constants
     self.speed_tolerance = 0.1 / 60.0 / 2.0;
     self.round_to_increment_mm_min = 0.00000166667;

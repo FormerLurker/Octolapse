@@ -105,9 +105,12 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     var current_step = showing_plan.steps[stepIndex];
                     if (current_step.action == "travel")
                     {
-                        x_current = current_step.x;
-                        y_current = current_step.y;
-                        z_current = current_step.z;
+                        if (current_step.x != null)
+                            x_current = current_step.x;
+                        if (current_step.y != null)
+                            y_current = current_step.y;
+                        if (current_step.z != null)
+                            z_current = current_step.z;
                     }
                     else if(current_step.action == "snapshot")
                     {

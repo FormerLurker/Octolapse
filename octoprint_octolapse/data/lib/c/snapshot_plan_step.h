@@ -33,15 +33,15 @@ class snapshot_plan_step
 {
 public:
 	snapshot_plan_step();
-	snapshot_plan_step(double x, double y, double z, double e, double f, std::string action);
+	snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action);
 	snapshot_plan_step(const snapshot_plan_step & source);
 	~snapshot_plan_step();
 	PyObject * to_py_object();
-	double x_;
-	double y_;
-	double z_;
-	double e_;
-	double f_;
+	double *p_x_;
+	double *p_y_;
+	double *p_z_;
+	double *p_e_;
+	double *p_f_;
 	std::string action_;
 };
 

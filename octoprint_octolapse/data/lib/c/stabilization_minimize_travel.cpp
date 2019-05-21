@@ -138,16 +138,19 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 		if (p_stabilization_args_->height_increment_ != 0)
 		{
 			// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
-			unsigned const int increment = int(p_current_pos->height_ / p_stabilization_args_->height_increment_);
-
+			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment_;
+			unsigned const int increment = gcode_position::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
-				if (increment > 1 && has_saved_position_)
+				if (increment > 1.0 && has_saved_position_)
+				{
+					current_height_increment_ = increment;
 					add_saved_plan();
-				// TODO:  LOG MISSED LAYER
-				//else
-				//   Log missed layer
-				current_height_increment_ = increment;
+				}
+				else
+				{
+					octolapse_log(octolapse_loggers::SNAPSHOT_PLAN, octolapse_log_levels::WARNING, "Octolapse missed a layer while creating a snapshot plan due to a height restriction.");
+				}
 			}
 		}
 		else
@@ -274,9 +277,9 @@ void stabilization_minimize_travel::add_saved_plan()
 	p_plan->p_triggering_command_ = new parsed_command(*p_saved_position_->p_command);
 	p_plan->p_start_command_ = new parsed_command(*p_saved_position_->p_command);
 	p_plan->p_initial_position_ = new position(*p_saved_position_);
-	snapshot_plan_step* p_travel_step = new snapshot_plan_step(stabilization_x_, stabilization_y_, 0, 0, 0, travel_action);
+	snapshot_plan_step* p_travel_step = new snapshot_plan_step(&stabilization_x_, &stabilization_y_, NULL, NULL, NULL, travel_action);
 	p_plan->steps_.push_back(p_travel_step);
-	snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(0, 0, 0, 0, 0, snapshot_action);
+	snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
 	p_plan->steps_.push_back(p_snapshot_step);
 
 	p_plan->p_return_position_ = new position(*p_saved_position_);

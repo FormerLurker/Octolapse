@@ -271,6 +271,11 @@ class PrinterProfile(ProfileSettings):
                 dict(value='inches', name='Inches'),
                 dict(value='millimeters', name='Millimeters')
             ],
+            'cura_surface_mode_options': [
+                dict(value="normal", name='Normal'),
+                dict(value="surface", name='Surface'),
+                dict(value="both", name='Both'),
+            ]
         }
 
     def get_current_slicer_settings(self):
@@ -1620,6 +1625,7 @@ class CuraSettings(SlicerSettings):
         self.axis_speed_display_settings = 'mm-sec'
         self.layer_height = None
         self.smooth_spiralized_contours = None
+        self.magic_mesh_surface_mode = None
     def get_num_slow_layers(self):
         if self.speed_slowdown_layers is None or len("{}".format(self.speed_slowdown_layers).strip()) == 0:
             return None
@@ -1648,7 +1654,7 @@ class CuraSettings(SlicerSettings):
             and settings.retraction_length > 0
         )
         settings.layer_height = self.layer_height
-        settings.vase_mode = self.smooth_spiralized_contours
+        settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
         return settings
 
     def get_retraction_amount(self):

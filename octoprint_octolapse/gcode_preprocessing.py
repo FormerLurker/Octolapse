@@ -1194,6 +1194,8 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'layer_height': SettingsDefinition(u'layer_height', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'smooth_spiralized_contours': SettingsDefinition(u'smooth_spiralized_contours',
                                                              CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode',
+                                                           CuraParsingFunctions.strip_string, [u'octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
             u'flavor': SettingsDefinition(u'flavor', CuraParsingFunctions.strip_string, [u'misc']),
 
@@ -1400,7 +1402,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'magic_fuzzy_skin_point_density': SettingsDefinition(u'magic_fuzzy_skin_point_density', CuraParsingFunctions.parse_float, [u'misc']),
             u'magic_fuzzy_skin_point_dist': SettingsDefinition(u'magic_fuzzy_skin_point_dist', CuraParsingFunctions.parse_float, [u'misc']),
             u'magic_fuzzy_skin_thickness': SettingsDefinition(u'magic_fuzzy_skin_thickness', CuraParsingFunctions.parse_float, [u'misc']),
-            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode', CuraParsingFunctions.strip_string, [u'misc']),
             u'magic_spiralize': SettingsDefinition(u'magic_spiralize', CuraParsingFunctions.parse_bool, [u'misc']),
             u'material_adhesion_tendency': SettingsDefinition(u'material_adhesion_tendency', CuraParsingFunctions.parse_int, [u'misc']),
             u'material_bed_temp_prepend': SettingsDefinition(u'material_bed_temp_prepend', CuraParsingFunctions.parse_bool, [u'misc']),

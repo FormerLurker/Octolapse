@@ -176,7 +176,8 @@ $(function () {
                 'g90_influences_extruder_options': settings.profiles.options.printer.g90_influences_extruder_options,
                 'xyz_axes_default_mode_options': settings.profiles.options.printer.xyz_axes_default_mode_options,
                 'units_default_options': settings.profiles.options.printer.units_default_options,
-                'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options
+                'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options,
+                'cura_surface_mode_options': settings.profiles.options.printer.cura_surface_mode_options
             };
             Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
             Object.keys(settings.profiles.printers).forEach(function(key) {

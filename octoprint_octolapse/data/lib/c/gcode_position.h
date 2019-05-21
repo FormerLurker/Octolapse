@@ -78,6 +78,7 @@ public:
 	void undo_update();
 	position * get_current_position();
 	position * get_previous_position();
+	static int round_up_to_int(double x);
 	static bool is_equal(double x, double y);
 	static bool greater_than(double x, double y);
 	static bool greater_than_or_equal(double x, double y);

@@ -279,13 +279,24 @@
                 </h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_smooth_spiralized_contours">Spiralize Outer Contour (vase mode)</label>
+                <label class="control-label" for="slicer_cura_smooth_spiralized_contours">Spiralize Outer Contour</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input id="slicer_cura_smooth_spiralized_contours" name="slicer_cura_smooth_spiralized_contours" type="checkbox" data-bind="checked: slicers.cura.smooth_spiralized_contours" title="Spiralize Outer Contour (vase mode)" />Enabled
+                        <input id="slicer_cura_smooth_spiralized_contours" name="slicer_cura_smooth_spiralized_contours" type="checkbox" data-bind="checked: slicers.cura.smooth_spiralized_contours" title="Spiralize Outer Contour" />Enabled
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#spiralize-outer-contour" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                     </label>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_smooth_spiralized_contours"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_surface_mode">Surface Mode</label>
+                <div class="controls">
+                    <select id="printer_profile_slicer_type" namd="printer_profile_surface_mode" data-bind="options: Octolapse.Printers.profileOptions.cura_surface_mode_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: slicers.cura.magic_mesh_surface_mode"></select>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#magic-mesh-surface-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_surface_mode"></div>
                 </div>
             </div>
         </div>
