@@ -366,7 +366,7 @@ class GcodeTrigger(Trigger):
                 # check to see if we are in the proper position to take a snapshot
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position
+                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
                 state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 
@@ -534,7 +534,7 @@ class LayerTrigger(Trigger):
                 state.is_homed = True
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position
+                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
                 state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 
@@ -785,7 +785,7 @@ class TimerTrigger(Trigger):
                 current_time = time.time()
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position
+                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
                 state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 

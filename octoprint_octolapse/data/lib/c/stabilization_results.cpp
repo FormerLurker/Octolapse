@@ -35,15 +35,4 @@ stabilization_results::~stabilization_results()
 		snapshot_plans_.pop_back();
 		delete p;
 	}
-	
-
-		/*for (unsigned int index = 0; index < (*p_snapshot_plans).size(); index++)
-		{
-			delete (*p_snapshot_plans)[index];
-			(*p_snapshot_plans)[index] = NULL;
-		}
-		p_snapshot_plans->clear();
-		delete p_snapshot_plans;
-		p_snapshot_plans = NULL;*/
-	
 }

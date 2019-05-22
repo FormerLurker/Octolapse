@@ -44,6 +44,13 @@ struct gcode_position_args {
 		xyz_axis_default_mode = "absolute";
 		e_axis_default_mode = "absolute";
 		units_default = "millimeters";
+		is_bound_ = false;
+		x_min_ = 0;
+		x_max_ = 0;
+		y_min_ = 0;
+		y_max_ = 0;
+		z_min_ = 0;
+		z_max_ = 0;
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
 	}
 	bool autodetect_position;
@@ -58,7 +65,13 @@ struct gcode_position_args {
 	double priming_height;
 	double minimum_layer_height;
 	bool g90_influences_extruder;
-	std::string key;
+	bool is_bound_;
+	double x_min_;
+	double x_max_;
+	double y_min_;
+	double y_max_;
+	double z_min_;
+	double z_max_;
 	std::string xyz_axis_default_mode;
 	std::string e_axis_default_mode;
 	std::string units_default;
@@ -105,6 +118,15 @@ private:
 	std::string e_axis_default_mode_;
 	std::string xyz_axis_default_mode_;
 	std::string units_default_;
+
+	bool is_bound_;
+	double x_min_;
+	double x_max_;
+	double y_min_;
+	double y_max_;
+	double z_min_;
+	double z_max_;
+
 	std::map<std::string, posFunctionType> gcode_functions_;
 	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;
 	

@@ -46,13 +46,6 @@ public:
 	stabilization_args();
 	~stabilization_args();
 	PyObject* py_on_progress_received;
-	bool is_bound_;
-	double x_min_;
-	double x_max_;
-	double y_min_;
-	double y_max_;
-	double z_min_;
-	double z_max_;
 	std::string stabilization_type_;
 	std::string file_path_;
 	double height_increment_;

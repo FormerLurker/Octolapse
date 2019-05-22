@@ -245,13 +245,6 @@ void stabilization::on_processing_complete()
 stabilization_args::stabilization_args() 
 {
 	stabilization_type_ = "";
-	is_bound_ = false;
-	x_min_ = 0;
-	x_max_ = 0;
-	y_min_ = 0;
-	y_max_ = 0;
-	z_min_ = 0;
-	z_max_ = 0;
 	height_increment_ = 0.0;
 	notification_period_seconds_ = 0.25;
 	fastest_speed_ = true;

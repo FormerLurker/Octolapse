@@ -59,11 +59,10 @@ extern "C"
 	static PyObject * GetSnapshotPlans_SnapToPrint(PyObject *self, PyObject *args);
 	static PyObject * GetSnapshotPlans_MinimizeTravel(PyObject *self, PyObject *args);
 }
-static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positionArgs);
-static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs);
-static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabilizationArgs);
-static bool ParseStabilizationArgs_SnapToPrint(PyObject *args, snap_to_print_args* snapToPrintArgs);
-static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_travel_args* stabilizationArgs);
+static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args);
+static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args);
+static bool ParseStabilizationArgs_SnapToPrint(PyObject *py_args, snap_to_print_args* args);
+static bool ParseStabilizationArgs_MinimizeTravel(PyObject *py_args, minimize_travel_args* args);
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const long gcodes_processed, const long lines_processed);
 static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
 #endif

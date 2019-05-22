@@ -103,7 +103,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		is_layer_change_wait_ = true;
 	}
 
-	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_)
+	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_ || !p_current_pos->is_in_bounds_)
 	{
 		return;
 	}
@@ -173,21 +173,6 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 
 bool stabilization_snap_to_print::is_closer(position * p_position)
 {
-	// check the bounding box
-	if (p_stabilization_args_->is_bound_)
-	{
-		if (
-			p_position->x_ < p_stabilization_args_->x_min_ ||
-			p_position->x_ > p_stabilization_args_->x_max_ ||
-			p_position->y_ < p_stabilization_args_->y_min_ ||
-			p_position->y_ > p_stabilization_args_->y_max_ ||
-			p_position->z_ < p_stabilization_args_->z_min_ ||
-			p_position->z_ > p_stabilization_args_->z_max_)
-		{
-			return false;
-		}
-	}
-
 	// if we have no saved position, this is the closest!
 	if (!has_saved_position_)
 		return true;

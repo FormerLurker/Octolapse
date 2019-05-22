@@ -341,18 +341,34 @@ extern "C"
 
 	static PyObject* Initialize(PyObject* self, PyObject *args)
 	{
+		const char * pKey;
+		PyObject* py_position_args;
+		if (!PyArg_ParseTuple(
+			args, "sO",
+			&pKey,
+			&py_position_args
+		))
+		{
+			std::string message = "GcodePositionProcessor.Initialize failed: unable to parse the initialization parameters.";
+			octolapse_log(GCODE_PARSER, ERROR, message);
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, message.c_str());
+			return NULL;
+		}
+
 		gcode_position_args positionArgs;
 
-		if (!ParseInitializationArgs(args, &positionArgs))
+		// Create the gcode position object 
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Parsing initialization position args.");
+
+		if (!ParsePositionArgs(py_position_args, &positionArgs))
 		{
 			return NULL; // The call failed, ParseInitializationArgs has taken care of the error message
 		}
-
-		// Create the gcode position object 
-		octolapse_log(SNAPSHOT_PLAN, INFO, "Parsing initialization args.");
+				
 		gcode_position * p_new_position = new gcode_position(&positionArgs);
 		// see if we already have a gcode_position object for the given key
-		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(positionArgs.key);
+		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(pKey);
 		if (gcode_position_iterator != gpp::gcode_positions.end())
 		{
 			octolapse_log(SNAPSHOT_PLAN, INFO, "Existing processor found, removing.");
@@ -360,11 +376,11 @@ extern "C"
 			gpp::gcode_positions.erase(gcode_position_iterator);
 		}
 		std::string message = "Adding processor with key:";
-		message.append(positionArgs.key).append("\r\n");
+		message.append(pKey).append("\r\n");
 
 		octolapse_log(SNAPSHOT_PLAN, INFO, message);
 		// add the new gcode position to our list of objects
-		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(positionArgs.key, p_new_position));
+		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(pKey, p_new_position));
 		return Py_BuildValue("O", Py_True);
 	}
 
@@ -707,146 +723,95 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 }
 
 /// Argument Parsing
-static bool ParseInitializationArgs(PyObject *args, gcode_position_args *positionArgs)
+static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 {
-	//PyObject_Print(args, stdout, Py_PRINT_RAW);
-
-	PyObject * poLocationDetectionCommands; // Hold the PyList
-	const char * pKey;
-	const char * pXYZAxisDefaultMode;
-	const char * pEAxisDefaultMode;
-	const char * pUnitsDefault;
-	long iAutoDetectPosition;
-	long iOriginXIsNone;
-	long iOriginYIsNone;
-	long iOriginZIsNone;
-	if (!PyArg_ParseTuple(
-		args, "(sldldldlddddlsssO)",
-		&pKey,
-		&iAutoDetectPosition,
-		&positionArgs->origin_x,
-		&iOriginXIsNone,
-		&positionArgs->origin_y,
-		&iOriginYIsNone,
-		&positionArgs->origin_z,
-		&iOriginZIsNone,
-		&positionArgs->retraction_length,
-		&positionArgs->z_lift_height,
-		&positionArgs->priming_height,
-		&positionArgs->minimum_layer_height,
-		&positionArgs->g90_influences_extruder,
-		&pXYZAxisDefaultMode,
-		&pEAxisDefaultMode,
-		&pUnitsDefault,
-		&poLocationDetectionCommands
-	))
+	// Get IsBound
+	PyObject * py_is_bound = PyDict_GetItemString(py_args, "is_bound");
+	if (py_is_bound == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ParseInitializationArgs failed: unable to parse parameters.";
-		octolapse_log(GCODE_PARSER, ERROR, message);
 		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve is_bound from the position args dict.");
 		return false;
 	}
-	// Removed by BH on 4-28-2019
-	//Py_INCREF(poLocationDetectionCommands);
+	args->is_bound_ = PyLong_AsLong(py_is_bound) > 0;
 
-	positionArgs->key = pKey;
-	positionArgs->autodetect_position = iAutoDetectPosition;
-	positionArgs->origin_x_none = iOriginXIsNone > 0;
-	positionArgs->origin_y_none = iOriginYIsNone > 0;
-	positionArgs->origin_z_none = iOriginZIsNone > 0;
-	positionArgs->xyz_axis_default_mode = pXYZAxisDefaultMode;
-	positionArgs->e_axis_default_mode = pEAxisDefaultMode;
-	positionArgs->units_default = pUnitsDefault;
-
-	// Extract the elements from  the location detection command list pyobject
-	int listSize = PyList_Size(poLocationDetectionCommands);
-	if (listSize < 0)
+	if (args->is_bound_)
 	{
-		std::string message = "Unable to build position arguments, LocationDetectionCommands is not a list.";
-		octolapse_log(GCODE_PARSER, ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
-		return false;
-	}
-
-	for (int index = 0; index < listSize; index++) {
-		PyObject *pyListItem = PyList_GetItem(poLocationDetectionCommands, index);
-		if (pyListItem == NULL)
+		// Extract the bounds
+		PyObject * py_bounds = PyDict_GetItemString(py_args, "bounds");
+		if (py_bounds == NULL)
 		{
-			std::string message = "Could not extract a list item from index from the location detection commands.";
-			octolapse_log(GCODE_PARSER, ERROR, message);
 			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the position args dict.");
 			return false;
 		}
-		Py_INCREF(pyListItem);
-		if (!PyUnicode_SafeCheck(pyListItem)) {
-			std::string message = "An element in the location_detection_commands is not a unicode string.";
-			octolapse_log(GCODE_PARSER, ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-			return false;
-		}
-		std::string command = PyUnicode_SafeAsString(pyListItem);
-		
-		positionArgs->location_detection_commands.push_back(command);
-		Py_DECREF(pyListItem);
-	}
-	//Py_DECREF(poLocationDetectionCommands);
-	return true;
-}
 
-static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
-{
+		PyObject * py_x_min = PyDict_GetItemString(py_bounds, "x_min");
+		if (py_x_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
+			return false;
+		}
+		args->x_min_ = PyFloatOrInt_AsDouble(py_x_min);
+
+		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
+		if (py_x_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
+			return false;
+		}
+		args->x_max_ = PyFloatOrInt_AsDouble(py_x_max);
+
+		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
+		if (py_y_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
+			return false;
+		}
+		args->y_min_ = PyFloatOrInt_AsDouble(py_y_min);
+
+		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
+		if (py_y_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
+			return false;
+		}
+		args->y_max_ = PyFloatOrInt_AsDouble(py_y_max);
+
+		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
+		if (py_z_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
+			return false;
+		}
+		args->z_min_ = PyFloatOrInt_AsDouble(py_z_min);
+
+		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
+		if (py_z_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
+			return false;
+		}
+		args->z_max_ = PyFloatOrInt_AsDouble(py_z_max);
+	}
 	//PyObject_Print(args, stdout, Py_PRINT_RAW);
 
-	PyObject* pyLocationDetectionCommands; // Hold the PyList
-	char* pXYZAxisDefaultMode;
-	char* pEAxisDefaultMode;
-	char* pUnitsDefault;
-	long iAutoDetectPosition;
-	long iOriginXIsNone;
-	long iOriginYIsNone;
-	long iOriginZIsNone;
-	if (!PyArg_ParseTuple(
-		args, "ldldldlddddlsssO",
-		&iAutoDetectPosition,
-		&positionArgs->origin_x,
-		&iOriginXIsNone,
-		&positionArgs->origin_y,
-		&iOriginYIsNone,
-		&positionArgs->origin_z,
-		&iOriginZIsNone,
-		&positionArgs->retraction_length,
-		&positionArgs->z_lift_height,
-		&positionArgs->priming_height,
-		&positionArgs->minimum_layer_height,
-		&positionArgs->g90_influences_extruder,
-		&pXYZAxisDefaultMode,
-		&pEAxisDefaultMode,
-		&pUnitsDefault,
-		&pyLocationDetectionCommands
-	))
+	// Get LocationDetection Commands
+	PyObject * py_location_detection_commands = PyDict_GetItemString(py_args, "location_detection_commands");
+	if (py_location_detection_commands == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ParsePositionArgs failed: unable to parse parameters.";
-		octolapse_log(GCODE_PARSER, ERROR, message);
 		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_location_detection_commands from the position args dict.");
 		return false;
 	}
-	// Removed by BH on 4/28/2019
-	//Py_INCREF(pyLocationDetectionCommands);
-	positionArgs->autodetect_position = iAutoDetectPosition;
-	positionArgs->origin_x_none = iOriginXIsNone > 0;
-	positionArgs->origin_y_none = iOriginYIsNone > 0;
-	positionArgs->origin_z_none = iOriginZIsNone > 0;
-	positionArgs->xyz_axis_default_mode = pXYZAxisDefaultMode;
-	positionArgs->e_axis_default_mode = pEAxisDefaultMode;
-	positionArgs->units_default = pUnitsDefault;
-
 	// Extract the elements from  the location detection command list pyobject
-	int listSize = PyList_Size(pyLocationDetectionCommands);
+	int listSize = PyList_Size(py_location_detection_commands);
 	if (listSize < 0)
 	{
 		std::string message = "Unable to build position arguments, LocationDetectionCommands is not a list.";
@@ -857,7 +822,7 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 	}
 
 	for (int index = 0; index < listSize; index++) {
-		PyObject *pyListItem = PyList_GetItem(pyLocationDetectionCommands, index);
+		PyObject *pyListItem = PyList_GetItem(py_location_detection_commands, index);
 		if (pyListItem == NULL)
 		{
 			std::string message = "Could not extract a list item from index from the location detection commands.";
@@ -875,16 +840,157 @@ static bool ParsePositionArgs(PyObject *args, gcode_position_args *positionArgs)
 			return false;
 		}
 		std::string command = PyUnicode_SafeAsString(pyListItem);
-		positionArgs->location_detection_commands.push_back(command);
+		args->location_detection_commands.push_back(command);
 	}
-	//Py_DECREF(pyLocationDetectionCommands);
+	
+	// xyz_axis_default_mode
+	PyObject * py_xyz_axis_default_mode = PyDict_GetItemString(py_args, "xyz_axis_default_mode");
+	if (py_xyz_axis_default_mode == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve xyz_axis_default_mode from the position dict.");
+		return false;
+	}
+	args->xyz_axis_default_mode = PyUnicode_SafeAsString(py_xyz_axis_default_mode);
+
+	// e_axis_default_mode
+	PyObject * py_e_axis_default_mode = PyDict_GetItemString(py_args, "e_axis_default_mode");
+	if (py_e_axis_default_mode == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve e_axis_default_mode from the position dict.");
+		return false;
+	}
+	args->e_axis_default_mode = PyUnicode_SafeAsString(py_e_axis_default_mode);
+
+	// units_default
+	PyObject * py_units_default = PyDict_GetItemString(py_args, "units_default");
+	if (py_units_default == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve units_default from the position dict.");
+		return false;
+	}
+	args->units_default = PyUnicode_SafeAsString(py_units_default);
+
+	// autodetect_position
+	PyObject * py_autodetect_position = PyDict_GetItemString(py_args, "autodetect_position");
+	if (py_autodetect_position == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve autodetect_position from the position dict.");
+		return false;
+	}
+	args->autodetect_position = PyLong_AsLong(py_autodetect_position) > 0;
+
+	// origin_x
+	PyObject * py_origin_x = PyDict_GetItemString(py_args, "origin_x");
+	if (py_origin_x == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_x from the position dict.");
+		return false;
+	}
+	if (py_origin_x == Py_None)
+	{
+		args->origin_x_none = true;
+	}
+	else
+	{
+		args->origin_x = PyFloatOrInt_AsDouble(py_origin_x);
+	}
+	
+	// origin_y
+	PyObject * py_origin_y = PyDict_GetItemString(py_args, "origin_y");
+	if (py_origin_y == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_y from the position dict.");
+		return false;
+	}
+	if (py_origin_y == Py_None)
+	{
+		args->origin_y_none = true;
+	}
+	else
+	{
+		args->origin_y = PyFloatOrInt_AsDouble(py_origin_y);
+	}
+
+	// origin_z
+	PyObject * py_origin_z = PyDict_GetItemString(py_args, "origin_z");
+	if (py_origin_z == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_z from the position dict.");
+		return false;
+	}
+	if (py_origin_z == Py_None)
+	{
+		args->origin_z_none = true;
+	}
+	else
+	{
+		args->origin_z = PyFloatOrInt_AsDouble(py_origin_z);
+	}
+
+	// retraction_length
+	PyObject * py_retraction_length = PyDict_GetItemString(py_args, "retraction_length");
+	if (py_retraction_length == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the position dict.");
+		return false;
+	}
+	args->retraction_length = PyFloatOrInt_AsDouble(py_retraction_length);
+
+	// z_lift_height
+	PyObject * py_z_lift_height = PyDict_GetItemString(py_args, "z_lift_height");
+	if (py_z_lift_height == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the position dict.");
+		return false;
+	}
+	args->z_lift_height = PyFloatOrInt_AsDouble(py_z_lift_height);
+	
+	// z_lift_height
+	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");
+	if (py_priming_height == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve priming_height from the position dict.");
+		return false;
+	}
+	args->priming_height = PyFloatOrInt_AsDouble(py_priming_height);
+
+	// minimum_layer_height
+	PyObject * py_minimum_layer_height = PyDict_GetItemString(py_args, "minimum_layer_height");
+	if (py_minimum_layer_height == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve minimum_layer_height from the position dict.");
+		return false;
+	}
+	args->minimum_layer_height = PyFloatOrInt_AsDouble(py_minimum_layer_height);
+
+	// g90_influences_extruder
+	PyObject * py_g90_influences_extruder = PyDict_GetItemString(py_args, "g90_influences_extruder");
+	if (py_g90_influences_extruder == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve g90_influences_extruder from the position dict.");
+		return false;
+	}
+	args->g90_influences_extruder = PyLong_AsLong(py_g90_influences_extruder) > 0;
+	
 	return true;
 }
 
-static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabilizationArgs)
+static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 {
 	// get gcode_settings - retraction_length, z_lift_height
-	PyObject * py_gcode_settings = PyDict_GetItemString(args, "gcode_settings");
+	PyObject * py_gcode_settings = PyDict_GetItemString(py_args, "gcode_settings");
 	if (py_gcode_settings == NULL)
 	{
 		PyErr_Print();
@@ -892,114 +998,38 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 		return false;
 	}
 	
-	// Get IsBound
-	PyObject * py_is_bound = PyDict_GetItemString(args, "is_bound");
-	if (py_is_bound == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve is_bound from the stabilization args dict.");
-		return false;
-	}
-	stabilizationArgs->is_bound_ = PyLong_AsLong(py_is_bound) > 0;
-
-	if (stabilizationArgs->is_bound_)
-	{
-		// Extract the bounds
-		PyObject * py_bounds = PyDict_GetItemString(args, "bounds");
-		if (py_bounds == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the stabilization args dict.");
-			return false;
-		}
-		
-		PyObject * py_x_min = PyDict_GetItemString(py_bounds, "x_min");
-		if (py_x_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->x_min_ = PyFloatOrInt_AsDouble(py_x_min);
-
-		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
-		if (py_x_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->x_max_ = PyFloatOrInt_AsDouble(py_x_max);
-
-		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
-		if (py_y_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->y_min_ = PyFloatOrInt_AsDouble(py_y_min);
-
-		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
-		if (py_y_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->y_max_ = PyFloatOrInt_AsDouble(py_y_max);
-
-		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
-		if (py_z_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->z_min_ = PyFloatOrInt_AsDouble(py_z_min);
-
-		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
-		if (py_z_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
-			return false;
-		}
-		stabilizationArgs->z_max_ = PyFloatOrInt_AsDouble(py_z_max);
-	}
-
 	// height_increment
-	PyObject * py_height_increment = PyDict_GetItemString(args, "height_increment");
+	PyObject * py_height_increment = PyDict_GetItemString(py_args, "height_increment");
 	if (py_height_increment == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->height_increment_ = PyFloatOrInt_AsDouble(py_height_increment);
+	args->height_increment_ = PyFloatOrInt_AsDouble(py_height_increment);
 
 	// fastest_speed
-	PyObject * py_fastest_speed = PyDict_GetItemString(args, "fastest_speed");
+	PyObject * py_fastest_speed = PyDict_GetItemString(py_args, "fastest_speed");
 	if (py_fastest_speed == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve fastest_speed from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->fastest_speed_ = PyLong_AsLong(py_fastest_speed) > 0;
+	args->fastest_speed_ = PyLong_AsLong(py_fastest_speed) > 0;
 
 	// notification_period_seconds
-	PyObject * py_notification_period_seconds = PyDict_GetItemString(args, "notification_period_seconds");
+	PyObject * py_notification_period_seconds = PyDict_GetItemString(py_args, "notification_period_seconds");
 	if (py_notification_period_seconds == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->notification_period_seconds_ = PyFloatOrInt_AsDouble(py_notification_period_seconds);
+	args->notification_period_seconds_ = PyFloatOrInt_AsDouble(py_notification_period_seconds);
 
 	// on_progress_received
-	PyObject * py_on_progress_received = PyDict_GetItemString(args, "on_progress_received");
+	PyObject * py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
 	if (py_on_progress_received == NULL)
 	{
 		PyErr_Print();
@@ -1008,51 +1038,51 @@ static bool ParseStabilizationArgs(PyObject *args, stabilization_args* stabiliza
 	}
 	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
 	Py_IncRef(py_on_progress_received);
-	stabilizationArgs->py_on_progress_received = py_on_progress_received;
+	args->py_on_progress_received = py_on_progress_received;
 
 	// file_path
-	PyObject * py_file_path = PyDict_GetItemString(args, "file_path");
+	PyObject * py_file_path = PyDict_GetItemString(py_args, "file_path");
 	if (py_file_path == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve file_path from the stabilization args.");
 		return false;
 	}
-	stabilizationArgs->file_path_ = PyUnicode_SafeAsString(py_file_path);
+	args->file_path_ = PyUnicode_SafeAsString(py_file_path);
 	
 	return true;
 }
 
-static bool ParseStabilizationArgs_SnapToPrint(PyObject *args, snap_to_print_args* snapToPrintArgs)
+static bool ParseStabilizationArgs_SnapToPrint(PyObject *py_args, snap_to_print_args* args)
 {
 
 	// nearest_to_corner
-	PyObject * py_nearest_to_corner = PyDict_GetItemString(args, "nearest_to_corner");
+	PyObject * py_nearest_to_corner = PyDict_GetItemString(py_args, "nearest_to_corner");
 	if (py_nearest_to_corner == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve nearest_to_corner from the snap_to_print_args args.");
 		return false;
 	}
-	snapToPrintArgs->nearest_to_corner = PyUnicode_SafeAsString(py_nearest_to_corner);
+	args->nearest_to_corner = PyUnicode_SafeAsString(py_nearest_to_corner);
 
 	// favor_x_axis
-	PyObject * py_favor_x_axis = PyDict_GetItemString(args, "favor_x_axis");
+	PyObject * py_favor_x_axis = PyDict_GetItemString(py_args, "favor_x_axis");
 	if (py_favor_x_axis == NULL)
 	{
 		PyErr_Print();
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve favor_x_axis from the stabilization args.");
 		return false;
 	}
-	snapToPrintArgs->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
+	args->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
 
 	return true;
 }
 
-static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_travel_args* min_travel_args)
+static bool ParseStabilizationArgs_MinimizeTravel(PyObject *py_args, minimize_travel_args* args)
 {
 	// gcode_generator
-	PyObject * py_gcode_generator = PyDict_GetItemString(args, "gcode_generator");
+	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
 	if (py_gcode_generator == NULL)
 	{
 		PyErr_Print();
@@ -1078,8 +1108,8 @@ static bool ParseStabilizationArgs_MinimizeTravel(PyObject *args, minimize_trave
 	// py_get_snapshot_position_callback is a new reference, no reason to incref
 
 	// set the travel args values
-	min_travel_args->py_gcode_generator = py_gcode_generator;
-	min_travel_args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
-	min_travel_args->has_py_callbacks_ = true;
+	args->py_gcode_generator = py_gcode_generator;
+	args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
+	args->has_py_callbacks_ = true;
 	return true;
 }

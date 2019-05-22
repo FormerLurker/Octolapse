@@ -45,7 +45,7 @@ class Pos(object):
         "has_position_error", "position_error", 'e_relative', 'extrusion_length', 'extrusion_length_total',
         'retraction_length','deretraction_length', 'is_extruding_start', 'is_extruding', 'is_primed',
         'is_retracting_start', 'is_retracting', 'is_retracted', 'is_partially_retracted', 'is_deretracting_start',
-        'is_deretracting', 'is_deretracted', 'file_line_number', 'gcode_number'
+        'is_deretracting', 'is_deretracted', 'file_line_number', 'gcode_number', "is_in_bounds"
     ]
 
     def __init__(self, copy_from_pos=None, reset_state=False):
@@ -113,6 +113,7 @@ class Pos(object):
                 self.has_position_changed = False
                 self.has_state_changed = False
                 self.has_received_home_command = False
+                self.is_in_bounds = True
             else:
                 # Copy or default states
                 self.is_layer_change = copy_from_pos.is_layer_change
@@ -122,6 +123,7 @@ class Pos(object):
                 self.has_position_changed = copy_from_pos.has_position_changed
                 self.has_state_changed = copy_from_pos.has_state_changed
                 self.has_received_home_command = copy_from_pos.has_received_home_command
+                self.is_in_bounds = copy_from_pos.is_in_bounds
 
         else:
             self.parsed_command = None
@@ -185,6 +187,7 @@ class Pos(object):
             self.in_path_position = False
             self.file_line_number = -1
             self.gcode_number = -1
+            self.is_in_bounds = True
 
     @classmethod
     def copy_from_cpp_pos(cls, cpp_pos, target):
@@ -242,9 +245,10 @@ class Pos(object):
         #target.has_one_feature_enabled = cpp_pos[50] > 0
         #target.is_in_position = cpp_pos[51] > 0
         #target.in_path_position = cpp_pos[52] > 0
-        target.file_line_number = cpp_pos[66] > 1
-        target.gcode_number = cpp_pos[67] > 1
-        fast_position = cpp_pos[68]
+        target.file_line_number = cpp_pos[66]
+        target.gcode_number = cpp_pos[67]
+        target.is_in_bounds = cpp_pos[68] > 0
+        fast_position = cpp_pos[69]
         if fast_position is not None:
             target.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
         else:
@@ -311,7 +315,8 @@ class Pos(object):
         #pos.in_path_position = cpp_pos[52] > 1
         pos.file_line_number = cpp_pos[66] > 1
         pos.gcode_number = cpp_pos[67] > 1
-        fast_position = cpp_pos[68]
+        is_in_bounds = cpp_pos[68] > 1
+        fast_position = cpp_pos[69]
         if fast_position is not None:
             pos.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
         else:
@@ -362,7 +367,8 @@ class Pos(object):
             "has_position_error": self.has_position_error,
             "position_error": self.position_error,
             "has_received_home_command": self.has_received_home_command,
-            "is_travel_only": self.is_travel_only
+            "is_travel_only": self.is_travel_only,
+            "is_in_bounds": self.is_in_bounds
         }
 
     def to_position_dict(self):
@@ -412,7 +418,8 @@ class Pos(object):
             "height": self.height,
             "has_received_home_command": self.has_received_home_command,
             "file_line_number": self.file_line_number,
-            "gcode_number": self.gcode_number
+            "gcode_number": self.gcode_number,
+            "is_in_bounds": self.is_in_bounds
         }
 
     def distance_to_zlift(self, z_hop, restrict_lift_height=True):
@@ -488,34 +495,9 @@ class Position(object):
         #     self._location_detection_commands.append("G162")
         self._gcode_generation_settings = printer_profile.get_current_state_detection_settings()
 
-        xyz_axes_default_mode = printer_profile.xyz_axes_default_mode
-        e_axis_default_mode = printer_profile.e_axis_default_mode
-        units_default = printer_profile.units_default
+        cpp_position_args = printer_profile.get_position_args(g90_influences_extruder)
 
-        cpp_position_args = (
-            self.key,  # gcode_position key
-            printer_profile.auto_detect_position,
-            0.0 if printer_profile.origin_x is None else printer_profile.origin_x,
-            True if printer_profile.origin_x is None else False,  # is_origin_x_none
-            0.0 if printer_profile.origin_y is None else printer_profile.origin_y,
-            True if printer_profile.origin_y is None else False,  # is_origin_x_none
-            0.0 if printer_profile.origin_z is None else printer_profile.origin_z,
-            True if printer_profile.origin_z is None else False,  # is_origin_x_none
-            self._gcode_generation_settings.retraction_length,
-            (
-                0 if self._gcode_generation_settings.z_lift_height is None
-                else self._gcode_generation_settings.z_lift_height
-            ),
-            printer_profile.priming_height,
-            printer_profile.minimum_layer_height,
-            self.g90_influences_extruder,
-            xyz_axes_default_mode,
-            e_axis_default_mode,
-            units_default,
-            self._location_detection_commands
-        )
-
-        GcodePositionProcessor.Initialize(cpp_position_args)
+        GcodePositionProcessor.Initialize(self.key, cpp_position_args)
 
         self._slicer_features = None if stabilization_profile is None else SlicerPrintFeatures(
             printer_profile.get_current_slicer_settings(), stabilization_profile
@@ -695,6 +677,7 @@ class Position(object):
         target.has_position_changed = False
         target.has_state_changed = False
         target.has_received_home_command = False
+        target.is_in_bounds = True
 
     def update(self, gcode):
         # Move the current position to the previous and the previous to the undo position

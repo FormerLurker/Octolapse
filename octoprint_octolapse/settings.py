@@ -228,6 +228,7 @@ class PrinterProfile(ProfileSettings):
         self.default_firmware_retractions = False
         self.default_firmware_retractions_zhop = False
         self.gocde_axis_compatibility_mode_enabled = True
+
     @staticmethod
     def get_options():
         return {
@@ -369,6 +370,40 @@ class PrinterProfile(ProfileSettings):
             if value is not None:
                 return float(value)
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
+
+    def get_position_args(self, octoprint_g90_influences_extruder):
+
+        if self.g90_influences_extruder == 'true':
+            g90_influences_extruder = True
+        elif self.g90_influences_extruder == 'false':
+            g90_influences_extruder = False
+        else:
+            g90_influences_extruder = octoprint_g90_influences_extruder
+
+        return {
+            "is_bound": self.restrict_snapshot_area,
+            "bounds": {
+                'x_min': self.snapshot_min_x,
+                'x_max': self.snapshot_max_x,
+                'y_min': self.snapshot_min_y,
+                'y_max': self.snapshot_max_y,
+                'z_min': self.snapshot_min_z,
+                'z_max': self.snapshot_max_z,
+            },
+            "location_detection_commands": self.get_location_detection_command_list(),
+            "xyz_axis_default_mode": self.xyz_axes_default_mode,
+            "e_axis_default_mode": self.e_axis_default_mode,
+            "units_default": self.units_default,
+            "autodetect_position": self.auto_detect_position,
+            "origin_x": self.origin_x,
+            "origin_y": self.origin_y,
+            "origin_z": self.origin_z,
+            "retraction_length": self.gcode_generation_settings.retraction_length,
+            "z_lift_height": self.gcode_generation_settings.z_lift_height,
+            "priming_height": self.priming_height,
+            "minimum_layer_height": self.minimum_layer_height,
+            "g90_influences_extruder": g90_influences_extruder
+        }
 
 
 class StabilizationPath(Settings):

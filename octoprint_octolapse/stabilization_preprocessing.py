@@ -57,7 +57,6 @@ class StabilizationPreprocessingThread(Thread):
         self.progress_callback = progress_callback
         self.complete_callback = complete_callback
         self.timelapse_settings = timelapse_settings
-        g90_influences_extruder = timelapse_settings["g90_influences_extruder"]
         self.daemon = True
         self.parsed_command = parsed_command
         self.cancel_event = cancel_event
@@ -74,39 +73,7 @@ class StabilizationPreprocessingThread(Thread):
         self.total_seconds = 0
         self.gcodes_processed = 0
         self.lines_processed = 0
-
-        # create the position args
-        autodetect_position = printer.auto_detect_position
-        origin_x = printer.origin_x
-        origin_y = printer.origin_y
-        origin_z = printer.origin_z
-        retraction_length = printer.gcode_generation_settings.retraction_length
-        z_lift_height = printer.gcode_generation_settings.z_lift_height
-        priming_height = printer.priming_height
-        minimum_layer_height = printer.minimum_layer_height
-        xyz_axis_default_mode = printer.xyz_axes_default_mode
-        e_axis_default_mode = printer.e_axis_default_mode
-        units_default = printer.units_default
-        location_detection_commands = printer.get_location_detection_command_list()
-
-        self.cpp_position_args = (
-            autodetect_position,
-            0.0 if origin_x is None else origin_x,
-            True if origin_x is None else False,  # is_origin_x_none
-            0.0 if origin_y is None else origin_y,
-            True if origin_y is None else False,  # is_origin_x_none
-            0.0 if origin_z is None else origin_z,
-            True if origin_z is None else False,  # is_origin_x_none
-            retraction_length,
-            z_lift_height,
-            priming_height,
-            minimum_layer_height,
-            g90_influences_extruder,
-            xyz_axis_default_mode,
-            e_axis_default_mode,
-            units_default,
-            location_detection_commands
-        )
+        self.cpp_position_args = printer.get_position_args(timelapse_settings["g90_influences_extruder"])
 
     def run(self):
         try:
@@ -174,15 +141,6 @@ class StabilizationPreprocessingThread(Thread):
 
         stabilization_args = {
             "gcode_settings": self.printer_profile.gcode_generation_settings, # contains retraction_length and z_lift_height
-            "is_bound": self.printer_profile.restrict_snapshot_area,
-            "bounds": {
-                'x_min': self.printer_profile.snapshot_min_x,
-                'x_max': self.printer_profile.snapshot_max_x,
-                'y_min': self.printer_profile.snapshot_min_y,
-                'y_max': self.printer_profile.snapshot_max_y,
-                'z_min': self.printer_profile.snapshot_min_z,
-                'z_max': self.printer_profile.snapshot_max_z,
-            },
             'height_increment': height_increment,
             'fastest_speed': self.stabilization_profile.fastest_speed,
             'notification_period_seconds': self.notification_period_seconds,

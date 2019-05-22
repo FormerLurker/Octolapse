@@ -164,6 +164,7 @@ void position::initialize()
 	file_line_number_ = -1;
 	gcode_number_ = -1;
 	gcode_ignored_ = true;
+	is_in_bounds_ = true;
 }
 
 position::position()
@@ -245,6 +246,7 @@ position::position(position & source)
 	file_line_number_ = source.file_line_number_;
 	gcode_number_ = source.gcode_number_;
 	gcode_ignored_ = source.gcode_ignored_;
+	is_in_bounds_ = source.is_in_bounds_;
 }
 
 position::position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
@@ -374,6 +376,7 @@ void position::copy(position &source, position* target)
 	target->file_line_number_ = source.file_line_number_;
 	target->gcode_number_ = source.gcode_number_;
 	target->gcode_ignored_ = source.gcode_ignored_;
+	target->is_in_bounds_ = source.is_in_bounds_;
 }
 
 PyObject* position::to_py_tuple()
@@ -389,7 +392,7 @@ PyObject* position::to_py_tuple()
 	}
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllllllllO",
+		"dddddddddddddddddddddllllllllllllllllllllllllllllllllllllllllllllllllO",
 		// Floats
 		x_, // 0
 		y_, // 1
@@ -463,8 +466,10 @@ PyObject* position::to_py_tuple()
 		// file statistics
 		file_line_number_, // 66
 		gcode_number_, // 67
+		// is in bounds
+		is_in_bounds_, // 68
 		// Objects
-		py_command // 68
+		py_command // 69
 	);
 	if (pyPosition == NULL)
 	{
@@ -505,6 +510,7 @@ void position::reset_state()
 	has_state_changed_ = false;
 	has_received_home_command_ = false;
 	gcode_ignored_ = true;
+	is_in_bounds_ = true;
 }
 
 PyObject* position::to_py_dict()
@@ -520,7 +526,7 @@ PyObject* position::to_py_dict()
 	}
 
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
 		// FLOATS
@@ -659,8 +665,9 @@ PyObject* position::to_py_dict()
 		"file_line_number",
 		file_line_number_,
 		"gcode_number",
-		gcode_number_
-
+		gcode_number_,
+		"is_in_bounds",
+		is_in_bounds_
 	);
 	if (p_position == NULL)
 	{

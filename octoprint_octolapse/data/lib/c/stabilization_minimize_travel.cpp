@@ -127,9 +127,8 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 		is_layer_change_wait_ = true;
 	}
 
-	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_)
+	if (!p_current_pos->is_extruding_ || !p_current_pos->has_xy_position_changed_ || p_current_pos->gcode_ignored_ || !p_current_pos->is_in_bounds_)
 	{
-		//std::cout << "Complete.\r\n";
 		return;
 	}
 
@@ -210,22 +209,7 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 
 double stabilization_minimize_travel::is_closer(position * p_position)
 {
-	//std::cout << " - running IsCloser.  Checking bounds...";
-	// check the bounding box
-	if (p_stabilization_args_->is_bound_)
-	{
-		if (
-			p_position->x_ < p_stabilization_args_->x_min_ ||
-			p_position->x_ > p_stabilization_args_->x_max_ ||
-			p_position->y_ < p_stabilization_args_->y_min_ ||
-			p_position->y_ > p_stabilization_args_->y_max_ ||
-			p_position->z_ < p_stabilization_args_->z_min_ ||
-			p_position->z_ > p_stabilization_args_->z_max_)
-		{
-			//std::cout << " - IsCloser Complete, out of bounds.\r\n";
-			return -1.0;
-		}
-	}
+	
 	//std::cout << "Checking for saved position...";
 	// if we have no saved position, this is the closest!
 	if (!has_saved_position_)

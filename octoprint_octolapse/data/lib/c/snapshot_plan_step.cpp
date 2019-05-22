@@ -175,7 +175,6 @@ snapshot_plan_step::~snapshot_plan_step()
 
 PyObject * snapshot_plan_step::to_py_object()
 {
-	std::cout << "Building snapshot plan step\r\n";
 	PyObject * py_x;
 	if(p_x_ == NULL)
 	{

@@ -44,6 +44,14 @@ gcode_position::gcode_position()
 	units_default_ = "millimeters";
 	gcode_functions_ = get_gcode_functions();
 
+	is_bound_ = false;
+	x_min_ = 0;
+	x_max_ = 0;
+	y_min_ = 0;
+	y_max_ = 0;
+	z_min_ = 0;
+	z_max_ = 0;
+
 	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -68,6 +76,14 @@ gcode_position::gcode_position(gcode_position_args* args)
 	xyz_axis_default_mode_ = args->xyz_axis_default_mode;
 	units_default_ = args->units_default;
 	gcode_functions_ = get_gcode_functions();
+
+	is_bound_ = args->is_bound_;
+	x_min_ = args->x_min_;
+	x_max_ = args->x_max_;
+	y_min_ = args->y_min_;
+	y_max_ = args->y_max_;
+	z_min_ = args->z_min_;
+	z_max_ = args->z_max_;
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -326,6 +342,21 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 		// Calcluate position restructions
 		// TODO:  INCLUDE POSITION RESTRICTION CALCULATIONS!
 		// tODO:  iNCLUDE FEATURE DETECTION!
+		// Set is_in_bounds_ to false if we're not in bounds, it will be true at this point
+		if (is_bound_)
+		{
+			if (
+				p_current_pos_->x_ < x_min_ ||
+				p_current_pos_->x_ > x_max_ ||
+				p_current_pos_->y_ < y_min_ ||
+				p_current_pos_->y_ > y_max_ ||
+				p_current_pos_->z_ < z_min_ ||
+				p_current_pos_->z_ > z_max_)
+			{
+				//std::cout << " - IsCloser Complete, out of bounds.\r\n";
+				p_current_pos_->is_in_bounds_ = false;
+			}
+		}
 	}
 	
 }

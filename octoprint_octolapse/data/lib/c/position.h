@@ -115,7 +115,7 @@ public:
 	int file_line_number_;
 	int gcode_number_;
 	bool gcode_ignored_;
-
+	bool is_in_bounds_;
 	double get_offset_x();
 	double get_offset_y();
 	double get_offset_z();
