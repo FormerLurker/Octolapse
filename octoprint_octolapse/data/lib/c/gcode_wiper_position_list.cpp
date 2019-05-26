@@ -11,7 +11,7 @@ gcode_wiper_position_list::gcode_wiper_position_list()
 
 gcode_wiper_position_list::gcode_wiper_position_list(gcode_wiper_position_list &source)
 {
-	throw std::exception("This function is not implemented, and probably shouldn't be");
+	throw std::exception();
 }
 
 gcode_wiper_position_list::~gcode_wiper_position_list()

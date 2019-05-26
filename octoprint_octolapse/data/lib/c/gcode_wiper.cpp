@@ -33,11 +33,9 @@ gcode_wiper::gcode_wiper(double retraction_length, double retraction_feedrate, d
 
 gcode_wiper::~gcode_wiper()
 {
-	octolapse_log(GCODE_POSITION, INFO, "Deleting gcode_wiper.");
 	// p_starting_position and p_previous_starting_position can be the same item!
 	if(p_starting_position_ == p_previous_starting_position_ && p_starting_position_ != NULL)
 	{
-		octolapse_log(GCODE_POSITION, INFO, "Starting and previous starting position are the same, deleting only one, marking both as NULL.");
 		delete p_starting_position_;
 		p_starting_position_ = NULL;
 		p_previous_starting_position_ = NULL;
@@ -46,18 +44,15 @@ gcode_wiper::~gcode_wiper()
 	{
 		if (p_starting_position_ != NULL)
 		{
-			octolapse_log(GCODE_POSITION, INFO, "Deleting the starting position.");
 			delete p_starting_position_;
 			p_starting_position_ = NULL;
 		}
 		if (p_previous_starting_position_ != NULL)
 		{
-			octolapse_log(GCODE_POSITION, INFO, "Deleting the previous starting position.");
 			delete p_previous_starting_position_;
 			p_previous_starting_position_ = NULL;
 		}
 	}
-	octolapse_log(GCODE_POSITION, INFO, "Finished deleting gcode_wiper.");
 
 }
 

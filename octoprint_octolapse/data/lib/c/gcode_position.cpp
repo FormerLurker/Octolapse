@@ -110,7 +110,6 @@ gcode_position::gcode_position(const gcode_position &source)
 
 gcode_position::~gcode_position()
 {
-	octolapse_log(GCODE_POSITION, INFO, "Deleting gcode_position.");
 	if (p_previous_pos_ != NULL)
 	{
 		delete p_previous_pos_;
@@ -132,7 +131,6 @@ gcode_position::~gcode_position()
 		delete p_wiper_;
 		p_wiper_ = NULL;
 	}
-	octolapse_log(GCODE_POSITION, INFO, "Finished deleting gcode_position.");
 }
 
 position * gcode_position::get_current_position()
