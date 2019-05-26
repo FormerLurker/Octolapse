@@ -21,7 +21,6 @@ public:
 	void get_next_xy_coordinates();
 	double x_coordinate_;
 	double y_coordinate_;
-	bool has_py_callbacks_;
 
 };
 
@@ -53,6 +52,7 @@ private:
 	bool has_saved_position_;
 	position * p_saved_position_;
 	minimize_travel_args *minimize_travel_args_;
+	bool has_python_coordinate_callback;
 	
 };
 

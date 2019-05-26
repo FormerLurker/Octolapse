@@ -6,14 +6,12 @@ minimize_travel_args::minimize_travel_args()
 {
 	x_coordinate_ = 0;
 	y_coordinate_ = 0;
-	has_py_callbacks_ = false;
 	py_get_snapshot_position_callback = NULL;
 	py_gcode_generator = NULL;
 }
 
 minimize_travel_args::minimize_travel_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
 {
-	has_py_callbacks_ = true;
 	x_coordinate_ = 0;
 	y_coordinate_ = 0;
 	py_get_snapshot_position_callback = get_snapshot_position_callback;
@@ -21,7 +19,6 @@ minimize_travel_args::minimize_travel_args(PyObject * gcode_generator, PyObject 
 }
 minimize_travel_args::minimize_travel_args(double x, double y)
 {
-	has_py_callbacks_ = false;
 	x_coordinate_ = x;
 	y_coordinate_ = y;
 	py_get_snapshot_position_callback = NULL;
@@ -29,11 +26,11 @@ minimize_travel_args::minimize_travel_args(double x, double y)
 }
 minimize_travel_args::~minimize_travel_args()
 {
-	if (has_py_callbacks_)
-	{
+	if(py_get_snapshot_position_callback != NULL)
 		Py_XDECREF(py_get_snapshot_position_callback);
+	if(py_gcode_generator != NULL)
 		Py_XDECREF(py_gcode_generator);
-	}
+	
 }
 
 stabilization_minimize_travel::stabilization_minimize_travel()
@@ -49,6 +46,7 @@ stabilization_minimize_travel::stabilization_minimize_travel()
 	has_saved_position_ = false;
 	minimize_travel_args_ = NULL;
 	p_saved_position_ = NULL;
+	has_python_coordinate_callback = true;
 }
 
 stabilization_minimize_travel::stabilization_minimize_travel(
@@ -63,6 +61,7 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	current_closest_dist_ = -1;
 	has_saved_position_ = false; 
 	p_saved_position_ = NULL;
+	has_python_coordinate_callback = false;
 	// Get the initial stabilization coordinates
 	get_next_xy_coordinates();
 }
@@ -80,6 +79,7 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	current_closest_dist_ = -1;
 	has_saved_position_ = false;
 	p_saved_position_ = NULL;
+	has_python_coordinate_callback = true;
 	// Get the initial stabilization coordinates
 	get_next_xy_coordinates();
 }
@@ -102,7 +102,7 @@ void stabilization_minimize_travel::get_next_xy_coordinates()
 {
 	//std::cout << "Getting XY stabilization coordinates...";
 
-	if (minimize_travel_args_->has_py_callbacks_)
+	if (has_python_coordinate_callback)
 	{
 		//std::cout << "calling python...";
 		if(!_get_coordinates_callback(minimize_travel_args_->py_get_snapshot_position_callback, minimize_travel_args_->x_coordinate_, minimize_travel_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
