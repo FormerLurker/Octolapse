@@ -26,9 +26,14 @@
 #include <map>
 #include "gcode_parser.h"
 #include "position.h"
-
+#include "gcode_wiper.h"
 struct gcode_position_args {
 	gcode_position_args() {
+		// Wipe Variables
+		wipe_while_retracting = false;
+		retraction_feedrate = -1;
+		wipe_feedrate = -1.0;
+
 		autodetect_position = true;
 		origin_x = 0;
 		origin_y = 0;
@@ -54,6 +59,11 @@ struct gcode_position_args {
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
 	}
 	bool autodetect_position;
+	// Wipe variables
+	bool wipe_while_retracting;
+	double retraction_feedrate;
+	double wipe_feedrate;
+
 	double origin_x;
 	double origin_y;
 	double origin_z;
@@ -61,6 +71,7 @@ struct gcode_position_args {
 	bool origin_y_none;
 	bool origin_z_none;
 	double retraction_length;
+	
 	double z_lift_height;
 	double priming_height;
 	double minimum_layer_height;
@@ -89,17 +100,13 @@ public:
 	void update(parsed_command* cmd, int file_line_number, int gcode_number);
 	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
 	void undo_update();
+	void get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps);
 	position * get_current_position();
 	position * get_previous_position();
-	static int round_up_to_int(double x);
-	static bool is_equal(double x, double y);
-	static bool greater_than(double x, double y);
-	static bool greater_than_or_equal(double x, double y);
-	static bool less_than(double x, double y);
-	static bool less_than_or_equal(double x, double y);
-	static bool is_zero(double x);
+	bool is_wipe_enabled();
 private:
 	gcode_position(const gcode_position & source);
+	
 	position* p_previous_pos_;
 	position* p_current_pos_;
 	position* p_undo_pos_;
@@ -118,7 +125,6 @@ private:
 	std::string e_axis_default_mode_;
 	std::string xyz_axis_default_mode_;
 	std::string units_default_;
-
 	bool is_bound_;
 	double x_min_;
 	double x_max_;
@@ -126,6 +132,12 @@ private:
 	double y_max_;
 	double z_min_;
 	double z_max_;
+	// Wipe variables
+	gcode_wiper* p_wiper_;
+	bool wipe_while_retracting_;
+	double retraction_feedrate_;
+	double wipe_feedrate_;
+
 
 	std::map<std::string, posFunctionType> gcode_functions_;
 	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;

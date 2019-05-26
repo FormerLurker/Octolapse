@@ -103,7 +103,8 @@ class SnapshotPlan(object):
                  initial_position=None,
                  steps=None,
                  return_position=None,
-                 end_command=None):
+                 end_command=None,
+                 wipe_steps=None):
         self.file_line_number = file_line_number
         self.file_gcode_number = file_gcode_number
         self.triggering_command = triggering_command
@@ -113,6 +114,10 @@ class SnapshotPlan(object):
             self.steps = steps
         else:
             self.steps = []
+        if wipe_steps is not None:
+            self.wipe_steps = wipe_steps
+        else:
+            self.wipe_steps = []
         self.start_command = start_command
         self.end_command = end_command
 
@@ -128,7 +133,8 @@ class SnapshotPlan(object):
                 "initial_position": None if self.initial_position is None else self.initial_position.to_dict(),
                 "steps": [x.to_dict() for x in self.steps],
                 "return_position": None if self.return_position is None else self.return_position.to_dict(),
-                "end_command": None if self.end_command is None else self.end_command.to_dict()
+                "end_command": None if self.end_command is None else self.end_command.to_dict(),
+                #"wipe_steps": self.wipe_steps,  # Let's not send these yet.
             }
         except Exception as e:
             logger.exception("An error occurred while converting the snapshot plan to a dict.")
@@ -147,6 +153,7 @@ class SnapshotPlan(object):
                 start_command = None if cpp_plan[3] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[3])
                 initial_position = Pos.create_from_cpp_pos(cpp_plan[4])
                 steps = []
+                wipe_steps = []
                 for step in cpp_plan[5]:
                     action = step[0]
                     x = step[1]
@@ -157,6 +164,7 @@ class SnapshotPlan(object):
                     steps.append(SnapshotPlanStep(action, x, y, z, e, f))
                 return_position = None if cpp_plan[6] is None else Pos.create_from_cpp_pos(cpp_plan[6])
                 end_command = None if cpp_plan[7] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[7])
+                wipe_steps = ParsedCommand.create_from_wipe_steps(cpp_plan[8])
                 snapshot_plan = SnapshotPlan(
                     file_line_number,
                     file_gcode_number,
@@ -165,7 +173,8 @@ class SnapshotPlan(object):
                     initial_position,
                     steps,
                     return_position,
-                    end_command)
+                    end_command,
+                    wipe_steps)
                 snapshot_plans.append(snapshot_plan)
         except Exception as e:
             logger.exception("Failed to create snapshot plans")
@@ -636,9 +645,21 @@ class SnapshotGcodeGenerator(object):
     # common functions for retract, lift, travel, and returning to the original position
     # Calls the appropriate functions based on the self.axis_mode_compatibility setting
     ######################################
+    def send_wipe_steps(self, wipe_steps):
+        for step in wipe_steps:
+            self.snapshot_gcode.append(
+                SnapshotGcode.INITIALIZATION_GCODE,
+                step.gcode)
+        self.retracted_by_start_gcode = True
+        # We are fully retracted here.
+        self.e_current -= self.length_to_retract
+
     def retract(self):
+        # Todo: make sure that retract with axis mode compatibility works for wipe steps
         if self.can_retract():
-            if self.axis_mode_compatibility:
+            if self.snapshot_plan.wipe_steps is not None and len(self.snapshot_plan.wipe_steps)>0:
+                self.send_wipe_steps(self.snapshot_plan.wipe_steps)
+            elif self.axis_mode_compatibility:
                 self.retract_relative()
             else:
                 self.retract_current_mode()

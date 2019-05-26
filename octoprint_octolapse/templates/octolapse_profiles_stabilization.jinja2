@@ -102,7 +102,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-z-lift" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
             </div>
         </div>
@@ -110,9 +110,18 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="lock_to_corner_disable_retract" type="checkbox" data-bind="checked: lock_to_corner_disable_retract" />Disable Retract Before Snapshot
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#invert-loop" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-retract" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
                 <p><span class="label label-important text-warning">Important:</span>  It is recommended that you disable both lift and retract when using this stabilization.  However, if your camera is exceptionally slow, allowing lift and retract may improve quality.</p>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: !lock_to_corner_disable_retract()">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="lock_to_corner_disable_wipe" type="checkbox" data-bind="checked: lock_to_corner_disable_wipe" />Disable Wipe While Retracting - Experimental
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-wipe" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+                <p><span class="label label-important text-warning">Important:</span>  In general wipe should be disabled for this stabilization.  If you experience blobs and/or stringing, you might want to uncheck this box.</p>
             </div>
         </div>
     </div>

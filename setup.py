@@ -28,7 +28,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards", "setuptools>=6.0"]
+plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards", "setuptools>=6.0", "faulthandler>=3.1"]
 
 
 # TODO:  Get fontconfig to work
@@ -99,7 +99,12 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/stabilization_results.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_minimize_travel.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_snap_to_print.cpp',
-    'octoprint_octolapse/data/lib/c/logging.cpp'
+    'octoprint_octolapse/data/lib/c/logging.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_wiper.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_wiper_position.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_wiper_position_list.cpp',
+    'octoprint_octolapse/data/lib/c/gcode_wiper_step.cpp',
+    'octoprint_octolapse/data/lib/c/utilities.cpp',
 ]
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',

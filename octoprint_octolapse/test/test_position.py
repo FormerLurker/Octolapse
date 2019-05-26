@@ -22,29 +22,40 @@
 ##################################################################################
 
 import unittest
+import pprint
 from tempfile import NamedTemporaryFile
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.position import Position
-from octoprint_octolapse.settings import OctolapseSettings
+from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, SlicerSettings, Slic3rPeSettings
 
 
 class TestPosition(unittest.TestCase):
     def setUp(self):
+
+        new_settings, defaults_loaded = OctolapseSettings.load(
+            "C:\\Users\\Brad\\AppData\\Roaming\\OctoPrint\\data\\octolapse\\settings.json",
+            "0.3.5rc1.dev0",
+            "C:\\Users\\Brad\\AppData\\Roaming\\OctoPrint\\data\\octolapse\\",
+            "settings.json"
+        )
+
         self.Commands = Commands()
-        self.Settings = OctolapseSettings(NamedTemporaryFile().name)
-        self.Settings.printers[self.Settings.DefaultPrinter.guid] = self.Settings.DefaultPrinter
-        self.Settings.profiles.current_printer_profile_guid = self.Settings.DefaultPrinter.guid
-        # in the general test case we want auto_detect_position to be false
-        # else we'll have to simulate a position update (m114 return) after
-        # a home (g28) command
-        self.Settings.profiles.current_printer().auto_detect_position = False
+        self.Settings = new_settings
+        self.Printer = self.Settings.profiles.current_printer()
+        self.Stabilization = self.Settings.profiles.current_stabilization()
+        self.Printer.auto_detect_position = False
         # since we've set auto_detect_position to false, we need to set
         # an origin, else X,Y and Z will still be None after a home command
-        self.Settings.profiles.current_printer().origin_x = 0
-        self.Settings.profiles.current_printer().origin_y = 0
-        self.Settings.profiles.current_printer().origin_z = 0
-
+        self.Printer.origin_x = 0
+        self.Printer.origin_y = 0
+        self.Printer.origin_z = 0
+        assert(isinstance(self.Printer, PrinterProfile))
+        self.Printer.slicer_type = SlicerSettings.SlicerTypeSlic3rPe
+        slicer_settings = self.Printer.get_current_slicer_settings()
+        assert(isinstance(slicer_settings, Slic3rPeSettings))
+        slicer_settings.retract_length = 0.8
+        slicer_settings.retract_speed = 2400/60
         self.OctoprintPrinterProfile = self.create_octolapse_printer_profile()
 
     def tearDown(self):
@@ -61,6 +72,91 @@ class TestPosition(unittest.TestCase):
                 "height": 200
             }
         }
+
+    def test_wipe(self):
+        pp = pprint.PrettyPrinter(indent=4)
+        position = Position(self.Printer, self.Stabilization, self.OctoprintPrinterProfile, False)
+        # send initialization gcode
+        position.update("M83")
+        position.update("G90")
+        position.update("G28")
+        position.update("G1 X0.000 Y30.000 Z1.000 E0.00000 F10800; Short Reverse Wipe - Travel to lifted start point")
+        assert(not position.get_wipe_gcodes())
+        position.update("G1 X0.000 Y30.000 Z0.400 E0.00000 F10800; Short Reverse Wipe - Delift")
+        assert(not position.get_wipe_gcodes())
+        position.update("G1 X0.000 Y30.000 Z0.400 E0.80000 F2100; Short Reverse Wipe - Deretract")
+        assert(not position.get_wipe_gcodes())
+        position.update("G1 X50.000 Y30.000 Z0.400 E1.56770 F1200; Short Reverse Wipe - Extrude to midpoint")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+        position.undo_update()
+        assert(not position.get_wipe_gcodes())
+        position.update("G1 X50.000 Y30.000 Z0.400 E1.56770 F1200; Short Reverse Wipe - Extrude to midpoint")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+        # try a travel, should reset the wipe gcodes
+        position.update("G1 X0 Y0;travel to origin")
+        assert(not position.get_wipe_gcodes())
+        # undo, should create wipe gcodes
+        position.undo_update()
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+        position.update("G1 X0 Y0;travel to origin")
+        position.update("G1 X1 Y1 E0.2; Extrude 0.2mm")
+        position.update("G1 X1 Y2 E0.2; Extrude 0.2mm")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+        position.update("G1 X0 Y0;travel to origin")
+        position.update("G1 X1 Y1 E0.2; Extrude 0.2mm")
+        position.update("G1 X1 Y2 E0.1; Extrude 0.1mm")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+        # try absolute e
+        position.update("M82; absolute e")
+        position.update("G92 E0; reset e")
+        position.update("G1 X0 Y0;travel to origin")
+        position.update("G1 X1 Y1 E0.2; ")
+        position.update("G1 X1 Y2 E0.4; ")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+        position.update("G1 X0 Y0;travel to origin")
+        position.update("G92 E0; reset e")
+        position.update("G1 X1 Y1 E0.2; ")
+        position.update("G1 X1 Y2 E0.3; ")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+
+        # try relative XY
+        position.update("G1 X0 Y0;travel to origin")
+        position.update("G91; set xyz to relative mode")
+        position.update("G92 E0; reset e")
+        position.update("G1 X10 Y10; relative move +10x +10y")
+        position.update("G1 X1 Y1 E0.2; ")
+        position.update("G1 X1 Y1 E0.3; ")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+        # try offset X and Y
+
+        position.update("G90; set xyz to absolute mode")
+        position.update("M83; set e axis to absolute mode")
+        position.update("G1 X0 Y0; travel to origin")
+        position.update("G92 X10 Y10; offset by + 10")
+        position.update("G1 X11 Y11 E0.1; ")
+        position.update("G1 X12 Y10 E0.1; ")
+        gcodes = position.get_wipe_gcodes()
+        pp.pprint(gcodes)
+
+        print("finished")
+        # travel to initial position
+
+
+
+        # send the appropriate start gcodes
 
     def test_position_error(self):
         """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move

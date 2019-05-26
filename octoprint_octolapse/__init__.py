@@ -23,6 +23,8 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+import faulthandler
+faulthandler.enable()
 # enable faulthandler for c extension
 # Create the root logger.  Note that it MUST be created before any imports that use the
 # plugin_octolapse.log.LoggingConfigurator, since it is a singleton and we want to be

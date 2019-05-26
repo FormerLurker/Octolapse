@@ -140,7 +140,6 @@ class StabilizationPreprocessingThread(Thread):
             height_increment = self.stabilization_profile.lock_to_corner_height_increment
 
         stabilization_args = {
-            "gcode_settings": self.printer_profile.gcode_generation_settings, # contains retraction_length and z_lift_height
             'height_increment': height_increment,
             'fastest_speed': self.stabilization_profile.fastest_speed,
             'notification_period_seconds': self.notification_period_seconds,
@@ -177,6 +176,10 @@ class StabilizationPreprocessingThread(Thread):
                 'disable_retract': self.stabilization_profile.lock_to_corner_disable_retract,
                 'disable_z_lift': self.stabilization_profile.lock_to_corner_disable_z_lift
             }
+            # if wiping is disabled, make sure it is disabled in the position args
+            if self.stabilization_profile.lock_to_corner_disable_retract or self.stabilization_profile.lock_to_corner_disable_wipe:
+                self.cpp_position_args["slicer_settings"]["wipe_enabled"] = False
+
             # run lock_to_print stabilization
             results = GcodePositionProcessor.GetSnapshotPlans_SnapToPrint(
                 self.cpp_position_args,
@@ -204,7 +207,7 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # gcodes_processed
                 0  # lines_processed
             )
-
+        logger.info("Stabilization results received, returning.")
         return results, options
 
     def on_progress_received(self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed,

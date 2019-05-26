@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "snapshot_plan.h"
 #include <iostream>
+#include "gcode_wiper_step.h"
 
 snapshot_plan::snapshot_plan()
 {
@@ -31,6 +32,7 @@ snapshot_plan::snapshot_plan()
 	p_return_position_ = NULL;
 	p_start_command_ = NULL;
 	p_end_command_ = NULL;
+	
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)
@@ -78,14 +80,17 @@ snapshot_plan::~snapshot_plan()
 		delete p_end_command_;
 		p_end_command_ = NULL;
 	}
-	
-	while (!steps_.empty()) {
-		snapshot_plan_step * p = steps_.back();
-		steps_.pop_back();
-		delete p;
+
+	for (std::vector<snapshot_plan_step*>::iterator step = steps_.begin(); step != steps_.end(); ++step) {
+		delete *step;
 	}
+	steps_.clear();
+
+	for (std::vector<gcode_wiper_step*>::iterator wipe_step = wipe_steps_.begin(); wipe_step != wipe_steps_.end(); ++wipe_step) {
+		delete *wipe_step;
+	}
+	wipe_steps_.clear();
 	
-		
 }
 
 PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
@@ -113,7 +118,6 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 			return NULL;
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
-		// Todo: evaluate the effect of this  
 		Py_DECREF(py_snapshot_plan);
 		//std::cout << "py_snapshot_plan refcount = " << py_snapshot_plan->ob_refcnt << "\r\n";
 	}
@@ -123,13 +127,23 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 
 PyObject * snapshot_plan::to_py_object()
 {
-	PyObject* py_triggering_command = p_triggering_command_->to_py_object();
-	if (py_triggering_command == NULL)
+	PyObject* py_triggering_command;
+	if (p_triggering_command_ == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the triggering_command to a PyObject.");
-		return NULL;
+		py_triggering_command = Py_None;
+		Py_IncRef(py_triggering_command);
 	}
+	else
+	{
+		py_triggering_command = p_triggering_command_->to_py_object();
+		if (py_triggering_command == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the triggering_command to a PyObject.");
+			return NULL;
+		}
+	}
+	
 
 	PyObject* py_start_command = NULL;
 	if (p_start_command_ == NULL)
@@ -148,13 +162,23 @@ PyObject * snapshot_plan::to_py_object()
 		}
 	}
 
-	PyObject * py_initial_position = p_initial_position_->to_py_tuple();
-	if (py_initial_position == NULL)
+	PyObject * py_initial_position;
+	if (p_initial_position_ == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create InitialPosition PyObject.");
-		return NULL;
+		py_initial_position = Py_None;
+		Py_IncRef(py_initial_position);
 	}
+	else
+	{
+		py_initial_position = p_initial_position_->to_py_tuple();
+		if (py_initial_position == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create InitialPosition PyObject.");
+			return NULL;
+		}
+	}
+
 	PyObject * py_steps = PyList_New(0);
 	if (py_steps == NULL)
 	{
@@ -190,7 +214,7 @@ PyObject * snapshot_plan::to_py_object()
 	if (p_return_position_ == NULL)
 	{
 		py_return_position = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_return_position);
 	}
 	else
 	{
@@ -203,11 +227,11 @@ PyObject * snapshot_plan::to_py_object()
 		}
 	}
 	
-	PyObject* py_end_command = NULL;
+	PyObject* py_end_command;
 	if (p_end_command_ == NULL)
 	{
 		py_end_command = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_end_command);
 	}
 	else
 	{
@@ -220,8 +244,26 @@ PyObject * snapshot_plan::to_py_object()
 		}
 	}
 
+	PyObject* py_wipe_steps;
+	
+	
+	if (wipe_steps_.empty())
+	{
+		py_wipe_steps = Py_None;
+		Py_IncRef(py_wipe_steps);
+	}
+	else
+	{
+		py_wipe_steps = gcode_wiper_step::to_py_object(wipe_steps_);
+		if (py_wipe_steps == NULL)
+		{
+			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the end_command to a PyObject.");
+			return NULL;
+		}
+	}
+	
 	PyObject *py_snapshot_plan = Py_BuildValue(
-		"llOOOOOO",
+		"llOOOOOOO",
 		file_line_,
 		file_gcode_number_,
 		py_triggering_command,
@@ -229,7 +271,8 @@ PyObject * snapshot_plan::to_py_object()
 		py_initial_position,
 		py_steps,
 		py_return_position,
-		py_end_command
+		py_end_command,
+		py_wipe_steps
 	);
 	if (py_snapshot_plan == NULL)
 	{
@@ -237,11 +280,14 @@ PyObject * snapshot_plan::to_py_object()
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create SnapshotPlan PyObject.");
 		return NULL;
 	}
+	
 	Py_DECREF(py_triggering_command);
 	Py_DECREF(py_initial_position);
 	Py_DECREF(py_return_position);
 	Py_DECREF(py_steps);
 	Py_DECREF(py_start_command);
 	Py_DECREF(py_end_command);
+	Py_DECREF(py_wipe_steps);
+	
 	return py_snapshot_plan;
 }

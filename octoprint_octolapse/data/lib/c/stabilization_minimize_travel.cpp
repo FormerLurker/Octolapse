@@ -1,5 +1,5 @@
 #include "stabilization_minimize_travel.h"
-#include <math.h>
+#include "utilities.h"
 #include "logging.h"
 #include <iostream>
 minimize_travel_args::minimize_travel_args()
@@ -86,7 +86,7 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 
 stabilization_minimize_travel::stabilization_minimize_travel(const stabilization_minimize_travel &source)
 {
-
+	
 }
 
 stabilization_minimize_travel::~stabilization_minimize_travel()
@@ -97,6 +97,7 @@ stabilization_minimize_travel::~stabilization_minimize_travel()
 		p_saved_position_ = NULL;
 	}
 }
+
 void stabilization_minimize_travel::get_next_xy_coordinates()
 {
 	//std::cout << "Getting XY stabilization coordinates...";
@@ -138,7 +139,7 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 		{
 			// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
 			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment_;
-			unsigned const int increment = gcode_position::round_up_to_int(increment_double);
+			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
 				if (increment > 1.0 && has_saved_position_)
@@ -182,15 +183,19 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 		//std::cout << "Creating new saved position.\r\n";
 		p_saved_position_ = new position(*p_current_pos);
 		current_closest_dist_ = distance;
+		delete_saved_wipe_steps();
+		get_current_wipe_steps(saved_wipe_steps_);
 	}
+	
 	// If the previous command was at the same height, and the extruder is primed, check the starting
 	// point of the current command to see if it's closer.
-	if (p_previous_pos->is_primed_ && gcode_position::is_equal(p_current_pos->z_, p_previous_pos->z_))
+	if (p_previous_pos->is_primed_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
 		//std::cout << "Running IsCloser on previous position.\r\n";
 		double distance = is_closer(p_previous_pos);
 		if (distance != -1.0)
 		{
+			//std::cout << "Previous position is closer!\r\n";
 			has_saved_position_ = true;
 			// delete the current saved position and parsed command
 			if (p_saved_position_ != NULL)
@@ -201,6 +206,8 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 			//std::cout << "Creating new saved position.\r\n";
 			p_saved_position_ = new position(*p_previous_pos);
 			current_closest_dist_ = distance;
+			delete_saved_wipe_steps();
+			get_previous_wipe_steps(saved_wipe_steps_);
 		}
 	}
 	//std::cout << "Complete.\r\n";
@@ -224,7 +231,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	if (p_stabilization_args_->fastest_speed_)
 	{
 		//std::cout << "Checking for faster speed...";
-		if (gcode_position::greater_than(p_position->f_, p_saved_position_->f_))
+		if (utilities::greater_than(p_position->f_, p_saved_position_->f_))
 		{
 			//std::cout << " - IsCloser Complete, faster.\r\n";
 			double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
@@ -232,7 +239,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 				//std::cout << " - IsCloser Complete, no saved position.\r\n";
 			return distance;
 		}
-		else if (gcode_position::less_than(p_position->f_, p_saved_position_->f_))
+		else if (utilities::less_than(p_position->f_, p_saved_position_->f_))
 		{
 			//std::cout << " - IsCloser Complete, curspeed too slow.\r\n";
 			return -1.0;
@@ -242,7 +249,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	//std::cout << "Checking for closer position...";
 	// Compare the saved points cartesian distance from the current point
 	double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-	if (distance != -1.0 && (current_closest_dist_ < 0 || gcode_position::greater_than(current_closest_dist_, distance)))
+	if (distance != -1.0 && (current_closest_dist_ < 0 || utilities::greater_than(current_closest_dist_, distance)))
 	{
 		//std::cout << " - IsCloser Complete, closer.\r\n";
 		return distance;
@@ -271,7 +278,9 @@ void stabilization_minimize_travel::add_saved_plan()
 
 	p_plan->file_line_ = p_saved_position_->file_line_number_;
 	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-
+	// Move all of the elements from the saved wipe steps into the snapshot plan wipe steps
+	move_saved_wipe_steps(p_plan->wipe_steps_);
+		
 	// Add the plan
 	p_snapshot_plans_->push_back(p_plan);
 

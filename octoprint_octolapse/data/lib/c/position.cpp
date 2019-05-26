@@ -290,11 +290,13 @@ position::position(const std::string& xyz_axis_default_mode, const std::string& 
 
 position::~position()
 {
+	octolapse_log(GCODE_POSITION, INFO, "Deleting position.");
 	if (p_command != NULL)
 	{
 		delete p_command;
 		p_command = NULL;
 	}
+	octolapse_log(GCODE_POSITION, INFO, "Finished deleting position.");
 }
 
 void position::copy(position &source, position* target)

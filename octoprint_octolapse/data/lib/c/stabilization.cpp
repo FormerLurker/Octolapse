@@ -106,7 +106,24 @@ stabilization::~stabilization()
 		delete gcode_position_;
 		gcode_position_ = NULL;
 	}
-	
+	delete_saved_wipe_steps();
+}
+
+void stabilization::delete_saved_wipe_steps()
+{
+	for (std::vector<gcode_wiper_step*>::iterator wipe_step = saved_wipe_steps_.begin(); wipe_step != saved_wipe_steps_.end(); ++wipe_step)
+	{
+		delete *wipe_step;
+	}
+	saved_wipe_steps_.clear();
+}
+void stabilization::move_saved_wipe_steps(std::vector<gcode_wiper_step*> &target)
+{
+	for (std::vector<gcode_wiper_step*>::iterator wipe_step = saved_wipe_steps_.begin(); wipe_step != saved_wipe_steps_.end(); ++wipe_step)
+	{
+		target.push_back(*wipe_step);
+	}
+	saved_wipe_steps_.clear();
 }
 
 long stabilization::get_file_size(const std::string& file_path)
@@ -240,6 +257,33 @@ void stabilization::on_processing_complete()
 	throw std::exception();
 }
 
+void stabilization::get_current_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
+{
+	gcode_position_->get_wipe_steps(wipe_steps);
+}
+
+void stabilization::get_previous_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
+{
+	if (!gcode_position_->is_wipe_enabled())
+	{
+		return;
+	}
+	// first undo the last position update
+	position* p_current_position = gcode_position_->get_current_position();
+	// record the file line number and the gcode number
+	int file_line_number = p_current_position->file_line_number_;
+	int gcode_number = p_current_position->gcode_number_;
+	// create a copy of the current parsed command
+	parsed_command * p_parsed_command_copy = new parsed_command(*p_current_position->p_command);
+
+	gcode_position_->undo_update();
+	// now get the wipe gcodes
+	gcode_position_->get_wipe_steps(wipe_steps);
+	// finally, reprocess the parsed command to return the processor to the previous state
+	gcode_position_->update(p_parsed_command_copy, file_line_number, gcode_number);
+	delete p_parsed_command_copy;
+
+}
 
 
 stabilization_args::stabilization_args() 

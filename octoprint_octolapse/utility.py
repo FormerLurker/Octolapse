@@ -116,11 +116,25 @@ def get_filename_from_full_path(path):
 def greater_than_or_close(a, b, abs_tol):
     return a - b > abs_tol
 
+
+def greater_than(a, b):
+    return a - b > FLOAT_MATH_EQUALITY_RANGE
+
+
+def less_than_or_equal(a, b):
+    return a < b or is_equal(a,b)
+
+
+def is_equal(a,b):
+    return a - b < FLOAT_MATH_EQUALITY_RANGE
+
 def less_than_or_close(a, b, abs_tol):
     return a - b < abs_tol
 
+
 def is_approximately_zero(a):
     return abs(a) <= FLOAT_MATH_EQUALITY_RANGE
+
 
 def is_close(a, b, abs_tol=0.01000):
     return abs(a - b) <= abs_tol
@@ -294,6 +308,7 @@ def coordinate_to_offset_position(coordinate, offset):
         return None
     return coordinate - offset
 
+
 def is_in_bounds(bounding_box, x, y, z):
     # Determines if the given X,Y,Z coordinate is within
     # the bounding box of the printer, as determined by
@@ -305,6 +320,7 @@ def is_in_bounds(bounding_box, x, y, z):
     y_in_bounds = y is None or bounding_box['min_y'] <= y <= bounding_box['max_y']
     z_in_bounds = z is None or bounding_box['min_z'] <= z <= bounding_box['max_z']
     return x_in_bounds and y_in_bounds and z_in_bounds
+
 
 def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
     min_x = bounding_box['min_x']
@@ -517,7 +533,6 @@ def get_intersections_rectangle(x1, y1, x2, y2, rect_x1, rect_y1, rect_x2, rect_
         return intersections
     else:
         return False
-
 
 
 def exception_to_string(e):

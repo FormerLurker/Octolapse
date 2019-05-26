@@ -22,8 +22,8 @@
 
 #include "stabilization_snap_to_print.h"
 #include <iostream>
-#include "gcode_position.h"
 #include "logging.h"
+#include "utilities.h"
 
 snap_to_print_args::snap_to_print_args()
 {
@@ -39,7 +39,7 @@ snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x)
 }
 snap_to_print_args::~snap_to_print_args()
 {
-
+	
 }
 
 stabilization_snap_to_print::stabilization_snap_to_print() : stabilization()
@@ -114,7 +114,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		{
 			// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
 			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment_;
-			unsigned const int increment = gcode_position::round_up_to_int(increment_double);
+			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			std::cout << "Last Increment: " << current_height_increment_ << " Current Increment double" << increment_double << " Current Increment int:" << increment;
 			if (increment > current_height_increment_)
 			{
@@ -152,19 +152,23 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		// delete the current saved position and parsed command
 		if (p_saved_position_ != NULL)
 			delete p_saved_position_;
-
+		delete_saved_wipe_steps();
+		get_current_wipe_steps(saved_wipe_steps_);
 		p_saved_position_ = new position(*p_current_pos);
 	}
 	// If the previous command was at the same height, and the extruder is primed, check the starting
 	// point of the current command to see if it's closer.
-	if (p_previous_pos->is_primed_ && gcode_position::is_equal(p_current_pos->z_, p_previous_pos->z_))
+	if (p_previous_pos->is_primed_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
 		if (is_closer(p_previous_pos))
 		{
+			//std::cout << "Previous position is closer!\r\n";
 			has_saved_position_ = true;
 			// delete the current saved position and parsed command
 			if (p_saved_position_ != NULL)
 				delete p_saved_position_;
+			delete_saved_wipe_steps();
+			get_previous_wipe_steps(saved_wipe_steps_);
 			p_saved_position_ = new position(*p_previous_pos);
 		}
 	}
@@ -180,29 +184,29 @@ bool stabilization_snap_to_print::is_closer(position * p_position)
 	// If the speed is faster than the saved speed, this is the closest point
 	if (p_stabilization_args_->fastest_speed_)
 	{
-		if (gcode_position::greater_than(p_position->f_, p_saved_position_->f_))
+		if (utilities::greater_than(p_position->f_, p_saved_position_->f_))
 			return true;
-		else if (gcode_position::less_than(p_position->f_, p_saved_position_->f_))
+		else if (utilities::less_than(p_position->f_, p_saved_position_->f_))
 			return false;
 	}
 	if (snap_to_print_args_->nearest_to_corner == FRONT_LEFT)
 	{
 		if (snap_to_print_args_->favor_x_axis)
 		{
-			if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return false;
-			else if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return true;
-			else if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return true;
 		}
 		else
 		{
-			if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return false;
-			else if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return true;
-			else if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return true;
 		}
 	}
@@ -210,20 +214,20 @@ bool stabilization_snap_to_print::is_closer(position * p_position)
 	{
 		if (snap_to_print_args_->favor_x_axis)
 		{
-			if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return false;
-			else if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return true;
-			else if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return true;
 		}
 		else
 		{
-			if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return false;
-			else if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return true;
-			else if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return true;
 		}
 	}
@@ -231,20 +235,20 @@ bool stabilization_snap_to_print::is_closer(position * p_position)
 	{
 		if (snap_to_print_args_->favor_x_axis)
 		{
-			if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return false;
-			else if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return true;
-			else if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return true;
 		}
 		else
 		{
-			if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return false;
-			else if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return true;
-			else if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return true;
 		}
 	}
@@ -252,20 +256,20 @@ bool stabilization_snap_to_print::is_closer(position * p_position)
 	{
 		if (snap_to_print_args_->favor_x_axis)
 		{
-			if (gcode_position::less_than(p_position->x_, p_saved_position_->x_))
+			if (utilities::less_than(p_position->x_, p_saved_position_->x_))
 				return false;
-			else if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return true;
-			else if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return true;
 		}
 		else
 		{
-			if (gcode_position::less_than(p_position->y_, p_saved_position_->y_))
+			if (utilities::less_than(p_position->y_, p_saved_position_->y_))
 				return false;
-			else if (gcode_position::greater_than(p_position->y_, p_saved_position_->y_))
+			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
 				return true;
-			else if (gcode_position::greater_than(p_position->x_, p_saved_position_->x_))
+			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
 				return true;
 		}
 	}
@@ -285,6 +289,8 @@ void stabilization_snap_to_print::add_saved_plan()
 	p_plan->p_end_command_ = NULL;
 	p_plan->file_line_ = p_saved_position_->file_line_number_;
 	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
+	// Move all of the elements from the saved wipe steps into the snapshot plan wipe steps
+	move_saved_wipe_steps(p_plan->wipe_steps_);
 	// Add the plan
 	p_snapshot_plans_->push_back(p_plan);
 

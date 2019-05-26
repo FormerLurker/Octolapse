@@ -34,6 +34,7 @@ $(function () {
         self.lock_to_corner_favor_axis = ko.observable(values.lock_to_corner_favor_axis);
         self.lock_to_corner_disable_z_lift = ko.observable(values.lock_to_corner_disable_z_lift);
         self.lock_to_corner_disable_retract = ko.observable(values.lock_to_corner_disable_retract);
+        self.lock_to_corner_disable_wipe = ko.observable(values.lock_to_corner_disable_wipe);
         self.fastest_speed = ko.observable(values.fastest_speed);
         //  Real-time stabilization options
         self.x_type = ko.observable(values.x_type);

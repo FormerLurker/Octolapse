@@ -34,7 +34,7 @@ public:
 	stabilization_minimize_travel(gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, progressCallback progress);
 	stabilization_minimize_travel(gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, pythonGetCoordinatesCallback get_coordinates,  pythonProgressCallback progress);
 	~stabilization_minimize_travel();
-protected:
+private:
 	stabilization_minimize_travel(const stabilization_minimize_travel &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();
@@ -53,6 +53,7 @@ protected:
 	bool has_saved_position_;
 	position * p_saved_position_;
 	minimize_travel_args *minimize_travel_args_;
+	
 };
 
 

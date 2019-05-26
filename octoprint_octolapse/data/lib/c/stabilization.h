@@ -85,6 +85,22 @@ private:
 protected:
 	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
 	virtual void on_processing_complete();
+	
+	/**
+	 * \brief Gets the current commands required to perform a wipe if fully retracted.
+	 * \return 
+	 */
+	void get_current_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps);
+	/**
+	 * \brief Gets the wipe commands from the previous position.  This will perform an undo on the
+	 * current gcode_position processor, will fetch the wipe commands, then will re-update the position
+	 * leaving it in the original state.
+	 * \param wipe_commands The wipe commands will be copied here
+	 */
+	void get_previous_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps);
+	void delete_saved_wipe_steps();
+	void move_saved_wipe_steps(std::vector<gcode_wiper_step*> &target);
+	std::vector<gcode_wiper_step*> saved_wipe_steps_;
 	std::vector<snapshot_plan*>* p_snapshot_plans_;
 	bool is_running_;
 	std::string errors_;

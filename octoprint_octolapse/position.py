@@ -23,14 +23,14 @@
 from __future__ import unicode_literals
 import math
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.settings import SlicerPrintFeatures, OctolapseGcodeSettings
+from octoprint_octolapse.settings import SlicerPrintFeatures, OctolapseGcodeSettings, PrinterProfile
 from octoprint_octolapse.gcode_parser import ParsedCommand
 import GcodePositionProcessor
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
-
+import collections
 
 class Pos(object):
     # Add slots for faster copy and init
@@ -313,9 +313,9 @@ class Pos(object):
         #pos.has_one_feature_enabled = cpp_pos[50] > 1
         #pos.is_in_position = cpp_pos[51] > 1
         #pos.in_path_position = cpp_pos[52] > 1
-        pos.file_line_number = cpp_pos[66] > 1
-        pos.gcode_number = cpp_pos[67] > 1
-        is_in_bounds = cpp_pos[68] > 1
+        pos.file_line_number = cpp_pos[66]
+        pos.gcode_number = cpp_pos[67]
+        pos.is_in_bounds = cpp_pos[68] > 1
         fast_position = cpp_pos[69]
         if fast_position is not None:
             pos.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
@@ -742,7 +742,6 @@ class Position(object):
                     )
             else:
                 current.has_one_feature_enabled = True
-
     #def process_g2_g3(self, cmd):
     #    parameters = self.current_pos.parsed_command.parameters
     #    # Movement Type

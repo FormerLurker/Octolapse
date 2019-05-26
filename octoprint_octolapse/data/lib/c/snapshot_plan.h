@@ -24,6 +24,7 @@
 #include "snapshot_plan_step.h"
 #include "parsed_command.h"
 #include "position.h"
+#include "gcode_wiper.h"
 #include <vector>
 #include <map>
 class snapshot_plan
@@ -42,6 +43,7 @@ public:
 	std::vector<snapshot_plan_step*> steps_;
 	position * p_return_position_;
 	parsed_command * p_end_command_;
+	std::vector<gcode_wiper_step*> wipe_steps_;
 };
 
 #endif

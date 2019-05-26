@@ -31,7 +31,7 @@
 #ifdef _DEBUG
 #include "test.h"
 #endif
-
+//#include "test.h"
 
 #if PY_MAJOR_VERSION >= 3
 int main(int argc, char *argv[])
@@ -62,10 +62,12 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-#ifdef _DEBUG
+#ifdef _DEBUG || _RELEASE
 	run_tests(argc, argv);
 	return 0;
 #else
+	//run_tests(argc, argv);
+	//return 0;
 	Py_SetProgramName(argv[0]);
 	Py_Initialize();
 	PyEval_InitThreads();
@@ -197,11 +199,7 @@ extern "C"
 			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
 		}
-		// Removed by BH on 4-28-2019
-		//Py_INCREF(py_position_args);
-		//Py_INCREF(py_stabilization_args);
-		//Py_INCREF(py_stabilization_type_args);
-		// Extract the position args
+		
 		gcode_position_args p_args;
 		if (!ParsePositionArgs(py_position_args, &p_args))
 		{
@@ -246,7 +244,7 @@ extern "C"
 			return NULL;
 		}
 		// Bring the snapshot plan refcount to 1
-		Py_DECREF(py_snapshot_plans);
+		//Py_DECREF(py_snapshot_plans);
 		//Py_DECREF(py_position_args);
 		//Py_DECREF(py_stabilization_args);
 		//Py_DECREF(py_stabilization_type_args);
@@ -258,6 +256,7 @@ extern "C"
 
 	static PyObject * GetSnapshotPlans_MinimizeTravel(PyObject *self, PyObject *args)
 	{
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Running minimize travel stabilization preprocessing.");
 		// TODO:  add error reporting and logging
 		PyObject *py_position_args;
 		PyObject *py_stabilization_args;
@@ -270,6 +269,7 @@ extern "C"
 			&py_stabilization_args,
 			&py_stabilization_type_args))
 		{
+			octolapse_log(SNAPSHOT_PLAN, ERROR, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
 		}
@@ -341,6 +341,8 @@ extern "C"
 
 	static PyObject* Initialize(PyObject* self, PyObject *args)
 	{
+		// Create the gcode position object 
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Initializing gcode position processor.");
 		const char * pKey;
 		PyObject* py_position_args;
 		if (!PyArg_ParseTuple(
@@ -363,22 +365,30 @@ extern "C"
 
 		if (!ParsePositionArgs(py_position_args, &positionArgs))
 		{
+			octolapse_log(SNAPSHOT_PLAN, ERROR, "Error parsing initialization position args.");
 			return NULL; // The call failed, ParseInitializationArgs has taken care of the error message
 		}
 				
-		gcode_position * p_new_position = new gcode_position(&positionArgs);
 		// see if we already have a gcode_position object for the given key
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(pKey);
+		gcode_position* p_gcode_position = NULL;
 		if (gcode_position_iterator != gpp::gcode_positions.end())
 		{
-			octolapse_log(SNAPSHOT_PLAN, INFO, "Existing processor found, removing.");
+			octolapse_log(SNAPSHOT_PLAN, INFO, "Existing processor found, deleting.");
 			delete gcode_position_iterator->second;
+		}
+		// Separate delete step.  Something is going on here.
+		if (gcode_position_iterator != gpp::gcode_positions.end())
+		{
 			gpp::gcode_positions.erase(gcode_position_iterator);
 		}
+
 		std::string message = "Adding processor with key:";
 		message.append(pKey).append("\r\n");
 
 		octolapse_log(SNAPSHOT_PLAN, INFO, message);
+		// Create the new position object
+		gcode_position * p_new_position = new gcode_position(&positionArgs);
 		// add the new gcode position to our list of objects
 		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(pKey, p_new_position));
 		return Py_BuildValue("O", Py_True);
@@ -681,7 +691,6 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
-	//PyObject * pyCoordinates = PyObject_CallMethodObjArgs(py_octolapse_gcode_parser_logger, pyFunctionName, pyMessage, NULL);  
 	PyObject * pyCoordinates = PyObject_CallObject(py_get_snapshot_position_callback, funcArgs);
 	PyGILState_Release(gstate);
 
@@ -933,28 +942,69 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	{
 		args->origin_z = PyFloatOrInt_AsDouble(py_origin_z);
 	}
+	// get the slicer settings dictionary
 
+	PyObject * py_slicer_settings_dict = PyDict_GetItemString(py_args, "slicer_settings");
+	if (py_slicer_settings_dict == NULL)
+	{
+		PyErr_Print();
+		octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to retrieve slicer settings from the position dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve slicer settings from the position dict.");
+		return false;
+	}
+	
 	// retraction_length
-	PyObject * py_retraction_length = PyDict_GetItemString(py_args, "retraction_length");
+	PyObject * py_retraction_length = PyDict_GetItemString(py_slicer_settings_dict, "retraction_length");
 	if (py_retraction_length == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the position dict.");
+		octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to retrieve retraction_length from the slicer settings dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the slicer settings dict.");
 		return false;
 	}
 	args->retraction_length = PyFloatOrInt_AsDouble(py_retraction_length);
 
 	// z_lift_height
-	PyObject * py_z_lift_height = PyDict_GetItemString(py_args, "z_lift_height");
+	PyObject * py_z_lift_height = PyDict_GetItemString(py_slicer_settings_dict, "z_lift_height");
 	if (py_z_lift_height == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the position dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the slicer settings dict.");
 		return false;
 	}
 	args->z_lift_height = PyFloatOrInt_AsDouble(py_z_lift_height);
 	
-	// z_lift_height
+	// retraction_speed
+	PyObject * py_retraction_speed = PyDict_GetItemString(py_slicer_settings_dict, "retraction_speed");
+	if (py_z_lift_height == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_speed from the slicer settings dict.");
+		return false;
+	}
+	args->retraction_feedrate = PyFloatOrInt_AsDouble(py_retraction_speed);
+	// wipe_speed
+	PyObject * py_wipe_speed = PyDict_GetItemString(py_slicer_settings_dict, "wipe_speed");
+	if (py_wipe_speed == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve wipe_speed from the slicer settings dict.");
+		return false;
+	}
+	args->wipe_feedrate = PyFloatOrInt_AsDouble(py_wipe_speed);
+	// wipe_enabledUnable to retrieve retraction_length from the position dict
+	PyObject * py_wipe_enabled = PyDict_GetItemString(py_slicer_settings_dict, "wipe_enabled");
+	if (py_wipe_enabled == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve wipe_enabled from the slicer settings dict.");
+		return false;
+	}
+	args->wipe_while_retracting = PyLong_AsLong(py_wipe_enabled)>0;
+
+
+
+	// priming_height
 	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");
 	if (py_priming_height == NULL)
 	{
@@ -989,15 +1039,6 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 
 static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 {
-	// get gcode_settings - retraction_length, z_lift_height
-	PyObject * py_gcode_settings = PyDict_GetItemString(py_args, "gcode_settings");
-	if (py_gcode_settings == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_settings from the stabilization args dict.");
-		return false;
-	}
-	
 	// height_increment
 	PyObject * py_height_increment = PyDict_GetItemString(py_args, "height_increment");
 	if (py_height_increment == NULL)
@@ -1075,7 +1116,6 @@ static bool ParseStabilizationArgs_SnapToPrint(PyObject *py_args, snap_to_print_
 		return false;
 	}
 	args->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
-
 	return true;
 }
 
@@ -1110,6 +1150,5 @@ static bool ParseStabilizationArgs_MinimizeTravel(PyObject *py_args, minimize_tr
 	// set the travel args values
 	args->py_gcode_generator = py_gcode_generator;
 	args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
-	args->has_py_callbacks_ = true;
 	return true;
 }

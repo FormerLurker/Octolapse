@@ -64,7 +64,7 @@ public:
 	stabilization_snap_to_print();
 	~stabilization_snap_to_print();
 
-protected:
+private:
 	stabilization_snap_to_print(const stabilization_snap_to_print &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();

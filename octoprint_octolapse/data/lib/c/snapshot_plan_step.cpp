@@ -179,7 +179,7 @@ PyObject * snapshot_plan_step::to_py_object()
 	if(p_x_ == NULL)
 	{
 		py_x = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_x);
 	}
 	else
 	{
@@ -196,7 +196,7 @@ PyObject * snapshot_plan_step::to_py_object()
 	if (p_y_ == NULL)
 	{
 		py_y = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_y);
 	}
 	else
 	{
@@ -213,7 +213,7 @@ PyObject * snapshot_plan_step::to_py_object()
 	if (p_z_ == NULL)
 	{
 		py_z = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_z);
 	}
 	else
 	{
@@ -230,7 +230,7 @@ PyObject * snapshot_plan_step::to_py_object()
 	if (p_e_ == NULL)
 	{
 		py_e = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_e);
 	}
 	else
 	{
@@ -247,7 +247,7 @@ PyObject * snapshot_plan_step::to_py_object()
 	if (p_f_ == NULL)
 	{
 		py_f = Py_None;
-		Py_IncRef(Py_None);
+		Py_IncRef(py_f);
 	}
 	else
 	{

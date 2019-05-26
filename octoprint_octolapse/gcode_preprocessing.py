@@ -728,6 +728,7 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'layer_height': SettingsDefinition(u'layer_height', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'spiral_vase': SettingsDefinition(u'spiral_vase', Slic3rParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'version': SettingsDefinition(u'version', None, [u'slicer_info', 'octolapse_setting'], True),
+            u'wipe': SettingsDefinition(u'wipe', Slic3rParsingFunctions.parse_bool, [u'octolapse_setting']),
             # End Octolapse Settings - The rest are included in case they become useful for Octolapse or another project
             u'external perimeters extrusion width': SettingsDefinition(u'external_perimeters_extrusion_width', Slic3rParsingFunctions.parse_mm, [u'misc']),
             u'perimeters extrusion width': SettingsDefinition(u'perimeters_extrusion_width', Slic3rParsingFunctions.parse_mm, [u'misc']),
@@ -826,7 +827,7 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'use_relative_e_distances': SettingsDefinition(u'use_relative_e_distances', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'use_volumetric_e': SettingsDefinition(u'use_volumetric_e', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'variable_layer_height': SettingsDefinition(u'variable_layer_height', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'wipe': SettingsDefinition(u'wipe', Slic3rParsingFunctions.parse_bool, [u'misc']),
+
             u'wipe_tower': SettingsDefinition(u'wipe_tower', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'wipe_tower_bridging': SettingsDefinition(u'wipe_tower_bridging', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'wipe_tower_rotation_angle': SettingsDefinition(u'wipe_tower_rotation_angle', Slic3rParsingFunctions.parse_float, [u'misc']),
@@ -1196,6 +1197,8 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
                                                              CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode',
                                                            CuraParsingFunctions.strip_string, [u'octolapse_setting']),
+            u'retraction_combing': SettingsDefinition(u'retraction_combing', CuraParsingFunctions.strip_string,
+                                                      [u'octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
             u'flavor': SettingsDefinition(u'flavor', CuraParsingFunctions.strip_string, [u'misc']),
 
@@ -1488,7 +1491,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'relative_extrusion': SettingsDefinition(u'relative_extrusion', CuraParsingFunctions.parse_bool, [u'misc']),
             u'remove_empty_first_layers': SettingsDefinition(u'remove_empty_first_layers', CuraParsingFunctions.parse_bool, [u'misc']),
             u'retract_at_layer_change': SettingsDefinition(u'retract_at_layer_change', CuraParsingFunctions.parse_bool, [u'misc']),
-            u'retraction_combing': SettingsDefinition(u'retraction_combing', CuraParsingFunctions.strip_string, [u'misc']),
             u'retraction_combing_max_distance': SettingsDefinition(u'retraction_combing_max_distance', CuraParsingFunctions.parse_int, [u'misc']),
             u'retraction_count_max': SettingsDefinition(u'retraction_count_max', CuraParsingFunctions.parse_int, [u'misc']),
             u'retraction_extra_prime_amount': SettingsDefinition(u'retraction_extra_prime_amount', CuraParsingFunctions.parse_int, [u'misc']),

@@ -276,6 +276,12 @@ class PrinterProfile(ProfileSettings):
                 dict(value="normal", name='Normal'),
                 dict(value="surface", name='Surface'),
                 dict(value="both", name='Both'),
+            ],
+            'cura_combing_mode_options': [
+                dict(value="off", name='Off'),
+                dict(value="all", name='All'),
+                dict(value="noskin", name='Not in Skin'),
+                dict(value="infill", name='Within Infill'),
             ]
         }
 
@@ -398,8 +404,7 @@ class PrinterProfile(ProfileSettings):
             "origin_x": self.origin_x,
             "origin_y": self.origin_y,
             "origin_z": self.origin_z,
-            "retraction_length": self.gcode_generation_settings.retraction_length,
-            "z_lift_height": self.gcode_generation_settings.z_lift_height,
+            "slicer_settings": self.gcode_generation_settings.to_dict(),
             "priming_height": self.priming_height,
             "minimum_layer_height": self.minimum_layer_height,
             "g90_influences_extruder": g90_influences_extruder
@@ -516,6 +521,7 @@ class StabilizationProfile(ProfileSettings):
         self.lock_to_corner_favor_axis = 'x'
         self.lock_to_corner_disable_z_lift = True
         self.lock_to_corner_disable_retract = False
+        self.lock_to_corner_disable_wipe = True
         self.lock_to_corner_height_increment = 0
         # Real Time stabilization options
         self.x_type = "relative"
@@ -1581,6 +1587,8 @@ class OctolapseGcodeSettings(Settings):
         self.z_lift_speed = None
         self.vase_mode = None
         self.layer_height = None
+        self.wipe_speed = None
+        self.wipe_enabled = None
 
 
 class SlicerSettings(Settings):
@@ -1661,6 +1669,8 @@ class CuraSettings(SlicerSettings):
         self.layer_height = None
         self.smooth_spiralized_contours = None
         self.magic_mesh_surface_mode = None
+        self.combing_mode = None
+
     def get_num_slow_layers(self):
         if self.speed_slowdown_layers is None or len("{}".format(self.speed_slowdown_layers).strip()) == 0:
             return None
@@ -1679,6 +1689,7 @@ class CuraSettings(SlicerSettings):
         settings.first_layer_travel_speed = self.get_slow_layer_speed_travel()
         settings.z_lift_height = self.get_retraction_hop()
         settings.z_lift_speed = self.get_speed_travel_z()
+        settings.wipe_speed = self.get_wi
         settings.retract_before_move = (
             self.retraction_enable and settings.retraction_length is not None and settings.retraction_length > 0
         )
@@ -1690,7 +1701,16 @@ class CuraSettings(SlicerSettings):
         )
         settings.layer_height = self.layer_height
         settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
+        settings.wipe_enabled = self.get_wipe_enabled()
+        settings.wipe_speed = self.get_wipe_speed()
+
         return settings
+
+    def get_wipe_speed(self):
+        return self.speed_travel * 0.8;
+
+    def get_wipe_enabled(self):
+        return self.combing_mode is not None and self.combing_mode != "" and self.combing_mode != "off"
 
     def get_retraction_amount(self):
         if self.retraction_amount is None or len("{}".format(self.retraction_amount).strip()) == 0:
@@ -1891,6 +1911,7 @@ class Simplify3dSettings(SlicerSettings):
         self.layer_height = None
         # simplify has a fixed speed tolerance
         self.axis_speed_display_settings = 'mm-min'
+        self.extruder_use_wipe = None
 
     def get_num_slow_layers(self):
         return 1
@@ -1916,6 +1937,9 @@ class Simplify3dSettings(SlicerSettings):
         )
         settings.vase_mode = self.spiral_vase_mode
         settings.layer_height = self.layer_height
+        settings.wipe_enabled = self.extruder_use_wipe
+        settings.wipe_speed = self.get_wipe_speed()
+
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
@@ -1929,6 +1953,9 @@ class Simplify3dSettings(SlicerSettings):
                 speed = speed * float(multiplier) / 100.0
 
         return utility.round_to(speed, 0.1)
+
+    def get_wipe_speed(self):
+        return self.get_x_y_axis_movement_speed() * 0.8;
 
     def get_retraction_distance(self):
         return float(self.retraction_distance)
@@ -2208,6 +2235,9 @@ class Simplify3dSettings(SlicerSettings):
         def _extruder_use_retract():
             return settings_dict["extruder_use_retract"][_primary_extruder()]
 
+        def _extruder_use_wipe():
+            return settings_dict["extruder_use_wipe"][_primary_extruder()]
+
         # for simplify we need to manually update the settings :(
         self.retraction_distance = _retraction_distance()
         self.retraction_vertical_lift = _retraction_vertical_lift()
@@ -2224,6 +2254,7 @@ class Simplify3dSettings(SlicerSettings):
         self.z_axis_movement_speed = _z_axis_movement_speed()
         self.bridging_speed_multiplier = _bridging_speed_multiplier()
         self.extruder_use_retract = _extruder_use_retract()
+        self.extruder_use_wipe = _extruder_use_wipe()
 
 
 class Slic3rPeSettings(SlicerSettings):
@@ -2248,6 +2279,7 @@ class Slic3rPeSettings(SlicerSettings):
         self.axis_speed_display_units = 'mm-sec'
         self.layer_height = None
         self.spiral_vase = None
+        self.wipe = None
 
     def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
@@ -2277,6 +2309,8 @@ class Slic3rPeSettings(SlicerSettings):
         settings.lift_when_retracted = self.get_lift_when_retracted()
         settings.layer_height = self.layer_height
         settings.vase_mode = self.spiral_vase
+        settings.wipe_speed = self.get_wipe_speed()
+        settings.wipe_enabled = self.wipe
         return settings
 
     def get_retract_before_travel(self):
@@ -2731,6 +2765,8 @@ class OtherSlicerSettings(SlicerSettings):
         self.axis_speed_display_units = 'mm-min'
         self.vase_mode = None
         self.layer_height = None
+        self.wipe_enabled = None
+        self.wipe_speed = None
 
     def update_settings_from_gcode(self, settings_dict):
         raise Exception("Cannot update 'Other Slicer' from gcode file!  Please select another slicer type to use this "
@@ -2758,6 +2794,8 @@ class OtherSlicerSettings(SlicerSettings):
         settings.retract_before_move = self.retract_before_move
         settings.layer_height = self.layer_height
         settings.vase_mode = self.vase_mode
+        settings.wipe_enabled = self.wipe_enabled
+        settings.wipe_speed = self.wipe_speed
         return settings
 
     def get_retract_length(self):

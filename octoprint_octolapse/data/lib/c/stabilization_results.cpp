@@ -30,9 +30,9 @@ stabilization_results::stabilization_results()
 }
 stabilization_results::~stabilization_results()
 {	
-	while (!snapshot_plans_.empty()) {
-		snapshot_plan* p = snapshot_plans_.back();
-		snapshot_plans_.pop_back();
-		delete p;
+	for (std::vector<snapshot_plan*>::iterator plan = snapshot_plans_.begin(); plan != snapshot_plans_.end(); ++plan)
+	{
+		delete *plan;
 	}
+	snapshot_plans_.clear();
 }

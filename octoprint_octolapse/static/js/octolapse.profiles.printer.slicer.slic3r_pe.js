@@ -19,6 +19,8 @@ Octolapse.Slic3rPeViewModel = function (values) {
     self.first_layer_speed = ko.observable(values.first_layer_speed);
     self.layer_height = ko.observable(values.layer_height);
     self.spiral_vase = ko.observable(values.spiral_vase);
+    self.wipe = ko.observable(values.wipe);
+
     self.retract_before_travel = ko.pureComputed(function () {
         if (self.retract_length() != null && self.retract_length() > 0)
             return true;
@@ -45,8 +47,8 @@ Octolapse.Slic3rPeViewModel = function (values) {
     };
 
     // Constants
-    self.speed_tolerance = 0.01 / 60.0 / 2.0
-    self.axis_speed_display_units = 'mm-sec'
+    self.speed_tolerance = 0.01 / 60.0 / 2.0;
+    self.axis_speed_display_units = 'mm-sec';
 
     self.round_to_increment_mm_min = 0.00000166667;
     self.round_to_increment_mm_sec = 0.0001;

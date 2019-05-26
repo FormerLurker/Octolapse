@@ -20,7 +20,7 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "gcode_position.h"
-#include <math.h>
+#include "utilities.h"
 #include <iostream>
 #include "logging.h"
 
@@ -55,6 +55,13 @@ gcode_position::gcode_position()
 	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
+
+	// Wipe variables
+	wipe_while_retracting_ = false;
+	retraction_feedrate_ = -1.0;
+	wipe_feedrate_ = -1.0;
+	p_wiper_ = NULL;
+
 }
 
 gcode_position::gcode_position(gcode_position_args* args)
@@ -85,6 +92,12 @@ gcode_position::gcode_position(gcode_position_args* args)
 	z_min_ = args->z_min_;
 	z_max_ = args->z_max_;
 
+	// Wipe variables
+	wipe_while_retracting_ = args->wipe_while_retracting;
+	retraction_feedrate_ = args->retraction_feedrate;
+	wipe_feedrate_ = args->wipe_feedrate;
+	p_wiper_ = new gcode_wiper(retraction_length_, retraction_feedrate_, wipe_feedrate_);
+
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -97,6 +110,7 @@ gcode_position::gcode_position(const gcode_position &source)
 
 gcode_position::~gcode_position()
 {
+	octolapse_log(GCODE_POSITION, INFO, "Deleting gcode_position.");
 	if (p_previous_pos_ != NULL)
 	{
 		delete p_previous_pos_;
@@ -112,6 +126,13 @@ gcode_position::~gcode_position()
 		delete p_undo_pos_;
 		p_undo_pos_ = NULL;
 	}
+
+	if (p_wiper_ != NULL)
+	{
+		delete p_wiper_;
+		p_wiper_ = NULL;
+	}
+	octolapse_log(GCODE_POSITION, INFO, "Finished deleting gcode_position.");
 }
 
 position * gcode_position::get_current_position()
@@ -124,42 +145,7 @@ position * gcode_position::get_previous_position()
 	return p_previous_pos_;
 }
 
-const double ZERO_TOLERANCE = 0.000000005;
 
-int gcode_position::round_up_to_int(double x)
-{
-	return int(x + ZERO_TOLERANCE);
-}
-
-bool gcode_position::is_equal(double x, double y)
-{
-	return fabs(x - y) < ZERO_TOLERANCE;
-}
-
-bool gcode_position::greater_than(double x, double y)
-{
-	return x > y && !is_equal(x, y);
-}
-
-bool gcode_position::greater_than_or_equal(double x, double y)
-{
-	return x > y || is_equal(x, y);
-}
-
-bool gcode_position::less_than(double x, double y)
-{
-	return x < y && !is_equal(x, y);
-}
-
-bool gcode_position::less_than_or_equal(double x, double y)
-{
-	return x < y || is_equal(x, y);
-}
-
-bool gcode_position::is_zero(double x)
-{
-	return fabs(x) < ZERO_TOLERANCE;
-}
 
 void gcode_position::update(parsed_command *command,int file_line_number, int gcode_number)
 {
@@ -197,13 +183,13 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 		// Have the XYZ positions changed after processing a command ?
 		p_current_pos_->e_relative_ = p_current_pos_->e_ - p_previous_pos_->e_;
 		p_current_pos_->has_xy_position_changed_ = (
-			!is_equal(p_current_pos_->x_, p_previous_pos_->x_) ||
-			!is_equal(p_current_pos_->y_, p_previous_pos_->y_)
+			!utilities::is_equal(p_current_pos_->x_, p_previous_pos_->x_) ||
+			!utilities::is_equal(p_current_pos_->y_, p_previous_pos_->y_)
 		);
 		p_current_pos_->has_position_changed_ = (
 			p_current_pos_->has_xy_position_changed_ ||
-			!is_equal(p_current_pos_->z_, p_previous_pos_->z_) ||
-			!is_zero(p_current_pos_->e_relative_) ||
+			!utilities::is_equal(p_current_pos_->z_, p_previous_pos_->z_) ||
+			!utilities::is_zero(p_current_pos_->e_relative_) ||
 			p_current_pos_->x_null_ != p_previous_pos_->x_null_ ||
 			p_current_pos_->y_null_ != p_previous_pos_->y_null_ ||
 			p_current_pos_->z_null_ != p_previous_pos_->z_null_);
@@ -229,7 +215,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 	{
 		p_current_pos_->extrusion_length_total_ += p_current_pos_->e_relative_;
 
-		if (greater_than(p_current_pos_->e_relative_, 0) && p_previous_pos_->is_extruding_ && !p_previous_pos_->is_extruding_start_)
+		if (utilities::greater_than(p_current_pos_->e_relative_, 0) && p_previous_pos_->is_extruding_ && !p_previous_pos_->is_extruding_start_)
 		{
 			// A little shortcut if we know we were extruding (not starting extruding) in the previous command
 			// This lets us skip a lot of the calculations for the extruder, including the state calculation
@@ -240,7 +226,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 			
 			// Update retraction_length and extrusion_length
 			p_current_pos_->retraction_length_ = p_current_pos_->retraction_length_ - p_current_pos_->e_relative_;
-			if (less_than_or_equal(p_current_pos_->retraction_length_, 0))
+			if (utilities::less_than_or_equal(p_current_pos_->retraction_length_, 0))
 			{
 				// we can use the negative retraction length to calculate our extrusion length!
 				p_current_pos_->extrusion_length_ = -1.0 * p_current_pos_->retraction_length_;
@@ -251,7 +237,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 				p_current_pos_->extrusion_length_ = 0;
 
 			// calculate deretraction length
-			if (greater_than(p_previous_pos_->retraction_length_, p_current_pos_->retraction_length_))
+			if (utilities::greater_than(p_previous_pos_->retraction_length_, p_current_pos_->retraction_length_))
 			{
 				p_current_pos_->deretraction_length_ = p_previous_pos_->retraction_length_ - p_current_pos_->retraction_length_;
 			}
@@ -260,22 +246,22 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 			
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
-			p_current_pos_->is_extruding_start_ = greater_than(p_current_pos_->extrusion_length_, 0) && !p_previous_pos_->is_extruding_;
-			p_current_pos_->is_extruding_ = greater_than(p_current_pos_->extrusion_length_, 0);
-			p_current_pos_->is_primed_ = is_zero(p_current_pos_->extrusion_length_) && is_zero(p_current_pos_->retraction_length_);
-			p_current_pos_->is_retracting_start_ = !p_previous_pos_->is_retracting_ && greater_than(p_current_pos_->retraction_length_, 0);
-			p_current_pos_->is_retracting_ = greater_than(p_current_pos_->retraction_length_, p_previous_pos_->retraction_length_);
-			p_current_pos_->is_partially_retracted_ = greater_than(p_current_pos_->retraction_length_, 0) && less_than(p_current_pos_->retraction_length_, retraction_length_);
-			p_current_pos_->is_retracted_ = greater_than_or_equal(p_current_pos_->retraction_length_, retraction_length_);
-			p_current_pos_->is_deretracting_start_ = greater_than(p_current_pos_->deretraction_length_, 0) && !p_previous_pos_->is_deretracting_;
-			p_current_pos_->is_deretracting_ = greater_than(p_current_pos_->deretraction_length_, p_previous_pos_->deretraction_length_);
-			p_current_pos_->is_deretracted_ = greater_than(p_previous_pos_->retraction_length_,0) && is_zero(p_current_pos_->retraction_length_);
+			p_current_pos_->is_extruding_start_ = utilities::greater_than(p_current_pos_->extrusion_length_, 0) && !p_previous_pos_->is_extruding_;
+			p_current_pos_->is_extruding_ = utilities::greater_than(p_current_pos_->extrusion_length_, 0);
+			p_current_pos_->is_primed_ = utilities::is_zero(p_current_pos_->extrusion_length_) && utilities::is_zero(p_current_pos_->retraction_length_);
+			p_current_pos_->is_retracting_start_ = !p_previous_pos_->is_retracting_ && utilities::greater_than(p_current_pos_->retraction_length_, 0);
+			p_current_pos_->is_retracting_ = utilities::greater_than(p_current_pos_->retraction_length_, p_previous_pos_->retraction_length_);
+			p_current_pos_->is_partially_retracted_ = utilities::greater_than(p_current_pos_->retraction_length_, 0) && utilities::less_than(p_current_pos_->retraction_length_, retraction_length_);
+			p_current_pos_->is_retracted_ = utilities::greater_than_or_equal(p_current_pos_->retraction_length_, retraction_length_);
+			p_current_pos_->is_deretracting_start_ = utilities::greater_than(p_current_pos_->deretraction_length_, 0) && !p_previous_pos_->is_deretracting_;
+			p_current_pos_->is_deretracting_ = utilities::greater_than(p_current_pos_->deretraction_length_, p_previous_pos_->deretraction_length_);
+			p_current_pos_->is_deretracted_ = utilities::greater_than(p_previous_pos_->retraction_length_,0) && utilities::is_zero(p_current_pos_->retraction_length_);
 			// *************End Calculate extruder state*************
 		}
 		// calculate last_extrusion_height and height
 		// If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
 		// adjust the last extrusion height
-		if (!is_equal(p_current_pos_->z_, p_current_pos_->last_extrusion_height_))
+		if (!utilities::is_equal(p_current_pos_->z_, p_current_pos_->last_extrusion_height_))
 		{
 			if (!p_current_pos_->z_null_)
 			{
@@ -287,10 +273,10 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 					if (!p_current_pos_->is_printer_primed_)
 					{
 						// We haven't primed yet, check to see if we have priming height restrictions
-						if (greater_than(priming_height_, 0))
+						if (utilities::greater_than(priming_height_, 0))
 						{
 							// if a priming height is configured, see if we've extruded below the  height
-							if (less_than(p_current_pos_->last_extrusion_height_, priming_height_))
+							if (utilities::less_than(p_current_pos_->last_extrusion_height_, priming_height_))
 								p_current_pos_->is_printer_primed_ = true;
 						}
 						else
@@ -301,10 +287,10 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 					// Has Reached Minimum layer height
 					if (!p_current_pos_->minimum_layer_height_reached_)
 					{
-						if (greater_than(minimum_layer_height_, 0))
+						if (utilities::greater_than(minimum_layer_height_, 0))
 						{
 							// if a minimum layer height is configured, see if we've extruded above it
-							if (greater_than_or_equal(p_current_pos_->last_extrusion_height_, minimum_layer_height_))
+							if (utilities::greater_than_or_equal(p_current_pos_->last_extrusion_height_, minimum_layer_height_))
 								p_current_pos_->minimum_layer_height_reached_ = true;
 						}
 						else
@@ -319,11 +305,11 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 					p_current_pos_->is_extruding_ && p_current_pos_->is_printer_primed_)
 				{
 
-					if (greater_than(p_current_pos_->z_, p_previous_pos_->height_))
+					if (utilities::greater_than(p_current_pos_->z_, p_previous_pos_->height_))
 					{
 						p_current_pos_->height_ = p_current_pos_->z_;
 						// calculate layer change
-						if (p_current_pos_->minimum_layer_height_reached_ && greater_than(p_current_pos_->height_ - p_previous_pos_->height_, 0) || p_current_pos_->layer_ == 0)
+						if (p_current_pos_->minimum_layer_height_reached_ && utilities::greater_than(p_current_pos_->height_ - p_previous_pos_->height_, 0) || p_current_pos_->layer_ == 0)
 						{
 							p_current_pos_->is_layer_change_ = true;
 							p_current_pos_->layer_++;
@@ -334,7 +320,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 				if (p_current_pos_->is_extruding_ || p_current_pos_->z_null_ || p_current_pos_->last_extrusion_height_null_)
 					p_current_pos_->is_zhop_ = false;
 				else
-					p_current_pos_->is_zhop_ = greater_than_or_equal(p_current_pos_->z_ - p_current_pos_->last_extrusion_height_, z_lift_height_);
+					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(p_current_pos_->z_ - p_current_pos_->last_extrusion_height_, z_lift_height_);
 			}
 
 		}
@@ -358,6 +344,9 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 			}
 		}
 	}
+
+	if (is_wipe_enabled())
+		p_wiper_->update(*p_current_pos_, *p_previous_pos_);
 	
 }
 
@@ -367,6 +356,8 @@ void gcode_position::undo_update()
 	p_current_pos_ = p_previous_pos_;
 	p_previous_pos_ = p_undo_pos_;
 	p_undo_pos_ = temp;
+	if (is_wipe_enabled())
+		p_wiper_->undo();
 }
 
 // Private Members
@@ -818,4 +809,14 @@ void gcode_position::process_m207(position* posPtr, parsed_command* parsedComman
 void gcode_position::process_m208(position* posPtr, parsed_command* parsedCommandPtr)
 {
 	// Todo: implement firmware retract
+}
+bool gcode_position::is_wipe_enabled()
+{
+	return wipe_while_retracting_;
+}
+void gcode_position::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
+{
+	if(is_wipe_enabled())
+		p_wiper_->get_wipe_steps(wipe_steps);
+
 }
