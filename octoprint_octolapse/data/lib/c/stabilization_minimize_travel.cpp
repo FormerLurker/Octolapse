@@ -106,7 +106,7 @@ void stabilization_minimize_travel::get_next_xy_coordinates()
 	{
 		//std::cout << "calling python...";
 		if(!_get_coordinates_callback(minimize_travel_args_->py_get_snapshot_position_callback, minimize_travel_args_->x_coordinate_, minimize_travel_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
-			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed to get snapshot coordinates.");
+			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed dto get snapshot coordinates.");
 	}
 
 	else
@@ -221,7 +221,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	// if we have no saved position, this is the closest!
 	if (!has_saved_position_)
 	{
-		double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+		double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 		if(distance  != -1)
 			//std::cout << " - IsCloser Complete, no saved position.\r\n";
 		return distance;
@@ -234,7 +234,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 		if (utilities::greater_than(p_position->f_, p_saved_position_->f_))
 		{
 			//std::cout << " - IsCloser Complete, faster.\r\n";
-			double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+			double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 			if (distance != -1)
 				//std::cout << " - IsCloser Complete, no saved position.\r\n";
 			return distance;
@@ -248,7 +248,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	}
 	//std::cout << "Checking for closer position...";
 	// Compare the saved points cartesian distance from the current point
-	double distance = stabilization::get_carteisan_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+	double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
 	if (distance != -1.0 && (current_closest_dist_ < 0 || utilities::greater_than(current_closest_dist_, distance)))
 	{
 		//std::cout << " - IsCloser Complete, closer.\r\n";

@@ -6,14 +6,14 @@ PyObject * gcode_wiper_step::to_py_dict()
 		"{s:i,s:d,s:d,s:d,s:d}",
 		"is_wipe_step",
 		is_wipe_step,
-		"offset_x",
-		offset_x,
-		"offset_y",
-		offset_y,
-		"offset_e",
-		offset_e,
-		"feedrate",
-		feedrate
+		"x",
+		x,
+		"y",
+		y,
+		"e",
+		e,
+		"f",
+		f
 	);
 	if (py_step == NULL)
 	{

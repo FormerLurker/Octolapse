@@ -72,7 +72,7 @@ public:
 	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonProgressCallback progress);
 	virtual ~stabilization();
 	void process_file(stabilization_results* results);
-	static double get_carteisan_distance(double x1, double y1, double x2, double y2);
+	
 private:
 	stabilization(const stabilization &source); // don't copy me!
 	double update_period_seconds_;

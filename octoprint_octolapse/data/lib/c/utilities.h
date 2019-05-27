@@ -9,6 +9,7 @@ public:
 	static bool less_than(double x, double y);
 	static bool less_than_or_equal(double x, double y);
 	static bool is_zero(double x);
+	static double get_cartesian_distance(double x1, double y1, double x2, double y2);
 private:
 	utilities();
 

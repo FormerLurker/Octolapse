@@ -650,6 +650,10 @@ class SnapshotGcodeGenerator(object):
             self.snapshot_gcode.append(
                 SnapshotGcode.INITIALIZATION_GCODE,
                 step.gcode)
+            # set the current feedrate if F is supplied
+            if "F" in step.parameters:
+                self.get_altered_feedrate(step.parameters["F"])
+
         self.retracted_by_start_gcode = True
         # We are fully retracted here.
         self.e_current -= self.length_to_retract

@@ -1588,6 +1588,8 @@ class OctolapseGcodeSettings(Settings):
         self.vase_mode = None
         self.layer_height = None
         self.wipe_speed = None
+        self.retract_before_wipe_percent = None
+        self.retract_after_wipe_percent = None
         self.wipe_enabled = None
 
 
@@ -1703,11 +1705,13 @@ class CuraSettings(SlicerSettings):
         settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
         settings.wipe_enabled = self.get_wipe_enabled()
         settings.wipe_speed = self.get_wipe_speed()
+        settings.retract_before_wipe_percent = 0
+        settings.retract_after_wipe_percent = 5.0 / 100.0
 
         return settings
 
     def get_wipe_speed(self):
-        return self.speed_travel * 0.8;
+        return self.speed_travel * 0.8
 
     def get_wipe_enabled(self):
         return self.combing_mode is not None and self.combing_mode != "" and self.combing_mode != "off"
@@ -1939,7 +1943,8 @@ class Simplify3dSettings(SlicerSettings):
         settings.layer_height = self.layer_height
         settings.wipe_enabled = self.extruder_use_wipe
         settings.wipe_speed = self.get_wipe_speed()
-
+        settings.retract_before_wipe_percent = 0
+        settings.retract_after_wipe_percent = 5.0 / 100.0
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
@@ -2280,6 +2285,8 @@ class Slic3rPeSettings(SlicerSettings):
         self.layer_height = None
         self.spiral_vase = None
         self.wipe = None
+        self.retract_before_wipe = None
+        self.retract_after_wipe = 5
 
     def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
@@ -2311,6 +2318,8 @@ class Slic3rPeSettings(SlicerSettings):
         settings.vase_mode = self.spiral_vase
         settings.wipe_speed = self.get_wipe_speed()
         settings.wipe_enabled = self.wipe
+        settings.retract_before_wipe_percent = self.retract_before_wipe / 100.0
+        settings.retract_after_wipe_percent = self.retract_after_wipe / 100.0
         return settings
 
     def get_retract_before_travel(self):
@@ -2685,7 +2694,6 @@ class Slic3rPeSettings(SlicerSettings):
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
                 if not (isinstance(class_item, string_types) and class_item == '{octolapse_no_property_found}'):
                     if key in [
-                        'retract_before_wipe',
                         'support_material_interface_speed',
                         'support_material_xy_spacing',
                         'fill_density',
@@ -2716,7 +2724,6 @@ class Slic3rPeSettings(SlicerSettings):
         # all of the following can be either strings or percent strings, we need to save them as strings
         if(
             key in [
-                'retract_before_wipe',
                 'support_material_interface_speed',
                 'support_material_xy_spacing',
                 'fill_density',
@@ -2796,6 +2803,8 @@ class OtherSlicerSettings(SlicerSettings):
         settings.vase_mode = self.vase_mode
         settings.wipe_enabled = self.wipe_enabled
         settings.wipe_speed = self.wipe_speed
+        settings.retract_before_wipe_percent = 0
+        settings.retract_after_wipe_percent = 5.0 / 100.0
         return settings
 
     def get_retract_length(self):

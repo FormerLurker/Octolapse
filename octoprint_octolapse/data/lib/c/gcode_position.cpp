@@ -58,8 +58,6 @@ gcode_position::gcode_position()
 
 	// Wipe variables
 	wipe_while_retracting_ = false;
-	retraction_feedrate_ = -1.0;
-	wipe_feedrate_ = -1.0;
 	p_wiper_ = NULL;
 
 }
@@ -94,9 +92,14 @@ gcode_position::gcode_position(gcode_position_args* args)
 
 	// Wipe variables
 	wipe_while_retracting_ = args->wipe_while_retracting;
-	retraction_feedrate_ = args->retraction_feedrate;
-	wipe_feedrate_ = args->wipe_feedrate;
-	p_wiper_ = new gcode_wiper(retraction_length_, retraction_feedrate_, wipe_feedrate_);
+	gcode_wiper_args wiper_args;
+	wiper_args.retraction_feedrate = args->retraction_feedrate;
+	wiper_args.retract_after_wipe_percent = args->retract_after_wipe_percent;
+	wiper_args.retract_before_wipe_percent = args->retract_before_wipe_percent;
+	wiper_args.retraction_length = args->retraction_length;
+	wiper_args.wipe_feedrate = args->wipe_feedrate;
+
+	p_wiper_ = new gcode_wiper(wiper_args);
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);

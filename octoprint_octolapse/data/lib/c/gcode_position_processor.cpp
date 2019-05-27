@@ -992,6 +992,27 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	args->wipe_feedrate = PyFloatOrInt_AsDouble(py_wipe_speed);
+
+	// retract_before_wipe_percent
+	PyObject * py_retract_before_wipe_percent = PyDict_GetItemString(py_slicer_settings_dict, "retract_before_wipe_percent");
+	if (py_retract_before_wipe_percent == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retract_before_wipe_percent from the slicer settings dict.");
+		return false;
+	}
+	args->retract_before_wipe_percent = PyFloatOrInt_AsDouble(py_retract_before_wipe_percent);
+
+	// retract_after_wipe_percent
+	PyObject * py_retract_after_wipe_percent = PyDict_GetItemString(py_slicer_settings_dict, "retract_after_wipe_percent");
+	if (py_retract_after_wipe_percent == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retract_after_wipe_percent from the slicer settings dict.");
+		return false;
+	}
+	args->retract_after_wipe_percent = PyFloatOrInt_AsDouble(py_retract_after_wipe_percent);
+
 	// wipe_enabledUnable to retrieve retraction_length from the position dict
 	PyObject * py_wipe_enabled = PyDict_GetItemString(py_slicer_settings_dict, "wipe_enabled");
 	if (py_wipe_enabled == NULL)

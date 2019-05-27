@@ -42,6 +42,8 @@ struct gcode_position_args {
 		origin_y_none = false;
 		origin_z_none = false;
 		retraction_length = 0;
+		retract_after_wipe_percent = 0;
+		retract_before_wipe_percent = 0;
 		z_lift_height = 0;
 		priming_height = 0;
 		minimum_layer_height = 0;
@@ -71,7 +73,8 @@ struct gcode_position_args {
 	bool origin_y_none;
 	bool origin_z_none;
 	double retraction_length;
-	
+	double retract_after_wipe_percent;
+	double retract_before_wipe_percent;
 	double z_lift_height;
 	double priming_height;
 	double minimum_layer_height;
@@ -135,9 +138,6 @@ private:
 	// Wipe variables
 	gcode_wiper* p_wiper_;
 	bool wipe_while_retracting_;
-	double retraction_feedrate_;
-	double wipe_feedrate_;
-
 
 	std::map<std::string, posFunctionType> gcode_functions_;
 	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;

@@ -220,19 +220,7 @@ void stabilization::process_file(stabilization_results* results)
 	p_snapshot_plans_ = NULL;
 }
 
-double stabilization::get_carteisan_distance(double x1, double y1, double x2, double y2)
-{
-	// Compare the saved points cartesian distance from the current point
-	double xdif = x1 - x2;
-	double ydif = y1 - y2;
-	double dist_squared = xdif * xdif + ydif * ydif;
-	if (dist_squared < 0)
-	{
-		//std::cout << "Negative Distance found!  Returning -1\r\n";
-		return -1.0;
-	}
-	return sqrt(xdif*xdif + ydif * ydif);
-}
+
 
 void stabilization::notify_progress(const double percent_progress, const double seconds_elapsed, const double seconds_to_complete,
 	const long gcodes_processed, const long lines_processed)

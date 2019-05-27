@@ -164,17 +164,17 @@ class ParsedCommand(object):
         for cpp_wipe_step in cpp_wipe_steps:
             if cpp_wipe_step["is_wipe_step"]:
                 parameters = {
-                    "X": cpp_wipe_step["offset_x"],
-                    "Y": cpp_wipe_step["offset_y"],
-                    "E": cpp_wipe_step["offset_e"],
+                    "X": round(cpp_wipe_step["x"], 3),
+                    "Y": round(cpp_wipe_step["y"], 3),
+                    "E": round(cpp_wipe_step["e"], 5),
                 }
             else:
                 cmd = "G1"
                 parameters = {
-                    "E": cpp_wipe_step["offset_e"],
+                    "E": round(cpp_wipe_step["e"], 5),
                 }
-            if cpp_wipe_step["feedrate"] > 0:
-                parameters["F"] = cpp_wipe_step["feedrate"]
+            if cpp_wipe_step["f"] > 0:
+                parameters["F"] = cpp_wipe_step["f"]
             new_command = ParsedCommand(cmd, parameters, "", "")
             new_command.gcode = ParsedCommand.to_string(new_command)
             parsed_commands.append(new_command)

@@ -596,15 +596,12 @@ class Slic3rParsingFunctions(ParsingFunctions):
     @staticmethod
     def parse_percent(parse_string):
         percent_index = parse_string.find(u'%')
-        if percent_index > -1:
+        if percent_index < 1:
             return None
         try:
-            percent = float(parse_string.encode(u'utf-8').translate(None, b'%'))
-            return {
-                u'percent': percent
-            }
+            return float(parse_string.encode(u'utf-8').translate(None, b'%'))
         except ValueError:
-            return None
+            return 0
         except Exception as e:
             raise e
 
@@ -721,7 +718,8 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'gap_fill_speed': SettingsDefinition(u'gap_fill_speed', Slic3rParsingFunctions.parse_float,[u'octolapse_setting']),
             u'travel_speed': SettingsDefinition(u'travel_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'first_layer_speed': SettingsDefinition(u'first_layer_speed', Slic3rParsingFunctions.parse_percent_or_mm,[u'octolapse_setting']),
-            # this setting is not yet used
+            u'retract_before_wipe': SettingsDefinition(u'retract_before_wipe',
+                                                       Slic3rParsingFunctions.parse_percent, [u'octolapse_setting']),
             u'retract_before_travel': SettingsDefinition(u'retract_before_travel', Slic3rParsingFunctions.parse_float,[u'octolapse_setting']),
             # this speed is not yet used
             u'max_print_speed': SettingsDefinition(u'max_print_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
@@ -805,7 +803,6 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'post_process': SettingsDefinition(u'post_process', Slic3rParsingFunctions.get_string, [u'misc']),
             u'printer_notes': SettingsDefinition(u'printer_notes', Slic3rParsingFunctions.get_string, [u'misc']),
             u'resolution': SettingsDefinition(u'resolution', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_before_wipe': SettingsDefinition(u'retract_before_wipe', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
             u'retract_layer_change': SettingsDefinition(u'retract_layer_change', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'retract_length_toolchange': SettingsDefinition(u'retract_length_toolchange', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'retract_lift_above': SettingsDefinition(u'retract_lift_above', Slic3rParsingFunctions.parse_float, [u'misc']),
