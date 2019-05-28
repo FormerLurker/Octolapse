@@ -11,18 +11,16 @@ struct gcode_wiper_args
 	gcode_wiper_args()
 	{
 		retraction_length = 0.0;
-		retract_before_wipe_percent = 0.0;
-		retract_after_wipe_percent = 0.05;
 		wipe_feedrate = 0.0;
 		retraction_feedrate = 0.0;
 		x_y_travel_speed = 0.0;
+		wipe_distance = 2.0;
 	}
 	double retraction_length;
 	double x_y_travel_speed;
 	double wipe_feedrate;
 	double retraction_feedrate;
-	double retract_before_wipe_percent;
-	double retract_after_wipe_percent;
+	double wipe_distance;
 };
 /**
  * \brief Class to create wipe gcode for a given position.  Supports limited undo.
@@ -62,8 +60,7 @@ private:
 	void prune_history();
 	void save_undo_data();
 	void restore_undo_data();
-	void initialize();
-	gcode_wiper_step* get_wipe_step(gcode_wiper_position* start_position, gcode_wiper_position* end_position, double retraction_relative, double &current_offset_e, double feedrate, bool is_return);
+	gcode_wiper_step* get_wipe_step(gcode_wiper_position* start_position, gcode_wiper_position* end_position, double feedrate, bool is_return);
 	static gcode_wiper_step* get_retract_step(double e, double f);
 	static gcode_wiper_step* get_travel_step(double x, double y, double f);
 	
@@ -77,31 +74,15 @@ private:
 	 * object.  You must store the supplied pointer and the modified pointer and delete them when you are finished.
 	 */
 	void clip_wipe_path(double distance_to_clip, gcode_wiper_position* &from_position, gcode_wiper_position* &to_position);
-	double get_wipe_distance();
-	double get_missing_retraction();
-	double get_extra_retraction();
 	gcode_wiper_position_list history_;
 	// Settings
 	gcode_wiper_args settings_;
-	// Calculated Values
-	double pre_wipe_retract_length_;
-	double post_wipe_retract_length_;
-	double half_wipe_distance_;
-	double wipe_distance_;
-	bool use_full_wipe_;
-	double distance_to_retraction_ratio_;
 	// History Tracking Variables
 	double total_distance_;
 	double previous_total_distance_;
 	gcode_wiper_position* p_starting_position_;
 	gcode_wiper_position* p_previous_starting_position_;
-	// other variables
-	bool is_initialized_;
 
 };
 
-#define wipe_distance_to_retraction_(wipe_distance,ratio) \
- ( \
-  wipe_distance * ratio \
- )
 #endif
