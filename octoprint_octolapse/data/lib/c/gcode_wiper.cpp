@@ -255,7 +255,7 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 	wipe_steps.push_back(get_retract_step(e, feedrate));
 	
 	// Set the feedrate to the wipe feedrate, the next steps will be wipe actions
-	feedrate = settings_.x_y_travel_speed;
+	feedrate = settings_.wipe_feedrate;
 
 	// We are going to loop through the list, first back to front, then front to back
 	// However, we will only hit the starting position (p_starting_location, which was

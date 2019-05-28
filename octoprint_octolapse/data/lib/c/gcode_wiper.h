@@ -14,7 +14,7 @@ struct gcode_wiper_args
 		wipe_feedrate = 0.0;
 		retraction_feedrate = 0.0;
 		x_y_travel_speed = 0.0;
-		wipe_distance = 2.0;
+		wipe_distance = 0.8;
 	}
 	double retraction_length;
 	double x_y_travel_speed;
