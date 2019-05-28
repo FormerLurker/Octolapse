@@ -230,21 +230,21 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 	// If the speed is faster than the saved speed, this is the closest point
 	if (p_stabilization_args_->fastest_speed_)
 	{
-		//std::cout << "Checking for faster speed...";
+		//std::cout << "Checking for faster speed than " << p_saved_position_->f_;
 		if (utilities::greater_than(p_position->f_, p_saved_position_->f_))
 		{
-			//std::cout << " - IsCloser Complete, faster.\r\n";
+			//std::cout << " - IsCloser Complete, " << p_position->f_ << " is faster than " << p_saved_position_->f_ << "\r\n";
 			double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-			if (distance != -1)
-				//std::cout << " - IsCloser Complete, no saved position.\r\n";
-			return distance;
+			if (distance > -1)
+				return distance;
 		}
 		else if (utilities::less_than(p_position->f_, p_saved_position_->f_))
 		{
-			//std::cout << " - IsCloser Complete, curspeed too slow.\r\n";
+			//std::cout << " - IsCloser Complete, " << p_position->f_ << " too slow.\r\n";"COMP
 			return -1.0;
 		}
-		//std::cout << "No faster speed found...";
+		//std::cout << "\r\n";
+		
 	}
 	//std::cout << "Checking for closer position...";
 	// Compare the saved points cartesian distance from the current point
@@ -261,7 +261,7 @@ double stabilization_minimize_travel::is_closer(position * p_position)
 
 void stabilization_minimize_travel::add_saved_plan()
 {
-	//std::cout << "Adding saved plan to plans...";
+	//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 	snapshot_plan* p_plan = new snapshot_plan();
 
 	// create the initial position

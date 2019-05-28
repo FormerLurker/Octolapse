@@ -33,7 +33,7 @@ struct gcode_position_args {
 		wipe_while_retracting = false;
 		retraction_feedrate = -1;
 		wipe_feedrate = -1.0;
-
+		x_y_travel_speed = -1.0;
 		autodetect_position = true;
 		origin_x = 0;
 		origin_y = 0;
@@ -65,7 +65,7 @@ struct gcode_position_args {
 	bool wipe_while_retracting;
 	double retraction_feedrate;
 	double wipe_feedrate;
-
+	double x_y_travel_speed;
 	double origin_x;
 	double origin_y;
 	double origin_z;

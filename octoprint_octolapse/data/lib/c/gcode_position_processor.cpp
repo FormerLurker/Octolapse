@@ -973,7 +973,18 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	args->z_lift_height = PyFloatOrInt_AsDouble(py_z_lift_height);
-	
+
+	// x_y_travel_speed
+	PyObject * py_x_y_travel_speed = PyDict_GetItemString(py_slicer_settings_dict, "x_y_travel_speed");
+	if (py_x_y_travel_speed == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_y_travel_speed from the slicer settings dict.");
+		return false;
+	}
+	args->x_y_travel_speed = PyFloatOrInt_AsDouble(py_x_y_travel_speed);
+
+
 	// retraction_speed
 	PyObject * py_retraction_speed = PyDict_GetItemString(py_slicer_settings_dict, "retraction_speed");
 	if (py_z_lift_height == NULL)

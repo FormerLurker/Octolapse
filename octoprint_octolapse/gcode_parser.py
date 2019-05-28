@@ -162,19 +162,26 @@ class ParsedCommand(object):
             return parsed_commands
         cmd = "G1"
         for cpp_wipe_step in cpp_wipe_steps:
-            if cpp_wipe_step["is_wipe_step"]:
+            step_type = cpp_wipe_step["step_type"]
+            cmd = "G1"
+            if step_type == 0:
+                parameters = {
+                    "E": round(cpp_wipe_step["e"], 5),
+                }
+            elif step_type == 1:
                 parameters = {
                     "X": round(cpp_wipe_step["x"], 3),
                     "Y": round(cpp_wipe_step["y"], 3),
                     "E": round(cpp_wipe_step["e"], 5),
                 }
             else:
-                cmd = "G1"
                 parameters = {
-                    "E": round(cpp_wipe_step["e"], 5),
+                    "X": round(cpp_wipe_step["x"], 3),
+                    "Y": round(cpp_wipe_step["y"], 3),
                 }
             if cpp_wipe_step["f"] > 0:
-                parameters["F"] = cpp_wipe_step["f"]
+                parameters["F"] = int(cpp_wipe_step["f"])
+
             new_command = ParsedCommand(cmd, parameters, "", "")
             new_command.gcode = ParsedCommand.to_string(new_command)
             parsed_commands.append(new_command)

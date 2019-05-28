@@ -98,6 +98,7 @@ gcode_position::gcode_position(gcode_position_args* args)
 	wiper_args.retract_before_wipe_percent = args->retract_before_wipe_percent;
 	wiper_args.retraction_length = args->retraction_length;
 	wiper_args.wipe_feedrate = args->wipe_feedrate;
+	wiper_args.x_y_travel_speed = args->x_y_travel_speed;
 
 	p_wiper_ = new gcode_wiper(wiper_args);
 

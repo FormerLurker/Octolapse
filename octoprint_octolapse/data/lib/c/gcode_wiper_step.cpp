@@ -4,8 +4,8 @@ PyObject * gcode_wiper_step::to_py_dict()
 {
 	PyObject * py_step = Py_BuildValue(
 		"{s:i,s:d,s:d,s:d,s:d}",
-		"is_wipe_step",
-		is_wipe_step,
+		"step_type",
+		step_type,
 		"x",
 		x,
 		"y",

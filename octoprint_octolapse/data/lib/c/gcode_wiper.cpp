@@ -10,6 +10,8 @@ gcode_wiper::gcode_wiper()
 	p_starting_position_ = NULL;
 	p_previous_starting_position_ = NULL;
 	is_initialized_ = false;
+	use_full_wipe_ = true;
+	
 }
 
 gcode_wiper::gcode_wiper(gcode_wiper_args args)
@@ -20,7 +22,7 @@ gcode_wiper::gcode_wiper(gcode_wiper_args args)
 	p_starting_position_ = NULL;
 	p_previous_starting_position_ = NULL;
 	is_initialized_ = false;
-
+	use_full_wipe_ = true;
 	// Set members from parameters
 	settings_ = args;
 	// Initialize the wiper
@@ -58,6 +60,7 @@ void gcode_wiper::initialize()
 	const double wipe_distance = wipe_retraction_length * wipe_retraction_speed_ratio;
 	// calculate the wipe distance to extrusion ratio
 	distance_to_retraction_ratio_ = (settings_.retraction_length - pre_wipe_retract_length_ - post_wipe_retract_length_) / wipe_distance;
+	wipe_distance_ = wipe_distance;
 	half_wipe_distance_ = wipe_distance * 0.5;
 	is_initialized_ = true;
 }
@@ -153,18 +156,49 @@ void gcode_wiper::update(position& current_position, position& previous_position
 	prune_history();
 }
 
+double gcode_wiper::get_wipe_distance()
+{
+	double distance;
+	if (use_full_wipe_)
+		distance = wipe_distance_;
+	else
+		distance = half_wipe_distance_;
+	return distance;
+}
+
+double gcode_wiper::get_missing_retraction()
+{
+	if (use_full_wipe_)
+	{
+		return wipe_distance_to_retraction_(
+			(use_full_wipe_ - total_distance_), distance_to_retraction_ratio_
+		);
+	}
+	return wipe_distance_to_retraction_(
+		(half_wipe_distance_ - total_distance_) * 2, distance_to_retraction_ratio_
+	);
+}
+
+double gcode_wiper::get_extra_retraction()
+{
+	if(use_full_wipe_)
+		return total_distance_ - wipe_distance_;
+	return total_distance_ - half_wipe_distance_;
+}
+
 void gcode_wiper::prune_history()
 {
+	double distance = get_wipe_distance();
 	// It's possible that multiple items are pruned from the beginning of the history.
 	// keep track of the first pruned item.
 	bool has_pruned_item = false;
 	// removes items at the front of the history until removing more items would cause total_extrusion < half_retraction_length
-	while (total_distance_ > half_wipe_distance_)
+	while (total_distance_ > distance)
 	{
 		// get a pointer to the first inserted history item
 		gcode_wiper_position * front_item = history_.peek();
-		
-		double distance_removed = utilities::get_cartesian_distance(
+
+		const double distance_removed = utilities::get_cartesian_distance(
 			p_starting_position_->x,
 			p_starting_position_->y,
 			front_item->x,
@@ -173,7 +207,7 @@ void gcode_wiper::prune_history()
 
 		const double new_total_distance = total_distance_ - distance_removed;
 
-		if (utilities::less_than(new_total_distance, half_wipe_distance_))
+		if (utilities::less_than(new_total_distance, distance))
 		{
 			// We want to keep the total extrusion length > half_retraction_length so that
 			// we can do a full wipe if possible.  Since removing this gcode would mean we can't 
@@ -232,7 +266,7 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 	{
 		return;
 	}
-
+	double distance = get_wipe_distance();
 	// save the starting x and y positions
 	gcode_wiper_position* start_position = p_starting_position_;
 	gcode_wiper_position* first_position = NULL;
@@ -247,9 +281,8 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 	double post_wipe_retract_length = post_wipe_retract_length_;
 
 	// Calculate the missing retraction.  If there is any, it will be added on to the post_wipe_retraction_length
-	double missing_retraction = wipe_distance_to_retraction_(
-		(half_wipe_distance_ - total_distance_) * 2, distance_to_retraction_ratio_
-	);
+	const double missing_retraction = get_missing_retraction();
+
 	if (utilities::greater_than_or_equal(missing_retraction, 0))
 	{
 		post_wipe_retract_length += missing_retraction;
@@ -262,7 +295,7 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 	
 	// See if we need to alter the starting position, in the case that we have more room to wipe in the 
 	// history than we need
-	const double extra_distance = total_distance_ - half_wipe_distance_;
+	const double extra_distance = get_extra_retraction();
 
 	if (utilities::greater_than(extra_distance, 0))
 	{
@@ -294,11 +327,11 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 		double e;
 		if (last_position->is_extruder_relative)
 		{
-			e = -1 * post_wipe_retract_length;
+			e = -1 * pre_wipe_retract_length_;
 		}
 		else
 		{
-			e = last_position->get_offset_e() - post_wipe_retract_length;
+			e = last_position->get_offset_e() - pre_wipe_retract_length_;
 		}
 		wipe_steps.push_back(get_retract_step(e, feedrate));
 	}
@@ -354,7 +387,6 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 			);
 			// add the extrusion length to the offset e value
 			retraction_relative = wipe_distance_to_retraction_(segment_distance, distance_to_retraction_ratio_);
-
 			gcode_wiper_step* step = get_wipe_step(previous_position, current_position, retraction_relative, current_offset_e, feedrate, pass != 0);
 			wipe_steps.push_back(step);
 			// the current position will be the previous position
@@ -376,7 +408,12 @@ void gcode_wiper::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
 			// Now we need to create a wipe command from the previous position to the starting point
 			gcode_wiper_step* step = get_wipe_step(previous_position, start_position, retraction_relative, current_offset_e, feedrate, false);
 			wipe_steps.push_back(step);
-			feedrate = -1;
+			// If we're traveling back and are at the first travel step, set the travel feedrate
+			if (use_full_wipe_)
+				feedrate = settings_.x_y_travel_speed;
+			else
+				feedrate = -1;
+
 			// Now we need to create a wipe command from the starting point to the previous position
 			step = get_wipe_step(start_position, previous_position, retraction_relative, current_offset_e, feedrate, true);
 			wipe_steps.push_back(step);
@@ -433,34 +470,49 @@ gcode_wiper_step* gcode_wiper::get_wipe_step(gcode_wiper_position* start_positio
 		x = end_position->get_offset_x();
 		y = end_position->get_offset_y();
 	}
-
-	if (end_position->is_extruder_relative)
+	// We want to retract unless we're returning and using full wipe
+	if (!(use_full_wipe_ && is_return))
 	{
-		if (is_return)
+		
+		if (end_position->is_extruder_relative)
 		{
-			e = -1 * retraction_relative;
+			if (is_return)
+			{
+				e = -1 * retraction_relative;
+			}
+			else
+			{
+				e = -1 * retraction_relative;
+			}
+
 		}
 		else
 		{
-			e = -1 * retraction_relative;
+			if (is_return)
+			{
+				e = current_offset_e - retraction_relative;
+				current_offset_e = e;
+			}
+			else
+			{
+				e = current_offset_e - retraction_relative;
+				current_offset_e = e;
+			}
+
 		}
-		
+		return new gcode_wiper_step(x, y, e, feedrate);
 	}
 	else
 	{
-		if (is_return)
-		{
-			e = current_offset_e - retraction_relative;
-			current_offset_e = e;
-		}
-		else
-		{
-			e = current_offset_e - retraction_relative;
-			current_offset_e = e;
-		}
-		
+		// We are returning home, just send a travel
+		return new gcode_wiper_step(x, y, feedrate);
 	}
-	return new gcode_wiper_step(x, y, e, feedrate);
+	
+}
+
+gcode_wiper_step* gcode_wiper::get_travel_step(double x, double y, double f)
+{
+	return new gcode_wiper_step(x, y, f);
 }
 
 gcode_wiper_step* gcode_wiper::get_retract_step(double e, double f)
