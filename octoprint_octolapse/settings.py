@@ -2705,8 +2705,7 @@ class Slic3rPeSettings(SlicerSettings):
                         'first_layer_speed',
                         'small_perimeter_speed',
                         'solid_infill_speed',
-                        'external_perimeter_speed',
-                        'retract_before_wipe'
+                        'external_perimeter_speed'
                     ]:
                         if 'percent' in value:
                             self.__dict__[key] = "{}%".format(value['percent'])
