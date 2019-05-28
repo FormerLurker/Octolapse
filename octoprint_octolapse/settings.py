@@ -2318,9 +2318,12 @@ class Slic3rPeSettings(SlicerSettings):
         settings.vase_mode = self.spiral_vase
         settings.wipe_speed = self.get_wipe_speed()
         settings.wipe_enabled = self.wipe
-        settings.retract_before_wipe_percent = self.retract_before_wipe / 100.0
+        settings.retract_before_wipe_percent = self.get_retract_before_wipe_percent()
         settings.retract_after_wipe_percent = self.retract_after_wipe / 100.0
         return settings
+
+    def get_retract_before_wipe_percent(self):
+        return 0 if self.retract_before_wipe is None else float(self.retract_before_wipe) / 100.0
 
     def get_retract_before_travel(self):
         retract_length = self.get_retract_length()
@@ -2702,7 +2705,8 @@ class Slic3rPeSettings(SlicerSettings):
                         'first_layer_speed',
                         'small_perimeter_speed',
                         'solid_infill_speed',
-                        'external_perimeter_speed'
+                        'external_perimeter_speed',
+                        'retract_before_wipe'
                     ]:
                         if 'percent' in value:
                             self.__dict__[key] = "{}%".format(value['percent'])

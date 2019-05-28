@@ -95,6 +95,17 @@
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_wipe"></div>
                 </div>
             </div>
+            <div class="control-group" data-bind="visible: slicers.slic3r_pe.wipe">
+                <label class="control-label" for="printer_profile_slic3r_pe_retract_before_wipe">Retract Before Wipe Percent*</label>
+                <div class="controls">
+                    <div class="input-append form-inline">
+                        <input id="printer_profile_slic3r_pe_retract_before_wipe" name="printer_profile_slic3r_pe_retract_before_wipe" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.retract_before_wipe" step="0.1" min=".00" max="100.0" required />
+                        <span class="add-on">%</span>
+                    </div>
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#retract-before-wipe-percent" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <div class="error_label_container text-error" data-error-for="printer_profile_slic3r_pe_retract_before_wipe"></div>
+                </div>
+            </div>
             <div class="text-right">
                 <p>* <i>Indicates required fields</i></p>
             </div>
