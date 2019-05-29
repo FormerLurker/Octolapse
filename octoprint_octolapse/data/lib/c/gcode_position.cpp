@@ -55,11 +55,6 @@ gcode_position::gcode_position()
 	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
-
-	// Wipe variables
-	wipe_while_retracting_ = false;
-	p_wiper_ = NULL;
-
 }
 
 gcode_position::gcode_position(gcode_position_args* args)
@@ -90,16 +85,6 @@ gcode_position::gcode_position(gcode_position_args* args)
 	z_min_ = args->z_min_;
 	z_max_ = args->z_max_;
 
-	// Wipe variables
-	wipe_while_retracting_ = args->wipe_while_retracting;
-	gcode_wiper_args wiper_args;
-	wiper_args.retraction_feedrate = args->retraction_feedrate;
-	wiper_args.retraction_length = args->retraction_length;
-	wiper_args.wipe_feedrate = args->wipe_feedrate;
-	wiper_args.x_y_travel_speed = args->x_y_travel_speed;
-
-	p_wiper_ = new gcode_wiper(wiper_args);
-
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -126,12 +111,6 @@ gcode_position::~gcode_position()
 	{
 		delete p_undo_pos_;
 		p_undo_pos_ = NULL;
-	}
-
-	if (p_wiper_ != NULL)
-	{
-		delete p_wiper_;
-		p_wiper_ = NULL;
 	}
 }
 
@@ -344,10 +323,6 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 			}
 		}
 	}
-
-	if (is_wipe_enabled())
-		p_wiper_->update(*p_current_pos_, *p_previous_pos_);
-	
 }
 
 void gcode_position::undo_update()
@@ -356,8 +331,6 @@ void gcode_position::undo_update()
 	p_current_pos_ = p_previous_pos_;
 	p_previous_pos_ = p_undo_pos_;
 	p_undo_pos_ = temp;
-	if (is_wipe_enabled())
-		p_wiper_->undo();
 }
 
 // Private Members
@@ -809,14 +782,4 @@ void gcode_position::process_m207(position* posPtr, parsed_command* parsedComman
 void gcode_position::process_m208(position* posPtr, parsed_command* parsedCommandPtr)
 {
 	// Todo: implement firmware retract
-}
-bool gcode_position::is_wipe_enabled()
-{
-	return wipe_while_retracting_;
-}
-void gcode_position::get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps)
-{
-	if(is_wipe_enabled())
-		p_wiper_->get_wipe_steps(wipe_steps);
-
 }

@@ -152,8 +152,6 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		// delete the current saved position and parsed command
 		if (p_saved_position_ != NULL)
 			delete p_saved_position_;
-		delete_saved_wipe_steps();
-		get_current_wipe_steps(saved_wipe_steps_);
 		p_saved_position_ = new position(*p_current_pos);
 	}
 	// If the previous command was at the same height, and the extruder is primed, check the starting
@@ -167,8 +165,6 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 			// delete the current saved position and parsed command
 			if (p_saved_position_ != NULL)
 				delete p_saved_position_;
-			delete_saved_wipe_steps();
-			get_previous_wipe_steps(saved_wipe_steps_);
 			p_saved_position_ = new position(*p_previous_pos);
 		}
 	}
@@ -289,8 +285,6 @@ void stabilization_snap_to_print::add_saved_plan()
 	p_plan->p_end_command_ = NULL;
 	p_plan->file_line_ = p_saved_position_->file_line_number_;
 	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	// Move all of the elements from the saved wipe steps into the snapshot plan wipe steps
-	move_saved_wipe_steps(p_plan->wipe_steps_);
 	// Add the plan
 	p_snapshot_plans_->push_back(p_plan);
 

@@ -1,7 +1,7 @@
 #include "utilities.h"
 #include <math.h>
 
-const double ZERO_TOLERANCE = 0.000000005;
+const double ZERO_TOLERANCE = 0.000015;
 
 int utilities::round_up_to_int(double x)
 {
@@ -10,7 +10,8 @@ int utilities::round_up_to_int(double x)
 
 bool utilities::is_equal(double x, double y)
 {
-	return fabs(x - y) < ZERO_TOLERANCE;
+	double abs_difference = fabs(x - y);
+	return abs_difference < ZERO_TOLERANCE;
 }
 
 bool utilities::greater_than(double x, double y)

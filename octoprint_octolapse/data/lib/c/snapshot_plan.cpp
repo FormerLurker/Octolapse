@@ -85,11 +85,6 @@ snapshot_plan::~snapshot_plan()
 		delete *step;
 	}
 	steps_.clear();
-
-	for (std::vector<gcode_wiper_step*>::iterator wipe_step = wipe_steps_.begin(); wipe_step != wipe_steps_.end(); ++wipe_step) {
-		delete *wipe_step;
-	}
-	wipe_steps_.clear();
 	
 }
 
@@ -244,26 +239,8 @@ PyObject * snapshot_plan::to_py_object()
 		}
 	}
 
-	PyObject* py_wipe_steps;
-	
-	
-	if (wipe_steps_.empty())
-	{
-		py_wipe_steps = Py_None;
-		Py_IncRef(py_wipe_steps);
-	}
-	else
-	{
-		py_wipe_steps = gcode_wiper_step::to_py_object(wipe_steps_);
-		if (py_wipe_steps == NULL)
-		{
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the end_command to a PyObject.");
-			return NULL;
-		}
-	}
-	
 	PyObject *py_snapshot_plan = Py_BuildValue(
-		"llOOOOOOO",
+		"llOOOOOO",
 		file_line_,
 		file_gcode_number_,
 		py_triggering_command,
@@ -271,8 +248,7 @@ PyObject * snapshot_plan::to_py_object()
 		py_initial_position,
 		py_steps,
 		py_return_position,
-		py_end_command,
-		py_wipe_steps
+		py_end_command
 	);
 	if (py_snapshot_plan == NULL)
 	{
@@ -287,7 +263,6 @@ PyObject * snapshot_plan::to_py_object()
 	Py_DECREF(py_steps);
 	Py_DECREF(py_start_command);
 	Py_DECREF(py_end_command);
-	Py_DECREF(py_wipe_steps);
 	
 	return py_snapshot_plan;
 }

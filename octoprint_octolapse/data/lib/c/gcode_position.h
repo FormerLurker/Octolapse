@@ -30,10 +30,6 @@
 struct gcode_position_args {
 	gcode_position_args() {
 		// Wipe Variables
-		wipe_while_retracting = false;
-		retraction_feedrate = -1;
-		wipe_feedrate = -1.0;
-		x_y_travel_speed = -1.0;
 		autodetect_position = true;
 		origin_x = 0;
 		origin_y = 0;
@@ -42,8 +38,6 @@ struct gcode_position_args {
 		origin_y_none = false;
 		origin_z_none = false;
 		retraction_length = 0;
-		retract_after_wipe_percent = 0;
-		retract_before_wipe_percent = 0;
 		z_lift_height = 0;
 		priming_height = 0;
 		minimum_layer_height = 0;
@@ -62,10 +56,6 @@ struct gcode_position_args {
 	}
 	bool autodetect_position;
 	// Wipe variables
-	bool wipe_while_retracting;
-	double retraction_feedrate;
-	double wipe_feedrate;
-	double x_y_travel_speed;
 	double origin_x;
 	double origin_y;
 	double origin_z;
@@ -73,8 +63,6 @@ struct gcode_position_args {
 	bool origin_y_none;
 	bool origin_z_none;
 	double retraction_length;
-	double retract_after_wipe_percent;
-	double retract_before_wipe_percent;
 	double z_lift_height;
 	double priming_height;
 	double minimum_layer_height;
@@ -103,10 +91,8 @@ public:
 	void update(parsed_command* cmd, int file_line_number, int gcode_number);
 	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
 	void undo_update();
-	void get_wipe_steps(std::vector<gcode_wiper_step*> &wipe_steps);
 	position * get_current_position();
 	position * get_previous_position();
-	bool is_wipe_enabled();
 private:
 	gcode_position(const gcode_position & source);
 	
@@ -135,9 +121,6 @@ private:
 	double y_max_;
 	double z_min_;
 	double z_max_;
-	// Wipe variables
-	gcode_wiper* p_wiper_;
-	bool wipe_while_retracting_;
 
 	std::map<std::string, posFunctionType> gcode_functions_;
 	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;

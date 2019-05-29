@@ -43,7 +43,6 @@ public:
 	std::vector<snapshot_plan_step*> steps_;
 	position * p_return_position_;
 	parsed_command * p_end_command_;
-	std::vector<gcode_wiper_step*> wipe_steps_;
 };
 
 #endif
