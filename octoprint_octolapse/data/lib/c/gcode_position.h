@@ -26,7 +26,6 @@
 #include <map>
 #include "gcode_parser.h"
 #include "position.h"
-#include "gcode_wiper.h"
 struct gcode_position_args {
 	gcode_position_args() {
 		// Wipe Variables

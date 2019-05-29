@@ -104,10 +104,6 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/stabilization_smart_layer.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_snap_to_print.cpp',
     'octoprint_octolapse/data/lib/c/logging.cpp',
-    'octoprint_octolapse/data/lib/c/gcode_wiper.cpp',
-    'octoprint_octolapse/data/lib/c/gcode_wiper_position.cpp',
-    'octoprint_octolapse/data/lib/c/gcode_wiper_position_list.cpp',
-    'octoprint_octolapse/data/lib/c/gcode_wiper_step.cpp',
     'octoprint_octolapse/data/lib/c/utilities.cpp',
 ]
 cpp_gcode_parser = Extension(

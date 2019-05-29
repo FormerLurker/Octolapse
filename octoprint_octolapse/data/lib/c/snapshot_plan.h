@@ -24,7 +24,6 @@
 #include "snapshot_plan_step.h"
 #include "parsed_command.h"
 #include "position.h"
-#include "gcode_wiper.h"
 #include <vector>
 #include <map>
 class snapshot_plan
