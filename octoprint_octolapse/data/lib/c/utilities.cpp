@@ -1,7 +1,8 @@
 #include "utilities.h"
 #include <math.h>
 
-const double ZERO_TOLERANCE = 0.000015;
+// Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
+const double ZERO_TOLERANCE = 0.000025;
 
 int utilities::round_up_to_int(double x)
 {

@@ -142,7 +142,7 @@ $(function () {
 
 
         self.get_xy_stabilization_type_options = ko.pureComputed( function () {
-                if (self.stabilization_type() === 'minimize-travel') {
+                if (self.stabilization_type() === 'smart-layer') {
                     var options = [];
                     for (var index = 0; index < Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options.length; index++) {
                         var curItem = Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options[index];

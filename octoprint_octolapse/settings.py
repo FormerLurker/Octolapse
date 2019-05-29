@@ -503,7 +503,7 @@ class SnapshotPositionRestrictions(Settings):
 class StabilizationProfile(ProfileSettings):
     STABILIZATION_TYPE_REAL_TIME = "real-time"
     STABILIZATION_TYPE_LOCK_TO_PRINT = "lock-to-print-corner"
-    STABILIZATION_TYPE_MINIMIZE_TRAVEL = "minimize-travel"
+    STABILIZATION_TYPE_SMART_LAYER = "smart-layer"
 
     EXTRUDER_TRIGGER_IGNORE_VALUE = ""
     EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
@@ -608,7 +608,7 @@ class StabilizationProfile(ProfileSettings):
     def get_precalculated_stabilization_types():
         return [
             StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT,
-            StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL
+            StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER
         ]
     def get_extruder_trigger_value_string(self, value):
         if value is None:
@@ -667,7 +667,7 @@ class StabilizationProfile(ProfileSettings):
         return {
             'stabilization_type_options': [
                 dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time'),
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL, name='Minimize Travel'),
+                dict(value=StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
                 dict(value=StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT, name='Lock to Print')
             ],
             'lock_to_corner_type_options': [

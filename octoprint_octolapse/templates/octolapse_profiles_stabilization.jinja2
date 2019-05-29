@@ -125,7 +125,7 @@
             </div>
         </div>
     </div>
-    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'lock-to-print-corner'])>-1">
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'lock-to-print-corner'])>-1">
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
@@ -142,7 +142,7 @@
             </div>
         </div>
     </div>
-    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time'])>-1">
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time'])>-1">
         <div>
             <div>
                 <h5>X Axis Stabilization</h5>
@@ -240,7 +240,7 @@
                 </div>
             </div>
         </div>
-        <div data-bind="visible: jQuery.inArray(stabilization_type(), ['minimize-travel', 'real-time'])>-1">
+        <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time'])>-1">
         <div>
             <h5>Y Axis Stabilization</h5>
             <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>

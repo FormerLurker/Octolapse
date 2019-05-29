@@ -1,8 +1,8 @@
-#include "stabilization_minimize_travel.h"
+#include "stabilization_smart_layer.h"
 #include "utilities.h"
 #include "logging.h"
 #include <iostream>
-minimize_travel_args::minimize_travel_args()
+smart_layer_args::smart_layer_args()
 {
 	x_coordinate_ = 0;
 	y_coordinate_ = 0;
@@ -10,21 +10,21 @@ minimize_travel_args::minimize_travel_args()
 	py_gcode_generator = NULL;
 }
 
-minimize_travel_args::minimize_travel_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
+smart_layer_args::smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
 {
 	x_coordinate_ = 0;
 	y_coordinate_ = 0;
 	py_get_snapshot_position_callback = get_snapshot_position_callback;
 	py_gcode_generator = gcode_generator;
 }
-minimize_travel_args::minimize_travel_args(double x, double y)
+smart_layer_args::smart_layer_args(double x, double y)
 {
 	x_coordinate_ = x;
 	y_coordinate_ = y;
 	py_get_snapshot_position_callback = NULL;
 	py_gcode_generator = NULL;
 }
-minimize_travel_args::~minimize_travel_args()
+smart_layer_args::~smart_layer_args()
 {
 	if(py_get_snapshot_position_callback != NULL)
 		Py_XDECREF(py_get_snapshot_position_callback);
@@ -33,10 +33,10 @@ minimize_travel_args::~minimize_travel_args()
 	
 }
 
-stabilization_minimize_travel::stabilization_minimize_travel()
+stabilization_smart_layer::stabilization_smart_layer()
 {
 	// Initialize travel args
-	minimize_travel_args_ = NULL;
+	smart_layer_args_ = NULL;
 	// Initialize python callback status
 	has_python_coordinate_callback = false;
 	// initialize stabilization point variables
@@ -55,8 +55,8 @@ stabilization_minimize_travel::stabilization_minimize_travel()
 	p_closest_travel_ = NULL;
 }
 
-stabilization_minimize_travel::stabilization_minimize_travel(
-	gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, progressCallback progress
+stabilization_smart_layer::stabilization_smart_layer(
+	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, progressCallback progress
 ) :stabilization(position_args, stab_args, progress)
 {
 	is_layer_change_wait_ = false;
@@ -65,7 +65,7 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	
-	minimize_travel_args_ = mt_args;
+	smart_layer_args_ = mt_args;
 	has_python_coordinate_callback = false;
 
 	// initialize closest extrusion/travel tracking structs
@@ -76,8 +76,8 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	get_next_xy_coordinates();
 }
 
-stabilization_minimize_travel::stabilization_minimize_travel(
-	gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
+stabilization_smart_layer::stabilization_smart_layer(
+	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
 ) : stabilization(position_args, stab_args, progress)
 {
 	is_layer_change_wait_ = false;
@@ -86,7 +86,7 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	_get_coordinates_callback = get_coordinates;
-	minimize_travel_args_ = mt_args;
+	smart_layer_args_ = mt_args;
 	has_python_coordinate_callback = true;
 	// initialize closest extrusion/travel tracking structs
 	p_closest_extrusion_ = NULL;
@@ -95,12 +95,12 @@ stabilization_minimize_travel::stabilization_minimize_travel(
 	get_next_xy_coordinates();
 }
 
-stabilization_minimize_travel::stabilization_minimize_travel(const stabilization_minimize_travel &source)
+stabilization_smart_layer::stabilization_smart_layer(const stabilization_smart_layer &source)
 {
 	
 }
 
-stabilization_minimize_travel::~stabilization_minimize_travel()
+stabilization_smart_layer::~stabilization_smart_layer()
 {
 	// delete any saved extrusion/travel tracking structs
 	if (p_closest_extrusion_ != NULL)
@@ -116,36 +116,36 @@ stabilization_minimize_travel::~stabilization_minimize_travel()
 	}
 }
 
-bool stabilization_minimize_travel::has_saved_position()
+bool stabilization_smart_layer::has_saved_position()
 {
 	if (p_closest_travel_ != NULL || p_closest_extrusion_ != NULL)
 		return true;
 	return false;
 }
-void stabilization_minimize_travel::get_next_xy_coordinates()
+void stabilization_smart_layer::get_next_xy_coordinates()
 {
 	//std::cout << "Getting XY stabilization coordinates...";
 
 	if (has_python_coordinate_callback)
 	{
 		//std::cout << "calling python...";
-		if(!_get_coordinates_callback(minimize_travel_args_->py_get_snapshot_position_callback, minimize_travel_args_->x_coordinate_, minimize_travel_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
+		if(!_get_coordinates_callback(smart_layer_args_->py_get_snapshot_position_callback, smart_layer_args_->x_coordinate_, smart_layer_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
 			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed dto get snapshot coordinates.");
 	}
 
 	else
 	{
 		//std::cout << "extracting from args...";
-		stabilization_x_ = minimize_travel_args_->x_coordinate_;
-		stabilization_y_ = minimize_travel_args_->y_coordinate_;
+		stabilization_x_ = smart_layer_args_->x_coordinate_;
+		stabilization_y_ = smart_layer_args_->y_coordinate_;
 	}
 	//std::cout << " - X coord: " << x_coord;
 	//std::cout << " - Y coord: " << y_coord << "\r\n";
 }
 
-void stabilization_minimize_travel::process_pos(position* p_current_pos, position* p_previous_pos)
+void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
 {
-	//std::cout << "StabilizationMinimizeTravel::process_pos - Processing Position...";
+	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
 	// if we're at a layer change, add the current saved plan
 	if (p_current_pos->is_layer_change_ && p_current_pos->layer_ > 1)
 	{
@@ -226,25 +226,34 @@ void stabilization_minimize_travel::process_pos(position* p_current_pos, positio
 			// We are sure that the previous command is primed, which we will treat as an extrusion
 			type = position_type::extrusion;
 		}
-		else if (p_previous_pos->is_travel_only_ && p_previous_pos->is_retracted_)
-		{
+		// The next section was removed, but I wanted to keep it in for further consideration.
+		// I don't think we need to consider the previous position if it's not an extrude.
+		// We want the printer to complete the travel before taking a snapshot so that any 
+		// strings are moved towards the interior of the print (usually the case).  At the 
+		// very least, any stringing should be similar to the stringing on the original print.
+		//else if (p_previous_pos->is_retracted_)
+		//{
 			// we are sure the previous position is a retracted travel
-			type = position_type::retracted_travel;
-		}
+		//	type = position_type::retracted_travel;
+		//}
 		// Calculate the distance to the previous extrusion
-		distance = -1;
-
-		distance = is_closer(p_previous_pos, type);
 		
-		if (utilities::greater_than_or_equal(distance ,0.0))
+		if (type != position_type::unknown)
 		{
-			save_position(p_previous_pos, type, distance);
+			distance = -1;
+
+			distance = is_closer(p_previous_pos, type);
+
+			if (utilities::greater_than_or_equal(distance, 0.0))
+			{
+				save_position(p_previous_pos, type, distance);
+			}
 		}
 	}
 	last_tested_gcode_number_ = p_current_pos->gcode_number_;
 }
 
-void stabilization_minimize_travel::save_position(position* p_position, position_type type_, double distance)
+void stabilization_smart_layer::save_position(position* p_position, position_type type_, double distance)
 {
 	if (type_ == position_type::extrusion)
 	{
@@ -270,7 +279,7 @@ void stabilization_minimize_travel::save_position(position* p_position, position
 	}
 }
 
-double stabilization_minimize_travel::is_closer(position * p_position, position_type type)
+double stabilization_smart_layer::is_closer(position * p_position, position_type type)
 {
 	closest_position* p_current_closest = NULL;
 	if (type == position_type::extrusion)
@@ -321,7 +330,7 @@ double stabilization_minimize_travel::is_closer(position * p_position, position_
 	return -1.0;
 }
 
-void stabilization_minimize_travel::add_plan()
+void stabilization_smart_layer::add_plan()
 {
 	closest_position * p_closest = NULL;
 	if (
@@ -367,7 +376,7 @@ void stabilization_minimize_travel::add_plan()
 	//std::cout << "Complete.\r\n";
 }
 
-void stabilization_minimize_travel::reset_saved_positions()
+void stabilization_smart_layer::reset_saved_positions()
 {
 	// cleanup memory
 	if (p_closest_extrusion_ != NULL)
@@ -386,7 +395,7 @@ void stabilization_minimize_travel::reset_saved_positions()
 	has_one_extrusion_speed_ = true;
 }
 
-void stabilization_minimize_travel::on_processing_complete()
+void stabilization_smart_layer::on_processing_complete()
 {
 	//std::cout << "Running on_process_complete...";
 	if (has_saved_position())

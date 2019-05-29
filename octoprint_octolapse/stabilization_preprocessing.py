@@ -186,15 +186,15 @@ class StabilizationPreprocessingThread(Thread):
                 stabilization_args,
                 lock_to_print_args
             )
-        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_MINIMIZE_TRAVEL:
-            # run minimize travel stabilization
-            minimize_travel_args = {
+        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER:
+            # run smart layer stabilization
+            smart_layer_args = {
                 'gcode_generator': self.gcode_generator
             }
-            results = GcodePositionProcessor.GetSnapshotPlans_MinimizeTravel(
+            results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,
                 stabilization_args,
-                minimize_travel_args
+                smart_layer_args
             )
         else:
             self.error = "Can't find a preprocessor named {0}, unable to preprocess gcode.".format(

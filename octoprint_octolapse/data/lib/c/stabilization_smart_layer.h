@@ -1,5 +1,5 @@
-#ifndef StabilizationMinimizeTravel_H
-#define StabilizationMinimizeTravel_H
+#ifndef StabilizationSmartLayer_H
+#define StabilizationSmartLayer_H
 #include "stabilization.h"
 #include "position.h"
 #ifdef _DEBUG
@@ -33,13 +33,13 @@ struct closest_position
 	double distance;
 	position * p_position;
 };
-class minimize_travel_args
+class smart_layer_args
 {
 public:
-	minimize_travel_args();
-	minimize_travel_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback);
-	minimize_travel_args(double x, double y);
-	~minimize_travel_args();
+	smart_layer_args();
+	smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback);
+	smart_layer_args(double x, double y);
+	~smart_layer_args();
 	PyObject * py_get_snapshot_position_callback;
 	PyObject * py_gcode_generator;
 	void get_next_xy_coordinates();
@@ -49,16 +49,16 @@ public:
 };
 
 typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
-static const char* MINIMIZE_TRAVEL_STABILIZATION = "minimize_travel";
-class stabilization_minimize_travel :	public stabilization
+static const char* SMART_LAYER_STABILIZATION = "smart_layer";
+class stabilization_smart_layer :	public stabilization
 {
 public:
-	stabilization_minimize_travel();
-	stabilization_minimize_travel(gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, progressCallback progress);
-	stabilization_minimize_travel(gcode_position_args* position_args, stabilization_args* stab_args, minimize_travel_args* mt_args, pythonGetCoordinatesCallback get_coordinates,  pythonProgressCallback progress);
-	~stabilization_minimize_travel();
+	stabilization_smart_layer();
+	stabilization_smart_layer(gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, progressCallback progress);
+	stabilization_smart_layer(gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates,  pythonProgressCallback progress);
+	~stabilization_smart_layer();
 private:
-	stabilization_minimize_travel(const stabilization_minimize_travel &source); // don't copy me
+	stabilization_smart_layer(const stabilization_smart_layer &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos);
 	void on_processing_complete();
 	void add_plan();
@@ -88,13 +88,10 @@ private:
 	bool has_one_extrusion_speed_;
 	unsigned int current_height_increment_;
 	
-	minimize_travel_args *minimize_travel_args_;
+	smart_layer_args *smart_layer_args_;
 	bool has_python_coordinate_callback;
 	// closest extrusion/travel position tracking variables
 	closest_position * p_closest_travel_;
 	closest_position * p_closest_extrusion_;
 };
-
-
-
 #endif

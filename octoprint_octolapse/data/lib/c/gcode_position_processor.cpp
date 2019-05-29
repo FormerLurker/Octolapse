@@ -23,7 +23,7 @@
 #include "gcode_position_processor.h"
 #include <iostream>
 #include "stabilization_snap_to_print.h"
-#include "stabilization_minimize_travel.h"
+#include "stabilization_smart_layer.h"
 #include "stabilization.h"
 #include "logging.h"
 #include "bytesobject.h"
@@ -99,7 +99,7 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 	{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
 	{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
 	{ "GetSnapshotPlans_SnapToPrint", (PyCFunction)GetSnapshotPlans_SnapToPrint, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SnapToPrint' stabilization." },
-	{ "GetSnapshotPlans_MinimizeTravel", (PyCFunction)GetSnapshotPlans_MinimizeTravel, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'MinimizeTravel' stabilization." },
+	{ "GetSnapshotPlans_SmartLayer", (PyCFunction)GetSnapshotPlans_SmartLayer, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SmartLayer' stabilization." },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -254,9 +254,9 @@ extern "C"
 		return py_results;
 	}
 
-	static PyObject * GetSnapshotPlans_MinimizeTravel(PyObject *self, PyObject *args)
+	static PyObject * GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args)
 	{
-		octolapse_log(SNAPSHOT_PLAN, INFO, "Running minimize travel stabilization preprocessing.");
+		octolapse_log(SNAPSHOT_PLAN, INFO, "Running smart layer stabilization preprocessing.");
 		// TODO:  add error reporting and logging
 		PyObject *py_position_args;
 		PyObject *py_stabilization_args;
@@ -292,15 +292,15 @@ extern "C"
 		{
 			return NULL;
 		}
-		//std::cout << "Parsing minimize travel arguments\r\n";
-		minimize_travel_args mt_args;
-		if (!ParseStabilizationArgs_MinimizeTravel(py_stabilization_type_args, &mt_args))
+		//std::cout << "Parsing smart layer arguments\r\n";
+		smart_layer_args mt_args;
+		if (!ParseStabilizationArgs_SmartLayer(py_stabilization_type_args, &mt_args))
 		{
 			return NULL;
 		}
 		//std::cout << "Creating Stabilization.\r\n";
 		// Create our stabilization object
-		stabilization_minimize_travel stabilization(
+		stabilization_smart_layer stabilization(
 			&p_args,
 			&s_args,
 			&mt_args,
@@ -1089,7 +1089,7 @@ static bool ParseStabilizationArgs_SnapToPrint(PyObject *py_args, snap_to_print_
 	return true;
 }
 
-static bool ParseStabilizationArgs_MinimizeTravel(PyObject *py_args, minimize_travel_args* args)
+static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_args* args)
 {
 	// gcode_generator
 	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
