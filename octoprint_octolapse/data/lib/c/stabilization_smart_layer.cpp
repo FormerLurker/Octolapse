@@ -2,36 +2,7 @@
 #include "utilities.h"
 #include "logging.h"
 #include <iostream>
-smart_layer_args::smart_layer_args()
-{
-	x_coordinate_ = 0;
-	y_coordinate_ = 0;
-	py_get_snapshot_position_callback = NULL;
-	py_gcode_generator = NULL;
-}
 
-smart_layer_args::smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
-{
-	x_coordinate_ = 0;
-	y_coordinate_ = 0;
-	py_get_snapshot_position_callback = get_snapshot_position_callback;
-	py_gcode_generator = gcode_generator;
-}
-smart_layer_args::smart_layer_args(double x, double y)
-{
-	x_coordinate_ = x;
-	y_coordinate_ = y;
-	py_get_snapshot_position_callback = NULL;
-	py_gcode_generator = NULL;
-}
-smart_layer_args::~smart_layer_args()
-{
-	if(py_get_snapshot_position_callback != NULL)
-		Py_XDECREF(py_get_snapshot_position_callback);
-	if(py_gcode_generator != NULL)
-		Py_XDECREF(py_gcode_generator);
-	
-}
 
 stabilization_smart_layer::stabilization_smart_layer()
 {
@@ -129,15 +100,15 @@ void stabilization_smart_layer::get_next_xy_coordinates()
 	if (has_python_coordinate_callback)
 	{
 		//std::cout << "calling python...";
-		if(!_get_coordinates_callback(smart_layer_args_->py_get_snapshot_position_callback, smart_layer_args_->x_coordinate_, smart_layer_args_->y_coordinate_, &stabilization_x_, &stabilization_y_))
+		if(!_get_coordinates_callback(smart_layer_args_->py_get_snapshot_position_callback, smart_layer_args_->x_coordinate, smart_layer_args_->y_coordinate, &stabilization_x_, &stabilization_y_))
 			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed dto get snapshot coordinates.");
 	}
 
 	else
 	{
 		//std::cout << "extracting from args...";
-		stabilization_x_ = smart_layer_args_->x_coordinate_;
-		stabilization_y_ = smart_layer_args_->y_coordinate_;
+		stabilization_x_ = smart_layer_args_->x_coordinate;
+		stabilization_y_ = smart_layer_args_->y_coordinate;
 	}
 	//std::cout << " - X coord: " << x_coord;
 	//std::cout << " - Y coord: " << y_coord << "\r\n";
@@ -156,11 +127,14 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 		return;
 
 	position_type type;
-	if (p_current_pos->is_extruding_)
+	if (
+		p_current_pos->is_extruding_ && 
+		smart_layer_args_->trigger_on_extrude
+	)
 	{
 		type = position_type::extrusion;
 	}
-	else if (p_current_pos->is_travel_only_ && p_current_pos->is_retracted_)
+	else if (p_current_pos->is_retracted_ && (p_current_pos->is_travel_only_ || p_current_pos->is_zhop_))
 	{
 		type = position_type::retracted_travel;
 	}
@@ -181,7 +155,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 			if (increment > current_height_increment_)
 			{
 				// We only update the height increment if we've detected extrusion on a layer
-				if (increment > 1.0 && p_closest_extrusion_ != NULL)
+				if (increment > 1.0 && has_saved_position())
 				{
 					current_height_increment_ = increment;
 					can_add_saved_plan = true;
@@ -217,7 +191,10 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	}
 	// If this is the first command on a new layer, the previous command is usually also a valid position
 	// If the last command was not examined, test it IF we are at the same z height.
-	if (last_tested_gcode_number_ != p_previous_pos->gcode_number_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
+	if (
+		last_tested_gcode_number_ != p_previous_pos->gcode_number_ &&
+		smart_layer_args_->trigger_on_extrude &&
+		utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
 		position_type previous_type = position_type::unknown;
 		// get the previous command type
@@ -282,13 +259,23 @@ void stabilization_smart_layer::save_position(position* p_position, position_typ
 double stabilization_smart_layer::is_closer(position * p_position, position_type type)
 {
 	closest_position* p_current_closest = NULL;
-	if (type == position_type::extrusion)
+	if (
+		type == position_type::extrusion &&
+		(
+			utilities::is_equal(smart_layer_args_->extrude_trigger_speed_threshold,0) ||
+			utilities::greater_than(p_position->f_, smart_layer_args_->extrude_trigger_speed_threshold)
+		)
+	)
+	{
 		p_current_closest = p_closest_extrusion_;
+	}
 	else if (type == position_type::retracted_travel)
+	{
 		p_current_closest = p_closest_travel_;
+	}
 	else
 		return -1.0;
-
+	
 	if (p_current_closest == NULL)
 	{
 		return utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);

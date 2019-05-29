@@ -33,24 +33,53 @@ struct closest_position
 	double distance;
 	position * p_position;
 };
-class smart_layer_args
+struct smart_layer_args
 {
-public:
-	smart_layer_args();
-	smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback);
-	smart_layer_args(double x, double y);
-	~smart_layer_args();
+	smart_layer_args()
+	{
+		x_coordinate = 0;
+		y_coordinate = 0;
+		py_get_snapshot_position_callback = NULL;
+		py_gcode_generator = NULL;
+		trigger_on_extrude = false;
+		extrude_trigger_speed_threshold = 0;
+	}
+	smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
+	{
+		x_coordinate = 0;
+		y_coordinate = 0;
+		py_get_snapshot_position_callback = get_snapshot_position_callback;
+		py_gcode_generator = gcode_generator;
+		trigger_on_extrude = false;
+		extrude_trigger_speed_threshold = 0;
+	}
+	smart_layer_args(double x, double y)
+	{
+		x_coordinate = x;
+		y_coordinate = y;
+		py_get_snapshot_position_callback = NULL;
+		py_gcode_generator = NULL;
+		trigger_on_extrude = false;
+		extrude_trigger_speed_threshold = 0;
+	}
+	~smart_layer_args()
+	{
+		if (py_get_snapshot_position_callback != NULL)
+			Py_XDECREF(py_get_snapshot_position_callback);
+		if (py_gcode_generator != NULL)
+			Py_XDECREF(py_gcode_generator);
+	}
 	PyObject * py_get_snapshot_position_callback;
 	PyObject * py_gcode_generator;
-	void get_next_xy_coordinates();
-	double x_coordinate_;
-	double y_coordinate_;
-
+	double x_coordinate;
+	double y_coordinate;
+	bool trigger_on_extrude;
+	double extrude_trigger_speed_threshold;
 };
 
 typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
 static const char* SMART_LAYER_STABILIZATION = "smart_layer";
-class stabilization_smart_layer :	public stabilization
+class stabilization_smart_layer : public stabilization
 {
 public:
 	stabilization_smart_layer();
