@@ -187,14 +187,13 @@ extern "C"
 		// TODO:  add error reporting and logging
 		PyObject *py_position_args;
 		PyObject *py_stabilization_args;
-		PyObject *py_stabilization_type_args;
 		
 		if (!PyArg_ParseTuple(
 			args,
-			"OOO",
+			"OO",
 			&py_position_args,
-			&py_stabilization_args,
-			&py_stabilization_type_args))
+			&py_stabilization_args)
+		)
 		{
 			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
 			return NULL;
@@ -213,16 +212,11 @@ extern "C"
 			return NULL;
 		}
 		
-		snap_to_print_args st_args;
-		if (!ParseStabilizationArgs_SnapToPrint(py_stabilization_type_args, &st_args))
-		{
-			return NULL;
-		}
 		// Create our stabilization object
 		stabilization_snap_to_print stabilization(
 			&p_args, 
 			&s_args,
-			&st_args,
+			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
 			pythonProgressCallback(ExecuteStabilizationProgressCallback)
 		);
 
@@ -726,6 +720,7 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		return false;
 	}
 	*y_result = PyFloatOrInt_AsDouble(pyY);
+	//std::cout << "Next Stabilization Coordinates: X" << *x_result << " Y"<< *y_result <<"\r\n";
 	Py_DECREF(pyCoordinates);
 	return true;
 
@@ -1009,6 +1004,35 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 
 static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 {
+	//std::cout << "Parsing Stabilization Args.\r\n";
+	// gcode_generator
+	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
+	if (py_gcode_generator == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_generator from the smart layer stabilization args.");
+		return false;
+	}
+	// Need to incref py_gcode_generator, borrowed ref and we're holding it!
+	Py_INCREF(py_gcode_generator);
+	args->py_gcode_generator = py_gcode_generator;
+	// extract the get_snapshot_position callback
+	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
+	if (py_get_snapshot_position_callback == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve get_snapshot_position function from the gcode_generator object.");
+		return false;
+	}
+	// make sure it is callable
+	if (!PyCallable_Check(py_get_snapshot_position_callback)) {
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "The get_snapshot_position attribute must be callable.");
+		return NULL;
+	}
+	// py_get_snapshot_position_callback is a new reference, no reason to incref
+	args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
+
 	// height_increment
 	PyObject * py_height_increment = PyDict_GetItemString(py_args, "height_increment");
 	if (py_height_increment == NULL)
@@ -1017,7 +1041,7 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
 		return false;
 	}
-	args->height_increment_ = PyFloatOrInt_AsDouble(py_height_increment);
+	args->height_increment = PyFloatOrInt_AsDouble(py_height_increment);
 
 	// fastest_speed
 	PyObject * py_fastest_speed = PyDict_GetItemString(py_args, "fastest_speed");
@@ -1027,7 +1051,7 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve fastest_speed from the stabilization args.");
 		return false;
 	}
-	args->fastest_speed_ = PyLong_AsLong(py_fastest_speed) > 0;
+	args->fastest_speed = PyLong_AsLong(py_fastest_speed) > 0;
 
 	// notification_period_seconds
 	PyObject * py_notification_period_seconds = PyDict_GetItemString(py_args, "notification_period_seconds");
@@ -1037,7 +1061,7 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
 		return false;
 	}
-	args->notification_period_seconds_ = PyFloatOrInt_AsDouble(py_notification_period_seconds);
+	args->notification_period_seconds = PyFloatOrInt_AsDouble(py_notification_period_seconds);
 
 	// on_progress_received
 	PyObject * py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
@@ -1059,66 +1083,33 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve file_path from the stabilization args.");
 		return false;
 	}
-	args->file_path_ = PyUnicode_SafeAsString(py_file_path);
-	
-	return true;
-}
-
-static bool ParseStabilizationArgs_SnapToPrint(PyObject *py_args, snap_to_print_args* args)
-{
-
-	// nearest_to_corner
-	PyObject * py_nearest_to_corner = PyDict_GetItemString(py_args, "nearest_to_corner");
-	if (py_nearest_to_corner == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve nearest_to_corner from the snap_to_print_args args.");
-		return false;
-	}
-	args->nearest_to_corner = PyUnicode_SafeAsString(py_nearest_to_corner);
-
-	// favor_x_axis
-	PyObject * py_favor_x_axis = PyDict_GetItemString(py_args, "favor_x_axis");
-	if (py_favor_x_axis == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve favor_x_axis from the stabilization args.");
-		return false;
-	}
-	args->favor_x_axis = PyLong_AsLong(py_favor_x_axis) > 0;
+	args->file_path = PyUnicode_SafeAsString(py_file_path);
+	//std::cout << "Stabilization Args parsed successfully.\r\n";
 	return true;
 }
 
 static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_args* args)
 {
-	// gcode_generator
-	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
-	if (py_gcode_generator == NULL)
+	//std::cout << "Parsing smart layer args.\r\n";
+	// Extract trigger_on_extrude
+	PyObject * py_trigger_on_extrude = PyDict_GetItemString(py_args, "trigger_on_extrude");
+	if (py_trigger_on_extrude == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_generator from the stabilization args.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_on_extrude from the smart layer trigger stabilization args.");
 		return false;
 	}
-	// Need to incref py_gcode_generator, borrowed ref and we're holding it!
-	Py_INCREF(py_gcode_generator);
-	// extract the get_snapshot_position callback
-	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
-	if (py_get_snapshot_position_callback == NULL)
+	args->trigger_on_extrude = PyLong_AsLong(py_trigger_on_extrude) > 0;
+	// Extract speed_threshold
+	PyObject * py_speed_threshold = PyDict_GetItemString(py_args, "speed_threshold");
+	if (py_speed_threshold == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve get_snapshot_position function from the gcode_generator object.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve speed_threshold from the smart layer trigger stabilization args.");
 		return false;
 	}
-	// make sure it is callable
-	if (!PyCallable_Check(py_get_snapshot_position_callback)) {
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "The get_snapshot_position attribute must be callable.");
-		return NULL;
-	}
-	// py_get_snapshot_position_callback is a new reference, no reason to incref
-
-	// set the travel args values
-	args->py_gcode_generator = py_gcode_generator;
-	args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
+	args->speed_threshold = PyFloatOrInt_AsDouble(py_speed_threshold);
+	//std::cout << "Smart layer args parsed successfully.\r\n";
+	
 	return true;
 }

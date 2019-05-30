@@ -41,19 +41,73 @@ static const char* send_parsed_command_first = "first";
 static const char* send_parsed_command_last = "last";
 static const char* send_parsed_command_never = "never";
 
+enum position_type { unknown = 0, extrusion = 1, retracted_travel = 2 };
+
+/**
+ * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
+ */
+struct closest_position
+{
+	closest_position()
+	{
+		type = position_type::unknown;
+		distance = -1;
+		p_position = NULL;
+	}
+	closest_position(position_type type_, double distance_, position* p_position_)
+	{
+		type = type_;
+		distance = distance_;
+		p_position = p_position_;
+	}
+	~closest_position()
+	{
+		if (p_position != NULL)
+			delete p_position;
+	}
+	position_type type;
+	double distance;
+	position * p_position;
+};
+
 class stabilization_args {
 public:
-	stabilization_args();
-	~stabilization_args();
+	stabilization_args()
+	{
+		stabilization_type = "";
+		height_increment = 0.0;
+		notification_period_seconds = 0.25;
+		fastest_speed = true;
+		file_path = "";
+		py_get_snapshot_position_callback = NULL;
+		py_gcode_generator = NULL;
+		py_on_progress_received = NULL;
+		x_coordinate = 0;
+		y_coordinate = 0;
+	}
+	~stabilization_args()
+	{
+		if (py_get_snapshot_position_callback != NULL)
+			Py_XDECREF(py_get_snapshot_position_callback);
+		if (py_gcode_generator != NULL)
+			Py_XDECREF(py_gcode_generator);
+		if (py_on_progress_received != NULL)
+			Py_XDECREF(py_on_progress_received);
+	}
 	PyObject* py_on_progress_received;
-	std::string stabilization_type_;
-	std::string file_path_;
-	double height_increment_;
-	double notification_period_seconds_;
-	bool fastest_speed_;
+	PyObject * py_get_snapshot_position_callback;
+	PyObject * py_gcode_generator;
+	std::string stabilization_type;
+	std::string file_path;
+	double height_increment;
+	double notification_period_seconds;
+	double x_coordinate;
+	double y_coordinate;
+	bool fastest_speed;
 };
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
+typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
 
 class NotImplemented : public std::logic_error
 {
@@ -69,20 +123,30 @@ public:
 	// constructor for use when running natively
 	stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress);
 	// constructor for use when being called from python
-	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonProgressCallback progress);
+	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress);
 	virtual ~stabilization();
 	void process_file(stabilization_results* results);
 	
 private:
 	stabilization(const stabilization &source); // don't copy me!
-	double update_period_seconds_;
 	double get_next_update_time() const;
 	static double get_time_elapsed(double start_clock, double end_clock);
-	bool python_callbacks_;
+	bool has_python_callbacks_;
+	// False if return < 0, else true
+	pythonGetCoordinatesCallback _get_coordinates_callback;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
 		long gcodes_processed, long lines_processed);
 	gcode_position_args* p_args_;
+	// current stabilization point
+	double stabilization_x_;
+	double stabilization_y_;
 protected:
+	/**
+	 * \brief Gets the next xy stabilization point
+	 * \param x The current x stabilization point, will be replaced with the next x point.
+	 * \param y The current y stabilization point, will be replaced with the next y point
+	 */
+	void get_next_xy_coordinates(double *x, double *y);
 	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
 	virtual void on_processing_complete();
 	std::vector<snapshot_plan*>* p_snapshot_plans_;
@@ -91,7 +155,6 @@ protected:
 	stabilization_args* p_stabilization_args_;
 	progressCallback native_progress_callback_;
 	pythonProgressCallback progress_callback_;
-	PyObject* python_progress_callback_;
 	gcode_position* gcode_position_;
 	gcode_parser* gcode_parser_;
 	long get_file_size(const std::string& file_path);

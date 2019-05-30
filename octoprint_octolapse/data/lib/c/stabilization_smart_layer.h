@@ -9,75 +9,29 @@
 #else
 #include <Python.h>
 #endif
-enum position_type {unknown=0, extrusion=1,retracted_travel=2};
-struct closest_position
-{
-	closest_position()
-	{
-		type = position_type::unknown;
-		distance = -1;
-		p_position = NULL;
-	}
-	closest_position(position_type type_, double distance_, position* p_position_)
-	{
-		type = type_;
-		distance = distance_;
-		p_position = p_position_;
-	}
-	~closest_position()
-	{
-		if (p_position != NULL)
-			delete p_position;
-	}
-	position_type type;
-	double distance;
-	position * p_position;
-};
+
 struct smart_layer_args
 {
 	smart_layer_args()
 	{
-		x_coordinate = 0;
-		y_coordinate = 0;
-		py_get_snapshot_position_callback = NULL;
-		py_gcode_generator = NULL;
 		trigger_on_extrude = false;
-		extrude_trigger_speed_threshold = 0;
+		speed_threshold = 0;
 	}
 	smart_layer_args(PyObject * gcode_generator, PyObject * get_snapshot_position_callback)
 	{
-		x_coordinate = 0;
-		y_coordinate = 0;
-		py_get_snapshot_position_callback = get_snapshot_position_callback;
-		py_gcode_generator = gcode_generator;
 		trigger_on_extrude = false;
-		extrude_trigger_speed_threshold = 0;
+		speed_threshold = 0;
 	}
 	smart_layer_args(double x, double y)
 	{
-		x_coordinate = x;
-		y_coordinate = y;
-		py_get_snapshot_position_callback = NULL;
-		py_gcode_generator = NULL;
 		trigger_on_extrude = false;
-		extrude_trigger_speed_threshold = 0;
+		speed_threshold = 0;
 	}
-	~smart_layer_args()
-	{
-		if (py_get_snapshot_position_callback != NULL)
-			Py_XDECREF(py_get_snapshot_position_callback);
-		if (py_gcode_generator != NULL)
-			Py_XDECREF(py_gcode_generator);
-	}
-	PyObject * py_get_snapshot_position_callback;
-	PyObject * py_gcode_generator;
-	double x_coordinate;
-	double y_coordinate;
 	bool trigger_on_extrude;
-	double extrude_trigger_speed_threshold;
+	double speed_threshold;
 };
 
-typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
+
 static const char* SMART_LAYER_STABILIZATION = "smart_layer";
 class stabilization_smart_layer : public stabilization
 {
@@ -92,14 +46,8 @@ private:
 	void on_processing_complete();
 	void add_plan();
 	void reset_saved_positions();
-
-	// False if return < 0, else true
-	pythonGetCoordinatesCallback _get_coordinates_callback;
-	// current stabilization point
-	double stabilization_x_;
-	double stabilization_y_;
-	void get_next_xy_coordinates();
-	
+	void save_position(position* p_position, position_type type_, double distance);
+	bool has_saved_position();
 	/**
 	 * \brief Returns the distance to the stabilization point if it is closer than 
 	 * previous points, or -1 (less than 0) if it is not.
@@ -108,17 +56,16 @@ private:
 	 * \return -1 if the position is not closer, or the current distance.
 	 */
 	double is_closer(position* p_position, position_type type_);
-	bool has_saved_position();
-	void save_position(position* p_position, position_type type_, double distance);
+	
 	// Layer/height tracking variables
 	bool is_layer_change_wait_;
 	int current_layer_;
 	int last_tested_gcode_number_;
 	bool has_one_extrusion_speed_;
 	unsigned int current_height_increment_;
-	
+	double stabilization_x_;
+	double stabilization_y_;
 	smart_layer_args *smart_layer_args_;
-	bool has_python_coordinate_callback;
 	// closest extrusion/travel position tracking variables
 	closest_position * p_closest_travel_;
 	closest_position * p_closest_extrusion_;

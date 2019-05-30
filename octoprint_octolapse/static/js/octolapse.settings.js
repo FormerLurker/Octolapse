@@ -188,8 +188,6 @@ $(function () {
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
             Octolapse.Stabilizations.profileOptions = {
                 'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
-                'lock_to_corner_type_options': settings.profiles.options.stabilization.lock_to_corner_type_options,
-                'lock_to_corner_favor_axis_options': settings.profiles.options.stabilization.lock_to_corner_favor_axis_options,
                 'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
                 'lock_to_print_type_options': settings.profiles.options.stabilization.lock_to_print_type_options,
                 'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options,

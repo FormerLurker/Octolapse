@@ -66,7 +66,7 @@
     <div>
          <h4>Stabilization Options</h4>
     </div>
-    <div data-bind="visible: (stabilization_type() == 'lock-to-print-corner')">
+    <div data-bind="visible: (stabilization_type() == 'snap-to-print')">
         <div>
             <p>
                 This stabilization will force the extruder to always be at one corner of your print when taking snapshots.
@@ -76,32 +76,9 @@
             </p>
         </div>
         <div class="control-group">
-            <label class="control-label">Lock Extruder to</label>
-            <div class="controls">
-                <select id="stabilization_profile_lock_to_corner_type" name="lock_to_corner_type" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_type_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: lock_to_corner_type"></select>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_type"></div>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Favor Axis</label>
-            <div class="controls">
-                <select id="stabilization_profile_lock_to_corner_favor_axis" name="lock_to_corner_favor_axis" data-bind="options: Octolapse.Stabilizations.profileOptions.lock_to_corner_favor_axis_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: lock_to_corner_favor_axis"></select>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#stabilization-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_lock_to_corner_favor_axis"></div>
-                <span class="help-inline">Prefer being closer to the X or Y plane when choosing the closest corner.</span>
-            </div>
-        </div>
-        <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <input name="lock_to_corner_disable_z_lift" type="checkbox" data-bind="checked: lock_to_corner_disable_z_lift" />Disable Lift Before Snapshot
+                    <input name="snap_to_print_disable_z_lift" type="checkbox" data-bind="checked: snap_to_print_disable_z_lift" />Disable Lift Before Snapshot
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-z-lift" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
             </div>
@@ -109,31 +86,22 @@
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <input name="lock_to_corner_disable_retract" type="checkbox" data-bind="checked: lock_to_corner_disable_retract" />Disable Retract Before Snapshot
+                    <input name="snap_to_print_disable_retract" type="checkbox" data-bind="checked: snap_to_print_disable_retract" />Disable Retract Before Snapshot
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-retract" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
                 <p><span class="label label-important text-warning">Important:</span>  It is recommended that you disable both lift and retract when using this stabilization.  However, if your camera is exceptionally slow, allowing lift and retract may improve quality.</p>
             </div>
         </div>
-        <div class="control-group" data-bind="visible: !lock_to_corner_disable_retract()">
-            <div class="controls">
-                <label class="checkbox">
-                    <input name="lock_to_corner_disable_wipe" type="checkbox" data-bind="checked: lock_to_corner_disable_wipe" />Disable Wipe While Retracting - Experimental
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#disable-wipe" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                </label>
-                <p><span class="label label-important text-warning">Important:</span>  In general wipe should be disabled for this stabilization.  If you experience blobs and/or stringing, you might want to uncheck this box.</p>
-            </div>
-        </div>
     </div>
-    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'lock-to-print-corner'])>-1">
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['snap-to-print'])>-1">
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize at fastest speed
+                    <input name="octoprint_stabilization_fastest_speed" type="checkbox" data-bind="checked: fastest_speed" />Stabilize At Fastest Speed
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
                 </label>
                 <p>
-                    <span data-bind="visible: jQuery.inArray(stabilization_type(), ['lock-to-print-corner'])>-1">
+                    <span data-bind="visible: jQuery.inArray(stabilization_type(), ['snap-to-print'])>-1">
                         <span class="label label-important text-warning">Important:</span> The timelapse quality may be negatively affected by this option.
                     </span>
                     When enabled Octolapse will start to stabilize only when printing at the fastest speed on the current layer.  This will usually improve print quality.
@@ -142,7 +110,34 @@
             </div>
         </div>
     </div>
-    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time'])>-1">
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer'])>-1">
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input name="octoprint_stabilization_smart_layer_trigger_on_extrude" type="checkbox" data-bind="checked: smart_layer_trigger_on_extrude" />Allow Snapshots While Extruding
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                </label>
+                <p>
+                    <span class="label label-important text-warning">Important:</span> Print quality can be negatively affected by this option.  However, this option can reduce the amount of time added by Octolapse.
+                </p>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: smart_layer_trigger_on_extrude">
+            <label class="control-label">Trigger Speed Threshold</label>
+            <div class="controls">
+                <span class="input-append">
+                    <input id="stabilization_profile_smart_layer_speed_threshold" name="smart_layer_speed_threshold" type="number" class="input-small ignore_hidden_errors"
+                           data-bind="value: smart_layer_speed_threshold" min="0" step="1" required="true" />
+                    <span class="add-on">mm/minute</span>
+                </span>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-speed-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_speed_threshold"></div>
+                <span class="help-inline">Prevents octolapse from triggering unless the extrusion speed is ABOVE this value.  Set to 0 to disable.  If used properly, this can eliminate quality issues associated with taking snapshots while extruding.</span>
+            </div>
+        </div>
+        
+    </div>
+    <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time', 'snap-to-print'])>-1">
         <div>
             <div>
                 <h5>X Axis Stabilization</h5>
@@ -240,7 +235,7 @@
                 </div>
             </div>
         </div>
-        <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time'])>-1">
+        <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer', 'real-time', 'snap-to-print'])>-1">
         <div>
             <h5>Y Axis Stabilization</h5>
             <p>Controls the Y axis stabilizations, which is the position on the Y axis where the bed/extruder will be when we take a snapshot.</p>
@@ -357,7 +352,7 @@
         <div class="control-group">
             <label class="control-label">Trigger Type</label>
             <div class="controls">
-                <select id="snapshot_profile_layer_trigger_type" data-bind="options: get_trigger_type_options,
+                <select id="stabilization_profile_layer_trigger_type" data-bind="options: get_trigger_type_options,
                        optionsText: 'name',
                        optionsValue: 'value',
                        value: trigger_type"></select>
@@ -370,7 +365,7 @@
                 <span data-bind="visible: trigger_type() == 'gcode'">
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#gcode-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                 </span>
-                <div class="error_label_container text-error" data-error-for="snapshot_profile_layer_trigger_type"></div>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_layer_trigger_type"></div>
             </div>
         </div>
 
@@ -379,12 +374,12 @@
                 <label class="control-label">Trigger Height</label>
                 <div class="controls">
                     <span class="input-append">
-                        <input id="snapshot_profile_layer_trigger_height" name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors"
+                        <input id="stabilization_profile_layer_trigger_height" name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors"
                                data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true" />
                         <span class="add-on">mm</span>
                     </span>
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#trigger-height" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="snapshot_profile_layer_trigger_height"></div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_layer_trigger_height"></div>
                     <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
                 </div>
             </div>
@@ -393,10 +388,10 @@
             <div class="control-group">
                 <label class="control-label">Seconds to Trigger</label>
                 <div class="controls">
-                    <input id="snapshot_profile_timer_trigger_seconds" name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
+                    <input id="stabilization_profile_timer_trigger_seconds" name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
                            data-bind="value: timer_trigger_seconds" min="0" required="true" />
                     <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#seconds-to-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    <div class="error_label_container text-error" data-error-for="snapshot_profile_timer_trigger_seconds"></div>
+                    <div class="error_label_container text-error" data-error-for="stabilization_profile_timer_trigger_seconds"></div>
                     <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
                 </div>
             </div>
@@ -432,7 +427,7 @@
             <div class="control-group">
                 <div class="controls">
                     <label class="checkbox">
-                        <input id="snapshot_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
+                        <input id="stabilization_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#extruder-trigger-requirements" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
                     </label>
                 </div>
@@ -441,111 +436,111 @@
                 <div class="control-group">
                     <label class="control-label">Extrusion Starting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_extruding_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_extruding_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_extruding_start"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_extruding_start"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_extruding_start"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">During Extrusion</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_extruding" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_extruding" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_extruding"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_extruding"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_extruding"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">On Extruder Primed</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_primed" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_primed" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_primed"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_primed"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_primed"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Start Retracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_retracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_retracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_retracting_start"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracting_start"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_retracting_start"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Retracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_retracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_retracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_retracting"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracting"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_retracting"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Partially Retracted</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_partially_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_partially_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_partially_retracted"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_partially_retracted"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_partially_retracted"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Fully Retracted</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_retracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_retracted"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_retracted"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_retracted"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Start Deretracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_deretracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_deretracting_start" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_deretracting_start"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting_start"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_deretracting_start"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Deretracting</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_deretracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_deretracting" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_deretracting"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracting"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_deretracting"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">On Deretracted</label>
                     <div class="controls">
-                        <select id="snapshot_profile_trigger_on_deretracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
+                        <select id="stabilization_profile_trigger_on_deretracted" data-bind="options: Octolapse.Stabilizations.profileOptions.snapshot_extruder_trigger_options,
                                optionsText: 'name',
                                optionsValue: 'value',
 
                                value: trigger_on_deretracted"></select>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_trigger_on_deretracted"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_trigger_on_deretracted"></div>
                     </div>
                 </div>
             </div>
@@ -604,23 +599,23 @@
                 <div class="control-group">
                     <label class="control-label">Position Restriction Type</label>
                     <div class="controls">
-                        <select id="snapshot_profile_new_position_restriction_type" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_types,
+                        <select id="stabilization_profile_new_position_restriction_type" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_types,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_type"></select>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_type"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_new_position_restriction_type"></div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Position Restriction Shape</label>
                     <div class="controls">
-                        <select id="snapshot_profile_new_position_restriction_shape" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_shapes,
+                        <select id="stabilization_profile_new_position_restriction_shape" data-bind="options: Octolapse.Stabilizations.profileOptions.position_restriction_shapes,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_shape"></select>
                         <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-shape" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                        <div class="error_label_container text-error" data-error-for="snapshot_profile_new_position_restriction_shape"></div>
+                        <div class="error_label_container text-error" data-error-for="stabilization_profile_new_position_restriction_shape"></div>
                     </div>
                 </div>
                 <div class="control-group">

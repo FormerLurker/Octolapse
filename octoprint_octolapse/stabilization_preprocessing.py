@@ -123,11 +123,10 @@ class StabilizationPreprocessingThread(Thread):
         )
 
     def _create_stabilization_args(self):
-        # height increment calculation.  If the self.stabilization_profile.lock_to_corner_height_increment == 0
         # and vase mode is enabled, use the layer height setting if it exists
         # I'm keeping this out of the c++ routine so it can be more easily changed based on slicer
         # changes.  I might add this to the settings class.
-        if self.stabilization_profile.lock_to_corner_height_increment == 0:
+        if self.stabilization_profile.layer_trigger_height == 0:
             if (
                 self.printer_profile.gcode_generation_settings.vase_mode and
                 self.printer_profile.gcode_generation_settings.layer_height
@@ -137,7 +136,7 @@ class StabilizationPreprocessingThread(Thread):
                 # use the default height increment
                 height_increment = PrinterProfile.minimum_height_increment
         else:
-            height_increment = self.stabilization_profile.lock_to_corner_height_increment
+            height_increment = self.stabilization_profile.layer_trigger_height
 
         stabilization_args = {
             'height_increment': height_increment,
@@ -145,6 +144,7 @@ class StabilizationPreprocessingThread(Thread):
             'notification_period_seconds': self.notification_period_seconds,
             'on_progress_received': self.on_progress_received,
             'file_path': self.timelapse_settings["gcode_file_path"],
+            'gcode_generator': self.gcode_generator,
         }
         return stabilization_args
 
@@ -167,29 +167,22 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # gcodes_processed
                 0  # lines_processed
             )
-        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_LOCK_TO_PRINT:
-            lock_to_print_args = {
-                'nearest_to_corner': self.stabilization_profile.lock_to_corner_type,
-                'favor_x_axis': self.stabilization_profile.lock_to_corner_favor_axis == "x"
-            }
+        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT:
             options = {
-                'disable_retract': self.stabilization_profile.lock_to_corner_disable_retract,
-                'disable_z_lift': self.stabilization_profile.lock_to_corner_disable_z_lift
+                'disable_retract': self.stabilization_profile.snap_to_print_disable_retract,
+                'disable_z_lift': self.stabilization_profile.snap_to_print_disable_z_lift
             }
-            # if wiping is disabled, make sure it is disabled in the position args
-            if self.stabilization_profile.lock_to_corner_disable_retract or self.stabilization_profile.lock_to_corner_disable_wipe:
-                self.cpp_position_args["slicer_settings"]["wipe_enabled"] = False
 
             # run lock_to_print stabilization
             results = GcodePositionProcessor.GetSnapshotPlans_SnapToPrint(
                 self.cpp_position_args,
-                stabilization_args,
-                lock_to_print_args
+                stabilization_args
             )
         elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER:
             # run smart layer stabilization
             smart_layer_args = {
-                'gcode_generator': self.gcode_generator
+                'trigger_on_extrude': self.stabilization_profile.smart_layer_trigger_on_extrude,
+                'speed_threshold': self.stabilization_profile.smart_layer_speed_threshold
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,

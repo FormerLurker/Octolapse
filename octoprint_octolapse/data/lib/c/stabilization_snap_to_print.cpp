@@ -24,61 +24,42 @@
 #include <iostream>
 #include "logging.h"
 #include "utilities.h"
-
-snap_to_print_args::snap_to_print_args()
-{
-	nearest_to_corner = "back-left";
-	favor_x_axis = false;
-
-}
-snap_to_print_args::snap_to_print_args(std::string nearest_to, bool favor_x)
-{
-	nearest_to_corner = nearest_to;
-	favor_x_axis = favor_x;
-
-}
-snap_to_print_args::~snap_to_print_args()
-{
-	
-}
-
 stabilization_snap_to_print::stabilization_snap_to_print() : stabilization()
 {
-	snap_to_print_args_ = NULL;
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
-	current_height_ = 0.0;
 	current_height_increment_ = 0;
-	has_saved_position_ = false;
-	p_saved_position_ = NULL;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	p_closest_position_ = NULL;
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_snap_to_print::stabilization_snap_to_print(
-	gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
-	progressCallback progress
+	gcode_position_args* position_args, stabilization_args* stab_args, progressCallback progress
 ) : stabilization(position_args, stab_args, progress)
 {
-	snap_to_print_args_ = snap_args;
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
-	current_height_ = 0.0;
 	current_height_increment_ = 0;
-	has_saved_position_ = false;
-	p_saved_position_ = NULL;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	p_closest_position_ = NULL;
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_snap_to_print::stabilization_snap_to_print(
-	gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
-	pythonProgressCallback progress
-) :stabilization(position_args, stab_args, progress)
+	gcode_position_args* position_args, stabilization_args* stab_args,  
+	pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
+) :stabilization(position_args, stab_args, get_coordinates, progress)
 {
-	snap_to_print_args_ = snap_args;
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
-	current_height_ = 0.0;
 	current_height_increment_ = 0;
-	has_saved_position_ = false;
-	p_saved_position_ = NULL;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	p_closest_position_ = NULL;
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_snap_to_print::stabilization_snap_to_print(const stabilization_snap_to_print &source)
@@ -88,15 +69,47 @@ stabilization_snap_to_print::stabilization_snap_to_print(const stabilization_sna
 
 stabilization_snap_to_print::~stabilization_snap_to_print()
 {
-	if (p_saved_position_ != NULL)
+	// delete any saved extrusion/travel tracking structs
+	delete_saved_positions();
+}
+
+bool stabilization_snap_to_print::has_saved_position()
+{
+	return p_closest_position_ != NULL;
+}
+
+void stabilization_snap_to_print::reset_saved_positions()
+{
+	// cleanup memory
+	delete_saved_positions();
+	// set the state for the next layer
+	is_layer_change_wait_ = false;
+}
+
+void stabilization_snap_to_print::delete_saved_positions()
+{
+	// cleanup memory
+	if (p_closest_position_ != NULL)
 	{
-		delete p_saved_position_;
-		p_saved_position_ = NULL;
+		delete p_closest_position_;
+		p_closest_position_ = NULL;
+	}
+}
+
+void stabilization_snap_to_print::save_position(position* p_position, position_type type_, double distance)
+{
+	if (type_ == position_type::extrusion)
+	{
+		// delete the current saved position and parsed command
+		delete_saved_positions();
+		//std::cout << "Creating new saved position.\r\n";
+		p_closest_position_ = new closest_position(position_type::extrusion, distance, new position(*p_position));
 	}
 }
 
 void stabilization_snap_to_print::process_pos(position* p_current_pos, position* p_previous_pos)
 {
+	//std::cout << "Processing Position for gcode:"<< p_current_pos->p_command->gcode_ << ".\r\n";
 	// if we're at a layer change, add the current saved plan
 	if (p_current_pos->is_layer_change_ && p_current_pos->layer_ > 1)
 	{
@@ -108,17 +121,18 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		return;
 	}
 
-	if (is_layer_change_wait_ && has_saved_position_)
+	if (is_layer_change_wait_ && has_saved_position())
 	{
-		if (p_stabilization_args_->height_increment_ != 0)
+		if (p_stabilization_args_->height_increment != 0)
 		{
+			//std::cout << "Checking Height Increment.\r\n";
 			// todo : improve this check, it doesn't need to be done on every command if Z hasn't changed
-			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment_;
+			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
-			std::cout << "Last Increment: " << current_height_increment_ << " Current Increment double" << increment_double << " Current Increment int:" << increment;
+			//std::cout << "Last Increment: " << current_height_increment_ << " Current Increment double" << increment_double << " Current Increment int:" << increment;
 			if (increment > current_height_increment_)
 			{
-				if (increment > 1 && has_saved_position_)
+				if (increment > 1)
 				{
 					current_height_increment_ = increment;
 					add_saved_plan();
@@ -133,7 +147,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 		{
 			add_saved_plan();
 		}
-		
+		//std::cout << "Completed Checking Height Increment.\r\n";
 	}
 
 	// check for errors in position, layer, or height, and make sure we are extruding.
@@ -146,161 +160,122 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 	// Note that we need to save the position immediately
 	// so that the IsCloser check for the previous_pos will
 	// have a saved command to check.
-	if (is_closer(p_current_pos))
+	//std::cout << "Checking for closer position.\r\n";
+	double distance = is_closer(p_current_pos, position_type::extrusion);
+	if (utilities::greater_than_or_equal(distance, 0.0))
 	{
-		has_saved_position_ = true;
-		// delete the current saved position and parsed command
-		if (p_saved_position_ != NULL)
-			delete p_saved_position_;
-		p_saved_position_ = new position(*p_current_pos);
+		save_position(p_current_pos, position_type::extrusion, distance);
 	}
+	
 	// If the previous command was at the same height, and the extruder is primed, check the starting
 	// point of the current command to see if it's closer.
 	if (p_previous_pos->is_primed_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
-		if (is_closer(p_previous_pos))
+		//std::cout << "Checking for closer previous position.\r\n";
+		distance = is_closer(p_previous_pos, position_type::extrusion);
+		if (utilities::greater_than_or_equal(distance, 0.0))
 		{
-			//std::cout << "Previous position is closer!\r\n";
-			has_saved_position_ = true;
-			// delete the current saved position and parsed command
-			if (p_saved_position_ != NULL)
-				delete p_saved_position_;
-			p_saved_position_ = new position(*p_previous_pos);
+			save_position(p_previous_pos, position_type::extrusion, distance);
 		}
 	}
-
 }
 
-bool stabilization_snap_to_print::is_closer(position * p_position)
+double stabilization_snap_to_print::is_closer(position * p_position, position_type type)
 {
-	// if we have no saved position, this is the closest!
-	if (!has_saved_position_)
-		return true;
+	closest_position* p_current_closest = NULL;
+	if (type == position_type::extrusion)
+	{
+		p_current_closest = p_closest_position_;
+	}
+	else
+		return -1.0;
+
+	if (p_current_closest == NULL)
+	{
+		//std::cout << "No closer position, returning distance.\r\n";
+		return utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+	}
 
 	// If the speed is faster than the saved speed, this is the closest point
-	if (p_stabilization_args_->fastest_speed_)
+	if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
 	{
-		if (utilities::greater_than(p_position->f_, p_saved_position_->f_))
-			return true;
-		else if (utilities::less_than(p_position->f_, p_saved_position_->f_))
-			return false;
-	}
-	if (snap_to_print_args_->nearest_to_corner == FRONT_LEFT)
-	{
-		if (snap_to_print_args_->favor_x_axis)
+		//std::cout << "Checking for faster speed than " << p_current_closest->p_position->f_;
+		if (utilities::greater_than(p_position->f_, p_current_closest->p_position->f_))
 		{
-			if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return false;
-			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return true;
-			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return true;
+			//std::cout << " - IsCloser Complete, " << p_position->f_ << " is faster than " << p_current_closest->p_position->f_ << "\r\n";
+			const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+			if (distance > -1)
+			{
+				return distance;
+			}
+
 		}
-		else
+		else if (utilities::less_than(p_position->f_, p_current_closest->p_position->f_))
 		{
-			if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return false;
-			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return true;
-			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return true;
+			//std::cout << " - IsCloser Complete, " << p_position->f_ << " too slow.\r\n";
+			return -1.0;
 		}
 	}
-	else if (snap_to_print_args_->nearest_to_corner == FRONT_RIGHT)
+	//std::cout << "Calculating nearest distance...";
+	// Compare the saved points cartesian distance from the current point
+	const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+	if (utilities::greater_than_or_equal(distance, 0) )
 	{
-		if (snap_to_print_args_->favor_x_axis)
+		if(utilities::is_equal(p_current_closest->distance, distance) && !p_snapshot_plans_->empty())
 		{
-			if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return false;
-			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return true;
-			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return true;
+			//std::cout << "Closest position tie detected, ";
+			// get the last snapshot plan position
+			position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position_;
+			const double old_distance_from_previous = utilities::get_cartesian_distance(p_current_closest->p_position->x_, p_current_closest->p_position->y_, last_position->x_, last_position->y_);
+			const double new_distance_from_previous = utilities::get_cartesian_distance(p_position->x_, p_position->y_, last_position->x_, last_position->y_);
+			if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
+			{
+				//std::cout << "new is closer to the last initial snapshot position.\r\n";
+				return distance;
+			}
+			//std::cout << "old position is closer to the last initial snapshot position.\r\n";
 		}
-		else
+		// Todo:  handle ties.  If there is a tie, choose the position that's closest to the previous position
+		else if (utilities::greater_than(p_current_closest->distance, distance))
 		{
-			if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return false;
-			else if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return true;
-			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return true;
+			//std::cout << " - IsCloser Complete, closer.\r\n";
+			return distance;
 		}
 	}
-	else if (snap_to_print_args_->nearest_to_corner == BACK_LEFT)
-	{
-		if (snap_to_print_args_->favor_x_axis)
-		{
-			if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return false;
-			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return true;
-			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return true;
-		}
-		else
-		{
-			if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return false;
-			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return true;
-			else if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return true;
-		}
-	}
-	else if (snap_to_print_args_->nearest_to_corner == BACK_RIGHT)
-	{
-		if (snap_to_print_args_->favor_x_axis)
-		{
-			if (utilities::less_than(p_position->x_, p_saved_position_->x_))
-				return false;
-			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return true;
-			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return true;
-		}
-		else
-		{
-			if (utilities::less_than(p_position->y_, p_saved_position_->y_))
-				return false;
-			else if (utilities::greater_than(p_position->y_, p_saved_position_->y_))
-				return true;
-			else if (utilities::greater_than(p_position->x_, p_saved_position_->x_))
-				return true;
-		}
-	}
-	return false;
+	//std::cout << " - IsCloser Complete, not closer.\r\n";
+	return -1.0;
 }
 
 void stabilization_snap_to_print::add_saved_plan()
 {
-	snapshot_plan* p_plan = new snapshot_plan();
-	// create the initial position
-	p_plan->p_triggering_command_ = new parsed_command(*p_saved_position_->p_command);
-	p_plan->p_start_command_ = new parsed_command(*p_saved_position_->p_command);
-	p_plan->p_initial_position_ = new position(*p_saved_position_);
-	snapshot_plan_step* p_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
-	p_plan->steps_.push_back(p_step);
-	p_plan->p_return_position_ = new position(*p_saved_position_);
-	p_plan->p_end_command_ = NULL;
-	p_plan->file_line_ = p_saved_position_->file_line_number_;
-	p_plan->file_gcode_number_ = p_saved_position_->gcode_number_;
-	// Add the plan
-	p_snapshot_plans_->push_back(p_plan);
-
-	current_height_ = p_saved_position_->height_;
-	current_layer_ = p_saved_position_->layer_;
-	// set the state for the next layer
-	has_saved_position_ = false;
-	is_layer_change_wait_ = false;
-	delete p_saved_position_;
-	p_saved_position_ = NULL;
-
+	///td::cout << "Adding saved plan.\r\n";
+	if (p_closest_position_ != NULL)
+	{
+		snapshot_plan* p_plan = new snapshot_plan();
+		// create the initial position
+		p_plan->p_triggering_command_ = new parsed_command(*p_closest_position_->p_position->p_command);
+		p_plan->p_start_command_ = new parsed_command(*p_closest_position_->p_position->p_command);
+		p_plan->p_initial_position_ = new position(*p_closest_position_->p_position);
+		snapshot_plan_step* p_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
+		p_plan->steps_.push_back(p_step);
+		p_plan->p_return_position_ = new position(*p_closest_position_->p_position);
+		p_plan->p_end_command_ = NULL;
+		p_plan->file_line_ = p_closest_position_->p_position->file_line_number_;
+		p_plan->file_gcode_number_ = p_closest_position_->p_position->gcode_number_;
+		// Add the plan
+		p_snapshot_plans_->push_back(p_plan);
+		current_layer_ = p_closest_position_->p_position->layer_;
+		// set the state for the next layer
+	}
+	
+	reset_saved_positions();
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
+	//std::cout << "Saved plan added.\r\n";
 }
 
 void stabilization_snap_to_print::on_processing_complete()
 {
-	if (has_saved_position_)
+	if (has_saved_position())
 	{
 		add_saved_plan();
 	}

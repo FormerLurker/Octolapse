@@ -31,34 +31,17 @@
 #else
 #include <Python.h>
 #endif
-class snap_to_print_args
-{
-public:
-	snap_to_print_args();
-	snap_to_print_args(std::string nearest_to_corner, bool favor_x_axis);
-	~snap_to_print_args();
-	std::string nearest_to_corner;
-	bool favor_x_axis;
-};
-
-static const char * FRONT_LEFT = "front-left";
-static const char * FRONT_RIGHT = "front-right";
-static const char * BACK_LEFT = "back-left";
-static const char * BACK_RIGHT = "back-right";
-static const char * FAVOR_X = "x";
-static const char * FAVOR_Y = "y";
 static const char* LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner";
 class stabilization_snap_to_print :
 	public stabilization
 {
 public:
 	stabilization_snap_to_print(
-		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
-		progressCallback progress
+		gcode_position_args* position_args, stabilization_args* stab_args, progressCallback progress
 	);
 	stabilization_snap_to_print(
-		gcode_position_args* position_args, stabilization_args* stab_args, snap_to_print_args* snap_args, 
-		pythonProgressCallback progress
+		gcode_position_args* position_args, stabilization_args* stab_args,
+		pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
 	);
 
 	stabilization_snap_to_print();
@@ -66,17 +49,20 @@ public:
 
 private:
 	stabilization_snap_to_print(const stabilization_snap_to_print &source); // don't copy me
-	void process_pos(position* p_current_pos, position* p_previous_pos);
-	void on_processing_complete();
+	void process_pos(position* p_current_pos, position* p_previous_pos) override;
+	void on_processing_complete() override;
 	void add_saved_plan();
-	bool is_closer(position* p_position);
+	bool has_saved_position();
+	void reset_saved_positions();
+	void delete_saved_positions();
+	void save_position(position* p_position, position_type type_, double distance);
+	double is_closer(position * p_position, position_type type);
+	double stabilization_x_;
+	double stabilization_y_;
 	bool is_layer_change_wait_;
-	snap_to_print_args* snap_to_print_args_;
 	int current_layer_;
-	double current_height_;
 	unsigned int current_height_increment_;
-	bool has_saved_position_;
-	position * p_saved_position_;
+	closest_position* p_closest_position_;
 };
 
 

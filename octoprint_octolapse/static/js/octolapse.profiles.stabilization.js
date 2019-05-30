@@ -30,12 +30,11 @@ $(function () {
         self.description = ko.observable(values.description);
         self.stabilization_type = ko.observable(values.stabilization_type);
         // Pre-calculated stabilization options
-        self.lock_to_corner_type = ko.observable(values.lock_to_corner_type);
-        self.lock_to_corner_favor_axis = ko.observable(values.lock_to_corner_favor_axis);
-        self.lock_to_corner_disable_z_lift = ko.observable(values.lock_to_corner_disable_z_lift);
-        self.lock_to_corner_disable_retract = ko.observable(values.lock_to_corner_disable_retract);
-        self.lock_to_corner_disable_wipe = ko.observable(values.lock_to_corner_disable_wipe);
+        self.snap_to_print_disable_z_lift = ko.observable(values.snap_to_print_disable_z_lift);
+        self.snap_to_print_disable_retract = ko.observable(values.snap_to_print_disable_retract);
         self.fastest_speed = ko.observable(values.fastest_speed);
+        self.smart_layer_trigger_on_extrude = ko.observable(values.smart_layer_trigger_on_extrude);
+        self.smart_layer_speed_threshold = ko.observable(values.smart_layer_speed_threshold);
         //  Real-time stabilization options
         self.x_type = ko.observable(values.x_type);
         self.x_fixed_coordinate = ko.observable(values.x_fixed_coordinate);
@@ -142,7 +141,7 @@ $(function () {
 
 
         self.get_xy_stabilization_type_options = ko.pureComputed( function () {
-                if (self.stabilization_type() === 'smart-layer') {
+                if (jQuery.inArray(self.stabilization_type(), ['smart-layer', 'snap-to-print'])>-1) {
                     var options = [];
                     for (var index = 0; index < Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options.length; index++) {
                         var curItem = Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options[index];
@@ -283,8 +282,6 @@ $(function () {
         rules: {
             name: "required"
             , stabilization_type: "required"
-            , lock_to_corner_type: "required"
-            , lock_to_corner_favor_axis: "required"
             , x_type: "required"
             , x_fixed_coordinate: {number: true, required: true}
             , x_fixed_path: {required: true, csvFloat: true}

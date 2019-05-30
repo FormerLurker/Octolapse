@@ -7,18 +7,15 @@
 stabilization_smart_layer::stabilization_smart_layer()
 {
 	// Initialize travel args
-	smart_layer_args_ = NULL;
-	// Initialize python callback status
-	has_python_coordinate_callback = false;
-	// initialize stabilization point variables
-	stabilization_x_ = 0;
-	stabilization_y_ = 0;
+	smart_layer_args_ = new smart_layer_args();
 	// initialize layer/height tracking variables
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
 	// initialize extrusion tracking	
 	p_closest_extrusion_ = NULL;
 	
@@ -37,33 +34,33 @@ stabilization_smart_layer::stabilization_smart_layer(
 	last_tested_gcode_number_ = -1;
 	
 	smart_layer_args_ = mt_args;
-	has_python_coordinate_callback = false;
 
 	// initialize closest extrusion/travel tracking structs
 	p_closest_extrusion_ = NULL;
 	p_closest_travel_ = NULL;
-	
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
 	// Get the initial stabilization coordinates
-	get_next_xy_coordinates();
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_smart_layer::stabilization_smart_layer(
 	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
-) : stabilization(position_args, stab_args, progress)
+) : stabilization(position_args, stab_args, get_coordinates, progress)
 {
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
-	_get_coordinates_callback = get_coordinates;
 	smart_layer_args_ = mt_args;
-	has_python_coordinate_callback = true;
 	// initialize closest extrusion/travel tracking structs
 	p_closest_extrusion_ = NULL;
 	p_closest_travel_ = NULL;
 	// Get the initial stabilization coordinates
-	get_next_xy_coordinates();
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_smart_layer::stabilization_smart_layer(const stabilization_smart_layer &source)
@@ -92,26 +89,6 @@ bool stabilization_smart_layer::has_saved_position()
 	if (p_closest_travel_ != NULL || p_closest_extrusion_ != NULL)
 		return true;
 	return false;
-}
-void stabilization_smart_layer::get_next_xy_coordinates()
-{
-	//std::cout << "Getting XY stabilization coordinates...";
-
-	if (has_python_coordinate_callback)
-	{
-		//std::cout << "calling python...";
-		if(!_get_coordinates_callback(smart_layer_args_->py_get_snapshot_position_callback, smart_layer_args_->x_coordinate, smart_layer_args_->y_coordinate, &stabilization_x_, &stabilization_y_))
-			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed dto get snapshot coordinates.");
-	}
-
-	else
-	{
-		//std::cout << "extracting from args...";
-		stabilization_x_ = smart_layer_args_->x_coordinate;
-		stabilization_y_ = smart_layer_args_->y_coordinate;
-	}
-	//std::cout << " - X coord: " << x_coord;
-	//std::cout << " - Y coord: " << y_coord << "\r\n";
 }
 
 void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
@@ -147,10 +124,10 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	if (is_layer_change_wait_ && has_saved_position())
 	{
 		bool can_add_saved_plan = true;
-		if (p_stabilization_args_->height_increment_ != 0)
+		if (p_stabilization_args_->height_increment != 0)
 		{
 			can_add_saved_plan = false;
-			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment_;
+			const double increment_double = p_current_pos->last_extrusion_height_ / p_stabilization_args_->height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
@@ -258,12 +235,13 @@ void stabilization_smart_layer::save_position(position* p_position, position_typ
 
 double stabilization_smart_layer::is_closer(position * p_position, position_type type)
 {
+	
 	closest_position* p_current_closest = NULL;
 	if (
 		type == position_type::extrusion &&
 		(
-			utilities::is_equal(smart_layer_args_->extrude_trigger_speed_threshold,0) ||
-			utilities::greater_than(p_position->f_, smart_layer_args_->extrude_trigger_speed_threshold)
+			utilities::is_equal(smart_layer_args_->speed_threshold,0) ||
+			utilities::greater_than(p_position->f_, smart_layer_args_->speed_threshold)
 		)
 	)
 	{
@@ -282,7 +260,7 @@ double stabilization_smart_layer::is_closer(position * p_position, position_type
 	}
 
 	// If the speed is faster than the saved speed, this is the closest point
-	if (p_stabilization_args_->fastest_speed_ && p_current_closest->type == position_type::extrusion)
+	if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
 	{
 		if(has_one_extrusion_speed_ && !utilities::is_equal(p_position->f_, p_current_closest->p_position->f_))
 		{
@@ -358,8 +336,12 @@ void stabilization_smart_layer::add_plan()
 		p_snapshot_plans_->push_back(p_plan);
 		current_layer_ = p_closest->p_position->layer_;
 	}
+	else
+	{
+		std::cout << "No saved position available to add snapshot plan!";
+	}
 	reset_saved_positions();
-	get_next_xy_coordinates();
+	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 	//std::cout << "Complete.\r\n";
 }
 
