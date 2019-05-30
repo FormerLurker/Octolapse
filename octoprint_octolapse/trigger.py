@@ -155,12 +155,10 @@ class TriggerState(object):
         self.trigger_type = None if state is None else state.trigger_type
         self.is_in_position = False if state is None else state.is_in_position
         self.in_path_position = False if state is None else state.in_path_position
-        self.is_feature_allowed = False if state is None else state.is_feature_allowed
         self.is_waiting = False if state is None else state.is_waiting
         self.is_home_position_wait = False if state is None else state.is_home_position_wait
         self.is_waiting_on_zhop = False if state is None else state.is_waiting_on_zhop
         self.is_waiting_on_extruder = False if state is None else state.is_waiting_on_extruder
-        self.is_waiting_on_feature = False if state is None else state.is_waiting_on_feature
         self.has_changed = False if state is None else state.has_changed
         self.is_homed = False if state is None else state.is_homed
 
@@ -170,12 +168,10 @@ class TriggerState(object):
             "trigger_type": self.trigger_type,
             "in_path_position": self.in_path_position,
             "is_in_position": self.is_in_position,
-            "is_feature_allowed": self.is_feature_allowed,
             "is_waiting": self.is_waiting,
             "is_home_position_wait": self.is_home_position_wait,
             "is_waiting_on_zhop": self.is_waiting_on_zhop,
             "is_waiting_on_extruder": self.is_waiting_on_extruder,
-            "is_waiting_on_feature": self.is_waiting_on_feature,
             "has_changed": self.has_changed,
             "require_zhop": trigger.require_zhop,
             "is_homed": self.is_homed,
@@ -199,7 +195,6 @@ class TriggerState(object):
                 and self.is_home_position_wait == state.is_home_position_wait
                 and self.is_waiting_on_zhop == state.is_waiting_on_zhop
                 and self.is_waiting_on_extruder == state.is_waiting_on_extruder
-                and self.is_waiting_on_feature == state.is_waiting_on_feature
                 and self.is_homed == state.is_homed):
             return True
         return False
@@ -251,12 +246,6 @@ class Trigger(object):
         if state is None:
             return None
         return state.in_path_position
-
-    def is_feature_allowed(self, index):
-        state = self.get_state(index)
-        if state is None:
-            return None
-        return state.is_feature
 
     def is_waiting(self, index):
         state = self.get_state(index)
@@ -368,7 +357,6 @@ class GcodeTrigger(Trigger):
                 # set is in position
                 state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
-                state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 
                 if self.snapshot_command.lower() == parsed_command.gcode.lower():
                     state.is_waiting = True
@@ -383,10 +371,6 @@ class GcodeTrigger(Trigger):
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("GcodeTrigger - Waiting on Position.")
-                        elif not state.is_feature_allowed:
-                            state.is_waiting_on_feature = True
-                            # Make sure the previous X,Y is in position
-                            logger.debug("GcodeTrigger - Waiting on Feature.")
                         else:
                             state.is_triggered = True
                             self.trigger_count += 1
@@ -400,7 +384,6 @@ class GcodeTrigger(Trigger):
                             state.is_waiting = False
                             state.is_waiting_on_zhop = False
                             state.is_waiting_on_extruder = False
-                            state.is_waiting_on_feature = False
                             logger.debug("GcodeTrigger - Waiting for extruder to trigger.")
                     else:
                         state.is_waiting_on_extruder = True
@@ -536,7 +519,6 @@ class LayerTrigger(Trigger):
                 # set is in position
                 state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
-                state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 
                 # calculate height increment changed
                 if (
@@ -610,10 +592,6 @@ class LayerTrigger(Trigger):
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("LayerTrigger - Waiting on Position.")
-                        elif not state.is_feature_allowed:
-                            state.is_waiting_on_feature = True
-                            # Make sure the previous X,Y is in position
-                            logger.debug("LayerTrigger - Waiting on Feature.")
                         else:
                             if state.is_height_change_wait:
                                 logger.debug("LayerTrigger - Height change triggering.")
@@ -636,7 +614,6 @@ class LayerTrigger(Trigger):
                             state.is_waiting = False
                             state.is_waiting_on_zhop = False
                             state.is_waiting_on_extruder = False
-                            state.is_waiting_on_feature = False
             # calculate changes and set the current state
             state.has_changed = not state.is_equal(self.get_state(0))
             # add the state to the history
@@ -787,7 +764,6 @@ class TimerTrigger(Trigger):
                 # set is in position
                 state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
-                state.is_feature_allowed = position.current_pos.has_one_feature_enabled
 
                 # if the trigger start time is null, set it now.
                 if state.trigger_start_time is None:
@@ -825,10 +801,6 @@ class TimerTrigger(Trigger):
                             # Make sure the previous X,Y is in position
 
                             logger.debug("TimerTrigger - Waiting on Position.")
-                        elif not state.is_feature_allowed:
-                            state.is_waiting_on_feature = True
-                            # Make sure the previous X,Y is in position
-                            logger.debug("TimerTrigger - Waiting on Feature.")
                         else:
                             # Is Triggering
                             self.trigger_count += 1
@@ -846,7 +818,6 @@ class TimerTrigger(Trigger):
                             state.trigger_start_time = None
                             state.is_waiting_on_zhop = False
                             state.is_waiting_on_extruder = False
-                            state.is_waiting_on_feature = False
                             # Log trigger
                             logger.info('TimerTrigger - Triggering.')
 

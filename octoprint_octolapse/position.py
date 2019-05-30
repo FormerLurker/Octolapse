@@ -23,7 +23,7 @@
 from __future__ import unicode_literals
 import math
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.settings import SlicerPrintFeatures, OctolapseGcodeSettings, PrinterProfile
+from octoprint_octolapse.settings import OctolapseGcodeSettings, PrinterProfile
 from octoprint_octolapse.gcode_parser import ParsedCommand
 import GcodePositionProcessor
 # create the module level logger
@@ -38,7 +38,7 @@ class Pos(object):
         "parsed_command", "f", "x", "x_offset", "x_homed", "y", "y_offset", "y_homed", "z", "z_offset", "z_homed",
         "e", "e_offset", "is_relative", "is_extruder_relative", "is_metric", "last_extrusion_height", "layer",
         "height", "is_printer_primed", "minimum_layer_height_reached", "is_in_position", "in_path_position",
-        "is_travel_only", "has_one_feature_enabled", "firmware_retraction_length",
+        "is_travel_only", "firmware_retraction_length",
         "firmware_unretraction_additional_length", "firmware_retraction_feedrate", "firmware_unretraction_feedrate", 
         "firmware_z_lift", "has_homed_position", "is_layer_change", "is_height_change", "is_zhop",
         "has_xy_position_changed", "has_position_changed", "has_state_changed", "has_received_home_command",
@@ -98,7 +98,6 @@ class Pos(object):
             self.is_deretracting = copy_from_pos.is_deretracting
             self.is_deretracted = copy_from_pos.is_deretracted
             self.is_in_position = copy_from_pos.is_in_position
-            self.has_one_feature_enabled = copy_from_pos.has_one_feature_enabled
             self.in_path_position = copy_from_pos.in_path_position
             self.is_zhop = copy_from_pos.is_zhop
             self.file_line_number = copy_from_pos.file_line_number
@@ -182,7 +181,6 @@ class Pos(object):
             self.has_position_changed = False
             self.has_state_changed = False
             self.has_received_home_command = False
-            self.has_one_feature_enabled = False
             self.is_in_position = False
             self.in_path_position = False
             self.file_line_number = -1
@@ -242,7 +240,6 @@ class Pos(object):
         target.has_state_changed = cpp_pos[48] > 0
         target.has_received_home_command = cpp_pos[49] > 0
         # Todo:  figure out how to deal with these things which must be currently ignored
-        #target.has_one_feature_enabled = cpp_pos[50] > 0
         #target.is_in_position = cpp_pos[51] > 0
         #target.in_path_position = cpp_pos[52] > 0
         target.file_line_number = cpp_pos[66]
@@ -310,7 +307,6 @@ class Pos(object):
         pos.has_state_changed = cpp_pos[48] > 1
         pos.has_received_home_command = cpp_pos[49] > 1
         # Todo:  figure out how to deal with these things which must be currently ignored
-        #pos.has_one_feature_enabled = cpp_pos[50] > 1
         #pos.is_in_position = cpp_pos[51] > 1
         #pos.in_path_position = cpp_pos[52] > 1
         pos.file_line_number = cpp_pos[66]
@@ -360,7 +356,6 @@ class Pos(object):
             "height": self.height,
             "last_extrusion_height": self.last_extrusion_height,
             "is_in_position": self.is_in_position,
-            "has_one_feature_enabled": self.has_one_feature_enabled,
             "in_path_position": self.in_path_position,
             "is_printer_primed": self.is_printer_primed,
             "minimum_layer_height_reached": self.minimum_layer_height_reached,
@@ -498,13 +493,6 @@ class Position(object):
         cpp_position_args = printer_profile.get_position_args(g90_influences_extruder)
 
         GcodePositionProcessor.Initialize(self.key, cpp_position_args)
-
-        self._slicer_features = None if stabilization_profile is None else SlicerPrintFeatures(
-            printer_profile.get_current_slicer_settings(), stabilization_profile
-        )
-        self.feature_restrictions_enabled = (
-            False if stabilization_profile is None else stabilization_profile.feature_restrictions_enabled
-        )
         self._auto_detect_position = printer_profile.auto_detect_position
         self._priming_height = printer_profile.priming_height
         self._position_restrictions = None if stabilization_profile is None else stabilization_profile.position_restrictions
@@ -562,9 +550,6 @@ class Position(object):
 
     def to_position_dict(self):
         ret_dict = self.current_pos.to_dict()
-        ret_dict["features"] = self._slicer_features.get_printing_features_list(
-            self.current_pos.f, self.current_pos.layer
-        )
         return ret_dict
 
     def to_state_dict(self):
@@ -648,7 +633,6 @@ class Position(object):
         target.has_position_error = source.has_position_error
         target.position_error = source.position_error
         target.has_homed_position = source.has_homed_position
-        target.has_one_feature_enabled = source.has_one_feature_enabled
         target.in_path_position = source.in_path_position
         target.is_zhop = source.is_zhop
 
@@ -732,16 +716,6 @@ class Position(object):
             else:
                 current.is_in_position = True
 
-
-            # Update Feature Detection
-            if self.feature_restrictions_enabled:
-                if current.f is not None or current.has_position_changed:
-                    # see if at least one feature is enabled, or if feature detection is disabled
-                    current.has_one_feature_enabled = self._slicer_features.is_one_feature_enabled(
-                        current.f, current.layer
-                    )
-            else:
-                current.has_one_feature_enabled = True
     #def process_g2_g3(self, cmd):
     #    parameters = self.current_pos.parsed_command.parameters
     #    # Movement Type

@@ -41,11 +41,6 @@ $(function() {
             auto_position_detection_commands: { csvString: true },
             printer_profile_other_slicer_retract_length: {required: true},
             printer_profile_slicer_other_z_hop: {required: true},
-            slicer_slic3r_pe_small_perimeter_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
-            slicer_slic3r_pe_external_perimeter_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
-            slicer_slic3r_pe_solid_infill_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
-            slicer_slic3r_pe_top_solid_infill_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
-            slicer_slic3r_pe_first_layer_speed: {slic3rPEFloatOrPercent: true, slic3rPEFloatOrPercentSteps: true},
             slicer_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#slicer_cura_layer_height"] },
             slicer_other_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_other_slicer_layer_height"] },
             slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_simplify_3d_layer_height"] },
@@ -90,7 +85,6 @@ $(function() {
         self.retraction_speed = ko.observable(values.retraction_speed);
         self.deretraction_speed = ko.observable(values.deretraction_speed);
         self.x_y_travel_speed = ko.observable(values.x_y_travel_speed);
-        self.first_layer_travel_speed = ko.observable(values.first_layer_travel_speed);
         self.z_lift_height = ko.observable(values.z_lift_height);
         self.z_lift_speed = ko.observable(values.z_lift_speed);
     };
@@ -161,74 +155,6 @@ $(function() {
         self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
         self.suppress_snapshot_command_always = ko.observable(values.suppress_snapshot_command_always);
         self.gocde_axis_compatibility_mode_enabled = ko.observable(values.gocde_axis_compatibility_mode_enabled);
-        self.nonUniqueSpeedList = ko.observable([]);
-        self.missingSpeedsList = ko.observable([]);
-        self.printFeaturesList = ko.observable([]);
-
-        self.getPrinterFeatures = function () {
-            //console.log("getting feature list");
-
-            var data = null;
-            switch(self.slicer_type())
-            {
-                case 'cura':
-                    data = ko.toJS(self.slicers.cura);
-                    break;
-                case 'other':
-                    data = ko.toJS(self.slicers.other);
-                    break;
-                case 'simplify-3d':
-                    data = ko.toJS(self.slicers.simplify_3d);
-                    break;
-                case 'slic3r-pe':
-                    data = ko.toJS(self.slicers.slic3r_pe);
-                    break;
-            }
-            if (data != null)
-            {
-                $.ajax({
-                    url: "./plugin/octolapse/getPrintFeatures",
-                    type: "POST",
-                    tryCount: 0,
-                    retryLimit: 3,
-                    contentType: "application/json",
-                    data: JSON.stringify({
-                            'slicer_settings': data,
-                            'slicer_type': self.slicer_type()
-                        }
-                    ),
-                    dataType: "json",
-                    success: function (result) {
-                        //console.log("print features received");
-                        //console.log(result);
-                        self.nonUniqueSpeedList(result['non-unique-speeds']);
-                        self.missingSpeedsList(result['missing-speeds']);
-                        self.printFeaturesList(result['all-features']);
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        return false;
-                    }
-                });
-            }
-        };
-
-        self.subscribeToFeatureChanges = function(observables)
-        {
-            //console.log("subscribing slicer settings to getPrinterFeatures");
-            for (var i = 0; i < observables.length; i++) {
-
-                observables[i].subscribe(self.getPrinterFeatures);
-            }
-        };
-
-        self.slicer_type.subscribe(self.getPrinterFeatures);
-        self.subscribeToFeatureChanges(self.slicers.cura.get_all_speed_settings());
-        self.subscribeToFeatureChanges(self.slicers.other.get_all_speed_settings());
-        self.subscribeToFeatureChanges(self.slicers.simplify_3d.get_all_speed_settings());
-        self.subscribeToFeatureChanges(self.slicers.slic3r_pe.get_all_speed_settings());
-        // Trigger a change of the slicer error messages
-       self.getPrinterFeatures();
-
 
         self.toJS = function()
         {

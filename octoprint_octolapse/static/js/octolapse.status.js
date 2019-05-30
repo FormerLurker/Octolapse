@@ -933,7 +933,6 @@ $(function () {
             self.z_offset = ko.observable(0).extend({numeric: 2});
             self.e = ko.observable(0).extend({numeric: 2});
             self.e_offset = ko.observable(0).extend({numeric: 2});
-            self.features = ko.observableArray([]);
             self.update = function (state) {
                 this.f(state.f);
                 this.x(state.x);
@@ -944,8 +943,6 @@ $(function () {
                 this.z_offset(state.z_offset);
                 this.e(state.e);
                 this.e_offset(state.e_offset);
-                this.features(state.features);
-                //console.log(this.Features());
                 //self.plotPosition(state.x, state.y, state.z);
             };
             /*
@@ -1148,8 +1145,6 @@ $(function () {
             self.is_homed = ko.observable(state.is_homed);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
-            self.is_feature_allowed = ko.observable(state.is_feature_allowed);
-            self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
                 self.type(state.type);
                 self.name(state.name);
@@ -1162,8 +1157,6 @@ $(function () {
                 self.is_homed(state.is_homed);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
-                self.is_feature_allowed(state.is_feature_allowed);
-                self.is_waiting_on_feature(state.is_waiting_on_feature);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.is_homed())
@@ -1192,8 +1185,6 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.is_in_position() && !self.in_path_position())
                         waitList.push("position");
-                    if (self.is_waiting_on_feature())
-                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";
@@ -1242,7 +1233,6 @@ $(function () {
             self.is_homed = ko.observable(state.is_homed);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
-            self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
                 self.type(state.type);
                 self.name(state.name);
@@ -1256,7 +1246,6 @@ $(function () {
                 self.is_homed(state.is_homed);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
-                self.is_waiting_on_feature(state.is_waiting_on_feature);
             };
 
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
@@ -1286,8 +1275,6 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.is_in_position() && !self.in_path_position())
                         waitList.push("position");
-                    if (self.is_waiting_on_feature())
-                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";
@@ -1344,8 +1331,7 @@ $(function () {
             self.is_homed = ko.observable(state.is_homed);
             self.layer = ko.observable(state.layer);
             self.is_in_position = ko.observable(state.is_in_position);
-            self.in_path_position = ko.observable(state.Isin_path_position);
-            self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
+            self.in_path_position = ko.observable(state.in_path_position);
             self.update = function (state) {
                 self.type(state.type);
                 self.name(state.name);
@@ -1365,7 +1351,6 @@ $(function () {
                 self.layer(state.layer);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
-                self.is_waiting_on_feature(state.is_waiting_on_feature);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.is_homed())
@@ -1396,8 +1381,6 @@ $(function () {
                         waitList.push("position");
                         //console.log("Waiting on position.");
                     }
-                    if (self.is_waiting_on_feature())
-                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";
@@ -1469,7 +1452,6 @@ $(function () {
             self.is_homed = ko.observable(state.is_homed);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
-            self.is_waiting_on_feature = ko.observable(state.is_waiting_on_feature);
             self.update = function (state) {
                 self.type(state.type);
                 self.name(state.name);
@@ -1486,7 +1468,6 @@ $(function () {
                 self.is_homed(state.is_homed);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
-                self.is_waiting_on_feature(state.is_waiting_on_feature);
             };
 
 
@@ -1508,8 +1489,6 @@ $(function () {
                         waitList.push("extruder");
                     if (!self.is_in_position() && !self.in_path_position())
                         waitList.push("position");
-                    if (self.is_waiting_on_feature())
-                        waitList.push("feature");
                     if (waitList.length > 1) {
                         waitText += " for " + waitList.join(" and ");
                         waitText += " to trigger";

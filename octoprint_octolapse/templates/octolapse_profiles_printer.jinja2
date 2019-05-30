@@ -60,14 +60,12 @@
                     <div class="error_label_container text-error" data-error-for="printer_profile_slicer_type"></div>
                 </div>
         </div>
-        <div data-bind="visible: slicer_type() != 'automatic', template:'printer-feature-template'"></div>
         <!-- Other Slicer Type -->
         <div data-bind="visible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
         <div data-bind="visible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
         <div data-bind="visible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
         <div data-bind="visible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
         <div data-bind="visible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
-        <div data-bind="visible: slicer_type() != 'automatic', template:'printer-feature-template'"></div>
     </div>
     <div>
         <div>

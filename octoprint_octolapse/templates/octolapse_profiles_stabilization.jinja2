@@ -545,36 +545,6 @@
                 </div>
             </div>
         </div>
-        <div data-bind="visible: feature_detection_available">
-            <div>
-                <h5>Feature Detection</h5>
-                <p>Allow snapshots to be taken while printing certain types of features.  The detection is performed by matching the current gcode speeds with your printer profile settings.  They must match exactly in order to work!</p>
-                <p>Important Note: If your slicer has any features that slow down a layer speed detection will not work properly on these layers (in Slic3r, check Filament Settings->Cooling->Cooling Thresholds)</p>
-            </div>
-            <div class="control-group">
-                <label class="control-label">Enable Feature Detection</label>
-                <div class="controls">
-                    <label class="checkbox" title="Enable or disable feature detection and restriction">
-                        <input type="checkbox" data-bind="checked: feature_restrictions_enabled" /> Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Feature-Detection" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                    </label>
-                </div>
-            </div>
-            <div data-bind="visible: feature_restrictions_enabled()">
-                <div data-bind="template:'printer-feature-template'"></div>
-                <div data-bind="template: feature_template_id"></div>
-            </div>
-            <div>
-                <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
-                    <p>
-                        <strong>
-                            There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
-                            currently enabled.
-                        </strong>
-                    </p>
-                </div>
-            </div>
-        </div>
         <div data-bind="visible: position_restrictions_available">
             <div>
                 <div>
@@ -788,5 +758,4 @@
 
 </script>
 
-{% include "octolapse_profiles_snapshot_slicer_features.jinja2" %}
 

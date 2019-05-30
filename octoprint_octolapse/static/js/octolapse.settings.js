@@ -401,7 +401,7 @@ $(function () {
                 default:
                     var message = "Cannot save the object, the template (" + profile.templateName + ") is unknown!";
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Error Saving Changes',
                         text: message,
                         type: 'error',
                         hide: false,

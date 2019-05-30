@@ -71,9 +71,8 @@ from octoprint_octolapse.position import Position
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, CameraProfile, \
-    RenderingProfile, DebugProfile, SlicerPrintFeatures, \
-    SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, Slic3rPeSettings, \
-    SettingsJsonEncoder
+    RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, \
+    Slic3rPeSettings, SettingsJsonEncoder
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
@@ -327,39 +326,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
         self.send_state_loaded_message()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-    @octoprint.plugin.BlueprintPlugin.route("/getPrintFeatures", methods=["POST"])
-    def get_print_features(self):
-        request_values = flask.request.get_json()
-        client_slicer_settings = request_values["slicer_settings"]
-        client_slicer_type = request_values["slicer_type"]
-
-        slicer_settings = None
-        speed_units = 'mm-min'
-        if client_slicer_type == 'cura':
-            slicer_settings = CuraSettings.create_from(client_slicer_settings)
-            speed_units = 'mm-sec'
-        elif client_slicer_type == 'other':
-            slicer_settings = OtherSlicerSettings.create_from(client_slicer_settings)
-            speed_units = slicer_settings.axis_speed_display_units
-        elif client_slicer_type == 'simplify-3d':
-            slicer_settings = Simplify3dSettings.create_from(client_slicer_settings)
-        elif client_slicer_type == 'slic3r-pe':
-            slicer_settings = Slic3rPeSettings.create_from(client_slicer_settings)
-
-        # extract the slicer settings
-        data = SlicerPrintFeatures(
-            slicer_settings, self._octolapse_settings.profiles.current_stabilization()
-        ).get_feature_dict(speed_units)
-
-        if self._octolapse_settings is None:
-            raise Exception(
-                "Unable to load print features from Octolapse.Settings, it hasn't been initialized yet.  Please wait "
-                "a few minutes and try again.  If the problem persists, please check plugin_octolapse.log for "
-                "exceptions."
-            )
-
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
     @restricted_access
