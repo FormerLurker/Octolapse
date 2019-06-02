@@ -161,7 +161,12 @@ class LoggingConfigurator(object):
         # set the log level
         self._root_logger.setLevel(logging.NOTSET)
 
-        if debug_settings is None or debug_settings.enabled or debug_settings.enabled_loggers:
+        if (
+            debug_settings is None or
+            debug_settings.enabled or
+            debug_settings.enabled_loggers
+            or debug_settings.log_all_errors
+        ):
             if log_file_path is not None:
                 # ensure that the logging path and file exist
                 directory = os.path.dirname(log_file_path)
@@ -197,7 +202,6 @@ class LoggingConfigurator(object):
                     ):
                         current_logger.setLevel(logging.ERROR)
 
-                        current_logger.setLevel(logging.ERROR)
                     elif found_enabled_logger is not None:
                         current_logger.setLevel(found_enabled_logger["log_level"])
                     else:

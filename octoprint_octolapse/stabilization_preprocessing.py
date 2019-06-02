@@ -134,7 +134,7 @@ class StabilizationPreprocessingThread(Thread):
                 height_increment = self.printer_profile.gcode_generation_settings.layer_height
             else:
                 # use the default height increment
-                height_increment = PrinterProfile.minimum_height_increment
+                height_increment = self.printer_profile.minimum_layer_height
         else:
             height_increment = self.stabilization_profile.layer_trigger_height
 

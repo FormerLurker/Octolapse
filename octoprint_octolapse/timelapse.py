@@ -240,17 +240,17 @@ class Timelapse(object):
         else:
             logger.info("Octolapse has received an position response but did not request one.  Ignoring.")
 
-    def send_snapshot_gcode_array(self, gcode_array):
-        self._octoprint_printer.commands(gcode_array, tags={"snapshot_gcode"})
+    def send_snapshot_gcode_array(self, gcode_array, tags):
+        self._octoprint_printer.commands(gcode_array, tags=tags)
 
     def send_gcode_for_camera(self, gcode_array, timeout):
         self.get_position_async(
-            start_gcode=gcode_array, timeout=timeout
+            start_gcode=gcode_array, timeout=timeout, tags={'camera-gcode'}
         )
 
     # requests a position from the printer (m400-m114), and can send optional gcode before the position request.
     # this ensures any gcode sent in the start_gcode parameter will be executed before the function returns.
-    def get_position_async(self, start_gcode=None, timeout=None):
+    def get_position_async(self, start_gcode=None, timeout=None, tags=None):
         if timeout is None:
             timeout = self._position_timeout_long
 
@@ -270,7 +270,9 @@ class Timelapse(object):
                 TimelapseState.TakingSnapshot, TimelapseState.AcquiringLocation, TimelapseState.WaitingToEndTimelapse,
                 TimelapseState.WaitingToRender
             ]:
-                self.send_snapshot_gcode_array(commands_to_send)
+                if tags is None:
+                    tags = {'current-position'}
+                self.send_snapshot_gcode_array(commands_to_send, tags)
             else:
                 logger.warning(
                     "Warning:  The printer was not in the expected state to send octolapse gcode.  State:%s",
@@ -339,7 +341,6 @@ class Timelapse(object):
             "error": ""
         }
         try:
-            snapshot_start_time = time.time()
             has_error = False
             # create the GCode for the timelapse and store it
             snapshot_gcode = self._gcode.create_gcode_for_snapshot_plan(
@@ -358,13 +359,11 @@ class Timelapse(object):
 
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
-            gcodes_sent_without_waiting = False
             # If we have any initialization gcodes, send them before waiting for moves to finish
             # (in case we are tracking item)
             if len(snapshot_gcode.InitializationGcode) > 0:
-                gcodes_sent_without_waiting = True
                 logger.info("Sending initialization gcode.")
-                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode)
+                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode, {'snapshot-start'})
 
             # start building up a list of gcodes to send, starting with (appropriately) the start gcode
             gcodes_to_send = snapshot_gcode.StartGcode
@@ -374,9 +373,10 @@ class Timelapse(object):
                     snapshot_position = None
                     if len(gcodes_to_send) > 0:
                         snapshot_position = self.get_position_async(
-                            start_gcode=gcodes_to_send
+                            start_gcode=gcodes_to_send,
+                            tags={'snapshot-gcode'}
                         )
-                        gcodes_sent_without_waiting = False
+                        gcodes_to_send = []
                         if snapshot_position is None:
                             has_error = True
                             logger.error(
@@ -386,31 +386,20 @@ class Timelapse(object):
                             # don't send any more gcode if we're cancelling
                             if self._octoprint_printer.get_state_id() == "CANCELLING":
                                 return None
-                    # wait if we need to.
-                    if gcodes_sent_without_waiting:
-                        snapshot_position = self.get_position_async()
-
                     # TODO:  ALLOW MULTIPLE PAYLOADS
                     timelapse_snapshot_payload["snapshot_position"] = snapshot_position
                     # take a snapshot
                     snapshot_payload = self._take_snapshots()
-                    # TODO:  ALLOW MULTIPLE PAYLOADS
-                    timelapse_snapshot_payload["snapshot_payload"] = snapshot_payload
-                    gcodes_to_send = []
                 else:
                     gcodes_to_send.append(gcode)
 
-            if len(gcodes_to_send) > 0:
-                # if any commands are left, send them!
-                self.send_snapshot_gcode_array(gcodes_to_send)
-
             # return the printhead to the start position
-            gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
-            if len(gcode_to_send) > 0:
+            gcodes_to_send.extend(snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode)
+            if len(gcodes_to_send) > 0:
                 if self._state == TimelapseState.TakingSnapshot:
                     logger.info(
                         "Sending snapshot return and end gcode.")
-                    self.send_snapshot_gcode_array(gcode_to_send)
+                    self.send_snapshot_gcode_array(gcodes_to_send, {"snapshot-end"})
 
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = not has_error and not self._gcode.has_snapshot_position_errors
@@ -621,7 +610,10 @@ class Timelapse(object):
 
         self.check_current_line_number(tags)
 
-        logger.debug("Queuing Command: gcode:%s", command_string)
+        if tags is not None and "plugin:octolapse" in tags:
+            self.log_octolapse_gcode(logger.verbose, "queuing", command_string, tags)
+        else:
+            logger.verbose("Queuing Command: %s", command_string)
 
         if self.is_realtime:
             return_value = self.process_realtime_gcode(command_string, tags)
@@ -854,7 +846,7 @@ class Timelapse(object):
 
     def preprocessing_finished(self, parsed_command):
         if parsed_command is not None:
-            self.send_snapshot_gcode_array([parsed_command.gcode])
+            self.send_snapshot_gcode_array([parsed_command.gcode], {'pre-processing-end'})
         self._octoprint_printer.set_job_on_hold(False)
         self.job_on_hold = False
 
@@ -944,7 +936,7 @@ class Timelapse(object):
             )
             # Undo the last position update, we will be resending the command
             self._position.undo_update()
-            current_position = self.get_position_async()
+            current_position = self.get_position_async(tags={'acquire-position'})
 
             if current_position is None:
                 self._print_end_status = "POSITION_TIMEOUT"
@@ -966,7 +958,7 @@ class Timelapse(object):
                 if self._state == TimelapseState.AcquiringLocation:
                     logger.info("Sending triggering command for position acquisition - %s", gcode)
                     # send the triggering command
-                    self.send_snapshot_gcode_array([gcode])
+                    self.send_snapshot_gcode_array([gcode], {'location-detection-command'})
                 else:
                     logger.warning(
                         "Unable to send triggering command for position acquisition - incorrect state:%s.",
@@ -1060,11 +1052,16 @@ class Timelapse(object):
 
     def on_gcode_sending(self, cmd, tags):
         if cmd == "M114" and 'plugin:octolapse' in tags:
-            logger.debug("The position request is being sent")
+            logger.verbose("The position request is being sent")
             self._position_request_sent = True
+        elif tags is not None and "plugin:octolapse" in tags:
+            self.log_octolapse_gcode(logger.verbose, "sending", cmd, tags)
 
-    def on_gcode_sent(self, cmd, cmd_type, gcode, tags):
-        logger.verbose("Sent to printer: %s", cmd)
+    def on_gcode_sent(self, cmd, cmd_type, gcode, tags={}):
+        if tags is not None and "plugin:octolapse" in tags:
+            self.log_octolapse_gcode(logger.debug, "sent", cmd, tags)
+        else:
+            logger.verbose("Sent to printer: %s", cmd)
 
     def on_gcode_received(self, line):
         logger.verbose("Received from printer: %s", line)
@@ -1074,6 +1071,26 @@ class Timelapse(object):
                 self.on_position_received(payload)
 
         return line
+
+    def log_octolapse_gcode(self, logf, msg, cmd, tags):
+        if "acquire-position" in tags:
+            logf("Acquire snapshot position gcode - %s: %s", msg, cmd)
+        elif "snapshot-start" in tags:
+            logf("Snapshot gcode START - %s: %s", msg, cmd)
+        elif "snapshot-gcode" in tags:
+            logf("Snapshot gcode       - %s: %s", msg, cmd)
+        elif "snapshot-end" in tags:
+            logf("Snapshot gcode END   - %s: %s", msg, cmd)
+        elif "pre-processing-end" in tags:
+            logf("Pre processing finished gcode - %s: %s", msg, cmd)
+        elif "current-position" in tags:
+            logf("Current position gcode - %s: %s", msg, cmd)
+        elif "camera-gcode" in tags:
+            logf("Camera gcode - %s: %s", msg, cmd)
+        elif "force_xyz_axis" in tags:
+            logf("Force XYZ axis mode gcode - %s: %s", msg, cmd)
+        elif "force_e_axis" in tags:
+            logf("Force E axis mode gcode - %s: %s", msg, cmd)
 
     # internal functions
     ####################

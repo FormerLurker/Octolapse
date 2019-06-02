@@ -1965,7 +1965,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             if self._timelapse is not None and self._timelapse.is_timelapse_active():
                 self._timelapse.on_gcode_sent(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
-            logger.excepttion("on_gcode_sent failed.")
+            logger.exception("on_gcode_sent failed.")
 
     # noinspection PyUnusedLocal
     def on_gcode_received(self, comm, line, *args, **kwargs):
