@@ -69,10 +69,9 @@ public:
 	bool is_metric_null_;
 	double last_extrusion_height_;
 	bool last_extrusion_height_null_;
-	int layer_;
+	long layer_;
 	double height_;
 	bool is_printer_primed_;
-	bool minimum_layer_height_reached_;
 	double firmware_retraction_length_;
 	bool firmware_retraction_length_null_;
 	double firmware_unretraction_additional_length_;
@@ -87,6 +86,7 @@ public:
 	std::string position_error_;
 	bool has_homed_position_;
 	double e_relative_;
+	double z_relative_;
 	double extrusion_length_;
 	double extrusion_length_total_;
 	double retraction_length_;
@@ -103,13 +103,13 @@ public:
 	bool is_deretracted_;
 	bool is_layer_change_;
 	bool is_height_change_;
-	bool is_travel_only_;
+	bool is_xy_travel_;
+	bool is_xyz_travel_;
 	bool is_zhop_;
 	bool has_position_changed_;
 	bool has_xy_position_changed_;
 	bool has_state_changed_;
 	bool has_received_home_command_;
-	bool has_one_feature_enabled_;
 	bool is_in_position_;
 	bool in_path_position_;
 	int file_line_number_;

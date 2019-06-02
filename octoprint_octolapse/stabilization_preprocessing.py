@@ -181,8 +181,9 @@ class StabilizationPreprocessingThread(Thread):
         elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER:
             # run smart layer stabilization
             smart_layer_args = {
-                'trigger_on_extrude': self.stabilization_profile.smart_layer_trigger_on_extrude,
-                'speed_threshold': self.stabilization_profile.smart_layer_speed_threshold
+                'trigger_type': int(self.stabilization_profile.smart_layer_trigger_type),
+                'distance_threshold': self.stabilization_profile.smart_layer_trigger_distance_threshold,
+                'speed_threshold': self.stabilization_profile.smart_layer_trigger_speed_threshold
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,

@@ -32,6 +32,11 @@ from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotati
 
 # custom log level - VERBOSE
 VERBOSE = 5
+DEBUG = logging.DEBUG
+INFO = logging.INFO
+WARNING = logging.WARNING
+ERROR = logging.ERROR
+CRITICAL = logging.CRITICAL
 logging.addLevelName(VERBOSE, "VERBOSE")
 
 
@@ -185,16 +190,19 @@ class LoggingConfigurator(object):
                             found_enabled_logger = enabled_logger
                             break
 
-                    if found_enabled_logger is not None:
+                    if (
+                        debug_settings.log_all_errors and (
+                            found_enabled_logger is None or current_logger.level > logging.ERROR
+                        )
+                    ):
+                        current_logger.setLevel(logging.ERROR)
+
+                        current_logger.setLevel(logging.ERROR)
+                    elif found_enabled_logger is not None:
                         current_logger.setLevel(found_enabled_logger["log_level"])
                     else:
                         # log level critical + 1 will not log anything
                         current_logger.setLevel(logging.CRITICAL + 1)
-
-                    # if log all errors is enabled and the current log level is less than error,
-                    # set to error log level.
-                    if current_logger.level > logging.ERROR and debug_settings.log_all_errors:
-                        current_logger.setLevel(logging.ERROR)
                 else:
                     current_logger = self._root_logger.getChild(logger_name)
                     current_logger.setLevel(default_log_level)

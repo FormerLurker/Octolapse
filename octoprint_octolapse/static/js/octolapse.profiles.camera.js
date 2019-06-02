@@ -109,7 +109,7 @@ $(function() {
                     }
                     else {
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Toggle Camera Error',
                             text: results.error,
                             type: 'error',
                             hide: false,
@@ -126,7 +126,7 @@ $(function() {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Toggle Camera Error',
                         text: message,
                         type: 'error',
                         hide: false,

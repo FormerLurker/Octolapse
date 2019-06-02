@@ -806,7 +806,7 @@ class SnapshotGcodeGenerator(object):
             snapshot_plan.steps.append(snapshot_step)
             snapshot_plan.return_position = current_position
             snapshot_plan.end_command = snapshot_plan.triggering_command
-            if parsed_command_position.is_travel_only:
+            if parsed_command_position.is_xy_travel:
                 logger.info("The triggering command is travel only, skipping return command generation")
                 snapshot_plan.return_position = None
         elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:

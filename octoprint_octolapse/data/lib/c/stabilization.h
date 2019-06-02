@@ -27,6 +27,7 @@
 #include "gcode_position.h"
 #include "snapshot_plan.h"
 #include "stabilization_results.h"
+
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -40,35 +41,6 @@ static const char* snapshot_action = "snapshot";
 static const char* send_parsed_command_first = "first";
 static const char* send_parsed_command_last = "last";
 static const char* send_parsed_command_never = "never";
-
-enum position_type { unknown = 0, extrusion = 1, retracted_travel = 2 };
-
-/**
- * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
- */
-struct closest_position
-{
-	closest_position()
-	{
-		type = position_type::unknown;
-		distance = -1;
-		p_position = NULL;
-	}
-	closest_position(position_type type_, double distance_, position* p_position_)
-	{
-		type = type_;
-		distance = distance_;
-		p_position = p_position_;
-	}
-	~closest_position()
-	{
-		if (p_position != NULL)
-			delete p_position;
-	}
-	position_type type;
-	double distance;
-	position * p_position;
-};
 
 class stabilization_args {
 public:

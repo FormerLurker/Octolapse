@@ -88,7 +88,7 @@ public:
 	~gcode_position();
 
 	void update(parsed_command* cmd, int file_line_number, int gcode_number);
-	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1);
+	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0);
 	void undo_update();
 	position * get_current_position();
 	position * get_previous_position();

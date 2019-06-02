@@ -9,7 +9,6 @@ Octolapse.Slic3rPeViewModel = function (values) {
     self.travel_speed = ko.observable(values.travel_speed);
     self.layer_height = ko.observable(values.layer_height);
     self.spiral_vase = ko.observable(values.spiral_vase);
-    self.wipe = ko.observable(values.wipe);
     self.retract_before_travel = ko.pureComputed(function () {
         if (self.retract_length() != null && self.retract_length() > 0)
             return true;

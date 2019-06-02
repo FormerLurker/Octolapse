@@ -184,7 +184,10 @@ void stabilization::process_file(stabilization_results* results)
 		delete cmd;
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
 	}
-
+	else
+	{
+		octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to open the gcode file.");
+	}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 	results->success_ = errors_.empty();

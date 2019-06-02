@@ -33,8 +33,9 @@ $(function () {
         self.snap_to_print_disable_z_lift = ko.observable(values.snap_to_print_disable_z_lift);
         self.snap_to_print_disable_retract = ko.observable(values.snap_to_print_disable_retract);
         self.fastest_speed = ko.observable(values.fastest_speed);
-        self.smart_layer_trigger_on_extrude = ko.observable(values.smart_layer_trigger_on_extrude);
-        self.smart_layer_speed_threshold = ko.observable(values.smart_layer_speed_threshold);
+        self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
+        self.smart_layer_trigger_speed_threshold = ko.observable(values.smart_layer_trigger_speed_threshold);
+        self.smart_layer_trigger_distance_threshold = ko.observable(values.smart_layer_trigger_distance_threshold);
         //  Real-time stabilization options
         self.x_type = ko.observable(values.x_type);
         self.x_fixed_coordinate = ko.observable(values.x_fixed_coordinate);

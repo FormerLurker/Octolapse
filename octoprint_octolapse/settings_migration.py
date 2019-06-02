@@ -293,7 +293,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'show_position_changes': settings_dict.get('show_position_changes',default_main_settings["show_position_changes"]),
         'show_extruder_state_changes': settings_dict.get('show_extruder_state_changes',default_main_settings["show_extruder_state_changes"]),
         'show_trigger_state_changes': settings_dict.get('show_trigger_state_changes',default_main_settings["show_trigger_state_changes"]),
-        'show_real_snapshot_time': settings_dict.get('show_real_snapshot_time',default_main_settings["show_real_snapshot_time"]),
         'cancel_print_on_startup_error': settings_dict.get('cancel_print_on_startup_error', default_main_settings["cancel_print_on_startup_error"]),
         "show_snapshot_plan_information": default_main_settings["show_snapshot_plan_information"],
         'platform': sys.platform

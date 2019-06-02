@@ -155,39 +155,6 @@ class ParsedCommand(object):
         gcode, comment = ParsedCommand.extract_comment(cpp_parsed_command[2])
         return ParsedCommand(cpp_parsed_command[0], cpp_parsed_command[1], gcode, comment)
 
-    @classmethod
-    def create_from_wipe_steps(cls, cpp_wipe_steps):
-        parsed_commands = []
-        if cpp_wipe_steps is None:
-            return parsed_commands
-        cmd = "G1"
-        for cpp_wipe_step in cpp_wipe_steps:
-            step_type = cpp_wipe_step["step_type"]
-            cmd = "G1"
-            if step_type == 0:
-                parameters = {
-                    "E": round(cpp_wipe_step["e"], 5),
-                }
-            elif step_type == 1:
-                parameters = {
-                    "X": round(cpp_wipe_step["x"], 3),
-                    "Y": round(cpp_wipe_step["y"], 3),
-                    "E": round(cpp_wipe_step["e"], 5),
-                }
-            else:
-                parameters = {
-                    "X": round(cpp_wipe_step["x"], 3),
-                    "Y": round(cpp_wipe_step["y"], 3),
-                }
-            if cpp_wipe_step["f"] > 0:
-                parameters["F"] = int(cpp_wipe_step["f"])
-
-            new_command = ParsedCommand(cmd, parameters, "", "")
-            new_command.gcode = ParsedCommand.to_string(new_command)
-            parsed_commands.append(new_command)
-        return parsed_commands
-
-
     @staticmethod
     def extract_comment(gcode):
         # strip off any trailing comments

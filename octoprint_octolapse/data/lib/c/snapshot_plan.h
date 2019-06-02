@@ -24,24 +24,25 @@
 #include "snapshot_plan_step.h"
 #include "parsed_command.h"
 #include "position.h"
+#include "trigger_position.h"
 #include <vector>
 #include <map>
-class snapshot_plan
+struct snapshot_plan
 {
-public:
 	snapshot_plan();
 	snapshot_plan(const snapshot_plan & source);
 	~snapshot_plan();
 	PyObject * to_py_object();
 	static PyObject * build_py_object(std::vector<snapshot_plan *> plans);
-	long file_line_;
-	long file_gcode_number_;
-	parsed_command * p_triggering_command_;
-	parsed_command * p_start_command_;
-	position * p_initial_position_;
-	std::vector<snapshot_plan_step*> steps_;
-	position * p_return_position_;
-	parsed_command * p_end_command_;
+	long file_line;
+	long file_gcode_number;
+	position_type position_type;
+	parsed_command * p_triggering_command;
+	parsed_command * p_start_command;
+	position * p_initial_position;
+	std::vector<snapshot_plan_step*> steps;
+	position * p_return_position;
+	parsed_command * p_end_command;
 };
 
 #endif

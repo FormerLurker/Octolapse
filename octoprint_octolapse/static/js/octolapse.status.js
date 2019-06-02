@@ -31,8 +31,6 @@ $(function () {
             self.is_timelapse_active = ko.observable(false);
             self.is_taking_snapshot = ko.observable(false);
             self.is_rendering = ko.observable(false);
-            self.current_snapshot_time = ko.observable(0);
-            self.total_snapshot_time = ko.observable(0);
             self.snapshot_count = ko.observable(0);
             self.snapshot_error = ko.observable(false);
             self.waiting_to_render = ko.observable();
@@ -149,7 +147,7 @@ $(function () {
                 //console.log("detecting configured printers.")
                 var current_printer = self.getCurrentProfileByGuid(self.profiles().printers(),Octolapse.Status.current_printer_profile_guid());
                 if (current_printer != null)
-                    return current_printer.slicer_type == 'automatic' || current_printer.has_been_saved_by_user;
+                    return self.is_timelapse_active() || current_printer.slicer_type == 'automatic' || current_printer.has_been_saved_by_user;
                 return true;
             },this);
 
@@ -417,7 +415,7 @@ $(function () {
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         var message = "Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Info Panel Toggle Error',
                             text: message,
                             type: 'error',
                             hide: false,
@@ -459,10 +457,13 @@ $(function () {
                 }
                 if(!Octolapse.Globals.enabled())
                     return 'Octolapse is disabled.';
-                if(!self.PositionState.is_initialized())
-                    return 'Octolapse is waiting for more information from the server.';
-                if( self.PositionState.hasPositionStateErrors())
-                    return 'Octolapse is waiting to initialize.';
+                if(Octolapse.Status.is_real_time())
+                {
+                    if(! self.PositionState.is_initialized())
+                        return 'Octolapse is waiting for more information from the server.';
+                    if( self.PositionState.hasPositionStateErrors())
+                        return 'Octolapse is waiting to initialize.';
+                }
                 if( self.is_taking_snapshot())
                     return "Octolapse is taking a snapshot.";
                 return "Octolapse is waiting to take snapshot.";
@@ -531,8 +532,6 @@ $(function () {
                 self.snapshot_count(settings.snapshot_count);
                 self.is_taking_snapshot(settings.is_taking_snapshot);
                 self.is_rendering(settings.is_rendering);
-                self.total_snapshot_time(settings.total_snapshot_time);
-                self.current_snapshot_time(settings.current_snapshot_time);
                 self.waiting_to_render(settings.waiting_to_render);
                 //console.log("Updating Profiles");
                 self.profiles().printers(settings.profiles.printers);
@@ -583,7 +582,7 @@ $(function () {
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 var message = "Unable to stop octolapse!.  Status: " + textStatus + ".  Error: " + errorThrown;
                                 var options = {
-                                    title: 'Octolapse Defaults Restored',
+                                    title: 'Stop Timelapse Error',
                                     text: message,
                                     type: 'error',
                                     hide: false,
@@ -597,12 +596,6 @@ $(function () {
                         });
                     }
                 }
-            };
-
-            self.snapshotTime = function () {
-                var date = new Date(null);
-                date.setSeconds(this.total_snapshot_time());
-                return date.toISOString().substr(11, 8);
             };
 
             self.navbarClicked = function () {
@@ -713,7 +706,7 @@ $(function () {
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 var message = "Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
                                 var options = {
-                                    title: 'Octolapse Defaults Restored',
+                                    title: 'Camera Selection Error',
                                     text: message,
                                     type: 'error',
                                     hide: false,

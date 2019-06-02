@@ -112,26 +112,39 @@
     </div>
     <div data-bind="visible: jQuery.inArray(stabilization_type(), ['smart-layer'])>-1">
         <div class="control-group">
+            <label class="control-label">Smart Layer Trigger Type</label>
             <div class="controls">
-                <label class="checkbox">
-                    <input name="octoprint_stabilization_smart_layer_trigger_on_extrude" type="checkbox" data-bind="checked: smart_layer_trigger_on_extrude" />Allow Snapshots While Extruding
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#TODO" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                </label>
-                <p>
-                    <span class="label label-important text-warning">Important:</span> Print quality can be negatively affected by this option.  However, this option can reduce the amount of time added by Octolapse.
-                </p>
+                <select id="stabilization_profile_smart_layer_trigger_type" name="smart_layer_trigger_type" data-bind="options: Octolapse.Stabilizations.profileOptions.smart_layer_trigger_type_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: smart_layer_trigger_type"></select>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Stabilizations-Profiles#smart-layer-trigger-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_trigger_type"></div>
             </div>
         </div>
-        <div class="control-group" data-bind="visible: smart_layer_trigger_on_extrude">
+        <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '3'">
             <label class="control-label">Trigger Speed Threshold</label>
             <div class="controls">
                 <span class="input-append">
-                    <input id="stabilization_profile_smart_layer_speed_threshold" name="smart_layer_speed_threshold" type="number" class="input-small ignore_hidden_errors"
-                           data-bind="value: smart_layer_speed_threshold" min="0" step="1" required="true" />
+                    <input id="stabilization_profile_smart_layer_trigger_distance_threshold" name="smart_layer_trigger_distance_threshold" type="number" class="input-small ignore_hidden_errors"
+                           data-bind="value: smart_layer_trigger_distance_threshold" min="0" step="1" required="true" />
+                    <span class="add-on">mm</span>
+                </span>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-distance-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_trigger_distance_threshold"></div>
+                <span class="help-inline">Octolapse will choose a closer position rather than one of higher quality if it is closer to the stabilization point by at least the amount entered here.</span>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '1'">
+            <label class="control-label">Trigger Speed Threshold</label>
+            <div class="controls">
+                <span class="input-append">
+                    <input id="stabilization_profile_smart_layer_trigger_speed_threshold" name="smart_layer_trigger_speed_threshold" type="number" class="input-small ignore_hidden_errors"
+                           data-bind="value: smart_layer_trigger_speed_threshold" min="0" step="1" required="true" />
                     <span class="add-on">mm/minute</span>
                 </span>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-speed-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_speed_threshold"></div>
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-trigger-speed-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_trigger_speed_threshold"></div>
                 <span class="help-inline">Prevents octolapse from triggering unless the extrusion speed is ABOVE this value.  Set to 0 to disable.  If used properly, this can eliminate quality issues associated with taking snapshots while extruding.</span>
             </div>
         </div>

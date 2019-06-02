@@ -4,10 +4,10 @@
 #include <iostream>
 
 
-stabilization_smart_layer::stabilization_smart_layer()
+stabilization_smart_layer::stabilization_smart_layer() : closest_positions_(0)
 {
 	// Initialize travel args
-	smart_layer_args_ = new smart_layer_args();
+	p_smart_layer_args_ = new smart_layer_args();
 	// initialize layer/height tracking variables
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
@@ -16,16 +16,12 @@ stabilization_smart_layer::stabilization_smart_layer()
 	last_tested_gcode_number_ = -1;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
-	// initialize extrusion tracking	
-	p_closest_extrusion_ = NULL;
-	
-	// initialize travel tracking variables
-	p_closest_travel_ = NULL;
+	current_layer_saved_extrusion_speed_ = -1;
 }
 
 stabilization_smart_layer::stabilization_smart_layer(
 	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, progressCallback progress
-) :stabilization(position_args, stab_args, progress)
+) :stabilization(position_args, stab_args, progress), closest_positions_(mt_args->distance_threshold)
 {
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
@@ -33,33 +29,30 @@ stabilization_smart_layer::stabilization_smart_layer(
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	
-	smart_layer_args_ = mt_args;
+	p_smart_layer_args_ = mt_args;
 
 	// initialize closest extrusion/travel tracking structs
-	p_closest_extrusion_ = NULL;
-	p_closest_travel_ = NULL;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
+	current_layer_saved_extrusion_speed_ = -1;
 	// Get the initial stabilization coordinates
 	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
 stabilization_smart_layer::stabilization_smart_layer(
 	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
-) : stabilization(position_args, stab_args, get_coordinates, progress)
+) : stabilization(position_args, stab_args, get_coordinates, progress), closest_positions_(mt_args->distance_threshold)
 {
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
-	smart_layer_args_ = mt_args;
-	// initialize closest extrusion/travel tracking structs
-	p_closest_extrusion_ = NULL;
-	p_closest_travel_ = NULL;
+	p_smart_layer_args_ = mt_args;
 	// Get the initial stabilization coordinates
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
+	current_layer_saved_extrusion_speed_ = -1;
 	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 }
 
@@ -70,25 +63,28 @@ stabilization_smart_layer::stabilization_smart_layer(const stabilization_smart_l
 
 stabilization_smart_layer::~stabilization_smart_layer()
 {
-	// delete any saved extrusion/travel tracking structs
-	if (p_closest_extrusion_ != NULL)
-	{
-		delete p_closest_extrusion_;
-		p_closest_extrusion_ = NULL;
-	}
 	
-	if (p_closest_travel_ != NULL)
-	{
-		delete p_closest_travel_;
-		p_closest_travel_ = NULL;
-	}
 }
 
-bool stabilization_smart_layer::has_saved_position()
+bool stabilization_smart_layer::can_process_position(position* p_position, position_type type) const
 {
-	if (p_closest_travel_ != NULL || p_closest_extrusion_ != NULL)
-		return true;
-	return false;
+	if (type == unknown)
+		return false;
+	if (type == extrusion)
+	{
+		if (p_smart_layer_args_->trigger_type > trigger_type::fast)
+			return false;
+	}
+	// check for errors in position, layer, or height
+	if (p_position->layer_ == 0 || p_position->x_null_ || p_position->y_null_ || p_position->z_null_)
+	{
+		return false;
+	}
+	// See if we should ignore the current position because it is not in bounds, or because it wasn't processed
+	if (p_position->gcode_ignored_ || !p_position->is_in_bounds_)
+		return false;
+
+	return true;
 }
 
 void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
@@ -99,29 +95,8 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	{
 		is_layer_change_wait_ = true;
 	}
-	
-	if (p_current_pos->gcode_ignored_ || !p_current_pos->is_in_bounds_ || !p_current_pos->has_xy_position_changed_)
-		return;
-
-	position_type type;
-	if (
-		p_current_pos->is_extruding_ && 
-		smart_layer_args_->trigger_on_extrude
-	)
-	{
-		type = position_type::extrusion;
-	}
-	else if (p_current_pos->is_retracted_ && (p_current_pos->is_travel_only_ || p_current_pos->is_zhop_))
-	{
-		type = position_type::retracted_travel;
-	}
-	else
-	{
-		// Not sure what this command is, so return without updating.
-		return;
-	}
-
-	if (is_layer_change_wait_ && has_saved_position())
+			
+	if (is_layer_change_wait_ && !closest_positions_.is_empty())
 	{
 		bool can_add_saved_plan = true;
 		if (p_stabilization_args_->height_increment != 0)
@@ -132,7 +107,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 			if (increment > current_height_increment_)
 			{
 				// We only update the height increment if we've detected extrusion on a layer
-				if (increment > 1.0 && has_saved_position())
+				if (increment > 1.0 && !closest_positions_.is_empty())
 				{
 					current_height_increment_ = increment;
 					can_add_saved_plan = true;
@@ -150,224 +125,171 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 
 	}
 
-	// check for errors in position, layer, or height
-	if (p_current_pos->layer_ == 0 || p_current_pos->x_null_ || p_current_pos->y_null_ || p_current_pos->z_null_)
-	{
+	
+	// Get the current position type and see if we can process this type
+	position_type current_type = trigger_position::get_type(p_current_pos);
+	if (!can_process_position(p_current_pos, current_type))
 		return;
-	}
-
+	
 	// Is the endpoint of the current command closer
 	// Note that we need to save the position immediately
 	// so that the IsCloser check for the previous_pos will
 	// have a saved command to check.
 	double distance = -1;
-	distance = is_closer(p_current_pos, type);
-	if (utilities::greater_than_or_equal(distance, 0.0))
+	if(is_closer(p_current_pos, current_type, distance))
 	{
-		save_position(p_current_pos, type, distance);
+		closest_positions_.add(current_type, distance, p_current_pos);
 	}
 	// If this is the first command on a new layer, the previous command is usually also a valid position
 	// If the last command was not examined, test it IF we are at the same z height.
 	if (
 		last_tested_gcode_number_ != p_previous_pos->gcode_number_ &&
-		smart_layer_args_->trigger_on_extrude &&
 		utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
-		position_type previous_type = position_type::unknown;
-		// get the previous command type
-		if (p_previous_pos->is_primed_)
+		position_type previous_type = trigger_position::get_type(p_previous_pos);
+		if (can_process_position(p_previous_pos, previous_type))
 		{
-			// We are sure that the previous command is primed, which we will treat as an extrusion
-			type = position_type::extrusion;
-		}
-		// The next section was removed, but I wanted to keep it in for further consideration.
-		// I don't think we need to consider the previous position if it's not an extrude.
-		// We want the printer to complete the travel before taking a snapshot so that any 
-		// strings are moved towards the interior of the print (usually the case).  At the 
-		// very least, any stringing should be similar to the stringing on the original print.
-		//else if (p_previous_pos->is_retracted_)
-		//{
-			// we are sure the previous position is a retracted travel
-		//	type = position_type::retracted_travel;
-		//}
-		// Calculate the distance to the previous extrusion
-		
-		if (type != position_type::unknown)
-		{
-			distance = -1;
-
-			distance = is_closer(p_previous_pos, type);
-
-			if (utilities::greater_than_or_equal(distance, 0.0))
-			{
-				save_position(p_previous_pos, type, distance);
-			}
+			// Calculate the distance to the previous extrusion
+			if(is_closer(p_previous_pos, previous_type, distance))
+				closest_positions_.add(previous_type, distance, p_previous_pos);
 		}
 	}
 	last_tested_gcode_number_ = p_current_pos->gcode_number_;
 }
 
-void stabilization_smart_layer::save_position(position* p_position, position_type type_, double distance)
+bool stabilization_smart_layer::is_closer(position * p_position, position_type type, double &distance)
 {
-	if (type_ == position_type::extrusion)
+	// Fist check the speed threshold if we are running a fast trigger type
+	// We want to ignore any extrusions that are below the speed threshold
+	const bool filter_extrusion_speeds = p_smart_layer_args_->trigger_type == trigger_type::fast && type == position_type::extrusion;
+	if (filter_extrusion_speeds)
 	{
-		// delete the current saved position and parsed command
-		if (p_closest_extrusion_ != NULL)
+		// Initialize our previous extrusion speed if it's not been initialized
+		if (current_layer_saved_extrusion_speed_ == -1)
+			current_layer_saved_extrusion_speed_ = p_position->f_;
+		// see if we have found more than one extrusion speed
+		if (has_one_extrusion_speed_)
 		{
-			//std::cout << "Deleting saved position.\r\n";
-			delete p_closest_extrusion_;
+			if (
+				current_layer_saved_extrusion_speed_ != p_position->f_ ||
+				(
+					utilities::greater_than(p_smart_layer_args_->speed_threshold, 0) &&
+					utilities::greater_than(p_position->f_, p_smart_layer_args_->speed_threshold)
+					)
+			)
+			{
+				has_one_extrusion_speed_ = false;
+			}
 		}
-		//std::cout << "Creating new saved position.\r\n";
-		p_closest_extrusion_ = new closest_position(position_type::extrusion, distance, new position(*p_position));
-	}
-	else if (type_ == position_type::retracted_travel)
-	{
-		// delete the current saved position and parsed command
-		if (p_closest_travel_ != NULL)
-		{
-			//std::cout << "Deleting saved position.\r\n";
-			delete p_closest_travel_;
-		}
-		//std::cout << "Creating new saved position.\r\n";
-		p_closest_travel_ = new closest_position(position_type::retracted_travel, distance, new position(*p_position));
-	}
-}
+		// see if we should filter out this position due to the feedrate
+		if (utilities::less_than_or_equal(p_position->f_, p_smart_layer_args_->speed_threshold))
+			return false;
 
-double stabilization_smart_layer::is_closer(position * p_position, position_type type)
-{
-	
-	closest_position* p_current_closest = NULL;
-	if (
-		type == position_type::extrusion &&
-		(
-			utilities::is_equal(smart_layer_args_->speed_threshold,0) ||
-			utilities::greater_than(p_position->f_, smart_layer_args_->speed_threshold)
-		)
-	)
-	{
-		p_current_closest = p_closest_extrusion_;
 	}
-	else if (type == position_type::retracted_travel)
-	{
-		p_current_closest = p_closest_travel_;
-	}
-	else
-		return -1.0;
-	
+
+	// Get the current closest position
+	trigger_position* p_current_closest = closest_positions_.get(type);
+	// Calculate the distance between the current point and the stabilization point
+	distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+	// If we don't have any closest position, this is the closest
 	if (p_current_closest == NULL)
 	{
-		return utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+		return true;
 	}
 
-	// If the speed is faster than the saved speed, this is the closest point
-	if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
+	if(filter_extrusion_speeds)
 	{
-		if(has_one_extrusion_speed_ && !utilities::is_equal(p_position->f_, p_current_closest->p_position->f_))
-		{
-			has_one_extrusion_speed_ = false;
-		}
-		//std::cout << "Checking for faster speed than " << p_saved_position_->f_;
+		// Check to see if the current extrusion feedrate is faster than the current closest extrusion feedrate.  If it is, it's our new closest
+		// extrusion position
 		if (utilities::greater_than(p_position->f_, p_current_closest->p_position->f_))
 		{
-			//std::cout << " - IsCloser Complete, " << p_position->f_ << " is faster than " << p_saved_position_->f_ << "\r\n";
-			const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-			if (distance > -1)
-			{
-				return distance;
-			}
-			
-		}
-		else if (utilities::less_than(p_position->f_, p_current_closest->p_position->f_))
-		{
-			//std::cout << " - IsCloser Complete, " << p_position->f_ << " too slow.\r\n";"COMP
-			return -1.0;
+			return true;
 		}
 	}
-	//std::cout << "Checking for closer position...";
-	// Compare the saved points cartesian distance from the current point
-	const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-	if (utilities::greater_than_or_equal(distance,0) && utilities::greater_than(p_current_closest->distance, distance))
+	// See if we have a closer position	
+	if (utilities::greater_than(p_current_closest->distance, distance))
 	{
 		//std::cout << " - IsCloser Complete, closer.\r\n";
-		return distance;
+		return true;
 	}
 	//std::cout << " - IsCloser Complete, not closer.\r\n";
-	return -1.0;
+	return false;
+}
+
+trigger_position* stabilization_smart_layer::get_closest_position()
+{
+	switch (p_smart_layer_args_->trigger_type)
+	{
+		case fastest:
+			return closest_positions_.get_closest_position();
+		case fast:
+			if (has_one_extrusion_speed_)
+				return closest_positions_.get_closest_non_extrude_position();
+			return closest_positions_.get_closest_position();
+		case standard:
+			return closest_positions_.get_closest_non_extrude_position();
+		case high_quality:
+			return closest_positions_.get_high_quality_position();
+		case best_quality:
+			return closest_positions_.get_best_quality_position();
+		default:
+			return NULL;
+	}
 }
 
 void stabilization_smart_layer::add_plan()
 {
-	closest_position * p_closest = NULL;
-	if (
-		p_closest_travel_ != NULL && (
-			p_closest_extrusion_ == NULL ||
-			has_one_extrusion_speed_ ||
-			utilities::less_than(p_closest_travel_->distance, p_closest_extrusion_->distance)
-		)
-	)
-	{
-		p_closest = p_closest_travel_;
-	}
-	else
-	{
-		p_closest = p_closest_extrusion_;
-	}
+	trigger_position * p_closest = get_closest_position();
 	if (p_closest != NULL)
 	{
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan* p_plan = new snapshot_plan();
-
+		p_plan->position_type = p_closest->type;
 		// create the initial position
-		p_plan->p_triggering_command_ = new parsed_command(*p_closest->p_position->p_command);
-		p_plan->p_start_command_ = new parsed_command(*p_closest->p_position->p_command);
-		p_plan->p_initial_position_ = new position(*p_closest->p_position);
+		p_plan->p_triggering_command = new parsed_command(*p_closest->p_position->p_command);
+		p_plan->p_start_command = new parsed_command(*p_closest->p_position->p_command);
+		p_plan->p_initial_position = new position(*p_closest->p_position);
 		snapshot_plan_step* p_travel_step = new snapshot_plan_step(&stabilization_x_, &stabilization_y_, NULL, NULL, NULL, travel_action);
-		p_plan->steps_.push_back(p_travel_step);
+		p_plan->steps.push_back(p_travel_step);
 		snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
-		p_plan->steps_.push_back(p_snapshot_step);
+		p_plan->steps.push_back(p_snapshot_step);
 
-		p_plan->p_return_position_ = new position(*p_closest->p_position);
-		p_plan->p_end_command_ = NULL;
+		p_plan->p_return_position = new position(*p_closest->p_position);
+		p_plan->p_end_command = NULL;
 
-		p_plan->file_line_ = p_closest->p_position->file_line_number_;
-		p_plan->file_gcode_number_ = p_closest->p_position->gcode_number_;
+		p_plan->file_line = p_closest->p_position->file_line_number_;
+		p_plan->file_gcode_number = p_closest->p_position->gcode_number_;
 
 		// Add the plan
 		p_snapshot_plans_->push_back(p_plan);
 		current_layer_ = p_closest->p_position->layer_;
+		// only get the next coordinates if we've actually added a plan.
+		get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 	}
 	else
 	{
 		std::cout << "No saved position available to add snapshot plan!";
 	}
+	// always reset the saved positions
 	reset_saved_positions();
-	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
+	
 	//std::cout << "Complete.\r\n";
 }
 
 void stabilization_smart_layer::reset_saved_positions()
 {
-	// cleanup memory
-	if (p_closest_extrusion_ != NULL)
-	{
-		delete p_closest_extrusion_;
-		p_closest_extrusion_ = NULL;
-	}
-	if (p_closest_travel_ != NULL)
-	{
-		delete p_closest_travel_;
-		p_closest_travel_ = NULL;
-	}
-
+	// Clear the saved closest positions
+	closest_positions_.clear();
 	// set the state for the next layer
 	is_layer_change_wait_ = false;
 	has_one_extrusion_speed_ = true;
+	current_layer_saved_extrusion_speed_ = -1;
 }
 
 void stabilization_smart_layer::on_processing_complete()
 {
 	//std::cout << "Running on_process_complete...";
-	if (has_saved_position())
+	if (!closest_positions_.is_empty())
 	{
 		add_plan();
 	}

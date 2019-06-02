@@ -103,7 +103,7 @@ void stabilization_snap_to_print::save_position(position* p_position, position_t
 		// delete the current saved position and parsed command
 		delete_saved_positions();
 		//std::cout << "Creating new saved position.\r\n";
-		p_closest_position_ = new closest_position(position_type::extrusion, distance, new position(*p_position));
+		p_closest_position_ = new trigger_position(position_type::extrusion, distance, p_position);
 	}
 }
 
@@ -182,7 +182,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 
 double stabilization_snap_to_print::is_closer(position * p_position, position_type type)
 {
-	closest_position* p_current_closest = NULL;
+	trigger_position* p_current_closest;
 	if (type == position_type::extrusion)
 	{
 		p_current_closest = p_closest_position_;
@@ -225,7 +225,7 @@ double stabilization_snap_to_print::is_closer(position * p_position, position_ty
 		{
 			//std::cout << "Closest position tie detected, ";
 			// get the last snapshot plan position
-			position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position_;
+			position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position;
 			const double old_distance_from_previous = utilities::get_cartesian_distance(p_current_closest->p_position->x_, p_current_closest->p_position->y_, last_position->x_, last_position->y_);
 			const double new_distance_from_previous = utilities::get_cartesian_distance(p_position->x_, p_position->y_, last_position->x_, last_position->y_);
 			if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
@@ -253,15 +253,15 @@ void stabilization_snap_to_print::add_saved_plan()
 	{
 		snapshot_plan* p_plan = new snapshot_plan();
 		// create the initial position
-		p_plan->p_triggering_command_ = new parsed_command(*p_closest_position_->p_position->p_command);
-		p_plan->p_start_command_ = new parsed_command(*p_closest_position_->p_position->p_command);
-		p_plan->p_initial_position_ = new position(*p_closest_position_->p_position);
+		p_plan->p_triggering_command = new parsed_command(*p_closest_position_->p_position->p_command);
+		p_plan->p_start_command = new parsed_command(*p_closest_position_->p_position->p_command);
+		p_plan->p_initial_position = new position(*p_closest_position_->p_position);
 		snapshot_plan_step* p_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
-		p_plan->steps_.push_back(p_step);
-		p_plan->p_return_position_ = new position(*p_closest_position_->p_position);
-		p_plan->p_end_command_ = NULL;
-		p_plan->file_line_ = p_closest_position_->p_position->file_line_number_;
-		p_plan->file_gcode_number_ = p_closest_position_->p_position->gcode_number_;
+		p_plan->steps.push_back(p_step);
+		p_plan->p_return_position = new position(*p_closest_position_->p_position);
+		p_plan->p_end_command = NULL;
+		p_plan->file_line = p_closest_position_->p_position->file_line_number_;
+		p_plan->file_gcode_number = p_closest_position_->p_position->gcode_number_;
 		// Add the plan
 		p_snapshot_plans_->push_back(p_plan);
 		current_layer_ = p_closest_position_->p_position->layer_;

@@ -24,6 +24,7 @@
 #define StabilizationSnapToPrint_H
 #include "stabilization.h"
 #include "position.h"
+#include "trigger_position.h"
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -62,7 +63,7 @@ private:
 	bool is_layer_change_wait_;
 	int current_layer_;
 	unsigned int current_height_increment_;
-	closest_position* p_closest_position_;
+	trigger_position* p_closest_position_;
 };
 
 

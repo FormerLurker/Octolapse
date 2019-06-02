@@ -189,8 +189,7 @@ $(function () {
             Octolapse.Stabilizations.profileOptions = {
                 'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
                 'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
-                'lock_to_print_type_options': settings.profiles.options.stabilization.lock_to_print_type_options,
-                'favor_axis_options': settings.profiles.options.stabilization.favor_axis_options,
+                'smart_layer_trigger_type_options': settings.profiles.options.stabilization.smart_layer_trigger_type_options,
                 'trigger_types': settings.profiles.options.stabilization.trigger_types,
                 'snapshot_extruder_trigger_options': settings.profiles.options.stabilization.snapshot_extruder_trigger_options,
                 'position_restriction_shapes': settings.profiles.options.stabilization.position_restriction_shapes,
@@ -287,7 +286,7 @@ $(function () {
                             Octolapse.Globals.update(newSettings.main_settings);
                             var message = "The default settings have been restored.  It is recommended that you restart the OctoPrint server now.";
                             var options = {
-                                title: 'Octolapse Defaults Restored',
+                                title: 'Error Restoring Defaults',
                                 text: message,
                                 type: 'success',
                                 hide: true,
@@ -301,7 +300,7 @@ $(function () {
                         error: function (XMLHttpRequest, textStatus, errorThrown) {
                             var message = "Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown;
                             var options = {
-                                title: 'Octolapse Defaults Restored',
+                                title: 'Error Restoring Defaults',
                                 text: message,
                                 type: 'error',
                                 hide: false,
@@ -335,7 +334,7 @@ $(function () {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Octolapse was unable to load the current settings.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Settings Load Error',
                         text: message,
                         type: 'error',
                         hide: false,

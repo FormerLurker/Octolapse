@@ -31,6 +31,7 @@
 #ifdef _DEBUG
 #include "test.h"
 #endif
+// Sometimes used to test performance in release mode.
 //#include "test.h"
 
 #if PY_MAJOR_VERSION >= 3
@@ -62,10 +63,11 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-#ifdef _DEBUG || _RELEASE
+#ifdef _DEBUG
 	run_tests(argc, argv);
 	return 0;
 #else
+	// I use this sometimes to test performance in release mode
 	//run_tests(argc, argv);
 	//return 0;
 	Py_SetProgramName(argv[0]);
@@ -1092,14 +1094,15 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 {
 	//std::cout << "Parsing smart layer args.\r\n";
 	// Extract trigger_on_extrude
-	PyObject * py_trigger_on_extrude = PyDict_GetItemString(py_args, "trigger_on_extrude");
-	if (py_trigger_on_extrude == NULL)
+	PyObject * py_trigger_type = PyDict_GetItemString(py_args, "trigger_type");
+	if (py_trigger_type == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_on_extrude from the smart layer trigger stabilization args.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_type from the smart layer trigger stabilization args.");
 		return false;
 	}
-	args->trigger_on_extrude = PyLong_AsLong(py_trigger_on_extrude) > 0;
+	args->trigger_type = static_cast<trigger_type>(PyLong_AsLong(py_trigger_type));
+
 	// Extract speed_threshold
 	PyObject * py_speed_threshold = PyDict_GetItemString(py_args, "speed_threshold");
 	if (py_speed_threshold == NULL)
@@ -1109,6 +1112,16 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 		return false;
 	}
 	args->speed_threshold = PyFloatOrInt_AsDouble(py_speed_threshold);
+
+	// Extract speed_threshold
+	PyObject * py_distance_threshold = PyDict_GetItemString(py_args, "distance_threshold");
+	if (py_distance_threshold == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve distance_threshold from the smart layer trigger stabilization args.");
+		return false;
+	}
+	args->distance_threshold = PyFloatOrInt_AsDouble(py_distance_threshold);
 	//std::cout << "Smart layer args parsed successfully.\r\n";
 	
 	return true;

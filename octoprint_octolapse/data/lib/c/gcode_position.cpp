@@ -158,9 +158,11 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 		// Execute the function to process this gcode
 		posFunctionType func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos_, command);
-
-		// Have the XYZ positions changed after processing a command ?
+		// calculate z and e relative distances
 		p_current_pos_->e_relative_ = p_current_pos_->e_ - p_previous_pos_->e_;
+		p_current_pos_->z_relative_ = p_current_pos_->z_ - p_previous_pos_->z_;
+		// Have the XYZ positions changed after processing a command ?
+		
 		p_current_pos_->has_xy_position_changed_ = (
 			!utilities::is_equal(p_current_pos_->x_, p_previous_pos_->x_) ||
 			!utilities::is_equal(p_current_pos_->y_, p_previous_pos_->y_)
@@ -263,38 +265,18 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 							p_current_pos_->is_printer_primed_ = true;
 					}
 
-					// Has Reached Minimum layer height
-					if (!p_current_pos_->minimum_layer_height_reached_)
+					if(p_current_pos_->is_printer_primed_)
 					{
-						if (utilities::greater_than(minimum_layer_height_, 0))
+						// Calculate current height
+						if (utilities::greater_than(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
 						{
-							// if a minimum layer height is configured, see if we've extruded above it
-							if (utilities::greater_than_or_equal(p_current_pos_->last_extrusion_height_, minimum_layer_height_))
-								p_current_pos_->minimum_layer_height_reached_ = true;
-						}
-						else
-							// if we have no minimum layer height set, just set to true
-							p_current_pos_->minimum_layer_height_reached_ = true;
-					}
-				}
-
-				// Calculate layer Change
-				if (
-					//((p_current_pos_->is_primed_ && p_current_pos_->layer_ > 0) || p_current_pos_->is_extruding_)
-					p_current_pos_->is_extruding_ && p_current_pos_->is_printer_primed_)
-				{
-
-					if (utilities::greater_than(p_current_pos_->z_, p_previous_pos_->height_))
-					{
-						p_current_pos_->height_ = p_current_pos_->z_;
-						// calculate layer change
-						if (p_current_pos_->minimum_layer_height_reached_ && utilities::greater_than(p_current_pos_->height_ - p_previous_pos_->height_, 0) || p_current_pos_->layer_ == 0)
-						{
+							p_current_pos_->height_ = p_current_pos_->z_;
 							p_current_pos_->is_layer_change_ = true;
 							p_current_pos_->layer_++;
 						}
 					}
 				}
+
 				// calculate is_zhop
 				if (p_current_pos_->is_extruding_ || p_current_pos_->z_null_ || p_current_pos_->last_extrusion_height_null_)
 					p_current_pos_->is_zhop_ = false;
@@ -356,11 +338,22 @@ std::map<std::string, gcode_position::posFunctionType> gcode_position::get_gcode
 	return newMap;
 }
 
-void gcode_position::update_position(position* pos, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1)
+void gcode_position::update_position(position* pos, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0)
 {
-	if (is_g1)
+	if (is_g1_g0)
 	{
-		pos->is_travel_only_ = !update_e && !update_z && (update_x || update_y);
+		if(!update_e)
+		{
+			if (update_z)
+			{
+				pos->is_xyz_travel_ = (update_x || update_y);
+			}
+			else
+			{
+				pos->is_xy_travel_ = (update_x || update_y);
+			}
+		}
+		
 	}
 	if (update_f)
 	{

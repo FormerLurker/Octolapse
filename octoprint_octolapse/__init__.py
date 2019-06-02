@@ -229,7 +229,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         )
         self._octolapse_settings.main_settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
         self._octolapse_settings.main_settings.show_snapshot_plan_information = request_values["show_snapshot_plan_information"]
-        self._octolapse_settings.main_settings.show_real_snapshot_time = request_values["show_real_snapshot_time"]
         self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
             request_values["cancel_print_on_startup_error"]
         )
@@ -1067,7 +1066,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             is_timelapse_active = False
             snapshot_count = 0
-            total_snapshot_time = 0
             is_taking_snapshot = False
             is_rendering = False
             current_timelapse_state = TimelapseState.Idle
@@ -1076,7 +1074,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             debug_dict = profiles_dict["debug"]
             if self._timelapse is not None:
                 snapshot_count = self._timelapse.get_snapshot_count()
-                total_snapshot_time = self._timelapse.SecondsAddedByOctolapse
                 is_timelapse_active = self._timelapse.is_timelapse_active()
                 if is_timelapse_active:
                     profiles_dict = self._timelapse.get_current_profiles()
@@ -1099,8 +1096,6 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 is_waiting_to_render = (not is_rendering) and current_timelapse_state == TimelapseState.WaitingToRender
             return {
                 'snapshot_count': snapshot_count,
-                'total_snapshot_time': total_snapshot_time,
-                'current_snapshot_time': 0,
                 'is_timelapse_active': is_timelapse_active,
                 'is_taking_snapshot': is_taking_snapshot,
                 'is_rendering': is_rendering,
@@ -1499,6 +1494,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
             if success:
                 settings_saved = False
+
                 updated_profile_json = None
                 if not current_printer_clone.slicers.automatic.disable_automatic_save:
                     # get the extracted slicer settings
@@ -1507,11 +1503,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                     self._octolapse_settings.profiles.current_printer().get_slicer_settings_by_type(
                         current_printer_clone.slicer_type
                     ).update(extracted_slicer_settings.to_dict())
+                    self._octolapse_settings.profiles.current_printer().has_been_saved_by_user = True
                     # save the live settings
                     self.save_settings()
-                    updated_profile_json = self._octolapse_settings.profiles.current_printer().to_json()
+                    printer_profile = self._octolapse_settings.profiles.current_printer().clone()
+                    printer_profile.slicer_type = PrinterProfile.slicer_type = 'automatic'
                     settings_saved = True
-
+                    updated_profile_json = printer_profile.to_json()
                 self.send_slicer_settings_detected_message(settings_saved, updated_profile_json)
             else:
                 if not current_printer_clone.slicers.automatic.continue_on_failure:
@@ -2000,12 +1998,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 payload.CameraName, payload.JobsRemaining
             )
 
-        if payload.SecondsAddedToPrint > 0:
-            msg = "Octolapse captured {0} frames in {1} seconds and has started rendering your timelapse file.".format(
-                payload.SnapshotCount, utility.seconds_to_hhmmss(payload.SecondsAddedToPrint))
-        else:
-            msg = "Octolapse captured {0} frames and has started rendering your timelapse file.".format(
-                payload.SnapshotCount)
+        msg = "Octolapse captured {0} frames and has started rendering your timelapse file.".format(
+            payload.SnapshotCount)
 
         if payload.Synchronize:
             will_sync_message = "This timelapse will synchronized with the default timelapse module, and will be " \

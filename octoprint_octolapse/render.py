@@ -21,7 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import logging
 import math
 import os
 import shutil
@@ -183,7 +182,6 @@ class RenderJobInfo(object):
             "PRINTSTARTTIMESTAMP": "{0:d}".format(math.trunc(round(job_info.PrintStartTime, 2) * 100)),
             "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
             "DATADIRECTORY": data_directory,
-            "TIMEADDED": "{0:d}".format(math.trunc(round(job_info.SecondsAdded))),
             "SNAPSHOTCOUNT": 0,
             "FPS": 0,
         }
@@ -287,6 +285,7 @@ class RenderingProcessor(threading.Thread):
 
 class TimelapseRenderJob(object):
     render_job_lock = threading.RLock()
+
     def __init__(
         self,
         rendering,
@@ -309,7 +308,6 @@ class TimelapseRenderJob(object):
         self._fps = None
         self._snapshot_metadata = None
         self._imageCount = None
-        self._secondsAddedToPrint = render_job_info.timelapse_job_info.SecondsAdded
         self._threads = threads
         self._ffmpeg = None
         if ffmpeg_path is not None:
@@ -612,7 +610,6 @@ class TimelapseRenderJob(object):
             self._synchronized_filename,
             self._synchronize,
             self._imageCount,
-            self.render_job_info.timelapse_job_info.SecondsAdded,
             self.render_job_info.job_number,
             self.render_job_info.jobs_remaining,
             self.render_job_info.camera.name,
@@ -729,8 +726,8 @@ class TimelapseRenderJob(object):
                                       " information.  You should be able to find your video within your "
                                       " OctoPrint  server here:<br/> '{0}'".format(self._rendering_output_file_path),
                                       cause=e)
-
         except Exception as e:
+            logger.exception("Rendering Error")
             if isinstance(e, RenderError):
                 r_error = e
             else:
@@ -741,7 +738,6 @@ class TimelapseRenderJob(object):
                 # Delete preprocessed images.
                 if self.temp_rendering_dir is not None:
                     shutil.rmtree(self.temp_rendering_dir)
-
         if r_error is None:
             self.on_render_success(self.create_callback_payload(0, "Timelapse rendering is complete."))
         else:
@@ -772,6 +768,7 @@ class TimelapseRenderJob(object):
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number'])
             if i == snapshot_number:
                 assert (i == snapshot_number)
+
                 format_vars['file_name'] = data['file_name']
                 format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
 
@@ -941,8 +938,6 @@ class TimelapseRenderJob(object):
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
 
-        logger = logging.getLogger(__name__)
-
         v_codec = self._get_vcodec_from_output_format(self._rendering.output_format)
 
         command = [self._ffmpeg, '-framerate', "{}".format(self._fps), '-loglevel', 'error', '-i',
@@ -1029,7 +1024,6 @@ class RenderingCallbackArgs(object):
         synchronized_filename,
         synchronize,
         snapshot_count,
-        seconds_added_to_print,
         job_number,
         jobs_remaining,
         camera_name,
@@ -1048,7 +1042,6 @@ class RenderingCallbackArgs(object):
         self.SynchronizedFilename = synchronized_filename
         self.Synchronize = synchronize
         self.SnapshotCount = snapshot_count
-        self.SecondsAddedToPrint = seconds_added_to_print
         self.JobNumber = job_number
         self.JobsRemaining = jobs_remaining
         self.CameraName = camera_name

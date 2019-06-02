@@ -115,7 +115,7 @@ $(function() {
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Unable to add/update the " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Add/Update Profile Error',
                         text: message,
                         type: 'error',
                         hide: false,
@@ -142,10 +142,10 @@ $(function() {
                     success: function (returnValue) {
                         if(returnValue.success)
                             self.profiles.remove(self.getProfileByGuid(guid));
-                        else
-                            var message = "Unable to remove the " + currentProfile.name() +" profile!.  Error: " + returnValue.error;
+                        else {
+                            var message = "Unable to remove the " + currentProfile.name() + " profile!.  Error: " + returnValue.error;
                             var options = {
-                                title: 'Octolapse Defaults Restored',
+                                title: 'Profile Delete Error',
                                 text: message,
                                 type: 'error',
                                 hide: false,
@@ -155,11 +155,12 @@ $(function() {
                                 }
                             };
                             Octolapse.displayPopup(options);
+                        }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         var message = "Unable to remove the " + currentProfile.name() + " profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Profile Delete Error',
                             text: message,
                             type: 'error',
                             hide: false,
@@ -192,7 +193,7 @@ $(function() {
                         var currentProfile = self.getProfileByGuid(guid);
                         var message = "Unable to set the current " + currentProfile.name() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Profile Selection Failed',
                             text: message,
                             type: 'error',
                             hide: false,
@@ -206,7 +207,7 @@ $(function() {
                     catch (e) {
                         var message = "Unable to set the current " + self.profileTypeName() +" profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Profile Selection Failed',
                             text: message,
                             type: 'error',
                             hide: false,
@@ -252,7 +253,7 @@ $(function() {
             if (index < 0) {
                 var message = "Could not find a " + self.profileTypeName() +" profile with the guid:" + guid + "!";
                 var options = {
-                    title: 'Octolapse Defaults Restored',
+                    title: 'Profile Not Found',
                     text: message,
                     type: 'error',
                     hide: false,

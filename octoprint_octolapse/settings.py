@@ -35,7 +35,6 @@ import math
 import collections
 import octoprint_octolapse.gcode_preprocessing as gcode_preprocessing
 import octoprint_octolapse.settings_migration as settings_migration
-import logging
 from six import string_types
 
 # create the module level logger
@@ -504,7 +503,11 @@ class StabilizationProfile(ProfileSettings):
     STABILIZATION_TYPE_REAL_TIME = "real-time"
     STABILIZATION_TYPE_SNAP_TO_PRINT = "snap-to-print"
     STABILIZATION_TYPE_SMART_LAYER = "smart-layer"
-
+    SMART_TRIGGER_TYPE_FASTEST = 0
+    SMART_TRIGGER_TYPE_FAST = 1
+    SMART_TRIGGER_TYPE_STANDARD = 2
+    SMART_TRIGGER_TYPE_HIGH_QUALITY = 3
+    SMART_TRIGGER_TYPE_BEST_QUALITY = 4
     EXTRUDER_TRIGGER_IGNORE_VALUE = ""
     EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
     EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
@@ -521,8 +524,9 @@ class StabilizationProfile(ProfileSettings):
         self.snap_to_print_disable_z_lift = True
         self.snap_to_print_disable_retract = False
         # smart layer trigger options
-        self.smart_layer_trigger_on_extrude = False
-        self.smart_layer_speed_threshold = 0
+        self.smart_layer_trigger_type = StabilizationProfile.SMART_TRIGGER_TYPE_STANDARD
+        self.smart_layer_trigger_speed_threshold = 0
+        self.smart_layer_trigger_distance_threshold = 10
         # Real Time stabilization options
         self.x_type = "relative"
         self.x_fixed_coordinate = 0.0
@@ -586,6 +590,7 @@ class StabilizationProfile(ProfileSettings):
             StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT,
             StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER
         ]
+
     def get_extruder_trigger_value_string(self, value):
         if value is None:
             return self.EXTRUDER_TRIGGER_IGNORE_VALUE
@@ -645,38 +650,29 @@ class StabilizationProfile(ProfileSettings):
                 dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time'),
                 dict(value=StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
                 dict(value=StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT, name='Snap to Print')
-            ],
-            'real_time_xy_stabilization_type_options': [
+            ], 'real_time_xy_stabilization_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
                 dict(value='fixed_path', name='List of Fixed Coordinates'),
                 dict(value='relative', name='Relative Coordinate (0-100)'),
                 dict(value='relative_path', name='List of Relative Coordinates')
-            ],
-            'lock_to_print_type_options': [
-                dict(value='front_left', name='Front Left'),
-                dict(value='front_right', name='Front Right'),
-                dict(value='back_left', name='Back Left'),
-                dict(value='back_right', name='Back Right'),
-            ],
-            'favor_axis_options': [
-                dict(value='x', name='Favor X Axis'),
-                dict(value='y', name='Favor Y Axis')
-            ],
-            'trigger_types': [
+            ], 'smart_layer_trigger_type_options': [
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FASTEST), name='Fastest'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FAST), name='Fast'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_STANDARD), name='Standard'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_HIGH_QUALITY), name='High Quality'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_BEST_QUALITY), name='Best Quality'),
+            ], 'trigger_types': [
                 dict(value=StabilizationProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
                 dict(value=StabilizationProfile.TIMER_TRIGGER_TYPE, name="Timer"),
                 dict(value=StabilizationProfile.GCODE_TRIGGER_TYPE, name="Gcode")
-            ],
-            'position_restriction_shapes': [
+            ], 'position_restriction_shapes': [
                 dict(value="rect", name="Rectangle"),
                 dict(value="circle", name="Circle")
-            ],
-            'position_restriction_types': [
+            ], 'position_restriction_types': [
                 dict(value="required", name="Must be inside"),
                 dict(value="forbidden", name="Cannot be inside")
-            ],
-            'snapshot_extruder_trigger_options': [
+            ], 'snapshot_extruder_trigger_options': [
                 dict(value=StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
                 dict(value=StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
                 dict(value=StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
@@ -1033,7 +1029,7 @@ class DebugProfile(ProfileSettings):
         self.log_all_errors = True
         self.enabled = False
         self.log_to_console = False
-        self.default_log_level = logging.DEBUG
+        self.default_log_level = log.DEBUG
         self.is_test_mode = False
         self.enabled_loggers = []
         for logger_name in logging_configurator.get_logger_names():
@@ -1066,11 +1062,11 @@ class DebugProfile(ProfileSettings):
         return {
             'logging_levels': [
                 dict(value=log.VERBOSE, name='Verbose'),
-                dict(value=logging.DEBUG, name='Debug'),
-                dict(value=logging.INFO, name='Info'),
-                dict(value=logging.WARNING, name='Warning'),
-                dict(value=logging.ERROR, name='Error'),
-                dict(value=logging.CRITICAL, name='Critical'),
+                dict(value=log.DEBUG, name='Debug'),
+                dict(value=log.INFO, name='Info'),
+                dict(value=log.WARNING, name='Warning'),
+                dict(value=log.ERROR, name='Error'),
+                dict(value=log.CRITICAL, name='Critical'),
             ],
             'all_logger_names': logging_configurator.get_logger_names()
 
@@ -1090,7 +1086,6 @@ class MainSettings(Settings):
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False
         self.show_snapshot_plan_information = False
-        self.show_real_snapshot_time = False
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform,
         self.version = plugin_version

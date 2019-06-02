@@ -24,66 +24,66 @@
 
 snapshot_plan::snapshot_plan()
 {
-	file_line_ = 0;
-	file_gcode_number_ = 0;
-	p_triggering_command_ = NULL;
-	p_initial_position_ = NULL;
-	p_return_position_ = NULL;
-	p_start_command_ = NULL;
-	p_end_command_ = NULL;
-	
+	file_line = 0;
+	file_gcode_number = 0;
+	p_triggering_command = NULL;
+	p_initial_position = NULL;
+	p_return_position = NULL;
+	p_start_command = NULL;
+	p_end_command = NULL;
+	position_type = position_type::unknown; // unknown
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)
 {
-	file_line_ = source.file_line_;
-	file_gcode_number_ = source.file_gcode_number_;
-	p_triggering_command_ = new parsed_command(*source.p_triggering_command_);
-	p_initial_position_ = new position(*source.p_initial_position_);
+	file_line = source.file_line;
+	file_gcode_number = source.file_gcode_number;
+	p_triggering_command = new parsed_command(*source.p_triggering_command);
+	p_initial_position = new position(*source.p_initial_position);
 	
-	for (unsigned int index = 0; index < source.steps_.size(); index++)
+	for (unsigned int index = 0; index < source.steps.size(); index++)
 	{
-		steps_.push_back(new snapshot_plan_step(*source.steps_[index]));
+		steps.push_back(new snapshot_plan_step(*source.steps[index]));
 	}
 
-	p_return_position_ = new position(*source.p_return_position_);
-	p_start_command_ = new parsed_command(*source.p_start_command_);
-	p_end_command_ = new parsed_command(*source.p_end_command_);
+	p_return_position = new position(*source.p_return_position);
+	p_start_command = new parsed_command(*source.p_start_command);
+	p_end_command = new parsed_command(*source.p_end_command);
 }
 
 snapshot_plan::~snapshot_plan()
 {
-	if(p_triggering_command_ != NULL)
+	if(p_triggering_command != NULL)
 	{
-		delete p_triggering_command_;
-		p_triggering_command_ = NULL;
+		delete p_triggering_command;
+		p_triggering_command = NULL;
 	}
-	if (p_initial_position_ != NULL)
+	if (p_initial_position != NULL)
 	{
-		delete p_initial_position_;
-		p_initial_position_ = NULL;
+		delete p_initial_position;
+		p_initial_position = NULL;
 	}
-	if (p_return_position_ != NULL)
+	if (p_return_position != NULL)
 	{
-		delete p_return_position_;
-		p_return_position_ = NULL;
+		delete p_return_position;
+		p_return_position = NULL;
 	}
-	if (p_start_command_ != NULL)
+	if (p_start_command != NULL)
 	{
-		delete p_start_command_;
-		p_start_command_ = NULL;
-	}
-
-	if (p_end_command_ != NULL)
-	{
-		delete p_end_command_;
-		p_end_command_ = NULL;
+		delete p_start_command;
+		p_start_command = NULL;
 	}
 
-	for (std::vector<snapshot_plan_step*>::iterator step = steps_.begin(); step != steps_.end(); ++step) {
+	if (p_end_command != NULL)
+	{
+		delete p_end_command;
+		p_end_command = NULL;
+	}
+
+	for (std::vector<snapshot_plan_step*>::iterator step = steps.begin(); step != steps.end(); ++step) {
 		delete *step;
 	}
-	steps_.clear();
+	steps.clear();
 	
 }
 
@@ -122,14 +122,14 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 PyObject * snapshot_plan::to_py_object()
 {
 	PyObject* py_triggering_command;
-	if (p_triggering_command_ == NULL)
+	if (p_triggering_command == NULL)
 	{
 		py_triggering_command = Py_None;
 		Py_IncRef(py_triggering_command);
 	}
 	else
 	{
-		py_triggering_command = p_triggering_command_->to_py_object();
+		py_triggering_command = p_triggering_command->to_py_object();
 		if (py_triggering_command == NULL)
 		{
 			PyErr_Print();
@@ -140,14 +140,14 @@ PyObject * snapshot_plan::to_py_object()
 	
 
 	PyObject* py_start_command = NULL;
-	if (p_start_command_ == NULL)
+	if (p_start_command == NULL)
 	{
 		py_start_command = Py_None;
 		Py_IncRef(Py_None);
 	}
 	else
 	{
-		py_start_command = p_start_command_->to_py_object();
+		py_start_command = p_start_command->to_py_object();
 		if (py_start_command == NULL)
 		{
 			PyErr_Print();
@@ -157,14 +157,14 @@ PyObject * snapshot_plan::to_py_object()
 	}
 
 	PyObject * py_initial_position;
-	if (p_initial_position_ == NULL)
+	if (p_initial_position == NULL)
 	{
 		py_initial_position = Py_None;
 		Py_IncRef(py_initial_position);
 	}
 	else
 	{
-		py_initial_position = p_initial_position_->to_py_tuple();
+		py_initial_position = p_initial_position->to_py_tuple();
 		if (py_initial_position == NULL)
 		{
 			PyErr_Print();
@@ -180,11 +180,11 @@ PyObject * snapshot_plan::to_py_object()
 		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create a PyList object to hold the snapshot plan steps.");
 		return NULL;
 	}
-	for (unsigned int step_index = 0; step_index < steps_.size(); step_index++)
+	for (unsigned int step_index = 0; step_index < steps.size(); step_index++)
 	{
 
 		// create the snapshot step object with build
-		PyObject * py_step = steps_[step_index]->to_py_object();
+		PyObject * py_step = steps[step_index]->to_py_object();
 		if (py_step == NULL)
 		{
 			PyErr_Print();
@@ -205,14 +205,14 @@ PyObject * snapshot_plan::to_py_object()
 	}
 
 	PyObject * py_return_position;
-	if (p_return_position_ == NULL)
+	if (p_return_position == NULL)
 	{
 		py_return_position = Py_None;
 		Py_IncRef(py_return_position);
 	}
 	else
 	{
-		py_return_position = p_return_position_->to_py_tuple();
+		py_return_position = p_return_position->to_py_tuple();
 		if (py_return_position == NULL)
 		{
 			PyErr_Print();
@@ -222,14 +222,14 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	
 	PyObject* py_end_command;
-	if (p_end_command_ == NULL)
+	if (p_end_command == NULL)
 	{
 		py_end_command = Py_None;
 		Py_IncRef(py_end_command);
 	}
 	else
 	{
-		py_end_command = p_end_command_->to_py_object();
+		py_end_command = p_end_command->to_py_object();
 		if (py_end_command == NULL)
 		{
 			PyErr_Print();
@@ -240,8 +240,8 @@ PyObject * snapshot_plan::to_py_object()
 
 	PyObject *py_snapshot_plan = Py_BuildValue(
 		"llOOOOOO",
-		file_line_,
-		file_gcode_number_,
+		file_line,
+		file_gcode_number,
 		py_triggering_command,
 		py_start_command,
 		py_initial_position,

@@ -22,74 +22,6 @@
 
 #include "position.h"
 #include "logging.h"
-/*
-f
-f_null
-x
-x_null
-x_offset
-x_homed
-y
-y_null
-y_offset
-y_homed
-z
-z_null
-z_offset
-z_homed
-e
-e_offset
-is_relative
-is_relative_null
-is_extruder_relative
-is_extruder_relative_null
-is_metric
-is_metric_null
-last_extrusion_height
-last_extrusion_height_null
-layer
-height
-is_printer_primed
-minimum_layer_height_reached
-firmware_retraction_length
-firmware_retraction_length_null
-firmware_unretraction_additional_length
-firmware_unretraction_additional_length_null
-firmware_retraction_feedrate
-firmware_retraction_feedrate_null
-firmware_unretraction_feedrate
-firmware_unretraction_feedrate_null
-firmware_z_lift
-firmware_z_lift_null
-has_position_error
-position_error
-has_homed_position
-e_relative
-extrusion_length
-extrusion_length_total
-retraction_length
-deretraction_length
-is_extruding_start
-is_extruding
-is_primed
-is_retracting_start
-is_retracting
-is_retracted
-is_partially_retracted
-is_deretracting_start
-is_deretracting
-is_deretracted
-is_layer_change
-is_height_change
-is_travel_only
-is_zhop
-has_position_changed
-has_state_changed
-has_received_home_command
-has_one_feature_enabled
-is_in_position
-in_path_position
-*/
 
 void position::initialize()
 {
@@ -121,7 +53,6 @@ void position::initialize()
 	layer_ = 0;
 	height_ = 0;
 	is_printer_primed_ = false;
-	minimum_layer_height_reached_ = false;
 	firmware_retraction_length_ = 0;
 	firmware_retraction_length_null_ = true;
 	firmware_unretraction_additional_length_ = 0;
@@ -136,6 +67,7 @@ void position::initialize()
 	position_error_ = "";
 	has_homed_position_ = false;
 	e_relative_ = 0;
+	z_relative_ = 0;
 	extrusion_length_ = 0;
 	extrusion_length_total_ = 0;
 	retraction_length_ = 0;
@@ -151,12 +83,12 @@ void position::initialize()
 	is_deretracting_ = false;
 	is_deretracted_ = false;
 	is_in_position_ = false;
-	has_one_feature_enabled_ = false;
 	in_path_position_ = false;
 	is_zhop_ = false;
 	is_layer_change_ = false;
 	is_height_change_ = false;
-	is_travel_only_ = false;
+	is_xy_travel_ = false;
+	is_xyz_travel_ = false;
 	has_xy_position_changed_ = false;
 	has_position_changed_ = false;
 	has_state_changed_ = false;
@@ -203,7 +135,6 @@ position::position(position & source)
 	layer_ = source.layer_;
 	height_ = source.height_;
 	is_printer_primed_ = source.is_printer_primed_;
-	minimum_layer_height_reached_ = source.minimum_layer_height_reached_;
 	firmware_retraction_length_ = source.firmware_retraction_length_;
 	firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
 	firmware_unretraction_additional_length_ = source.firmware_unretraction_additional_length_;
@@ -218,6 +149,7 @@ position::position(position & source)
 	position_error_ = source.position_error_;
 	has_homed_position_ = source.has_homed_position_;
 	e_relative_ = source.e_relative_;
+	z_relative_ = source.z_relative_;
 	extrusion_length_ = source.extrusion_length_;
 	extrusion_length_total_ = source.extrusion_length_total_;
 	retraction_length_ = source.retraction_length_;
@@ -234,13 +166,13 @@ position::position(position & source)
 	is_deretracted_ = source.is_deretracted_;
 	is_layer_change_ = source.is_layer_change_;
 	is_height_change_ = source.is_height_change_;
-	is_travel_only_ = source.is_travel_only_;
+	is_xy_travel_ = source.is_xy_travel_;
+	is_xyz_travel_ = source.is_xyz_travel_;
 	is_zhop_ = source.is_zhop_;
 	has_xy_position_changed_ = source.has_xy_position_changed_;
 	has_position_changed_ = source.has_position_changed_;
 	has_state_changed_ = source.has_state_changed_;
 	has_received_home_command_ = source.has_received_home_command_;
-	has_one_feature_enabled_ = source.has_one_feature_enabled_;
 	is_in_position_ = source.is_in_position_;
 	in_path_position_ = source.in_path_position_;
 	file_line_number_ = source.file_line_number_;
@@ -290,13 +222,11 @@ position::position(const std::string& xyz_axis_default_mode, const std::string& 
 
 position::~position()
 {
-	octolapse_log(GCODE_POSITION, INFO, "Deleting position.");
 	if (p_command != NULL)
 	{
 		delete p_command;
 		p_command = NULL;
 	}
-	octolapse_log(GCODE_POSITION, INFO, "Finished deleting position.");
 }
 
 void position::copy(position &source, position* target)
@@ -335,7 +265,6 @@ void position::copy(position &source, position* target)
 	target->layer_ = source.layer_;
 	target->height_ = source.height_;
 	target->is_printer_primed_ = source.is_printer_primed_;
-	target->minimum_layer_height_reached_ = source.minimum_layer_height_reached_;
 	target->firmware_retraction_length_ = source.firmware_retraction_length_;
 	target->firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
 	target->firmware_unretraction_additional_length_ = source.firmware_unretraction_additional_length_;
@@ -350,6 +279,7 @@ void position::copy(position &source, position* target)
 	target->position_error_ = source.position_error_;
 	target->has_homed_position_ = source.has_homed_position_;
 	target->e_relative_ = source.e_relative_;
+	target->z_relative_ = source.z_relative_;
 	target->extrusion_length_ = source.extrusion_length_;
 	target->extrusion_length_total_ = source.extrusion_length_total_;
 	target->retraction_length_ = source.retraction_length_;
@@ -366,13 +296,13 @@ void position::copy(position &source, position* target)
 	target->is_deretracted_ = source.is_deretracted_;
 	target->is_layer_change_ = source.is_layer_change_;
 	target->is_height_change_ = source.is_height_change_;
-	target->is_travel_only_ = source.is_travel_only_;
+	target->is_xy_travel_ = source.is_xy_travel_;
+	target->is_xyz_travel_ = source.is_xyz_travel_;
 	target->is_zhop_ = source.is_zhop_;
 	target->has_xy_position_changed_ = source.has_xy_position_changed_;
 	target->has_position_changed_ = source.has_position_changed_;
 	target->has_state_changed_ = source.has_state_changed_;
 	target->has_received_home_command_ = source.has_received_home_command_;
-	target->has_one_feature_enabled_ = source.has_one_feature_enabled_;
 	target->is_in_position_ = source.is_in_position_;
 	target->in_path_position_ = source.in_path_position_;
 	target->file_line_number_ = source.file_line_number_;
@@ -394,7 +324,7 @@ PyObject* position::to_py_tuple()
 	}
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddddddddddddddddllllllllllllllllllllllllllllllllllllllllllllllllO",
+		"ddddddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllllllllO",
 		// Floats
 		x_, // 0
 		y_, // 1
@@ -406,28 +336,28 @@ PyObject* position::to_py_tuple()
 		z_offset_, // 7
 		e_offset_, // 8
 		e_relative_, // 9
-		extrusion_length_, // 10
-		extrusion_length_total_, // 11
-		retraction_length_, // 12
-		deretraction_length_, // 13
-		last_extrusion_height_, // 14
-		height_, // 15
-		firmware_retraction_length_, // 16
-		firmware_unretraction_additional_length_, // 17
-		firmware_retraction_feedrate_, // 18
-		firmware_unretraction_feedrate_, // 19
-		firmware_z_lift_, // 20
+		z_relative_, // 10
+		extrusion_length_, // 11
+		extrusion_length_total_, // 12
+		retraction_length_, // 13
+		deretraction_length_, // 14
+		last_extrusion_height_, // 15
+		height_, // 16
+		firmware_retraction_length_, // 17
+		firmware_unretraction_additional_length_, // 18
+		firmware_retraction_feedrate_, // 19
+		firmware_unretraction_feedrate_, // 20
+		firmware_z_lift_, // 21
 		// Int
-		layer_, // 21
+		layer_, // 22
 		// Bool (represented as an integer)
-		x_homed_, // 22
-		y_homed_, // 23
-		z_homed_, // 24
-		is_relative_, // 25
-		is_extruder_relative_, // 26
-		is_metric_, // 27
-		is_printer_primed_, // 28
-		minimum_layer_height_reached_, // 29
+		x_homed_, // 23
+		y_homed_, // 24
+		z_homed_, // 25
+		is_relative_, // 26
+		is_extruder_relative_, // 27
+		is_metric_, // 28
+		is_printer_primed_, // 29
 		has_position_error_, // 30
 		has_homed_position_, // 31
 		is_extruding_start_, // 32
@@ -442,13 +372,13 @@ PyObject* position::to_py_tuple()
 		is_deretracted_, // 41
 		is_layer_change_, // 42
 		is_height_change_, // 43
-		is_travel_only_, // 44
-		is_zhop_, // 45
-		has_xy_position_changed_, // 46
-		has_position_changed_, // 47
-		has_state_changed_, // 48
-		has_received_home_command_, // 49
-		has_one_feature_enabled_, // 50
+		is_xy_travel_, // 44
+		is_xyz_travel_, // 45
+		is_zhop_, // 46
+		has_xy_position_changed_, // 47
+		has_position_changed_, // 48
+		has_state_changed_, // 49
+		has_received_home_command_, // 50
 		is_in_position_, // 51
 		in_path_position_, // 52
 		// Null bool, represented as integers
@@ -507,12 +437,15 @@ void position::reset_state()
 {
 	is_layer_change_ = false;
 	is_height_change_ = false;
-	is_travel_only_ = false;
+	is_xy_travel_ = false;
+	is_xyz_travel_ = false;
 	has_position_changed_ = false;
 	has_state_changed_ = false;
 	has_received_home_command_ = false;
 	gcode_ignored_ = true;
 	is_in_bounds_ = true;
+	e_relative_ = 0;
+	z_relative_ = 0;
 }
 
 PyObject* position::to_py_dict()
@@ -528,7 +461,7 @@ PyObject* position::to_py_dict()
 	}
 
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
 		// FLOATS
@@ -566,6 +499,8 @@ PyObject* position::to_py_dict()
 		firmware_z_lift_,
 		"e_relative",
 		e_relative_,
+		"z_relative",
+		z_relative_,
 		"extrusion_length",
 		extrusion_length_,
 		"extrusion_length_total",
@@ -620,8 +555,6 @@ PyObject* position::to_py_dict()
 		has_position_error_,
 		"has_homed_position",
 		has_homed_position_,
-		"minimum_layer_height_reached",
-		minimum_layer_height_reached_,
 		"is_extruding_start",
 		is_extruding_start_,
 		"is_extruding",
@@ -646,8 +579,10 @@ PyObject* position::to_py_dict()
 		is_layer_change_,
 		"is_height_change",
 		is_height_change_,
-		"is_travel_only",
-		is_travel_only_,
+		"is_xy_travel",
+		is_xy_travel_,
+		"is_xyz_travel",
+		is_xyz_travel_,
 		"is_zhop",
 		is_zhop_,
 		"has_xy_position_changed",
@@ -658,8 +593,6 @@ PyObject* position::to_py_dict()
 		has_state_changed_,
 		"has_received_home_command",
 		has_received_home_command_,
-		"has_one_feature_enabled",
-		has_one_feature_enabled_,
 		"is_in_position",
 		is_in_position_,
 		"in_path_position",

@@ -31,12 +31,6 @@
             <span data-bind="text: Octolapse.Globals.enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
         </div>
         <div>
-            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'}">
-                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.show_real_snapshot_time()  ), 'fa-close': (!Octolapse.Globals.show_real_snapshot_time() ) },style: { color: (Octolapse.Globals.show_real_snapshot_time()  ) ? 'limegreen' : '' }"></span>
-            </span>
-            <span data-bind="text: Octolapse.Globals.show_real_snapshot_time() ? 'Snapshot time calculation is enabled' : 'Snapshot time calculation is disabled'"></span>
-        </div>
-        <div>
             <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'}">
                 <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.cancel_print_on_startup_error()  ), 'fa-close': (!Octolapse.Globals.cancel_print_on_startup_error() ) },style: { color: (Octolapse.Globals.cancel_print_on_startup_error()  ) ? 'limegreen' : '' }"></span>
             </span>
@@ -145,22 +139,6 @@
                                     </label>
                                 </div>
                             </div>
-
-                            <hr />
-                            <div>
-                                <h4>Snapshot Time</h4>
-                                <p>Octolapse can determine the exact amount of time that it adds to your print, but this requires multiple M400 commands to be sent which can reduce quality on some printers in some situations.  Disable if you see any blobs on your print that weren't there before you started using Octolapse.</p>
-                                <p>Note:  A feature is in the works to calculate the snapshot time if this settings is disabled.</p>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">Display real snapshot time</label>
-                                <div class="controls">
-                                    <label class="checkbox">
-                                        <input type="checkbox" title="Display real snapshot time" data-bind="checked:show_real_snapshot_time" />Enabled
-                                    </label>
-                                </div>
-                            </div>
-
                             <hr />
                             <div>
                                 <h4>Navbar Control</h4>

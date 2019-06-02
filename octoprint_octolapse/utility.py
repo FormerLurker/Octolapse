@@ -738,7 +738,7 @@ def run_command_with_timeout(args, timeout_sec):
 class TimelapseJobInfo(object):
     def __init__(
         self, job_info=None, job_guid=None, print_start_time=None, print_end_time=None,
-        print_end_state=None, print_file_name=None, seconds_added=None
+        print_end_state=None, print_file_name=None
      ):
         if job_info is None:
             self.JobGuid = "{}".format(job_guid)
@@ -746,7 +746,6 @@ class TimelapseJobInfo(object):
             self.PrintEndTime = print_end_time
             self.PrintEndState = print_end_state
             self.PrintFileName = print_file_name
-            self.SecondsAdded = seconds_added
 
         else:
             self.JobGuid = job_info.JobGuid
@@ -754,4 +753,3 @@ class TimelapseJobInfo(object):
             self.PrintEndTime = job_info.PrintEndTime
             self.PrintEndState = job_info.PrintEndState
             self.PrintFileName = job_info.PrintFileName
-            self.SecondsAdded = job_info.SecondsAdded

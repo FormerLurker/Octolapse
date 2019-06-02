@@ -101,7 +101,6 @@ class Timelapse(object):
         # State Tracking that should only be reset when starting a timelapse
         self._has_been_stopped = False
         self._timelapse_stop_requested = False
-        self.SecondsAddedByOctolapse = 0
         # State tracking variables
         self.job_on_hold = False
         self.RequiresLocationDetectionAfterHome = False
@@ -172,8 +171,6 @@ class Timelapse(object):
         self.is_realtime = self.snapshot_plans is None
         assert (isinstance(self._printer, PrinterProfile))
 
-        # time tracking - how much time did we add to the print?
-        self.SecondsAddedByOctolapse = 0
         self.RequiresLocationDetectionAfterHome = False
         self._octoprint_printer_profile = octoprint_printer_profile
         self._ffmpeg_path = ffmpeg_path
@@ -338,15 +335,12 @@ class Timelapse(object):
             "return_position": None,
             "snapshot_gcode": None,
             "snapshot_payload": None,
-            "current_snapshot_time": 0,
-            "total_snapshot_time": 0,
             "success": False,
             "error": ""
         }
         try:
             snapshot_start_time = time.time()
             has_error = False
-            show_real_snapshot_time = self._settings.main_settings.show_real_snapshot_time
             # create the GCode for the timelapse and store it
             snapshot_gcode = self._gcode.create_gcode_for_snapshot_plan(
                 self.current_snapshot_plan, self._position.g90_influences_extruder,
@@ -371,23 +365,6 @@ class Timelapse(object):
                 gcodes_sent_without_waiting = True
                 logger.info("Sending initialization gcode.")
                 self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode)
-
-            if show_real_snapshot_time and gcodes_sent_without_waiting:
-                # wait for commands to finish before recording start time - this will give us a very accurate
-                # snapshot time, but requires an m400 + m114
-                logger.info("Waiting for commands to finish to calculate snapshot time accurately.")
-                start_position = self.get_position_async()
-                gcodes_sent_without_waiting = False
-                snapshot_start_time = time.time()
-                if start_position is None:
-                    has_error = True
-                    logger.error(
-                        "Unable to acquire the starting position.  Either the print has cancelled or a timeout has "
-                        "been reached. "
-                    )
-                    # don't send any more gcode if we're cancelling
-                    if self._octoprint_printer.get_state_id() == "CANCELLING":
-                        return None
 
             # start building up a list of gcodes to send, starting with (appropriately) the start gcode
             gcodes_to_send = snapshot_gcode.StartGcode
@@ -427,44 +404,13 @@ class Timelapse(object):
                 # if any commands are left, send them!
                 self.send_snapshot_gcode_array(gcodes_to_send)
 
-            if not show_real_snapshot_time:
-                # return the printhead to the start position
-                gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
-                if len(gcode_to_send) > 0:
-                    if self._state == TimelapseState.TakingSnapshot:
-                        logger.info(
-                            "Sending snapshot return and end gcode.")
-                        self.send_snapshot_gcode_array(gcode_to_send)
-            else:
-                if len(snapshot_gcode.ReturnCommands) > 0:
-                    logger.info("Sending return gcode.")
-                    return_position = self.get_position_async(
-                        start_gcode=snapshot_gcode.ReturnCommands, timeout=self._position_timeout_short
-                    )
-                    timelapse_snapshot_payload["return_position"] = return_position
-                    if return_position is None:
-                        logger.error(
-                            "The snapshot_position is None.  Either the print has cancelled or a timeout has been "
-                            "reached. "
-                        )
-                        # don't send any more gcode if we're cancelling
-                        if self._octoprint_printer.get_state_id() == "CANCELLING":
-                            return None
-                # calculate the total snapshot time
-                snapshot_end_time = time.time()
-                snapshot_time = snapshot_end_time - snapshot_start_time
-                logger.info(
-                    "Stabilization and snapshot process complected in %s seconds",
-                    snapshot_time
-                )
-                self.SecondsAddedByOctolapse += snapshot_time
-                timelapse_snapshot_payload["current_snapshot_time"] = snapshot_time
-                timelapse_snapshot_payload["total_snapshot_time"] = self.SecondsAddedByOctolapse
-
-                if len(snapshot_gcode.EndGcode) > 0:
-                    if self._state == TimelapseState.TakingSnapshot:
-                        logger.info("Sending end gcode.")
-                        self.send_snapshot_gcode_array(snapshot_gcode.EndGcode)
+            # return the printhead to the start position
+            gcode_to_send = snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode
+            if len(gcode_to_send) > 0:
+                if self._state == TimelapseState.TakingSnapshot:
+                    logger.info(
+                        "Sending snapshot return and end gcode.")
+                    self.send_snapshot_gcode_array(gcode_to_send)
 
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = not has_error and not self._gcode.has_snapshot_position_errors
@@ -1283,8 +1229,6 @@ class Timelapse(object):
                 "error": snapshot_payload["error"],
                 "snapshot_count":  self._capture_snapshot.SnapshotsTotal,
                 "snapshot_payload": snapshot_payload["snapshot_payload"],
-                "total_snapshot_time": snapshot_payload["total_snapshot_time"],
-                "current_snapshot_time": snapshot_payload["total_snapshot_time"]
             }
 
             snapshot_complete_callback_thread = threading.Thread(
@@ -1303,7 +1247,6 @@ class Timelapse(object):
             logger.info("Snapshot jobs queue has completed, starting to render.")
             self._current_job_info.PrintEndTime = time.time()
             self._current_job_info.PrintEndState = print_end_state
-            self._current_job_info.SecondsAdded = self.SecondsAddedByOctolapse
             for camera in self._settings.profiles.active_cameras():
                 rendering_job_info = RenderJobInfo(
                     self._current_job_info,

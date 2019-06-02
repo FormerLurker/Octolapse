@@ -105,6 +105,7 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/stabilization_snap_to_print.cpp',
     'octoprint_octolapse/data/lib/c/logging.cpp',
     'octoprint_octolapse/data/lib/c/utilities.cpp',
+    'octoprint_octolapse/data/lib/c/trigger_position.cpp'
 ]
 cpp_gcode_parser = Extension(
     'GcodePositionProcessor',

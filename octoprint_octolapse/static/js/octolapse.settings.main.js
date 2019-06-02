@@ -38,7 +38,6 @@ $(function () {
         self.auto_reload_frames = ko.observable();
         self.show_navbar_icon = ko.observable();
         self.show_navbar_when_not_printing = ko.observable();
-        self.show_real_snapshot_time = ko.observable();
         self.cancel_print_on_startup_error = ko.observable();
         self.show_position_state_changes = ko.observable();
         self.show_position_changes = ko.observable();
@@ -99,7 +98,6 @@ $(function () {
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
             self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
-            self.show_real_snapshot_time(settings.show_real_snapshot_time);
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
 
 
@@ -128,7 +126,7 @@ $(function () {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Unable to enable/disable Octolapse.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Enable/Disable Error',
                         text: message,
                         type: 'error',
                         hide: false,
@@ -157,7 +155,6 @@ $(function () {
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
             self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information());
-            self.show_real_snapshot_time(Octolapse.Globals.show_real_snapshot_time());
             self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error());
 
             var dialog = this;
@@ -241,7 +238,6 @@ $(function () {
                 dialog.$defaultButton.unbind("click");
                 dialog.$defaultButton.bind("click", function () {
                     // Set the options to the current settings
-                    self.show_real_snapshot_time(false);
                     self.is_octolapse_enabled(true);
                     self.auto_reload_latest_snapshot(true);
                     self.auto_reload_frames(5);
@@ -272,7 +268,6 @@ $(function () {
                             , "show_extruder_state_changes": self.show_extruder_state_changes()
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
                             , "show_snapshot_plan_information": self.show_snapshot_plan_information()
-                            , "show_real_snapshot_time": self.show_real_snapshot_time()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
                             , "client_id": Octolapse.Globals.client_id
                         };
@@ -289,7 +284,7 @@ $(function () {
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 var message = "Unable to save the main settings.  Status: " + textStatus + ".  Error: " + errorThrown;
                                 var options = {
-                                    title: 'Octolapse Defaults Restored',
+                                    title: 'Main Settings Save Error',
                                     text: message,
                                     type: 'error',
                                     hide: false,

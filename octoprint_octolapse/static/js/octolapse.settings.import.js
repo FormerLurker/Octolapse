@@ -86,7 +86,7 @@ $(function () {
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         var message = "Unable to import the provided settings:(  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Settings Import Error',
                             text: message,
                             type: 'error',
                             hide: false,

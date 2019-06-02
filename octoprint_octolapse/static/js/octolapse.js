@@ -586,7 +586,7 @@ $(function () {
                     var message = "Octolapse could not validate the rendering template.";
 
                     var options = {
-                            title: 'Octolapse Defaults Restored',
+                            title: 'Rendering Template Error',
                             text: message,
                             type: 'error',
                             hide: false,
@@ -925,7 +925,6 @@ $(function () {
         self.enabled = ko.observable(false);
         self.navbar_enabled = ko.observable(false);
         self.show_navbar_when_not_printing = ko.observable(false);
-        self.show_real_snapshot_time = ko.observable(false);
         self.cancel_print_on_startup_error = ko.observable(true);
 
         self.version = ko.observable("unknown");
@@ -1114,11 +1113,6 @@ $(function () {
             else
                 self.show_trigger_state_changes(settings.show_trigger_state_changes);
 
-            if (ko.isObservable(settings.show_real_snapshot_time))
-                self.show_real_snapshot_time(settings.show_real_snapshot_time());
-            else
-                self.show_real_snapshot_time(settings.show_real_snapshot_time);
-
             if (ko.isObservable(settings.cancel_print_on_startup_error))
                 self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
             else
@@ -1146,7 +1140,7 @@ $(function () {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Could not cancel preprocessing.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
-                        title: 'Octolapse Defaults Restored',
+                        title: 'Error Cancelling Process',
                         text: message,
                         type: 'error',
                         hide: false,
@@ -1240,6 +1234,8 @@ $(function () {
                     }
                     else
                         console.log("Slicer settings detected but not saved.");
+                    // Disable the error notification for profiles that haven't been configured
+
 
                 case "state-loaded":
                     {
