@@ -35,7 +35,7 @@ $(function () {
         self.fastest_speed = ko.observable(values.fastest_speed);
         self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
         self.smart_layer_trigger_speed_threshold = ko.observable(values.smart_layer_trigger_speed_threshold);
-        self.smart_layer_trigger_distance_threshold = ko.observable(values.smart_layer_trigger_distance_threshold);
+        self.smart_layer_trigger_distance_threshold_percent = ko.observable(values.smart_layer_trigger_distance_threshold_percent);
         //  Real-time stabilization options
         self.x_type = ko.observable(values.x_type);
         self.x_fixed_coordinate = ko.observable(values.x_fixed_coordinate);

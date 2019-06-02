@@ -32,7 +32,6 @@
                 </div>
             </div>
         </div>
-
         <div class="panel-body">
             <div class="row-fluid">
                 <div class="span6">
@@ -89,6 +88,17 @@
                         </div>
                         <div class="span9 text-left no-min-height">
                             <strong>X</strong><span data-bind="text: SnapshotPlanState.x_return" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_return" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_return" />
+                        </div>
+                    </div>
+                    <div data-bind="visible:SnapshotPlanState.total_travel_distance() > 0">
+                        <strong>Statistics</strong>
+                        <div class="row-fluid">
+                            <div class="span4 text-right no-min-height">
+                            Total Travel:&nbsp;
+                            </div>
+                            <div class="span8 text-left no-min-height">
+                                <span data-bind="text: SnapshotPlanState.total_travel_distance" />mm,&nbsp;<strong>Saved:&nbsp</strong><span data-bind="text: SnapshotPlanState.total_saved_travel_percent" />&#37;
+                            </div>
                         </div>
                     </div>
                 </div>

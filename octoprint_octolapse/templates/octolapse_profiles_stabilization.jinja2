@@ -123,16 +123,16 @@
             </div>
         </div>
         <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '3'">
-            <label class="control-label">Trigger Speed Threshold</label>
+            <label class="control-label">Distance Threshold Percent</label>
             <div class="controls">
                 <span class="input-append">
-                    <input id="stabilization_profile_smart_layer_trigger_distance_threshold" name="smart_layer_trigger_distance_threshold" type="number" class="input-small ignore_hidden_errors"
-                           data-bind="value: smart_layer_trigger_distance_threshold" min="0" step="1" required="true" />
-                    <span class="add-on">mm</span>
+                    <input id="stabilization_profile_smart_layer_trigger_distance_threshold_percent" name="smart_layer_trigger_distance_threshold_percent" type="number" class="input-small ignore_hidden_errors"
+                           data-bind="value: smart_layer_trigger_distance_threshold_percent" min="0.0" max="100" step="1" required="true" />
+                    <span class="add-on">%</span>
                 </span>
                 <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-distance-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_trigger_distance_threshold"></div>
-                <span class="help-inline">Octolapse will choose a closer position rather than one of higher quality if it is closer to the stabilization point by at least the amount entered here.</span>
+                <div class="error_label_container text-error" data-error-for="stabilization_profile_smart_layer_trigger_distance_threshold_percent"></div>
+                <span class="help-inline">Octolapse will choose a closer position rather than one of higher quality if it is closer to the stabilization point by at least the percentage entered here.</span>
             </div>
         </div>
         <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '1'">

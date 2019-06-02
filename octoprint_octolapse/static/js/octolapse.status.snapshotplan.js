@@ -41,12 +41,24 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.progress_percent = ko.observable(null).extend({numeric: 2});
             self.snapshot_positions = ko.observableArray([]);
             self.is_animating_plans = ko.observable(false);
-
+            self.travel_distance = ko.observable(0).extend({numeric: 1});
+            self.saved_travel_distance = ko.observable(0).extend({numeric: 1});
+            self.total_travel_distance = ko.observable(0).extend({numeric: 1});
+            self.total_saved_travel_percent = ko.observable(0).extend({numeric: 1});
             self.update = function (state) {
                 if (state.snapshot_plans != null)
                 {
                     self.snapshot_plans(state.snapshot_plans);
                     self.plan_count(state.snapshot_plans.length);
+                    self.total_travel_distance(state.total_travel_distance);
+                    var potential_total_distance = state.total_saved_travel_distance + state.total_travel_distance;
+                    var percent_saved = 0;
+                    if(potential_total_distance>0)
+                    {
+                        percent_saved = (1 - (state.total_travel_distance / potential_total_distance)) * 100;
+                    }
+                    self.total_saved_travel_percent(percent_saved);
+
                 }
                 if (state.current_plan_index != null)
                 {
@@ -94,7 +106,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.x_return(showing_plan.return_position.x);
                 self.y_return(showing_plan.return_position.y);
                 self.z_return(showing_plan.return_position.z);
-
+                self.travel_distance(showing_plan.total_travel_distance);
+                self.saved_travel_distance(showing_plan.total_saved_travel_distance);
                 var x_current = showing_plan.initial_position.x;
                 var y_current = showing_plan.initial_position.y;
                 var z_current = showing_plan.initial_position.z;

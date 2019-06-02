@@ -505,9 +505,10 @@ class StabilizationProfile(ProfileSettings):
     STABILIZATION_TYPE_SMART_LAYER = "smart-layer"
     SMART_TRIGGER_TYPE_FASTEST = 0
     SMART_TRIGGER_TYPE_FAST = 1
-    SMART_TRIGGER_TYPE_STANDARD = 2
-    SMART_TRIGGER_TYPE_HIGH_QUALITY = 3
-    SMART_TRIGGER_TYPE_BEST_QUALITY = 4
+    SMART_TRIGGER_TYPE_COMPATIBILITY = 2
+    SMART_TRIGGER_TYPE_NORMAL_QUALITY = 3
+    SMART_TRIGGER_TYPE_HIGH_QUALITY = 4
+    SMART_TRIGGER_TYPE_BEST_QUALITY = 5
     EXTRUDER_TRIGGER_IGNORE_VALUE = ""
     EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
     EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
@@ -524,9 +525,9 @@ class StabilizationProfile(ProfileSettings):
         self.snap_to_print_disable_z_lift = True
         self.snap_to_print_disable_retract = False
         # smart layer trigger options
-        self.smart_layer_trigger_type = StabilizationProfile.SMART_TRIGGER_TYPE_STANDARD
+        self.smart_layer_trigger_type = StabilizationProfile.SMART_TRIGGER_TYPE_COMPATIBILITY
         self.smart_layer_trigger_speed_threshold = 0
-        self.smart_layer_trigger_distance_threshold = 10
+        self.smart_layer_trigger_distance_threshold_percent = 10
         # Real Time stabilization options
         self.x_type = "relative"
         self.x_fixed_coordinate = 0.0
@@ -659,7 +660,8 @@ class StabilizationProfile(ProfileSettings):
             ], 'smart_layer_trigger_type_options': [
                 dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FASTEST), name='Fastest'),
                 dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FAST), name='Fast'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_STANDARD), name='Standard'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_COMPATIBILITY), name='Compatibility'),
+                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_NORMAL_QUALITY), name='Normal Quality'),
                 dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_HIGH_QUALITY), name='High Quality'),
                 dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_BEST_QUALITY), name='Best Quality'),
             ], 'trigger_types': [

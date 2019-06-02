@@ -19,11 +19,12 @@ static const char* SMART_LAYER_STABILIZATION = "smart_layer";
  *        layer, optionally excluding extrusions with feedrates that are below or equal to an
  *        speed threshold.  If only one extrusion speed is detected on a given layer,
  *        and no speed threshold is provided, use a non-extrusion position\n
- * standard - Gets the closest non-extrusion position\n
- * high_quality - Gets a close non-extrusion position and automatically balance time and quality\n
- * best_quality - gets the best non-extrusion position available\n
+ * compatibility - Gets the closest non-extrusion position if possible, else returns the closest available position\n
+ * normal_quality - Gets a close non-extrusion position.  Returns a lesser quality position if no good quality position is found.\n
+ * high_quality - Gets a close non-extrusion position and automatically balance time and quality   Returns a lesser quality position if no good quality position is found.\n
+ * best_quality - gets the best non-extrusion position available.  Skips snapshots if no quality position can be found.\n
  */
-enum trigger_type { fastest, fast, standard, high_quality, best_quality };
+enum trigger_type { fastest, fast, compatibility, normal_quality, high_quality, best_quality };
 
 struct smart_layer_args
 {
@@ -31,11 +32,11 @@ struct smart_layer_args
 	{
 		smart_layer_trigger_type = best_quality;
 		speed_threshold = 0;
-		distance_threshold = 0;
+		distance_threshold_percent = 0;
 	}
 	trigger_type smart_layer_trigger_type;
 	double speed_threshold;
-	double distance_threshold;
+	double distance_threshold_percent;
 };
 
 class stabilization_smart_layer : public stabilization
@@ -73,6 +74,7 @@ private:
 	double stabilization_x_;
 	double stabilization_y_;
 	double current_layer_saved_extrusion_speed_;
+	double standard_layer_trigger_distance_;
 	smart_layer_args *p_smart_layer_args_;
 	// closest extrusion/travel position tracking variables
 	trigger_positions closest_positions_;

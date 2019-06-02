@@ -182,7 +182,9 @@ class StabilizationPreprocessingThread(Thread):
             # run smart layer stabilization
             smart_layer_args = {
                 'trigger_type': int(self.stabilization_profile.smart_layer_trigger_type),
-                'distance_threshold': self.stabilization_profile.smart_layer_trigger_distance_threshold,
+                'distance_threshold_percent': (
+                    self.stabilization_profile.smart_layer_trigger_distance_threshold_percent / 100.0
+                ),
                 'speed_threshold': self.stabilization_profile.smart_layer_trigger_speed_threshold
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(

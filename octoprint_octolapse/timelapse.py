@@ -434,16 +434,24 @@ class Timelapse(object):
                 else:
                     snapshot_plans = None
                     printer_volume = None
+                    total_travel_distance = 0.0
+                    total_saved_travel_distance = 0.0
                     if include_timelapse_start_data:
                         if self.snapshot_plans is not None:
-                            snapshot_plans = [x.to_dict() for x in self.snapshot_plans]
+                            snapshot_plans = []
+                            for plan in self.snapshot_plans:
+                                snapshot_plans.append(plan.to_dict())
+                                total_travel_distance += plan.travel_distance
+                                total_saved_travel_distance += plan.saved_travel_distance
                         printer_volume = self.get_printer_volume_dict()
-                    snapshot_plan = {
-                        "printer_volume": printer_volume,
-                        "snapshot_plans": snapshot_plans,
-                        "current_plan_index": self.current_snapshot_plan_index,
-                        "current_file_line": self._current_file_line,
-                    }
+                        snapshot_plan = {
+                            "printer_volume": printer_volume,
+                            "snapshot_plans": snapshot_plans,
+                            "total_travel_distance": total_travel_distance,
+                            "total_saved_travel_distance": total_saved_travel_distance,
+                            "current_plan_index": self.current_snapshot_plan_index,
+                            "current_file_line": self._current_file_line,
+                        }
 
             state_dict = {
                 "extruder": extruder_dict,
