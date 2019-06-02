@@ -312,8 +312,8 @@ extern "C"
 		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
 		if (py_snapshot_plans == NULL)
 		{
-			octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
-			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
+			//octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
+			//PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
 			return NULL;
 		}
 		octolapse_log(SNAPSHOT_PLAN, INFO, "Creating return values.");
@@ -1114,14 +1114,14 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	args->speed_threshold = PyFloatOrInt_AsDouble(py_speed_threshold);
 
 	// Extract speed_threshold
-	PyObject * py_distance_threshold = PyDict_GetItemString(py_args, "distance_threshold");
-	if (py_distance_threshold == NULL)
+	PyObject * py_distance_threshold_percent = PyDict_GetItemString(py_args, "distance_threshold_percent");
+	if (py_distance_threshold_percent == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve distance_threshold from the smart layer trigger stabilization args.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve distance_threshold_percent from the smart layer trigger stabilization args.");
 		return false;
 	}
-	args->distance_threshold = PyFloatOrInt_AsDouble(py_distance_threshold);
+	args->distance_threshold_percent = PyFloatOrInt_AsDouble(py_distance_threshold_percent);
 	//std::cout << "Smart layer args parsed successfully.\r\n";
 	
 	return true;

@@ -31,6 +31,8 @@ snapshot_plan::snapshot_plan()
 	p_return_position = NULL;
 	p_start_command = NULL;
 	p_end_command = NULL;
+	total_travel_distance = 0;
+	saved_travel_distance = 0;
 	triggering_command_type = position_type::unknown; // unknown
 }
 
@@ -237,11 +239,13 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 	}
-
+	
 	PyObject *py_snapshot_plan = Py_BuildValue(
-		"llOOOOOO",
+		"llddOOOOOO",
 		file_line,
 		file_gcode_number,
+		total_travel_distance,
+		saved_travel_distance,
 		py_triggering_command,
 		py_start_command,
 		py_initial_position,

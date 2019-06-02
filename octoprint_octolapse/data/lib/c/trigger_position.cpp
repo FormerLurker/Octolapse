@@ -30,27 +30,41 @@ position_type trigger_position::get_type(position* p_position)
 	}
 	else if(utilities::greater_than(p_position->z_relative_, 0))
 	{
-		if (!p_position->is_xyz_travel_)
+		if (p_position->is_retracted_)
 		{
-			if (p_position->is_zhop_)
-				return position_type::lifted;
+			if(p_position->is_xyz_travel_)
+			{
+				if (p_position->is_zhop_)
+					return position_type::lifted_retracted_travel;
+				else
+					return position_type::lifting_retracted_travel;
+			}
 			else
-				return position_type::lifting;
-		}
-		else if (p_position->is_retracted_)
-		{
-			if (p_position->is_zhop_)
-				return position_type::lifted_retracted_travel;
-			else
-				return position_type::lifting_retracted_travel;
+			{
+				if (p_position->is_zhop_)
+					return position_type::retracted_lifted;
+				else
+					return position_type::retracted_lifting;
+			}
 		}
 		else
 		{
-			if (p_position->is_zhop_)
-				return position_type::lifted_travel;
+			if (p_position->is_xyz_travel_)
+			{
+				if (p_position->is_zhop_)
+					return position_type::lifted_travel;
+				else
+					return position_type::lifting_travel;
+			}
 			else
-				return position_type::lifting_travel;
+			{
+				if (p_position->is_zhop_)
+					return position_type::lifted;
+				else
+					return position_type::lifting;
+			}
 		}
+		
 	}
 	else if(utilities::less_than(p_position->e_relative_ , 0) && p_position->is_retracted_)
 	{
@@ -62,15 +76,15 @@ position_type trigger_position::get_type(position* p_position)
 	}
 }
 
-trigger_positions::trigger_positions(double distance_threshold)
+trigger_positions::trigger_positions(double distance_threshold_percent)
 {
-	distance_threshold_ = distance_threshold;
+	distance_threshold_percent_ = distance_threshold_percent;
 	initialize_position_list();
 }
 
 trigger_positions::trigger_positions()
 {
-	distance_threshold_ = 0;
+	distance_threshold_percent_ = 0;
 	initialize_position_list();
 }
 
@@ -82,9 +96,9 @@ void trigger_positions::initialize_position_list()
 	}
 }
 
-void trigger_positions::set_distance_threshold(double distance_threshold)
+void trigger_positions::set_distance_threshold_percent(double distance_threshold_percent)
 {
-	distance_threshold_ = distance_threshold;
+	distance_threshold_percent_ = distance_threshold_percent;
 }
 
 trigger_positions::~trigger_positions()
@@ -102,7 +116,7 @@ bool trigger_positions::is_empty()
 	return true;
 }
 
-trigger_position* trigger_positions::get_closest_position()
+trigger_position* trigger_positions::get_fastest_position()
 {
 	trigger_position* current_closest = NULL;
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
@@ -119,13 +133,37 @@ trigger_position* trigger_positions::get_closest_position()
 	return current_closest;
 }
 
-trigger_position* trigger_positions::get_closest_non_extrude_position()
+trigger_position* trigger_positions::get_compatibility_position()
+{
+	trigger_position* current_closest = NULL;
+	double closest_distance;
+	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
+	for (int index = num_position_types - 1; index > -1; index--)
+	{
+		if (index < fast_cutoff && current_closest != NULL)
+			return current_closest;
+
+		trigger_position* current_position = position_list_[index];
+		
+		if (current_position != NULL)
+		{
+			if (current_closest == NULL || utilities::less_than(current_position->distance, current_closest->distance))
+				current_closest = current_position;
+		}
+	}
+	return current_closest;
+}
+
+trigger_position* trigger_positions::get_normal_quality_position()
 {
 	trigger_position* current_closest = NULL;
 	double closest_distance;
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
 	for (int index = num_position_types - 1; index > extrusion; index--)
 	{
+		if (index < quality_cutoff && current_closest != NULL)
+			return current_closest;
+
 		trigger_position* current_position = position_list_[index];
 
 		if (current_position != NULL)
@@ -142,7 +180,11 @@ trigger_position* trigger_positions::get_high_quality_position()
 	trigger_position* current_closest = NULL;
 	for (int index = num_position_types - 1; index > extrusion; index--)
 	{
+		if (index < quality_cutoff && current_closest != NULL)
+			return current_closest;
+
 		trigger_position* current_position = position_list_[index];
+
 		if (current_position != NULL)
 		{
 			if (current_closest == NULL)
@@ -151,12 +193,15 @@ trigger_position* trigger_positions::get_high_quality_position()
 			}
 			else
 			{
-				const double difference = current_closest->distance - current_position->distance;
-				// If our current position is closer to the previous distance by at least the set distance threshold, 
-				// record the current position as the closest position
-				if (utilities::greater_than(difference, distance_threshold_))
+				if (!utilities::is_zero(current_position->distance))
 				{
-					current_closest = current_position;
+					const double difference_percent = 1.0 - (current_position->distance / current_closest->distance);
+					// If our current position is closer to the previous distance by at least the set distance threshold, 
+					// record the current position as the closest position
+					if (utilities::greater_than(difference_percent, distance_threshold_percent_))
+					{
+						current_closest = current_position;
+					}
 				}
 			}
 		}
@@ -166,7 +211,7 @@ trigger_position* trigger_positions::get_high_quality_position()
 
 trigger_position* trigger_positions::get_best_quality_position()
 {
-	for (int index = num_position_types - 1; index > extrusion; index--)
+	for (int index = num_position_types - 1; index > quality_cutoff - 1; index--)
 	{
 		trigger_position* current_position = position_list_[index];
 		if (current_position != NULL)

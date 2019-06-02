@@ -1,10 +1,12 @@
 #pragma once
 #include "position.h"
 #include <map>;
-enum position_type { unknown, extrusion, retraction, lifting, lifted, travel, lifting_travel, lifted_travel, retracted_travel, lifting_retracted_travel, lifted_retracted_travel};
-static const unsigned int num_position_types = 11;
-static const std::string position_type_name[11] = {
-	"unknown", "extrusion", "retraction", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel"
+enum position_type { unknown, extrusion, lifting, lifted, travel, lifting_travel, lifted_travel, retraction, retracted_lifting, retracted_lifted, retracted_travel, lifting_retracted_travel, lifted_retracted_travel};
+static const unsigned int num_position_types = 13;
+static const position_type quality_cutoff = position_type::retraction;
+static const position_type fast_cutoff = position_type::lifting;
+static const std::string position_type_name[13] = {
+	"unknown", "extrusion", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retraction", "retracted_lifting", "retracted_lifted", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel"
 };
 /**
  * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
@@ -40,12 +42,13 @@ public:
 	trigger_positions();
 	trigger_positions(double distance_threshold);
 	~trigger_positions();
-	trigger_position* get_closest_position();
-	trigger_position* get_closest_non_extrude_position();
+	trigger_position* get_fastest_position();
+	trigger_position* get_compatibility_position();
+	trigger_position* get_normal_quality_position();
 	trigger_position* get_high_quality_position();
 	trigger_position* get_best_quality_position();
 	trigger_position** get_all();
-	void set_distance_threshold(double distance_threshold);
+	void set_distance_threshold_percent(double distance_threshold_percent);
 	void clear();
 	void add(position_type type, double distance, position *p_position);
 	void add(double distance, position *p_position);
@@ -54,6 +57,6 @@ public:
 private:
 	void initialize_position_list();
 	trigger_position* position_list_[num_position_types];
-	double distance_threshold_;
+	double distance_threshold_percent_;
 };
 
