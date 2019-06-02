@@ -29,11 +29,11 @@ struct smart_layer_args
 {
 	smart_layer_args()
 	{
-		trigger_type = best_quality;
+		smart_layer_trigger_type = best_quality;
 		speed_threshold = 0;
 		distance_threshold = 0;
 	}
-	trigger_type trigger_type;
+	trigger_type smart_layer_trigger_type;
 	double speed_threshold;
 	double distance_threshold;
 };

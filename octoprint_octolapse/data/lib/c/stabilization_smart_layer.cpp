@@ -72,7 +72,7 @@ bool stabilization_smart_layer::can_process_position(position* p_position, posit
 		return false;
 	if (type == extrusion)
 	{
-		if (p_smart_layer_args_->trigger_type > trigger_type::fast)
+		if (p_smart_layer_args_->smart_layer_trigger_type > trigger_type::fast)
 			return false;
 	}
 	// check for errors in position, layer, or height
@@ -161,7 +161,7 @@ bool stabilization_smart_layer::is_closer(position * p_position, position_type t
 {
 	// Fist check the speed threshold if we are running a fast trigger type
 	// We want to ignore any extrusions that are below the speed threshold
-	const bool filter_extrusion_speeds = p_smart_layer_args_->trigger_type == trigger_type::fast && type == position_type::extrusion;
+	const bool filter_extrusion_speeds = p_smart_layer_args_->smart_layer_trigger_type == trigger_type::fast && type == position_type::extrusion;
 	if (filter_extrusion_speeds)
 	{
 		// Initialize our previous extrusion speed if it's not been initialized
@@ -218,7 +218,7 @@ bool stabilization_smart_layer::is_closer(position * p_position, position_type t
 
 trigger_position* stabilization_smart_layer::get_closest_position()
 {
-	switch (p_smart_layer_args_->trigger_type)
+	switch (p_smart_layer_args_->smart_layer_trigger_type)
 	{
 		case fastest:
 			return closest_positions_.get_closest_position();
@@ -244,7 +244,7 @@ void stabilization_smart_layer::add_plan()
 	{
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan* p_plan = new snapshot_plan();
-		p_plan->position_type = p_closest->type;
+		p_plan->triggering_command_type = p_closest->type;
 		// create the initial position
 		p_plan->p_triggering_command = new parsed_command(*p_closest->p_position->p_command);
 		p_plan->p_start_command = new parsed_command(*p_closest->p_position->p_command);

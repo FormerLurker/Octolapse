@@ -31,7 +31,7 @@ snapshot_plan::snapshot_plan()
 	p_return_position = NULL;
 	p_start_command = NULL;
 	p_end_command = NULL;
-	position_type = position_type::unknown; // unknown
+	triggering_command_type = position_type::unknown; // unknown
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)
