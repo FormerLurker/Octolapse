@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 from threading import Thread
 from six.moves import queue
 from octoprint_octolapse.gcode import SnapshotPlan, SnapshotGcodeGenerator
-from octoprint_octolapse.settings import PrinterProfile, StabilizationProfile
+from octoprint_octolapse.settings import PrinterProfile, TriggerProfile, StabilizationProfile
 import GcodePositionProcessor
 
 # create the module level logger
@@ -48,10 +48,12 @@ class StabilizationPreprocessingThread(Thread):
         super(StabilizationPreprocessingThread, self).__init__()
         printer = timelapse_settings["settings"].profiles.current_printer()
         stabilization = timelapse_settings["settings"].profiles.current_stabilization()
+        trigger = timelapse_settings["settings"].profiles.current_trigger()
         assert (isinstance(printer, PrinterProfile))
         assert (isinstance(stabilization, StabilizationProfile))
+        assert (isinstance(trigger, TriggerProfile))
         assert (
-            stabilization.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types()
+            trigger.trigger_type in TriggerProfile.get_precalculated_trigger_types()
         )
         self.gcode_generator = SnapshotGcodeGenerator(timelapse_settings["settings"], timelapse_settings["octoprint_printer_profile"])
         self.progress_callback = progress_callback
@@ -69,6 +71,7 @@ class StabilizationPreprocessingThread(Thread):
         self.snapshot_plans = []
         self.printer_profile = printer
         self.stabilization_profile = stabilization
+        self.trigger_profile = trigger
         self.error = None
         self.total_seconds = 0
         self.gcodes_processed = 0
@@ -126,7 +129,7 @@ class StabilizationPreprocessingThread(Thread):
         # and vase mode is enabled, use the layer height setting if it exists
         # I'm keeping this out of the c++ routine so it can be more easily changed based on slicer
         # changes.  I might add this to the settings class.
-        if self.stabilization_profile.layer_trigger_height == 0:
+        if self.trigger_profile.layer_trigger_height == 0:
             if (
                 self.printer_profile.gcode_generation_settings.vase_mode and
                 self.printer_profile.gcode_generation_settings.layer_height
@@ -136,29 +139,37 @@ class StabilizationPreprocessingThread(Thread):
                 # use the default height increment
                 height_increment = self.printer_profile.minimum_layer_height
         else:
-            height_increment = self.stabilization_profile.layer_trigger_height
+            height_increment = self.trigger_profile.layer_trigger_height
 
         stabilization_args = {
             'height_increment': height_increment,
-            'fastest_speed': self.stabilization_profile.fastest_speed,
             'notification_period_seconds': self.notification_period_seconds,
             'on_progress_received': self.on_progress_received,
             'file_path': self.timelapse_settings["gcode_file_path"],
             'gcode_generator': self.gcode_generator,
+            "x_stabilization_disabled": (
+                self.stabilization_profile.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
+            ),
+            "y_stabilization_disabled": (
+                self.stabilization_profile.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
+            )
         }
         return stabilization_args
 
     def _run_stabilization(self):
-        results = None
         options = {}
         stabilization_args = self._create_stabilization_args()
-        stabilization_type = self.stabilization_profile.stabilization_type
+        # if this is a vase mode print, set the minimum layer height to the
+        # height increment so we can get better layer change detection for vase mode
+        if self.printer_profile.gcode_generation_settings.vase_mode:
+            self.cpp_position_args["minimum_layer_height"] = stabilization_args["height_increment"]
+        trigger_type = self.trigger_profile.trigger_type
         is_precalculated = (
-            self.stabilization_profile.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types()
+            self.trigger_profile.trigger_type in TriggerProfile.get_precalculated_trigger_types()
         )
-        # If the current stabilization is not precalculated, return an error
+        # If the current trigger is not precalculated, return an error
         if not is_precalculated:
-            self.error = "The current stabilization is not a pre-calculated stabilization."
+            self.error = "The current trigger is not a pre-calculated trigger."
             results = (
                 False,  # success
                 self.error,  # errors
@@ -167,10 +178,9 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # gcodes_processed
                 0  # lines_processed
             )
-        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT:
+        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT:
             options = {
-                'disable_retract': self.stabilization_profile.snap_to_print_disable_retract,
-                'disable_z_lift': self.stabilization_profile.snap_to_print_disable_z_lift
+                'disable_z_lift': self.trigger_profile.snap_to_print_disable_z_lift
             }
 
             # run lock_to_print stabilization
@@ -178,14 +188,15 @@ class StabilizationPreprocessingThread(Thread):
                 self.cpp_position_args,
                 stabilization_args
             )
-        elif stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER:
-            # run smart layer stabilization
+        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
+            # run smart layer trigger
             smart_layer_args = {
-                'trigger_type': int(self.stabilization_profile.smart_layer_trigger_type),
+                'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),
                 'distance_threshold_percent': (
-                    self.stabilization_profile.smart_layer_trigger_distance_threshold_percent / 100.0
+                    self.trigger_profile.smart_layer_trigger_distance_threshold_percent / 100.0
                 ),
-                'speed_threshold': self.stabilization_profile.smart_layer_trigger_speed_threshold
+                'speed_threshold': self.trigger_profile.smart_layer_trigger_speed_threshold,
+                'snap_to_print': self.trigger_profile.smart_layer_snap_to_print
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,
@@ -194,7 +205,7 @@ class StabilizationPreprocessingThread(Thread):
             )
         else:
             self.error = "Can't find a preprocessor named {0}, unable to preprocess gcode.".format(
-                self.stabilization_profile.stabilization_type)
+                self.trigger_profile.trigger_type)
             results = (
                 False,  # success
                 self.error,  # errors

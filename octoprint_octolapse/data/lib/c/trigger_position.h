@@ -4,7 +4,6 @@
 enum position_type { unknown, extrusion, lifting, lifted, travel, lifting_travel, lifted_travel, retraction, retracted_lifting, retracted_lifted, retracted_travel, lifting_retracted_travel, lifted_retracted_travel};
 static const unsigned int num_position_types = 13;
 static const position_type quality_cutoff = position_type::retraction;
-static const position_type fast_cutoff = position_type::lifting;
 static const std::string position_type_name[13] = {
 	"unknown", "extrusion", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retraction", "retracted_lifting", "retracted_lifted", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel"
 };

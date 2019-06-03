@@ -69,15 +69,27 @@ stabilization_smart_layer::~stabilization_smart_layer()
 	
 }
 
-bool stabilization_smart_layer::can_process_position(position* p_position, position_type type) const
+trigger_type stabilization_smart_layer::get_trigger_type()
 {
+	if (p_smart_layer_args_->snap_to_print)
+		return fastest;
+	return p_smart_layer_args_->smart_layer_trigger_type;
+}
+
+bool stabilization_smart_layer::can_process_position(position* p_position, position_type type)
+{
+
 	if (type == unknown)
 		return false;
+	if (p_smart_layer_args_->snap_to_print && type != extrusion)
+		return false;
+
 	if (type == extrusion)
 	{
-		if (p_smart_layer_args_->smart_layer_trigger_type > trigger_type::compatibility)
+		if (get_trigger_type() > trigger_type::compatibility)
 			return false;
 	}
+
 	// check for errors in position, layer, or height
 	if (p_position->layer_ == 0 || p_position->x_null_ || p_position->y_null_ || p_position->z_null_)
 	{
@@ -133,20 +145,19 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 
 	}
 
-	
+	double distance = -1;
 	// Get the current position type and see if we can process this type
 	position_type current_type = trigger_position::get_type(p_current_pos);
-	if (!can_process_position(p_current_pos, current_type))
-		return;
-	
-	// Is the endpoint of the current command closer
-	// Note that we need to save the position immediately
-	// so that the IsCloser check for the previous_pos will
-	// have a saved command to check.
-	double distance = -1;
-	if(is_closer(p_current_pos, current_type, distance))
+	if (can_process_position(p_current_pos, current_type))
 	{
-		closest_positions_.add(current_type, distance, p_current_pos);
+		// Is the endpoint of the current command closer
+		// Note that we need to save the position immediately
+		// so that the IsCloser check for the previous_pos will
+		// have a saved command to check.
+		if (is_closer(p_current_pos, current_type, distance))
+		{
+			closest_positions_.add(current_type, distance, p_current_pos);
+		}
 	}
 	// If this is the first command on a new layer, the previous command is usually also a valid position
 	// If the last command was not examined, test it IF we are at the same z height.
@@ -169,7 +180,7 @@ bool stabilization_smart_layer::is_closer(position * p_position, position_type t
 {
 	// Fist check the speed threshold if we are running a fast trigger type
 	// We want to ignore any extrusions that are below the speed threshold
-	const bool filter_extrusion_speeds = p_smart_layer_args_->smart_layer_trigger_type == trigger_type::fast && type == position_type::extrusion;
+	const bool filter_extrusion_speeds = get_trigger_type() == trigger_type::fast && type == position_type::extrusion;
 	if (filter_extrusion_speeds)
 	{
 		// Initialize our previous extrusion speed if it's not been initialized
@@ -198,7 +209,17 @@ bool stabilization_smart_layer::is_closer(position * p_position, position_type t
 	// Get the current closest position
 	trigger_position* p_current_closest = closest_positions_.get(type);
 	// Calculate the distance between the current point and the stabilization point
-	distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+	double x2, y2;
+	if (p_stabilization_args_->x_stabilization_disabled)
+		x2 = p_position->x_;
+	else
+		x2 = stabilization_x_;
+	if (p_stabilization_args_->y_stabilization_disabled)
+		y2 = p_position->y_;
+	else
+		y2 = stabilization_y_;
+
+	distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, x2,y2);
 	// If we don't have any closest position, this is the closest
 	if (p_current_closest == NULL)
 	{
@@ -220,13 +241,27 @@ bool stabilization_smart_layer::is_closer(position * p_position, position_type t
 		//std::cout << " - IsCloser Complete, closer.\r\n";
 		return true;
 	}
+	else if (utilities::is_equal(p_current_closest->distance, distance) && !p_snapshot_plans_->empty())
+	{
+		//std::cout << "Closest position tie detected, ";
+		// get the last snapshot plan position
+		position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position;
+		const double old_distance_from_previous = utilities::get_cartesian_distance(p_current_closest->p_position->x_, p_current_closest->p_position->y_, last_position->x_, last_position->y_);
+		const double new_distance_from_previous = utilities::get_cartesian_distance(p_position->x_, p_position->y_, last_position->x_, last_position->y_);
+		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
+		{
+			//std::cout << "new is closer to the last initial snapshot position.\r\n";
+			return true;
+		}
+		//std::cout << "old position is closer to the last initial snapshot position.\r\n";
+	}
 	//std::cout << " - IsCloser Complete, not closer.\r\n";
 	return false;
 }
 
 trigger_position* stabilization_smart_layer::get_closest_position()
 {
-	switch (p_smart_layer_args_->smart_layer_trigger_type)
+	switch (get_trigger_type())
 	{
 		case fastest:
 			return closest_positions_.get_fastest_position();
@@ -262,8 +297,26 @@ void stabilization_smart_layer::add_plan()
 		p_plan->p_triggering_command = new parsed_command(*p_closest->p_position->p_command);
 		p_plan->p_start_command = new parsed_command(*p_closest->p_position->p_command);
 		p_plan->p_initial_position = new position(*p_closest->p_position);
-		snapshot_plan_step* p_travel_step = new snapshot_plan_step(&stabilization_x_, &stabilization_y_, NULL, NULL, NULL, travel_action);
-		p_plan->steps.push_back(p_travel_step);
+
+		bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+		
+		if (!(all_stabilizations_disabled || p_smart_layer_args_->snap_to_print))
+		{
+			double x_stabilization, y_stabilization;
+			if (p_stabilization_args_->x_stabilization_disabled)
+				x_stabilization = p_closest->p_position->x_;
+			else
+				x_stabilization = stabilization_x_;
+
+			if (p_stabilization_args_->y_stabilization_disabled)
+				y_stabilization = p_closest->p_position->y_;
+			else
+				y_stabilization = stabilization_y_;
+
+			snapshot_plan_step* p_travel_step = new snapshot_plan_step(&x_stabilization, &y_stabilization, NULL, NULL, NULL, travel_action);
+			p_plan->steps.push_back(p_travel_step);
+		}
+		
 		snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
 		p_plan->steps.push_back(p_snapshot_step);
 

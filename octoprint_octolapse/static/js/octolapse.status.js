@@ -36,6 +36,7 @@ $(function () {
             self.waiting_to_render = ko.observable();
             self.current_printer_profile_guid = ko.observable();
             self.current_stabilization_profile_guid = ko.observable();
+            self.current_trigger_profile_guid = ko.observable();
             self.current_snapshot_profile_guid = ko.observable();
             self.current_rendering_profile_guid = ko.observable();
             self.current_debug_profile_guid = ko.observable();
@@ -43,6 +44,7 @@ $(function () {
             self.profiles = ko.observable({
                 'printers': ko.observableArray([{name: "Unknown", guid: "", has_been_saved_by_user: false}]),
                 'stabilizations': ko.observableArray([{name: "Unknown", guid: ""}]),
+                'triggers': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'snapshots': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'renderings': ko.observableArray([{name: "Unknown", guid: ""}]),
                 'cameras': ko.observableArray([{name: "Unknown", guid: "", enabled: false}]),
@@ -50,11 +52,10 @@ $(function () {
             });
             self.is_real_time = ko.observable(true);
             self.current_camera_guid = ko.observable(null);
-            self.stabilization_requires_snapshot_profile = ko.observable();
             self.PositionState = new Octolapse.positionStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
-            self.TriggerState = new Octolapse.triggersStateViewModel();
+            self.TriggerState = new Octolapse.TriggersStateViewModel();
             self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
             self.WebcamSettings = new Octolapse.WebcamSettingsPopupViewModel();
             self.IsTabShowing = false;
@@ -151,18 +152,11 @@ $(function () {
                 return true;
             },this);
 
-            self.current_stabilization_requires_snapshot_profile = function(){
-                var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
-                if (current_stabilization != null)
-                    return current_stabilization.requires_snapshot_profile;
-                return true;
-            };
-
-            self.is_current_stabilization_real_time = function(){
-                var current_stabilization = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
-                if (current_stabilization  != null)
-                    //console.log(current_stabilization.stabilization_type);
-                    return current_stabilization.stabilization_type === "real-time";
+            self.is_current_trigger_real_time = function(){
+                var current_trigger = self.getCurrentProfileByGuid(self.profiles().triggers(),Octolapse.Status.current_trigger_profile_guid());
+                if (current_trigger  != null)
+                    //console.log(current_trigger.trigger_type);
+                    return current_trigger.trigger_type === "real-time";
                 return true;
             };
 
@@ -505,8 +499,8 @@ $(function () {
             {
 
                 //console.log("octolapse.status.js - Updating State")
-                if (state.stabilization_type != null)
-                    self.is_real_time(state.stabilization_type == "real-time");
+                if (state.trigger_type != null)
+                    self.is_real_time(state.trigger_type == "real-time");
 
                 if (state.position != null) {
                     self.Position.update(state.position);
@@ -536,11 +530,13 @@ $(function () {
                 //console.log("Updating Profiles");
                 self.profiles().printers(settings.profiles.printers);
                 self.profiles().stabilizations(settings.profiles.stabilizations);
+                self.profiles().triggers(settings.profiles.triggers);
                 self.profiles().renderings(settings.profiles.renderings);
                 self.profiles().cameras(settings.profiles.cameras);
                 self.profiles().debug_profiles(settings.profiles.debug_profiles);
                 self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
                 self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
+                self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
                 self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
                 self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
                 self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
@@ -548,10 +544,8 @@ $(function () {
                 if(self.current_camera_guid() == null)
                     self.current_camera_guid(settings.profiles.current_camera_profile_guid);
 
-                self.is_real_time(self.is_current_stabilization_real_time());
-                self.stabilization_requires_snapshot_profile(
-                    self.current_stabilization_requires_snapshot_profile()
-                );
+                self.is_real_time(self.is_current_trigger_real_time());
+
                 // Update snapshots
                 self.updateLatestSnapshotImage(true);
                 self.updateLatestSnapshotThumbnail(true);
@@ -643,6 +637,24 @@ $(function () {
                         var guid = $("#octolapse_tab_stabilization_profile").val();
                         //console.log("Default stabilization is changing to " + guid + " from " + self.current_stabilization_profile_guid());
                         Octolapse.Stabilizations.setCurrentProfile(guid);
+                        return true;
+                    }
+                }
+            };
+
+            // Trigger Profile Settings
+            self.triggers_sorted = ko.computed(function() { return self.nameSort(self.profiles().triggers) });
+            self.openCurrentTriggerProfile = function () {
+                //console.log("Opening current trigger profile from tab.")
+                Octolapse.Triggers.showAddEditDialog(self.current_trigger_profile_guid(), false);
+            };
+            self.defaultTriggerChanged = function (obj, event) {
+                if (Octolapse.Globals.is_admin()) {
+                    if (event.originalEvent) {
+                        // Get the current guid
+                        var guid = $("#octolapse_tab_trigger_profile").val();
+                        //console.log("Default trigger is changing to " + guid + " from " + self.current_trigger_profile_guid());
+                        Octolapse.Triggers.setCurrentProfile(guid);
                         return true;
                     }
                 }
@@ -1072,7 +1084,7 @@ $(function () {
                 return "None";
             }, self);
         };
-        Octolapse.triggersStateViewModel = function () {
+        Octolapse.TriggersStateViewModel = function () {
             var self = this;
 
             // State variables

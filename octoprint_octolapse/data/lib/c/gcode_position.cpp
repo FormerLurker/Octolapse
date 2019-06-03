@@ -268,7 +268,7 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 					if(p_current_pos_->is_printer_primed_)
 					{
 						// Calculate current height
-						if (utilities::greater_than(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
+						if (utilities::greater_than_or_equal(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
 						{
 							p_current_pos_->height_ = p_current_pos_->z_;
 							p_current_pos_->is_layer_change_ = true;

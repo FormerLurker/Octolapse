@@ -49,13 +49,14 @@ public:
 		stabilization_type = "";
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
-		fastest_speed = true;
 		file_path = "";
 		py_get_snapshot_position_callback = NULL;
 		py_gcode_generator = NULL;
 		py_on_progress_received = NULL;
 		x_coordinate = 0;
 		y_coordinate = 0;
+		x_stabilization_disabled = false;
+		y_stabilization_disabled = false;
 	}
 	~stabilization_args()
 	{
@@ -73,9 +74,18 @@ public:
 	std::string file_path;
 	double height_increment;
 	double notification_period_seconds;
+	
+	/**
+	 * \brief If true, the x axis will stabilize at the layer change point.
+	 */
+	bool x_stabilization_disabled;
+	/**
+	 * \brief If true, the y axis will stabilize at the layer change point.
+	 */
+	bool y_stabilization_disabled;
+
 	double x_coordinate;
 	double y_coordinate;
-	bool fastest_speed;
 };
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
@@ -110,6 +120,7 @@ private:
 		long gcodes_processed, long lines_processed);
 	gcode_position_args* p_args_;
 	// current stabilization point
+
 	double stabilization_x_;
 	double stabilization_y_;
 protected:

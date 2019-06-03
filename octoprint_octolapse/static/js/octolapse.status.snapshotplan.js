@@ -55,7 +55,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     var percent_saved = 0;
                     if(potential_total_distance>0)
                     {
-                        percent_saved = (1 - (state.total_travel_distance / potential_total_distance)) * 100;
+                        percent_saved = (state.total_saved_travel_distance / potential_total_distance) * 100.0;
                     }
                     self.total_saved_travel_percent(percent_saved);
 

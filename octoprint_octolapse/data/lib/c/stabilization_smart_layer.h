@@ -30,13 +30,15 @@ struct smart_layer_args
 {
 	smart_layer_args()
 	{
-		smart_layer_trigger_type = best_quality;
+		smart_layer_trigger_type = trigger_type::compatibility;
 		speed_threshold = 0;
 		distance_threshold_percent = 0;
+		snap_to_print = false;
 	}
 	trigger_type smart_layer_trigger_type;
 	double speed_threshold;
 	double distance_threshold_percent;
+	bool snap_to_print;
 };
 
 class stabilization_smart_layer : public stabilization
@@ -48,11 +50,12 @@ public:
 	~stabilization_smart_layer();
 private:
 	stabilization_smart_layer(const stabilization_smart_layer &source); // don't copy me
-	void process_pos(position* p_current_pos, position* p_previous_pos);
-	void on_processing_complete();
+	void process_pos(position* p_current_pos, position* p_previous_pos) override;
+	void on_processing_complete() override;
 	void add_plan();
 	void reset_saved_positions();
-	bool can_process_position(position* p_position, position_type type) const;
+	bool can_process_position(position* p_position, position_type type);
+	trigger_type get_trigger_type();
 	trigger_position* get_closest_position();
 	/**
 	 * \brief Determine if a position is closer.  If necessary, filter based on speed, and also detect 

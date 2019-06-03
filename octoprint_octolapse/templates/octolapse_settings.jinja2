@@ -51,6 +51,9 @@
                                class="hide-disabled">Stabilization</a>
                         </li>
                         <li>
+                            <a href="#octolapse_trigger_tab" data-toggle="tab" class="hide-disabled">Trigger</a>
+                        </li>
+                        <li>
                             <a href="#octolapse_rendering_tab" data-toggle="tab" class="hide-disabled">Rendering</a>
                         </li>
                         <li>
@@ -73,6 +76,9 @@
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
                     <div id="octolapse_stabilization_tab" class="panel panel-default tab-pane hide-disabled">
+                        <div data-bind="template: 'profiles-template'"></div>
+                    </div>
+                    <div id="octolapse_trigger_tab" class="panel panel-default tab-pane hide-disabled">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
                     <div id="octolapse_rendering_tab" class="panel panel-default tab-pane hide-disabled">
@@ -99,71 +105,73 @@
                                 </a>
                             </p>
                             <h4>Thanks to all my patrons, may you live forever!</h4>
-                            <p>Octolapse was built entirely in open source for the 3D printing community.
+                            <p>
+                                Octolapse was built entirely in open source for the 3D printing community.
                                 I don't ask for any royalties, don't steal any personal info, and don't push any adds
                                 through Octolapse.  Your patronage gives me the motivation and funds necessary to
                                 keep plowing through the issues, to add new fancy features, and to continue combing the internet for
                                 users that may need assistance.  All of the users below have contributed to Octolapse:
                             </p>
                             <p>
-                                3Dprinterman<br/>
-                                <b>Blacksheep</b><br/>
-                                Steve Smith<br/>
-                                <b>Rhonda Hochgesang</b><br/>
-                                Mike H.<br/>
-                                <b>Irvel Nduva</b><br/>
-                                <b>RedKB</b></br>
-                                Franziska Kunsmann<br/>
+                                3Dprinterman<br />
+                                <b>Blacksheep</b><br />
+                                Steve Smith<br />
+                                <b>Rhonda Hochgesang</b><br />
+                                Mike H.<br />
+                                <b>Irvel Nduva</b><br />
                                 <b>RedKB</b><br/>
-                                Zach Loafman<br/>
-                                <b>Frank M Graziano</b><br/>
-                                <b>Graham Medlin</b><br/>
-                                <b>Chuck Kozlowski</b><br/>
-                                Brian Medema<br/>
-                                Zwirbel</br>
-                                <b>Hayder Jawad</b><br/>
-                                Core3D.tech<br/>
-                                <b>Alex Cunningham</b><br/>
-                                <b>JDubster3D</b><br/>
-                                Paul Scott<br/>
-                                <b>James Direen</b><br/>
-                                <b>Laszlo Tres Szabo</b><br/>
-                                <b>Kenji Castro</b><br/>
-                                <b>Simon Vanheukelom</b><br/>
-                                <b>Derek Nickel</b><br/>
-                                <b>Joel Santiago</b><br/>
-                                <b>Martin Tellblom</b><br/>
-                                <b>Bojan Kopanja</b><br/>
-                                <b>Scott Rini</b><br/>
-                                Narskogr<br/>
-                                Mike Phelps<br/>
-                                <b>Nathan Johnson</b><br/>
-                                Michael Thompson<br/>
-                                Brian Moses<br/>
-                                <b>Rory Martin</b><br/>
+                                Franziska Kunsmann<br />
+                                <b>RedKB</b><br />
+                                Zach Loafman<br />
+                                <b>Frank M Graziano</b><br />
+                                <b>Graham Medlin</b><br />
+                                <b>Chuck Kozlowski</b><br />
+                                Brian Medema<br />
+                                Zwirbel<br />
+                                <b>Hayder Jawad</b><br />
+                                Core3D.tech<br />
+                                <b>Alex Cunningham</b><br />
+                                <b>JDubster3D</b><br />
+                                Paul Scott<br />
+                                <b>James Direen</b><br />
+                                <b>Laszlo Tres Szabo</b><br />
+                                <b>Kenji Castro</b><br />
+                                <b>Simon Vanheukelom</b><br />
+                                <b>Derek Nickel</b><br />
+                                <b>Joel Santiago</b><br />
+                                <b>Martin Tellblom</b><br />
+                                <b>Bojan Kopanja</b><br />
+                                <b>Scott Rini</b><br />
+                                Narskogr<br />
+                                Mike Phelps<br />
+                                <b>Nathan Johnson</b><br />
+                                Michael Thompson<br />
+                                Brian Moses<br />
+                                <b>Rory Martin</b><br />
                             </p>
 
                             <h4>Three cheers for the Octoprint development community!</h4>
-                            <p>When I first started to develop Octolapse, I knew practically noting about the technology
+                            <p>
+                                When I first started to develop Octolapse, I knew practically noting about the technology
                                 or open source development in general.  Fortunately for me the Octoprint/Open Source
                                 community is a welcoming and educational place.  Thank you to everyone who has
                                 contributed to the source code, or by posting issues/feature requests to the github
                                 page!  Here are some, but not all, of those users whom I feel require a special mention:
                             </p>
                             <p>
-                                <b>Gina Häußge</b> - Creator of OctoPrint, development guru, and all around good person<br/>
+                                <b>Gina Häußge</b> - Creator of OctoPrint, development guru, and all around good person<br />
                                 <b>Shadowen</b> - A key contributor who has implemented several key features and bugfixes,
                                 including but not limited to: GIF and H.264 rendering, custom watermarking, and rendering
-                                text overlay/preview.<br/>
-                                <b>ppessi</b> - Helped me clean up my amateurish python formatting<br/>
+                                text overlay/preview.<br />
+                                <b>ppessi</b> - Helped me clean up my amateurish python formatting<br />
                                 <b>adam6806</b> - Helped with code formatting, refactoring and general cleanup of js/python
-                                code<br/>
-                                <b>bluecamel</b> - url fix for proxies, Taz6 support.<br/>
-                                <b>tjjfvi</b> - created a <a href="https://csi.t6.fyi/" title="Link to cura gcode settings template">Cura gcode settings template</a> that can be used to extract slicer settings.<br/>
+                                code<br />
+                                <b>bluecamel</b> - url fix for proxies, Taz6 support.<br />
+                                <b>tjjfvi</b> - created a <a href="https://csi.t6.fyi/" title="Link to cura gcode settings template">Cura gcode settings template</a> that can be used to extract slicer settings.<br />
                                 <b>einfallstoll</b> - pointed out an embarrasing spelling mistake and even submitted a pull reqest to fix it!  Turns out this error existed all over the place, so I refactored the code myself.
-                                If there's anyone I've forgotten here, please let me know!<br/>
-                                <br/>
-                                I'd like to add a special thank you to <b>Andy</b> and <b>Maggie</b> for encouragement, testing, support, and tolerance.<br/>
+                                If there's anyone I've forgotten here, please let me know!<br />
+                                <br />
+                                I'd like to add a special thank you to <b>Andy</b> and <b>Maggie</b> for encouragement, testing, support, and tolerance.<br />
 
                             </p>
 
@@ -174,7 +182,7 @@
         </div>
     </div>
     <div id="octolapse_plugin_settings">
-        <input type="hidden" id="platform" data-bind="value:platform"/>
+        <input type="hidden" id="platform" data-bind="value:platform" />
         <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
         <div class="row-fluid">
             <a class="btn btn-default span4"
@@ -194,9 +202,9 @@
         </div>
     </div>
     <div>
-    <span class="help-inline">
-      <br/><span class="label label-important">USE AT YOUR OWN RISK</span> Octolapse is still in development and may contain errors that could affect your prints.  Please be safe and don't leave your printer unattended!
-    </span>
+        <span class="help-inline">
+            <br /><span class="label label-important">USE AT YOUR OWN RISK</span> Octolapse is still in development and may contain errors that could affect your prints.  Please be safe and don't leave your printer unattended!
+        </span>
     </div>
 </div>
 <script type="text/html" id="empty-template">
@@ -205,6 +213,7 @@
 {% include "octolapse_profiles.jinja2" %}
 {% include "octolapse_profiles_printer.jinja2" %}
 {% include "octolapse_profiles_stabilization.jinja2" %}
+{% include "octolapse_profiles_trigger.jinja2" %}
 {% include "octolapse_profiles_rendering.jinja2" %}
 {% include "octolapse_profiles_camera.jinja2" %}
 {% include "octolapse_profiles_debug.jinja2" %}

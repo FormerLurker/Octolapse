@@ -398,7 +398,7 @@ class Pos(object):
         return self.e - self.e_offset
 
 class Position(object):
-    def __init__(self, printer_profile, stabilization_profile, octoprint_printer_profile,
+    def __init__(self, printer_profile, trigger_profile, octoprint_printer_profile,
                  g90_influences_extruder):
         # This key is used to call the unique gcode_position object for Octolapse.
         # This way multiple position trackers can be used at the same time with no
@@ -438,7 +438,7 @@ class Position(object):
         GcodePositionProcessor.Initialize(self.key, cpp_position_args)
         self._auto_detect_position = printer_profile.auto_detect_position
         self._priming_height = printer_profile.priming_height
-        self._position_restrictions = None if stabilization_profile is None else stabilization_profile.position_restrictions
+        self._position_restrictions = None if trigger_profile is None else trigger_profile.position_restrictions
         self._octoprint_printer_profile = octoprint_printer_profile
         self._origin = {
             "x": printer_profile.origin_x,
@@ -448,8 +448,8 @@ class Position(object):
 
         self._retraction_length = self._gcode_generation_settings.retraction_length
 
-        self._has_restricted_position = False if stabilization_profile is None else (
-            len(stabilization_profile.position_restrictions) > 0 and stabilization_profile.position_restrictions_enabled
+        self._has_restricted_position = False if trigger_profile is None else (
+            len(trigger_profile.position_restrictions) > 0 and trigger_profile.position_restrictions_enabled
         )
         # Todo:  make sure this setting is being read correctly, it doesn't look correct
         if printer_profile.g90_influences_extruder in ['true', 'false']:

@@ -52,6 +52,7 @@ void position::initialize()
 	last_extrusion_height_null_ = true;
 	layer_ = 0;
 	height_ = 0;
+	current_height_increment_ = 0;
 	is_printer_primed_ = false;
 	firmware_retraction_length_ = 0;
 	firmware_retraction_length_null_ = true;
@@ -134,6 +135,7 @@ position::position(position & source)
 	last_extrusion_height_null_ = source.last_extrusion_height_null_;
 	layer_ = source.layer_;
 	height_ = source.height_;
+	current_height_increment_ = source.current_height_increment_;
 	is_printer_primed_ = source.is_printer_primed_;
 	firmware_retraction_length_ = source.firmware_retraction_length_;
 	firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
@@ -264,6 +266,7 @@ void position::copy(position &source, position* target)
 	target->last_extrusion_height_null_ = source.last_extrusion_height_null_;
 	target->layer_ = source.layer_;
 	target->height_ = source.height_;
+	target->current_height_increment_ = source.current_height_increment_;
 	target->is_printer_primed_ = source.is_printer_primed_;
 	target->firmware_retraction_length_ = source.firmware_retraction_length_;
 	target->firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
@@ -487,6 +490,8 @@ PyObject* position::to_py_dict()
 		last_extrusion_height_,
 		"height",
 		height_,
+		"current_height_increment_",
+		current_height_increment_,
 		"firmware_retraction_length",
 		firmware_retraction_length_,
 		"firmware_unretraction_additional_length",

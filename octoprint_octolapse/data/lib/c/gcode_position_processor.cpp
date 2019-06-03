@@ -64,9 +64,9 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
-	run_tests(argc, argv);
-	return 0;
-#else
+	//run_tests(argc, argv);
+	//return 0;
+#endif
 	// I use this sometimes to test performance in release mode
 	//run_tests(argc, argv);
 	//return 0;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	PyEval_InitThreads();
 	initGcodePositionProcessor();
 	return 0;
-#endif
+
 }
 #endif
 
@@ -1045,15 +1045,25 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	}
 	args->height_increment = PyFloatOrInt_AsDouble(py_height_increment);
 
-	// fastest_speed
-	PyObject * py_fastest_speed = PyDict_GetItemString(py_args, "fastest_speed");
-	if (py_fastest_speed == NULL)
+	// x_axis_stabilization_disabled
+	PyObject * py_x_stabilization_disabled = PyDict_GetItemString(py_args, "x_stabilization_disabled");
+	if (py_x_stabilization_disabled == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve fastest_speed from the stabilization args.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_stabilization_disabled from the stabilization args.");
 		return false;
 	}
-	args->fastest_speed = PyLong_AsLong(py_fastest_speed) > 0;
+	args->x_stabilization_disabled = PyLong_AsLong(py_x_stabilization_disabled) > 0;
+
+	// x_axis_stabilization_disabled
+	PyObject * py_y_stabilization_disabled = PyDict_GetItemString(py_args, "y_stabilization_disabled");
+	if (py_x_stabilization_disabled == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_stabilization_disabled from the stabilization args.");
+		return false;
+	}
+	args->y_stabilization_disabled = PyLong_AsLong(py_y_stabilization_disabled) > 0;
 
 	// notification_period_seconds
 	PyObject * py_notification_period_seconds = PyDict_GetItemString(py_args, "notification_period_seconds");
@@ -1123,6 +1133,17 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	}
 	args->distance_threshold_percent = PyFloatOrInt_AsDouble(py_distance_threshold_percent);
 	//std::cout << "Smart layer args parsed successfully.\r\n";
-	
+	// snap_to_print
+	PyObject * py_snap_to_print = PyDict_GetItemString(py_args, "snap_to_print");
+	if (py_snap_to_print == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve snap_to_print from the position args dict.");
+		return false;
+	}
+	args->snap_to_print = PyLong_AsLong(py_snap_to_print) > 0;
+
+
+
 	return true;
 }

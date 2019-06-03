@@ -265,13 +265,10 @@ class SnapshotGcodeGenerator(object):
             if self.distance_to_lift is None:
                 self.distance_to_lift = 0
 
-        if options is not None and "disable_retract" in options and options["disable_retract"]:
+        retraction_length = self.Printer.gcode_generation_settings.retraction_length
+        self.length_to_retract = snapshot_plan.initial_position.length_to_retract(retraction_length)
+        if self.length_to_retract is None:
             self.length_to_retract = 0
-        else:
-            retraction_length = self.Printer.gcode_generation_settings.retraction_length
-            self.length_to_retract = snapshot_plan.initial_position.length_to_retract(retraction_length)
-            if self.length_to_retract is None:
-                self.length_to_retract = 0
 
         self.retracted_by_start_gcode = False
         self.lifted_by_start_gcode = False

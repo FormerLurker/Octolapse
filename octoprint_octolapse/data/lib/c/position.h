@@ -71,6 +71,7 @@ public:
 	bool last_extrusion_height_null_;
 	long layer_;
 	double height_;
+	int current_height_increment_;
 	bool is_printer_primed_;
 	double firmware_retraction_length_;
 	bool firmware_retraction_length_null_;

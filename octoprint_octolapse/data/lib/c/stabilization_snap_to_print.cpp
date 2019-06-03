@@ -161,8 +161,8 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 	// so that the IsCloser check for the previous_pos will
 	// have a saved command to check.
 	//std::cout << "Checking for closer position.\r\n";
-	double distance = is_closer(p_current_pos, position_type::extrusion);
-	if (utilities::greater_than_or_equal(distance, 0.0))
+	double distance = -1;
+	if(is_closer(p_current_pos, position_type::extrusion, distance))
 	{
 		save_position(p_current_pos, position_type::extrusion, distance);
 	}
@@ -172,15 +172,14 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 	if (p_previous_pos->is_primed_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
 		//std::cout << "Checking for closer previous position.\r\n";
-		distance = is_closer(p_previous_pos, position_type::extrusion);
-		if (utilities::greater_than_or_equal(distance, 0.0))
+		if(is_closer(p_previous_pos, position_type::extrusion, distance))
 		{
 			save_position(p_previous_pos, position_type::extrusion, distance);
 		}
 	}
 }
 
-double stabilization_snap_to_print::is_closer(position * p_position, position_type type)
+bool stabilization_snap_to_print::is_closer(position * p_position, position_type type, double &distance)
 {
 	trigger_position* p_current_closest;
 	if (type == position_type::extrusion)
@@ -188,62 +187,64 @@ double stabilization_snap_to_print::is_closer(position * p_position, position_ty
 		p_current_closest = p_closest_position_;
 	}
 	else
-		return -1.0;
+		return false;
+
+	double x2, y2;
+	if (p_stabilization_args_->x_stabilization_disabled)
+		x2 = p_position->x_;
+	else
+		x2 = stabilization_x_;
+	if (p_stabilization_args_->y_stabilization_disabled)
+		y2 = p_position->y_;
+	else
+		y2 = stabilization_y_;
+
+	distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, x2, y2);
 
 	if (p_current_closest == NULL)
 	{
 		//std::cout << "No closer position, returning distance.\r\n";
-		return utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
+		return true;
 	}
 
 	// If the speed is faster than the saved speed, this is the closest point
-	if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
+	/*if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
 	{
 		//std::cout << "Checking for faster speed than " << p_current_closest->p_position->f_;
 		if (utilities::greater_than(p_position->f_, p_current_closest->p_position->f_))
 		{
 			//std::cout << " - IsCloser Complete, " << p_position->f_ << " is faster than " << p_current_closest->p_position->f_ << "\r\n";
-			const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-			if (distance > -1)
-			{
-				return distance;
-			}
+			return true;
 
 		}
 		else if (utilities::less_than(p_position->f_, p_current_closest->p_position->f_))
 		{
 			//std::cout << " - IsCloser Complete, " << p_position->f_ << " too slow.\r\n";
-			return -1.0;
+			return false;
 		}
 	}
-	//std::cout << "Calculating nearest distance...";
-	// Compare the saved points cartesian distance from the current point
-	const double distance = utilities::get_cartesian_distance(p_position->x_, p_position->y_, stabilization_x_, stabilization_y_);
-	if (utilities::greater_than_or_equal(distance, 0) )
+	*/
+	if(utilities::is_equal(p_current_closest->distance, distance) && !p_snapshot_plans_->empty())
 	{
-		if(utilities::is_equal(p_current_closest->distance, distance) && !p_snapshot_plans_->empty())
+		//std::cout << "Closest position tie detected, ";
+		// get the last snapshot plan position
+		position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position;
+		const double old_distance_from_previous = utilities::get_cartesian_distance(p_current_closest->p_position->x_, p_current_closest->p_position->y_, last_position->x_, last_position->y_);
+		const double new_distance_from_previous = utilities::get_cartesian_distance(p_position->x_, p_position->y_, last_position->x_, last_position->y_);
+		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
 		{
-			//std::cout << "Closest position tie detected, ";
-			// get the last snapshot plan position
-			position* last_position = (*p_snapshot_plans_)[p_snapshot_plans_->size() - 1]->p_initial_position;
-			const double old_distance_from_previous = utilities::get_cartesian_distance(p_current_closest->p_position->x_, p_current_closest->p_position->y_, last_position->x_, last_position->y_);
-			const double new_distance_from_previous = utilities::get_cartesian_distance(p_position->x_, p_position->y_, last_position->x_, last_position->y_);
-			if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
-			{
-				//std::cout << "new is closer to the last initial snapshot position.\r\n";
-				return distance;
-			}
-			//std::cout << "old position is closer to the last initial snapshot position.\r\n";
+			//std::cout << "new is closer to the last initial snapshot position.\r\n";
+			return true;
 		}
-		// Todo:  handle ties.  If there is a tie, choose the position that's closest to the previous position
-		else if (utilities::greater_than(p_current_closest->distance, distance))
-		{
-			//std::cout << " - IsCloser Complete, closer.\r\n";
-			return distance;
-		}
+		//std::cout << "old position is closer to the last initial snapshot position.\r\n";
+	}
+	else if (utilities::greater_than(p_current_closest->distance, distance))
+	{
+		//std::cout << " - IsCloser Complete, closer.\r\n";
+		return true;
 	}
 	//std::cout << " - IsCloser Complete, not closer.\r\n";
-	return -1.0;
+	return false;
 }
 
 void stabilization_snap_to_print::add_saved_plan()

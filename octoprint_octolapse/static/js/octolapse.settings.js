@@ -93,6 +93,27 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
+            
+            /*
+                Create our triggers view model
+            */
+            var triggerSettings =
+                {
+                    'current_profile_guid': null
+                    , 'profiles': []
+                    , 'default_profile': null
+                    , 'profileOptions': {}
+                    , 'profileViewModelCreateFunction': Octolapse.TriggerProfileViewModel
+                    , 'profileValidationRules': Octolapse.TriggerProfileValidationRules
+                    , 'bindingElementId': 'octolapse_trigger_tab'
+                    , 'addEditTemplateName': 'trigger-template'
+                    , 'profileTypeName': 'Trigger'
+                    , 'addUpdatePath': 'addUpdateProfile'
+                    , 'removeProfilePath': 'removeProfile'
+                    , 'setCurrentProfilePath': 'setCurrentProfile'
+                };
+            Octolapse.Triggers = new Octolapse.ProfilesViewModel(triggerSettings);
+            
             /*
                 Create our rendering view model
             */
@@ -184,6 +205,7 @@ $(function () {
                 Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(settings.profiles.printers[key]));
             });
 
+            // Stabilizations
             Octolapse.Stabilizations.profiles([]);
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
             Octolapse.Stabilizations.profileOptions = {
@@ -200,6 +222,23 @@ $(function () {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
             });
 
+            // Triggers
+            Octolapse.Triggers.profiles([]);
+            Octolapse.Triggers.default_profile(settings.profiles.defaults.trigger);
+            Octolapse.Triggers.profileOptions = {
+                'trigger_type_options': settings.profiles.options.trigger.trigger_type_options,
+                'real_time_xy_trigger_type_options': settings.profiles.options.trigger.real_time_xy_trigger_type_options,
+                'smart_layer_trigger_type_options': settings.profiles.options.trigger.smart_layer_trigger_type_options,
+                'trigger_subtype_options': settings.profiles.options.trigger.trigger_subtype_options,
+                'snapshot_extruder_trigger_options': settings.profiles.options.trigger.snapshot_extruder_trigger_options,
+                'position_restriction_shapes': settings.profiles.options.trigger.position_restriction_shapes,
+                'position_restriction_types': settings.profiles.options.trigger.position_restriction_types
+            };
+            Octolapse.Triggers.current_profile_guid(settings.profiles.current_trigger_profile_guid);
+            Object.keys(settings.profiles.triggers).forEach(function(key) {
+                Octolapse.Triggers.profiles.push(new Octolapse.TriggerProfileViewModel(settings.profiles.triggers[key]));
+            });
+            
             // Renderings
             Octolapse.Renderings.profiles([]);
             Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
@@ -361,6 +400,11 @@ $(function () {
             Octolapse.Stabilizations.default_profile(null);
             Octolapse.Stabilizations.current_profile_guid(null);
             Octolapse.Stabilizations.profileOptions = {};
+            // Triggers
+            Octolapse.Triggers.profiles([]);
+            Octolapse.Triggers.default_profile(null);
+            Octolapse.Triggers.current_profile_guid(null);
+            Octolapse.Triggers.profileOptions = {};
             // Renderings
             Octolapse.Renderings.profiles([]);
             Octolapse.Renderings.default_profile(null);
@@ -387,6 +431,9 @@ $(function () {
                     break;
                 case "stabilization-template":
                     Octolapse.Stabilizations.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                    break;
+                case "trigger-template":
+                    Octolapse.Triggers.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
                     break;
                 case "rendering-template":
                     Octolapse.Renderings.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());

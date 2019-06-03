@@ -70,9 +70,9 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
-from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, CameraProfile, \
-    RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, Simplify3dSettings, \
-    Slic3rPeSettings, SettingsJsonEncoder
+from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
+    CameraProfile, RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
+    Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
@@ -1255,9 +1255,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
             gcode_file_path = timelapse_settings["gcode_file_path"]
             settings_clone = timelapse_settings["settings"]
-            current_stabilization_clone = settings_clone.profiles.current_stabilization()
+            current_trigger_clone = settings_clone.profiles.current_trigger()
             preprocessed = False
-            if current_stabilization_clone.stabilization_type in StabilizationProfile.get_precalculated_stabilization_types():
+            if current_trigger_clone.trigger_type in TriggerProfile.get_precalculated_trigger_types():
                 preprocessed = True
                 # pre-process the stabilization
                 # this is done in another process, so we'll have to exit and wait for the results
@@ -2087,6 +2087,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.profiles.printer.slicer.simplify_3d.js",
                 "js/octolapse.profiles.printer.slicer.slic3r_pe.js",
                 "js/octolapse.profiles.stabilization.js",
+                "js/octolapse.profiles.trigger.js",
                 "js/octolapse.profiles.rendering.js",
                 "js/octolapse.profiles.camera.js",
                 "js/octolapse.profiles.debug.js",

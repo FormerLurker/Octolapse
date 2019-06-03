@@ -140,7 +140,7 @@ trigger_position* trigger_positions::get_compatibility_position()
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
 	for (int index = num_position_types - 1; index > -1; index--)
 	{
-		if (index < fast_cutoff && current_closest != NULL)
+		if (index < quality_cutoff && current_closest != NULL)
 			return current_closest;
 
 		trigger_position* current_position = position_list_[index];
@@ -195,7 +195,7 @@ trigger_position* trigger_positions::get_high_quality_position()
 			{
 				if (!utilities::is_zero(current_position->distance))
 				{
-					const double difference_percent = 1.0 - (current_position->distance / current_closest->distance);
+					const double difference_percent = 100.0 * (1.0 - (current_position->distance / current_closest->distance));
 					// If our current position is closer to the previous distance by at least the set distance threshold, 
 					// record the current position as the closest position
 					if (utilities::greater_than(difference_percent, distance_threshold_percent_))

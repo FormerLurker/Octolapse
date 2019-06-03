@@ -83,6 +83,26 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>Trigger</td>
+                    <td>
+                        <select id="octolapse_tab_trigger_profile"
+                                class="input-block-level"
+                                data-bind="
+                                enable: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(),
+                                options: Octolapse.Status.triggers_sorted,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                event: {change: Octolapse.Status.defaultTriggerChanged},
+                                value: Octolapse.Status.current_trigger_profile_guid"></select>
+
+                    </td>
+                    <td>
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_trigger_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentTriggerProfile">
+                            <i class="fa fa-gear fa-2x"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr>
                     <td>Rendering</td>
                     <td>
                         <select id="octolapse_tab_rendering_profile"

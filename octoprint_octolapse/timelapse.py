@@ -90,6 +90,7 @@ class Timelapse(object):
         self._current_job_info = None
         self._ffmpeg_path = None
         self._stabilization = None
+        self._trigger = None
         self._gcode = None
         self._printer = None
         self._capture_snapshot = None
@@ -161,6 +162,7 @@ class Timelapse(object):
         self._printer = self._settings.profiles.current_printer()
         self._snapshot_command = self._printer.snapshot_command
         self._stabilization = self._settings.profiles.current_stabilization()
+        self._trigger_profile = self._settings.profiles.current_trigger()
         self.snapshot_plans = snapshot_plans
         self.current_snapshot_plan = None
         self.current_snapshot_plan_index = 0
@@ -208,7 +210,7 @@ class Timelapse(object):
 
         self._position = Position(
             self._settings.profiles.current_printer(),
-            self._settings.profiles.current_stabilization(), octoprint_printer_profile, g90_influences_extruder
+            self._settings.profiles.current_trigger(), octoprint_printer_profile, g90_influences_extruder
         )
         self._state = TimelapseState.WaitingForTrigger
         self._is_test_mode = self._settings.profiles.current_debug_profile().is_test_mode
@@ -345,7 +347,7 @@ class Timelapse(object):
             # create the GCode for the timelapse and store it
             snapshot_gcode = self._gcode.create_gcode_for_snapshot_plan(
                 self.current_snapshot_plan, self._position.g90_influences_extruder,
-                self._stabilization.get_snapshot_plan_options()
+                self._trigger_profile.get_snapshot_plan_options()
             )
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
@@ -458,7 +460,7 @@ class Timelapse(object):
                 "position": position_dict,
                 "position_state": position_state_dict,
                 "trigger_state": trigger_state,
-                "stabilization_type": "real-time" if self.is_realtime else "pre-calculated",
+                "trigger_type": "real-time" if self.is_realtime else "pre-calculated",
                 "snapshot_plan": snapshot_plan
 
             }
@@ -573,8 +575,7 @@ class Timelapse(object):
             self._settings is None
             or self._state in [TimelapseState.Idle, TimelapseState.Initializing, TimelapseState.WaitingToRender]
             or self._octoprint_printer.get_state_id() == "CANCELLING"
-            or self._triggers is None
-            or self._triggers.count() < 1
+            or (self.is_realtime and (self._triggers is None or self._triggers.count() < 1))
         ):
             return False
         return True
@@ -1158,7 +1159,7 @@ class Timelapse(object):
                             }
                     change_dict = {
 
-                        "stabilization_type": "real-time",
+                        "trigger_type": "real-time",
                         "extruder": extruder_change_dict,
                         "position": position_change_dict,
                         "position_state": position_state_change_dict,
@@ -1179,7 +1180,7 @@ class Timelapse(object):
                     # if there are any state changes, send them
                     change_dict = {
 
-                        "stabilization_type": "pre-calculated",
+                        "trigger_type": "pre-calculated",
                         "snapshot_plan":
                         {
                             "printer_volume": self.get_printer_volume_dict(),
@@ -1346,6 +1347,7 @@ class Timelapse(object):
         self._current_profiles = {
             "printer": "",
             "stabilization": "",
+            "trigger": "",
             "snapshot": "",
             "rendering": "",
             "camera": "",

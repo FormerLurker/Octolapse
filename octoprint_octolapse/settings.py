@@ -500,34 +500,14 @@ class SnapshotPositionRestrictions(Settings):
 
 
 class StabilizationProfile(ProfileSettings):
-    STABILIZATION_TYPE_REAL_TIME = "real-time"
-    STABILIZATION_TYPE_SNAP_TO_PRINT = "snap-to-print"
-    STABILIZATION_TYPE_SMART_LAYER = "smart-layer"
-    SMART_TRIGGER_TYPE_FASTEST = 0
-    SMART_TRIGGER_TYPE_FAST = 1
-    SMART_TRIGGER_TYPE_COMPATIBILITY = 2
-    SMART_TRIGGER_TYPE_NORMAL_QUALITY = 3
-    SMART_TRIGGER_TYPE_HIGH_QUALITY = 4
-    SMART_TRIGGER_TYPE_BEST_QUALITY = 5
-    EXTRUDER_TRIGGER_IGNORE_VALUE = ""
-    EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
-    EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
-    LAYER_TRIGGER_TYPE = 'layer'
-    TIMER_TRIGGER_TYPE = 'timer'
-    GCODE_TRIGGER_TYPE = 'gcode'
+    STABILIZATION_AXIS_TYPE_DISABLED = 'disabled'
+    STABILIZATION_AXIS_TYPE_FIXED_COORDINATE = 'fixed_coordinate'
+    STABILIZATION_AXIS_TYPE_FIXED_PATH = 'fixed_path'
+    STABILIZATION_AXIS_TYPE_RELATIVE_COORDINATE = 'relative'
+    STABILIZATION_AXIS_TYPE_RELATIVE_PATH = 'relative_path'
 
     def __init__(self, name="New Stabilization Profile"):
         super(StabilizationProfile, self).__init__(name)
-        self.stabilization_type = StabilizationProfile.STABILIZATION_TYPE_REAL_TIME
-        # Pre-Calculated stabilization options
-        self.fastest_speed = True
-        # Lock to corner options
-        self.snap_to_print_disable_z_lift = True
-        self.snap_to_print_disable_retract = False
-        # smart layer trigger options
-        self.smart_layer_trigger_type = StabilizationProfile.SMART_TRIGGER_TYPE_COMPATIBILITY
-        self.smart_layer_trigger_speed_threshold = 0
-        self.smart_layer_trigger_distance_threshold_percent = 10
         # Real Time stabilization options
         self.x_type = "relative"
         self.x_fixed_coordinate = 0.0
@@ -550,71 +530,21 @@ class StabilizationProfile(ProfileSettings):
         self.y_relative_path_loop = True
         self.y_relative_path_invert_loop = True
 
-        # Settings that were formerly in the snapshot profile (now removed)
-        self.is_default = False
-        self.trigger_type = self.LAYER_TRIGGER_TYPE
-        # timer trigger settings
-        self.timer_trigger_seconds = 30
-        # layer trigger settings
-        self.layer_trigger_height = 0.0
-
-        # Position Restrictions
-        self.position_restrictions_enabled = False
-        self.position_restrictions = []
-
-        # Quality Settings
-        self.require_zhop = False
-        # Extruder State
-        self.extruder_state_requirements_enabled = True
-        self.trigger_on_extruding_start = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        self.trigger_on_extruding = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        self.trigger_on_primed = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        self.trigger_on_retracting_start = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
-        self.trigger_on_retracting = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
-        self.trigger_on_partially_retracted = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
-        self.trigger_on_retracted = StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        self.trigger_on_deretracting_start = StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
-        self.trigger_on_deretracting = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
-        self.trigger_on_deretracted = StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
-
-    def get_snapshot_plan_options(self):
-        if self.stabilization_type == StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT:
-            return {
-                'disable_z_lift': self.snap_to_print_disable_z_lift,
-                'disable_retract': self.snap_to_print_disable_retract
-            }
-        return None
-
-    @staticmethod
-    def get_precalculated_stabilization_types():
-        return [
-            StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT,
-            StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER
-        ]
-
-    def get_extruder_trigger_value_string(self, value):
-        if value is None:
-            return self.EXTRUDER_TRIGGER_IGNORE_VALUE
-        elif value:
-            return self.EXTRUDER_TRIGGER_REQUIRED_VALUE
-        elif not value:
-            return self.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
-
     def get_stabilization_paths(self):
         x_stabilization_path = StabilizationPath()
         x_stabilization_path.type = self.x_type
-        if self.x_type == 'fixed_coordinate':
+        if self.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_FIXED_COORDINATE:
             x_stabilization_path.path.append(self.x_fixed_coordinate)
             x_stabilization_path.coordinate_system = 'absolute'
-        elif self.x_type == 'relative':
+        elif self.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_RELATIVE_COORDINATE:
             x_stabilization_path.path.append(self.x_relative)
             x_stabilization_path.coordinate_system = 'bed_relative'
-        elif self.x_type == 'fixed_path':
+        elif self.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_FIXED_PATH:
             x_stabilization_path.path = self.parse_csv_path(self.x_fixed_path)
             x_stabilization_path.coordinate_system = 'absolute'
             x_stabilization_path.loop = self.x_fixed_path_loop
             x_stabilization_path.invert_loop = self.x_fixed_path_invert_loop
-        elif self.x_type == 'relative_path':
+        elif self.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_RELATIVE_PATH:
             x_stabilization_path.path = self.parse_csv_path(self.x_relative_path)
             x_stabilization_path.coordinate_system = 'bed_relative'
             x_stabilization_path.loop = self.x_relative_path_loop
@@ -622,18 +552,18 @@ class StabilizationProfile(ProfileSettings):
 
         y_stabilization_path = StabilizationPath()
         y_stabilization_path.type = self.y_type
-        if self.y_type == 'fixed_coordinate':
+        if self.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_FIXED_COORDINATE:
             y_stabilization_path.path.append(self.y_fixed_coordinate)
-            y_stabilization_path.CoordinateSystem = 'absolute'
-        elif self.y_type == 'relative':
+            y_stabilization_path.coordinate_system = 'absolute'
+        elif self.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_RELATIVE_COORDINATE:
             y_stabilization_path.path.append(self.y_relative)
             y_stabilization_path.coordinate_system = 'bed_relative'
-        elif self.y_type == 'fixed_path':
+        elif self.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_FIXED_PATH:
             y_stabilization_path.path = self.parse_csv_path(self.y_fixed_path)
             y_stabilization_path.coordinate_system = 'absolute'
             y_stabilization_path.loop = self.y_fixed_path_loop
             y_stabilization_path.invert_loop = self.y_fixed_path_invert_loop
-        elif self.y_type == 'relative_path':
+        elif self.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_RELATIVE_PATH:
             y_stabilization_path.path = self.parse_csv_path(self.y_relative_path)
             y_stabilization_path.coordinate_system = 'bed_relative'
             y_stabilization_path.loop = self.y_relative_path_loop
@@ -647,37 +577,12 @@ class StabilizationProfile(ProfileSettings):
     @staticmethod
     def get_options():
         return {
-            'stabilization_type_options': [
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_REAL_TIME, name='Real-Time'),
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
-                dict(value=StabilizationProfile.STABILIZATION_TYPE_SNAP_TO_PRINT, name='Snap to Print')
-            ], 'real_time_xy_stabilization_type_options': [
+            'real_time_xy_stabilization_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
                 dict(value='fixed_path', name='List of Fixed Coordinates'),
                 dict(value='relative', name='Relative Coordinate (0-100)'),
                 dict(value='relative_path', name='List of Relative Coordinates')
-            ], 'smart_layer_trigger_type_options': [
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FASTEST), name='Fastest'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_FAST), name='Fast'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_COMPATIBILITY), name='Compatibility'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_NORMAL_QUALITY), name='Normal Quality'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_HIGH_QUALITY), name='High Quality'),
-                dict(value='{}'.format(StabilizationProfile.SMART_TRIGGER_TYPE_BEST_QUALITY), name='Best Quality'),
-            ], 'trigger_types': [
-                dict(value=StabilizationProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
-                dict(value=StabilizationProfile.TIMER_TRIGGER_TYPE, name="Timer"),
-                dict(value=StabilizationProfile.GCODE_TRIGGER_TYPE, name="Gcode")
-            ], 'position_restriction_shapes': [
-                dict(value="rect", name="Rectangle"),
-                dict(value="circle", name="Circle")
-            ], 'position_restriction_types': [
-                dict(value="required", name="Must be inside"),
-                dict(value="forbidden", name="Cannot be inside")
-            ], 'snapshot_extruder_trigger_options': [
-                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
-                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
-                dict(value=StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
             ]
         }
 
@@ -692,14 +597,143 @@ class StabilizationProfile(ProfileSettings):
                 path.append(float(item))
         return path
 
+    @classmethod
+    def try_convert_value(cls, destination, value, key):
+        if key == 'position_restrictions':
+            if value is not None:
+                return StabilizationProfile.get_trigger_position_restrictions(value)
+
+        return super(StabilizationProfile, cls).try_convert_value(destination, value, key)
+
+
+class TriggerProfile(ProfileSettings):
+    TRIGGER_TYPE_REAL_TIME = "real-time"
+    TRIGGER_TYPE_SNAP_TO_PRINT = "snap-to-print"
+    TRIGGER_TYPE_SMART_LAYER = "smart-layer"
+    SMART_TRIGGER_TYPE_FASTEST = 0
+    SMART_TRIGGER_TYPE_FAST = 1
+    SMART_TRIGGER_TYPE_COMPATIBILITY = 2
+    SMART_TRIGGER_TYPE_NORMAL_QUALITY = 3
+    SMART_TRIGGER_TYPE_HIGH_QUALITY = 4
+    SMART_TRIGGER_TYPE_BEST_QUALITY = 5
+    EXTRUDER_TRIGGER_IGNORE_VALUE = ""
+    EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
+    EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
+    LAYER_TRIGGER_TYPE = 'layer'
+    TIMER_TRIGGER_TYPE = 'timer'
+    GCODE_TRIGGER_TYPE = 'gcode'
+
+    def __init__(self, name="New Trigger Profile"):
+        super(TriggerProfile, self).__init__(name)
+        self.trigger_type = TriggerProfile.TRIGGER_TYPE_SMART_LAYER
+        # smart layer trigger options
+        self.smart_layer_trigger_type = TriggerProfile.SMART_TRIGGER_TYPE_COMPATIBILITY
+        self.smart_layer_trigger_speed_threshold = 0
+        self.smart_layer_trigger_distance_threshold_percent = 10
+        self.smart_layer_snap_to_print = False
+        self.smart_layer_disable_z_lift = True
+
+        # Settings that were formerly in the snapshot profile (now removed)
+        self.is_default = False
+        self.trigger_subtype = TriggerProfile.LAYER_TRIGGER_TYPE
+        # timer trigger settings
+        self.timer_trigger_seconds = 30
+        # layer trigger settings
+        self.layer_trigger_height = 0.0
+
+        # Position Restrictions
+        self.position_restrictions_enabled = False
+        self.position_restrictions = []
+
+        # Quality Settings
+        self.require_zhop = False
+        # Extruder State
+        self.extruder_state_requirements_enabled = True
+        self.trigger_on_extruding_start = TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_extruding = TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_primed = TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_retracting_start = TriggerProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_retracting = TriggerProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_partially_retracted = TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+        self.trigger_on_retracted = TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        self.trigger_on_deretracting_start = TriggerProfile.EXTRUDER_TRIGGER_IGNORE_VALUE
+        self.trigger_on_deretracting = TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+        self.trigger_on_deretracted = TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+
+    def get_snapshot_plan_options(self):
+        if self.trigger_type == TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT:
+            return {
+                'disable_z_lift': self.snap_to_print_disable_z_lift,
+            }
+        if (
+            self.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
+            self.smart_layer_snap_to_print
+        ):
+            return {
+                'disable_z_lift': self.smart_layer_disable_z_lift
+            }
+        return None
+
+    @staticmethod
+    def get_precalculated_trigger_types():
+        return [
+            TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT,
+            TriggerProfile.TRIGGER_TYPE_SMART_LAYER
+        ]
+
+    def get_extruder_trigger_value_string(self, value):
+        if value is None:
+            return self.EXTRUDER_TRIGGER_IGNORE_VALUE
+        elif value:
+            return self.EXTRUDER_TRIGGER_REQUIRED_VALUE
+        elif not value:
+            return self.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
+
+    @staticmethod
+    def get_options():
+        return {
+            'trigger_type_options': [
+                dict(value=TriggerProfile.TRIGGER_TYPE_REAL_TIME, name='Real-Time'),
+                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
+                dict(value=TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT, name='Snap to Print')
+            ], 'real_time_xy_trigger_type_options': [
+                dict(value='disabled', name='Disabled'),
+                dict(value='fixed_coordinate', name='Fixed Coordinate'),
+                dict(value='fixed_path', name='List of Fixed Coordinates'),
+                dict(value='relative', name='Relative Coordinate (0-100)'),
+                dict(value='relative_path', name='List of Relative Coordinates')
+            ], 'smart_layer_trigger_type_options': [
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_FASTEST), name='Fastest'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_FAST), name='Fast'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_COMPATIBILITY), name='Compatibility'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_NORMAL_QUALITY), name='Normal Quality'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_HIGH_QUALITY), name='High Quality'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_BEST_QUALITY), name='Best Quality'),
+            ], 'trigger_subtype_options': [
+                dict(value=TriggerProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
+                dict(value=TriggerProfile.TIMER_TRIGGER_TYPE, name="Timer"),
+                dict(value=TriggerProfile.GCODE_TRIGGER_TYPE, name="Gcode")
+            ], 'position_restriction_shapes': [
+                dict(value="rect", name="Rectangle"),
+                dict(value="circle", name="Circle")
+            ], 'position_restriction_types': [
+                dict(value="required", name="Must be inside"),
+                dict(value="forbidden", name="Cannot be inside")
+            ], 'snapshot_extruder_trigger_options': [
+                dict(value=TriggerProfile.EXTRUDER_TRIGGER_IGNORE_VALUE, name='Ignore', visible=True),
+                dict(value=TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE, name='Trigger', visible=True),
+                dict(value=TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE, name='Forbidden', visible=True)
+            ]
+        }
+
     @staticmethod
     def get_extruder_trigger_value(value):
         if isinstance(value, string_types):
             if value is None or len(value) == 0:
                 return None
-            elif value.lower() == StabilizationProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
+            elif value.lower() == TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
                 return True
-            elif value.lower() == StabilizationProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE:
+            elif value.lower() == TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE:
                 return False
             else:
                 return None
@@ -739,9 +773,9 @@ class StabilizationProfile(ProfileSettings):
     def try_convert_value(cls, destination, value, key):
         if key == 'position_restrictions':
             if value is not None:
-                return StabilizationProfile.get_trigger_position_restrictions(value)
+                return TriggerProfile.get_trigger_position_restrictions(value)
 
-        return super(StabilizationProfile, cls).try_convert_value(destination, value, key)
+        return super(TriggerProfile, cls).try_convert_value(destination, value, key)
 
 
 class RenderingProfile(ProfileSettings):
@@ -1097,6 +1131,7 @@ class ProfileOptions(StaticSettings):
     def __init__(self):
         self.printer = PrinterProfile.get_options()
         self.stabilization = StabilizationProfile.get_options()
+        self.trigger = TriggerProfile.get_options()
         self.rendering = RenderingProfile.get_options()
         self.camera = CameraProfile.get_options()
         self.debug = DebugProfile.get_options()
@@ -1106,6 +1141,7 @@ class ProfileDefaults(StaticSettings):
     def __init__(self):
         self.printer = PrinterProfile("Default Printer")
         self.stabilization = StabilizationProfile("Default Stabilization")
+        self.trigger = TriggerProfile("Default Trigger")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
         self.debug = DebugProfile("Default Debug")
@@ -1124,6 +1160,9 @@ class Profiles(Settings):
         self.current_stabilization_profile_guid = self.defaults.stabilization.guid
         self.stabilizations = {self.defaults.stabilization.guid: self.defaults.stabilization}
 
+        self.current_trigger_profile_guid = self.defaults.trigger.guid
+        self.triggers = {self.defaults.trigger.guid: self.defaults.trigger}
+
         self.current_rendering_profile_guid = self.defaults.rendering.guid
         self.renderings = {self.defaults.rendering.guid: self.defaults.rendering}
 
@@ -1138,11 +1177,13 @@ class Profiles(Settings):
         profiles_dict = {
             'current_printer_profile_guid': self.current_printer_profile_guid,
             'current_stabilization_profile_guid': self.current_stabilization_profile_guid,
+            'current_trigger_profile_guid': self.current_trigger_profile_guid,
             'current_rendering_profile_guid': self.current_rendering_profile_guid,
             'current_camera_profile_guid': self.current_camera_profile_guid,
             'current_debug_profile_guid': self.current_debug_profile_guid,
             'printers': [],
             'stabilizations': [],
+            'triggers': [],
             'renderings': [],
             'cameras': [],
             'debug': []
@@ -1159,8 +1200,14 @@ class Profiles(Settings):
         for key, stabilization in self.stabilizations.items():
             profiles_dict["stabilizations"].append({
                 "name": stabilization.name,
-                "guid": stabilization.guid,
-                "stabilization_type": stabilization.stabilization_type
+                "guid": stabilization.guid
+            })
+
+        for key, trigger in self.triggers.items():
+            profiles_dict["triggers"].append({
+                "name": trigger.name,
+                "guid": trigger.guid,
+                "trigger_type": trigger.trigger_type
             })
 
         for key, rendering in self.renderings.items():
@@ -1192,6 +1239,11 @@ class Profiles(Settings):
         if self.current_stabilization_profile_guid in self.stabilizations:
             return self.stabilizations[self.current_stabilization_profile_guid]
         return self.defaults.stabilization
+
+    def current_trigger(self):
+        if self.current_trigger_profile_guid in self.triggers:
+            return self.triggers[self.current_trigger_profile_guid]
+        return self.defaults.trigger
 
     def current_rendering(self):
         if self.current_rendering_profile_guid in self.renderings:
@@ -1234,6 +1286,8 @@ class Profiles(Settings):
             profile = self.printers[guid]
         elif profile_type == "Stabilization":
             profile = self.stabilizations[guid]
+        elif profile_type == "Trigger":
+            profile = self.triggers[guid]
         elif profile_type == "Rendering":
             profile = self.renderings[guid]
         elif profile_type == "Camera":
@@ -1254,6 +1308,9 @@ class Profiles(Settings):
         elif profile_type == "Stabilization":
             new_profile = StabilizationProfile.create_from(profile_json)
             existing_profiles = self.stabilizations
+        elif profile_type == "Trigger":
+            new_profile = TriggerProfile.create_from(profile_json)
+            existing_profiles = self.triggers
         elif profile_type == "Rendering":
             new_profile = RenderingProfile.create_from(profile_json)
             existing_profiles = self.renderings
@@ -1291,6 +1348,9 @@ class Profiles(Settings):
         elif profile_type == "Stabilization":
             new_profile = StabilizationProfile.create_from(profile)
             self.stabilizations[guid] = new_profile
+        elif profile_type == "Trigger":
+            new_profile = TriggerProfile.create_from(profile)
+            self.triggers[guid] = new_profile
         elif profile_type == "Rendering":
             new_profile = RenderingProfile.create_from(profile)
             self.renderings[guid] = new_profile
@@ -1314,6 +1374,10 @@ class Profiles(Settings):
             if self.current_stabilization_profile_guid == guid:
                 return False
             del self.stabilizations[guid]
+        elif profile_type == "Trigger":
+            if self.current_trigger_profile_guid == guid:
+                return False
+            del self.triggers[guid]
         elif profile_type == "Rendering":
             if self.current_rendering_profile_guid == guid:
                 return False
@@ -1336,6 +1400,8 @@ class Profiles(Settings):
             self.current_printer_profile_guid = guid
         elif profile_type == "Stabilization":
             self.current_stabilization_profile_guid = guid
+        elif profile_type == "Trigger":
+            self.current_trigger_profile_guid = guid
         elif profile_type == "Rendering":
             self.current_rendering_profile_guid = guid
         elif profile_type == "Camera":
@@ -1362,6 +1428,10 @@ class Profiles(Settings):
                         self.stabilizations = {}
                         for profile_key, profile_value in value.items():
                             self.stabilizations[profile_key] = StabilizationProfile.create_from(profile_value)
+                    elif key == 'triggers':
+                        self.triggers = {}
+                        for profile_key, profile_value in value.items():
+                            self.triggers[profile_key] = TriggerProfile.create_from(profile_value)
                     elif key == 'renderings':
                         self.renderings = {}
                         for profile_key, profile_value in value.items():
