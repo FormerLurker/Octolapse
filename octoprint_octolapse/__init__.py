@@ -43,6 +43,7 @@ import json
 import os
 import shutil
 import flask
+import math
 import threading
 import uuid
 from six.moves import queue
@@ -259,9 +260,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 logger.error(error)
                 return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
 
+            octoprint_printer_profile = self._printer_profile_manager.get_current()
             # create a snapshot gcode generator object
             gcode_generator = SnapshotGcodeGenerator(
-                self._octolapse_settings, self._printer_profile_manager.get_current()
+                self._octolapse_settings, octoprint_printer_profile
             )
 
             # get the stabilization point
@@ -271,11 +273,23 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 logger.error(error)
                 return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
 
-            # get the gcode generation settings
+            # get the movement feedrate from the Octoprint printer profile, or use 6000 as a default
+
+            default_feedrate = 6000
+
+            feedrate_x = default_feedrate
+            feedrate_y = default_feedrate
+            axes = octoprint_printer_profile.get("axes", None)
+            if axes is not None:
+                x_axis = axes.get("x", {"speed": default_feedrate})
+                feedrate_x = x_axis.get("speed", default_feedrate)
+                y_axis = axes.get("y", {"speed": default_feedrate})
+                feedrate_y = y_axis.get("speed", default_feedrate)
+
+            feedrate = min(feedrate_x, feedrate_y)
             # create the gcode necessary to move the extuder to the stabilization position and add it to the gocde array
-            # TODO: Add a setting for the Feedrate
             gcode_array.append(
-                SnapshotGcodeGenerator.get_gcode_travel(stabilization_point["x"], stabilization_point["y"], 1000)
+                SnapshotGcodeGenerator.get_gcode_travel(stabilization_point["x"], stabilization_point["y"], feedrate)
             )
 
             # send the gcode to the printer

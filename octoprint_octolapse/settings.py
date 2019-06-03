@@ -227,7 +227,7 @@ class PrinterProfile(ProfileSettings):
         self.default_firmware_retractions = False
         self.default_firmware_retractions_zhop = False
         self.gocde_axis_compatibility_mode_enabled = True
-        self.home_axis_gcode = "G28 X Y; Home XY Axis\r\nG90; Switch to Absolute XYZ"
+        self.home_axis_gcode = "G90; Switch to Absolute XYZ\r\nG28 X Y; Home XY Axis"
 
     @staticmethod
     def get_options():
