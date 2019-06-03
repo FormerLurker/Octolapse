@@ -227,6 +227,7 @@ class PrinterProfile(ProfileSettings):
         self.default_firmware_retractions = False
         self.default_firmware_retractions_zhop = False
         self.gocde_axis_compatibility_mode_enabled = True
+        self.home_axis_gcode = "G28 X Y; Home XY Axis\r\nG90; Switch to Absolute XYZ"
 
     @staticmethod
     def get_options():
@@ -1123,7 +1124,7 @@ class MainSettings(Settings):
         self.show_trigger_state_changes = False
         self.show_snapshot_plan_information = False
         self.cancel_print_on_startup_error = True
-        self.platform = sys.platform,
+        self.platform = sys.platform
         self.version = plugin_version
 
 

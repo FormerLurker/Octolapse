@@ -90,7 +90,7 @@ $(function() {
         };
 
         self.saveWebcamSettings = function(){
-            console.log("Undoing webcam changes.");
+            //console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'guid': self.webcam_settings.guid(),
@@ -639,6 +639,42 @@ $(function() {
                     Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                 }
             });
+        };
+
+        self.previewStabilization = function() {
+            var message = "Make sure your bed is clear, and that your 'Home Axis Gcode Script' \
+                           is correct before attempting to preview the stabilization point.  \
+                           Are you sure you want to continue?";
+            Octolapse.showConfirmDialog("preview-stabilization", "Preview Stabilization", message, function(){
+                $.ajax({
+                    url: "./plugin/octolapse/previewStabilization",
+                    type: "POST",
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (results) {
+                        if (!results.success) {
+                            var options = {
+                                title: 'Error Previewing Stabilization',
+                                text: results.error,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse"
+                            };
+                            Octolapse.displayPopupForKey(options, "stabilization_preview_error", ["stabilization_preview_error"]);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        var options = {
+                            title: 'Error Previewing Stabilization',
+                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "stabilization_preview_error", ["stabilization_preview_error"]);
+                    }
+                }); // end ajax call
+            },null);
         };
 
     }

@@ -880,7 +880,9 @@ class Commands(object):
     def string_to_gcode_array(gcode_string):
         lines = []
         for line in gcode_string.splitlines():
-            lines.append(Commands.strip_comments(line))
+            command = Commands.strip_comments(line).strip()
+            if len(command) > 0:
+                lines.append(command)
         return lines
 
 

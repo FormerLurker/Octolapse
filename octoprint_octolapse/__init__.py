@@ -68,6 +68,7 @@ import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.position import Position
+from octoprint_octolapse.gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
@@ -205,6 +206,81 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def stop_timelapse_request(self):
         self._timelapse.stop_snapshots()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/previewStabilization", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def preview_stabilization(self):
+        # make sure we aren't printing
+        if not self._printer.is_ready():
+            error = "Cannot preview the stabilization because the printer is either printing or is a non-operational " \
+                    "state."
+            logger.error(error)
+            return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+        with self._printer.job_on_hold():
+            # get the current stabilization
+            current_stabilization = self._octolapse_settings.profiles.current_stabilization()
+            assert(isinstance(current_stabilization, StabilizationProfile))
+            # get the current trigger
+            current_trigger = self._octolapse_settings.profiles.current_trigger()
+            assert (isinstance(current_trigger, TriggerProfile))
+            # get the current printer
+            current_printer = self._octolapse_settings.profiles.current_printer()
+            if current_printer is None:
+                error = "Cannot preview the stabilization because no printer profile is selected.  Please select " \
+                        "and configure a printer profile and try again."
+                logger.error(error)
+                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+            assert (isinstance(current_printer, PrinterProfile))
+            # if both the X and Y axis are disabled, or the trigger is a smart trigger with snap to print enabled, return
+            # an error.
+            if (
+                current_stabilization.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED and
+                current_stabilization.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
+            ):
+                error = "Cannot preview the stabilization because both the X and Y axis are disabled.  Please enable at " \
+                        "least one stabilized axis and try again."
+                logger.error(error)
+                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+
+            if (
+                    current_trigger.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
+                    current_trigger.smart_layer_snap_to_print
+            ):
+                error = "Cannot preview the stabilization when using a snap-to-print trigger."
+                logger.error(error)
+                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+
+            gcode_array = Commands.string_to_gcode_array(current_printer.home_axis_gcode)
+            if len(gcode_array) < 1:
+                error = "Cannot preview stabilization.  The home axis gcode script in your printer profile does not " \
+                        "contain any valid gcodes.  Please add a script to home your printer to the printer profile and " \
+                        "try again."
+                logger.error(error)
+                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+
+            # create a snapshot gcode generator object
+            gcode_generator = SnapshotGcodeGenerator(
+                self._octolapse_settings, self._printer_profile_manager.get_current()
+            )
+
+            # get the stabilization point
+            stabilization_point = gcode_generator.get_snapshot_position(None, None)
+            if stabilization_point is None and stabilization_point["x"] is None and stabilization_point["y"] is None:
+                error = "No stabilization points were returned.  Cannot preview stabilization."
+                logger.error(error)
+                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+
+            # get the gcode generation settings
+            # create the gcode necessary to move the extuder to the stabilization position and add it to the gocde array
+            # TODO: Add a setting for the Feedrate
+            gcode_array.append(
+                SnapshotGcodeGenerator.get_gcode_travel(stabilization_point["x"], stabilization_point["y"], 1000)
+            )
+
+            # send the gcode to the printer
+            self._printer.commands(gcode_array, tags={"preview-stabilization"})
+            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/saveMainSettings", methods=["POST"])
     @restricted_access
@@ -688,6 +764,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @admin_permission.require(403)
     def cancel_preprocessing_request(self):
         logger.info("Cancelling Preprocessing for /cancelPreprocessing.")
+        # todo:  Check the current printing session and make sure it matches before canceling the print!
         self.cancel_preprocessing()
         if self._printer.is_printing():
             self._printer.cancel_print(tags={'startup-failed'})

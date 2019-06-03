@@ -199,7 +199,7 @@ class SnapshotGcodeGenerator(object):
         self.has_snapshot_position_errors = False
         self.snapshot_position_errors = ""
         self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
-        assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
+        # assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
         # this will be determined by the supplied position object
         self.g90_g91_affect_extruder = None
         # variables for gcode generation

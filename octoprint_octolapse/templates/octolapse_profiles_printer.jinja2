@@ -464,6 +464,15 @@
                 </p>
             </div>
         </div>
+        <div class="control-group">
+            <label class="control-label">Home Axis Gcode Script</label>
+            <div class="controls">
+                <textarea id="printer_profile_home_axis_gcode" name="home_axis_gcode" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: home_axis_gcode" required="true" />
+                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#home_axis_gcode_script" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <div class="error_label_container text-error" data-error-for="printer_profile_home_axis_gcode"></div>
+                <span class="help-inline">Gcode to send to the printer in order to capture a snapshot.</span>
+            </div>
+        </div>
 
     </div>
 

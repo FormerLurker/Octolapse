@@ -1100,6 +1100,8 @@ class Timelapse(object):
             logf("Force XYZ axis mode gcode - %s: %s", msg, cmd)
         elif "force_e_axis" in tags:
             logf("Force E axis mode gcode - %s: %s", msg, cmd)
+        elif "preview-stabilization" in tags:
+            logf("Preview stabilization gcode - %s: %s", msg, cmd)
 
     # internal functions
     ####################

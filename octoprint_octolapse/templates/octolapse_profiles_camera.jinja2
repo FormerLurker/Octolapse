@@ -262,6 +262,9 @@
             </div>
             <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>
         </div>
+        <div data-bind="visible: !camera_stream_visible()">
+            <button type="button" class="span6 btn btn-default input-block-level" data-bind="click: webcam_settings.previewStabilization">Stabilize Extruder</button>
+        </div>
 
     </div>
     <hr />

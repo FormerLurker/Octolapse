@@ -155,6 +155,7 @@ $(function() {
         self.default_firmware_retractions_zhop = ko.observable(values.default_firmware_retractions_zhop);
         self.suppress_snapshot_command_always = ko.observable(values.suppress_snapshot_command_always);
         self.gocde_axis_compatibility_mode_enabled = ko.observable(values.gocde_axis_compatibility_mode_enabled);
+        self.home_axis_gcode = ko.observable(values.home_axis_gcode);
 
         self.toJS = function()
         {
