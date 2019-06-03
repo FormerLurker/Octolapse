@@ -21,8 +21,8 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 -->
-<script type="text/html" id="webcam-settings-popup-template">
-    <div id="octolapse_webcam_settings_dialog" class="modal hide fade">
+<script type="text/html" id="snapshot-plan-preview-template">
+    <div id="octolapse_snapshot_plan_preview_dialog" class="modal hide fade">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form id="octolapse_webcam_settings_form" class="form-horizontal octolapse_form">
@@ -31,28 +31,15 @@
                             <a class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
                         </div>
                         <div>
-                            <h3>Camera Settings - <span data-bind="text:Octolapse.Status.WebcamSettings.webcam_settings.name" /></h3>
-
-                            <div class="webcam_settings_preview">
-                                <img id="octolapse_webcam_settings_stream" class="webcam_stream_preview"  style="display:none;" data-bind="streamLoading:{src: Octolapse.Status.WebcamSettings.webcam_settings.stream_url, loading_selector: '#octolapse_webcam_settings_stream_loading', error_selector: '#octolapse_webcam_settings_stream_error'}">
-                                <div id="octolapse_webcam_settings_stream_error" class="alert" style="display:none;">
-                                    Unable to load the webcam stream
-                                </div>
-                                <div id="octolapse_webcam_settings_stream_loading" style="display:none;">
-                                    Loading the webcam stream
-                                </div>
-                            </div>
-
-
+                            <h3>Snapshot Plan Preview</h3>
                         </div>
                     </div>
-                    <div class="modal-body" data-bind="template:{name:'webcam-settings-template', data:Octolapse.Status.WebcamSettings.webcam_settings}">
+                    <div class="modal-body" data-bind="template:{name:'snapshot-plan-template', data:Octolapse.Status}">
                     </div>
                     <div class="modal-footer" style="bottom:0;position:relative">
                         <div class="row-fluid">
                                 <button type="button" class="span4 btn btn-default cancel input-block-level">Cancel</button>
-                                <button type="button" class="span4 btn btn-default set-defaults input-block-level">Defaults</button>
-                                <button type="button" class="span4 btn btn-primary save input-block-level">Save</button>
+                                <button type="button" class="span4 btn btn-primary continue input-block-level">Continue</button>
                             </span>
                         </div>
                     </div>
@@ -60,7 +47,5 @@
             </div>
         </div>
     </div>
-
 </script>
-{% include "octolapse_webcam_settings.jinja2" %}
-
+{% include "octolapse_status_snapshot_plan.jinja2" %}

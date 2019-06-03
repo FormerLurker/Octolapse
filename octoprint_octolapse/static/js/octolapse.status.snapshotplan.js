@@ -45,6 +45,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.saved_travel_distance = ko.observable(0).extend({numeric: 1});
             self.total_travel_distance = ko.observable(0).extend({numeric: 1});
             self.total_saved_travel_percent = ko.observable(0).extend({numeric: 1});
+            self.is_preview = false;
+
             self.update = function (state) {
                 if (state.snapshot_plans != null)
                 {
@@ -143,7 +145,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 {
                     self.plan_index(index);
                 }
-                self.update_current_plan()
+                self.update_current_plan();
                 return false;
             };
 
@@ -156,7 +158,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 {
                     self.plan_index(index);
                 }
-                self.update_current_plan()
+                self.update_current_plan();
                 return false;
             };
 
@@ -165,7 +167,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.is_animating_plans(false);
                 self.view_current_plan(true);
                 self.plan_index(self.current_plan_index());
-                self.update_current_plan()
+                self.update_current_plan();
                 return false;
             };
 
@@ -181,7 +183,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
                 if (self.snapshot_plans().length>0)
                     self.animate_plan(0);
-            }
+            };
 
             self.animate_plan = function(index)
             {
@@ -192,7 +194,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     self.update_current_plan();
                     index++;
                     if (index < self.snapshot_plans().length)
-                        self.animate_plan(index)
+                        self.animate_plan(index);
                     else
                     {
                         self.view_current_plan(true);
@@ -201,11 +203,11 @@ Octolapse.snapshotPlanStateViewModel = function() {
                         self.update_current_plan();
                     }
                 }, 33.3);
-            }
+            };
             // Canvass Variables
             self.canvas_printer_size = [125,125,125];
             self.canvas_border_size = [14,14,14];
-            self.legend_size = [115,0,0]
+            self.legend_size = [115,0,0];
             self.canvas_size = [
                 self.canvas_printer_size[0]+self.canvas_border_size[0]*2+self.legend_size[0],
                 self.canvas_printer_size[1]+self.canvas_border_size[1]*2+self.legend_size[1],
@@ -220,18 +222,31 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.initial_position_radius=5;
             self.snapshot_position_radius=4;
             self.canvas_location_radius=3;
+            self.preview_canvas = null;
+            self.info_panel_canvas = null;
             self.canvas = null;
             self.canvas_context = null;
 
             self.updateCanvas = function () {
                 self.canvas_update_scale();
+
+                self.canvas_selector = "#snapshot_plan_info_panel #snapshot_plan_canvas_container";
+                self.canvas = self.preview_canvas;
+                if (self.is_preview) {
+                    self.canvas_selector = "#octolapse_snapshot_plan_preview_dialog #snapshot_plan_canvas_container";
+                    self.canvas = self.preview_canvas
+                }
                 if (self.canvas === null)
                 {
                     self.canvas = document.createElement('canvas');
+                    if(self.is_preview)
+                        self.preview_canvas = self.canvas;
+                    else
+                        self.info_panel_canvas = self.canvas;
                     self.canvas.width = self.canvas_size[0];
                     self.canvas.height = self.canvas_size[1];
-                    var snapshotConatiner = $("#snapshot_plan_canvas_container");
-                    $(self.canvas).attr('id','snapshot_plan_canvas').text('unsupported browser').appendTo("#snapshot_plan_canvas_container");
+                    $(self.canvas).attr('id','snapshot_plan_canvas').text('unsupported browser')
+                        .appendTo(self.canvas_selector);
                     self.canvas_context = self.canvas.getContext('2d');
                     self.canvas_erase_contents();
                     self.canvas_draw_axis();

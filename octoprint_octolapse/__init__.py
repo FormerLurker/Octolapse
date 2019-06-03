@@ -110,6 +110,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
 
         self._plugin_message_queue = queue.Queue()
         self._message_worker = None
+        # this variable is used to make sure that cancelling old stabilizations (perhaps on browsers that have errored
+        # out somehow) don't cancel any current print.
+        self.preprocessing_job_guid = None
+        self.saved_timelapse_settings = None
+        self.saved_snapshot_plans = None
+        self.saved_parsed_command = None
 
     def get_sorting_key(self, context=None):
         return 1
@@ -321,6 +327,9 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._octolapse_settings.main_settings.show_snapshot_plan_information = request_values["show_snapshot_plan_information"]
         self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
             request_values["cancel_print_on_startup_error"]
+        )
+        self._octolapse_settings.main_settings.preview_preprocessed_stabilizations = (
+            request_values["preview_preprocessed_stabilizations"]
         )
 
         # save the updated settings to a file.
@@ -777,11 +786,46 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @restricted_access
     @admin_permission.require(403)
     def cancel_preprocessing_request(self):
+        request_values = flask.request.get_json()
+        preprocessing_job_guid = request_values["preprocessing_job_guid"]
+        if (
+            self.preprocessing_job_guid is None
+            or preprocessing_job_guid != str(self.preprocessing_job_guid)
+        ):
+            # return without doing anything, this job is already over
+            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
         logger.info("Cancelling Preprocessing for /cancelPreprocessing.")
         # todo:  Check the current printing session and make sure it matches before canceling the print!
+        self.preprocessing_job_guid = None
         self.cancel_preprocessing()
         if self._printer.is_printing():
             self._printer.cancel_print(tags={'startup-failed'})
+        self.send_snapshot_preview_complete_message()
+        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/acceptSnapshotPlanPreview", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def accept_snapshot_plan_preview(self):
+        request_values = flask.request.get_json()
+        preprocessing_job_guid = request_values["preprocessing_job_guid"]
+        if (
+            self.preprocessing_job_guid is None or
+            preprocessing_job_guid != str(self.preprocessing_job_guid) or
+            self.saved_timelapse_settings is None or
+            self.saved_snapshot_plans is None or
+            self.saved_parsed_command is None
+        ):
+            # return without doing anything, this job is already over
+            message = "Unable to accept the snapshot plan. Either the printer is printing, or this plan has been " \
+                      "deleted."
+            return json.dumps({'success': False, 'error': message}), 200, {'ContentType': 'application/json'}
+
+        logger.info("Accepting the saved snapshot plan")
+        self.preprocessing_job_guid = None
+        self.start_preprocessed_timelapse()
+        self.send_snapshot_preview_complete_message()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
@@ -1355,6 +1399,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 self.pre_process_stabilization(
                     timelapse_settings, parsed_command
                 )
+
                 # return false so the print job lock isn't released
                 return False
 
@@ -1702,14 +1747,13 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         preprocessor = StabilizationPreprocessingThread(
             timelapse_settings,
             self.send_pre_processing_progress_message,
+            self.on_pre_processing_start,
             self.pre_preocessing_complete,
             self._preprocessing_cancel_event,
             parsed_command,
-            notification_period_seconds=self.PREPROCESSING_NOTIFICATION_PERIOD_SECONDS
-        )
+            notification_period_seconds=self.PREPROCESSING_NOTIFICATION_PERIOD_SECONDS,
 
-        # notify webclients of preprocessing start
-        self.send_pre_processing_start_message()
+        )
         preprocessor.start()
 
     def pre_preocessing_complete(self, success, errors, is_cancelled, snapshot_plans, seconds_elapsed,
@@ -1732,11 +1776,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     def cancel_preprocessing(self):
         if self._preprocessing_cancel_event.is_set():
             self._preprocessing_cancel_event.clear()
+            self.saved_timelapse_settings = None
+            self.saved_snapshot_plans = None
+            self.saved_parsed_command = None
 
     def pre_processing_cancelled(self):
         # signal complete to the UI (will close the progress popup
         self.send_pre_processing_progress_message(
             100, 0, 0, 0, 0)
+        self.preprocessing_job_guid = None
 
     def pre_processing_failed(self, errors):
         if self._printer.is_printing():
@@ -1750,6 +1798,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # close the UI progress popup
         self.send_pre_processing_progress_message(
             100, 0, 0, 0, 0)
+        self.preprocessing_job_guid = None
 
     def pre_processing_success(
         self, timelapse_settings, parsed_command, snapshot_plans, total_seconds,
@@ -1759,16 +1808,64 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # which was saved when pring start was detected
         self.send_pre_processing_progress_message(100, total_seconds, 0, gcodes_processed, lines_processed)
 
-        # initialize the timelapse obeject
-        self.start_timelapse(timelapse_settings, snapshot_plans)
+        self.saved_timelapse_settings = timelapse_settings
+        self.saved_snapshot_plans = snapshot_plans
+        self.saved_parsed_command = parsed_command
 
-        self._timelapse.preprocessing_finished(parsed_command)
+        if timelapse_settings["settings"].main_settings.preview_preprocessed_stabilizations:
+            self.send_snapshot_plan_preview()
+        else:
+            self.start_preprocessed_timelapse()
 
+    def send_snapshot_plan_preview(self):
+        # set a print job guid so we know if we should cancel this print later or not
+        snapshot_plans = []
+        total_travel_distance = 0
+        total_saved_travel_distance = 0
+        octoprint_printer_profile = self._printer_profile_manager.get_current()
+        printer_volume = utility.get_bounding_box(
+            self.saved_timelapse_settings["settings"].profiles.current_printer(), octoprint_printer_profile
+        )
+        for plan in self.saved_snapshot_plans:
+            snapshot_plans.append(plan.to_dict())
+            total_travel_distance += plan.travel_distance
+            total_saved_travel_distance += plan.saved_travel_distance
 
-
-    def send_pre_processing_start_message(self):
         data = {
-            "type": "gcode-preprocessing-start"
+            "type": "snapshot-plan-preview",
+            "preprocessing_job_guid": str(self.preprocessing_job_guid),
+            "snapshot_plans": {
+            "snapshot_plans": snapshot_plans,
+            "printer_volume": printer_volume,
+            "total_travel_distance": total_travel_distance,
+            "total_saved_travel_distance": total_saved_travel_distance,
+            "current_plan_index": 0,
+            "current_file_line": 0,
+            }
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def start_preprocessed_timelapse(self):
+        # initialize the timelapse obeject
+        self.preprocessing_job_guid = None
+        if(
+            self.saved_timelapse_settings is None or
+            self.saved_snapshot_plans is None or
+            self.saved_parsed_command is None
+        ):
+            logger.error("Unable to start the preprocessed timelapse, some required items could not be found.")
+            self.cancel_preprocessing()
+            return
+
+        self.start_timelapse(self.saved_timelapse_settings, self.saved_snapshot_plans)
+        self._timelapse.preprocessing_finished(self.saved_parsed_command)
+
+    def on_pre_processing_start(self):
+        # set a print job guid so we know if we should cancel this print later or not
+        self.preprocessing_job_guid = uuid.uuid4()
+        data = {
+            "type": "gcode-preprocessing-start",
+            "preprocessing_job_guid": str(self.preprocessing_job_guid)
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
@@ -1777,6 +1874,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     ):
         data = {
             "type": "gcode-preprocessing-update",
+            "preprocessing_job_guid": str(self.preprocessing_job_guid),
             "percent_progress": percent_progress,
             "seconds_elapsed": seconds_elapsed,
             "seconds_to_complete": seconds_to_complete,
@@ -1796,6 +1894,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             "type": "state-changed",
             "state": state
         }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_snapshot_preview_complete_message(self):
+        data = {"type": "snapshot-plan-preview-complete"}
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_settings_changed_message(self, client_id=""):
@@ -2184,6 +2286,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.profiles.debug.js",
                 "js/octolapse.status.js",
                 "js/octolapse.status.snapshotplan.js",
+                "js/octolapse.status.snapshotplan_preview.js",
                 "js/octolapse.webcam.settings.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],

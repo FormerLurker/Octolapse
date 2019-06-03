@@ -39,6 +39,7 @@ class StabilizationPreprocessingThread(Thread):
         self,
         timelapse_settings,
         progress_callback,
+        start_callback,
         complete_callback,
         cancel_event,
         parsed_command,
@@ -57,6 +58,7 @@ class StabilizationPreprocessingThread(Thread):
         )
         self.gcode_generator = SnapshotGcodeGenerator(timelapse_settings["settings"], timelapse_settings["octoprint_printer_profile"])
         self.progress_callback = progress_callback
+        self.start_callback = start_callback
         self.complete_callback = complete_callback
         self.timelapse_settings = timelapse_settings
         self.daemon = True
@@ -80,6 +82,8 @@ class StabilizationPreprocessingThread(Thread):
 
     def run(self):
         try:
+            # perform the start callback
+            self.start_callback()
             ret_val, options = self._run_stabilization()
             logger.info(
                 "Received %s snapshot plans from the GcodePositionProcessor stabilization in %s seconds.",

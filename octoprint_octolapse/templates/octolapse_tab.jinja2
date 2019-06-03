@@ -193,7 +193,7 @@
 
         </div>
         <div data-bind="visible: Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time()">
-            <div data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
+            <div id="snapshot_plan_info_panel" data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
             </div>
         </div>
         <div data-bind="template:'latest-snapshot-template'"></div>
@@ -203,6 +203,7 @@
             </h6>
         </div>
         <div data-bind="template:'webcam-settings-popup-template'"></div>
+        <div data-bind="template:'snapshot-plan-preview-template'"></div>
     </div>
     <div data-bind="visible:!Octolapse.Globals.has_loaded_state()" class="loading">
         <span>
@@ -221,5 +222,6 @@
 {% include "octolapse_tab_latest_snapshot.jinja2" %}
 {% include "octolapse_tab_settings_current.jinja2" %}
 {% include "octolapse_webcam_settings_popup.jinja2" %}
+{% include "octolapse_tab_snapshot_plan_preview_popup.jinja2" %}
 
 

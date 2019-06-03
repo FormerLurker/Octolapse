@@ -1126,6 +1126,7 @@ class MainSettings(Settings):
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform
         self.version = plugin_version
+        self.preview_preprocessed_stabilizations = True
 
 
 class ProfileOptions(StaticSettings):

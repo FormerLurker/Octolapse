@@ -1,0 +1,95 @@
+/*
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2019  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+*/
+$(function() {
+    Octolapse.SnapshotPlanPreviewPopupViewModel = function (values) {
+        var self = this;
+        
+        self.openDialog = function()
+        {
+
+            var dialog = this;
+            dialog.$snapshotPlanPreviewDialog = $("#octolapse_snapshot_plan_preview_dialog");
+            dialog.$snapshotPlanPreviewForm = dialog.$snapshotPlanPreviewDialog.find("#octolapse_snapshot_plan_preview_form");
+            dialog.$cancelButton = $(".cancel", dialog.$snapshotPlanPreviewDialog);
+            dialog.$continueButton = $(".continue", dialog.$snapshotPlanPreviewDialog);
+            dialog.$modalBody = dialog.$snapshotPlanPreviewDialog.find(".modal-body");
+            dialog.$modalHeader = dialog.$snapshotPlanPreviewDialog.find(".modal-header");
+            dialog.$modalFooter = dialog.$snapshotPlanPreviewDialog.find(".modal-footer");
+            dialog.$cancelButton.unbind("click");
+            // Called when the user clicks the cancel button in any add/update dialog
+            dialog.$cancelButton.bind("click", function () {
+                // Hide the dialog
+                Octolapse.Globals.cancelPreprocessing();
+                self.closeSnapshotPlanPreviewDialog();
+            });
+
+            dialog.$continueButton.unbind("click");
+            // Called when the user clicks the cancel button in any add/update dialog
+            dialog.$continueButton.bind("click", function () {
+                // Save the settings.
+                Octolapse.Globals.acceptSnapshotPlanPreview();
+                self.closeSnapshotPlanPreviewDialog();
+            });
+
+            dialog.$snapshotPlanPreviewDialog.on("hidden.bs.modal", function () {
+            });
+
+            dialog.$snapshotPlanPreviewDialog.on("show.bs.modal", function () {
+            });
+
+            dialog.$snapshotPlanPreviewDialog.on("shown.bs.modal", function () {
+                dialog.$snapshotPlanPreviewDialog.css({
+                    width: '940px',
+                    'margin-left': function () {
+                        return -($(this).width() / 2);
+                    }
+                });
+
+            });
+            dialog.$snapshotPlanPreviewDialog.modal({
+                backdrop: 'static',
+                maxHeight: function() {
+                    return Math.max(
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      200
+                    );
+                }
+            });
+        };
+
+        self.closeSnapshotPlanPreviewDialog = function() {
+            $("#octolapse_snapshot_plan_preview_dialog").modal("hide");
+        };
+
+        self.cancelPreview = function(){
+            Octolapse.Globals.cancelPreprocessing();
+
+        };
+
+        self.acceptPreview = function() {
+            Octolapse.Globals.acceptSnapshotPlanPreview();
+        };
+        
+    };
+});

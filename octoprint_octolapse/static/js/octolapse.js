@@ -919,6 +919,7 @@ $(function () {
         self.show_extruder_state_changes = ko.observable(false);
         self.show_trigger_state_changes = ko.observable(false);
         self.show_snapshot_plan_information = ko.observable(false);
+        self.preview_preprocessed_stabilizations = ko.observable(false);
         self.auto_reload_latest_snapshot = ko.observable(false);
         self.auto_reload_frames = ko.observable(5);
         self.is_admin = ko.observable(false);
@@ -926,7 +927,7 @@ $(function () {
         self.navbar_enabled = ko.observable(false);
         self.show_navbar_when_not_printing = ko.observable(false);
         self.cancel_print_on_startup_error = ko.observable(true);
-
+        self.preprocessing_job_guid = "";
         self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid();
@@ -968,7 +969,7 @@ $(function () {
             Octolapse.Status.snapshot_error(false);
             //console.log("Finished loading initial state.");
 
-        }
+        };
 
         self.loadState = function () {
             console.log("octolapse.js - Loading State");
@@ -1108,6 +1109,11 @@ $(function () {
             else
                 self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
 
+            if (ko.isObservable(settings.preview_preprocessed_stabilizations))
+                self.preview_preprocessed_stabilizations(settings.preview_preprocessed_stabilizations());
+            else
+                self.preview_preprocessed_stabilizations(settings.preview_preprocessed_stabilizations);
+
             if (ko.isObservable(settings.show_trigger_state_changes))
                 self.show_trigger_state_changes(settings.show_trigger_state_changes());
             else
@@ -1120,10 +1126,60 @@ $(function () {
 
         };
 
+        self.acceptSnapshotPlanPreview = function()
+        {
+            console.log("Accepting snapshot plan preview.");
+            var data = {"preprocessing_job_guid":self.preprocessing_job_guid};
+            $.ajax({
+                url: "./plugin/octolapse/acceptSnapshotPlanPreview",
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                dataType: "json",
+                success: function (result) {
+                    if(result.success)
+                    {
+                        Octolapse.Status.SnapshotPlanPreview.closeSnapshotPlanPreviewDialog();
+                    }
+                    else
+                    {
+                        var options = {
+                            title: 'Error Accepting Plan',
+                            text: result.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopup(options);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Could not accept the snapshot plan.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Error Cancelling Process',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
+                    return false;
+                }
+            });
+        };
+
         self.cancelPreprocessing = function()
         {
             //console.log("Cancelling preprocessing")
-            var data = {"cancel":true};
+            var data = {"cancel":true, "preprocessing_job_guid":self.preprocessing_job_guid};
             $.ajax({
                 url: "./plugin/octolapse/cancelPreprocessing",
                 type: "POST",
@@ -1163,9 +1219,20 @@ $(function () {
             //console.log("Message received.  Type:" + data.type);
             //console.log(data);
             switch (data.type) {
+                case "snapshot-plan-preview":
+                    console.log("Previewing snapshot plans.");
+                    self.preprocessing_job_guid = data.preprocessing_job_guid;
+                    Octolapse.Status.previewSnapshotPlans(data.snapshot_plans);
+                    break;
+                case "snapshot-plan-preview-complete":
+                    // create the cancel popup
+                    console.log("The snapshot preview is complete.  Closing the preview dialog.");
+                    Octolapse.Status.SnapshotPlanPreview.closeSnapshotPlanPreviewDialog();
+                    break;
                 case "gcode-preprocessing-start":
                     // create the cancel popup
                     console.log("Creating a progress bar.");
+                    self.preprocessing_job_guid = data.preprocessing_job_guid;
                     self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing, "Initializing...");
                     break;
                 case "gcode-preprocessing-update":
@@ -1235,8 +1302,6 @@ $(function () {
                     else
                         console.log("Slicer settings detected but not saved.");
                     // Disable the error notification for profiles that haven't been configured
-
-
                 case "state-loaded":
                     {
                         console.log('octolapse.js - state-loaded');

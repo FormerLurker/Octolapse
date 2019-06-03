@@ -58,6 +58,7 @@ $(function () {
             self.TriggerState = new Octolapse.TriggersStateViewModel();
             self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
             self.WebcamSettings = new Octolapse.WebcamSettingsPopupViewModel();
+            self.SnapshotPlanPreview = new Octolapse.SnapshotPlanPreviewPopupViewModel();
             self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
@@ -515,8 +516,17 @@ $(function () {
                     self.TriggerState.update(state.trigger_state);
                 }
                 if (state.snapshot_plan != null) {
+                    self.SnapshotPlanState.is_preview = false;
                     self.SnapshotPlanState.update(state.snapshot_plan);
                 }
+
+            };
+            self.previewSnapshotPlans = function(data)
+            {
+                console.log("Updating snapshot plan state with a preview of the snapshot plans");
+                self.SnapshotPlanState.is_preview = true;
+                self.SnapshotPlanState.update(data);
+                self.SnapshotPlanPreview.openDialog();
 
             };
 

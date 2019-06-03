@@ -88,6 +88,14 @@
             </span>
             <span data-bind="text: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'"></span>
         </div>
+        <div>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.preview_preprocessed_stabilizations() ? 'Pre-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.preview_preprocessed_stabilizations()  ), 'fa-close': (!Octolapse.Globals.preview_preprocessed_stabilizations() ) },style: { color: (Octolapse.Globals.preview_preprocessed_stabilizations()  ) ? 'limegreen' : '' }"></span>
+            </span>
+            <span data-bind="text: Octolapse.Globals.preview_preprocessed_stabilizations() ? 're-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'"></span>
+        </div>
+
+
 
     </div>
     <div class="panel-footer">
@@ -242,6 +250,17 @@
                                         </label>
                                     </div>
                                 </div>
+                                <div class="control-group">
+                                    <label class="control-label">Preview Pre-Calculated Snapshot Plan Information Before Printing</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Preview Pre-Calculated Snapshot Plan Information Before Printing" data-bind="checked:preview_preprocessed_stabilizations" />Enabled
+                                            <br />
+                                        </label>
+                                    </div>
+                                </div>
+
+
                             </div>
                         </div>
                     </div>

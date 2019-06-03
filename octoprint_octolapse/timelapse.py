@@ -506,14 +506,21 @@ class Timelapse(object):
 
     def on_print_cancelling(self):
         self._state = TimelapseState.Cancelling
+        requests_in_progress = False
         if not self._position_signal.is_set():
             logger.error("The print is cancelling, but a position request is in progress.")
             self._position_payload = None
             self._position_signal.set()
+            requests_in_progress = True
         if not self._snapshot_signal.is_set():
             logger.error("The print is cancelling, but a snapshot request is in progress.")
             self._most_recent_snapshot_payload = None
             self._snapshot_signal.set()
+            requests_in_progress = True
+        if not requests_in_progress:
+            self._octoprint_printer.set_job_on_hold(False)
+            self.job_on_hold = False
+
 
     def on_print_canceled(self):
         if self._state != TimelapseState.Idle:
