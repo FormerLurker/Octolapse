@@ -1,0 +1,1 @@
+How far to offset the text from the aligned position.  For example, if your text is aligned at the top left, you will probably want to move the text down and to the right slightly to give it a nice margin.  Positive X values move the text to the right, negative values move it to the left.  Positive Y values move the text DOWN, and negative y values move the text up.

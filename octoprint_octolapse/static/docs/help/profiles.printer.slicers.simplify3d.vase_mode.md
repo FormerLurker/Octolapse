@@ -1,0 +1,1 @@
+When vase mode is enabled, Octolapse will automatically set your minimum layer height to the 'layer height' configured in this profile.  If you are using a 'Layer Trigger' with a height restriction set, Octolapse will use the greater of the two restrictions when taking snapshots in vase mode.

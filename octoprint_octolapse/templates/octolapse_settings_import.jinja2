@@ -1,79 +1,81 @@
-<div id="octolapse_settings_import_dialog" class="modal fade hide octolapse_settings_import_dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="octolapse_settings_import_form" class="form-horizontal octolapse_form">
-                <div class="modal-header">
-                    <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-                    <h3 class="modal-title">Import Settings</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="control-group">
-                        <label class="control-label" for="octolapse_settings_import_method">Import From</label>
-                        <div class="controls">
-                            <select id="octolapse_settings_import_type" data-bind="options: Octolapse.SettingsImport.options.import_methods,
-                                           optionsText: 'name',
-                                           optionsValue: 'value',
-                                           value: Octolapse.SettingsImport.import_method"></select>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#slicer-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg">TODO</span></a>
-                            <div class="error_label_container text-error" data-error-for="octolapse_settings_import_method"></div>
-                        </div>
+<script type="text/html" id="octolapse-import-dialog-template">
+    <div id="octolapse_settings_import_dialog" class="modal fade hide">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="octolapse_settings_import_form" class="form-horizontal octolapse_form">
+                    <div class="modal-header">
+                        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                        <h3 class="modal-title">Import Settings</h3>
                     </div>
-                    <div>
-                        <div data-bind="visible:  Octolapse.SettingsImport.import_method() == 'text'">
-                            <div class="control-group">
-                                <label class="control-label">Settings Text</label>
-                                <div class="controls">
-                                    <textarea id="octolapse_settings_import_text" name="octolapse_settings_import_text" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: Octolapse.SettingsImport.import_text" required="true"></textarea>
-                                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#slicer-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg">TODO</span></a>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_settings_import_text"></div>
-                                </div>
+                    <div class="modal-body">
+                        <div class="control-group">
+                            <label class="control-label" for="octolapse_settings_import_method">Import From</label>
+                            <div class="controls">
+                                <select id="octolapse_settings_import_type" data-bind="options: Octolapse.SettingsImport.options.import_methods,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: Octolapse.SettingsImport.import_method"></select>
+                                <a class="octolapse_help" data-help-url="settings.import.import_method.md" data-help-title="Import Settings From"/>
+                                <div class="error_label_container text-error" data-error-for="octolapse_settings_import_method"></div>
                             </div>
                         </div>
-                        <div data-bind="visible: Octolapse.SettingsImport.import_method() == 'file'">
-                            <fieldset class="octolapse octolapse_dropzone">
-                                <legend>File Upload</legend>
-                                    <div class="control-group">
-                                        <div class="controls">
-                                            <div class="controls-row">
-                                                <span class="btn fileinput-button">
-                                                    <span>Upload new...</span>
-                                                    <input id="octolapse_settings_import_path_upload" type="file" name="octolapse_settings_import_path_upload" accept=".json,.txt" data-url="{{ url_for('plugin.octolapse.import_settings') }}" class="ignore_hidden_errors">
-                                                </span>
-                                                <div class="error_label_container text-error" data-error-for="octolapse_settings_import_path_upload"></div>
-                                            </div>
-                                            <div class="controls-row">
-                                                <span id="octolapse_settings_import_path" data-bind="text: Octolapse.SettingsImport.import_file_path"></span>
-                                            </div>
-                                            <div class="controls-row">
-                                                <div id="octolapse_upload_settings_progress" class="progress-bar-container">
-                                                <span class="progress-bar" style="width: 0%;"></span>
-                                            </div>
+                        <div>
+                            <div data-bind="visible:  Octolapse.SettingsImport.import_method() == 'text'">
+                                <div class="control-group">
+                                    <label class="control-label">Settings Text</label>
+                                    <div class="controls">
+                                        <textarea id="octolapse_settings_import_text" name="octolapse_settings_import_text" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: Octolapse.SettingsImport.import_text" required="true"></textarea>
+                                        <a class="octolapse_help" data-help-url="settings.import.import_text.md" data-help-title="Import Settings Text"/>
+                                        <div class="error_label_container text-error" data-error-for="octolapse_settings_import_text"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div data-bind="visible: Octolapse.SettingsImport.import_method() == 'file'">
+                                <fieldset class="octolapse octolapse_dropzone">
+                                    <legend>File Upload</legend>
+                                        <div class="control-group">
+                                            <div class="controls">
+                                                <div class="controls-row">
+                                                    <span class="btn fileinput-button">
+                                                        <span>Upload new...</span>
+                                                        <input id="octolapse_settings_import_path_upload" type="file" name="octolapse_settings_import_path_upload" accept=".json,.txt" data-url="{{ url_for('plugin.octolapse.import_settings') }}" class="ignore_hidden_errors">
+                                                    </span>
+                                                    <div class="error_label_container text-error" data-error-for="octolapse_settings_import_path_upload"></div>
+                                                </div>
+                                                <div class="controls-row">
+                                                    <span id="octolapse_settings_import_path" data-bind="text: Octolapse.SettingsImport.import_file_path"></span>
+                                                </div>
+                                                <div class="controls-row">
+                                                    <div id="octolapse_upload_settings_progress" class="progress-bar-container">
+                                                    <span class="progress-bar" style="width: 0%;"></span>
+                                                </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                            </fieldset>
+                                </fieldset>
 
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer" style="bottom:0;position:relative">
-                    <div class="row-fluid">
-                        <div id="settings_import_validation_summary" class="alert alert-danger span12" style="display:none;">
-                            <div class="error-count"></div>
+                    <div class="modal-footer" style="bottom:0;position:relative">
+                        <div class="row-fluid">
+                            <div id="settings_import_validation_summary" class="alert alert-danger span12" style="display:none;">
+                                <div class="error-count"></div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <span class="span4">
+                                <a href="#" class="btn btn-default cancel input-block-level">Cancel</a>
+                            </span>
+                            <span class="span4">
+                            </span>
+                            <span class="span4">
+                                <button type="button" class="btn btn-primary save input-block-level">Import</button>
+                            </span>
                         </div>
                     </div>
-                    <div class="row-fluid">
-                        <span class="span4">
-                            <a href="#" class="btn btn-default cancel input-block-level">Cancel</a>
-                        </span>
-                        <span class="span4">
-                        </span>
-                        <span class="span4">
-                            <button type="button" class="btn btn-primary save input-block-level">Import</button>
-                        </span>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+</script>

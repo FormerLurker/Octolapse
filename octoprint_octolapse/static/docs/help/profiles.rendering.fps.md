@@ -1,0 +1,1 @@
+The entered Frames Per Second (FPS) will be used regardless of the number of snapshots taken.  Higher FPS will result in a shorter timelapse.  Lower FPS will result in a choppy timelapse.  FPS between 15 and 60 is usually acceptable for most prints.

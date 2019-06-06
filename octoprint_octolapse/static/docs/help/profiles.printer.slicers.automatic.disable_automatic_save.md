@@ -1,0 +1,1 @@
+By default, any settings that are extracted from your gcode file when using 'Automatic' slicer configuration are saved in your printer profile.  Use this option to prevent this if you have custom settings that you don't want to lose.  I recommend leaving this item unchecked so that you can see what settings Octolapse has extracted for debugging purposes.

@@ -1,0 +1,1 @@
+This feature will prevent the snapshot pseudo-gcode command from being sent to the printer even when Octolapse is not enabled.  Note that this setting will NOT work if Octolapse is disabled through the plugin manager, but only through the Octolapse main settings or on the Octolapse tab.

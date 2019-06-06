@@ -1,0 +1,1 @@
+When enabled, a control will appear in the navbar (to the  left of the settings button).  This control shows you when Octolapse is running, taking a snapshot, or rendering a timelapse.  If you click on the navbar control it will open the Octolapse tab.

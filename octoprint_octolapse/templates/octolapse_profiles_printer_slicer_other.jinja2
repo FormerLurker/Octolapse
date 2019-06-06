@@ -12,7 +12,7 @@
                     <div class="controls">
                         <label class="checkbox">
                             <input id="printer_profile_other_retraction_enable" name="retraction_enable" type="checkbox" data-bind="checked: slicers.other.retraction_enable" title="Enable retraction" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                            <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.retraction_enable.md" data-help-title="Retraction Enabled"/>
                         </label>
                     </div>
                 </div>
@@ -23,7 +23,7 @@
                         <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.retract_length" step="0.0001" min="0.0000" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#retraction-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.retract_length.md" data-help-title="Retraction Length"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_other_slicer_retract_length"></div>
                 </div>
             </div>
@@ -34,7 +34,7 @@
                         <input id="printer_profile_slicer_other_z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.z_hop" step="0.0001" min="0.0000" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#z-hop-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.z_hop.md" data-help-title="Z-Hop Height"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_slicer_other_z_hop"></div>
                 </div>
             </div>
@@ -49,8 +49,7 @@
                                        optionsValue: 'value',
                                         event: {change: slicers.other.axisSpeedDisplayUnitsChanged},
                                        value: slicers.other.axis_speed_display_units"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#speed-display-units"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.axis_speed_display_unit_options.md" data-help-title="Speed Display Units"/>
                     <div class="error_label_container text-error"
                          data-error-for="octolapse_axis_speed_display_unit_options"></div>
                 </div>
@@ -64,8 +63,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#movement-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.travel_speed.md" data-help-title="Movement Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_travel_speed"></div>
                 </div>
             </div>
@@ -78,8 +76,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#retraction-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.retract_speed.md" data-help-title="Retraction Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_retract_speed"></div>
                 </div>
             </div>
@@ -92,8 +89,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#deretraction-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.deretract_speed.md" data-help-title="Deretraction Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_deretract_speed"></div>
                 </div>
             </div>
@@ -106,8 +102,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on" data-bind="text: slicers.other.getAxisSpeedTimeUnit">?</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#z-movement-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.z_travel_speed.md" data-help-title="Z Movement Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_z_travel_speed"></div>
                 </div>
             </div>
@@ -119,7 +114,7 @@
                     <div class="controls">
                         <label class="checkbox">
                             <input id="slicer_other_vase_mode" name="slicer_other_vase_mode" type="checkbox" data-bind="checked: slicers.other.vase_mode" title="Enable retraction" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#vase-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                            <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.vase_mode.md" data-help-title="Vase Mode"/>
                         </label>
                         <div class="error_label_container text-error" data-error-for="slicer_other_vase_mode"></div>
                     </div>
@@ -131,7 +126,7 @@
                         <input id="slicer_other_slicer_layer_height" name="slicer_other_slicer_layer_height" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.layer_height" step="0.0001" min="0.0000" max="100.0"/>
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Other-Slicer-Settings#layer-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.slicer_other_slicer_layer_height.md" data-help-title="Layer Height"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_slicer_layer_height"></div>
                 </div>
             </div>

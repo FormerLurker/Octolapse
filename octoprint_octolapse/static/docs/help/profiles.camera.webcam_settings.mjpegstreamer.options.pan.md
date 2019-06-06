@@ -1,0 +1,1 @@
+Pan will move your webcam image from left to right if panning is supported.  0 is centered.  Some cameras have digital pan, and require that your image is zoomed in for pan to work, since it's just cropping out a section of your image to simulate pan.

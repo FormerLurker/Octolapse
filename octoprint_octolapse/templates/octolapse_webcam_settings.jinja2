@@ -35,11 +35,11 @@
                         <label>Brightness - (0-255)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_brightness" class="slider" name="brightness" type="range" data-bind="octolapseSlicerValue: brightness" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_brightness" class="slider" name="brightness" type="range" data-bind="octolapseSliderValue: brightness" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: brightness" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.brightness.md" data-help-title="Brightness"/>
                             </div>
                         </div>
                     </div>
@@ -47,11 +47,11 @@
                         <label>Contrast - (0-255)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_contrast" class="slider" name="contrast" type="range" data-bind="octolapseSlicerValue: contrast" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_contrast" class="slider" name="contrast" type="range" data-bind="octolapseSliderValue: contrast" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: contrast" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.contrast.md" data-help-title="Contrast"/>
                             </div>
                         </div>
                     </div>
@@ -59,11 +59,11 @@
                         <label>Saturation (0-255)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_saturation" class="slider" name="saturation" type="range" data-bind="octolapseSlicerValue: saturation" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_saturation" class="slider" name="saturation" type="range" data-bind="octolapseSliderValue: saturation" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: saturation" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.saturation.md" data-help-title="Saturation"/>
                             </div>
                         </div>
                     </div>
@@ -71,11 +71,11 @@
                         <label>Sharpness (0-255)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_sharpness" class="slider" name="contrast" type="range" data-bind="octolapseSlicerValue: sharpness" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_sharpness" class="slider" name="contrast" type="range" data-bind="octolapseSliderValue: sharpness" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: sharpness" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#brightness-contrast-saturation-sharpness" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.sharpness.md" data-help-title="Sharpness"/>
                             </div>
                         </div>
                     </div>
@@ -83,11 +83,11 @@
                         <label>JPEG Quality (1-100)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_jpeg_quality" class="slider" name="jpeg_quality" type="range" data-bind="octolapseSlicerValue: jpeg_quality" min="0" max="100" step="1" required="true" />
+                                <input id="camera_profile_jpeg_quality" class="slider" name="jpeg_quality" type="range" data-bind="octolapseSliderValue: jpeg_quality" min="0" max="100" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: jpeg_quality" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#jpeg-quality" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.jpeg_quality.md" data-help-title="JPEG Quality"/>
                             </div>
                         </div>
                     </div>
@@ -98,19 +98,19 @@
                     <div>
                         <label class="checkbox">
                             <input name="white_balance_auto" type="checkbox" data-bind="checked: white_balance_auto" title="Enable or disable auto white balance" />Auto White Balance
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#auto-white-balance-temperature" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.white_balance_auto.md" data-help-title="White Balance"/>
                         </label>
                     </div>
                     <div>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_white_balance_temperature" class="slider" name="white_balance_temperature" type="range" data-bind="octolapseSlicerValue: white_balance_temperature, disable: white_balance_auto()" required="True" min="2000" max="6500" step="1" />
+                                <input id="camera_profile_white_balance_temperature" class="slider" name="white_balance_temperature" type="range" data-bind="octolapseSliderValue: white_balance_temperature, disable: white_balance_auto()" required="True" min="2000" max="6500" step="1" />
                             </div>
                             <div class="span3">
                                 <span data-bind="visible:white_balance_auto()">AUTO</span>
                                 <span data-bind="visible:!white_balance_auto(), text: white_balance_temperature"></span>
                                 <span data-bind="visible:!white_balance_auto()">K</span>
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#white-balance-temperature" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.white_balance_temperature.md" data-help-title="white_balance_temperature"/>
                             </div>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                     <div>
                         <label class="checkbox">
                             <input type="checkbox" data-bind="checked: backlight_compensation_enabled" title="Enable or disable backlight compensation" />Backlight Compensation Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#backlight-compensation" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.backlight_compensation_enabled.md" data-help-title="Backlight Compensation"/>
                         </label>
                     </div>
                     <div>
@@ -134,7 +134,7 @@
 
                             </div>
                             <div class="span3">
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.exposure_type.md" data-help-title="Exposure Type"/>
                             </div>
                         </div>
                     </div>
@@ -142,12 +142,12 @@
                         <label>Exposure (3-2047)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_exposure" name="exposure" type="range" class="slider" data-bind="octolapseSlicerValue: exposure, disable: exposure_type() != '1'" min="3" max="2047" step="1" required="true" />
+                                <input id="camera_profile_exposure" name="exposure" type="range" class="slider" data-bind="octolapseSliderValue: exposure, disable: exposure_type() != '1'" min="3" max="2047" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: exposure, visible: exposure_type() == '1'" />
                                 <span data-bind="visible: exposure_type() != '1'">Auto</span>
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.exposure.md" data-help-title="Exposure"/>
                             </div>
                         </div>
                     </div>
@@ -155,12 +155,12 @@
                         <label>Gain (0-255)</label>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_gain" name="gain" type="range" class="slider" data-bind="octolapseSlicerValue: gain, disable: exposure_type() != '1'" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_gain" name="gain" type="range" class="slider" data-bind="octolapseSliderValue: gain, disable: exposure_type() != '1'" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: gain, visible: exposure_type() == '1'" />
                                 <span data-bind="visible: exposure_type() != '1'">Auto</span>
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#gain" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.gain.md" data-help-title="Gain"/>
                             </div>
                         </div>
                     </div>
@@ -171,7 +171,7 @@
                                     <input id="exposure_auto_priority_enabled" type="checkbox" data-bind="visible: exposure_type() == '1', checked: exposure_auto_priority_enabled" />
                                     <input type="checkbox" data-bind="visible: exposure_type() != '1'" disabled="true" value="false" />
                                     Exposure Auto-Priority Enabled
-                                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#exposure-auto-priority" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                    <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.exposure_auto_priority_enabled.md" data-help-title="Exposure Auto-Priority"/>
                                 </label>
                             </div>
                         </div>
@@ -184,17 +184,17 @@
                     <div>
                         <label class="checkbox">
                             <input type="checkbox" data-bind="checked: autofocus_enabled" title="Enable or disable autofocus" />Autofocus Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#autofocus-enabled" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.autofocus_enabled.md" data-help-title="Enable Autofocus"/>
                         </label>
                     </div>
                     <div class="row-fluid">
                         <div class="span9">
-                            <input id="camera_profile_focus" name="focus" type="range" class="slider" data-bind="octolapseSlicerValue: focus, disable: autofocus_enabled()" min="0" max="250" step="5" required="true" />
+                            <input id="camera_profile_focus" name="focus" type="range" class="slider" data-bind="octolapseSliderValue: focus, disable: autofocus_enabled()" min="0" max="250" step="5" required="true" />
                         </div>
                         <div class="span3">
                             <span data-bind="text: focus, visible: !autofocus_enabled()" />
                             <span data-bind="visible: autofocus_enabled">AUTO</span>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#absolute-focus" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.focus.md" data-help-title="Manual Focus Amount"/>
                         </div>
                     </div>
                 </fieldset>
@@ -204,11 +204,11 @@
                         <span>Pan (-36000-36000)</span>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_pan" name="pan" type="range" class="slider" data-bind="octolapseSlicerValue: pan" min="-36000" max="36000" step="3600" required="true" />
+                                <input id="camera_profile_pan" name="pan" type="range" class="slider" data-bind="octolapseSliderValue: pan" min="-36000" max="36000" step="3600" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: pan" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.pan.md" data-help-title="Pan"/>
                             </div>
                         </div>
                     </div>
@@ -216,11 +216,11 @@
                         <span>Tilt (-36000-36000)</span>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_tilt" name="tilt" type="range" class="slider" data-bind="octolapseSlicerValue: tilt" min="-36000" max="36000" step="3600" required="true" />
+                                <input id="camera_profile_tilt" name="tilt" type="range" class="slider" data-bind="octolapseSliderValue: tilt" min="-36000" max="36000" step="3600" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: tilt" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.tilt.md" data-help-title="Tilt"/>
                             </div>
                         </div>
                     </div>
@@ -228,11 +228,11 @@
                         <span>Zoom (0-255)</span>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_zoom" name="zoom" type="range" class="slider" data-bind="octolapseSlicerValue: zoom" min="100" max="500" step="1" required="true" />
+                                <input id="camera_profile_zoom" name="zoom" type="range" class="slider" data-bind="octolapseSliderValue: zoom" min="100" max="500" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: zoom" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#pan-tilt-and-zoom" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.zoom.md" data-help-title="Zoom"/>
                             </div>
                         </div>
                     </div>
@@ -246,18 +246,18 @@
                      optionsText: 'name',
                      optionsValue: 'value',
                      value: led1_mode"></select>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#led-1-mode" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.camera_led_1_mode_options.md" data-help-title="LED 1 Mode"/>
                         </div>
                     </div>
                     <div>
-                        <span>LED 1 Frequency</span>ex
+                        <span>LED 1 Frequency</span>
                         <div class="row-fluid">
                             <div class="span9">
-                                <input id="camera_profile_led1_frequency" name="led1_frequency" type="range" class="slider" data-bind="octolapseSlicerValue: led1_frequency" min="0" max="255" step="1" required="true" />
+                                <input id="camera_profile_led1_frequency" name="led1_frequency" type="range" class="slider" data-bind="octolapseSliderValue: led1_frequency" min="0" max="255" step="1" required="true" />
                             </div>
                             <div class="span3">
                                 <span data-bind="text: led1_frequency" />
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#led-1-frequency" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.led1_frequency.md" data-help-title="LED 1 Frequency"/>
                             </div>
                         </div>
                     </div>
@@ -270,7 +270,7 @@
                      optionsText: 'name',
                      optionsValue: 'value',
                      value: powerline_frequency"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#powerline-frequency" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.mjpegstreamer.options.camera_powerline_frequency_options.md" data-help-title="Powerline Frequency"/>
                     </div>
                 </fieldset>
             </div>

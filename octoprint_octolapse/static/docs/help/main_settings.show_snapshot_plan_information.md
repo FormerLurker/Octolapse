@@ -1,0 +1,1 @@
+When enabled all planned snapshots will be shown on the Octolapse tab when using the smart layer trigger.  Snapshot plan information will not be shown when using any of the real time triggers, like the timer, gcode and classic layer trigger.

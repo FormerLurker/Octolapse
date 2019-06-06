@@ -1,0 +1,1 @@
+This tells Octolapse that your gcode will generally hop after retraction.  If this setting is disabled, Octolapse won't z-hop when moving to the snapshot position, which can cause your printer to snag on the currently printing layer.  It is recommended that you use retraction hop when using Octolapse to prevent snagging/skipping issues while traveling.

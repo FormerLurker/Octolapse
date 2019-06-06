@@ -34,6 +34,14 @@
     height:400px;
 }
 
+.octolapse-pnotify-help
+{
+    max-width:100vw;
+}
+.octolapse-pnotify-help .ui-pnotify-title
+{
+    padding-bottom:5px;
+}
 #octolapse_tab .loading span{
     display: table-cell;
     vertical-align: middle;

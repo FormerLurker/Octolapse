@@ -1,0 +1,1 @@
+This setting is used when printing in vase mode (see the 'vase mode' setting for details about vase mode) in order to properly detect layer changes.  If this is not set, the 'Minimum Layer Height' setting is used to calculate minimum vase mode layer change heights.

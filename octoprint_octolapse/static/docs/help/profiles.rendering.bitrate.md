@@ -1,0 +1,1 @@
+This determines how much data is packed into every second of video.  In general a higher bitrate video will be better quality than a lower one.  However there are diminishing returns for higher (and lower) bitrates, and your final video will never exceed the quality of the snapshots used.

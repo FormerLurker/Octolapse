@@ -59,6 +59,7 @@ $(function() {
             });
 
             dialog.$snapshotPlanPreviewDialog.on("shown.bs.modal", function () {
+                Octolapse.Help.bindHelpLinks("#octolapse_snapshot_plan_preview_dialog");
                 dialog.$snapshotPlanPreviewDialog.css({
                     width: '940px',
                     'margin-left': function () {

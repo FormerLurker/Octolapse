@@ -1,0 +1,1 @@
+This is the default mode (relative/absolute) for the extruder.  The safest setting here is 'Require Explicit M82/M83', which means that Octolapse will not track the extruder position before it receives an M82 or M83 command.  This is a good practice.

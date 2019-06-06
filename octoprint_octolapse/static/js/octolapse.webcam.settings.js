@@ -71,6 +71,7 @@ $(function() {
             });
 
             dialog.$webcamSettingsDialog.on("shown.bs.modal", function () {
+                Octolapse.Help.bindHelpLinks("#octolapse_webcam_settings_dialog");
                 dialog.$webcamSettingsDialog.css({
                     width: '940px',
                     'margin-left': function () {

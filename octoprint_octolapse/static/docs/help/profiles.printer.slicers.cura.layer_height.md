@@ -1,0 +1,1 @@
+This setting is used when printing in vase mode (see 'Spiralize Outer Countour' and 'Surface Mode' for details about vase mode detection) in order to properly detect layer changes.  If this is not set, the 'Minimum Layer Height' setting is used to calculate minimum vase mode layer change heights.

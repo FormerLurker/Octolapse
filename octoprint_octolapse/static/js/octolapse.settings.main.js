@@ -44,7 +44,7 @@ $(function () {
         self.show_extruder_state_changes = ko.observable();
         self.show_trigger_state_changes = ko.observable();
         self.show_snapshot_plan_information = ko.observable();
-        self.preview_preprocessed_stabilizations = ko.observable();
+        self.preview_snapshot_plans = ko.observable();
         // Informational Values
         self.platform = ko.observable();
 
@@ -56,33 +56,6 @@ $(function () {
         self.onAfterBinding = function () {
 
 
-
-        };
-        /*
-            Show and hide the settings tabs based on the enabled parameter
-        */
-        self.setSettingsVisibility = function (isVisible) {
-
-            var octolapseSettings = $('#octolapse_settings');
-
-            if (isVisible) {
-                //console.log("Showing Settings")
-            }
-
-            else {
-                //console.log("Hiding settings")
-                octolapseSettings.find('div.tab-content .hide-disabled').each(function (index, element) {
-                    // Clear any active tabs
-                    $(element).removeClass('active');
-                });
-            }
-            octolapseSettings.find('ul.nav .hide-disabled').each(function (index, element) {
-                if (isVisible)
-                    $(element).show();
-                else
-                    $(element).hide();
-                $(element).removeClass('active');
-            });
 
         };
 
@@ -98,14 +71,12 @@ $(function () {
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
             self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
-            self.preview_preprocessed_stabilizations(settings.preview_preprocessed_stabilizations);
+            self.preview_snapshot_plans(settings.preview_snapshot_plans);
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
 
 
             //self.platform(settings.platform());
 
-            // Set the tab-button/tab visibility
-            self.setSettingsVisibility(settings.is_octolapse_enabled);
         };
 
         self.toggleOctolapse = function(){
@@ -156,7 +127,7 @@ $(function () {
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
             self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information());
-            self.preview_preprocessed_stabilizations(Octolapse.Globals.preview_preprocessed_stabilizations());
+            self.preview_snapshot_plans(Octolapse.Globals.preview_snapshot_plans());
 
             self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error());
 
@@ -225,6 +196,8 @@ $(function () {
                 }
             });
             dialog.$editDialog.on("shown.bs.modal", function () {
+                // bind any help links
+                Octolapse.Help.bindHelpLinks("#octolapse_edit_settings_main_dialog");
                 // Create all of the validation rules
 
                 dialog.validator = dialog.$editForm.validate(dialog.rules);
@@ -251,7 +224,7 @@ $(function () {
                     self.show_extruder_state_changes(false);
                     self.show_trigger_state_changes(false);
                     self.show_snapshot_plan_information(false);
-                    self.preview_preprocessed_stabilizations(false);
+                    self.preview_snapshot_plans(false);
 
                 });
 
@@ -273,7 +246,7 @@ $(function () {
                             , "show_extruder_state_changes": self.show_extruder_state_changes()
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
                             , "show_snapshot_plan_information": self.show_snapshot_plan_information()
-                            , "preview_preprocessed_stabilizations": self.preview_preprocessed_stabilizations()
+                            , "preview_snapshot_plans": self.preview_snapshot_plans()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
                             , "client_id": Octolapse.Globals.client_id
                         };

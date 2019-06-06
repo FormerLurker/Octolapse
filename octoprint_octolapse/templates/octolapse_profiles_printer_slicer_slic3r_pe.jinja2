@@ -16,16 +16,16 @@
                         <input id="slicer_slic3r_pe_layer_height" name="slicer_slic3r_pe_layer_height" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.layer_height" step="0.000001" min="0" max="100.0"/>
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#layer-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.layer_height.md" data-help-title="Layer Height">
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_layer_height"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_slic3r_pe_vase_mode">Single outline corkscrew printing mode (vase mode)</label>
+                <label class="control-label" for="slicer_slic3r_pe_vase_mode">Spiral Vase</label>
                 <div class="controls">
                     <label class="checkbox">
                         <input id="slicer_slic3r_pe_vase_mode" name="slicer_slic3r_pe_vase_mode" type="checkbox" data-bind="checked: slicers.slic3r_pe.vase_mode" title="Enable Vase Mode" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#vase-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.vase_mode.md" data-help-title="Spiral Vase"/>
                     </label>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_vase_mode"></div>
                 </div>
@@ -41,7 +41,7 @@
                         <input id="printer_profile_slic3r_retract_length" name="slicer_slic3r_pe_retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.retract_length" step="0.000001" min="0" max="100.0" required/>
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.retract_length.md" data-help-title="Retraction Length"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_slic3r_retract_length"></div>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                         <input id="printer_profile_slic3r_pe_retract_lift" name="slicer_slic3r_pe_retract_lift" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.slic3r_pe.retract_lift" step="0.0001" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#lift-z" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.retract_lift.md" data-help-title="Retraction Lift Z"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_slic3r_pe_retract_lift"></div>
                 </div>
             </div>
@@ -65,8 +65,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#retraction-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.retract_speed.md" data-help-title="Retraction Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_retract_speed"></div>
                 </div>
             </div>
@@ -80,8 +79,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#deretraction-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.deretract_speed.md" data-help-title="Deretraction Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_deretract_speed"></div>
                 </div>
             </div>
@@ -102,8 +100,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Slic3r-Prusa-Edition-Settings#movement-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                   <a class="octolapse_help" data-help-url="profiles.printer.slicers.slic3r_pe.travel_speed.md" data-help-title="Travel Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_slic3r_pe_travel_speed"></div>
                 </div>
             </div>

@@ -1,0 +1,3 @@
+Here you can enter any gcode that you want to execute to acquire a snapshot.  You can enter as many lines as you like.  Each line will be stripped of any comments, and sent to the printer.  The gcode is sent after all script/webcam images start, but before they are completed.  The snapshot will only complete once all of the script has been executed and the printer movements are completed.  Octolapse will send an M400 followed by an M114 after the script has been sent, and will wait for a reply from the M114 before continuing.
+
+It is NOT recommended that you change the position of the print head or any of the axis modes during this process, since it is possible that you will mess up the return script.

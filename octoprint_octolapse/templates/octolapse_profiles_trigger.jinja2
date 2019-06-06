@@ -56,7 +56,7 @@
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: trigger_type"></select>
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/triggers-Profiles#trigger-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <a class="octolapse_help" data-help-url="profiles.trigger.trigger_type.md" data-help-title="Trigger Type"/>
                 <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_type"></div>
             </div>
         </div>
@@ -81,15 +81,7 @@
                        optionsText: 'name',
                        optionsValue: 'value',
                        value: trigger_subtype"></select>
-                <span data-bind="visible: trigger_subtype() == 'layer'">
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#layerheight-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                </span>
-                <span data-bind="visible: trigger_subtype() == 'timer'">
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#timer-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                </span>
-                <span data-bind="visible: trigger_subtype() == 'gcode'">
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#gcode-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
-                </span>
+                <a class="octolapse_help" data-help-url="profiles.trigger.trigger_subtype.md" data-help-title="When to Trigger"/>
                 <div class="error_label_container text-error" data-error-for="trigger_profile_layer_trigger_profile_trigger_subtype"></div>
             </div>
         </div>
@@ -103,7 +95,7 @@
                                data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true" />
                         <span class="add-on">mm</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#trigger-height" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.trigger.layer_trigger_height.md" data-help-title="Trigger Height"/>
                     <div class="error_label_container text-error" data-error-for="trigger_profile_layer_trigger_height"></div>
                     <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
                 </div>
@@ -114,7 +106,7 @@
                     <div class="controls">
                         <label class="checkbox">
                             <input name="smart_layer_snap_to_print" type="checkbox" data-bind="checked: smart_layer_snap_to_print" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/triggers-Profiles#snap-to-print" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print.md" data-help-title="Snap To Print"/>
                         </label>
                     </div>
                 </div>
@@ -126,7 +118,7 @@
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: smart_layer_trigger_type"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/triggers-Profiles#smart-layer-trigger-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_type.md" data-help-title="Smart Layer Trigger Type"/>
                         <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_type"></div>
                     </div>
                 </div>
@@ -138,7 +130,7 @@
                                    data-bind="value: smart_layer_trigger_distance_threshold_percent" min="0.0" max="100" step="1" required="true" />
                             <span class="add-on">%</span>
                         </span>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-distance-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_distance_threshold_percent.md" data-help-title="Distance Threshold Percent"/>
                         <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_distance_threshold_percent"></div>
                         <span class="help-inline">Octolapse will choose a closer position rather than one of higher quality if it is closer to the trigger point by at least the percentage entered here.</span>
                     </div>
@@ -151,7 +143,7 @@
                                    data-bind="value: smart_layer_trigger_speed_threshold" min="0" step="1" required="true" />
                             <span class="add-on">mm/minute</span>
                         </span>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#smart-layer-trigger-speed-threshold" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_speed_threshold.md" data-help-title="Trigger Speed Threshold"/>
                         <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_speed_threshold"></div>
                         <span class="help-inline">Prevents octolapse from triggering unless the extrusion speed is ABOVE this value.  Set to 0 to disable.  If used properly, this can eliminate quality issues associated with taking snapshots while extruding.</span>
                     </div>
@@ -162,7 +154,7 @@
                         <div class="controls">
                             <label class="checkbox">
                                 <input name="smart_layer_disable_z_lift" type="checkbox" data-bind="checked: smart_layer_disable_z_lift" />Disable Lift Before Snapshot
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/triggers-Profiles#disable-z-lift" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                                <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_disable_z_lift.md" data-help-title="Disable Lift Before Snapshot"/>
                                 <span class="help-inline">Disabling z-lift is generally recommended when using snap-to-print.  If it takes a long time to capture an image, consider enabling z_lift to prevent the extruder from melting your print.</span>
                             </label>
                         </div>
@@ -176,7 +168,7 @@
                 <div class="controls">
                     <input id="trigger_profile_timer_trigger_seconds" name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
                            data-bind="value: timer_trigger_seconds" min="0" required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#seconds-to-trigger" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.trigger.timer_trigger_seconds.md" data-help-title="Seconds to Trigger"/>
                     <div class="error_label_container text-error" data-error-for="trigger_profile_timer_trigger_seconds"></div>
                     <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
                 </div>
@@ -185,8 +177,7 @@
     </div>
     <hr />
     <div data-bind="visible: print_quality_settings_available">
-        <h4>Print Quality Settings<a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#print-quality-settings" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a></h4>
-
+        <h4>Print Quality Settings</h4>
         <p>Here you can place restrictions on when Octolapse can trigger a snapshot.</p>
 
         <div data-bind="visible: trigger_on_zhop_only_available">
@@ -198,7 +189,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: require_zhop" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#trigger-on-z-hop-only" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.require_zhop.md" data-help-title="Trigger on Z-Hop Only"/>
                     </label>
                 </div>
             </div>
@@ -214,7 +205,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="trigger_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Extruder-State-Quality-Settings#extruder-trigger-requirements" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.extruder_state_requirements_enabled.md" data-help-title="Extruder Trigger Requirements"/>
                     </label>
                 </div>
             </div>
@@ -345,7 +336,7 @@
                     <div class="controls">
                         <label class="checkbox" title="Enable or disable position restrictions">
                             <input type="checkbox" data-bind="checked: position_restrictions_enabled" /> Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Snapshot-Profiles#position-restrictions" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.position_restrictions_enabled.md" data-help-title="Enable Position Restrictions"/>
                         </label>
                     </div>
                 </div>
@@ -359,7 +350,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_type"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-type" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_type.md" data-help-title="Position Restriction Type"/>
                         <div class="error_label_container text-error" data-error-for="trigger_profile_new_position_restriction_type"></div>
                     </div>
                 </div>
@@ -370,7 +361,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: new_position_restriction_shape"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#position-restriction-shape" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_shape.md" data-help-title="Position Restriction Shape"/>
                         <div class="error_label_container text-error" data-error-for="trigger_profile_new_position_restriction_shape"></div>
                     </div>
                 </div>
@@ -458,7 +449,7 @@
                             <input type="checkbox"
                                    data-bind="checked: new_calculate_intersections"
                                    title="Calculate intersections and trigger if an intersection is in position." />Calculate Intersections
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Position-Restrictions#calculate-intersections" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.calculate_intersections.md" data-help-title="Calculate Intersections"/>
                         </label>
                         <span class="help-inline">
                             When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.

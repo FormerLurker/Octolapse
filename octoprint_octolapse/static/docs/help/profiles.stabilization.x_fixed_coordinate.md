@@ -1,0 +1,1 @@
+The snapshot will be taken exactly at the absolute X coordinate provided.  Generally the X axis runs from left to right if you're looking at the front of the printer, with lower values being towards the left of the printer, and higher values being towards the right.

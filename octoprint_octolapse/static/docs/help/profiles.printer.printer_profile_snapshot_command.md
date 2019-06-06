@@ -1,0 +1,3 @@
+When GCode Triggering is enabled (snapshot settings) This command will be detected by Octolapse.  When it appears in the gcode file, a snapshot will be taken (depending on the gcode trigger settings).
+
+Octolapse will automatically prevent the snapshot gcode from being sent to the printer while it is running.  By default, it will remove the snapshot gcode EVEN WHILE OCTOLAPSE IS DISABLED to prevent snapshot commands from mistakenly being sent to the printer.  See the main settings for this optional setting that can be used to prevent all snapshot commands from being sent to the printer as long as Octolapse is installed.

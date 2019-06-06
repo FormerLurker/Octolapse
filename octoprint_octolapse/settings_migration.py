@@ -113,12 +113,13 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     profiles = {
         'current_printer_profile_guid': settings_dict['current_printer_profile_guid'],
         'current_stabilization_profile_guid': None,
+        'current_trigger_profile_guid': None,
         'current_rendering_profile_guid': settings_dict['current_rendering_profile_guid'],
         'current_camera_profile_guid': settings_dict['current_camera_profile_guid'],
         'current_debug_profile_guid': None,
         'printers': {},
         'stabilizations': {},
-        'snapshots': {},
+        'triggers': {},
         'renderings': {},
         'cameras': {},
         'debug': {},
@@ -192,6 +193,14 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     for key, default_profile in six.iteritems(default_settings["profiles"]['stabilizations']):
         profiles['stabilizations'][default_profile["guid"]] = copy.deepcopy(default_profile)
 
+    # set the default trigger
+    profiles["current_trigger_profile_guid"] = (
+        default_settings["profiles"]["current_trigger_profile_guid"]
+    )
+    # restore default stabilizations
+    for key, default_profile in six.iteritems(default_settings["profiles"]['triggers']):
+        profiles['triggers'][default_profile["guid"]] = copy.deepcopy(default_profile)
+
     # extract some info from the current rendering profile to use as the default values
     # we will use this item to default all rendering profiles.
     current_snapshot_guid = settings_dict["current_snapshot_profile_guid"]
@@ -210,8 +219,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         default_rendering_profile = default_settings["profiles"]["defaults"]["rendering"]
         cleanup_after_render_complete = default_rendering_profile['cleanup_after_render_complete']
         cleanup_after_render_fail = default_rendering_profile['cleanup_after_render_fail']
-    # clear out any snapshot profiles
-    del settings_dict["snapshots"]
 
     for rendering in settings_dict['renderings']:
         rendering["cleanup_after_render_complete"] = cleanup_after_render_complete
@@ -306,6 +313,10 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         {
             "profile_type": "stabilizations",
             "default_profile_name": "stabilization",
+        },
+        {
+            "profile_type": "triggers",
+            "default_profile_name": "trigger",
         },
         {
             "profile_type": "cameras",

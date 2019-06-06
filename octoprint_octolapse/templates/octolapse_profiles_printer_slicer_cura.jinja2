@@ -16,7 +16,7 @@
                     <div class="controls">
                         <label class="checkbox">
                             <input id="printer_profile_cura_retraction_enable" name="retraction_enable" type="checkbox" data-bind="checked: slicers.cura.retraction_enable" title="Enable retraction" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                            <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_enable.md" data-help-title="Retraction Enabled"/>
                         </label>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                             <input id="printer_profile_cura_retraction_amount" name="retraction_amount" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_amount" step="0.0001" min="0" max="100.0" required/>
                             <span class="add-on">mm</span>
                         </div>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#retraction-distance" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_amount.md" data-help-title="Retraction Distance"/>
                         <div class="error_label_container text-error" data-error-for="printer_profile_cura_retraction_amount"></div>
                     </div>
                 </div>
@@ -41,8 +41,7 @@
                             <span class="add-on">mm</span>
                             <span class="add-on">sec</span>
                         </div>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#retraction-retract-speed"
-                           title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_retract_speed.md" data-help-title="Retraction Retract Speed"/>
                         <div class="error_label_container text-error" data-error-for="slicer_cura_retraction_retract_speed"></div>
                     </div>
                 </div>
@@ -56,8 +55,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#retraction-prime-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_prime_speed.md" data-help-title="Retraction Prime Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_retraction_prime_speed"></div>
                 </div>
             </div>
@@ -74,8 +72,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#travel-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.speed_travel.md" data-help-title="Travel Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_speed_travel"></div>
                 </div>
             </div>
@@ -89,8 +86,7 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">sec</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#maximum-z-speed"
-                       title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.max_feedrate_z_override.md" data-help-title="Maximum Z Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_max_feedrate_z_override"></div>
                 </div>
             </div>
@@ -102,7 +98,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="slicer_cura_retraction_hop_enabled" name="retraction_hop_enabled" type="checkbox" data-bind="checked: slicers.cura.retraction_hop_enabled" title="Enable retraction" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#z-hop-when-retracted" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_hop_enabled.md" data-help-title="Z Hop When Retracted"/>
                     </label>
                 </div>
             </div>
@@ -113,7 +109,7 @@
                         <input id="slicer_cura_retraction_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_hop" step="0.0001" min=".00" max="100.0" required />
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#z-hop-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_hop.md" data-help-title="Z Hop Height"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_retraction_hop"></div>
                 </div>
             </div>
@@ -129,7 +125,7 @@
                         <input id="slicer_cura_layer_height" name="slicer_cura_layer_height" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.layer_height" step="0.0001" min="0" max="100.0"/>
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#layer-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.layer_height.md" data-help-title="Layer Height"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_layer_height"></div>
                 </div>
             </div>
@@ -143,7 +139,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="slicer_cura_smooth_spiralized_contours" name="slicer_cura_smooth_spiralized_contours" type="checkbox" data-bind="checked: slicers.cura.smooth_spiralized_contours" title="Spiralize Outer Contour" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#spiralize-outer-contour" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.smooth_spiralized_contours.md" data-help-title="Spiralize Outer Contour"/>
                     </label>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_smooth_spiralized_contours"></div>
                 </div>
@@ -155,7 +151,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: slicers.cura.magic_mesh_surface_mode"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles---Cura-Settings#magic-mesh-surface-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.cura_surface_mode.md" data-help-title="Surface Mode"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_surface_mode"></div>
                 </div>
             </div>

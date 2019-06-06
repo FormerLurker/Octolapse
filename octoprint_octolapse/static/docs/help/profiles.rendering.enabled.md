@@ -1,0 +1,1 @@
+Enable or disable rendering completely if you only want to take snapshots.  This can be useful if you want to render your timelapse manually, especially if you are using an external DSLR, but not downloading the images to Octolapse for speed/print quality reasons (DSLRs can take a long time to transmit a huge image!).

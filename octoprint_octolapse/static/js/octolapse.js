@@ -25,6 +25,8 @@ Octolapse = {};
 Octolapse.Printers = { 'current_profile_guid': function () {return null;}};
 OctolapseViewModel = {};
 //UI_API_KEY = "";
+Octolapse.Help = null;
+
 $(function () {
     // Finds the first index of an array with the matching predicate
     Octolapse.IsShowingSettingsChangedPopup = false;
@@ -244,6 +246,10 @@ $(function () {
 
     Octolapse.getLocalStorage = function (name, value) {
         return localStorage.getItem("octolapse_"+name)
+    };
+
+    Octolapse.replaceAll = function (str, find, replace) {
+        return str.replace(new RegExp(find, 'g'), replace);
     };
 
     Octolapse.displayPopup = function (options) {
@@ -719,7 +725,7 @@ $(function () {
         }
     };
 
-    ko.bindingHandlers.octolapseSlicerValue = {
+    ko.bindingHandlers.octolapseSliderValue = {
           // Init, runs on initialization
           init: function (element, valueAccessor, allBindings, viewModel, bindingContext)  {
             if ( ko.isObservable(valueAccessor()) && (element instanceof HTMLInputElement) && (element.type === "range") )
@@ -752,8 +758,7 @@ $(function () {
               }
             }
           } // End update
-        }; // End octolapseSlicerValue
-
+        }; // End octolapseSliderValue
 
     ko.extenders.axis_speed_unit = function (target, options) {
         //console.log("rounding to axis speed units");
@@ -919,7 +924,7 @@ $(function () {
         self.show_extruder_state_changes = ko.observable(false);
         self.show_trigger_state_changes = ko.observable(false);
         self.show_snapshot_plan_information = ko.observable(false);
-        self.preview_preprocessed_stabilizations = ko.observable(false);
+        self.preview_snapshot_plans = ko.observable(false);
         self.auto_reload_latest_snapshot = ko.observable(false);
         self.auto_reload_frames = ko.observable(5);
         self.is_admin = ko.observable(false);
@@ -946,7 +951,7 @@ $(function () {
             //console.log("Startup Complete")
             self.getInitialState();
             self.startup_complete = true;
-
+            Octolapse.Help = new OctolapseHelp();
         };
 
         self.onDataUpdaterReconnect = function () {
@@ -1033,7 +1038,6 @@ $(function () {
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
 
                 Octolapse.Globals.update(data.main_settings);
-                Octolapse.SettingsMain.setSettingsVisibility(Octolapse.Globals.enabled());
                 if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
                     //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
@@ -1109,10 +1113,10 @@ $(function () {
             else
                 self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
 
-            if (ko.isObservable(settings.preview_preprocessed_stabilizations))
-                self.preview_preprocessed_stabilizations(settings.preview_preprocessed_stabilizations());
+            if (ko.isObservable(settings.preview_snapshot_plans))
+                self.preview_snapshot_plans(settings.preview_snapshot_plans());
             else
-                self.preview_preprocessed_stabilizations(settings.preview_preprocessed_stabilizations);
+                self.preview_snapshot_plans(settings.preview_snapshot_plans);
 
             if (ko.isObservable(settings.show_trigger_state_changes))
                 self.show_trigger_state_changes(settings.show_trigger_state_changes());
@@ -1664,7 +1668,5 @@ $(function () {
         , ["loginStateViewModel", "printerStateViewModel", "timelapseViewModel"]
         , ["#octolapse"]
     ]);
-
-
 
 });

@@ -89,28 +89,20 @@
             <span data-bind="text: Octolapse.Globals.show_snapshot_plan_information() ? 'Showing pre-calculated snapshot plan information' : 'Not showing pre-calculated snapshot plan information'"></span>
         </div>
         <div>
-            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.preview_preprocessed_stabilizations() ? 'Pre-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'}">
-                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.preview_preprocessed_stabilizations()  ), 'fa-close': (!Octolapse.Globals.preview_preprocessed_stabilizations() ) },style: { color: (Octolapse.Globals.preview_preprocessed_stabilizations()  ) ? 'limegreen' : '' }"></span>
+            <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.preview_snapshot_plans() ? 'Pre-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'}">
+                <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.preview_snapshot_plans()  ), 'fa-close': (!Octolapse.Globals.preview_snapshot_plans() ) },style: { color: (Octolapse.Globals.preview_snapshot_plans()  ) ? 'limegreen' : '' }"></span>
             </span>
-            <span data-bind="text: Octolapse.Globals.preview_preprocessed_stabilizations() ? 're-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'"></span>
+            <span data-bind="text: Octolapse.Globals.preview_snapshot_plans() ? 'Pre-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'"></span>
         </div>
-
-
-
     </div>
     <div class="panel-footer">
         <div class="row-fluid">
             <a class="span12 btn btn-default input-block-level" data-bind="click: showEditMainSettingsPopup">Edit Main Settings</a>
         </div>
-
     </div>
-
     <div id="octolapse_edit_settings_main_dialog" class="modal fade hide octolapse_add_edit_dialog">
-
         <div class="modal-dialog" role="document">
-
             <div class="modal-content">
-
                 <form id="octolapse_edit_main_settings_form" class="form-horizontal octolapse_form">
                     <div class="modal-header">
                         <a class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
@@ -125,6 +117,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.enabled.md" data-help-title="Enable/Disable Octolapse"/>
                                     </label>
                                     <span class="help-inline">
                                         If you enable or disable the plugin during a print, the current timelapse will continue until it completes.
@@ -132,7 +125,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div data-bind="visible:is_octolapse_enabled">
+                        <div>
+                            <hr />
+                            <div>
+                                <h4>Preview Snapshot Plans</h4>
+                                <p>When using the smart trigger, preview the snapshot plans to see how many snapshots will be taken, how much travel distance is added, how much travel saved versus the standard 'at layer change' snapshots, and view a preview animation of your printer's movements and snapshot location.</p>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Enabled</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" title="Preview Pre-Calculated Snapshot Plan Information Before Printing" data-bind="checked:preview_snapshot_plans" />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plans.md" data-help-title="Preview Snapshot Plan"/>
+                                    </label>
+                                </div>
+                            </div>
                             <hr />
                             <div>
                                 <h4>Octolapse Startup</h4>
@@ -144,6 +151,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.cancel_print_on_startup_error.md" data-help-title="Cancel Print On Startup Error"/>
                                     </label>
                                 </div>
                             </div>
@@ -156,6 +164,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:show_navbar_icon" />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_icon.md" data-help-title="Show Navbar Icon"/>
                                     </label>
                                     <span class="help-inline">The navbar control shows you, at a glance, what Octolapse is doing.  Clicking the navbar opens the Octolapse tab.</span>
                                 </div>
@@ -165,6 +174,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Show the navbar when not printing" data-bind="checked:show_navbar_when_not_printing" />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_when_not_printing.md" data-help-title="Show Navbar When Not Printing"/>
                                     </label>
                                     <span class="help-inline">When enabled, the navbar icon will always be shown.  When disabled, the navbar icon will be hidden unless a timelapse is running.</span>
                                 </div>
@@ -183,6 +193,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:auto_reload_latest_snapshot" />Enabled
+                                        <a class="octolapse_help" data-help-url="main_settings.auto_reload_latest_snapshot.md" data-help-title="Auto Reload Latest Snapshot"/>
                                     </label>
                                 </div>
                             </div>
@@ -190,6 +201,7 @@
                                 <label class="control-label">Animation Frames</label>
                                 <div class="controls">
                                     <input name="auto_reload_frames" class="input-small ignore_hidden_errors" title="The number of frames to animate during auto-reload" type="number" data-bind="value: auto_reload_frames" min="1" max="256" step="1" required="true" />
+                                    <a class="octolapse_help" data-help-url="main_settings.auto_reload_frames.md" data-help-title="Auto Reload Frames"/>
                                     <div class="error_label_container text-error"></div>
                                     <span class="help-inline">
                                         Determines the number of frames that will be used to create an animation when the latest snapshot loads
@@ -211,6 +223,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_state_changes" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.show_position_state_changes.md" data-help-title="Show Position State Changes"/>
                                         </label>
                                     </div>
                                 </div>
@@ -219,6 +232,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_position_changes" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.show_position_changes.md" data-help-title="Show Position Changes"/>
                                             <br />
                                         </label>
                                     </div>
@@ -228,6 +242,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_extruder_state_changes" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.show_extruder_state_changes.md" data-help-title="Show Extruder State Changes"/>
                                             <br />
                                         </label>
                                     </div>
@@ -237,6 +252,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:show_trigger_state_changes" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.show_trigger_state_changes.md" data-help-title="Show Trigger State Changes"/>
                                             <br />
                                         </label>
                                     </div>
@@ -246,21 +262,11 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable the snapshot plan informaiton display" data-bind="checked:show_snapshot_plan_information" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.show_snapshot_plan_information.md" data-help-title="Show Snapshot Plan Information"/>
                                             <br />
                                         </label>
                                     </div>
                                 </div>
-                                <div class="control-group">
-                                    <label class="control-label">Preview Pre-Calculated Snapshot Plan Information Before Printing</label>
-                                    <div class="controls">
-                                        <label class="checkbox">
-                                            <input type="checkbox" title="Preview Pre-Calculated Snapshot Plan Information Before Printing" data-bind="checked:preview_preprocessed_stabilizations" />Enabled
-                                            <br />
-                                        </label>
-                                    </div>
-                                </div>
-
-
                             </div>
                         </div>
                     </div>

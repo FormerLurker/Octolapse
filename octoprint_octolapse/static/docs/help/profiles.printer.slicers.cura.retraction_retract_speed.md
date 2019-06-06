@@ -1,0 +1,1 @@
+This setting is used to tell Octolapse which speed to use when retracting before traveling to take a snapshot.  Note that if 'Retraction Prime Speed' is set to 0, this value is also used to deretract after returning from the snapshot position.

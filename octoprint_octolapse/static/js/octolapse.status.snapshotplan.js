@@ -87,6 +87,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
                 var showing_plan = self.snapshot_plans()[self.plan_index()];
                 var current_plan = self.snapshot_plans()[self.current_plan_index()];
+                if (!(showing_plan && current_plan))
+                    return;
                 var previous_plan = null;
                 var previous_line = 0;
 
@@ -226,18 +228,21 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.info_panel_canvas = null;
             self.canvas = null;
             self.canvas_context = null;
-
+            self.preview_canvas_context = null;
+            self.info_panel_canvas_context = null;
+            self.line_width = 2;
             self.updateCanvas = function () {
                 self.canvas_update_scale();
-
-                self.canvas_selector = "#snapshot_plan_info_panel #snapshot_plan_canvas_container";
-                self.canvas = self.preview_canvas;
-                if (self.is_preview) {
-                    self.canvas_selector = "#octolapse_snapshot_plan_preview_dialog #snapshot_plan_canvas_container";
-                    self.canvas = self.preview_canvas
-                }
+                self.get_canvas();
                 if (self.canvas === null)
                 {
+                    if (self.is_preview) {
+                        self.canvas_selector = "#octolapse_snapshot_plan_preview_dialog #snapshot_plan_canvas_container";
+                    }
+                    else
+                    {
+                        self.canvas_selector = "#snapshot_plan_info_panel #snapshot_plan_canvas_container";
+                    }
                     self.canvas = document.createElement('canvas');
                     if(self.is_preview)
                         self.preview_canvas = self.canvas;
@@ -248,21 +253,53 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     $(self.canvas).attr('id','snapshot_plan_canvas').text('unsupported browser')
                         .appendTo(self.canvas_selector);
                     self.canvas_context = self.canvas.getContext('2d');
+                    self.canvas.lineWidth = self.line_width;
                     self.canvas_erase_contents();
                     self.canvas_draw_axis();
                     self.canvas_draw_legend();
+                    self.save_canvas();
                 }
                 if (self.canvas_context == null)
                 {
                     console.log("Octolapse - Unable to create canvas context!");
                     return;
                 }
-                self.canvas_erase_print_bed();
+                self.canvas_erase_print_bed_and_axis();
+                self.canvas_draw_axis();
                 self.canvas_draw_print_bed();
                 self.canvas_draw_start_location();
                 self.canvas_draw_snapshot_locations();
                 self.canvas_draw_return_location();
+
             };
+            self.get_canvas = function()
+            {
+                if (self.is_preview) {
+                    self.canvas_selector = "#octolapse_snapshot_plan_preview_dialog #snapshot_plan_canvas_container";
+                    self.canvas = self.preview_canvas;
+                    self.canvas_context = self.preview_canvas_context;
+                }
+                else
+                {
+                    self.canvas_selector = "#snapshot_plan_info_panel #snapshot_plan_canvas_container";
+                    self.canvas = self.info_panel_canvas;
+                    self.canvas_context = self.info_panel_canvas_context;
+                }
+            };
+
+            self.save_canvas = function()
+            {
+                if (self.is_preview) {
+                    self.preview_canvas = self.canvas;
+                    self.preview_canvas_context = self.canvas_context;
+                }
+                else
+                {
+                    self.info_panel_canvas = self.canvas;
+                    self.info_panel_canvas_context = self.canvas_context;
+                }
+            };
+
 
             self.canvas_update_scale = function()
             {
@@ -413,7 +450,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
-                var text = "Initial Position";
+                var text = "Start";
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
@@ -430,7 +467,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
-                text = "Snapshot Position";
+                text = "Snapshot";
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
@@ -447,7 +484,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 // Draw the start  position text
                 self.canvas_context.fillStyle = "#000000";
                 self.canvas_context.textAlign="left";
-                text = "Return Position";
+                text = "Return";
                 self.canvas_context.font = "12px Helvetica Neue,Helvetica,Arial,sans-serif";
                 self.canvas_context.fillText(
                     text,
@@ -461,14 +498,16 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.canvas_context.fillRect(0,0,self.canvas_size[0],self.canvas_size[1]);
             };
 
-            self.canvas_erase_print_bed = function(){
+            self.canvas_erase_print_bed_and_axis = function(){
                 //console.log("Erasing Bed");
                 self.canvas_context.fillStyle = '#ffffff';
                 self.canvas_context.fillRect(
-                    self.canvas_border_size[0] - self.canvas_location_radius,
-                    self.canvas_border_size[1] - self.canvas_location_radius,
-                    self.canvas_printer_size[0] + self.canvas_location_radius*2,
-                    self.canvas_printer_size[1] + self.canvas_location_radius*2
+                    0,
+                    0,
+                    self.canvas_border_size[0] + self.initial_position_radius + self.canvas_printer_size[0] + self.line_width,
+                    self.canvas_border_size[1] + self.initial_position_radius + self.canvas_printer_size[1]  + self.line_width
+                    //self.canvas_printer_size[0] + self.canvas_location_radius*2,
+                    //self.canvas_printer_size[1] + self.canvas_location_radius*2
                 );
             };
 

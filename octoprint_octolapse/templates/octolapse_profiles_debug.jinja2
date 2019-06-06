@@ -56,7 +56,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#test-mode" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.debug.is_test_mode.md" data-help-title="Test Mode"/>
                 </label>
             </div>
         </div>
@@ -76,7 +76,7 @@
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: log_all_errors" title="Log all errors no matter what." />Enabled
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-all-errors" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <a class="octolapse_help" data-help-url="profiles.debug.log_all_errors.md" data-help-title="Log All Errors"/>
             </label>
             <span class="help-inline">When enabled, all errors will be logged, no matter what the other logging settings are.</span>
         </div>
@@ -86,7 +86,7 @@
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-additional-information" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                <a class="octolapse_help" data-help-url="profiles.debug.enabled.md" data-help-title="Additional Logging"/>
             </label>
     </div>
     <div data-bind="visible: enabled">
@@ -95,7 +95,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#write-to-console" title="Get help with this setting." target="_blank"><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.debug.log_to_console.md" data-help-title="Write To Console"/>
                 </label>
                 <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
             </div>

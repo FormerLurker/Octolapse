@@ -328,8 +328,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
             request_values["cancel_print_on_startup_error"]
         )
-        self._octolapse_settings.main_settings.preview_preprocessed_stabilizations = (
-            request_values["preview_preprocessed_stabilizations"]
+        self._octolapse_settings.main_settings.preview_snapshot_plans = (
+            request_values["preview_snapshot_plans"]
         )
 
         # save the updated settings to a file.
@@ -1812,7 +1812,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.saved_snapshot_plans = snapshot_plans
         self.saved_parsed_command = parsed_command
 
-        if timelapse_settings["settings"].main_settings.preview_preprocessed_stabilizations:
+        if timelapse_settings["settings"].main_settings.preview_snapshot_plans:
             self.send_snapshot_plan_preview()
         else:
             self.start_preprocessed_timelapse()
@@ -2268,6 +2268,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         return dict(
             js=[
                 "js/jquery.minicolors.min.js",
+                "js/showdown.min.js",
                 "js/jquery.validate.min.js",
                 "js/octolapse.js",
                 "js/octolapse.settings.js",
@@ -2287,10 +2288,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.status.js",
                 "js/octolapse.status.snapshotplan.js",
                 "js/octolapse.status.snapshotplan_preview.js",
-                "js/octolapse.webcam.settings.js"
+                "js/octolapse.webcam.settings.js",
+                "js/octolapse.help.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
-            less=["less/octolapse.less"])
+            less=["less/octolapse.less"]
+        )
 
     # ~~ software update hook
     def get_update_information(self):

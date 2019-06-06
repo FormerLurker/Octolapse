@@ -1,0 +1,1 @@
+This setting can be used to override the setting for this feature within OctoPrint.  For some printers running a G90 or G91 also sets the extruder mode (like M82 or M83).  This was mostly included to make users aware of the impact of this setting, and to make it easier to switch printers.

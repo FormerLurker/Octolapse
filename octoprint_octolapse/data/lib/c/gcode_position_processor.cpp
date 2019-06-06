@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
-	//run_tests(argc, argv);
-	//return 0;
+	run_tests(argc, argv);
+	return 0;
 #endif
 	// I use this sometimes to test performance in release mode
 	//run_tests(argc, argv);

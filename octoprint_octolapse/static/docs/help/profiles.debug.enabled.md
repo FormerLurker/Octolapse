@@ -1,0 +1,1 @@
+When enabled Octolapse can log additional information on a per-module basis.  This is useful for debugging.  Note that the 'log all errors' setting will cause errors to be logged, even if this setting is disabled.

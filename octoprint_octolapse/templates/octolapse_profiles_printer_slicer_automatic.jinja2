@@ -9,7 +9,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="printer_profile_automatic_slicer_continue_on_failure" name="continue_on_failure" type="checkbox" data-bind="checked: slicers.automatic.continue_on_failure" title="Continue printing even if Octolapse can't detect your slicer settings" />Continue Printing After Failure
-                        <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.automatic.continue_on_failure.md" data-help-title="Continue Printing After Failure"/>
                     </label>
                     <span class="help-inline">
                         If Octolapse can't determine your slicer settings from your gcode file, your print will not start.  Enabling this option will allow your print to continue, but Octolapse will not function.
@@ -20,7 +20,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="printer_profile_disable_automatic_save" name="disable_automatic_save" type="checkbox" data-bind="checked: slicers.automatic.disable_automatic_save" title="Disable Automatic Save" />Disable Automatic Save
-                        <a href="" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                        <a class="octolapse_help" data-help-url="profiles.printer.slicers.automatic.disable_automatic_save.md" data-help-title="Disable Automatic Save"/>
                     </label>
                     <span class="help-inline">
                         When enabled any settings discovered will NOT applied to your printer profile automatically.

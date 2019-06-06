@@ -1,0 +1,1 @@
+When synchronizing with the default plugin, your timelapses will appear in the native timelapse plugin tab after rendering is complete.  OctoPrint version 1.3.11 or higher is needed in order to synchronize all video types besides MP4, which will synchronize fine in earlier versions of OctoPrint.

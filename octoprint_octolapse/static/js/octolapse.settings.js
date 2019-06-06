@@ -590,6 +590,8 @@ $(function () {
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
+                // bind any help links
+                Octolapse.Help.bindHelpLinks("#octolapse_add_edit_profile_dialog");
                 dialog.validator = dialog.$addEditForm.validate(rules);
                 dialog.IsValid = function()
                 {
@@ -675,7 +677,7 @@ $(function () {
     OCTOPRINT_VIEWMODELS.push([
         Octolapse.SettingsViewModel
         , ["settingsViewModel", "loginStateViewModel"]
-        , ["#octolapse_plugin_settings", "#octolapse_settings_nav", "#octolapse_about_tab"]
+        , ["#octolapse_plugin_settings", "#octolapse_settings_nav", "#octolapse_about_tab", "#octolapse_settings_title"]
     ]);
 
 

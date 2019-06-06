@@ -694,9 +694,8 @@ class TriggerProfile(ProfileSettings):
     def get_options():
         return {
             'trigger_type_options': [
-                dict(value=TriggerProfile.TRIGGER_TYPE_REAL_TIME, name='Real-Time'),
-                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
-                dict(value=TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT, name='Snap to Print')
+                dict(value=TriggerProfile.TRIGGER_TYPE_REAL_TIME, name='Real-Time Triggers'),
+                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger')
             ], 'real_time_xy_trigger_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
@@ -1126,7 +1125,7 @@ class MainSettings(Settings):
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform
         self.version = plugin_version
-        self.preview_preprocessed_stabilizations = True
+        self.preview_snapshot_plans = True
 
 
 class ProfileOptions(StaticSettings):

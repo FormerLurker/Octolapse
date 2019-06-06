@@ -50,7 +50,7 @@
             <label class="checkbox">
                 <input name="rendering_enabled" type="checkbox" data-bind="checked: enabled"
                        title="Enable or disable timelapse generation" />Enabled
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#timelapse-generation" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <a class="octolapse_help" data-help-url="profiles.rendering.enabled.md" data-help-title="Timelapse Generation"/>
             </label>
             <span class="help-inline">
                 When disabled, no timelapse will be generated.  This can be useful if you want to manually generate your own timelapse.
@@ -71,7 +71,7 @@
                                  optionsValue: 'value',
                                  optionsCaption: 'Select One...',
                                  value: output_format"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#output-file-format" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.output_format.md" data-help-title="Output Format (Codec)" />
                     <div class="error_label_container text-error" data-error-for="rendering_profile_output_format"></div>
                     <span class="help-inline" data-bind="visible: !can_synchronize_format()">
                         <span class="label label-important">Attention</span>&nbsp;Sync Output may not work correctly unless you have selected mp4.
@@ -79,12 +79,12 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label">Sync Output</label>
+                <label class="control-label">Sync Output With Timelapse Tab</label>
                 <div class="controls">
                     <label class="checkbox">
                         <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse"
                                title="Automatically move the finished timelapse into the standard octoprint timelapse directory" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#sync-output" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.sync_with_timelapse.md" data-help-title="Sync Output With Timelapse Tab"/>
                     </label>
                     <span class="help-inline">
                         When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
@@ -110,8 +110,7 @@
                                 optionsCaption: 'Select One...',
                                 value: fps_calculation_type"></select>
 
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-types" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-
+                    <a class="octolapse_help" data-help-url="profiles.rendering.fps_calculation_type.md" data-help-title="FPS Type"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_fps_calculation_type"></div>
                 </div>
             </div>
@@ -120,7 +119,7 @@
                 <div class="controls">
                     <input id="rendering_profile_fps" name="fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: fps"
                            min="1" required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fps-type---fixed-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.fps.md" data-help-title="Static FPS"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_fps"></div>
                 </div>
             </div>
@@ -132,7 +131,7 @@
                                data-bind="value: run_length_seconds" min="0.5" step="0.5" required="true" />
                         <span class="add-on">seconds</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#fixed-run-length" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.run_length_seconds.md" data-help-title="Fixed Run Length"/>
                     <div class="error_label_container text-error" data-error-for="octolapse_run_length_seconds"></div>
 
                 </div>
@@ -143,7 +142,7 @@
                     <input id="rendering_profile_min_fps" name="min_fps" type="number"
                            class="ignore_hidden_errors input-small" data-bind="value: min_fps" min="0.5" step="0.5"
                            required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#minimum-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.min_fps.md" data-help-title="Minimum FPS"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_min_fps"></div>
                     <span class="help-inline">
                         When using <i>Fixed Length</i> rendering, the calculated FPS can be no less than this value.
@@ -156,7 +155,7 @@
                     <input id="rendering_profile_max_fps" name="max_fps" type="number"
                            class="input-small ignore_hidden_errors" data-bind="value: max_fps" min="0.5" step="0.5"
                            required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#maximum-fps" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.max_fps.md" data-help-title="Maximum FPS"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_max_fps"></div>
                     <span class="help-inline">
                         When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
@@ -171,7 +170,7 @@
                                data-bind="value: pre_roll_seconds" min="0" max="60" required="true" />
                         <span class="add-on">seconds</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#pre-roll" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.pre_roll_seconds.md" data-help-title="Pre-Roll"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_pre_roll_seconds"></div>
                     <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
                 </div>
@@ -184,7 +183,7 @@
                            data-bind="value: post_roll_seconds" min="0" max="60" required="true" />
                         <span class="add-on">seconds</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#post-roll" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.post_roll_seconds.md" data-help-title="Post-Roll"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_post_roll_seconds"></div>
                     <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
                 </div>
@@ -198,7 +197,7 @@
                         <span class="add-on">kbps</span>
                         <span class="add-on">mbps</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#bitrate" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.bitrate.md" data-help-title="Bitrate"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_bitrate"></div>
                     <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
                 </div>
@@ -218,7 +217,7 @@
                     <label class="checkbox">
                         <input name="watermark" type="checkbox" data-bind="checked: enable_watermark"
                                title="Embed a watermark in the resulting timelapse" />Enabled
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#embed-watermark" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.enable_watermark.md" data-help-title="Embed watermark"/>
                     </label>
                 </div>
             </div>
@@ -294,7 +293,7 @@
                     <label class="control-label">Text:</label>
                     <div class="controls">
                         <textarea id="octolapse_overlay_text_template" class="input-xxl ignore_hidden_errors" name="overlay_text_template" data-bind="value: overlay_text_template" />
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-and-replacement-tokens" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_template.md" data-help-title="Overlay Text Template"/>
                         <div class="error_label_container text-error" data-error-for="octolapse_overlay_text_template"></div>
                         <p class="help-inline">
                             Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
@@ -313,7 +312,7 @@
                             <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" />
                             <span class="add-on">pt</span>
                         </span>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-size" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_font_size.md" data-help-title="Overlay Font Size"/>
                         <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_font_size"></div>
                     </div>
                 </div>
@@ -323,7 +322,7 @@
                         <select id="rendering_profile_overlay_text_valign" name="overlay_text_valign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
                                         optionsCaption: 'Select One...',
                                         value: overlay_text_valign"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-vertical-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_valign.md" data-help-title="Overlay Vertical Alignment"/>
                         <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_valign"></div>
                     </div>
                 </div>
@@ -333,7 +332,7 @@
                         <select id="rendering_profile_overlay_text_halign" name="overlay_text_halign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
                                         optionsCaption: 'Select One...',
                                         value: overlay_text_halign"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-horizontal-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_halign.md" data-help-title="Overlay Text Horizontal Alignment"/>
                         <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_halign"></div>
                     </div>
                 </div>
@@ -343,7 +342,7 @@
                         <select id="rendering_profile_overlay_text_alignment" name="overlay_text_alignment" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
                                         optionsCaption: 'Select One...',
                                         value: overlay_text_alignment"></select>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-alignment" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_alignment.md" data-help-title="Overlay Text Alignment"/>
                         <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_alignment"></div>
                     </div>
                 </div>
@@ -358,7 +357,7 @@
                             <input type="number" class="input-small" data-bind="value: overlay_text_pos_y" required="true" />
                             <span class="add-on">y</span>
                         </span>
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-position-offset" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_pos_xy.md" data-help-title="Overlay Text Position Offset"/>
                         <div class="input-append" style="display:inline-block">
                             <input type="hidden" id="rendering_profile_overlay_text_pos" name="octolapse_overlay_text_pos" data-bind="value: overlay_text_pos()"/>
                         </div>
@@ -370,12 +369,14 @@
                     <label for="rendering_profile_overlay_color" class="control-label">Color:</label>
                     <div class="controls">
                         <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
-                        <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-text-color" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_color_as_css.md" data-help-title="Overlay Text Color"/>
                         <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">Font: <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-font-selection" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a></label>
+                    <label class="control-label">Font:
+                        <a class="octolapse_help" data-help-url="profiles.rendering.overlay_font_path.md" data-help-title="Text Overlay Font"/>
+                    </label>
                     <div class="controls">
                         <div class="scroll-table-container">
                             <table class="table table-condensed table-hover file-selector-list">
@@ -401,7 +402,7 @@
                         </div>
                         <div class="span2">
                             <div class="text-right">
-                                <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#overlay-image-preview" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                                <a class="octolapse_help" data-help-url="profiles.rendering.overlay_preview.md" data-help-title="Overlay Preview??"/>
                             </div>
                         </div>
                     </div>
@@ -425,7 +426,7 @@
                         <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
                             <input type="checkbox" data-bind="checked: cleanup_after_render_complete"
                                    title="After timelapse is rendered" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#clean-snapshots-after-rendering" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_complete.md" data-help-title="Clean Snapshots After Rendering"/>
                         </label>
                         <span class="help-inline">
                             <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary images, even those taken during a different timelapse.
@@ -438,7 +439,7 @@
                         <label class="checkbox">
                             <input type="checkbox" data-bind="checked: cleanup_after_render_fail"
                                    title="After timelapse fails" />Enabled
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#clean-snapshots-after-rendering-failure" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                            <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_fail.md" data-help-title="Clean Snapshots After Rendering Failure"/>
                         </label>
                         <span class="help-inline">
                             <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting, but it should not cause any errors.  Currently this process will delete ALL temporary images, even those taken during a different timelapse.
@@ -449,7 +450,7 @@
                 <label class="control-label">Filename Template</label>
                 <div class="controls">
                     <input id="octolapse_output_template" name="output_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: output_template" required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#filename-template" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.output_template.md" data-help-title="Rendering Filename Template"/>
                     <div class="error_label_container text-error" data-error-for="octolapse_output_template"></div>
                     <span class="help-inline">
                         Determines the rendering file name.  You can use the following replacement tokens:
@@ -467,7 +468,7 @@
                     <input id="rendering_profile_thread_count" name="thread_count" type="number"
                            class="ignore_hidden_errors input-small" data-bind="value: thread_count" min="1" step="1"
                            required="true" />
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Rendering-Profiles#rendering-thread-count" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.rendering.thread_count.md" data-help-title="Rendering Thread Count"/>
                     <div class="error_label_container text-error" data-error-for="rendering_profile_thread_count"></div>
                     <span class="help-inline">
                         Increasing the amount of threads will improve rendering performance as long as your processor has idle cores.  It may HURT performance if you do not.

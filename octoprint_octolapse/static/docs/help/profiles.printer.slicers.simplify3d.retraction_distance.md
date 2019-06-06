@@ -1,0 +1,1 @@
+Controls the retraction length used before traveling to the snapshot position.  It is also used to detect retraction when planning snapshot positions.  This setting is CRITICAL for Octolapse.  It should match your slicer exactly or you will have quality issuee.  If it is incorrect, Octolapse might not take any pictures at all!

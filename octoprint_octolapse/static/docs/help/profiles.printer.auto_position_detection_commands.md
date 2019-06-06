@@ -1,0 +1,1 @@
+Some commands change the bed/extruder position in a similar way to the home command (G28) or mesh bed leveling (G29).  The MK2 and MK3 allow M80 to trigger mesh bed leveling.  Adding that command here will cause Octolapse to query a position (m114) before continuing.  So far I have not found this necessary for getting good timelapses, but this could help with some edge cases.

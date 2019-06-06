@@ -1,0 +1,1 @@
+This is the default mode (relative/absolute) for the X,Y and Z axes.  The safest setting here is 'Require Explicit G90/G91', which means that Octolapse will not track the bed/extruder position before it receives a G90 or G91 command.  This is a good practice.

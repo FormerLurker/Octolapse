@@ -1,0 +1,1 @@
+This is usually only useful when running Octolapse within a debugger, where it's helpful to see the log output within the console.  Do not enable this option if you are not using Octolapse with a debugger, since it can dramatically impact performance.

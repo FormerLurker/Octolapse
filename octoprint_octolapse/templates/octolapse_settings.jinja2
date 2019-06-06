@@ -22,10 +22,18 @@
 ##################################################################################
 -->
 <div>
-    <div class="text-center">
-        <h3>Octolapse Settings</h3>
-    </div>
     <div id="octolapse_settings">
+        <div class="row-fluid" id="octolapse_settings_title">
+            <div class="span2"></div>
+            <div class="span8">
+                <div class="text-center">
+                    <h3>Octolapse Settings</h3>
+                </div>
+            </div>
+            <div class="span2">
+                <span data-bind="visible: !Octolapse.SettingsMain.is_octolapse_enabled()">Disabled</span>
+            </div>
+        </div>
         <div class="row">
             <div class="span12">
                 <div id="octolapse_settings_nav">
@@ -41,26 +49,26 @@
                             <a href="#octolapse_main_tab" data-toggle="tab">Main</a>
                         </li>
                         <li>
-                            <a href="#octolapse_printer_tab" data-toggle="tab" class="hide-disabled">
+                            <a href="#octolapse_printer_tab" data-toggle="tab">
                                 Printer&nbsp;
                                 <i class="text-error fa fa-exclamation" data-bind="visible: !Octolapse.Printers.current_profile_guid()"></i>
                             </a>
                         </li>
                         <li>
                             <a href="#octolapse_stabilization_tab" data-toggle="tab"
-                               class="hide-disabled">Stabilization</a>
+                               >Stabilization</a>
                         </li>
                         <li>
-                            <a href="#octolapse_trigger_tab" data-toggle="tab" class="hide-disabled">Trigger</a>
+                            <a href="#octolapse_trigger_tab" data-toggle="tab" >Trigger</a>
                         </li>
                         <li>
-                            <a href="#octolapse_rendering_tab" data-toggle="tab" class="hide-disabled">Rendering</a>
+                            <a href="#octolapse_rendering_tab" data-toggle="tab" >Rendering</a>
                         </li>
                         <li>
-                            <a href="#octolapse_camera_tab" data-toggle="tab" class="hide-disabled">Camera</a>
+                            <a href="#octolapse_camera_tab" data-toggle="tab" >Camera</a>
                         </li>
                         <li>
-                            <a href="#octolapse_debug_tab" data-toggle="tab" class="hide-disabled">Debug</a>
+                            <a href="#octolapse_debug_tab" data-toggle="tab" >Debug</a>
                         </li>
                         <li>
                             <a href="#octolapse_about_tab" data-toggle="tab">About</a>
@@ -72,22 +80,22 @@
                     <div id="octolapse_main_tab" class="panel panel-default tab-pane active">
                         <div data-bind="template: 'octolapse-settings-main'"></div>
                     </div>
-                    <div id="octolapse_printer_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_printer_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_stabilization_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_stabilization_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_trigger_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_trigger_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_rendering_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_rendering_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_camera_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_camera_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_debug_tab" class="panel panel-default tab-pane hide-disabled">
+                    <div id="octolapse_debug_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
                     <div id="octolapse_about_tab" class="panel panel-default tab-pane">
@@ -190,7 +198,7 @@
                download="">
                 <i class="fa fa-download"></i> Download Settings
             </a>
-            {% include "octolapse_settings_import.jinja2" %}
+            <div data-bind="template:'octolapse-import-dialog-template'"></div>
             <a class="span3 btn btn-default" data-bind="click: Octolapse.SettingsImport.showSettingsImportPopup">
                 <i class="fa fa-refresh"></i>
                 Import Settings
@@ -209,6 +217,8 @@
 </div>
 <script type="text/html" id="empty-template">
 </script>
+
+{% include "octolapse_settings_import.jinja2" %}
 {% include "octolapse_settings_main.jinja2" %}
 {% include "octolapse_profiles.jinja2" %}
 {% include "octolapse_profiles_printer.jinja2" %}

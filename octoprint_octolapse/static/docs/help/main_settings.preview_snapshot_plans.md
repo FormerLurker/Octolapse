@@ -1,0 +1,1 @@
+When using the smart trigger, preview the snapshot plans to see how many snapshots will be taken, how much travel distance is added, how much travel saved versus the standard 'at layer change' snapshots, and view a preview animation of your printer's movements and snapshot location.

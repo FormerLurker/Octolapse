@@ -1,0 +1,1 @@
+When enabled Octolapse will automatically download the most recent snapshot as soon as it is available.  When disabled you will have the option to refresh the image on-demand.  Disable this option if you need to save on bandwidth.

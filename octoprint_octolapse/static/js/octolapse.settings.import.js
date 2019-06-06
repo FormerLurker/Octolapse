@@ -250,6 +250,8 @@ $(function () {
                 }
             });
             self.$dialog.$editDialog.on("shown.bs.modal", function () {
+                console.log("Octolapse import dialog is shown.");
+                Octolapse.Help.bindHelpLinks("#octolapse_settings_import_dialog");
                 // Create all of the validation rules
 
                 self.$dialog.validator = self.$dialog.$editForm.validate(self.$dialog.rules);

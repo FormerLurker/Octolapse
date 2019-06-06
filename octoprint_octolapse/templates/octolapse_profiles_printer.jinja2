@@ -56,7 +56,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: slicer_type"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#slicer-type" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicer_type.md" data-help-title="Slicer Type"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_slicer_type"></div>
                 </div>
         </div>
@@ -83,7 +83,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: xyz_axes_default_mode"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#xyz-axis-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.xyz_axes_default_mode.md" data-help-title="X/Y/Z Axis Mode"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
                 </div>
             </div>
@@ -94,7 +94,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: e_axis_default_mode"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#e-axis-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.e_axis_default_mode.md" data-help-title="E Axis Mode"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: g90_influences_extruder"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#g90g91-influences-extruder" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.g90_influences_extruder.md" data-help-title="G90/G91 Influences Extruder"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: units_default"></select>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#default-units" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.units_default.md" data-help-title="Default Units"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
                     <span class="help-inline">
                         <span class="label label-important">Attention</span>&nbsp;Currently octolapse does not support any units besides Millimeters and will fail if movement is detected while using Inches.
@@ -130,7 +130,7 @@
                         <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required min="0.0" step="0.01" />
                         <span class="add-on">mm</span>
                     </div>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#priming-height" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.priming_height.md" data-help-title="Priming Height"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
                     <span class="help-inline">Some start gcode is configured to prime quite far from the printer bed.  This setting will prevent layer detection until extrusion is detected BELOW a current height.  If the 'Position State' info panel displays a current layer height that is higher than you expect, and no snapshots are being taken, you may need to adjust this setting.  Set to 0 to turn off.</span>
                 </div>
@@ -142,7 +142,7 @@
                         <input id="printer_profile_minimum_layer_height" name="minimum_layer_height" type="number" class="input-small text-right" data-bind="value: minimum_layer_height" required min="0.0" step="0.001" />
                         <span class="add-on">mm</span>
                     </div>
-                    <a title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg">TODO</span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.minimum_layer_height.md" data-help-title="Minimum Layer Height"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_minimum_layer_height"></div>
                     <span class="help-inline">This is the minimum height change necessary to trigger a layer change.  It can be used to prevent problems with vase mode if you forget to specify vase mode in the slicer settings above.</span>
                 </div>
@@ -161,7 +161,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input id="printer_profile_auto_detect_position" name="auto_detect_position" type="checkbox" data-bind="checked: auto_detect_position" title="Auto-detect the current position after receiving a home command" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#auto-detect-position" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.auto_detect_position.md" data-help-title="Auto-Detect Position"/>
                 </label>
                 <span class="help-inline">
                     Setting this option to true causes Octolapse request a position (M114) after receiving a home/mesh bed leveling command (G28, G29).
@@ -176,8 +176,7 @@
                         <input id="printer_profile_auto_position_detection_commands" name="auto_position_detection_commands" type="text" class="ignore_hidden_errors" data-bind="value: auto_position_detection_commands" />
                         <span class="add-on">csv</span>
                     </span>
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#additional-location-detection-commands" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
-
+                    <a class="octolapse_help" data-help-url="profiles.printer.auto_position_detection_commands.md" data-help-title="Additional location detection commands"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_auto_position_detection_commands"></div>
                     <span class="help-inline">Provide a comma separated list of commands require position detection.  For example, the MK2 and MK3 use G80 for mesh bed leveling, so that command should be listed for those printers.  You do not need to include G28,or G29 in the list.</span>
                 </div>
@@ -231,7 +230,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="override_octoprint_print_volume" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#override-octoprint-printer-profile" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.override_octoprint_print_volume.md" data-help-title="Override Octoprint Printer Profile"/>
                 </label>
                 <span class="help-inline">
                     When enabled the print volume within your current Octoprint Printer Profile will be overridden.  This does not affect the function of Octoprint, only the Octolapse plugin.
@@ -247,7 +246,6 @@
                             <span class="add-on">Min</span>
                             <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required />
                             <span class="add-on">mm</span>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#override-octoprint-printer-profile" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
                         </div>
                         <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
                     </div>
@@ -309,16 +307,16 @@
             </div>
         </div>
         <hr/>
+        <div>
+            <h4>Restrict Snapshot Area</h4>
+            <p>Octolapse can prevent snapshot from occurring while the printer is outside of a given boundary.  When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area (like the Mk2 and Mk3's priming area at the front of the bed), or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.</p>
+        </div>
         <div class="control-group">
-            <label class="control-label" for="restrict_snapshot_area">Snapshot Position Restrictions</label>
             <div class="controls">
                 <label class="checkbox">
                     <input name="restrict_snapshot_area" type="checkbox" data-bind="checked: restrict_snapshot_area" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#restrict-snapshot-area" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO!</a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.restrict_snapshot_area.md" data-help-title="Restrict Snapshot Area"/>
                 </label>
-                <span class="help-inline">
-                    When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area, or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.
-                </span>
             </div>
         </div>
         <div class="control-group" data-bind="visible:restrict_snapshot_area">
@@ -330,7 +328,6 @@
                             <span class="add-on">Min</span>
                             <input id="octolapse_printer_snapshot_min_x" name="snapshot_min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_x" step="any" required />
                             <span class="add-on">mm</span>
-                            <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#override-octoprint-printer-profile" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO!</a>
                         </div>
                         <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_x"></div>
                     </div>
@@ -396,7 +393,8 @@
             <label class="control-label" for="abort_out_of_bounds">Abort Snapshot When Out-Of-Bounds</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds" />Enabled <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#abort-snapshot-when-out-of-bounds" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds" />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.printer.abort_out_of_bounds.md" data-help-title="Abort Snapshot When Out-Of-Bounds"/>
                 </label>
                 <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
             </div>
@@ -411,7 +409,7 @@
             <label class="control-label" for="printer_profile_snapshot_command">Snapshot Command</label>
             <div class="controls">
                 <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required />
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#snapshot-command" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                <a class="octolapse_help" data-help-url="profiles.printer.printer_profile_snapshot_command.md" data-help-title="Snapshot Command">
                 <div class="error_label_container text-error" data-error-for="printer_profile_snapshot_command"></div>
                 <span class="help-inline">This custom command can be used in conjunction with the gcode trigger to initiate a snapshot.  All comments will be stripped from the command entered here after saving.</span>
             </div>
@@ -421,7 +419,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="suppress_snapshot_command_always" type="checkbox" data-bind="checked: suppress_snapshot_command_always" title="Abort snapshots when the position is out-of-bounds" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#suppress-snapshot-command-when-disabled" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.suppress_snapshot_command_always.md" data-help-title="Suppress Snapshot Command When Disabled"/>
                 </label>
                 <span class="help-inline">When checked, Octolapse will prevent the snapshot command above from being sent to the printer even when Octolapse it is disabled.</span>
             </div>
@@ -432,7 +430,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-retractionderetraction-settings-for-firmware-retractderetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions.md" data-help-title="Use Retraction/Deretraction settings for Firmware Retract/Deretract"/>
                 </label>
                 <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/deretraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
             </div>
@@ -442,7 +440,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#use-z-hop-z-lift-settings-for-firmware-retractderetract" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span></a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions_zhop.md" data-help-title="Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract"/>
                 </label>
                 <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/deretraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
                 <p>
@@ -456,7 +454,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input name="gocde_axis_compatibility_mode_enabled" type="checkbox" data-bind="checked: gocde_axis_compatibility_mode_enabled" title="When enabled, use relative axis mode for lift/retraction and absolute mode for travel." />Enabled
-                    <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#snapshot-gocde-axis-compatibility-mode" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO!</a>
+                    <a class="octolapse_help" data-help-url="profiles.printer.gocde_axis_compatibility_mode_enabled.md" data-help-title="Snapshot Gcode Axis Compatibility Mode"/>
                 </label>
                 <span class="help-inline">When enabled, use relative axis mode for lift/retraction and absolute mode for travel.  This is the safest and most tested way for Octolapse to generate the gcode necessary to take a snapshot.</span>
                 <p>
@@ -468,9 +466,9 @@
             <label class="control-label">Home Axis Gcode Script</label>
             <div class="controls">
                 <textarea id="printer_profile_home_axis_gcode" name="home_axis_gcode" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: home_axis_gcode" required="true" />
-                <a href="https://github.com/FormerLurker/Octolapse/wiki/Printer-Profiles#home_axis_gcode_script" title="Get help with this setting." target="_blank" ><span class="fa fa-question-circle fa-lg"></span>TODO</a>
+                <a class="octolapse_help" data-help-url="profiles.printer.home_axis_gcode.md" data-help-title="Home Axis Gcode Script"/>
                 <div class="error_label_container text-error" data-error-for="printer_profile_home_axis_gcode"></div>
-                <span class="help-inline">Gcode to send to the printer in order to capture a snapshot.</span>
+                <span class="help-inline">This gcode will be sent to your printer when Octolapse needs to home your XY axis.</span>
             </div>
         </div>
 
