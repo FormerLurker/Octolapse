@@ -56,8 +56,8 @@ private:
 	bool has_saved_position();
 	void reset_saved_positions();
 	void delete_saved_positions();
-	void save_position(position* p_position, position_type type_, double distance);
-	bool is_closer(position * p_position, position_type type, double &distance);
+	void save_position(position* p_position, trigger_position::position_type type_, double distance);
+	bool is_closer(position * p_position, trigger_position::position_type type, double &distance);
 	double stabilization_x_;
 	double stabilization_y_;
 	bool is_layer_change_wait_;

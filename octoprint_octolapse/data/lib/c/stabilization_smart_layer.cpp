@@ -76,15 +76,15 @@ trigger_type stabilization_smart_layer::get_trigger_type()
 	return p_smart_layer_args_->smart_layer_trigger_type;
 }
 
-bool stabilization_smart_layer::can_process_position(position* p_position, position_type type)
+bool stabilization_smart_layer::can_process_position(position* p_position, trigger_position::position_type type)
 {
 
-	if (type == unknown)
+	if (type == trigger_position::unknown)
 		return false;
-	if (p_smart_layer_args_->snap_to_print && type != extrusion)
+	if (p_smart_layer_args_->snap_to_print && type != trigger_position::extrusion)
 		return false;
 
-	if (type == extrusion)
+	if (type == trigger_position::extrusion)
 	{
 		if (get_trigger_type() > trigger_type::compatibility)
 			return false;
@@ -147,7 +147,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 
 	double distance = -1;
 	// Get the current position type and see if we can process this type
-	position_type current_type = trigger_position::get_type(p_current_pos);
+	trigger_position::position_type current_type = trigger_position::get_type(p_current_pos);
 	if (can_process_position(p_current_pos, current_type))
 	{
 		// Is the endpoint of the current command closer
@@ -165,7 +165,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 		last_tested_gcode_number_ != p_previous_pos->gcode_number_ &&
 		utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
-		position_type previous_type = trigger_position::get_type(p_previous_pos);
+		trigger_position::position_type previous_type = trigger_position::get_type(p_previous_pos);
 		if (can_process_position(p_previous_pos, previous_type))
 		{
 			// Calculate the distance to the previous extrusion
@@ -176,11 +176,11 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	last_tested_gcode_number_ = p_current_pos->gcode_number_;
 }
 
-bool stabilization_smart_layer::is_closer(position * p_position, position_type type, double &distance)
+bool stabilization_smart_layer::is_closer(position * p_position, trigger_position::position_type type, double &distance)
 {
 	// Fist check the speed threshold if we are running a fast trigger type
 	// We want to ignore any extrusions that are below the speed threshold
-	const bool filter_extrusion_speeds = get_trigger_type() == trigger_type::fast && type == position_type::extrusion;
+	const bool filter_extrusion_speeds = get_trigger_type() == trigger_type::fast && type == trigger_position::extrusion;
 	if (filter_extrusion_speeds)
 	{
 		// Initialize our previous extrusion speed if it's not been initialized

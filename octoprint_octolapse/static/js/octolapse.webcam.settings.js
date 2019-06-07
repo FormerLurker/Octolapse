@@ -658,7 +658,7 @@ $(function() {
                                 title: 'Error Previewing Stabilization',
                                 text: results.error,
                                 type: 'error',
-                                hide: false,
+                                hide: true,
                                 addclass: "octolapse"
                             };
                             Octolapse.displayPopupForKey(options, "stabilization_preview_error", ["stabilization_preview_error"]);
@@ -669,7 +669,7 @@ $(function() {
                             title: 'Error Previewing Stabilization',
                             text: "Status: " + textStatus + ".  Error: " + errorThrown,
                             type: 'error',
-                            hide: false,
+                            hide: true,
                             addclass: "octolapse"
                         };
                         Octolapse.displayPopupForKey(options, "stabilization_preview_error", ["stabilization_preview_error"]);

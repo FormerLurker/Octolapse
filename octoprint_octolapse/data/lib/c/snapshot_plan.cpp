@@ -33,7 +33,7 @@ snapshot_plan::snapshot_plan()
 	p_end_command = NULL;
 	total_travel_distance = 0;
 	saved_travel_distance = 0;
-	triggering_command_type = position_type::unknown; // unknown
+	triggering_command_type = trigger_position::unknown; // unknown
 }
 
 snapshot_plan::snapshot_plan(const snapshot_plan & source)

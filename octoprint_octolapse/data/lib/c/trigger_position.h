@@ -1,20 +1,22 @@
 #pragma once
 #include "position.h"
-#include <map>;
-enum position_type { unknown, extrusion, lifting, lifted, travel, lifting_travel, lifted_travel, retraction, retracted_lifting, retracted_lifted, retracted_travel, lifting_retracted_travel, lifted_retracted_travel};
-static const unsigned int num_position_types = 13;
-static const position_type quality_cutoff = position_type::retraction;
-static const std::string position_type_name[13] = {
-	"unknown", "extrusion", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retraction", "retracted_lifting", "retracted_lifted", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel"
-};
+#include <map>
+
 /**
  * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
  */
+static const std::string position_type_name[13] = {
+		"unknown", "extrusion", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retraction", "retracted_lifting", "retracted_lifted", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel"
+};
 struct trigger_position
 {
+	enum position_type { unknown, extrusion, lifting, lifted, travel, lifting_travel, lifted_travel, retraction, retracted_lifting, retracted_lifted, retracted_travel, lifting_retracted_travel, lifted_retracted_travel };
+	static const unsigned int num_position_types = 13;
+	static const position_type quality_cutoff = trigger_position::retraction;
+	
 	trigger_position()
 	{
-		type = position_type::unknown;
+		type = trigger_position::unknown;
 		distance = -1;
 		p_position = NULL;
 	}
@@ -49,13 +51,13 @@ public:
 	trigger_position** get_all();
 	void set_distance_threshold_percent(double distance_threshold_percent);
 	void clear();
-	void add(position_type type, double distance, position *p_position);
+	void add(trigger_position::position_type type, double distance, position *p_position);
 	void add(double distance, position *p_position);
 	bool is_empty();
-	trigger_position* get(position_type type);
+	trigger_position* get(trigger_position::position_type type);
 private:
 	void initialize_position_list();
-	trigger_position* position_list_[num_position_types];
+	trigger_position* position_list_[trigger_position::num_position_types];
 	double distance_threshold_percent_;
 };
 

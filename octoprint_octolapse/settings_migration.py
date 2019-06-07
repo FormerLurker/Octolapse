@@ -125,7 +125,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'debug': {},
     }
 
-    # add all profiles
+    #  UPGRADE PRINTER PROFILES
     for printer in settings_dict['printers']:
         #
         speed_units = printer['axis_speed_display_units']
@@ -166,6 +166,8 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             simlify3d["x_y_axis_movement_speed"] = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
             simlify3d["z_axis_movement_speed"] = None if "z_hop_speed" not in printer or printer["z_hop_speed"] is None else float(printer["z_hop_speed"]) * speed_multiplier
             simlify3d["axis_speed_display_settings"] = 'mm-min'
+            # now set to automatic settings extraction!
+            printer['slicer_type'] = 'automatic'
             printer['slicers']['simplify_3d'] = simlify3d
         elif slicer_type == "slic3r-pe":
             slic3rpe = {}
@@ -177,32 +179,60 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             slic3rpe["retract_speed"] = None if "retract_speed" not in printer or printer["retract_speed"] is None else float(printer["retract_speed"]) * speed_multiplier
             slic3rpe["travel_speed"] = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
             slic3rpe["axis_speed_display_units"] = 'mm-sec'
+            printer['slicer_type'] = 'automatic'
             printer['slicers']['slic3r_pe'] = slic3rpe
 
         profiles['printers'][printer['guid']] = printer
 
-    # replace all of the existing stabilizations
-    settings_dict["stabilizations"] = copy.deepcopy(default_settings["profiles"]["stabilizations"])
-
-    # set the default stabilization
-    profiles["current_stabilization_profile_guid"] = (
-        default_settings["profiles"]["current_stabilization_profile_guid"]
-    )
-
+    # set the current printer profile guid
+    profiles['current_printer_profile_guid'] = settings_dict['current_printer_profile_guid']
+    # UPGRADE STABILIZATION PROFILES - Nothing much has changed.  Copy the existing profiles and add 'disabled' profile
     # restore default stabilizations
-    for key, default_profile in six.iteritems(default_settings["profiles"]['stabilizations']):
-        profiles['stabilizations'][default_profile["guid"]] = copy.deepcopy(default_profile)
+    for existing_profile in settings_dict['stabilizations']:
+        profiles['stabilizations'][existing_profile["guid"]] = copy.deepcopy(existing_profile)
+    # set the current stabilization profile
+    profiles['current_stabilization_profile_guid'] = settings_dict['current_stabilization_profile_guid']
+    # add the 'disabled' stabilization profile
+    disabled_stabilization_guid = 'a1137d9a-70b6-4941-95fb-74c49e0ae9b8'
+    profiles["stabilizations"][disabled_stabilization_guid] = copy.deepcopy(default_settings["profiles"]["stabilizations"][disabled_stabilization_guid])
 
-    # set the default trigger
+    # UPGRADE TRIGGER PROFILES - previously called snapshot profiles
     profiles["current_trigger_profile_guid"] = (
         default_settings["profiles"]["current_trigger_profile_guid"]
     )
-    # restore default stabilizations
-    for key, default_profile in six.iteritems(default_settings["profiles"]['triggers']):
-        profiles['triggers'][default_profile["guid"]] = copy.deepcopy(default_profile)
+    # upgrade the trigger profiles
+    for existing_profile in settings_dict["snapshots"]:
+        # first copy all of the settings into the new profiles dict
+        new_profile = copy.deepcopy(existing_profile)
+        # set the current trigger type, which is now called the trigger subtype
+        new_profile["trigger_subtype"] = existing_profile["trigger_type"]
+        # set the trigger type, which will always be real-time
+        new_profile["trigger_type"] = "real-time"
+        # update the extruder trigger requirements
+        new_profile["trigger_on_retracted"] = "trigger_on"
+        new_profile["trigger_on_retracting_start"] =  ""
+        new_profile["trigger_on_extruding"] = "trigger_on"
+        new_profile["trigger_on_extruding_start"] = "trigger_on"
+        new_profile["trigger_on_partially_retracted"] = "forbidden"
+        new_profile["trigger_on_primed"] = "trigger_on"
+        new_profile["trigger_on_deretracting"] = "forbidden"
+        new_profile["trigger_on_retracting"] = ""
+        new_profile["trigger_on_deretracted"] = "forbidden"
+        new_profile["trigger_on_deretracting_start"] = ""
+        # add the new preofile
+        profiles["triggers"][existing_profile["guid"]] = new_profile
 
-    # extract some info from the current rendering profile to use as the default values
-    # we will use this item to default all rendering profiles.
+    # set the current trigger profile
+    profiles['current_trigger_profile_guid'] = settings_dict['current_snapshot_profile_guid']
+
+    # add all of the new triggers (the non-real time triggers)
+    for key, default_profile in six.iteritems(default_settings["profiles"]["triggers"]):
+        if default_profile["trigger_type"] != 'real-time':
+            # add this setting, it's new!
+            profiles["triggers"][key] = default_profile
+
+    # UPGRADE THE RENDERING PROFILES, a few settings have moved from the former snapshot profile
+    # extract some info from the previous snapshot profile to use as the default values for the rendering profile
     current_snapshot_guid = settings_dict["current_snapshot_profile_guid"]
     current_snapshot_profile = None
     for snapshot_profile in settings_dict["snapshots"]:
@@ -211,20 +241,23 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             break
 
     if current_snapshot_profile is not None:
-        # TODO: test
+        # we found a snapshot profile that has these new rendering profile settings.  Save them
         cleanup_after_render_complete = current_snapshot_profile['cleanup_after_render_complete']
         cleanup_after_render_fail = current_snapshot_profile['cleanup_after_render_fail']
     else:
-        # TODO: test
+        # no default snapshot profile found, this is unexpected, but could happen
+        # extract the new rendering profile settings from our new default rendering profile
         default_rendering_profile = default_settings["profiles"]["defaults"]["rendering"]
         cleanup_after_render_complete = default_rendering_profile['cleanup_after_render_complete']
         cleanup_after_render_fail = default_rendering_profile['cleanup_after_render_fail']
 
+    ## apply the new settings to each rendering profile
     for rendering in settings_dict['renderings']:
         rendering["cleanup_after_render_complete"] = cleanup_after_render_complete
         rendering["cleanup_after_render_fail"] = cleanup_after_render_fail
         profiles['renderings'][rendering["guid"]] = rendering
 
+    # UPGRADE CAMERA PROFILES.  The structure has changed quite a bit.
     default_camera_profile = default_settings["profiles"]["defaults"]["camera"]
     for camera in settings_dict['cameras']:
         camera['webcam_settings'] = {
@@ -283,12 +316,13 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         del camera['powerline_frequency'],
         profiles['cameras'][camera['guid']] = camera
 
-    # drop the existing debug profiles
+    # UPGRADE THE DEBUG PROFILES - remove and replace the debug profiles, they are too different to salvage
     for key, default_profile in six.iteritems(default_settings['profiles']['debug']):
         profiles['debug'][key] = default_profile
-
+    # set the default debug profile
     profiles["current_debug_profile_guid"] = default_settings['profiles']['current_debug_profile_guid']
 
+    # UPGRADE THE MAIN SETTINGS - use the defaults if no value is provided
     default_main_settings = default_settings["main_settings"]
     main_settings = {
         'show_navbar_icon': settings_dict.get('show_navbar_icon',default_main_settings["show_navbar_icon"]),
@@ -304,7 +338,9 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         "show_snapshot_plan_information": default_main_settings["show_snapshot_plan_information"],
         'platform': sys.platform
     }
-    # add any new settings to each profile
+
+    # ADD ALL NEW VALUES TO THE NEW SETTINGS - Update any leftover settings.  Note that chages will only be made if
+    # the current 'profiles' do not contain some of the new default settings.
     profile_default_types = [
         {
             "profile_type": "printers",
@@ -340,7 +376,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             defaults_copy.update(profile)
             profiles[profile_type][key] = defaults_copy
 
-    # return the new dict
+    # return the new upgraded settings dict
     return {
         'version': current_version,
         'main_settings': main_settings,

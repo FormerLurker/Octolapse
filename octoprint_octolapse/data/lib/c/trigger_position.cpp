@@ -2,30 +2,30 @@
 #include "utilities.h"
 #include <iterator>
 
-position_type trigger_position::get_type(position* p_position)
+trigger_position::position_type trigger_position::get_type(position* p_position)
 {
 	if (p_position->is_partially_retracted_ || p_position->is_deretracted_)
-		return position_type::unknown;
+		return trigger_position::unknown;
 	
 	if (p_position->is_extruding_ && utilities::greater_than(p_position->e_relative_, 0))
 	{
-		return position_type::extrusion;
+		return trigger_position::extrusion;
 	}
 	else if(p_position->is_xy_travel_)
 	{
 		if (p_position->is_retracted_)
 		{
 			if (p_position->is_zhop_)
-				return position_type::lifted_retracted_travel;
+				return trigger_position::lifted_retracted_travel;
 			else
-				return position_type::retracted_travel;
+				return trigger_position::retracted_travel;
 		}
 		else 
 		{
 			if (p_position->is_zhop_)
-				return position_type::lifted_travel;
+				return trigger_position::lifted_travel;
 			else
-				return position_type::travel;
+				return trigger_position::travel;
 		}
 	}
 	else if(utilities::greater_than(p_position->z_relative_, 0))
@@ -35,16 +35,16 @@ position_type trigger_position::get_type(position* p_position)
 			if(p_position->is_xyz_travel_)
 			{
 				if (p_position->is_zhop_)
-					return position_type::lifted_retracted_travel;
+					return trigger_position::lifted_retracted_travel;
 				else
-					return position_type::lifting_retracted_travel;
+					return trigger_position::lifting_retracted_travel;
 			}
 			else
 			{
 				if (p_position->is_zhop_)
-					return position_type::retracted_lifted;
+					return trigger_position::retracted_lifted;
 				else
-					return position_type::retracted_lifting;
+					return trigger_position::retracted_lifting;
 			}
 		}
 		else
@@ -52,27 +52,27 @@ position_type trigger_position::get_type(position* p_position)
 			if (p_position->is_xyz_travel_)
 			{
 				if (p_position->is_zhop_)
-					return position_type::lifted_travel;
+					return trigger_position::lifted_travel;
 				else
-					return position_type::lifting_travel;
+					return trigger_position::lifting_travel;
 			}
 			else
 			{
 				if (p_position->is_zhop_)
-					return position_type::lifted;
+					return trigger_position::lifted;
 				else
-					return position_type::lifting;
+					return trigger_position::lifting;
 			}
 		}
 		
 	}
 	else if(utilities::less_than(p_position->e_relative_ , 0) && p_position->is_retracted_)
 	{
-		return position_type::retraction;
+		return trigger_position::retraction;
 	}
 	else
 	{
-		return position_type::unknown;
+		return trigger_position::unknown;
 	}
 }
 
@@ -90,7 +90,7 @@ trigger_positions::trigger_positions()
 
 void trigger_positions::initialize_position_list()
 {
-	for (int index = num_position_types - 1; index > -1; index--)
+	for (int index = trigger_position::num_position_types - 1; index > -1; index--)
 	{
 		position_list_[index] = NULL;
 	}
@@ -108,7 +108,7 @@ trigger_positions::~trigger_positions()
 
 bool trigger_positions::is_empty()
 {
-	for (unsigned int index = 0; index < num_position_types; index++)
+	for (unsigned int index = 0; index < trigger_position::num_position_types; index++)
 	{
 		if (position_list_[index] != NULL)
 			return false;
@@ -120,7 +120,7 @@ trigger_position* trigger_positions::get_fastest_position()
 {
 	trigger_position* current_closest = NULL;
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
-	for (int index = num_position_types - 1; index > -1; index--)
+	for (int index = trigger_position::num_position_types - 1; index > -1; index--)
 	{
 		trigger_position* current_position = position_list_[index];
 
@@ -138,9 +138,9 @@ trigger_position* trigger_positions::get_compatibility_position()
 	trigger_position* current_closest = NULL;
 	double closest_distance;
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
-	for (int index = num_position_types - 1; index > -1; index--)
+	for (int index = trigger_position::num_position_types - 1; index > -1; index--)
 	{
-		if (index < quality_cutoff && current_closest != NULL)
+		if (index < (int)trigger_position::quality_cutoff && current_closest != NULL)
 			return current_closest;
 
 		trigger_position* current_position = position_list_[index];
@@ -159,9 +159,9 @@ trigger_position* trigger_positions::get_normal_quality_position()
 	trigger_position* current_closest = NULL;
 	double closest_distance;
 	// Loop backwards so that in the case of ties, the best match (the one with the higher enum value) is selected
-	for (int index = num_position_types - 1; index > extrusion; index--)
+	for (int index = trigger_position::num_position_types - 1; index > trigger_position::extrusion; index--)
 	{
-		if (index < quality_cutoff && current_closest != NULL)
+		if (index < trigger_position::quality_cutoff && current_closest != NULL)
 			return current_closest;
 
 		trigger_position* current_position = position_list_[index];
@@ -178,9 +178,9 @@ trigger_position* trigger_positions::get_normal_quality_position()
 trigger_position* trigger_positions::get_high_quality_position()
 {
 	trigger_position* current_closest = NULL;
-	for (int index = num_position_types - 1; index > extrusion; index--)
+	for (int index = trigger_position::num_position_types - 1; index > trigger_position::extrusion; index--)
 	{
-		if (index < quality_cutoff && current_closest != NULL)
+		if (index < trigger_position::quality_cutoff && current_closest != NULL)
 			return current_closest;
 
 		trigger_position* current_position = position_list_[index];
@@ -211,7 +211,7 @@ trigger_position* trigger_positions::get_high_quality_position()
 
 trigger_position* trigger_positions::get_best_quality_position()
 {
-	for (int index = num_position_types - 1; index > quality_cutoff - 1; index--)
+	for (int index = trigger_position::num_position_types - 1; index > trigger_position::quality_cutoff - 1; index--)
 	{
 		trigger_position* current_position = position_list_[index];
 		if (current_position != NULL)
@@ -227,7 +227,7 @@ trigger_position** trigger_positions::get_all()
 
 void trigger_positions::clear()
 {
-	for (unsigned int index = 0; index < num_position_types; index++)
+	for (unsigned int index = 0; index < trigger_position::num_position_types; index++)
 	{
 		trigger_position* current_position = position_list_[index];
 		if (current_position != NULL)
@@ -238,7 +238,7 @@ void trigger_positions::clear()
 	}
 }
 
-void trigger_positions::add(position_type type, double distance, position *p_position)
+void trigger_positions::add(trigger_position::position_type type, double distance, position *p_position)
 {
 	trigger_position* current_position = position_list_[type];
 	if(current_position != NULL)
@@ -250,7 +250,7 @@ void trigger_positions::add(position_type type, double distance, position *p_pos
 
 void trigger_positions::add(double distance, position *p_position)
 {
-	position_type type = trigger_position::get_type(p_position);
+	trigger_position::position_type type = trigger_position::get_type(p_position);
 	trigger_position* current_position = position_list_[type];
 	if (current_position != NULL)
 	{
@@ -259,7 +259,7 @@ void trigger_positions::add(double distance, position *p_position)
 	position_list_[type] = new trigger_position(type, distance, p_position);
 }
 
-trigger_position* trigger_positions::get(position_type type)
+trigger_position* trigger_positions::get(trigger_position::position_type type)
 {
 	return position_list_[type];
 }

@@ -221,7 +221,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         # make sure we aren't printing
         if not self._printer.is_ready():
             error = "Cannot preview the stabilization because the printer is either printing or is a non-operational " \
-                    "state."
+                    "state, or is disconnected.  Check the 'State' of your printer on the left side of the screen " \
+                    "and make sure it is connected and operational"
             logger.error(error)
             return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
         with self._printer.job_on_hold():

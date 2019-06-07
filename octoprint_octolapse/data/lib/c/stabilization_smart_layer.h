@@ -54,7 +54,7 @@ private:
 	void on_processing_complete() override;
 	void add_plan();
 	void reset_saved_positions();
-	bool can_process_position(position* p_position, position_type type);
+	bool can_process_position(position* p_position, trigger_position::position_type type);
 	trigger_type get_trigger_type();
 	trigger_position* get_closest_position();
 	/**
@@ -66,7 +66,7 @@ private:
 	 * \param distance the distance between the supplied position and the stabilization point.  Is set to -1 if there are errors
 	 * \return true if the position is closer, false if it is not or if it is filtered
 	 */
-	bool is_closer(position* p_position, position_type type_, double &distance);
+	bool is_closer(position* p_position, trigger_position::position_type type_, double &distance);
 	
 	// Layer/height tracking variables
 	bool is_layer_change_wait_;

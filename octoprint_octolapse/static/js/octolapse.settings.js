@@ -325,7 +325,7 @@ $(function () {
                             Octolapse.Globals.update(newSettings.main_settings);
                             var message = "The default settings have been restored.  It is recommended that you restart the OctoPrint server now.";
                             var options = {
-                                title: 'Error Restoring Defaults',
+                                title: 'Default Settings Restored',
                                 text: message,
                                 type: 'success',
                                 hide: true,

@@ -96,14 +96,14 @@ void stabilization_snap_to_print::delete_saved_positions()
 	}
 }
 
-void stabilization_snap_to_print::save_position(position* p_position, position_type type_, double distance)
+void stabilization_snap_to_print::save_position(position* p_position, trigger_position::position_type type_, double distance)
 {
-	if (type_ == position_type::extrusion)
+	if (type_ == trigger_position::extrusion)
 	{
 		// delete the current saved position and parsed command
 		delete_saved_positions();
 		//std::cout << "Creating new saved position.\r\n";
-		p_closest_position_ = new trigger_position(position_type::extrusion, distance, p_position);
+		p_closest_position_ = new trigger_position(trigger_position::extrusion, distance, p_position);
 	}
 }
 
@@ -162,9 +162,9 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 	// have a saved command to check.
 	//std::cout << "Checking for closer position.\r\n";
 	double distance = -1;
-	if(is_closer(p_current_pos, position_type::extrusion, distance))
+	if(is_closer(p_current_pos, trigger_position::extrusion, distance))
 	{
-		save_position(p_current_pos, position_type::extrusion, distance);
+		save_position(p_current_pos, trigger_position::extrusion, distance);
 	}
 	
 	// If the previous command was at the same height, and the extruder is primed, check the starting
@@ -172,17 +172,17 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 	if (p_previous_pos->is_primed_ && utilities::is_equal(p_current_pos->z_, p_previous_pos->z_))
 	{
 		//std::cout << "Checking for closer previous position.\r\n";
-		if(is_closer(p_previous_pos, position_type::extrusion, distance))
+		if(is_closer(p_previous_pos, trigger_position::extrusion, distance))
 		{
-			save_position(p_previous_pos, position_type::extrusion, distance);
+			save_position(p_previous_pos, trigger_position::extrusion, distance);
 		}
 	}
 }
 
-bool stabilization_snap_to_print::is_closer(position * p_position, position_type type, double &distance)
+bool stabilization_snap_to_print::is_closer(position * p_position, trigger_position::position_type type, double &distance)
 {
 	trigger_position* p_current_closest;
-	if (type == position_type::extrusion)
+	if (type == trigger_position::extrusion)
 	{
 		p_current_closest = p_closest_position_;
 	}
@@ -208,7 +208,7 @@ bool stabilization_snap_to_print::is_closer(position * p_position, position_type
 	}
 
 	// If the speed is faster than the saved speed, this is the closest point
-	/*if (p_stabilization_args_->fastest_speed && p_current_closest->type == position_type::extrusion)
+	/*if (p_stabilization_args_->fastest_speed && p_current_closest->type == trigger_position::extrusion)
 	{
 		//std::cout << "Checking for faster speed than " << p_current_closest->p_position->f_;
 		if (utilities::greater_than(p_position->f_, p_current_closest->p_position->f_))

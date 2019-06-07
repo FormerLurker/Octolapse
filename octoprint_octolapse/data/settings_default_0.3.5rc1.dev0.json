@@ -31,6 +31,31 @@
   "profiles": {
     "current_stabilization_profile_guid": "d35dbbe6-949e-4f97-b16f-c575d94ad062",
     "stabilizations": {
+      "a1137d9a-70b6-4941-95fb-74c49e0ae9b8": {
+        "y_relative_path_loop": true,
+        "y_relative": 50.0,
+        "x_relative_path": "50.0",
+        "guid": "a1137d9a-70b6-4941-95fb-74c49e0ae9b8",
+        "y_fixed_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "x_type": "disabled",
+        "x_relative_path_loop": true,
+        "x_fixed_path": "0",
+        "y_type": "disabled",
+        "y_fixed_coordinate": 0.0,
+        "x_fixed_coordinate": 0.0,
+        "y_fixed_path_invert_loop": true,
+        "description": "No stabilization will be performed.  This has an interesting effect if you are using the 'snap to print' option with the new smart layer trigger.  For other profiles it replicates the look of the stock Octoprint timelapse but without the motion blur.",
+        "x_fixed_path_loop": true,
+        "x_relative_print": 50.0,
+        "x_relative": 50.0,
+        "x_fixed_path_invert_loop": true,
+        "y_relative_path_invert_loop": true,
+        "name": "Disabled",
+        "y_fixed_path": "0",
+        "y_relative_print": 50.0,
+        "y_relative_path": "50"
+      },
       "801846db-3889-4d90-8496-9a473ee99cc4": {
         "y_relative_path_loop": true,
         "y_relative": 50.0,
