@@ -29,6 +29,7 @@ static const char* SMART_LAYER_STABILIZATION = "smart_layer";
 struct smart_layer_args
 {
 	enum trigger_type { fastest, fast, compatibility, normal_quality, high_quality, best_quality };
+	
 	smart_layer_args()
 	{
 		smart_layer_trigger_type = smart_layer_args::compatibility;

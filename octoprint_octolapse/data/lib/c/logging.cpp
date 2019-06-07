@@ -100,19 +100,19 @@ void octolapse_log(int logger_type, int log_level, std::string message)
 	PyObject * pyFunctionName;
 	switch (log_level)
 	{
-		case INFO:
+	case octolapse_log::INFO:
 			pyFunctionName = py_info_function_name;
 			break;
-		case WARNING:
+	case octolapse_log::WARNING:
 			pyFunctionName = py_warn_function_name;
 			break;
-		case ERROR:
+		case octolapse_log::ERROR:
 			pyFunctionName = py_error_function_name;
 			break;
-		case DEBUG:
+		case octolapse_log::DEBUG:
 			pyFunctionName = py_debug_function_name;
 			break;
-		case VERBOSE:
+		case octolapse_log::VERBOSE:
 			pyFunctionName = py_verbose_function_name;
 			break;
 		default:
@@ -132,13 +132,13 @@ void octolapse_log(int logger_type, int log_level, std::string message)
 	PyObject * ret_val;
 	switch (logger_type)
 	{
-		case GCODE_PARSER:
+		case octolapse_log::GCODE_PARSER:
 			ret_val = PyObject_CallMethodObjArgs(py_octolapse_gcode_parser_logger, pyFunctionName, pyMessage, NULL);
 			break;
-		case GCODE_POSITION:
+		case octolapse_log::GCODE_POSITION:
 			ret_val = PyObject_CallMethodObjArgs(py_octolapse_gcode_position_logger, pyFunctionName, pyMessage, NULL);
 			break;
-		case SNAPSHOT_PLAN:
+		case octolapse_log::SNAPSHOT_PLAN:
 			ret_val = PyObject_CallMethodObjArgs(py_octolapse_snapshot_plan_logger, pyFunctionName, pyMessage, NULL);
 			break;
 		default:

@@ -410,7 +410,7 @@ PyObject* position::to_py_tuple()
 	{
 		std::string message = "Position.to_py_tuple - Unable to create the position.";
 		PyErr_Print();
-		octolapse_log(GCODE_PARSER, ERROR, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}

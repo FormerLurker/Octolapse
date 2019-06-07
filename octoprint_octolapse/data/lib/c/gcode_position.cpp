@@ -393,7 +393,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 					pos->x_ = x + pos->x_;
 				else
 				{
-					octolapse_log(GCODE_POSITION, ERROR, "GcodePosition.update_position: Cannot update X because the XYZ axis mode is relative and X is null.");
+					octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.update_position: Cannot update X because the XYZ axis mode is relative and X is null.");
 				}
 			}
 			if (update_y)
@@ -402,7 +402,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 					pos->y_ = y + pos->y_;
 				else
 				{
-					octolapse_log(GCODE_POSITION, ERROR, "GcodePosition.update_position: Cannot update Y because the XYZ axis mode is relative and Y is null.");
+					octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.update_position: Cannot update Y because the XYZ axis mode is relative and Y is null.");
 				}
 			}
 			if (update_z)
@@ -411,7 +411,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 					pos->z_ = z + pos->z_;
 				else
 				{
-					octolapse_log(GCODE_POSITION, ERROR, "GcodePosition.update_position: Cannot update Z because the XYZ axis mode is relative and Z is null.");
+					octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.update_position: Cannot update Z because the XYZ axis mode is relative and Z is null.");
 				}
 			}
 		}
@@ -437,7 +437,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 	else
 	{
 		std::string message = "The XYZ axis mode is not set, cannot update position.";
-		octolapse_log(GCODE_POSITION, ERROR, message);
+		octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, message);
 	}
 
 	if (update_e)
@@ -456,7 +456,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 		else
 		{
 			std::string message = "The E axis mode is not set, cannot update position.";
-			octolapse_log(GCODE_POSITION, ERROR, message);
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, message);
 		}
 	}
 	

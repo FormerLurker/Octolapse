@@ -128,7 +128,7 @@ void stabilization::process_file(stabilization_results* results)
 	
 	p_snapshot_plans_ = &results->snapshot_plans_;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
-	octolapse_log(SNAPSHOT_PLAN, INFO, "Processing File.");
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
 	PyThreadState *_save = NULL;
 	is_running_ = true;
 	
@@ -186,7 +186,7 @@ void stabilization::process_file(stabilization_results* results)
 	}
 	else
 	{
-		octolapse_log(SNAPSHOT_PLAN, ERROR, "Unable to open the gcode file.");
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
 	}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
@@ -195,7 +195,7 @@ void stabilization::process_file(stabilization_results* results)
 	results->seconds_elapsed_ = total_seconds;
 	results->gcodes_processed_ = gcodes_processed_;
 	results->lines_processed_ = lines_processed_;
-	octolapse_log(SNAPSHOT_PLAN, INFO, "Completed file processing.");
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Completed file processing.");
 	p_snapshot_plans_ = NULL;
 }
 
@@ -230,7 +230,7 @@ void stabilization::get_next_xy_coordinates(double *x, double*y)
 	{
 		//std::cout << "calling python...";
 		if (!_get_coordinates_callback(p_stabilization_args_->py_get_snapshot_position_callback, p_stabilization_args_->x_coordinate, p_stabilization_args_->y_coordinate, x, y))
-			octolapse_log(SNAPSHOT_PLAN, INFO, "Failed dto get snapshot coordinates.");
+			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Failed dto get snapshot coordinates.");
 	}
 	else
 	{

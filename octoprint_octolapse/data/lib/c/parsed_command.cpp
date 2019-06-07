@@ -67,7 +67,7 @@ PyObject * parsed_command::to_py_object()
 		PyErr_Print();
 		std::string message = "Unable to convert the parameter name to unicode: ";
 		message += cmd_;
-		octolapse_log(GCODE_PARSER, ERROR, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
@@ -77,7 +77,7 @@ PyObject * parsed_command::to_py_object()
 		PyErr_Print();
 		std::string message = "Unable to convert the gcode to unicode: ";
 		message += gcode_;
-		octolapse_log(GCODE_PARSER, ERROR, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
@@ -92,7 +92,7 @@ PyObject * parsed_command::to_py_object()
 			message += cmd_;
 			message += " Gcode: ";
 			message += gcode_;
-			octolapse_log(GCODE_PARSER, ERROR, message);
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return NULL;
 		}
@@ -107,7 +107,7 @@ PyObject * parsed_command::to_py_object()
 		{
 			PyErr_Print();
 			std::string message = "ParsedCommand.to_py_object: Unable to create the parameters dict.";
-			octolapse_log(GCODE_PARSER, ERROR, message);
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return NULL;
 		}
@@ -173,7 +173,7 @@ PyObject * parsed_command::to_py_object()
 			message += cmd_;
 			message += " Gcode: ";
 			message += gcode_;
-			octolapse_log(GCODE_PARSER, ERROR, message);
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 			PyErr_SetString(PyExc_ValueError, message.c_str());
 			return NULL;
 		}

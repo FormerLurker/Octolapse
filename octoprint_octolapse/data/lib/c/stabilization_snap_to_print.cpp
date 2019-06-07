@@ -139,7 +139,7 @@ void stabilization_snap_to_print::process_pos(position* p_current_pos, position*
 				}
 				else
 				{
-					octolapse_log(octolapse_loggers::SNAPSHOT_PLAN, octolapse_log_levels::WARNING, "Octolapse missed a layer while creating a snapshot plan due to a height restriction.");
+					octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::WARNING, "Octolapse missed a layer while creating a snapshot plan due to a height restriction.");
 				}
 			}
 		}

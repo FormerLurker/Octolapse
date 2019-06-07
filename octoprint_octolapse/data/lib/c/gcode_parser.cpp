@@ -108,7 +108,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 	{
 		std::string message = "No gcode command was found: ";
 		message += gcode;
-		octolapse_log(GCODE_PARSER, WARNING, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 		return false;
 	}
 	command->gcode_ = gcode;
@@ -119,7 +119,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
 		std::string message = "The gcode command is not in the parsable commands set: ";
 		message += gcode;
-		octolapse_log(GCODE_PARSER, VERBOSE, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
 		return true;
 	}
 
@@ -132,7 +132,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		{
 			std::string message = "Unable to extract a text parameter from: ";
 			message += p;
-			octolapse_log(GCODE_PARSER, WARNING, message);
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 			return true;
 		}
 		p_text_command->name_ = "TEXT";
@@ -148,7 +148,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 			{
 				std::string message = "Unable to extract a parameter from the T command: ";
 				message += gcode;
-				octolapse_log(GCODE_PARSER, ERROR, message);
+				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 				delete param;
 				param = NULL;
 			}
@@ -419,7 +419,7 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 		if(!try_extract_unsigned_long(&p,&(parameter->unsigned_long_value_)))
 		{
 			std::string message = "GcodeParser.try_extract_t_parameter: Unable to extract parameters from the T command.";
-			octolapse_log(GCODE_PARSER, WARNING, message);
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 			//std::cout << "No parameter for the T command.\r\n";
 			return false;
 		}
