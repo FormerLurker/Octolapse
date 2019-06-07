@@ -72,8 +72,8 @@ plugin_ignored_packages = []
 
 copt = {
     'msvc': ['/Ox', '/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot'],
-    'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native'],
-    'gcc': ['-O3']
+    'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native', '-std=c++11'],
+    'gcc': ['-O3', '-std=c++11']
 }
 
 lopt = {

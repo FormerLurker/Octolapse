@@ -91,12 +91,6 @@ typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, 
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
 
-class NotImplemented : public std::logic_error
-{
-public:
-	NotImplemented() : std::logic_error("Function not yet implemented") { };
-};
-
 class stabilization
 {
 public:
