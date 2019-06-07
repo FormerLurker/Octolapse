@@ -24,18 +24,19 @@ static const char* SMART_LAYER_STABILIZATION = "smart_layer";
  * high_quality - Gets a close non-extrusion position and automatically balance time and quality   Returns a lesser quality position if no good quality position is found.\n
  * best_quality - gets the best non-extrusion position available.  Skips snapshots if no quality position can be found.\n
  */
-enum trigger_type { fastest, fast, compatibility, normal_quality, high_quality, best_quality };
+
 
 struct smart_layer_args
 {
+	enum trigger_type { fastest, fast, compatibility, normal_quality, high_quality, best_quality };
 	smart_layer_args()
 	{
-		smart_layer_trigger_type = trigger_type::compatibility;
+		smart_layer_trigger_type = smart_layer_args::compatibility;
 		speed_threshold = 0;
 		distance_threshold_percent = 0;
 		snap_to_print = false;
 	}
-	trigger_type smart_layer_trigger_type;
+	smart_layer_args::trigger_type smart_layer_trigger_type;
 	double speed_threshold;
 	double distance_threshold_percent;
 	bool snap_to_print;
@@ -55,7 +56,7 @@ private:
 	void add_plan();
 	void reset_saved_positions();
 	bool can_process_position(position* p_position, trigger_position::position_type type);
-	trigger_type get_trigger_type();
+	smart_layer_args::trigger_type get_trigger_type();
 	trigger_position* get_closest_position();
 	/**
 	 * \brief Determine if a position is closer.  If necessary, filter based on speed, and also detect 

@@ -69,10 +69,10 @@ stabilization_smart_layer::~stabilization_smart_layer()
 	
 }
 
-trigger_type stabilization_smart_layer::get_trigger_type()
+smart_layer_args::trigger_type stabilization_smart_layer::get_trigger_type()
 {
 	if (p_smart_layer_args_->snap_to_print)
-		return fastest;
+		return smart_layer_args::fastest;
 	return p_smart_layer_args_->smart_layer_trigger_type;
 }
 
@@ -86,7 +86,7 @@ bool stabilization_smart_layer::can_process_position(position* p_position, trigg
 
 	if (type == trigger_position::extrusion)
 	{
-		if (get_trigger_type() > trigger_type::compatibility)
+		if (get_trigger_type() > smart_layer_args::compatibility)
 			return false;
 	}
 
@@ -180,7 +180,7 @@ bool stabilization_smart_layer::is_closer(position * p_position, trigger_positio
 {
 	// Fist check the speed threshold if we are running a fast trigger type
 	// We want to ignore any extrusions that are below the speed threshold
-	const bool filter_extrusion_speeds = get_trigger_type() == trigger_type::fast && type == trigger_position::extrusion;
+	const bool filter_extrusion_speeds = get_trigger_type() == smart_layer_args::fast && type == trigger_position::extrusion;
 	if (filter_extrusion_speeds)
 	{
 		// Initialize our previous extrusion speed if it's not been initialized
@@ -263,19 +263,19 @@ trigger_position* stabilization_smart_layer::get_closest_position()
 {
 	switch (get_trigger_type())
 	{
-		case fastest:
+	case smart_layer_args::fastest:
 			return closest_positions_.get_fastest_position();
-		case fast:
+		case smart_layer_args::fast:
 			if (has_one_extrusion_speed_)
 				return closest_positions_.get_compatibility_position();
 			return closest_positions_.get_fastest_position();
-		case compatibility:
+		case smart_layer_args::compatibility:
 			return closest_positions_.get_compatibility_position();
-		case normal_quality:
+		case smart_layer_args::normal_quality:
 			return closest_positions_.get_normal_quality_position();
-		case high_quality:
+		case smart_layer_args::high_quality:
 			return closest_positions_.get_high_quality_position();
-		case best_quality:
+		case smart_layer_args::best_quality:
 			return closest_positions_.get_best_quality_position();
 		default:
 			return NULL;

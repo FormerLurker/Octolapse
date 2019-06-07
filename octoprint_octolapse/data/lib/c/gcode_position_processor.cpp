@@ -1111,7 +1111,7 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_type from the smart layer trigger stabilization args.");
 		return false;
 	}
-	args->smart_layer_trigger_type = static_cast<trigger_type>(PyLong_AsLong(py_trigger_type));
+	args->smart_layer_trigger_type = static_cast<smart_layer_args::trigger_type>(PyLong_AsLong(py_trigger_type));
 
 	// Extract speed_threshold
 	PyObject * py_speed_threshold = PyDict_GetItemString(py_args, "speed_threshold");
