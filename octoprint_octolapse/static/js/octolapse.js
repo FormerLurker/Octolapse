@@ -347,11 +347,23 @@ $(function () {
     }
 
     Octolapse.ConfirmDialogs = {};
+    Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
+        if (!$.isArray(remove_keys))
+        {
+            remove_keys = [remove_keys];
+        }
+        for (var index = 0; index < remove_keys.length; index++) {
+            var key = remove_keys[index];
+            if (key in Octolapse.ConfirmDialogs) {
+
+                Octolapse.ConfirmDialogs[key].remove();
+                delete Octolapse.ConfirmDialogs[key];
+            }
+        }
+    }
     Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel)
     {
-        if (key in Octolapse.ConfirmDialogs) {
-            Octolapse.ConfirmDialogs[key].remove();
-        }
+        Octolapse.closeConfirmDialogsForKeys([key]);
         Octolapse.ConfirmDialogs[key] = (
             new PNotify({
                 title: title,
@@ -816,7 +828,7 @@ $(function () {
         var self = this;
         self.message = "Are you sure?";
         self.title = "Confirm";
-        self.key = 'confirmation';
+        self.dialog_key = 'confirmation';
         self.before_confirm_callback = null;
         self.cancel_callback = null;
         self.confirmed_callbacked = null;
@@ -839,7 +851,7 @@ $(function () {
             if(options.title)
                 self.title = options.title;
             if(options.key)
-                self.key = options.key;
+                self.dialog_key = options.key;
             if(options.on_before_confirm)
                 self.before_confirm_callback = options.on_before_confirm;
             if(options.on_cancel)
@@ -860,7 +872,10 @@ $(function () {
             if(self.before_confirm_callback)
             {
                 options = self.before_confirm_callback(self.new_value, self.current_value);
-                self.get_options(options);
+                if (options)
+                {
+                    self.get_options(options);
+                }
             }
         };
 
@@ -902,7 +917,7 @@ $(function () {
                         self.on_before_confirm();
                         var current_value = target();
                         Octolapse.showConfirmDialog(
-                            self.key,
+                            self.dialog_key,
                             self.title,
                             self.message,
                             function() {

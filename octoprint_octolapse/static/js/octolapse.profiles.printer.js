@@ -168,7 +168,7 @@ $(function() {
                         self.updateProfileFromLibrary({
                             on_failed: function () {
                                 self.ignore_is_custom_change = true;
-                                self.is_custom(old_is_custom);
+                                self.is_custom(self.old_is_custom);
                                 self.ignore_is_custom_change = false;
                                 self.ignore_model_changes = true;
                                 self.make(oldValue);
@@ -207,6 +207,8 @@ $(function() {
                     self.ignore_is_custom_change=true;
                     self.is_custom(true);
                     self.ignore_is_custom_change=false;
+                    // Is custom triggered a model update, which is a special case
+                    // mark it
                     self.is_custom_triggered_update = true;
                     var current_model = self.model();
                     self.ignore_model_changes = true;
@@ -306,7 +308,8 @@ $(function() {
             );
         },this);
         
-        self.updateProfileFromLibrary = function(on_failed){
+        self.updateProfileFromLibrary = function(options){
+            var on_failed = options.on_failed;
             var data = {
                 'type': 'printer',
                 'profile': parent.toJS(),
@@ -343,6 +346,7 @@ $(function() {
                         self.ignore_is_custom_change = false;
                     }
                     else{
+                        // Is custom triggered the change, clear the flag
                         self.is_custom_triggered_update = false;
                     }
                     // Update the parent data
@@ -387,7 +391,8 @@ $(function() {
         };
 
         self.on_closed = function(){
-            Octolapse.closePopupsForKeys(['printer-profile-update', 'confirm-is-automatic']);
+            Octolapse.closePopupsForKeys(['printer-profile-update']);
+            Octolapse.closeConfirmDialogsForKeys(['confirm-load-server-profile']);
         }
     };
     

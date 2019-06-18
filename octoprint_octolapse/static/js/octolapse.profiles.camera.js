@@ -266,6 +266,7 @@ $(function() {
         self.on_closed = function(){
             console.log("Closing camera profile");
             self.webcam_settings.stream_template("");
+            self.automatic_configuration.on_closed();
         };
 
         self.on_cancelled = function(){
@@ -275,7 +276,7 @@ $(function() {
                 (self.apply_settings_at_startup() || self.apply_settings_before_print())
             )
                 self.webcam_settings.cancelWebcamChanges();
-        }
+        };
 
         self.updateFromServer = function(values) {
             self.guid = ko.observable(values.guid);

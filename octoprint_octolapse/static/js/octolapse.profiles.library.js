@@ -37,6 +37,8 @@ $(function() {
         self.old_is_custom = null;
         self.ignore_is_custom_change = false;
         self.ignore_key_change = false;
+        // tracks if the is_custom value triggered a server profile update
+        self.is_custom_triggered_update = false;
         // profile observables
         self.version = ko.observable(values.version);
         self.suppress_update_notification_version = ko.observable(values.suppress_update_notification_version);
@@ -92,11 +94,13 @@ $(function() {
                         self.updateProfileFromLibrary({
                             on_failed: function () {
                                 self.ignore_is_custom_change = true;
-                                self.is_custom(old_is_custom);
+                                self.is_custom(self.old_is_custom);
                                 self.ignore_is_custom_change = false;
                                 self.ignore_key_change = true;
                                 self.key(oldValue);
                                 self.ignore_key_change = false;
+                                // We need to mark this in case of failure, else is_custom might not revert properly
+                                self.is_custom_triggered_update = false;
                             }
                         });
                     }
@@ -113,6 +117,9 @@ $(function() {
                 self.ignore_key_change = true;
                 self.key(null);
                 self.ignore_key_change = false;
+                // Is custom triggered a model update, which is a special case
+                // mark it
+                self.is_custom_triggered_update = true;
                 // If we've switched from an automatically configured profile to a custom profile, display this
                 // temporarily to inform the user.
                 if (old_key && old_key != 'custom')
@@ -157,7 +164,8 @@ $(function() {
         },this);
         
         self.on_closed = function(){
-            Octolapse.closePopupsForKeys(['profile-library-update', 'confirm-load-server-profile']);
+            Octolapse.closePopupsForKeys(['profile-library-update']);
+            Octolapse.closeConfirmDialogsForKeys(['confirm-load-server-profile']);
         };
         
         self.updateProfileFromLibrary = function(options){
@@ -199,9 +207,18 @@ $(function() {
                     self.key(automatic_configuration.key);
                     self.ignore_key_change = false;
                     self.ignore_is_custom_change = true;
-                    self.is_custom(false);
                     self.ignore_is_custom_change = false;
                     self.automatic_changed_to_custom(false);
+                    // If is custom did not trigger the change, set is suctom to false
+                    if(!self.is_custom_triggered_update) {
+                        self.ignore_is_custom_change = true;
+                        self.is_custom(false);
+                        self.ignore_is_custom_change = false;
+                    }
+                    else{
+                        // Is custom triggered the change, clear the flag
+                        self.is_custom_triggered_update = false;
+                    }
                     // Update the parent data
                     self.update_callback(updated_profile);
         
