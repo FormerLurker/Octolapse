@@ -45,6 +45,8 @@ $(function () {
         self.show_trigger_state_changes = ko.observable();
         self.show_snapshot_plan_information = ko.observable();
         self.preview_snapshot_plans = ko.observable();
+        self.automatic_updates_enabled = ko.observable();
+        self.automatic_update_interval_days = ko.observable();
         // Informational Values
         self.platform = ko.observable();
 
@@ -73,7 +75,8 @@ $(function () {
             self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
             self.preview_snapshot_plans(settings.preview_snapshot_plans);
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
-
+            self.automatic_update_interval_days(settings.automatic_update_interval_days);
+            self.automatic_updates_enabled(settings.automatic_updates_enabled);
 
             //self.platform(settings.platform());
 
@@ -128,6 +131,8 @@ $(function () {
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
             self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information());
             self.preview_snapshot_plans(Octolapse.Globals.preview_snapshot_plans());
+            self.automatic_update_interval_days(Octolapse.Globals.automatic_update_interval_days());
+            self.automatic_updates_enabled(Octolapse.Globals.automatic_updates_enabled());
 
             self.cancel_print_on_startup_error(Octolapse.Globals.cancel_print_on_startup_error());
 
@@ -225,6 +230,8 @@ $(function () {
                     self.show_trigger_state_changes(false);
                     self.show_snapshot_plan_information(false);
                     self.preview_snapshot_plans(false);
+                    self.automatic_update_interval_days(7);
+                    self.automatic_updates_enabled(true);
 
                 });
 
@@ -247,6 +254,8 @@ $(function () {
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
                             , "show_snapshot_plan_information": self.show_snapshot_plan_information()
                             , "preview_snapshot_plans": self.preview_snapshot_plans()
+                            , "automatic_update_interval_days": self.automatic_update_interval_days()
+                            , "automatic_updates_enabled": self.automatic_updates_enabled()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
                             , "client_id": Octolapse.Globals.client_id
                         };

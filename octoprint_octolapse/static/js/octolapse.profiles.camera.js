@@ -219,8 +219,7 @@ $(function() {
             self.testCustomImagePreferences(self.apply_settings_before_print,id);
         };
 
-        self.testCustomImagePreferences = function(bool_observable, id)
-        {
+        self.testCustomImagePreferences = function(bool_observable, id){
             self.is_testing_custom_image_preferences(true);
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
@@ -277,6 +276,46 @@ $(function() {
             )
                 self.webcam_settings.cancelWebcamChanges();
         }
+
+        self.updateFromServer = function(values) {
+            self.guid = ko.observable(values.guid);
+            self.name = ko.observable(values.name);
+            self.enabled = ko.observable(values.enabled);
+            self.description = ko.observable(values.description);
+            self.camera_type = ko.observable(values.camera_type);
+            //self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+            //self.on_print_start_script = ko.observable(values.on_print_start_script);
+            //self.on_before_snapshot_script = ko.observable(values.on_before_snapshot_script);
+            //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
+            //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
+            //self.on_before_render_script = ko.observable(values.on_before_render_script);
+            //self.on_after_render_script = ko.observable(values.on_after_render_script);
+            self.delay = ko.observable(values.delay);
+            self.timeout_ms = ko.observable(values.timeout_ms);
+            self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
+            self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
+            self.snapshot_transpose = ko.observable(values.snapshot_transpose);
+            self.webcam_settings.updateWebcamSettings(values);
+        };
+
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+            values.automatic_configuration,
+            Octolapse.Cameras.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            true,
+            self.updateFromServer
+        );
+
+        self.toJS = function()
+        {
+            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var parent = self.automatic_configuration.parent;
+            self.automatic_configuration.parent = null;
+            var copy = ko.toJS(self);
+            self.automatic_configuration.parent = parent;
+            return copy;
+        };
     };
 
     Octolapse.CameraProfileValidationRules = {

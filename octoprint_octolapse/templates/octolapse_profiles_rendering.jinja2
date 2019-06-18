@@ -44,6 +44,8 @@
             </div>
         </div>
     </div>
+    <div data-bind="template: {name: 'octolapse-profile-library-template', data: automatic_configuration}"></div>
+    <hr />
     <div class="control-group">
         <label class="control-label">Timelapse Generation</label>
         <div class="controls">
@@ -449,8 +451,14 @@
             <div class="control-group">
                 <label class="control-label">Filename Template</label>
                 <div class="controls">
-                    <input id="octolapse_output_template" name="output_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: output_template" required="true" />
-                    <a class="octolapse_help" data-help-url="profiles.rendering.output_template.md" data-help-title="Rendering Filename Template"/>
+                    <div class="row-fluid">
+                        <div class="span11">
+                            <input id="octolapse_output_template" name="output_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: output_template" required="true" />
+                        </div>
+                        <div class="span1">
+                            <a class="octolapse_help" data-help-url="profiles.rendering.output_template.md" data-help-title="Rendering Filename Template"/>
+                        </div>
+                    </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_output_template"></div>
                     <span class="help-inline">
                         Determines the rendering file name.  You can use the following replacement tokens:
@@ -478,6 +486,8 @@
         </div>
     </div>
 </script>
+
+
 
 
 

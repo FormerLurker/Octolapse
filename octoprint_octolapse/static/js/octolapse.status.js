@@ -126,7 +126,7 @@ $(function () {
                 });
 
 
-            }
+            };
 
             self.hasOneCameraEnabled = ko.pureComputed(function(){
                 var hasConfigIssue = true;
@@ -575,7 +575,9 @@ $(function () {
             self.stopTimelapse = function () {
                 if (Octolapse.Globals.is_admin()) {
                     //console.log("octolapse.status.js - ButtonClick: StopTimelapse");
-                    if (confirm("Warning: You cannot restart octolapse once it is stopped until the next print.  Do you want to stop Octolapse?")) {
+                    var message = "Warning: You cannot restart octolapse once it is stopped until the next print." +
+                        "  Do you want to stop Octolapse?";
+                    if (confirm(message)) {
                         $.ajax({
                             url: "./plugin/octolapse/stopTimelapse",
                             type: "POST",
@@ -616,11 +618,23 @@ $(function () {
                     });
             };
 
+            // Octolapse settings link
+            self.openOctolapseSettings = function() {
+                var timeout = 250;
+                var total_tries = 3/(250/1000);
+                var tries = 0;
+                $('a#navbar_show_settings').click();
+                $('li#settings_plugin_octolapse_link a').click();
+            };
             // Printer Profile Settings
             self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });
             self.openCurrentPrinterProfile = function () {
                 //console.log("Opening current printer profile from tab.")
                 Octolapse.Printers.showAddEditDialog(self.current_printer_profile_guid(), false);
+            };
+            self.createNewPrinterProfile = function () {
+                //console.log("Opening current printer profile from tab.")
+                Octolapse.Printers.showAddEditDialog(null, false);
             };
             self.defaultPrinterChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {

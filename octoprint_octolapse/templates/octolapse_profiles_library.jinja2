@@ -1,0 +1,39 @@
+<script type="text/html" id="octolapse-profile-library-template">
+    <div>
+        <hr/>
+        <div>
+            <h4>Import Profile</h4>
+            <p>Choose a pre-configured profile from the list to import a profile from the server.  You may have to configure some items manually after importing a new profile.
+            </p>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <select id="library_profile_server_profile_name" data-bind="options: server_profiles,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: key,
+                                   optionsCaption: 'Select a profile to import...'"></select>
+                <a class="octolapse_help" data-help-url="profiles.library.server_profiles.md" data-help-title="Import Server Profiles" />
+                <div class="error_label_container text-error" data-error-for="library_profile_server_profile_name"></div>
+            </div>
+        </div>
+        <div data-bind="fadeVisible:key() && key() != 'other' && can_update_from_server()">
+            <div class="control-group">
+                <label class="control-label" for="library_profile_is_custom">Customize Profile</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input id="library_profile_is_custom" name="is_custom" type="checkbox" data-bind="checked: is_custom" title="Customize the current automatically configured profile" />Enabled
+                        <a class="octolapse_help" data-help-url="profiles.library.is_custom.md" data-help-title="Customize Server Profile" />
+                    </label>
+                    <span class="help-inline">
+                        Allows you to make changes to the current profile, or to view the profile settings.  Prevents server updates.
+                    </span>
+                </div>
+            </div>
+
+        </div>
+        <div data-bind="fadeVisible: automatic_changed_to_custom">
+            <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
+        </div>
+    </div>
+</script>

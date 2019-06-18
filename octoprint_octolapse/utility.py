@@ -753,3 +753,15 @@ class TimelapseJobInfo(object):
             self.PrintEndTime = job_info.PrintEndTime
             self.PrintEndState = job_info.PrintEndState
             self.PrintFileName = job_info.PrintFileName
+
+
+class RecurringTimerThread(threading.Thread):
+    def __init__(self, interval_seconds, callback, cancel_event):
+        threading.Thread.__init__(self)
+        self.interval_seconds = interval_seconds
+        self.callback = callback
+        self.stopped = cancel_event
+
+    def run(self):
+        while not self.stopped.wait(self.interval_seconds):
+            self.callback()

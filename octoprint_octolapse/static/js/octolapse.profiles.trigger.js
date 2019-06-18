@@ -23,6 +23,7 @@
 */
 $(function () {
     Octolapse.TriggerProfileViewModel = function (values) {
+        
         var self = this;
         self.profileTypeName = ko.observable("Trigger");
         self.guid = ko.observable(values.guid);
@@ -46,16 +47,7 @@ $(function () {
             Layer/Height Trigger Settings
         */
         self.layer_trigger_height = ko.observable(values.layer_trigger_height);
-        /*
-        * Position Restrictions
-        * */
-        self.position_restrictions_enabled = ko.observable(values.position_restrictions_enabled);
-        self.position_restrictions = ko.observableArray([]);
-        for (var index = 0; index < values.position_restrictions.length; index++) {
-            self.position_restrictions.push(
-                ko.observable(values.position_restrictions[index]));
-        }
-
+        
         /*
         * Quaity Settiings
         */
@@ -72,6 +64,17 @@ $(function () {
         self.trigger_on_deretracting = ko.observable(values.trigger_on_deretracting);
         self.trigger_on_deretracted = ko.observable(values.trigger_on_deretracted);
         self.require_zhop = ko.observable(values.require_zhop);
+        
+        /*
+        * Position Restrictions
+        * */
+        self.position_restrictions_enabled = ko.observable(values.position_restrictions_enabled);
+        self.position_restrictions = ko.observableArray([]);
+        for (var index = 0; index < values.position_restrictions.length; index++) {
+            self.position_restrictions.push(
+                ko.observable(values.position_restrictions[index]));
+        }
+
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');
         self.new_position_restriction_shape = ko.observable('rect');
@@ -135,6 +138,60 @@ $(function () {
         self.removePositionRestriction = function (index) {
             console.log("Removing restriction at index: " + index);
             self.position_restrictions.splice(index, 1);
+        };
+        
+        self.updateFromServer = function(values) {
+            self.guid(values.guid);
+            self.name(values.name);
+            self.description(values.description);
+            self.trigger_type(values.trigger_type);
+            self.snap_to_print_disable_z_lift(values.snap_to_print_disable_z_lift);
+            self.fastest_speed(values.fastest_speed);
+            self.smart_layer_trigger_type(values.smart_layer_trigger_type);
+            self.smart_layer_trigger_speed_threshold(values.smart_layer_trigger_speed_threshold);
+            self.smart_layer_trigger_distance_threshold_percent(values.smart_layer_trigger_distance_threshold_percent);
+            self.smart_layer_snap_to_print(values.smart_layer_snap_to_print);
+            self.smart_layer_disable_z_lift(values.smart_layer_disable_z_lift);
+            self.trigger_subtype(values.trigger_subtype);
+            self.timer_trigger_seconds(values.timer_trigger_seconds);
+            self.layer_trigger_height(values.layer_trigger_height);
+            self.extruder_state_requirements_enabled(values.extruder_state_requirements_enabled);
+            self.trigger_on_extruding(values.trigger_on_extruding);
+            self.trigger_on_extruding_start(values.trigger_on_extruding_start);
+            self.trigger_on_primed(values.trigger_on_primed);
+            self.trigger_on_retracting_start(values.trigger_on_retracting_start);
+            self.trigger_on_retracting(values.trigger_on_retracting);
+            self.trigger_on_partially_retracted(values.trigger_on_partially_retracted);
+            self.trigger_on_retracted(values.trigger_on_retracted);
+            self.trigger_on_deretracting_start(values.trigger_on_deretracting_start);
+            self.trigger_on_deretracting(values.trigger_on_deretracting);
+            self.trigger_on_deretracted(values.trigger_on_deretracted);
+            self.require_zhop(values.require_zhop);
+            self.position_restrictions_enabled(values.position_restrictions_enabled);
+            self.position_restrictions([]);
+            for (var index = 0; index < values.position_restrictions.length; index++) {
+                self.position_restrictions.push(
+                    ko.observable(values.position_restrictions[index]));
+            }
+        };
+        
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+            values.automatic_configuration,
+            Octolapse.Triggers.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            true,
+            self.updateFromServer
+        );
+
+        self.toJS = function()
+        {
+            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var parent = self.automatic_configuration.parent;
+            self.automatic_configuration.parent = null;
+            var copy = ko.toJS(self);
+            self.automatic_configuration.parent = parent;
+            return copy;
         };
     };
 

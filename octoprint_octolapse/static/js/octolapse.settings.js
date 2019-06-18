@@ -176,8 +176,10 @@ $(function () {
         };
 
         self.onAfterBinding = function (){
+            // initialize settings import
             Octolapse.SettingsImport.initialize();
         };
+
         // Update all octolapse settings
         self.updateSettings = function (settings) {
             console.log("Settings Received:");
@@ -198,7 +200,8 @@ $(function () {
                 'xyz_axes_default_mode_options': settings.profiles.options.printer.xyz_axes_default_mode_options,
                 'units_default_options': settings.profiles.options.printer.units_default_options,
                 'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options,
-                'cura_surface_mode_options': settings.profiles.options.printer.cura_surface_mode_options
+                'cura_surface_mode_options': settings.profiles.options.printer.cura_surface_mode_options,
+                'makes_and_models': settings.profiles.options.printer.makes_and_models
             };
             Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
             Object.keys(settings.profiles.printers).forEach(function(key) {
@@ -209,6 +212,7 @@ $(function () {
             Octolapse.Stabilizations.profiles([]);
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
             Octolapse.Stabilizations.profileOptions = {
+                'server_profiles': settings.profiles.options.stabilization.server_profiles,
                 'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
                 'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
                 'smart_layer_trigger_type_options': settings.profiles.options.stabilization.smart_layer_trigger_type_options,
@@ -226,6 +230,7 @@ $(function () {
             Octolapse.Triggers.profiles([]);
             Octolapse.Triggers.default_profile(settings.profiles.defaults.trigger);
             Octolapse.Triggers.profileOptions = {
+                'server_profiles': settings.profiles.options.trigger.server_profiles,
                 'trigger_type_options': settings.profiles.options.trigger.trigger_type_options,
                 'real_time_xy_trigger_type_options': settings.profiles.options.trigger.real_time_xy_trigger_type_options,
                 'smart_layer_trigger_type_options': settings.profiles.options.trigger.smart_layer_trigger_type_options,
@@ -243,6 +248,7 @@ $(function () {
             Octolapse.Renderings.profiles([]);
             Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
             Octolapse.Renderings.profileOptions = {
+                'server_profiles': settings.profiles.options.rendering.server_profiles,
                 'rendering_fps_calculation_options': settings.profiles.options.rendering.rendering_fps_calculation_options,
                 'rendering_output_format_options': settings.profiles.options.rendering.rendering_output_format_options,
                 'rendering_file_templates': settings.profiles.options.rendering.rendering_file_templates,
@@ -260,6 +266,7 @@ $(function () {
             Octolapse.Cameras.profiles([]);
             Octolapse.Cameras.default_profile(settings.profiles.defaults.camera);
             Octolapse.Cameras.profileOptions = {
+                'server_profiles': settings.profiles.options.camera.server_profiles,
                 'camera_powerline_frequency_options': settings.profiles.options.camera.camera_powerline_frequency_options,
                 'camera_exposure_type_options': settings.profiles.options.camera.camera_exposure_type_options,
                 'camera_led_1_mode_options': settings.profiles.options.camera.camera_led_1_mode_options,
@@ -276,6 +283,7 @@ $(function () {
             Octolapse.DebugProfiles.profiles([]);
             Octolapse.DebugProfiles.default_profile(settings.profiles.defaults.debug);
             Octolapse.DebugProfiles.profileOptions = {
+                'server_profiles': settings.profiles.options.debug.server_profiles,
                 'logging_levels': settings.profiles.options.debug.logging_levels,
                 'all_logger_names': settings.profiles.options.debug.all_logger_names
             };
@@ -420,7 +428,56 @@ $(function () {
             Octolapse.DebugProfiles.default_profile(null);
             Octolapse.DebugProfiles.current_profile_guid(null);
             Octolapse.DebugProfiles.profileOptions = {};
-        }
+        };
+
+        self.updateProfilesFromServer = function() {
+
+            console.log("Updating Octolapse profiles from the server.");
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            var data = {
+                'client_id': Octolapse.Globals.client_id
+            };
+            $.ajax({
+                url: "./plugin/octolapse/updateProfilesFromServer",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (newSettings) {
+                    console.log("Octolapse profiles updated from the server.");
+                    self.updateSettings(newSettings);
+                    Octolapse.Globals.loadState();
+                    var message = "Your Octolapse profiles are up-to-date.";
+                    var options = {
+                        title: 'Profiles Updated',
+                        text: message,
+                        type: 'success',
+                        hide: true,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Error updating octolapse profiles from the server.");
+                    var message = "Octolapse was unable to update your profiles to the most recent version the current settings.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Profile Update Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                }
+            });
+        };
+
         /*
             Profile Add/Update routine for showAddEditDialog
         */
@@ -662,11 +719,16 @@ $(function () {
                 });
 
                 // see if the current viewmodel has an on_opened function
-                if (typeof self.profileObservable().on_opened === 'function')
-                {
+                if (typeof self.profileObservable().on_opened === 'function'){
                     // call the function
                     self.profileObservable().on_opened();
                 }
+
+                dialog.resize_handler = function() {
+                    //Todo: write resize routine for settings handler
+                };
+
+                $(window).bind("resize", dialog.resize_handler);
             });
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal();

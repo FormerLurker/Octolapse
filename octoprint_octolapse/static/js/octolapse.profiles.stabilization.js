@@ -49,6 +49,50 @@ $(function () {
         self.y_relative_path_loop = ko.observable(values.y_relative_path_loop);
         self.y_relative_path_invert_loop = ko.observable(values.y_relative_path_invert_loop);
 
+        self.updateFromServer = function(values) {
+            self.guid(values.guid);
+            self.name(values.name);
+            self.description(values.description);
+            self.x_type(values.x_type);
+            self.x_fixed_coordinate(values.x_fixed_coordinate);
+            self.x_fixed_path(values.x_fixed_path);
+            self.x_fixed_path_loop(values.x_fixed_path_loop);
+            self.x_fixed_path_invert_loop(values.x_fixed_path_invert_loop);
+            self.x_relative(values.x_relative);
+            self.x_relative_print(values.x_relative_print);
+            self.x_relative_path(values.x_relative_path);
+            self.x_relative_path_loop(values.x_relative_path_loop);
+            self.x_relative_path_invert_loop(values.x_relative_path_invert_loop);
+            self.y_type(values.y_type);
+            self.y_fixed_coordinate(values.y_fixed_coordinate);
+            self.y_fixed_path(values.y_fixed_path);
+            self.y_fixed_path_loop(values.y_fixed_path_loop);
+            self.y_fixed_path_invert_loop(values.y_fixed_path_invert_loop);
+            self.y_relative(values.y_relative);
+            self.y_relative_print(values.y_relative_print);
+            self.y_relative_path(values.y_relative_path);
+            self.y_relative_path_loop(values.y_relative_path_loop);
+            self.y_relative_path_invert_loop(values.y_relative_path_invert_loop);
+        };
+        
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+            values.automatic_configuration,
+            Octolapse.Stabilizations.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            true,
+            self.updateFromServer
+        );
+
+        self.toJS = function()
+        {
+            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var parent = self.automatic_configuration.parent;
+            self.automatic_configuration.parent = null;
+            var copy = ko.toJS(self);
+            self.automatic_configuration.parent = parent;
+            return copy;
+        };
     };
 
 

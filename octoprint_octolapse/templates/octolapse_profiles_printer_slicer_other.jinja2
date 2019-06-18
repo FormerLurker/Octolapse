@@ -8,7 +8,7 @@
                 <h5>Retraction Length/Z-Hop Distance</h5>
             </div>
             <div class="control-group">
-                    <label class="control-label" for="printer_profile_other_retraction_enable">Retraction Enabled</label>
+                    <label class="control-label" for="printer_profile_other_retraction_enable">Retraction Enabled*</label>
                     <div class="controls">
                         <label class="checkbox">
                             <input id="printer_profile_other_retraction_enable" name="retraction_enable" type="checkbox" data-bind="checked: slicers.other.retraction_enable" title="Enable retraction" />Enabled
@@ -17,7 +17,7 @@
                     </div>
                 </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_other_slicer_retract_length">*Retraction Length</label>
+                <label class="control-label" for="printer_profile_other_slicer_retract_length">Retraction Length*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="printer_profile_other_slicer_retract_length" name="retract_length" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.retract_length" step="0.0001" min="0.0000" max="100.0" required/>
@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_slicer_other_z_hop">*Z-Hop Height</label>
+                <label class="control-label" for="printer_profile_slicer_other_z_hop">Z-Hop Height*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="printer_profile_slicer_other_z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.other.z_hop" step="0.0001" min="0.0000" max="100.0" required />
@@ -36,6 +36,11 @@
                     </div>
                     <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.z_hop.md" data-help-title="Z-Hop Height"/>
                     <div class="error_label_container text-error" data-error-for="printer_profile_slicer_other_z_hop"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
                 </div>
             </div>
             <div>
@@ -55,7 +60,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_travel_speed">*Movement Speed</label>
+                <label class="control-label" for="slicer_other_travel_speed">Movement Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_travel_speed" name="travel_speed" type="number"
@@ -68,7 +73,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_retract_speed">*Retraction Speed</label>
+                <label class="control-label" for="slicer_other_retract_speed">Retraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_retract_speed" name="retract_speed" type="number"
@@ -81,7 +86,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_deretract_speed">*Deretraction Speed</label>
+                <label class="control-label" for="slicer_other_deretract_speed">Deretraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_deretract_speed" name="deretract_speed" type="number"
@@ -94,7 +99,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_other_z_travel_speed">Z Movement Speed</label>
+                <label class="control-label" for="slicer_other_z_travel_speed">Z Movement Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_other_z_travel_speed" name="z_travel_speed" type="number"
@@ -104,6 +109,11 @@
                     </div>
                     <a class="octolapse_help" data-help-url="profiles.printer.slicers.other.z_travel_speed.md" data-help-title="Z Movement Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_other_z_travel_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
                 </div>
             </div>
             <div>

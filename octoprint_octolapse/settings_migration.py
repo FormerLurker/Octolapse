@@ -9,16 +9,19 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-
-def migrate_settings(current_version, settings_dict, default_settings_directory):
-    # extract the settings version
-    # note that the version moved from settings.version to settings.main_settings.version
+def get_version(settings_dict):
     version = 'unknown'
     if 'version' in settings_dict:
         version = settings_dict["version"]
     elif 'main_settings' in settings_dict and 'version' in settings_dict["main_settings"]:
         version = settings_dict["main_settings"]["version"]
-    else:
+    return version
+
+def migrate_settings(current_version, settings_dict, default_settings_directory):
+    # extract the settings version
+    # note that the version moved from settings.version to settings.main_settings.version
+    version = get_version(settings_dict)
+    if version == 'unknown':
         raise Exception("Could not find the settings version.")
 
     if LooseVersion(version) <= LooseVersion("0.3.3rc3.dev0"):

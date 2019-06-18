@@ -101,7 +101,43 @@ $(function() {
         {
             var debug_container = document.getElementById("octolapse_add_edit_profile_model_body");
             debug_container.scrollTop = debug_container.scrollHeight;
-        }
+        };
+        
+        self.updateFromServer = function(values) {
+            self.guid(values.guid);
+            self.name(values.name);
+            self.description(values.description);
+            self.enabled(values.enabled);
+            self.is_test_mode(values.is_test_mode);
+            self.log_to_console(values.log_to_console);
+            self.log_all_errors(values.log_all_errors);
+            self.enabled_loggers([]);
+            for (var index = 0; index < values.enabled_loggers.length; index++)
+            {
+                var curItem = values.enabled_loggers[index];
+                self.enabled_loggers.push({'name':curItem.name, 'log_level':curItem.log_level});
+            }
+        };
+        
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+            values.automatic_configuration,
+            Octolapse.DebugProfiles.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            true,
+            self.updateFromServer
+        );
+
+        self.toJS = function()
+        {
+            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var parent = self.automatic_configuration.parent;
+            self.automatic_configuration.parent = null;
+            var copy = ko.toJS(self);
+            self.automatic_configuration.parent = parent;
+            return copy;
+        };
+        
     };
     Octolapse.DebugProfileValidationRules = {
         rules: {

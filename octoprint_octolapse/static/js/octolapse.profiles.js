@@ -55,7 +55,7 @@ $(function() {
             if(self.profileTypeName == 'Printer')
             {
                 var current_printer = self.currentProfile();
-                if(current_printer!=null && !current_printer.saved_by_user_flag())
+                if(current_printer!=null && !current_printer.has_been_saved_by_user())
                     return false;
                 return true;
             }
@@ -63,7 +63,7 @@ $(function() {
         });
 
         // Created a sorted observable
-        self.profiles_sorted = ko.computed(function() { return Octolapse.nameSort(self.profiles) });
+        self.profiles_sorted = ko.computed(function() { return Octolapse.observableNameSort(self.profiles) });
 
         /*
             Octoprint Viewmodel Events
@@ -222,7 +222,6 @@ $(function() {
                 }
             });
         };
-
         /*
             Profile Create/Retrieve
         */

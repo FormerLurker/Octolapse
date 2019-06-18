@@ -140,14 +140,26 @@ $(function () {
     };
     Octolapse.HasTakenFirstSnapshot = false;
     // Returns an observable sorted by name(), case insensitive
-    Octolapse.nameSort = function (observable) {
+    Octolapse.observableNameSort = function (observable) {
         return observable().sort(
             function (left, right) {
                 var leftName = left.name().toLowerCase();
                 var rightName = right.name().toLowerCase();
                 return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
-            });
+            }
+        );
     };
+
+    Octolapse.nameSort = function (array_to_sort) {
+        return array_to_sort.sort(
+            function (left, right) {
+                var leftName = left.name.toLowerCase();
+                var rightName = right.name.toLowerCase();
+                return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
+            }
+        );
+    };
+
     // Toggles an element based on the data-toggle attribute.  Expects list of elements containing a selector, onClass and offClass.
     // It will apply the on or off class to the result of each selector, which should return exactly one result.
     Octolapse.toggle = function (caller, args) {
@@ -315,16 +327,24 @@ $(function () {
 
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
+        Octolapse.closePopupsForKeys(remove_keys);
+        Octolapse.Popups[popup_key] = new PNotify(options);
+    };
+
+    Octolapse.closePopupsForKeys = function(remove_keys) {
+        if (!$.isArray(remove_keys))
+        {
+            remove_keys = [remove_keys];
+        }
         for (var index = 0; index < remove_keys.length; index++) {
-            key = remove_keys[index];
+            var key = remove_keys[index];
             if (key in Octolapse.Popups) {
 
                 Octolapse.Popups[key].remove();
                 delete Octolapse.Popups[key];
             }
         }
-        Octolapse.Popups[popup_key] = new PNotify(options);
-    };
+    }
 
     Octolapse.ConfirmDialogs = {};
     Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel)
@@ -760,6 +780,155 @@ $(function () {
           } // End update
         }; // End octolapseSliderValue
 
+    // Got this cool snippit from the knockoutjs.com site!
+    // I added some jquery to disable elements so that no clicking can be done during the fade out
+    ko.bindingHandlers.fadeVisible = {
+        init: function(element, valueAccessor) {
+            // Initially set the element to be instantly visible/hidden depending on the value
+            var value = valueAccessor();
+            $(element).toggle(ko.unwrap(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+        },
+        update: function(element, valueAccessor) {
+            // Whenever the value subsequently changes, slowly fade the element in or out
+            var value = valueAccessor();
+            if(ko.unwrap(value))
+            {
+                $(element).removeClass("octolapse_unclickable").fadeIn();
+            }
+            else
+            {
+                $(element).addClass("octolapse_unclickable").fadeOut();
+            }
+        }
+    };
+    /*  Might need this.  Is an interesting extension
+        ko.subscribable.fn.subscribeChanged = function (callback) {
+            var savedValue = this.peek();
+            return this.subscribe(function (latestValue) {
+                var oldValue = savedValue;
+                savedValue = latestValue;
+                callback(latestValue, oldValue);
+            });
+        };
+    */
+
+    ko.extenders.confirmable = function(target, options) {
+        var self = this;
+        self.message = "Are you sure?";
+        self.title = "Confirm";
+        self.key = 'confirmation';
+        self.before_confirm_callback = null;
+        self.cancel_callback = null;
+        self.confirmed_callbacked = null;
+        self.complete_callback = null;
+        // If this callback returns true, the confirmable value will
+        // change and no other callbacks will be called.
+        self.ignore_callback = null;
+        // If this is true, no popup will be shown, but the value will change and
+        // confirmed_callback will be called, unless ignored_callback returns true
+        self.auto_confirm_callback = null;
+        self.new_value = null;
+        self.current_value = null;
+        self.is_ignored = null;
+        self.is_confirmed = null;
+        self.get_options = function(options){
+            if (!options)
+                return;
+            if(options.message)
+                self.message = options.message;
+            if(options.title)
+                self.title = options.title;
+            if(options.key)
+                self.key = options.key;
+            if(options.on_before_confirm)
+                self.before_confirm_callback = options.on_before_confirm;
+            if(options.on_cancel)
+                self.cancel_callback = options.on_cancel;
+            if(options.on_confirmed)
+                self.confirmed_callbacked = options.on_confirmed;
+            if(options.on_complete)
+                self.complete_callback = options.on_complete;
+            if(options.ignore)
+                self.ignore_callback = options.ignore;
+            if(options.auto_confirm)
+                self.auto_confirm_callback = options.auto_confirm;
+        };
+
+        self.get_options(options);
+
+        self.on_before_confirm = function(){
+            if(self.before_confirm_callback)
+            {
+                options = self.before_confirm_callback(self.new_value, self.current_value);
+                self.get_options(options);
+            }
+        };
+
+        self.on_cancel = function() {
+            if(self.cancel_callback)
+                self.cancel_callback(self.new_value, self.current_value);
+        };
+
+        self.on_confirmed = function() {
+            if(self.confirmed_callbacked)
+            self.confirmed_callbacked(self.new_value, self.current_value);
+        };
+
+        self.on_complete = function() {
+            if(self.complete_callback)
+                self.complete_callback(self.new_value, self.current_value, self.is_confirmed, self.is_ignored);
+        };
+
+        var result = ko.computed({
+            read: target,  //always return the original observables value
+            write: function(new_value) {
+                self.is_confirmed = false;
+                self.new_value = new_value;
+                self.current_value = target();
+                self.is_ignored = self.ignore_callback && self.ignore_callback(new_value, self.current_value);
+                if(!is_ignored)
+                {
+                    var auto_confirm = (
+                        self.auto_confirm_callback &&
+                        self.auto_confirm_callback(new_value, self.current_value)
+                    );
+                    if (auto_confirm) {
+                        self.on_confirmed();
+                        target(new_value);
+                        self.is_confirmed = true;
+                        self.on_complete();
+                    }
+                    else {
+                        self.on_before_confirm();
+                        var current_value = target();
+                        Octolapse.showConfirmDialog(
+                            self.key,
+                            self.title,
+                            self.message,
+                            function() {
+                                self.on_confirmed();
+                                target(new_value);
+                                self.is_confirmed = true;
+                                self.on_complete();
+                            }, function () {
+                                self.on_cancel();
+                                target.notifySubscribers(current_value);
+                                self.on_complete();
+                            }
+                        );
+                    }
+
+                }
+                else {
+                    target(new_value);
+                }
+
+            }
+        }).extend({ notify: 'always' });
+        //return the new computed observable
+        return result;
+    };
+
     ko.extenders.axis_speed_unit = function (target, options) {
         //console.log("rounding to axis speed units");
         var result = ko.pureComputed({
@@ -925,6 +1094,8 @@ $(function () {
         self.show_trigger_state_changes = ko.observable(false);
         self.show_snapshot_plan_information = ko.observable(false);
         self.preview_snapshot_plans = ko.observable(false);
+        self.automatic_updates_enabled = ko.observable(true);
+        self.automatic_update_interval_days = ko.observable(7);
         self.auto_reload_latest_snapshot = ko.observable(false);
         self.auto_reload_frames = ko.observable(5);
         self.is_admin = ko.observable(false);
@@ -1118,6 +1289,16 @@ $(function () {
             else
                 self.preview_snapshot_plans(settings.preview_snapshot_plans);
 
+            if (ko.isObservable(settings.automatic_updates_enabled))
+                self.automatic_updates_enabled(settings.automatic_updates_enabled());
+            else
+                self.automatic_updates_enabled(settings.automatic_updates_enabled);
+
+            if (ko.isObservable(settings.automatic_update_interval_days ))
+                self.automatic_update_interval_days(settings.automatic_update_interval_days());
+            else
+                self.automatic_update_interval_days(settings.automatic_update_interval_days);
+
             if (ko.isObservable(settings.show_trigger_state_changes))
                 self.show_trigger_state_changes(settings.show_trigger_state_changes());
             else
@@ -1267,11 +1448,39 @@ $(function () {
                     }
 
                     break;
+                case "updated-profiles-available":
+                    if (self.is_admin())
+                    {
+                        var message;
+                        if (Octolapse.Status.is_timelapse_active())
+                        {
+                            message = "There are profiles available to update. " +
+                                      "It is safe to update these profiles while a timelapse is running. " +
+                                      "Would you like to update these now?";
+                        }
+                        else
+                        {
+                            message = "There are profiles available to update. " +
+                                      " Would you like to update these now?";
+                        }
+                        Octolapse.showConfirmDialog(
+                            "update-all-automatic-profiles",
+                            "Update Octolapse Profiles",
+                            message,
+                            function(){
+                                Octolapse.Settings.updateProfilesFromServer();
+                            }
+                        );
+                    }
+                    break;
+                case "external_profiles_list_changed":
+                    Octolapse.Printers.profileOptions.makes_and_models = data.makes_and_models;
+                    break;
                 case "settings-changed":
                     {
-                        // Was this from us?
                         if (Octolapse.Settings.is_loaded())
                             self.updateState(data);
+                        // Was this from us?
                         if (self.client_id !== data.client_id && self.is_admin())
                         {
                             Octolapse.showConfirmDialog(
@@ -1646,14 +1855,16 @@ $(function () {
                     break;
                 case "warning":
                     //console.log("A warning was sent to the plugin.")
-                        var options = {
-                            title: 'Octolapse - Warning',
-                            text: data.msg,
-                            type: 'notice',
-                            hide: true,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopup(options, "warning");
+                    var options = {
+                        title: 'Octolapse - Warning',
+                        text: data.msg,
+                        type: 'notice',
+                        hide: true,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopup(options, "warning");
+                    break;
+
                 default:
                     {
                         //console.log('Octolapse.js - passing on message from server.  DataType:' + data.type);

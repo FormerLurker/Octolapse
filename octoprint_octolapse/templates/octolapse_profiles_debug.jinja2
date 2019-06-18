@@ -41,6 +41,7 @@
             </div>
         </div>
     </div>
+    <div data-bind="template: {name: 'octolapse-profile-library-template', data: automatic_configuration}"></div>
     <hr />
     <div>
         <div>
@@ -56,7 +57,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode" />Enabled
-                    <a class="octolapse_help" data-help-url="profiles.debug.is_test_mode.md" data-help-title="Test Mode"/>
+                    <a class="octolapse_help" data-help-url="profiles.debug.is_test_mode.md" data-help-title="Test Mode" />
                 </label>
             </div>
         </div>
@@ -76,7 +77,7 @@
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: log_all_errors" title="Log all errors no matter what." />Enabled
-                <a class="octolapse_help" data-help-url="profiles.debug.log_all_errors.md" data-help-title="Log All Errors"/>
+                <a class="octolapse_help" data-help-url="profiles.debug.log_all_errors.md" data-help-title="Log All Errors" />
             </label>
             <span class="help-inline">When enabled, all errors will be logged, no matter what the other logging settings are.</span>
         </div>
@@ -86,8 +87,9 @@
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
-                <a class="octolapse_help" data-help-url="profiles.debug.enabled.md" data-help-title="Additional Logging"/>
+                <a class="octolapse_help" data-help-url="profiles.debug.enabled.md" data-help-title="Additional Logging" />
             </label>
+        </div>
     </div>
     <div data-bind="visible: enabled">
         <div class="control-group">
@@ -95,7 +97,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
-                    <a class="octolapse_help" data-help-url="profiles.debug.log_to_console.md" data-help-title="Write To Console"/>
+                    <a class="octolapse_help" data-help-url="profiles.debug.log_to_console.md" data-help-title="Write To Console" />
                 </label>
                 <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
             </div>
@@ -118,16 +120,13 @@
                         <select data-bind="options: $parent.enabled_loggers,
                             optionsText: 'name',
                             optionsValue: 'name',
-                            value: name">
-                        </select>
+                            value: name"></select>
                     </div>
                     <div class="span5">
-                        <select
-                            data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
+                        <select data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
                             optionsText: 'name',
                             optionsValue: 'value',
-                            value: log_level">
-                        </select>
+                            value: log_level"></select>
                     </div>
                     <div class="span2">
                         <a title="Delete" class="btn btn-danger" data-bind="click: $parent.removeLogger"><i class="icon-trash"></i></a>
@@ -155,7 +154,10 @@
             </div>
         </div>
     </div>
+
 </script>
+
+
 
 
 

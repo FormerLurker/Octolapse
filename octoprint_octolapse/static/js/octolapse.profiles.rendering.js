@@ -73,7 +73,8 @@ $(function() {
         self.overlay_font_size = ko.observable(values.overlay_font_size);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
-
+        self.thread_count = ko.observable(values.thread_count);
+        
         // Text position as a JSON string.
         self.overlay_text_pos = ko.pureComputed({
             read: function() {
@@ -104,9 +105,6 @@ $(function() {
 
             },
         });
-        //self.overlay_text_pos_x = values.overlay_text_pos_x === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_x);
-        // = values.overlay_text_pos_y === undefined ? ko.observable() : ko.observable(values.overlay_text_pos_y);
-
         self.overlay_text_pos_x = ko.observable();
         self.overlay_text_pos_y = ko.observable();
         self.overlay_text_pos(values.overlay_text_pos);
@@ -139,7 +137,6 @@ $(function() {
 
         self.overlay_preview_image = ko.observable('');
         self.overlay_preview_image_error = ko.observable('');
-        self.thread_count = ko.observable(values.thread_count)
         self.overlay_preview_image_src = ko.computed(function() {
             return 'data:image/jpeg;base64,' + self.overlay_preview_image();
         });
@@ -312,6 +309,46 @@ $(function() {
             delete copy.font_list;
             delete copy.overlay_preview_image;
             delete copy.overlay_preview_image_src;
+            return copy;
+        };
+        
+        self.updateFromServer = function(values) {
+            self.guid(values.guid);
+            self.name(values.name);
+            self.description(values.description);
+            self.enabled(values.enabled);
+            self.fps_calculation_type(values.fps_calculation_type);
+            self.run_length_seconds(values.run_length_seconds);
+            self.fps(values.fps);
+            self.max_fps(values.max_fps);
+            self.min_fps(values.min_fps);
+            self.output_format(values.output_format);
+            self.sync_with_timelapse(values.sync_with_timelapse);
+            self.bitrate(values.bitrate);
+            self.post_roll_seconds(values.post_roll_seconds);
+            self.pre_roll_seconds(values.pre_roll_seconds);
+            self.output_template(values.output_template);
+            self.cleanup_after_render_complete(values.cleanup_after_render_complete);
+            self.cleanup_after_render_fail(values.cleanup_after_render_fail);
+            self.thread_count(values.thread_count);    
+        };
+        
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+            values.automatic_configuration,
+            Octolapse.Renderings.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            true,
+            self.updateFromServer
+        );
+
+        self.toJS = function()
+        {
+            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var parent = self.automatic_configuration.parent;
+            self.automatic_configuration.parent = null;
+            var copy = ko.toJS(self);
+            self.automatic_configuration.parent = parent;
             return copy;
         };
     };

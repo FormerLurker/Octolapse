@@ -12,7 +12,7 @@
                 <h5>Material</h5>
             </div>
                 <div class="control-group">
-                    <label class="control-label" for="printer_profile_cura_retraction_enable">Retraction Enabled</label>
+                    <label class="control-label" for="printer_profile_cura_retraction_enable">Retraction Enabled*</label>
                     <div class="controls">
                         <label class="checkbox">
                             <input id="printer_profile_cura_retraction_enable" name="retraction_enable" type="checkbox" data-bind="checked: slicers.cura.retraction_enable" title="Enable retraction" />Enabled
@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label" for="printer_profile_cura_retraction_amount">Retraction Distance</label>
+                    <label class="control-label" for="printer_profile_cura_retraction_amount">Retraction Distance*</label>
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="printer_profile_cura_retraction_amount" name="retraction_amount" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_amount" step="0.0001" min="0" max="100.0" required/>
@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label" for="slicer_cura_retraction_retract_speed">Retraction Retract Speed</label>
+                    <label class="control-label" for="slicer_cura_retraction_retract_speed">Retraction Retract Speed*</label>
                     <div class="controls">
                         <div class="input-append form-inline">
                             <input id="slicer_cura_retraction_retract_speed" name="retraction_retract_speed" type="number"
@@ -46,7 +46,7 @@
                     </div>
                 </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_retraction_prime_speed">Retraction Prime Speed</label>
+                <label class="control-label" for="slicer_cura_retraction_prime_speed">Retraction Prime Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_retraction_prime_speed" name="retraction_prime_speed" type="number"
@@ -59,11 +59,16 @@
                     <div class="error_label_container text-error" data-error-for="slicer_cura_retraction_prime_speed"></div>
                 </div>
             </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
+                </div>
+            </div>
             <div>
                 <h5>Speed</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_speed_travel">Travel Speed</label>
+                <label class="control-label" for="slicer_cura_speed_travel">Travel Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_speed_travel" name="speed_travel" type="number"
@@ -90,11 +95,16 @@
                     <div class="error_label_container text-error" data-error-for="slicer_cura_max_feedrate_z_override"></div>
                 </div>
             </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
+                </div>
+            </div>
             <div>
                 <h5>Travel</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_retraction_hop_enabled">Z Hop When Retracted</label>
+                <label class="control-label" for="slicer_cura_retraction_hop_enabled">Z Hop When Retracted*</label>
                 <div class="controls">
                     <label class="checkbox">
                         <input id="slicer_cura_retraction_hop_enabled" name="retraction_hop_enabled" type="checkbox" data-bind="checked: slicers.cura.retraction_hop_enabled" title="Enable retraction" />Enabled
@@ -103,7 +113,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_cura_retraction_hop">Z Hop Height</label>
+                <label class="control-label" for="slicer_cura_retraction_hop">Z Hop Height*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_cura_retraction_hop" name="z_hop" type="number" class="input-small text-right ignore_hidden_errors" data-bind="value: slicers.cura.retraction_hop" step="0.0001" min=".00" max="100.0" required />
@@ -111,6 +121,11 @@
                     </div>
                     <a class="octolapse_help" data-help-url="profiles.printer.slicers.cura.retraction_hop.md" data-help-title="Z Hop Height"/>
                     <div class="error_label_container text-error" data-error-for="slicer_cura_retraction_hop"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
                 </div>
             </div>
             <div>

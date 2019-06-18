@@ -1,0 +1,61 @@
+<script type="text/html" id="printer-automatic-configuration-template">
+    <div>
+        <h4>Make and Model</h4>
+        <p>Select your make and model so that Octolapse can automatically update your printer profile.  This list will be updated as more profiles are created, so check back if your printer isn't listed!</p>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="printer_profile_make">Make</label>
+        <div class="controls">
+            <select id="printer_profile_make" data-bind="options: makes,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+                               value: make,
+                               optionsCaption: 'Please select...'"></select>
+            <a class="octolapse_help" data-help-url="profiles.printer.automatic_configuration.make.md" data-help-title="Make" />
+            <div class="error_label_container text-error" data-error-for="printer_profile_make"></div>
+        </div>
+    </div>
+    <div class="control-group" data-bind="fadeVisible: make() == 'other'">
+        <label class="control-label" for="printer_profile_other_make">Other Make:</label>
+        <div class="controls">
+            <input id="printer_profile_other_make" name="name" type="text" class="form-input ignore_hidden_errors" data-bind="value: other_make" required />
+            <div class="error_label_container text-error" data-error-for="printer_profile_other_make"></div>
+        </div>
+    </div>
+    <div class="control-group" data-bind="fadeVisible:make()">
+        <label class="control-label" for="printer_profile_model">Model</label>
+        <div class="controls">
+            <select id="printer_profile_model" data-bind="options: models,
+                               optionsText: 'name',
+                               optionsValue: 'value',
+                               value: model,
+                               optionsCaption: 'Please select...'"></select>
+            <a class="octolapse_help" data-help-url="profiles.printer.automatic_configuration.model.md" data-help-title="Model" />
+            <div class="error_label_container text-error" data-error-for="printer_profile_model"></div>
+        </div>
+    </div>
+    <div class="control-group" data-bind="fadeVisible: make() && model() == 'other'">
+        <label class="control-label" for="printer_profile_other_model">Other Model:</label>
+        <div class="controls">
+            <input id="printer_profile_other_make" name="name" type="text" class="form-input ignore_hidden_errors" data-bind="value: other_model" required />
+            <div class="error_label_container text-error" data-error-for="printer_profile_other_model"></div>
+        </div>
+    </div>
+    <div data-bind="fadeVisible:can_update_from_repo">
+        <div class="control-group">
+            <label class="control-label" for="printer_profile_is_custom">Customize Server Profile</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input id="printer_profile_is_custom" name="is_custom" type="checkbox" data-bind="checked: is_custom" title="Customize the current printer profile" />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.printer.automatic_configuration.is_custom.md" data-help-title="Customize Printer profile" />
+                </label>
+                <span class="help-inline">
+                    Customize the server profile or view the current settings.  Prevents automatic updates.
+                </span>
+            </div>
+        </div>
+    </div>
+    <div data-bind="fadeVisible: automatic_changed_to_custom">
+        <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
+    </div>
+</script>

@@ -46,6 +46,7 @@ import flask
 import math
 import threading
 import uuid
+import six
 from six.moves import queue
 from tempfile import mkdtemp
 # import python 3 specific modules
@@ -78,6 +79,7 @@ from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, Stab
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
+from octoprint_octolapse.settings_external import ExternalSettings, ExternalSettingsError
 
 try:
     # noinspection PyCompatibility
@@ -89,14 +91,16 @@ except ImportError:
 # configure all imported loggers
 logging_configurator.configure_loggers()
 
-class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
-                      octoprint.plugin.AssetPlugin,
-                      octoprint.plugin.TemplatePlugin,
-                      octoprint.plugin.StartupPlugin,
-                      octoprint.plugin.ShutdownPlugin,
-                      octoprint.plugin.EventHandlerPlugin,
-                      octoprint.plugin.BlueprintPlugin,
-                      octoprint.plugin.RestartNeedingPlugin):
+class OctolapsePlugin(
+    octoprint.plugin.SettingsPlugin,
+    octoprint.plugin.AssetPlugin,
+    octoprint.plugin.TemplatePlugin,
+    octoprint.plugin.StartupPlugin,
+    octoprint.plugin.ShutdownPlugin,
+    octoprint.plugin.EventHandlerPlugin,
+    octoprint.plugin.BlueprintPlugin,
+    octoprint.plugin.WizardPlugin,
+):
     TIMEOUT_DELAY = 1000
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 0.5
@@ -116,6 +120,15 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self.saved_timelapse_settings = None
         self.saved_snapshot_plans = None
         self.saved_parsed_command = None
+        # automatic update thread
+        self.automatic_update_thread = None
+        self.automatic_updates_notification_thread = None
+        self.automatic_update_lock = threading.RLock()
+        self.automatic_update_cancel = threading.Event()
+        # contains a list of all profiles with available updates
+        self.automatic_updates_available = None
+        # holds a list of all available profiles on the server for the current version
+        self.available_profiles = None
 
     def get_sorting_key(self, context=None):
         return 1
@@ -332,6 +345,12 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         self._octolapse_settings.main_settings.preview_snapshot_plans = (
             request_values["preview_snapshot_plans"]
         )
+        self._octolapse_settings.main_settings.automatic_updates_enabled = (
+            request_values["automatic_updates_enabled"]
+        )
+        self._octolapse_settings.main_settings.automatic_update_interval_days = (
+            request_values["automatic_update_interval_days"]
+        )
 
         # save the updated settings to a file.
         self.save_settings()
@@ -498,7 +517,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         try:
             self.load_settings(force_defaults=True)
             self.send_settings_changed_message(client_id)
-
+            self.check_for_updates(wait_for_lock=True)
             return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
         except Exception as e:
             logger.exception("Failed to restore the defaults in /restoreDefaults.")
@@ -509,6 +528,80 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     @admin_permission.require(403)
     def load_settings_request(self):
         return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/updateProfileFromServer", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def update_profile_from_server(self):
+        logger.info("Attempting to update the current profile from the server")
+        request_values = flask.request.get_json()
+        profile_type = request_values["type"]
+        profile_identifiers = request_values["identifiers"]
+        profile_dict = request_values["profile"]
+        try:
+            server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, profile_identifiers)
+        except ExternalSettingsError as e:
+            logger.exception(e)
+            return json.dumps(
+                {
+                    "message": e.message
+                }
+            ), 500, {'ContentType': 'application/json'}
+
+        # update the profile
+        updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
+            profile_type, profile_dict, server_profile_dict
+        )
+        return json.dumps(
+            {
+                "profile_json": updated_profile.to_json()
+            }
+        ), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/updateProfilesFromServer", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def update_profiles_from_server(self):
+        logger.info("Attempting to update all current profile from the server")
+        request_values = flask.request.get_json()
+        client_id = request_values["client_id"]
+        with self.automatic_update_lock:
+            if not self.automatic_updates_available:
+                message = "There were no updates available on the server, or they were already applied by another client."
+                return json.dumps(
+                    {
+                        "message": message
+                    }
+                ), 500, {'ContentType': 'application/json'}
+            for profile_type, updatable_profiles in six.iteritems(self.automatic_updates_available):
+                # now iterate through the printer profiles
+                for updatable_profile in updatable_profiles:
+                    current_profile = self._octolapse_settings.profiles.get_profile(
+                        profile_type, updatable_profile["guid"]
+                    )
+                    try:
+                        server_profile_dict = ExternalSettings.get_profile(
+                            self._plugin_version, profile_type,
+                            updatable_profile
+                        )
+                    except ExternalSettingsError as e:
+                        logger.exception(e)
+                        return json.dumps(
+                            {
+                                "message": e.message
+                            }
+                        ), 500, {'ContentType': 'application/json'}
+
+                    # update the profile
+
+                    updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
+                        profile_type, current_profile.to_dict(), server_profile_dict
+                    )
+                    current_profile.update(updated_profile)
+            self.automatic_updates_available = False
+            self.save_settings()
+            self.send_settings_changed_message(client_id)
+            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/importSettings", methods=["POST"])
     @restricted_access
@@ -1103,18 +1196,21 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
         )
 
     def load_settings(self, force_defaults=False):
+
         if force_defaults:
             settings_file_path = None
         else:
             settings_file_path = self.get_settings_file_path()
-
-        # create new settings from default setting file
-        new_settings, defaults_loaded = OctolapseSettings.load(
-            settings_file_path,
-            self._plugin_version,
-            self.get_default_settings_folder(),
-            self.get_default_settings_filename()
-        )
+        # wait for any pending update checks to finish
+        with self.automatic_update_lock:
+            # create new settings from default setting file
+            new_settings, defaults_loaded = OctolapseSettings.load(
+                settings_file_path,
+                self._plugin_version,
+                self.get_default_settings_folder(),
+                self.get_default_settings_filename(),
+                available_profiles=self.available_profiles
+            )
         self._octolapse_settings = new_settings
         self.configure_loggers()
 
@@ -1193,10 +1289,10 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
     # EVENTS
     #########
     def get_settings_defaults(self):
-        return dict(load=None)
+        return dict(load=None, restore_default_settings=None)
 
     def on_settings_load(self):
-        return None
+        return dict(load=None, restore_default_settings=None)
 
     def get_status_dict(self):
         try:
@@ -1270,9 +1366,94 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             on_position_error=self.on_position_error
         )
 
+    def get_available_server_profiles_path(self):
+        return os.path.join(self.get_plugin_data_folder(), "server_profiles.json".format())
+
+    def start_automatic_updates(self):
+            # create function to load makes and models
+            def _get_available_profiles():
+                # load all available profiles from the server
+                try:
+                    available_profiles = ExternalSettings.get_available_profiles(
+                        self._plugin_version, self.get_available_server_profiles_path()
+                    )
+                    if not available_profiles:
+                        logger.error("No server profiles could be loaded from the server or from a locally cached copy")
+                        return None
+                    # update the profile options within the octolapse settings
+                    self._octolapse_settings.profiles.options.update_server_options(available_profiles)
+                    # notify the clients of the makes and models changes
+                    data = {
+                        'type': 'server_profiles_updated',
+                        'external_profiles_list_changed': available_profiles
+                    }
+                    self._plugin_manager.send_plugin_message(self._identifier, data)
+                    return available_profiles
+                except ExternalSettingsError as e:
+                    logger.exception("Unable to fetch available profiles from the server.")
+                return None
+
+            # create a function to do all of the updates
+            def _update():
+                if not self._octolapse_settings.main_settings.automatic_updates_enabled:
+                    return
+                with self.automatic_update_lock:
+                    logger.info("Checking for profile updates.")
+                    available_profiles = _get_available_profiles()
+                    if available_profiles is not None:
+                        self.available_profiles = available_profiles
+                        self.check_for_updates()
+                    else:
+                        logger.info("There are no automatic profiles to update.")
+
+            update_interval = 60 * 60 * 24 * self._octolapse_settings.main_settings.automatic_update_interval_days
+            self.automatic_update_thread = utility.RecurringTimerThread(
+                update_interval, _update, self.automatic_update_cancel
+            )
+            # do an initial update now
+            _update()
+
+            self.automatic_update_thread.start()
+
+            update_interval = 60*3  # three minutes
+
+            # create another thread to notify users when new updates are available
+            self.automatic_updates_notification_thread = utility.RecurringTimerThread(
+                update_interval, self.notify_updates, self.automatic_update_cancel
+            )
+
+            self.automatic_updates_notification_thread.start()
+
+    # create function to update all existing automatic profiles
+    def check_for_updates(self, wait_for_lock=False):
+        try:
+            if wait_for_lock:
+                self.automatic_update_lock.acquire()
+            self.automatic_updates_available = ExternalSettings.check_for_updates(
+                self.available_profiles, self._octolapse_settings.profiles.get_updatable_profiles_dict()
+            )
+            if self.automatic_updates_available:
+                logger.info("Profile updates are available.")
+            else:
+                logger.info("No profile updates are available.")
+        finally:
+            if wait_for_lock:
+                self.automatic_update_lock.release()
+
+    def notify_updates(self):
+        if not self._octolapse_settings.main_settings.automatic_updates_enabled:
+            return
+
+        if self.automatic_updates_available:
+            logger.info("Profile updates are available from the server.")
+            # create an automatic updates available message
+            data = {
+                "type": "updated-profiles-available"
+            }
+            self._plugin_manager.send_plugin_message(self._identifier, data)
+
     def on_startup(self, host, port):
         try:
-
             # tell the logging configuator what our logfile path is
             logger.info("Configuring file logger.")
             logging_configurator.configure_loggers(log_file_path=self.get_log_file_path())
@@ -1300,6 +1481,7 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
             # note that errors here will ONLY show up in the log.
             self.apply_camera_settings(camera_profiles=startup_cameras)
 
+            self.start_automatic_updates()
             # log the loaded state
             logger.info("Octolapse - loaded and active.")
         except Exception as e:
@@ -1633,23 +1815,23 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 settings_saved = False
 
                 updated_profile_json = None
-                if not current_printer_clone.slicers.automatic.disable_automatic_save:
-                    # get the extracted slicer settings
-                    extracted_slicer_settings = current_printer_clone.get_current_slicer_settings()
-                    # Apply the extracted settings to to the live settings
-                    self._octolapse_settings.profiles.current_printer().get_slicer_settings_by_type(
-                        current_printer_clone.slicer_type
-                    ).update(extracted_slicer_settings.to_dict())
-                    self._octolapse_settings.profiles.current_printer().has_been_saved_by_user = True
-                    # save the live settings
-                    self.save_settings()
-                    printer_profile = self._octolapse_settings.profiles.current_printer().clone()
-                    printer_profile.slicer_type = PrinterProfile.slicer_type = 'automatic'
-                    settings_saved = True
-                    updated_profile_json = printer_profile.to_json()
+                # Save the profile changes
+                # get the extracted slicer settings
+                extracted_slicer_settings = current_printer_clone.get_current_slicer_settings()
+                # Apply the extracted settings to to the live settings
+                self._octolapse_settings.profiles.current_printer().get_slicer_settings_by_type(
+                    current_printer_clone.slicer_type
+                ).update(extracted_slicer_settings.to_dict())
+                self._octolapse_settings.profiles.current_printer().has_been_saved_by_user = True
+                # save the live settings
+                self.save_settings()
+                printer_profile = self._octolapse_settings.profiles.current_printer().clone()
+                printer_profile.slicer_type = PrinterProfile.slicer_type = 'automatic'
+                settings_saved = True
+                updated_profile_json = printer_profile.to_json()
                 self.send_slicer_settings_detected_message(settings_saved, updated_profile_json)
             else:
-                if not current_printer_clone.slicers.automatic.continue_on_failure:
+                if self._octolapse_settings.main_settings.self.cancel_print_on_startup_error:
                     # If you are using Cura, see this link:  TODO:  ADD LINK TO CURA FEATURE TEMPLATE AND INSTRUCTIONS
                     if error_type == "no-settings-detected":
                         message = "No slicer settings could be extracted from the gcode file.  Please check the " \
@@ -2290,7 +2472,8 @@ class OctolapsePlugin(octoprint.plugin.SettingsPlugin,
                 "js/octolapse.status.snapshotplan.js",
                 "js/octolapse.status.snapshotplan_preview.js",
                 "js/octolapse.webcam.settings.js",
-                "js/octolapse.help.js"
+                "js/octolapse.help.js",
+                "js/octolapse.profiles.library.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]

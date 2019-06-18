@@ -21,7 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import pprint
 import shutil
 import copy
 import json
@@ -35,7 +34,7 @@ import math
 import collections
 import octoprint_octolapse.gcode_preprocessing as gcode_preprocessing
 import octoprint_octolapse.settings_migration as settings_migration
-from six import string_types
+import six
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -99,7 +98,7 @@ class Settings(object):
         for key, value in item_to_iterate.items():
             try:
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, Settings):
                         class_item.update(value)
                     elif isinstance(class_item, StaticSettings):
@@ -167,23 +166,43 @@ class ProfileSettings(Settings):
         return new_object
 
 
-class SlicerAutomatic(Settings):
-    def __init__(self):
-        self.continue_on_failure = False
-        self.disable_automatic_save = False
-
-
 class PrinterProfileSlicers(Settings):
     def __init__(self):
-        self.automatic = SlicerAutomatic()
         self.cura = CuraSettings()
         self.simplify_3d = Simplify3dSettings()
         self.slic3r_pe = Slic3rPeSettings()
         self.other = OtherSlicerSettings()
 
 
-class PrinterProfile(ProfileSettings):
+class AutomaticPrinterConfiguration(Settings):
+    def __init__(self):
+        self.make = "custom"
+        self.other_make = None
+        self.model = "custom"
+        self.other_model = None
+        self.version = None
+        self.suppress_update_notification_version = False
+        self.is_custom = False
 
+    def is_updatable_from_server(self):
+        return (
+            not self.is_custom and
+            self.make and
+            self.make != 'custom' and
+            self.model and
+            self.model != 'custom'
+        )
+
+    def get_server_update_identifiers_dict(self):
+        return {
+            'version': self.version,
+            'suppress_update_notification_version': self.suppress_update_notification_version,
+            'make': self.make,
+            'model': self.model
+        }
+
+
+class PrinterProfile(ProfileSettings):
     minimum_height_increment = 0.05
 
     def __init__(self, name="New Printer Profile"):
@@ -191,6 +210,7 @@ class PrinterProfile(ProfileSettings):
         # flag that is false until the profile has been saved by the user at least once
         # this is used to show a warning to the user if a new printer profile is used
         # without being configured
+        self.automatic_configuration = AutomaticPrinterConfiguration()
         self.has_been_saved_by_user = False
         self.slicer_type = "automatic"
         self.gcode_generation_settings = OctolapseGcodeSettings()
@@ -228,6 +248,46 @@ class PrinterProfile(ProfileSettings):
         self.default_firmware_retractions_zhop = False
         self.gocde_axis_compatibility_mode_enabled = True
         self.home_axis_gcode = "G90; Switch to Absolute XYZ\r\nG28 X Y; Home XY Axis"
+
+    @classmethod
+    def update_from_server_profile(cls, current_profile, server_profile_dict):
+        # make sure I didn't make a version mistake
+        # we don't want to alter the provided profile information, so make copies
+        current_profile_copy = current_profile.clone()
+        # copy the profile portion of the profile
+        server_profile_copy = copy.deepcopy(server_profile_dict)
+        # save our current automatic configuration settings
+        is_custom = current_profile_copy.automatic_configuration.is_custom
+
+
+        # when updating, we don't want to change any of the guids, slicer settings,
+        # gcode generation settings, so remove those items from the server profile
+        if 'guid' in server_profile_copy:
+            del server_profile_copy["guid"]
+        if 'slicer_type' in server_profile_copy:
+            del server_profile_copy["slicer_type"]
+        if 'slicers' in server_profile_copy:
+            del server_profile_copy["slicers"]
+        if 'gcode_generation_settings' in server_profile_copy:
+            del server_profile_copy["gcode_generation_settings"]
+
+        # now update everything else
+        current_profile_copy.update(server_profile_copy)
+
+        # restore the previous automatic configuration setting
+        current_profile_copy.automatic_configuration.is_custom = is_custom
+        # clear the previous notification suppression version
+        current_profile_copy.automatic_configuration.suppress_update_notification_version = None
+
+        return current_profile_copy
+
+    def is_updatable_from_server(self):
+        return self.automatic_configuration.is_updatable_from_server()
+
+    def get_server_update_identifiers_dict(self):
+        identifiers = self.automatic_configuration.get_server_update_identifiers_dict()
+        identifiers["guid"] = self.guid
+        return identifiers
 
     @staticmethod
     def get_options():
@@ -282,7 +342,8 @@ class PrinterProfile(ProfileSettings):
                 dict(value="all", name='All'),
                 dict(value="noskin", name='Not in Skin'),
                 dict(value="infill", name='Within Infill'),
-            ]
+            ],
+            'makes_and_models': None
         }
 
     def get_current_slicer_settings(self):
@@ -411,6 +472,66 @@ class PrinterProfile(ProfileSettings):
         }
 
 
+class AutomaticConfiguration(Settings):
+    def __init__(self):
+        self.key = None
+        self.version = None
+        self.suppress_update_notification_version = False
+        self.is_custom = False
+
+    def is_updatable_from_server(self):
+        return (
+            not self.is_custom and
+            self.key
+        )
+
+    def get_server_update_identifiers_dict(self):
+        return {
+            'version': self.version,
+            'suppress_update_notification_version': self.suppress_update_notification_version,
+            'key': self.key
+        }
+
+
+class AutomaticConfigurationProfile(ProfileSettings):
+    def __init__(self, name="Automatic Configuration Profile"):
+        super(AutomaticConfigurationProfile, self).__init__(name)
+        self.automatic_configuration = AutomaticConfiguration()
+
+    @classmethod
+    def update_from_server_profile(cls, current_profile, server_profile_dict):
+        # make sure I didn't make a version mistake
+        # we don't want to alter the provided profile information, so make copies
+        current_profile_copy = current_profile.clone()
+        # copy the profile portion of the profile
+        server_profile_copy = copy.deepcopy(server_profile_dict)
+        # save our current automatic configuration settings
+        is_custom = current_profile_copy.automatic_configuration.is_custom
+
+        # when updating, we don't want to change any of the guids, slicer settings,
+        # gcode generation settings, so remove those items from the server profile
+        if 'guid' in server_profile_copy:
+            del server_profile_copy["guid"]
+
+        # now update everything else
+        current_profile_copy.update(server_profile_copy)
+
+        # restore the previous automatic configuration setting
+        current_profile_copy.automatic_configuration.is_custom = is_custom
+        # clear the previous notification suppression version
+        current_profile_copy.automatic_configuration.suppress_update_notification_version = None
+
+        return current_profile_copy
+
+    def is_updatable_from_server(self):
+        return self.automatic_configuration.is_updatable_from_server()
+
+    def get_server_update_identifiers_dict(self):
+        identifiers = self.automatic_configuration.get_server_update_identifiers_dict()
+        identifiers["guid"] = self.guid
+        return identifiers
+
+
 class StabilizationPath(Settings):
     def __init__(self):
         self.path = []
@@ -500,7 +621,7 @@ class SnapshotPositionRestrictions(Settings):
             raise TypeError("SnapshotPosition shape must be 'rect' or 'circle'.")
 
 
-class StabilizationProfile(ProfileSettings):
+class StabilizationProfile(AutomaticConfigurationProfile):
     STABILIZATION_AXIS_TYPE_DISABLED = 'disabled'
     STABILIZATION_AXIS_TYPE_FIXED_COORDINATE = 'fixed_coordinate'
     STABILIZATION_AXIS_TYPE_FIXED_PATH = 'fixed_path'
@@ -607,7 +728,7 @@ class StabilizationProfile(ProfileSettings):
         return super(StabilizationProfile, cls).try_convert_value(destination, value, key)
 
 
-class TriggerProfile(ProfileSettings):
+class TriggerProfile(AutomaticConfigurationProfile):
     TRIGGER_TYPE_REAL_TIME = "real-time"
     TRIGGER_TYPE_SNAP_TO_PRINT = "snap-to-print"
     TRIGGER_TYPE_SMART_LAYER = "smart-layer"
@@ -728,7 +849,7 @@ class TriggerProfile(ProfileSettings):
 
     @staticmethod
     def get_extruder_trigger_value(value):
-        if isinstance(value, string_types):
+        if isinstance(value, six.string_types):
             if value is None or len(value) == 0:
                 return None
             elif value.lower() == TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
@@ -778,7 +899,7 @@ class TriggerProfile(ProfileSettings):
         return super(TriggerProfile, cls).try_convert_value(destination, value, key)
 
 
-class RenderingProfile(ProfileSettings):
+class RenderingProfile(AutomaticConfigurationProfile):
     def __init__(self, name="New Rendering Profile"):
         super(RenderingProfile, self).__init__(name)
         self.enabled = True
@@ -954,7 +1075,7 @@ class MjpegStreamerStaticSettings(StaticSettings):
         }
 
 
-class CameraProfile(ProfileSettings):
+class CameraProfile(AutomaticConfigurationProfile):
     def __init__(self, name="New Camera Profile"):
         super(CameraProfile, self).__init__(name)
         self.enabled = True
@@ -1057,7 +1178,7 @@ class LoggerSettings(Settings):
         self.log_level = log_level
 
 
-class DebugProfile(ProfileSettings):
+class DebugProfile(AutomaticConfigurationProfile):
 
     def __init__(self, name="New Debug Profile"):
         super(DebugProfile, self).__init__(name)
@@ -1126,7 +1247,8 @@ class MainSettings(Settings):
         self.platform = sys.platform
         self.version = plugin_version
         self.preview_snapshot_plans = True
-
+        self.automatic_updates_enabled = True
+        self.automatic_update_interval_days = 7
 
 class ProfileOptions(StaticSettings):
     def __init__(self):
@@ -1136,6 +1258,15 @@ class ProfileOptions(StaticSettings):
         self.rendering = RenderingProfile.get_options()
         self.camera = CameraProfile.get_options()
         self.debug = DebugProfile.get_options()
+
+    def update_server_options(self, available_profiles):
+        # Printer Profile Update
+        self.printer["makes_and_models"] = available_profiles.get("printer", None)
+        self.stabilization["server_profiles"] = available_profiles.get("stabilization", None)
+        self.trigger["server_profiles"] = available_profiles.get("trigger", None)
+        self.rendering["server_profiles"] = available_profiles.get("rendering", None)
+        self.camera["server_profiles"] = available_profiles.get("camera", None)
+        self.debug["server_profiles"] = available_profiles.get("debug", None)
 
 
 class ProfileDefaults(StaticSettings):
@@ -1283,17 +1414,19 @@ class Profiles(Settings):
 
     def get_profile(self, profile_type, guid):
 
-        if profile_type == "Printer":
+        profile_type = profile_type.lower()
+
+        if profile_type == "printer":
             profile = self.printers[guid]
-        elif profile_type == "Stabilization":
+        elif profile_type == "stabilization":
             profile = self.stabilizations[guid]
-        elif profile_type == "Trigger":
+        elif profile_type == "trigger":
             profile = self.triggers[guid]
-        elif profile_type == "Rendering":
+        elif profile_type == "rendering":
             profile = self.renderings[guid]
-        elif profile_type == "Camera":
+        elif profile_type == "camera":
             profile = self.cameras[guid]
-        elif profile_type == "Debug":
+        elif profile_type == "debug":
             profile = self.debug[guid]
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
@@ -1301,24 +1434,24 @@ class Profiles(Settings):
 
     def import_profile(self, profile_type, profile_json, update_existing=False):
         logger.info("Importing a profile.")
-
+        profile_type = profile_type.lower()
         # Create the profile by type
-        if profile_type == "Printer":
+        if profile_type == "printer":
             new_profile = PrinterProfile.create_from(profile_json)
             existing_profiles = self.printers
-        elif profile_type == "Stabilization":
+        elif profile_type == "stabilization":
             new_profile = StabilizationProfile.create_from(profile_json)
             existing_profiles = self.stabilizations
-        elif profile_type == "Trigger":
+        elif profile_type == "trigger":
             new_profile = TriggerProfile.create_from(profile_json)
             existing_profiles = self.triggers
-        elif profile_type == "Rendering":
+        elif profile_type == "rendering":
             new_profile = RenderingProfile.create_from(profile_json)
             existing_profiles = self.renderings
-        elif profile_type == "Camera":
+        elif profile_type == "camera":
             new_profile = CameraProfile.create_from(profile_json)
             existing_profiles = self.cameras
-        elif profile_type == "Debug":
+        elif profile_type == "debug":
             new_profile = DebugProfile.create_from(profile_json)
             existing_profiles = self.debug
         else:
@@ -1337,55 +1470,67 @@ class Profiles(Settings):
             guid = "{}".format(uuid.uuid4())
             profile["guid"] = guid
 
-        if profile_type == "Printer":
+        profile_type = profile_type.lower()
+        if profile_type == "printer":
             new_profile = PrinterProfile.create_from(profile)
             if new_profile.slicer_type != 'automatic':
                 new_profile.gcode_generation_settings = (
                     new_profile.get_current_slicer_settings().get_gcode_generation_settings()
                 )
             self.printers[guid] = new_profile
-            if len(self.printers) == 1:
+            if len(self.printers) == 1 or self.current_printer_profile_guid not in self.printers:
                 self.current_printer_profile_guid = new_profile.guid
-        elif profile_type == "Stabilization":
+        elif profile_type == "stabilization":
             new_profile = StabilizationProfile.create_from(profile)
             self.stabilizations[guid] = new_profile
-        elif profile_type == "Trigger":
+            if len(self.stabilizations) == 1 or self.current_stabilization_profile_guid not in self.stabilizations:
+                self.current_stabilization_profile_guid = new_profile.guid
+        elif profile_type == "trigger":
             new_profile = TriggerProfile.create_from(profile)
             self.triggers[guid] = new_profile
-        elif profile_type == "Rendering":
+            if len(self.triggers) == 1 or self.current_trigger_profile_guid not in self.triggers:
+                self.current_trigger_profile_guid = new_profile.guid
+        elif profile_type == "rendering":
             new_profile = RenderingProfile.create_from(profile)
             self.renderings[guid] = new_profile
-        elif profile_type == "Camera":
+            if len(self.renderings) == 1 or self.current_rendering_profile_guid not in self.renderings:
+                self.current_rendering_profile_guid = new_profile.guid
+        elif profile_type == "camera":
             new_profile = CameraProfile.create_from(profile)
             self.cameras[guid] = new_profile
-        elif profile_type == "Debug":
+            if len(self.cameras) == 1 or self.current_camera_profile_guid not in self.cameras:
+                self.current_camera_profile_guid = new_profile.guid
+        elif profile_type == "debug":
             new_profile = DebugProfile.create_from(profile)
             self.debug[guid] = new_profile
+            if len(self.debug) == 1 or self.current_debug_profile_guid not in self.debug:
+                self.current_debug_profile_guid = new_profile.guid
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
         return new_profile
 
     def remove_profile(self, profile_type, guid):
 
-        if profile_type == "Printer":
+        profile_type = profile_type.lower()
+        if profile_type == "printer":
             if self.current_printer_profile_guid == guid:
                 return False
             del self.printers[guid]
-        elif profile_type == "Stabilization":
+        elif profile_type == "stabilization":
             if self.current_stabilization_profile_guid == guid:
                 return False
             del self.stabilizations[guid]
-        elif profile_type == "Trigger":
+        elif profile_type == "trigger":
             if self.current_trigger_profile_guid == guid:
                 return False
             del self.triggers[guid]
-        elif profile_type == "Rendering":
+        elif profile_type == "rendering":
             if self.current_rendering_profile_guid == guid:
                 return False
             del self.renderings[guid]
-        elif profile_type == "Camera":
+        elif profile_type == "camera":
             del self.cameras[guid]
-        elif profile_type == "Debug":
+        elif profile_type == "debug":
             if self.current_debug_profile_guid == guid:
                 return False
             del self.debug[guid]
@@ -1395,19 +1540,20 @@ class Profiles(Settings):
         return True
 
     def set_current_profile(self, profile_type, guid):
-        if profile_type == "Printer":
+        profile_type = profile_type.lower()
+        if profile_type == "printer":
             if guid == "":
                 guid = None
             self.current_printer_profile_guid = guid
-        elif profile_type == "Stabilization":
+        elif profile_type == "stabilization":
             self.current_stabilization_profile_guid = guid
-        elif profile_type == "Trigger":
+        elif profile_type == "trigger":
             self.current_trigger_profile_guid = guid
-        elif profile_type == "Rendering":
+        elif profile_type == "rendering":
             self.current_rendering_profile_guid = guid
-        elif profile_type == "Camera":
+        elif profile_type == "camera":
             self.current_camera_profile_guid = guid
-        elif profile_type == "Debug":
+        elif profile_type == "debug":
             self.current_debug_profile_guid = guid
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
@@ -1420,7 +1566,7 @@ class Profiles(Settings):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if key == 'printers':
                         self.printers = {}
                         for profile_key, profile_value in value.items():
@@ -1455,6 +1601,92 @@ class Profiles(Settings):
         except Exception as e:
             raise e
 
+    def update_from_server_profile(self, profile_type, current_profile_dict, server_profile_dict):
+        profile_type = profile_type.lower()
+        if profile_type == "printer":
+            # get the current profile
+            current_profile = PrinterProfile.create_from(current_profile_dict)
+            new_profile = PrinterProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.printers[new_profile.guid] = new_profile
+        elif profile_type == "stabilization":
+            # get the current profile
+            current_profile = StabilizationProfile.create_from(current_profile_dict)
+            new_profile = StabilizationProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.stabilizations[new_profile.guid] = new_profile
+        elif profile_type == "trigger":
+            # get the current profile
+            current_profile = TriggerProfile.create_from(current_profile_dict)
+            new_profile = TriggerProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.triggers[new_profile.guid] = new_profile
+        elif profile_type == "rendering":
+            # get the current profile
+            current_profile = RenderingProfile.create_from(current_profile_dict)
+            new_profile = RenderingProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.renderings[new_profile.guid] = new_profile
+        elif profile_type == "camera":
+            # get the current profile
+            current_profile = CameraProfile.create_from(current_profile_dict)
+            new_profile = CameraProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.cameras[new_profile.guid] = new_profile
+        elif profile_type == "debug":
+            # get the current profile
+            current_profile = DebugProfile.create_from(current_profile_dict)
+            new_profile = DebugProfile.update_from_server_profile(current_profile, server_profile_dict)
+            self.debug[new_profile.guid] = new_profile
+        else:
+            raise ValueError('An unknown profile type {} was received.'.format(profile_type))
+        return new_profile
+
+    def get_updatable_profiles_dict(self):
+        profiles = {
+            "printer": [],
+            "stabilization": [],
+            "trigger": [],
+            "rendering": [],
+            "camera": [],
+            "debug": []
+        }
+        has_profiles = False
+        for key, printer_profile in six.iteritems(self.printers):
+            if printer_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = printer_profile.get_server_update_identifiers_dict()
+                profiles["printer"].append(identifiers)
+                
+        for key, stabilization_profile in six.iteritems(self.stabilizations):
+            if stabilization_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = stabilization_profile.get_server_update_identifiers_dict()
+                profiles["stabilization"].append(identifiers)
+
+        for key, trigger_profile in six.iteritems(self.triggers):
+            if trigger_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = trigger_profile.get_server_update_identifiers_dict()
+                profiles["trigger"].append(identifiers)
+
+        for key, rendering_profile in six.iteritems(self.renderings):
+            if rendering_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = rendering_profile.get_server_update_identifiers_dict()
+                profiles["rendering"].append(identifiers)
+
+        for key, camera_profile in six.iteritems(self.cameras):
+            if camera_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = camera_profile.get_server_update_identifiers_dict()
+                profiles["camera"].append(identifiers)
+
+        for key, debug_profile in six.iteritems(self.debug):
+            if debug_profile.is_updatable_from_server():
+                has_profiles = True
+                identifiers = debug_profile.get_server_update_identifiers_dict()
+                profiles["debug"].append(identifiers)
+
+        if not has_profiles:
+            return None
+        return profiles
+
 
 class GlobalOptions(StaticSettings):
     def __init__(self):
@@ -1473,14 +1705,19 @@ class OctolapseSettings(Settings):
         self.main_settings = MainSettings(plugin_version)
         self.profiles = Profiles()
         self.global_options = GlobalOptions()
-
+        self.upgrade_info = {
+            "was_upgraded": False,
+            "previous_version": None
+        }
     def save(self, file_path):
         logger.info("Saving settings to: %s.", file_path)
         self.save_as_json(file_path)
         logger.info("Settings saved.")
 
     @classmethod
-    def load(cls, file_path, plugin_version, default_settings_folder, default_settings_filename):
+    def load(
+        cls, file_path, plugin_version, default_settings_folder, default_settings_filename, available_profiles=None
+     ):
         # try to load the file path if it exists
         if file_path is not None:
             load_defualt_settings = not os.path.isfile(file_path)
@@ -1490,15 +1727,28 @@ class OctolapseSettings(Settings):
             logger.info("Loading existing settings file from: %s.", file_path)
             with open(file_path, 'r') as settings_file:
                 try:
+
                     data = json.load(settings_file)
+                    original_version = settings_migration.get_version(data)
                     data = settings_migration.migrate_settings(
                         plugin_version, data, default_settings_folder
                     )
+
                     # if a settings file does not exist, create one ??
                     new_settings = OctolapseSettings.create_from_iterable(
                         plugin_version,
                         data
                     )
+                    if original_version != plugin_version:
+                        new_settings.upgrade_info = {
+                            "was_upgraded": True,
+                            "previous_version": None
+                        }
+                    else:
+                        new_settings.upgrade_info = {
+                            "was_upgraded": False,
+                            "previous_version": None
+                        }
                     logger.info("Settings file loaded.")
                 except ValueError as e:
                     logger.exception("The existing settings file is corrupted.  Will attempt to load the defaults")
@@ -1522,6 +1772,10 @@ class OctolapseSettings(Settings):
                     logger.exception("The defualt settings file is corrupted.  Something is seriously wrong!")
                     raise e
 
+        # update our server profile options if they were supplied
+        if available_profiles:
+            # update the profile options within the octolapse settings
+            new_settings.profiles.options.update_server_options(available_profiles)
         return new_settings, load_defualt_settings
 
     def get_profile_export_json(self, profile_type, guid):
@@ -1927,7 +2181,7 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             if parse_string is None:
                 return None
-            if isinstance(parse_string, string_types):
+            if isinstance(parse_string, six.string_types):
                 percent_index = "{}".format(parse_string).strip().find('%')
                 if percent_index < 1:
                     return None
@@ -1978,7 +2232,7 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             for key, value in settings_dict.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
                         self.version = value["version"]
                     elif isinstance(class_item, Settings):
@@ -1990,7 +2244,7 @@ class Slic3rPeSettings(SlicerSettings):
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
-        if value is None or (isinstance(value, string_types) and value == 'None'):
+        if value is None or (isinstance(value, six.string_types) and value == 'None'):
             return None
         return super(Slic3rPeSettings, cls).try_convert_value(destination, value, key)
 

@@ -12,6 +12,7 @@ $(function () {
             "firstpos2": (document.body.clientWidth / 2) - (self.popup_width / 2 + self.popup_margin),
             "modal": true
         };
+
         self.options = {
             title: "Octolapse Help",
             text: "unknown",
@@ -57,14 +58,19 @@ $(function () {
                 $overlay.click(function(){
                     notice.remove();
                 });
+                console.log("Adding resize handler.");
+                $(window).on("resize",self.resize_handler);
             },
             after_close: function(notice){
                 var $parentDiv = $(notice.elem).parent();
                 $parentDiv.remove();
+                console.log("Removing resize handler.");
+                $(window).off("resize", self.resize_handler);
             }
         };
 
-        $(window).resize(function(){
+        self.resize_handler = function(event) {
+            console.log("Resizing octolapse help.");
             var width = self.popup_width.toString() + "px";
             if (document.body.clientWidth < self.popup_width_with_margin) {
                 self.stack_center.firstpos2 = self.popup_margin;
@@ -74,13 +80,15 @@ $(function () {
                 self.stack_center.firstpos2 = (document.body.clientWidth / 2) - (self.popup_width / 2);
             }
             $(".octolapse-pnotify-help").css("width", width);
-        });
+        };
 
         self.converter = new showdown.Converter({
             'openLinksInNewWindow': true,
             'simpleLineBreaks': true
         });
+
         self.converter.setFlavor('github');
+
         self.showHelpForLink = function (doc, title)
         {
             url = "/plugin/octolapse/static/docs/help/" + doc + "?nonce=" + Date.now().toString();

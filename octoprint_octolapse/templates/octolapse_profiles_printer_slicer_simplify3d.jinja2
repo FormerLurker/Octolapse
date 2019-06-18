@@ -11,7 +11,7 @@
                 <h5>Extruder - Ooze Control</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="printer_profile_simplify_3d_extruder_use_retract">Retraction</label>
+                <label class="control-label" for="printer_profile_simplify_3d_extruder_use_retract">Retraction*</label>
                 <div class="controls">
                     <label class="checkbox">
                         <input id="printer_profile_simplify_3d_extruder_use_retract" name="extruder_use_retract" type="checkbox" data-bind="checked: slicers.simplify_3d.extruder_use_retract" title="Enable retraction" />Enabled
@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_simplify_3d_retraction_distance">Retraction Distance</label>
+                <label class="control-label" for="slicer_simplify_3d_retraction_distance">Retraction Distance*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_simplify_3d_retraction_distance" name="retraction_distance" type="number"
@@ -33,7 +33,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_simplify_3d_retraction_vertical_lift">Retraction Vertical Lift</label>
+                <label class="control-label" for="slicer_simplify_3d_retraction_vertical_lift">Retraction Vertical Lift*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_simplify_3d_retraction_vertical_lift" name="retraction_vertical_lift" type="number"
@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_simplify_3d_retraction_speed">Retraction Speed</label>
+                <label class="control-label" for="slicer_simplify_3d_retraction_speed">Retraction Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_simplify_3d_retraction_speed" name="retraction_speed" type="number"
@@ -57,6 +57,11 @@
                     </div>
                     <a class="octolapse_help" data-help-url="profiles.printer.slicers.simplify3d.retraction_speed.md" data-help-title="Retraction Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_retraction_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
                 </div>
             </div>
             <div>
@@ -81,14 +86,14 @@
                         <input id="slicer_simplify_3d_vase_mode" name="slicer_simplify_3d_vase_mode" type="checkbox" data-bind="checked: slicers.simplify_3d.vase_mode" title="Enable Vase Mode" />Enabled
                         <a class="octolapse_help" data-help-url="profiles.printer.slicers.simplify3d.vase_mode.md" data-help-title="Single outline corkscrew printing mode (vase mode)"/>
                     </label>
-                     <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_vase_mode"></div>
+                    <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_vase_mode"></div>
                 </div>
             </div>
             <div>
                 <h5>Speeds</h5>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_simplify_3d_x_y_axis_movement_speed">X/Y Axis Movement Speed</label>
+                <label class="control-label" for="slicer_simplify_3d_x_y_axis_movement_speed">X/Y Axis Movement Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_simplify_3d_x_y_axis_movement_speed" name="xy_axis_movement_speed" type="number"
@@ -97,12 +102,12 @@
                         <span class="add-on">mm</span>
                         <span class="add-on">min</span>
                     </div>
-                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.simplify3d.x_y_axis_movement_speed.md" data-help-title="X/Y Axis Movement Speed">
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicers.simplify3d.x_y_axis_movement_speed.md" data-help-title="X/Y Axis Movement Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_x_y_axis_movement_speed"></div>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="slicer_simplify_3d_z_axis_movement_speed">Z Axis Movement Speed</label>
+                <label class="control-label" for="slicer_simplify_3d_z_axis_movement_speed">Z Axis Movement Speed*</label>
                 <div class="controls">
                     <div class="input-append form-inline">
                         <input id="slicer_simplify_3d_z_axis_movement_speed" name="z_axis_movement_speed" type="number"
@@ -113,6 +118,11 @@
                     </div>
                     <a class="octolapse_help" data-help-url="profiles.printer.slicers.simplify3d.z_axis_movement_speed.md" data-help-title="Z Axis Movement Speed"/>
                     <div class="error_label_container text-error" data-error-for="slicer_simplify_3d_z_axis_movement_speed"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p><i>* Indicates required fields</i></p>
                 </div>
             </div>
         </div>

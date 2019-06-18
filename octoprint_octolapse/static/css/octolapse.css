@@ -21,6 +21,9 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+.octolapse_unclickable {
+    pointer-events: none;
+}
 .text-left{
     text-align:left;
 }
