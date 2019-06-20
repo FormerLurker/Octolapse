@@ -57,7 +57,7 @@ $(function() {
         self.applySettingsToCamera = function (settings_type) {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
-                'profile': ko.toJS(self),
+                'profile': self.toJS(self),
                 'type': "from_new_profile",
                 'settings_type':settings_type
             };
@@ -143,7 +143,7 @@ $(function() {
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
-            var data = { 'profile': ko.toJS(self) };
+            var data = { 'profile': self.toJS(self) };
             $.ajax({
                 url: "./plugin/octolapse/testCamera",
                 type: "POST",
@@ -223,7 +223,7 @@ $(function() {
             self.is_testing_custom_image_preferences(true);
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
-            var data = { 'profile': ko.toJS(self) };
+            var data = { 'profile': self.toJS(self) };
             $.ajax({
                 url: "./plugin/octolapse/testCameraSettingsApply",
                 type: "POST",

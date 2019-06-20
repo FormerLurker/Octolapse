@@ -42,119 +42,120 @@
         </div>
     </div>
     <div data-bind="template: {name: 'octolapse-profile-library-template', data: automatic_configuration}"></div>
-    <hr />
-    <div>
+    <div data-bind="fadeVisible: !automatic_configuration.updating_from_server()">
         <div>
-            <h4>Test Mode</h4>
-            <p>
-                Strips all extrusion, temperature change and fan commands from the GCode.  This is useful for testing new settings without wasting plastic or waiting for the printer to heat up!  This is also very useful for debugging issues with Octolapse in general.  If you find any other uses for test mode, please let me know.
-            </p>
-            <p>
-                <span class="label label-important">Attention</span>&nbsp;  This is a beta product that is not yet battle-hardened.  It's possible I left out or messed up some GCode commands.  Please report any issues you have while using test mode so that I can improve it.
-            </p>
+            <hr />
+            <div>
+                <h4>Test Mode</h4>
+                <p>
+                    Strips all extrusion, temperature change and fan commands from the GCode.  This is useful for testing new settings without wasting plastic or waiting for the printer to heat up!  This is also very useful for debugging issues with Octolapse in general.  If you find any other uses for test mode, please let me know.
+                </p>
+                <p>
+                    <span class="label label-important">Attention</span>&nbsp;  This is a beta product that is not yet battle-hardened.  It's possible I left out or messed up some GCode commands.  Please report any issues you have while using test mode so that I can improve it.
+                </p>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode" />Enabled
+                        <a class="octolapse_help" data-help-url="profiles.debug.is_test_mode.md" data-help-title="Test Mode" />
+                    </label>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div>
+            <div>
+                <h4>Log Additional Information</h4>
+                <p>
+                    Here you can enable or disable additional logging info that will appear in plugin_octolapse.log, which you can download from the <i>Logs</i> page available in the main menu.  The log file can grow quite large, so do not enable these unless it is necessary.
+                </p>
+                <p>A slight disclaimer is in order here.  Most of these commands were implemented to help me test or solve particular problems.  Some of these may not do exactly what they say they do, and it's possible that some are obsolete.  I will review the logging functions at some point, especially those that turn out to be useful to actual users.</p>
+            </div>
         </div>
         <div class="control-group">
+            <label class="control-label">Log All Errors</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: is_test_mode" title="Enable test mode" />Enabled
-                    <a class="octolapse_help" data-help-url="profiles.debug.is_test_mode.md" data-help-title="Test Mode" />
+                    <input type="checkbox" data-bind="checked: log_all_errors" title="Log all errors no matter what." />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.debug.log_all_errors.md" data-help-title="Log All Errors" />
+                </label>
+                <span class="help-inline">When enabled, all errors will be logged, no matter what the other logging settings are.</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Additional Logging</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.debug.enabled.md" data-help-title="Additional Logging" />
                 </label>
             </div>
         </div>
-    </div>
-    <hr />
-    <div>
-        <div>
-            <h4>Log Additional Information</h4>
-            <p>
-                Here you can enable or disable additional logging info that will appear in plugin_octolapse.log, which you can download from the <i>Logs</i> page available in the main menu.  The log file can grow quite large, so do not enable these unless it is necessary.
-            </p>
-            <p>A slight disclaimer is in order here.  Most of these commands were implemented to help me test or solve particular problems.  Some of these may not do exactly what they say they do, and it's possible that some are obsolete.  I will review the logging functions at some point, especially those that turn out to be useful to actual users.</p>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Log All Errors</label>
-        <div class="controls">
-            <label class="checkbox">
-                <input type="checkbox" data-bind="checked: log_all_errors" title="Log all errors no matter what." />Enabled
-                <a class="octolapse_help" data-help-url="profiles.debug.log_all_errors.md" data-help-title="Log All Errors" />
-            </label>
-            <span class="help-inline">When enabled, all errors will be logged, no matter what the other logging settings are.</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Additional Logging</label>
-        <div class="controls">
-            <label class="checkbox">
-                <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
-                <a class="octolapse_help" data-help-url="profiles.debug.enabled.md" data-help-title="Additional Logging" />
-            </label>
-        </div>
-    </div>
-    <div data-bind="visible: enabled">
-        <div class="control-group">
-            <label class="control-label">Write To Console</label>
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
-                    <a class="octolapse_help" data-help-url="profiles.debug.log_to_console.md" data-help-title="Write To Console" />
-                </label>
-                <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
-            </div>
-        </div>
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="span5">
-                    Module to Log
-                </div>
-                <div class="span5">
-                    Logging Level
-                </div>
-                <div class="span2">
-                    &nbsp;
+        <div data-bind="visible: enabled">
+            <div class="control-group">
+                <label class="control-label">Write To Console</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
+                        <a class="octolapse_help" data-help-url="profiles.debug.log_to_console.md" data-help-title="Write To Console" />
+                    </label>
+                    <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
                 </div>
             </div>
-            <div data-bind="foreach: enabled_loggers">
-                <div class="row-fluid" style="margin-bottom:5px;">
+            <div class="container-fluid">
+                <div class="row-fluid">
                     <div class="span5">
-                        <select data-bind="options: $parent.enabled_loggers,
-                            optionsText: 'name',
-                            optionsValue: 'name',
-                            value: name"></select>
+                        Module to Log
                     </div>
                     <div class="span5">
-                        <select data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
-                            optionsText: 'name',
-                            optionsValue: 'value',
-                            value: log_level"></select>
+                        Logging Level
                     </div>
                     <div class="span2">
-                        <a title="Delete" class="btn btn-danger" data-bind="click: $parent.removeLogger"><i class="icon-trash"></i></a>
+                        &nbsp;
                     </div>
                 </div>
-            </div>
+                <div data-bind="foreach: enabled_loggers">
+                    <div class="row-fluid" style="margin-bottom:5px;">
+                        <div class="span5">
+                            <select data-bind="options: $parent.enabled_loggers,
+                                optionsText: 'name',
+                                optionsValue: 'name',
+                                value: name"></select>
+                        </div>
+                        <div class="span5">
+                            <select data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
+                                optionsText: 'name',
+                                optionsValue: 'value',
+                                value: log_level"></select>
+                        </div>
+                        <div class="span2">
+                            <a title="Delete" class="btn btn-danger" data-bind="click: $parent.removeLogger"><i class="icon-trash"></i></a>
+                        </div>
+                    </div>
+                </div>
 
-            <div data-bind="visible: available_loggers().length > 0" class="row-fluid">
-                <div class="span5">
-                    <select id="debug_profile_available_loggers" name="debug_profile_available_loggers" data-bind="options: available_loggers_sorted,
-                    optionsText: 'name',
-                    optionsValue: 'name',
-                    value: logger_name_add"></select>
-                </div>
-                <div class="span5">
-                    <select id="debug_profile_logging_level" name="debug_profile_logging_level"
-                            data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
-                    optionsText: 'name',
-                    optionsValue: 'value',
-                    value: logger_level_add"></select>
-                </div>
-                <div class="span2">
-                    <a title="Add" class="btn btn-primary" data-bind="click: addLogger"><i class="icon-plus"></i></a>
+                <div data-bind="visible: available_loggers().length > 0" class="row-fluid">
+                    <div class="span5">
+                        <select id="debug_profile_available_loggers" name="debug_profile_available_loggers" data-bind="options: available_loggers_sorted,
+                        optionsText: 'name',
+                        optionsValue: 'name',
+                        value: logger_name_add"></select>
+                    </div>
+                    <div class="span5">
+                        <select id="debug_profile_logging_level" name="debug_profile_logging_level"
+                                data-bind="options: Octolapse.DebugProfiles.profileOptions.logging_levels,
+                        optionsText: 'name',
+                        optionsValue: 'value',
+                        value: logger_level_add"></select>
+                    </div>
+                    <div class="span2">
+                        <a title="Add" class="btn btn-primary" data-bind="click: addLogger"><i class="icon-plus"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 </script>
 
 

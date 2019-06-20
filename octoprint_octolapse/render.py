@@ -150,7 +150,6 @@ class RenderJobInfo(object):
         self, timelapse_job_info, data_directory, current_camera, rendering, ffmpeg_path, job_number=0, jobs_remaining=0
     ):
         self.timelapse_job_info = timelapse_job_info
-
         self.job_id = timelapse_job_info.JobGuid
         self.job_number = job_number
         self.jobs_remaining = jobs_remaining

@@ -93,6 +93,7 @@ $(function () {
             self.automatic_configuration.parent = parent;
             return copy;
         };
+
         self.on_closed = function(){
             self.automatic_configuration.on_closed();
         };

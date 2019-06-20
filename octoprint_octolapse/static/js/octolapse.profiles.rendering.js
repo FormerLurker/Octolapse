@@ -48,7 +48,7 @@ $(function() {
 
     Octolapse.RenderingProfileViewModel = function (values) {
         var self = this;
-        self.profileTypeName = ko.observable("Render")
+        self.profileTypeName = ko.observable("Rendering");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
@@ -119,7 +119,15 @@ $(function() {
         self.overlay_text_color_as_css = ko.pureComputed({
             read: function () {
                 // Convert to js.
-                var rgba = JSON.parse(self.overlay_text_color());
+                var rgba;
+                if (Array.isArray(self.overlay_text_color()))
+                {
+                    rgba = self.overlay_text_color();
+                }
+                else
+                {
+                    rgba = JSON.parse(self.overlay_text_color());
+                }
                 // Divide alpha by 255.
                 rgba[3] = rgba[3] / 255;
                 // Build the correct string.

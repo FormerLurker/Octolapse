@@ -139,7 +139,7 @@ class ExternalSettings(object):
         if r.status_code != requests.codes.ok:
             message = (
                 "An invalid status code or {0} was returned while getting available profiles."
-                    .format(r.status_code)
+                .format(r.status_code)
             )
             raise ExternalSettingsError('invalid-status-code', message)
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
@@ -151,8 +151,8 @@ class ExternalSettings(object):
     @staticmethod
     def _get_url_for_profile(settings_version, profile_type, profile_identifiers):
         version_url = (
-            "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/{0}/{1}/{2}/profile.json?nonce={3}"
-            .format(settings_version, profile_type.lower(), "{0}", uuid.uuid4().hex)
+            "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/{0}/{1}/"
+            "{2}/profile.json?nonce={3} ".format(settings_version, profile_type.lower(), "{0}", uuid.uuid4().hex)
         )
         if profile_type == 'printer':
             return version_url.format("{0}/{1}".format(profile_identifiers["make"], profile_identifiers["model"]))
