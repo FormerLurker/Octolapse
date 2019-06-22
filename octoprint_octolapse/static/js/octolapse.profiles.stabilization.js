@@ -75,7 +75,7 @@ $(function () {
             self.y_relative_path_invert_loop(values.y_relative_path_invert_loop);
         };
 
-        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
             values.automatic_configuration,
             Octolapse.Stabilizations.profileOptions.server_profiles,
             self.profileTypeName(),

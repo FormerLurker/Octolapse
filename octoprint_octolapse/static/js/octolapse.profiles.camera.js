@@ -299,7 +299,7 @@ $(function() {
             self.webcam_settings.updateWebcamSettings(values);
         };
 
-        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
             values.automatic_configuration,
             Octolapse.Cameras.profileOptions.server_profiles,
             self.profileTypeName(),

@@ -1,23 +1,24 @@
-<script type="text/html" id="octolapse-profile-library-template">
-    <div>
+<script type="text/html" id="octolapse-profile-library-test-template">
+    <div data-bind="visible:options().length>0">
         <hr/>
         <div>
-            <h4>Import Profile</h4>
+            <h3>Import <span data-bind="text: profile_type"/> Profile</h3>
             <p>Choose a pre-configured profile from the list to import a profile from the server.  You may have to configure some items manually after importing a new profile.
             </p>
         </div>
-        <div class="control-group">
-            <div class="controls">
-                <select id="library_profile_server_profile_name" data-bind="options: server_profiles,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-                                   value: key,
-                                   optionsCaption: 'Select a profile to import...'"></select>
-                <a class="octolapse_help" data-help-url="profiles.library.server_profiles.md" data-help-title="Import Server Profiles" />
-                <div class="error_label_container text-error" data-error-for="library_profile_server_profile_name"></div>
+        <div data-bind="foreach: available_keys">
+            <div class="control-group" data-bind="visible: $index()==0 || $parent.is_option_visible($parent.key_values_with_index()[$index()-1]())">
+                <label class="control-label" data-bind="text: $parent.available_keys[$index()].name" ></label>
+                <div class="controls">
+                    <select data-bind="options: $parent.options()[$index()],
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: $parent.key_values_with_index()[$index()]">
+                    </select>
+                </div>
             </div>
         </div>
-        <div data-bind="fadeVisible:key() && key() != 'other' && can_update_from_server()">
+        <div data-bind="fadeVisible:can_update_from_server">
             <div class="control-group">
                 <label class="control-label" for="library_profile_is_custom">Customize Profile</label>
                 <div class="controls">

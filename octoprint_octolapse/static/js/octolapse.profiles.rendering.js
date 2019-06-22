@@ -341,7 +341,7 @@ $(function() {
             self.thread_count(values.thread_count);    
         };
 
-        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
+        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
             values.automatic_configuration,
             Octolapse.Renderings.profileOptions.server_profiles,
             self.profileTypeName(),

@@ -2473,8 +2473,7 @@ class OctolapsePlugin(
                 "js/octolapse.status.snapshotplan_preview.js",
                 "js/octolapse.webcam.settings.js",
                 "js/octolapse.help.js",
-                "js/octolapse.profiles.library.js",
-                "js/octolapse.profiles.library.test.js"
+                "js/octolapse.profiles.library.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]
