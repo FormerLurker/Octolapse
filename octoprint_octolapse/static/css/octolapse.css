@@ -23,6 +23,12 @@
 */
 .octolapse_unclickable {
     pointer-events: none;
+    opacity: 0.25;
+}
+.octolapse a:hover{
+    cursor: pointer;
+    text-decoration: none;
+
 }
 .text-left{
     text-align:left;

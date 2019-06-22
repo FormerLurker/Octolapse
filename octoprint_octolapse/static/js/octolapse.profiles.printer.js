@@ -98,313 +98,18 @@ $(function() {
         self.slic3r_pe = new Octolapse.Slic3rPeViewModel(values.slic3r_pe);
     };
 
-    Octolapse.AutomaticPrinterConfigurationViewModel = function(values, parent) {
-        var self = this;
-        self.parent = parent;
-        self.make = ko.observable(values.make);
-        self.model = ko.observable(values.model);
-        self.version = ko.observable(values.version);
-        self.suppress_update_notification_version = ko.observable(values.suppress_update_notification_version);
-        self.make = ko.observable(values.make);
-        self.original_make = values.make;
-        self.other_make = ko.observable(values.other_make);
-        self.ignore_is_custom_change = false;
-        self.ignore_model_changes = false;
-        self.ignore_make_changes = false;
-        // tracks if the is_custom value triggered a server profile update
-        self.is_custom_triggered_update = false;
-        self.original_model = values.model;
-        self.is_custom = ko.observable(values.is_custom);
-        self.old_is_custom = null;
-        self.automatic_changed_to_custom = ko.observable(false);
-        self.model = ko.observable(values.model).extend({
-            confirmable: {
-                key: 'confirm-load-server-profile',
-                message: 'This will overwrite your current settings.  Are you sure?',
-                title: 'Update Profile From Server',
-                on_before_confirm: function(newValue, oldValue)
-                {
-                    // Record our previous custom value in case we need to revert to the previous value
-                    self.old_is_custom = self.is_custom();
-                    // no need to save the old key, it will be provided in later callbacks
-                },
-                ignore: function(newValue, oldValue) {
-                    // ignore the popup if we are ignoring key changes
-                    return self.ignore_model_changes || !newValue || newValue == 'custom';
-                },
-                auto_confirm: function(newValue, oldValue)
-                {
-                    return !self.is_custom() && oldValue && oldValue != 'custom' && newValue && newValue != 'custom';
-                },
-                on_confirmed: function(newValue, oldValue) {
-                    // We've updated from the server, we are no longer custom!
-                    self.ignore_is_custom_change = true;
-                    self.is_custom(false);
-                    self.ignore_is_custom_change = false;
-                },
-                on_cancel: function(newValue, oldValue)
-                {
-                    // Revert the key and is_custom setting to their previous value
-                    // No other changes will have been made to the profile at this point
-                    if(newValue) {
-                        self.ignore_model_changes = true;
-                        self.model(self.original_model);
-                        self.ignore_model_changes = false;
-                        self.ignore_is_custom_change = true;
-                        self.is_custom(self.old_is_custom);
-                        self.ignore_is_custom_change = false;
-                    }
-                },
-                on_complete: function(newValue, oldValue, wasConfirmed)
-                {
-                    // we don't want to do anything if we're ignoring key changes
-                    if (self.ignore_model_changes)
-                        return;
-
-                    // only update the profile if the new value is not null or custom
-                    var should_update_profile = wasConfirmed && (newValue && newValue !== 'custom');
-
-                    if(should_update_profile) {
-                        self.updateProfileFromLibrary({
-                            on_failed: function () {
-                                self.ignore_is_custom_change = true;
-                                self.is_custom(self.old_is_custom);
-                                self.ignore_is_custom_change = false;
-                                self.ignore_model_changes = true;
-                                self.make(oldValue);
-                                self.ignore_model_changes = false;
-                                // We need to mark this in case of failure, else is_custom might not revert properly
-                                self.is_custom_triggered_update = false;
-                            }
-                        });
-                    }
-                }
-            }
-        });
-
-        self.other_model = ko.observable(values.other_model);
-
-        self.is_custom.subscribe(function(newValue){
-            if (self.ignore_is_custom_change)
-                return;
-
-            // If we've switched from an automatically configured profile to a custom profile, display this
-            // temporarily to inform the user.
-            if (newValue) {
-                if (self.model && self.model() != 'custom')
-                    self.automatic_changed_to_custom(true);
-                else
-                    self.automatic_changed_to_custom(false);
-            }
-            else {
-                // If we've disabled the custom profile setting, update the profile from the server.
-                if (self.make() && self.make() != 'custom' && self.model() && self.model() != 'custom')
-                {
-                    // normally model changes trigger server updates, but this is a special
-                    // case.  If the user has a non custom make and model selected,
-                    // switching is_custom off should trigger a server update
-                    // track is by setting self.is_custom_triggered_update = true;
-                    self.ignore_is_custom_change=true;
-                    self.is_custom(true);
-                    self.ignore_is_custom_change=false;
-                    // Is custom triggered a model update, which is a special case
-                    // mark it
-                    self.is_custom_triggered_update = true;
-                    var current_model = self.model();
-                    self.ignore_model_changes = true;
-                    self.model(null);
-                    self.ignore_model_changes = false;
-                    self.model(current_model);
-                }
-            }
-        });
-
-        self.make.subscribe(function(newValue) {
-            console.log("Make changed");
-            // Clear the model
-            if(newValue==='custom') {
-                self.model('custom');
-            }
-            else{
-                self.model(null);
-            }
-            self.version(null);
-            self.suppress_update_notification_version(null);
-            self.ignore_is_custom_change = true;
-            self.is_custom(false);
-            self.ignore_is_custom_change = false;
-        });
-
-        self.makes = ko.pureComputed(function(){
-            console.log("Getting printer makes.");
-            var makes = [];
-            if (self.make() !== 'custom' && !Octolapse.Printers.profileOptions.makes_and_models)
-            {
-                var make = {
-                    name: self.original_make,
-                    value: self.original_make
-                };
-                makes.push(make);
-            }
-            else
-            {
-                for (key in Octolapse.Printers.profileOptions.makes_and_models)
-                {
-                    var current_make = Octolapse.Printers.profileOptions.makes_and_models[key];
-                    var make = {
-                        'name': current_make.name,
-                        'value': key
-                    };
-                    makes.push(make);
-                }
-            }
-            var other_make = {
-                'name': 'Custom',
-                'value': 'custom'
-            };
-            makes.push(other_make);
-            return makes;
-        },this);
-
-        self.models = ko.pureComputed(function(){
-            console.log("Getting printer models.");
-            var models = [];
-            var model = null;
-            if (self.make() !== 'custom' && !Octolapse.Printers.profileOptions.makes_and_models)
-            {
-                model= {
-                    name: self.original_model,
-                    value: self.original_model
-                };
-                models.push(model);
-
-            }
-            else if (
-                Octolapse.Printers.profileOptions.makes_and_models &&
-                (self.make() && self.make() in Octolapse.Printers.profileOptions.makes_and_models)
-            ){
-                var models_dict = Octolapse.Printers.profileOptions.makes_and_models[self.make()].models;
-                for (key in models_dict) {
-                    var current_model = models_dict[key];
-                    model = {
-                        'name': current_model.name,
-                        'value': key
-                    };
-                    models.push(model);
-                }
-            }
-            var other_model = {
-                'name': 'Custom',
-                'value': 'custom'
-            };
-            models.push(other_model);
-            return models;
-        },this);
-
-        self.can_update_from_repo = ko.pureComputed(function(){
-            return (
-                self.make() && self.make() !== "custom" &&
-                self.model() && self.model() !== "custom"
-            );
-        },this);
-        
-        self.updateProfileFromLibrary = function(options){
-            var on_failed = options.on_failed;
-            var data = {
-                'type': 'printer',
-                'profile': parent.toJS(),
-                'identifiers': {
-                    'make': self.make(),
-                    'model': self.model()
-                }
-            };
-            $.ajax({
-                url: "./plugin/octolapse/updateProfileFromServer",
-                type: "POST",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: function (data) {
-                    var updated_profile = JSON.parse(data.profile_json);
-                    // Update automatic configuration settings
-                    self.version(updated_profile.automatic_configuration.version);
-                    self.suppress_update_notification_version(null);
-                    self.ignore_make_changes = true;
-                    self.make(updated_profile.automatic_configuration.make);
-                    self.ignore_make_changes = false;
-                    self.original_make = updated_profile.automatic_configuration.make;
-                    self.other_make("");
-                    self.ignore_model_changes = true;
-                    self.model(updated_profile.automatic_configuration.model);
-                    self.ignore_model_changes = false;
-                    self.original_model = updated_profile.automatic_configuration.model;
-                    self.other_model("");
-                    self.automatic_changed_to_custom(false);
-                    if(!self.is_custom_triggered_update) {
-                        self.ignore_is_custom_change = true;
-                        self.is_custom(false);
-                        self.ignore_is_custom_change = false;
-                    }
-                    else{
-                        // Is custom triggered the change, clear the flag
-                        self.is_custom_triggered_update = false;
-                    }
-                    // Update the parent data
-                    self.parent.updateFromServerProfile(updated_profile);
-
-                    var message = "Your printer settings have been updated.  Click 'save' to apply the changes.";
-                    var options = {
-                        title: 'Printer Settings Updated',
-                        text: message,
-                        type: 'success',
-                        hide: true,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopupForKey(
-                        options,"printer-profile-update","printer-profile-update"
-                    );
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    if(on_failed)
-                        on_failed();
-                    var message = "Octolapse was unable to update your printer profile.  See" +
-                                  " plugin_octolapse.log for details.  Status: " + textStatus +
-                                  ".  Error: " + errorThrown;
-                    var options = {
-                        title: 'Unable to Update',
-                        text: message,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopupForKey(
-                        options,"printer-profile-update","printer-profile-update"
-                    );
-                }
-            });
-        };
-
-        self.on_closed = function(){
-            Octolapse.closePopupsForKeys(['printer-profile-update']);
-            Octolapse.closeConfirmDialogsForKeys(['confirm-load-server-profile']);
-        }
-    };
-    
     Octolapse.PrinterProfileViewModel = function (values) {
         var self = this;
         self.profileTypeName = ko.observable("Printer");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
+        /*
         self.automatic_configuration = new Octolapse.AutomaticPrinterConfigurationViewModel(
             values.automatic_configuration, self
         );
+        */
+
         self.gcode_generation_settings = new Octolapse.OctolapseGcodeSettings(values.gcode_generation_settings);
         self.slicers = new Octolapse.Slicers(values.slicers);
         // has_been_saved_by_user profile setting, computed and always returns true
@@ -447,7 +152,7 @@ $(function() {
         self.home_axis_gcode = ko.observable(values.home_axis_gcode);
 
         // Update the current profile from server profile values
-        self.updateFromServerProfile = function(server_profile){
+        self.updateFromServer = function(server_profile){
             self.name(server_profile.name);
             self.description(server_profile.description);
             self.has_been_saved_by_user(true);
@@ -494,14 +199,24 @@ $(function() {
         self.toJS = function()
         {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
-            var parent = self.automatic_configuration.parent;
-            self.automatic_configuration.parent = null;
             var copy = ko.toJS(self);
             delete copy.helpers;
-            self.automatic_configuration.parent = parent;
             return copy;
 
         };
+
+        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
+            values.automatic_configuration,
+            Octolapse.Printers.profileOptions.server_profiles,
+            self.profileTypeName(),
+            self,
+            self.updateFromServer
+        );
+
+        self.automatic_configuration.is_confirming.subscribe(function(value){
+            console.log("IsClickable" + value.toString());
+            Octolapse.Printers.setIsClickable(!value);
+        });
 
     };
 

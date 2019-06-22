@@ -340,13 +340,12 @@ $(function() {
             self.cleanup_after_render_fail(values.cleanup_after_render_fail);
             self.thread_count(values.thread_count);    
         };
-        
-        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+
+        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
             values.automatic_configuration,
             Octolapse.Renderings.profileOptions.server_profiles,
             self.profileTypeName(),
             self,
-            true,
             self.updateFromServer
         );
 

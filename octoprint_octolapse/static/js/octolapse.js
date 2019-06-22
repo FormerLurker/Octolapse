@@ -805,11 +805,11 @@ $(function () {
             var value = valueAccessor();
             if(ko.unwrap(value))
             {
-                $(element).removeClass("octolapse_unclickable").fadeIn();
+                $(element).removeClass("octolapse_unclickable").stop( true, true ).fadeIn();
             }
             else
             {
-                $(element).addClass("octolapse_unclickable").fadeOut();
+                $(element).addClass("octolapse_unclickable").stop( true, true ).fadeOut();
             }
         }
     };
@@ -829,6 +829,7 @@ $(function () {
         self.message = "Are you sure?";
         self.title = "Confirm";
         self.dialog_key = 'confirmation';
+        self.on_before_changed_callback = null;
         self.before_confirm_callback = null;
         self.cancel_callback = null;
         self.confirmed_callbacked = null;
@@ -852,6 +853,8 @@ $(function () {
                 self.title = options.title;
             if(options.key)
                 self.dialog_key = options.key;
+            if(options.on_before_changed)
+                self.on_before_changed_callback = options.on_before_changed;
             if(options.on_before_confirm)
                 self.before_confirm_callback = options.on_before_confirm;
             if(options.on_cancel)
@@ -867,6 +870,12 @@ $(function () {
         };
 
         self.get_options(options);
+
+        self.on_before_changed = function(){
+            if (self.on_before_changed_callback){
+                self.on_before_changed_callback(self.new_value, self.current_value);
+            }
+        };
 
         self.on_before_confirm = function(){
             if(self.before_confirm_callback)
@@ -900,6 +909,7 @@ $(function () {
                 self.is_confirmed = false;
                 self.new_value = new_value;
                 self.current_value = target();
+                self.on_before_changed();
                 self.is_ignored = self.ignore_callback && self.ignore_callback(new_value, self.current_value);
                 if(!is_ignored)
                 {
@@ -1489,7 +1499,7 @@ $(function () {
                     }
                     break;
                 case "external_profiles_list_changed":
-                    Octolapse.Printers.profileOptions.makes_and_models = data.makes_and_models;
+                    Octolapse.Printers.profileOptions.server_profiles = data.server_profiles;
                     break;
                 case "settings-changed":
                     {

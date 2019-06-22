@@ -118,13 +118,12 @@ $(function() {
                 self.enabled_loggers.push({'name':curItem.name, 'log_level':curItem.log_level});
             }
         };
-        
-        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+
+        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
             values.automatic_configuration,
             Octolapse.DebugProfiles.profileOptions.server_profiles,
             self.profileTypeName(),
             self,
-            true,
             self.updateFromServer
         );
 

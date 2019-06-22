@@ -28,11 +28,6 @@
                 <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Settings <i class="fa fa-no-shadow fa-caret-down"></i>
             </a>
         </div>
-        <div class="span6 text-right">
-            <a data-bind="click: function() {openOctolapseSettings()};">
-                Main Settings<i class="fa fa-gear fa-2x"></i>
-            </a>
-        </div>
     </div>
 
     <div id="octolapse_status_settings_current_panel">
@@ -70,7 +65,7 @@
                     </td>
                     <td>
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile">
-                            <i class="fa fa-gear fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() == null && Octolapse.Settings.is_loaded(), click: createNewPrinterProfile">
                             <i class="fa fa-plus fa-2x"></i>
@@ -93,7 +88,7 @@
                     </td>
                     <td>
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile">
-                            <i class="fa fa-gear fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
                 </tr>
@@ -113,7 +108,7 @@
                     </td>
                     <td>
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_trigger_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentTriggerProfile">
-                            <i class="fa fa-gear fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
                 </tr>
@@ -132,7 +127,7 @@
                     </td>
                     <td class="text-right">
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile">
-                            <i class="fa fa-gear fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
                 </tr>
@@ -159,7 +154,7 @@
                     </td>
                     <td>
                         <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile">
-                            <i class="fa fa-gear fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
                 </tr>

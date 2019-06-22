@@ -300,6 +300,7 @@ $(function() {
         self.toggle = Octolapse.Toggle;
 
         self.showAddEditDialog = function(guid, isCopy) {
+            self.setIsClickable(true);
             //console.log("octolapse.profiles.js - Showing add edit dialog.")
             isCopy = isCopy || false;
             var title = null;
@@ -344,6 +345,13 @@ $(function() {
             addEditObservable(newProfile);
 
             Octolapse.Settings.showAddEditDialog({ "profileObservable": addEditObservable, "title": title, "templateName": self.addEditTemplateName, "validationRules": JSON.parse(JSON.stringify(self.profileValidationRules)), 'warning':warning },this);
+        };
+
+        self.setIsClickable = function(is_clickable){
+            if (!is_clickable)
+                $("#octolapse_add_edit_profile_dialog div.modal-content").addClass("octolapse_unclickable");
+            else
+                $("#octolapse_add_edit_profile_dialog div.modal-content").removeClass("octolapse_unclickable");
         };
         /*
             Set data prior to bindings

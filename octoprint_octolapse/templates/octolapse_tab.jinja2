@@ -25,7 +25,7 @@
     <!-- We need somewhere to bind the OctolapseViewModel-->
 </div>
 
-<div id="octolapse_tab">
+<div id="octolapse_tab" class="octolapse">
     <script>
         getLatestSnapshotUrl = function (camera_guid) {
 
@@ -42,16 +42,19 @@
             <div class="panel-heading ol-heading">
                 <div class="row-fluid">
 
-                    <div class="span11">
+                    <div class="span10">
                         <h4 data-bind="text: getStatusText">
                             Octolapse
                         </h4>
                     </div>
-                    <div class="span1 text-right">
+                    <div class="span2 text-right">
                         <label class="toggle-switch-fa-sm" data-bind="visible: Octolapse.Globals.is_admin, attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
                             <input type="checkbox" data-bind="checked: Octolapse.Globals.enabled, click: function() {return Octolapse.SettingsMain.toggleOctolapse();}, enable: Octolapse.Globals.is_admin()">
                             <span class="fa-slider"><i class="fa icon-off fa-inverse"></i></span>
                         </label>
+                        |<a data-bind="click: function() {openOctolapseSettings()};">
+                            <i class="fa fa-gear fa-lg"></i>
+                        </a>
                     </div>
                 </div>
             </div>

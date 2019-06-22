@@ -536,10 +536,10 @@ class OctolapsePlugin(
         logger.info("Attempting to update the current profile from the server")
         request_values = flask.request.get_json()
         profile_type = request_values["type"]
-        profile_identifiers = request_values["identifiers"]
+        key_values = request_values["key_values"]
         profile_dict = request_values["profile"]
         try:
-            server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, profile_identifiers)
+            server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, key_values)
         except ExternalSettingsError as e:
             logger.exception(e)
             return json.dumps(
@@ -2473,7 +2473,8 @@ class OctolapsePlugin(
                 "js/octolapse.status.snapshotplan_preview.js",
                 "js/octolapse.webcam.settings.js",
                 "js/octolapse.help.js",
-                "js/octolapse.profiles.library.js"
+                "js/octolapse.profiles.library.js",
+                "js/octolapse.profiles.library.test.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]

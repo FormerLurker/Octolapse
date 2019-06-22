@@ -166,6 +166,31 @@ class ProfileSettings(Settings):
         return new_object
 
 
+class AutomaticConfiguration(Settings):
+    def __init__(self):
+        self.key_values = None
+        self.version = None
+        self.suppress_update_notification_version = False
+        self.is_custom = False
+
+    def is_updatable_from_server(self):
+        if self.key_values is None:
+            return False
+
+        for key in self.key_values:
+            if not key:
+                return False
+
+        return not self.is_custom
+
+    def get_server_update_identifiers_dict(self):
+        return {
+            'version': self.version,
+            'suppress_update_notification_version': self.suppress_update_notification_version,
+            'key_values': self.key_values
+        }
+
+
 class PrinterProfileSlicers(Settings):
     def __init__(self):
         self.cura = CuraSettings()
@@ -174,32 +199,43 @@ class PrinterProfileSlicers(Settings):
         self.other = OtherSlicerSettings()
 
 
-class AutomaticPrinterConfiguration(Settings):
-    def __init__(self):
-        self.make = "custom"
-        self.other_make = None
-        self.model = "custom"
-        self.other_model = None
-        self.version = None
-        self.suppress_update_notification_version = False
-        self.is_custom = False
+class AutomaticConfigurationProfile(ProfileSettings):
+    def __init__(self, name="Automatic Configuration Profile"):
+        super(AutomaticConfigurationProfile, self).__init__(name)
+        self.automatic_configuration = AutomaticConfiguration()
+
+    @classmethod
+    def update_from_server_profile(cls, current_profile, server_profile_dict):
+        # make sure I didn't make a version mistake
+        # we don't want to alter the provided profile information, so make copies
+        current_profile_copy = current_profile.clone()
+        # copy the profile portion of the profile
+        server_profile_copy = copy.deepcopy(server_profile_dict)
+        # save our current automatic configuration settings
+        is_custom = current_profile_copy.automatic_configuration.is_custom
+
+        # when updating, we don't want to change any of the guids, slicer settings,
+        # gcode generation settings, so remove those items from the server profile
+        if 'guid' in server_profile_copy:
+            del server_profile_copy["guid"]
+
+        # now update everything else
+        current_profile_copy.update(server_profile_copy)
+
+        # restore the previous automatic configuration setting
+        current_profile_copy.automatic_configuration.is_custom = is_custom
+        # clear the previous notification suppression version
+        current_profile_copy.automatic_configuration.suppress_update_notification_version = None
+
+        return current_profile_copy
 
     def is_updatable_from_server(self):
-        return (
-            not self.is_custom and
-            self.make and
-            self.make != 'custom' and
-            self.model and
-            self.model != 'custom'
-        )
+        return self.automatic_configuration.is_updatable_from_server()
 
     def get_server_update_identifiers_dict(self):
-        return {
-            'version': self.version,
-            'suppress_update_notification_version': self.suppress_update_notification_version,
-            'make': self.make,
-            'model': self.model
-        }
+        identifiers = self.automatic_configuration.get_server_update_identifiers_dict()
+        identifiers["guid"] = self.guid
+        return identifiers
 
 
 class PrinterProfile(ProfileSettings):
@@ -210,7 +246,7 @@ class PrinterProfile(ProfileSettings):
         # flag that is false until the profile has been saved by the user at least once
         # this is used to show a warning to the user if a new printer profile is used
         # without being configured
-        self.automatic_configuration = AutomaticPrinterConfiguration()
+        self.automatic_configuration = AutomaticConfiguration()
         self.has_been_saved_by_user = False
         self.slicer_type = "automatic"
         self.gcode_generation_settings = OctolapseGcodeSettings()
@@ -343,7 +379,7 @@ class PrinterProfile(ProfileSettings):
                 dict(value="noskin", name='Not in Skin'),
                 dict(value="infill", name='Within Infill'),
             ],
-            'makes_and_models': None
+            'server_profiles': None
         }
 
     def get_current_slicer_settings(self):
@@ -470,66 +506,6 @@ class PrinterProfile(ProfileSettings):
             "minimum_layer_height": self.minimum_layer_height,
             "g90_influences_extruder": g90_influences_extruder
         }
-
-
-class AutomaticConfiguration(Settings):
-    def __init__(self):
-        self.key = None
-        self.version = None
-        self.suppress_update_notification_version = False
-        self.is_custom = False
-
-    def is_updatable_from_server(self):
-        return (
-            not self.is_custom and
-            self.key
-        )
-
-    def get_server_update_identifiers_dict(self):
-        return {
-            'version': self.version,
-            'suppress_update_notification_version': self.suppress_update_notification_version,
-            'key': self.key
-        }
-
-
-class AutomaticConfigurationProfile(ProfileSettings):
-    def __init__(self, name="Automatic Configuration Profile"):
-        super(AutomaticConfigurationProfile, self).__init__(name)
-        self.automatic_configuration = AutomaticConfiguration()
-
-    @classmethod
-    def update_from_server_profile(cls, current_profile, server_profile_dict):
-        # make sure I didn't make a version mistake
-        # we don't want to alter the provided profile information, so make copies
-        current_profile_copy = current_profile.clone()
-        # copy the profile portion of the profile
-        server_profile_copy = copy.deepcopy(server_profile_dict)
-        # save our current automatic configuration settings
-        is_custom = current_profile_copy.automatic_configuration.is_custom
-
-        # when updating, we don't want to change any of the guids, slicer settings,
-        # gcode generation settings, so remove those items from the server profile
-        if 'guid' in server_profile_copy:
-            del server_profile_copy["guid"]
-
-        # now update everything else
-        current_profile_copy.update(server_profile_copy)
-
-        # restore the previous automatic configuration setting
-        current_profile_copy.automatic_configuration.is_custom = is_custom
-        # clear the previous notification suppression version
-        current_profile_copy.automatic_configuration.suppress_update_notification_version = None
-
-        return current_profile_copy
-
-    def is_updatable_from_server(self):
-        return self.automatic_configuration.is_updatable_from_server()
-
-    def get_server_update_identifiers_dict(self):
-        identifiers = self.automatic_configuration.get_server_update_identifiers_dict()
-        identifiers["guid"] = self.guid
-        return identifiers
 
 
 class StabilizationPath(Settings):
@@ -1261,7 +1237,7 @@ class ProfileOptions(StaticSettings):
 
     def update_server_options(self, available_profiles):
         # Printer Profile Update
-        self.printer["makes_and_models"] = available_profiles.get("printer", None)
+        self.printer["server_profiles"] = available_profiles.get("printer", None)
         self.stabilization["server_profiles"] = available_profiles.get("stabilization", None)
         self.trigger["server_profiles"] = available_profiles.get("trigger", None)
         self.rendering["server_profiles"] = available_profiles.get("rendering", None)

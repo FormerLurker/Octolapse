@@ -174,13 +174,12 @@ $(function () {
                     ko.observable(values.position_restrictions[index]));
             }
         };
-        
-        self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
+
+        self.automatic_configuration = new Octolapse.ProfileLibraryTestViewModel(
             values.automatic_configuration,
             Octolapse.Triggers.profileOptions.server_profiles,
             self.profileTypeName(),
             self,
-            true,
             self.updateFromServer
         );
 

@@ -201,7 +201,7 @@ $(function () {
                 'units_default_options': settings.profiles.options.printer.units_default_options,
                 'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options,
                 'cura_surface_mode_options': settings.profiles.options.printer.cura_surface_mode_options,
-                'makes_and_models': settings.profiles.options.printer.makes_and_models
+                'server_profiles': settings.profiles.options.printer.server_profiles
             };
             Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
             Object.keys(settings.profiles.printers).forEach(function(key) {

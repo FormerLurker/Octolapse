@@ -88,53 +88,78 @@ class ExternalSettings(object):
         return r.json()
 
     @staticmethod
+    def _get_profile_for_keys(profiles, key_values, profile_type):
+        if profile_type in profiles:
+            profiles = profiles[profile_type]["values"]
+            profile = None
+            for key in key_values:
+                if key in profiles:
+                    profile = profiles[key]
+                    if "values" not in profile:
+                        return profile
+                    else:
+                        profiles = profile["values"]
+        return None
+
+
+    @staticmethod
     def check_for_updates(available_profiles, updatable_profiles):
         profiles_to_update = {
-            "printer": []
+            "printer": [],
+            "stabilization": [],
+            "trigger": [],
+            "rendering": [],
+            "camera": [],
+            "debug": [],
+
         }
         updates_available = False
         # loop through printer profiles
         if (
             updatable_profiles is not None and
-            available_profiles is not None and
-            "printer" in updatable_profiles and
-            "printer" in available_profiles
+            available_profiles is not None
         ):
-            for updatable_profile in updatable_profiles["printer"]:
-                # get the available profile and see if we should update it
-                make = available_profiles["printer"].get(updatable_profile["make"], None)
-                if make is not None and "models" in make:
-                    model = make["models"].get(updatable_profile["model"], None)
+            # loop through the updatable profile dicts
+            for profile_type, value in six.iteritems(updatable_profiles):
+                # loop through the profiles
+                for updatable_profile in value:
+                    # get the available profile for the updatable profile keys
+                    key_values = [x["value"] for x in updatable_profile["key_values"]]
+                    available_profile = ExternalSettings._get_profile_for_keys(
+                        available_profiles, key_values, profile_type
+                    )
+                    if available_profile is None:
+                        continue
                     # if we have new model and the version is greater than the update version
                     # and we're not suppressing updates for this version, add the profile
                     # to our update list
                     if (
-                        model is not None and
                         updatable_profile["version"] is None or
                         (
-                            LooseVersion(model["version"]) > LooseVersion(updatable_profile["version"]) and
+                            LooseVersion(available_profile["version"]) > LooseVersion(updatable_profile["version"]) and
                             (
                                 updatable_profile["suppress_update_notification_version"] is None or
                                 (
-                                    LooseVersion(model["version"]) >
+                                    LooseVersion(available_profile["version"]) >
                                     LooseVersion(updatable_profile["suppress_update_notification_version"])
                                 )
                             )
                         )
                     ):
                         updates_available = True
-                        profiles_to_update["printer"].append(updatable_profile)
+                        profiles_to_update[profile_type].append(updatable_profile)
 
         if not updates_available:
             return False
         return profiles_to_update
 
     @staticmethod
-    def get_profile(current_octolapse_version, profile_type, profile_identifiers):
+    def get_profile(current_octolapse_version, profile_type, key_values):
         # get the best settings version, or raise an error if we can't get one
         settings_version = ExternalSettings._get_best_settings_version(current_octolapse_version)
         # construct the URL for the current version
-        url = ExternalSettings._get_url_for_profile(settings_version, profile_type, profile_identifiers)
+        keys = [x["value"] for x in key_values]
+        url = ExternalSettings._get_url_for_profile(settings_version, profile_type, keys)
         r = requests.get(url, timeout=float(5))
         if r.status_code != requests.codes.ok:
             message = (
@@ -149,15 +174,13 @@ class ExternalSettings(object):
         return r.json()
 
     @staticmethod
-    def _get_url_for_profile(settings_version, profile_type, profile_identifiers):
-        version_url = (
+    def _get_url_for_profile(settings_version, profile_type, key_values):
+        # build up keys string
+        keys_string = "/".join(key_values)
+        return(
             "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/{0}/{1}/"
-            "{2}/profile.json?nonce={3} ".format(settings_version, profile_type.lower(), "{0}", uuid.uuid4().hex)
+            "{2}/profile.json?nonce={3} ".format(settings_version, profile_type.lower(), keys_string, uuid.uuid4().hex)
         )
-        if profile_type == 'printer':
-            return version_url.format("{0}/{1}".format(profile_identifiers["make"], profile_identifiers["model"]))
-
-        return version_url.format("{0}".format(profile_identifiers["key"]))
 
     @staticmethod
     def _get_best_settings_version(current_version):
