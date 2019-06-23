@@ -619,12 +619,14 @@ $(function () {
             };
 
             // Octolapse settings link
-            self.openOctolapseSettings = function() {
-                var timeout = 250;
-                var total_tries = 3/(250/1000);
-                var tries = 0;
+            self.openOctolapseSettings = function(profile_type) {
                 $('a#navbar_show_settings').click();
                 $('li#settings_plugin_octolapse_link a').click();
+                if(profile_type)
+                {
+                    var query= "#octolapse_settings_nav a[data-profile-type='"+profile_type+"']";
+                    $(query).click();
+                }
             };
             // Printer Profile Settings
             self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });

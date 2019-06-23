@@ -42,7 +42,11 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Printer</td>
+                    <td>
+                        <a data-bind="click: function() {openOctolapseSettings('printer');}">
+                            Printer
+                        </a>
+                    </td>
                     <td>
                         <select id="octolapse_tab_printer_profile"
                                 class="input-block-level"
@@ -73,7 +77,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Stabilization</td>
+                    <td>
+                        <a data-bind="click: function() {openOctolapseSettings('stabilization');}">
+                            Stabilization
+                        </a>
+                    </td>
                     <td>
                         <select id="octolapse_tab_stabilization_profile"
                                 class="input-block-level"
@@ -93,7 +101,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Trigger</td>
+                    <td>
+                        <a data-bind="click: function() {openOctolapseSettings('trigger');}">
+                            Trigger
+                        </a>
+                    </td>
                     <td>
                         <select id="octolapse_tab_trigger_profile"
                                 class="input-block-level"
@@ -113,7 +125,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Rendering</td>
+                    <td>
+                        <a data-bind="click: function() {openOctolapseSettings('rendering');}">
+                            Rendering
+                        </a>
+                    </td>
                     <td>
                         <select id="octolapse_tab_rendering_profile"
                                 class="input-block-level"
@@ -133,14 +149,20 @@
                 </tr>
                 <tr>
                     <td>
-                        Cameras
+                        <a data-bind="click: function() {openOctolapseSettings('camera');}">
+                            Cameras
+                        </a>
                     </td>
                     <td colspan="2">
                         <div data-bind="template:'octolapse-tab-settings-current-cameras'"></div>
                     </td>
                 </tr>
                 <tr>
-                    <td>Debug</td>
+                    <td>
+                        <a data-bind="click: function() {openOctolapseSettings('debug');}">
+                            Debug
+                        </a>
+                    </td>
                     <td>
                         <select id="octolapse_tab_debug_profile"
                                 class="input-block-level"

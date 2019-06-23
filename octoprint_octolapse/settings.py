@@ -1583,32 +1583,26 @@ class Profiles(Settings):
             # get the current profile
             current_profile = PrinterProfile.create_from(current_profile_dict)
             new_profile = PrinterProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.printers[new_profile.guid] = new_profile
         elif profile_type == "stabilization":
             # get the current profile
             current_profile = StabilizationProfile.create_from(current_profile_dict)
             new_profile = StabilizationProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.stabilizations[new_profile.guid] = new_profile
         elif profile_type == "trigger":
             # get the current profile
             current_profile = TriggerProfile.create_from(current_profile_dict)
             new_profile = TriggerProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.triggers[new_profile.guid] = new_profile
         elif profile_type == "rendering":
             # get the current profile
             current_profile = RenderingProfile.create_from(current_profile_dict)
             new_profile = RenderingProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.renderings[new_profile.guid] = new_profile
         elif profile_type == "camera":
             # get the current profile
             current_profile = CameraProfile.create_from(current_profile_dict)
             new_profile = CameraProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.cameras[new_profile.guid] = new_profile
         elif profile_type == "debug":
             # get the current profile
             current_profile = DebugProfile.create_from(current_profile_dict)
             new_profile = DebugProfile.update_from_server_profile(current_profile, server_profile_dict)
-            self.debug[new_profile.guid] = new_profile
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
         return new_profile
