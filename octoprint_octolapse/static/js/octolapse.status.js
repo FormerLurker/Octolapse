@@ -213,7 +213,7 @@ $(function () {
                 if (current != null && current === "#tab_plugin_octolapse") {
                     //console.log("Octolapse Tab is showing");
                     self.IsTabShowing = true;
-                    self.updateLatestSnapshotThumbnail(true);
+                    self.updateLatestSnapshotThumbnail(true, true);
 
                 }
                 else if (previous != null && previous === "#tab_plugin_octolapse") {
@@ -228,9 +228,9 @@ $(function () {
                 isThumbnail = isThumbnail || false;
                 //console.log("Refreshing Snapshot Thumbnail");
                 if (isThumbnail)
-                    self.updateLatestSnapshotThumbnail(true);
+                    self.updateLatestSnapshotThumbnail(true, true);
                 else
-                    self.updateLatestSnapshotImage(true);
+                    self.updateLatestSnapshotImage(true, true);
             };
 
             self.startSnapshotAnimation = function (targetId) {
@@ -265,7 +265,9 @@ $(function () {
                 }
             };
 
-            self.updateLatestSnapshotThumbnail = function (force) {
+            self.updateLatestSnapshotThumbnail = function (force, updateIfDisabled) {
+                if (!updateIfDisabled && !self.current_camera_enabled())
+                    return;
                 force = force || false;
                 console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
@@ -589,7 +591,7 @@ $(function () {
                 self.set_current_camera_enabled();
                 // Update snapshots
                 self.updateLatestSnapshotImage(true);
-                self.updateLatestSnapshotThumbnail(true);
+                self.updateLatestSnapshotThumbnail(true, false);
             };
 
             self.onTimelapseStart = function () {
@@ -781,7 +783,7 @@ $(function () {
                 console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
-                self.updateLatestSnapshotThumbnail(true);
+                self.updateLatestSnapshotThumbnail(true, true);
                 self.updateLatestSnapshotImage(true);
             };
 

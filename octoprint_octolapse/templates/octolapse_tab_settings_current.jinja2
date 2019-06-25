@@ -68,10 +68,10 @@
                         </div>
                     </td>
                     <td>
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile" title="Edit this printer profile">
                             <i class="fa fa-pencil fa-2x"></i>
                         </a>
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() == null && Octolapse.Settings.is_loaded(), click: createNewPrinterProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() == null && Octolapse.Settings.is_loaded(), click: createNewPrinterProfile" title="Add a printer profile.">
                             <i class="fa fa-plus fa-2x"></i>
                         </a>
                     </td>
@@ -95,7 +95,7 @@
 
                     </td>
                     <td>
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile"  title="Edit this stabilization profile">
                             <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
@@ -119,7 +119,7 @@
 
                     </td>
                     <td>
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_trigger_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentTriggerProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_trigger_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentTriggerProfile" title="Edit this trigger profile.">
                             <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
@@ -142,7 +142,7 @@
                                 value: Octolapse.Status.current_rendering_profile_guid"></select>
                     </td>
                     <td class="text-right">
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile" title="Edit this rendering profile.">
                             <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>
@@ -175,7 +175,7 @@
                                 value: Octolapse.Status.current_debug_profile_guid"></select>
                     </td>
                     <td>
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile">
+                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile" title="Edit this debug profile.">
                             <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </td>

@@ -45,12 +45,24 @@ gcode_position::gcode_position()
 	gcode_functions_ = get_gcode_functions();
 
 	is_bound_ = false;
+	snapshot_x_min_ = 0;
+	snapshot_x_max_ = 0;
+	snapshot_y_min_ = 0;
+	snapshot_y_max_ = 0;
+	snapshot_z_min_ = 0;
+	snapshot_z_max_ = 0;
+
 	x_min_ = 0;
 	x_max_ = 0;
 	y_min_ = 0;
 	y_max_ = 0;
 	z_min_ = 0;
 	z_max_ = 0;
+	invert_x_ = false;
+	invert_y_ = false;
+	invert_z_ = false;
+	invert_e_ = false;
+	is_circular_bed_ = false;
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -78,16 +90,31 @@ gcode_position::gcode_position(gcode_position_args* args)
 	gcode_functions_ = get_gcode_functions();
 
 	is_bound_ = args->is_bound_;
-	x_min_ = args->x_min_;
-	x_max_ = args->x_max_;
-	y_min_ = args->y_min_;
-	y_max_ = args->y_max_;
-	z_min_ = args->z_min_;
-	z_max_ = args->z_max_;
+	snapshot_x_min_ = args->snapshot_x_min;
+	snapshot_x_max_ = args->snapshot_x_max;
+	snapshot_y_min_ = args->snapshot_y_min;
+	snapshot_y_max_ = args->snapshot_y_max;
+	snapshot_z_min_ = args->snapshot_z_min;
+	snapshot_z_max_ = args->snapshot_z_max;
+
+	x_min_ = args->x_min;
+	x_max_ = args->x_max;
+	y_min_ = args->y_min;
+	y_max_ = args->y_max;
+	z_min_ = args->z_min;
+	z_max_ = args->z_max;
+	invert_x_ = args->invert_x;
+	invert_y_ = args->invert_y;
+	invert_z_ = args->invert_z;
+	invert_e_ = args->invert_e;
+	is_circular_bed_ = args->is_circular_bed;
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
+
+	e_multiplier_ = invert_e_ ? -1.0 : 1.0;
+	z_multiplier_ = invert_z_ ? -1.0 : 1.0;
 }
 
 gcode_position::gcode_position(const gcode_position &source)
@@ -124,9 +151,15 @@ position * gcode_position::get_previous_position()
 	return p_previous_pos_;
 }
 
+double gcode_position::get_height_from_z(double z)
+{
+	if (invert_z_)
+		return z_max_ - z;
+	else
+		return z;
+}
 
-
-void gcode_position::update(parsed_command *command,int file_line_number, int gcode_number)
+void gcode_position::update(parsed_command *command, const int file_line_number, const int gcode_number)
 {
 	if (command->cmd_.empty())
 		return;
@@ -152,15 +185,16 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 	p_current_pos_->gcode_number_ = gcode_number;
 	// Does our function exist in our functions map?
 	gcode_functions_iterator_ = gcode_functions_.find(command->cmd_);
+	
 	if (gcode_functions_iterator_ != gcode_functions_.end())
 	{
 		p_current_pos_->gcode_ignored_ = false;
 		// Execute the function to process this gcode
-		posFunctionType func = gcode_functions_iterator_->second;
+		const pos_function_type func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos_, command);
 		// calculate z and e relative distances
-		p_current_pos_->e_relative_ = p_current_pos_->e_ - p_previous_pos_->e_;
-		p_current_pos_->z_relative_ = p_current_pos_->z_ - p_previous_pos_->z_;
+		p_current_pos_->e_relative_ = e_multiplier_ * (p_current_pos_->e_ - p_previous_pos_->e_);
+		p_current_pos_->z_relative_ = z_multiplier_ * (p_current_pos_->z_ - p_previous_pos_->z_);
 		// Have the XYZ positions changed after processing a command ?
 		
 		p_current_pos_->has_xy_position_changed_ = (
@@ -242,13 +276,14 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 		// calculate last_extrusion_height and height
 		// If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
 		// adjust the last extrusion height
-		if (!utilities::is_equal(p_current_pos_->z_, p_current_pos_->last_extrusion_height_))
+		const double height = get_height_from_z(p_current_pos_->z_);
+		if (!utilities::is_equal(height, p_current_pos_->last_extrusion_height_))
 		{
 			if (!p_current_pos_->z_null_)
 			{
 				if (p_current_pos_->is_extruding_)
 				{
-					p_current_pos_->last_extrusion_height_ = p_current_pos_->z_;
+					p_current_pos_->last_extrusion_height_ = height;
 					p_current_pos_->last_extrusion_height_null_ = false;
 					// Is Primed
 					if (!p_current_pos_->is_printer_primed_)
@@ -268,9 +303,9 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 					if(p_current_pos_->is_printer_primed_)
 					{
 						// Calculate current height
-						if (utilities::greater_than_or_equal(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
+						if (utilities::greater_than_or_equal(height, p_previous_pos_->height_ + minimum_layer_height_))
 						{
-							p_current_pos_->height_ = p_current_pos_->z_;
+							p_current_pos_->height_ = height;
 							p_current_pos_->is_layer_change_ = true;
 							p_current_pos_->layer_++;
 						}
@@ -281,27 +316,35 @@ void gcode_position::update(parsed_command *command,int file_line_number, int gc
 				if (p_current_pos_->is_extruding_ || p_current_pos_->z_null_ || p_current_pos_->last_extrusion_height_null_)
 					p_current_pos_->is_zhop_ = false;
 				else
-					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(p_current_pos_->z_ - p_current_pos_->last_extrusion_height_, z_lift_height_);
+					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(height - p_current_pos_->last_extrusion_height_, z_lift_height_);
 			}
 
 		}
 
 		// Calcluate position restructions
 		// TODO:  INCLUDE POSITION RESTRICTION CALCULATIONS!
-		// tODO:  iNCLUDE FEATURE DETECTION!
 		// Set is_in_bounds_ to false if we're not in bounds, it will be true at this point
 		if (is_bound_)
 		{
-			if (
-				p_current_pos_->x_ < x_min_ ||
-				p_current_pos_->x_ > x_max_ ||
-				p_current_pos_->y_ < y_min_ ||
-				p_current_pos_->y_ > y_max_ ||
-				p_current_pos_->z_ < z_min_ ||
-				p_current_pos_->z_ > z_max_)
+			if (!is_circular_bed_)
 			{
-				//std::cout << " - IsCloser Complete, out of bounds.\r\n";
-				p_current_pos_->is_in_bounds_ = false;
+				if (
+					p_current_pos_->x_ < snapshot_x_min_ ||
+					p_current_pos_->x_ > snapshot_x_max_ ||
+					p_current_pos_->y_ < snapshot_y_min_ ||
+					p_current_pos_->y_ > snapshot_y_max_ ||
+					p_current_pos_->z_ < snapshot_z_min_ ||
+					p_current_pos_->z_ > snapshot_z_max_)
+				{
+					//std::cout << " - IsCloser Complete, out of bounds.\r\n";
+					p_current_pos_->is_in_bounds_ = false;
+				}
+			}
+			else
+			{
+				const double r = x_max_; // good stand in for radius
+				const double dist = sqrt(p_current_pos_->x_*p_current_pos_->x_ + p_current_pos_->y_*p_current_pos_->y_);
+				p_current_pos_->is_in_bounds_ = utilities::greater_than(dist, r);
 			}
 		}
 	}
@@ -316,9 +359,9 @@ void gcode_position::undo_update()
 }
 
 // Private Members
-std::map<std::string, gcode_position::posFunctionType> gcode_position::get_gcode_functions()
+std::map<std::string, gcode_position::pos_function_type> gcode_position::get_gcode_functions()
 {
-	std::map<std::string, posFunctionType> newMap;
+	std::map<std::string, pos_function_type> newMap;
 	newMap.insert(std::make_pair("G0", &gcode_position::process_g0_g1));
 	newMap.insert(std::make_pair("G1", &gcode_position::process_g0_g1));
 	newMap.insert(std::make_pair("G2", &gcode_position::process_g2));

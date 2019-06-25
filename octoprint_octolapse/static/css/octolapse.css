@@ -31,7 +31,10 @@
 .octolapse a:hover{
     cursor: pointer;
     text-decoration: none;
-
+}
+.octolapse a:disabled, .octolapse select:disabled, .octolapse .disabled{
+    cursor: not-allowed;
+    text-decoration: none;
 }
 .octolapse-snapshot-text {
     position: absolute;
